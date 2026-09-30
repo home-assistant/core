@@ -238,7 +238,7 @@ async def test_user_step_lists_devices(
     udev creates no by-id link for Bluetooth devices, so those are offered by
     their node, once per name. Nodes that cannot send keys, with or without a
     by-id link, host-bus devices such as the power button, and nodes that
-    cannot be opened are not offered.
+    cannot be opened or are unplugged while inspected are not offered.
     """
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
@@ -252,6 +252,8 @@ async def test_user_step_lists_devices(
         sends_keys=False,
         link="/dev/input/by-id/usb-Webcam-event-if00",
     )
+    unplugged = fake_input.add("/dev/input/event13", "Unplugged")
+    unplugged.capabilities.side_effect = OSError(errno.ENODEV, "No such device")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -264,6 +266,7 @@ async def test_user_step_lists_devices(
         },
         {"value": BT_REMOTE_PATH, "label": f"{BT_REMOTE_NAME} (event7)"},
     ]
+    unplugged.close.assert_called_once()
 
 
 @pytest.mark.parametrize(

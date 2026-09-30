@@ -110,10 +110,16 @@ def _scan_input_devices_sync(
         except OSError:
             continue
         name = dev.name
-        usable = (
-            ecodes.EV_KEY in dev.capabilities() and dev.info.bustype != ecodes.BUS_HOST
-        )
-        dev.close()
+        try:
+            usable = (
+                ecodes.EV_KEY in dev.capabilities()
+                and dev.info.bustype != ecodes.BUS_HOST
+            )
+        except OSError:
+            # Unplugged since it was opened
+            continue
+        finally:
+            dev.close()
         if not usable:
             continue
         if (link := links.get(os.path.realpath(dev_path))) is not None:
