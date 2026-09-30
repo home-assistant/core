@@ -1,6 +1,6 @@
 """Expose images as media sources."""
 
-import logging
+import math
 from pathlib import Path
 from time import time
 
@@ -9,9 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
-from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR, LOGGER
 
 
 @singleton(DATA_MEDIA_SOURCE, async_=True)
@@ -39,7 +37,7 @@ async def async_clear_images(hass: HomeAssistant, days: int | None) -> None:
     """Delete generated images, or only those older than the given days."""
     source = await async_get_media_source(hass)
     image_dir = Path(source.media_dirs[IMAGE_DIR])
-    cutoff = None if days is None else time() - days * 86400
+    cutoff = time() - days * 86400 if days else math.inf
 
     def remove_images() -> None:
         """Remove images from the filesystem."""
@@ -47,12 +45,10 @@ async def async_clear_images(hass: HomeAssistant, days: int | None) -> None:
             return
         for image in image_dir.iterdir():
             try:
-                if not image.is_file() or (
-                    cutoff is not None and image.stat().st_mtime >= cutoff
-                ):
+                if not image.is_file() or image.stat().st_mtime >= cutoff:
                     continue
                 image.unlink()
             except OSError as err:
-                _LOGGER.warning("Can't remove image '%s': %s", image.name, err)
+                LOGGER.warning("Can't remove image '%s': %s", image.name, err)
 
     await hass.async_add_executor_job(remove_images)

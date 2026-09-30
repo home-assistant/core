@@ -1,6 +1,7 @@
 """Constants for the AI Task integration."""
 
 from enum import IntFlag
+import logging
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
     from .entity import AITaskEntity
 
 DOMAIN: Final = "ai_task"
+LOGGER: Final = logging.getLogger(__package__)
 DATA_COMPONENT: HassKey[EntityComponent[AITaskEntity]] = HassKey(DOMAIN)
 DATA_PREFERENCES: HassKey[AITaskPreferences] = HassKey(f"{DOMAIN}_preferences")
 DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_source")
