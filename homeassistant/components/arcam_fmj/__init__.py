@@ -5,8 +5,8 @@ from asyncio import timeout
 from contextlib import AsyncExitStack
 import logging
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
+from arcam.fmj.errors import ConnectionFailed
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,11 @@ from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRunti
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:

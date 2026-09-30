@@ -43,13 +43,13 @@ CONF_ALLOW_BYPASS_LOGIN = "allow_bypass_login"
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
         probatio.Required(CONF_TRUSTED_NETWORKS): probatio.All(
-            cv.ensure_list, [ip_network]
+            probatio.EnsureList(), [ip_network]
         ),
         probatio.Optional(CONF_TRUSTED_USERS, default={}): probatio.Schema(
             # we only validate the format of user_id or group_id
             {
                 ip_network: probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         probatio.Or(
                             cv.uuid4_hex,

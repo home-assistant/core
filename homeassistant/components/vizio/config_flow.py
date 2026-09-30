@@ -91,7 +91,11 @@ def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> probatio.Sc
         input_dict = {}
 
     return probatio.Schema(
-        {probatio.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str}
+        {
+            probatio.Required(
+                probatio.Secret(CONF_PIN), default=input_dict.get(CONF_PIN, "")
+            ): str
+        }
     )
 
 

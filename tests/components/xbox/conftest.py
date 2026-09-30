@@ -191,6 +191,13 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.titlehub.get_title_info.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
         )
+
+        def get_title_info_by_xuid(xuid: str, _: str) -> TitleHubResponse:
+            return TitleHubResponse(
+                **load_json_object_fixture(f"titlehub_titleinfo_{xuid}.json", DOMAIN)
+            )
+
+        client.titlehub.get_title_info_by_xuid.side_effect = get_title_info_by_xuid
         client.titlehub.get_title_history.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titlehistory.json", DOMAIN)
         )

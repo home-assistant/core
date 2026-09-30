@@ -58,6 +58,29 @@
     }
   },
   "entity": {
+    "number": {
+      "ww1boost": {
+        "name": "Boost Target Temperature"
+      },
+      "ww_boost_h": {
+        "name": "Minimum Hysteresis"
+      },
+      "ww_targ_h": {
+        "name": "Maximum Hysteresis"
+      }
+    },
+    "select": {
+      "bstmode": {
+        "name": "Boost mode",
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "1": "[%key:common::state::on%]",
+          "3": "Relay",
+          "4": "SELV relay",
+          "5": "AUX relay"
+        }
+      }
+    },
     "sensor": {
       "cur_eth_mode": {
         "name": "Network mode",

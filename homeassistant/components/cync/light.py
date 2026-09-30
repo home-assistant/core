@@ -58,6 +58,7 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     """Representation of a Cync light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes: set[ColorMode]
     _attr_min_color_temp_kelvin = 2000
     _attr_max_color_temp_kelvin = 7000
     _attr_translation_key = "light"
@@ -129,10 +130,12 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
             and self._device.color_mode == 254
         ):
             return ColorMode.RGB
-        if self._device.supports_capability(CyncCapability.DIMMING):
+        if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
             return ColorMode.BRIGHTNESS
+        if ColorMode.ONOFF in self._attr_supported_color_modes:
+            return ColorMode.ONOFF
 
-        return ColorMode.ONOFF
+        return ColorMode.UNKNOWN
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

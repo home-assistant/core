@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus button platform."""
+"""Tests for the Sofar button platform."""
 
 from collections.abc import Callable, Sequence
 from unittest.mock import patch
