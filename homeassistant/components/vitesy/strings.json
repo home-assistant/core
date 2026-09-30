@@ -37,6 +37,7 @@
           "eco": "Eco",
           "shelf": "Shelf"
         }
+      }
     },
     "sensor": {
       "air_quality_score": {
