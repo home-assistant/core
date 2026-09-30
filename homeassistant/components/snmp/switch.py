@@ -110,7 +110,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
             SNMP_VERSIONS
         ),

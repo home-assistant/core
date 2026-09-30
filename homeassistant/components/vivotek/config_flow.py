@@ -43,7 +43,7 @@ DESCRIPTION_PLACEHOLDERS = {
 CONF_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_IP_ADDRESS): cv.string,
-        probatio.Required(CONF_PORT, default=80): cv.port,
+        probatio.Required(CONF_PORT, default=80): probatio.Port(),
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
         probatio.Required(

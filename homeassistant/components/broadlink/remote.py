@@ -63,7 +63,7 @@ FLAG_SAVE_DELAY = 15
 COMMAND_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_COMMAND): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.All(cv.string, probatio.Length(min=1))],
             probatio.Length(min=1),
         ),

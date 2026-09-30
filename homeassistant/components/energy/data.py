@@ -393,7 +393,7 @@ GRID_POWER_SOURCE_SCHEMA = probatio.All(
             probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
     ),
-    cv.has_at_least_one_key("stat_rate", "power_config"),
+    probatio.AtLeastOne("stat_rate", "power_config"),
 )
 
 

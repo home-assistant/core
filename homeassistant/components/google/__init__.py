@@ -69,7 +69,7 @@ DEVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CAL_ID): cv.string,
         probatio.Required(CONF_ENTITIES, None): probatio.All(
-            cv.ensure_list, [_SINGLE_CALSEARCH_CONFIG]
+            probatio.EnsureList(), [_SINGLE_CALSEARCH_CONFIG]
         ),
     },
     extra=probatio.ALLOW_EXTRA,

@@ -120,10 +120,10 @@ COMBINED_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         **RESOURCE_SCHEMA,
         probatio.Optional(SENSOR_DOMAIN): probatio.All(
-            cv.ensure_list, [probatio.Schema(SENSOR_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(SENSOR_SCHEMA)]
         ),
         probatio.Optional(BINARY_SENSOR_DOMAIN): probatio.All(
-            cv.ensure_list, [probatio.Schema(BINARY_SENSOR_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(BINARY_SENSOR_SCHEMA)]
         ),
     }
 )
@@ -131,7 +131,7 @@ COMBINED_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             cv.remove_falsy,
             [COMBINED_SCHEMA],
         )

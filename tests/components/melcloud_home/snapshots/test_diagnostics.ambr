@@ -11,7 +11,7 @@
       }),
       'domain': 'melcloud_home',
       'entry_id': 'config-entry-uuid-1',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

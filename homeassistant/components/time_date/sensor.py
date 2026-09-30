@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -34,7 +33,7 @@ TIME_STR_FORMAT = "%H:%M"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): probatio.All(
-            cv.ensure_list, [probatio.In(OPTION_TYPES)]
+            probatio.EnsureList(), [probatio.In(OPTION_TYPES)]
         )
     }
 )

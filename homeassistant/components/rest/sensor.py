@@ -19,7 +19,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -46,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = probatio.All(
     SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA}),
-    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
+    probatio.AtLeastOne(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )
 
 
