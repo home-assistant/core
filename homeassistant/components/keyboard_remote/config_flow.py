@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_TYPE, UnitOfTime
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.typing import UNDEFINED
@@ -502,7 +502,7 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 min=EMULATE_KEY_HOLD_DELAY_MIN,
                                 max=EMULATE_KEY_HOLD_DELAY_MAX,
                                 step=0.001,
-                                unit_of_measurement="s",
+                                unit_of_measurement=UnitOfTime.SECONDS,
                                 mode=selector.NumberSelectorMode.BOX,
                             )
                         ),
@@ -513,7 +513,7 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 min=EMULATE_KEY_HOLD_REPEAT_MIN,
                                 max=EMULATE_KEY_HOLD_REPEAT_MAX,
                                 step=0.001,
-                                unit_of_measurement="s",
+                                unit_of_measurement=UnitOfTime.SECONDS,
                                 mode=selector.NumberSelectorMode.BOX,
                             )
                         ),

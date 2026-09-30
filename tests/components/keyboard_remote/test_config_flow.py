@@ -271,7 +271,7 @@ async def test_user_step_lists_devices(
     """Test which devices the user step offers.
 
     udev creates no by-id link for Bluetooth devices, so those are offered by
-    their node, once per name. Nodes that cannot send keys, with or without a
+    their node, once per uniq and name. Nodes that cannot send keys, with or without a
     by-id link, host-bus devices such as the power button, and nodes that
     cannot be opened or are unplugged while inspected are not offered.
     """
@@ -315,10 +315,9 @@ async def test_user_step_lists_devices(
 async def test_user_step_creates_name_matched_entry(
     hass: HomeAssistant, fake_input: FakeInput, other_link: str | None
 ) -> None:
-    """Test a device without a by-id link is configured by its name.
+    """Test a device without a by-id link or uniq is configured by its name.
 
-    Its node can change when it reconnects, so the entry matches by name, like
-    a YAML entry configured by name.
+    Its node can change when it reconnects, so the entry matches by name.
     """
     fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
     fake_input.add(REMOTE_REAL_PATH, FAKE_DEVICE_NAME_2, link=other_link)

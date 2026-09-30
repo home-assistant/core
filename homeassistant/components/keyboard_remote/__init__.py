@@ -168,7 +168,12 @@ async def _async_import_yaml_device(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type KeyboardRemoteConfigEntry = ConfigEntry[DeviceHandler]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: KeyboardRemoteConfigEntry
+) -> bool:
     """Set up a single keyboard remote device from a config entry."""
     if (manager := hass.data.get(DATA_MANAGER)) is None:
         manager = KeyboardRemoteManager(hass)
@@ -178,29 +183,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             manager.open_watcher()
         except OSError as err:
             raise ConfigEntryNotReady(
-                # The error names the path, which may be the by-id directory
-                f"Unable to watch for input devices: {err}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_watch_input",
+                # The error names the path that failed
+                translation_placeholders={"error": str(err)},
             ) from err
         hass.data[DATA_MANAGER] = manager
 
-    handler = DeviceHandler(hass, entry)
-    manager.register_handler(entry.entry_id, handler)
+    entry.runtime_data = DeviceHandler(hass, entry)
+    manager.register_handler(entry.runtime_data)
 
-    # Start the manager when HA is running (idempotent — first call starts,
-    # subsequent calls are no-ops). async_at_start fires immediately if HA
-    # is already running, or waits for EVENT_HOMEASSISTANT_START.
-    async def _start_manager(hass: HomeAssistant) -> None:
+    async def _async_start(_: HomeAssistant) -> None:
         await manager.async_start()
 
-    entry.async_on_unload(async_at_start(hass, _start_manager))
-
+    entry.async_on_unload(async_at_start(hass, _async_start))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: KeyboardRemoteConfigEntry
+) -> bool:
     """Unload a keyboard remote config entry."""
     manager = hass.data[DATA_MANAGER]
-    await manager.unregister_handler(entry.entry_id)
+    await manager.unregister_handler(entry.runtime_data)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # Detach it before awaiting, so an entry that sets up meanwhile creates
@@ -227,7 +232,7 @@ class KeyboardRemoteManager:
         self._inotify: Inotify | None = None
         self._watcher: Watch | None = None
         self._by_id_watcher: Watch | None = None
-        self._monitor_task: asyncio.Task | None = None
+        self._monitor_task: asyncio.Task[None] | None = None
         self._stop_listener: CALLBACK_TYPE | None = None
         self._started = False
         # Cleared as soon as stopping begins, unlike _started, so device checks
@@ -372,16 +377,16 @@ class KeyboardRemoteManager:
         self._forget_handler(handler)
         await handler.async_device_stop_monitoring(from_monitor_task=True)
 
-    def register_handler(self, entry_id: str, handler: DeviceHandler) -> None:
-        """Register a DeviceHandler for a config entry."""
-        self._handlers[entry_id] = handler
+    def register_handler(self, handler: DeviceHandler) -> None:
+        """Register a config entry's DeviceHandler."""
+        self._handlers[handler.entry.entry_id] = handler
         handler.set_monitor_failure_callback(self._async_release_failed_handler)
         if self._started:
             self.hass.async_create_task(self._async_check_handler(handler))
 
-    async def unregister_handler(self, entry_id: str) -> None:
+    async def unregister_handler(self, handler: DeviceHandler) -> None:
         """Unregister a DeviceHandler and stop its monitoring."""
-        handler = self._handlers.pop(entry_id)
+        del self._handlers[handler.entry.entry_id]
         self._forget_handler(handler)
         await handler.async_device_stop_monitoring()
 
@@ -582,14 +587,14 @@ class KeyboardRemoteManager:
         descriptor_active = descriptor in self._active_handlers_by_descriptor
 
         if (event.mask & Mask.DELETE) and descriptor_active:
-            _LOGGER.debug("removing: %s", descriptor)
+            _LOGGER.debug("Removing %s", descriptor)
             handler = self._active_handlers_by_descriptor[descriptor]
             del self._active_handlers_by_descriptor[descriptor]
             await handler.async_device_stop_monitoring()
         elif (
             (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
         ) and not descriptor_active:
-            _LOGGER.debug("checking new: %s", descriptor)
+            _LOGGER.debug("Checking new %s", descriptor)
             await self._async_attach_descriptor(descriptor)
 
     async def _async_attach_descriptor(self, descriptor: str) -> None:
@@ -607,7 +612,7 @@ class KeyboardRemoteManager:
     ) -> None:
         """Start monitoring a matched device, unless the claim is refused."""
         if self._claim_descriptor(descriptor, dev, handler):
-            _LOGGER.debug("adding: %s", descriptor)
+            _LOGGER.debug("Adding %s", descriptor)
             handler.async_device_start_monitoring(dev)
 
     def _match_linked_device(
@@ -713,11 +718,11 @@ class KeyboardRemoteManager:
 class DeviceHandler:
     """Manage input events for a single keyboard device (one config entry)."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: KeyboardRemoteConfigEntry) -> None:
         """Initialize from config entry data and options."""
         self.hass = hass
         self.entry = entry
-        self._monitor_task: asyncio.Task | None = None
+        self._monitor_task: asyncio.Task[None] | None = None
         self.dev: InputDevice | None = None
         self._descriptor: str | None = None
         self._on_monitor_failure: (
@@ -726,19 +731,10 @@ class DeviceHandler:
         # The options flow reloads the entry, so these cannot change while
         # this handler exists.
         options = entry.options
-        self._key_values = {
-            KEY_VALUE[key_type]
-            for key_type in options.get(CONF_KEY_TYPES, DEFAULT_KEY_TYPES)
-        }
-        self._emulate_key_hold: bool = options.get(
-            CONF_EMULATE_KEY_HOLD, DEFAULT_EMULATE_KEY_HOLD
-        )
-        self._emulate_key_hold_delay: float = options.get(
-            CONF_EMULATE_KEY_HOLD_DELAY, DEFAULT_EMULATE_KEY_HOLD_DELAY
-        )
-        self._emulate_key_hold_repeat: float = options.get(
-            CONF_EMULATE_KEY_HOLD_REPEAT, DEFAULT_EMULATE_KEY_HOLD_REPEAT
-        )
+        self._key_values = {KEY_VALUE[key_type] for key_type in options[CONF_KEY_TYPES]}
+        self._emulate_key_hold: bool = options[CONF_EMULATE_KEY_HOLD]
+        self._emulate_key_hold_delay: float = options[CONF_EMULATE_KEY_HOLD_DELAY]
+        self._emulate_key_hold_repeat: float = options[CONF_EMULATE_KEY_HOLD_REPEAT]
 
     def set_monitor_failure_callback(
         self, on_failure: Callable[[DeviceHandler], Coroutine[Any, Any, None]]
@@ -753,10 +749,10 @@ class DeviceHandler:
 
     @property
     def _device_path(self) -> str | None:
-        """The configured device path (by-id or raw), if the entry has one.
+        """The configured device path, if the entry has one.
 
-        Name-only YAML imports store no path, because the only path available
-        at import time is a transient /dev/input/eventN.
+        Entries matched by name, or by uniq and name, store none, as the only
+        path they could store is a /dev/input/eventN that can change.
         """
         return self.entry.data.get(CONF_DEVICE_PATH)
 
@@ -766,7 +762,7 @@ class DeviceHandler:
         return self.entry.data.get(CONF_DEVICE_UNIQ)
 
     @property
-    def _device_name_config(self) -> str | None:
+    def _device_name(self) -> str | None:
         """The configured device name."""
         return self.entry.data.get(CONF_DEVICE_NAME)
 
@@ -803,8 +799,8 @@ class DeviceHandler:
         if (
             not device_path
             and not self._device_descriptor
-            and self._device_name_config
-            and dev.name == self._device_name_config
+            and self._device_name
+            and dev.name == self._device_name
         ):
             # The uniq tells identical Bluetooth remotes apart
             if uniq := self._device_uniq:
@@ -844,7 +840,7 @@ class DeviceHandler:
                 CONF_DEVICE_NAME: dev.name,
             },
         )
-        _LOGGER.debug("Keyboard (re-)connected, %s", dev.name)
+        _LOGGER.debug("Connected %s", dev.name)
 
     async def async_device_stop_monitoring(
         self, *, from_monitor_task: bool = False
@@ -887,7 +883,7 @@ class DeviceHandler:
                     CONF_DEVICE_NAME: dev.name,
                 },
             )
-            _LOGGER.debug("Keyboard disconnected, %s", dev.name)
+            _LOGGER.debug("Disconnected %s", dev.name)
             self.dev = None
         if not from_monitor_task:
             # Unlike awaiting the task, this cannot swallow a cancellation of
@@ -917,7 +913,7 @@ class DeviceHandler:
 
         dev = self.dev
         assert dev is not None
-        repeat_tasks: dict[int, asyncio.Task] = {}
+        repeat_tasks: dict[int, asyncio.Task[None]] = {}
 
         try:
             _LOGGER.debug("Start device monitoring")
@@ -986,7 +982,7 @@ class DeviceHandler:
             await self._async_monitor_failed(repeat_tasks)
 
     async def _async_monitor_failed(
-        self, repeat_tasks: dict[int, asyncio.Task]
+        self, repeat_tasks: dict[int, asyncio.Task[None]]
     ) -> None:
         """Release this handler's device after its monitor stopped reading."""
         await self._async_cancel_repeats(repeat_tasks)
@@ -994,7 +990,7 @@ class DeviceHandler:
             await self._on_monitor_failure(self)
 
     async def _async_cancel_repeats(
-        self, repeat_tasks: dict[int, asyncio.Task]
+        self, repeat_tasks: dict[int, asyncio.Task[None]]
     ) -> None:
         """Cancel any outstanding emulated key hold tasks."""
         for task in repeat_tasks.values():

@@ -21,6 +21,11 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_watch_input": {
+      "message": "Unable to watch for input devices: {error}"
+    }
+  },
   "options": {
     "error": {
       "no_key_types": "Select at least one key event type."
@@ -35,8 +40,8 @@
         },
         "data_description": {
           "emulate_key_hold": "Enable software emulation of key hold events.",
-          "emulate_key_hold_delay": "Delay in seconds before key hold emulation starts.",
-          "emulate_key_hold_repeat": "Repeat interval in seconds for emulated key hold events.",
+          "emulate_key_hold_delay": "Delay before key hold emulation starts.",
+          "emulate_key_hold_repeat": "Repeat interval for emulated key hold events.",
           "key_types": "Select which key events to listen for."
         },
         "description": "Device: `{device}`",

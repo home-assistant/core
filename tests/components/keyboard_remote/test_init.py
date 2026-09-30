@@ -1219,8 +1219,8 @@ async def test_entry_registered_during_startup_scan_connects(
 ) -> None:
     """Test an entry that loads while the startup scan runs still connects.
 
-    The scan took its list of entries before this one existed, and entries
-    registering before the scan finished were not checked separately.
+    The scan works from the entries registered when it started, so an entry
+    registering while it runs is checked once the scan is done.
     """
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
