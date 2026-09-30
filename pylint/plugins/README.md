@@ -633,12 +633,10 @@ Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
 scanned.
 
 The rule targets new unique ids. Integrations with existing unique ids in
-this format keep them and are listed in `REDUNDANT_DOMAIN_EXEMPTIONS`:
-migrating unique ids rewrites the entity registry and is easy to get wrong
-(for example, a downgrade leaves duplicate entities behind), which the
-cosmetic gain doesn't justify. The exemption applies to the whole
-integration. New integrations must not be added to the list, and a test
-fails when a listed integration no longer needs its exemption.
+this format should keep them and disable the check on that line: migrating
+unique ids rewrites the entity registry and is easy to get wrong (for example,
+a downgrade leaves duplicate entities behind), which the cosmetic gain doesn't
+justify.
 
 ### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
 
@@ -665,9 +663,8 @@ other helper sub-modules are out of scope because the platform
 context is ambiguous there. The three in-class scan locations are
 the same as for `W7425`.
 
-As for `W7425`, the rule targets new unique ids: integrations with
-existing unique ids in this format keep them and are listed in
-`REDUNDANT_PLATFORM_EXEMPTIONS`.
+As for `W7425`, the rule targets new unique ids: existing unique ids in
+this format should be kept, with the check disabled on that line.
 
 
 ## `home_assistant_entity_description_defaults` checker

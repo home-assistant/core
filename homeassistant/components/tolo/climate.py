@@ -63,7 +63,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Initialize TOLO Sauna Climate entity."""
         super().__init__(coordinator, entry)
 
-        self._attr_unique_id = f"{entry.entry_id}_climate"
+        self._attr_unique_id = f"{entry.entry_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override

@@ -58,7 +58,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         self._rebuild_wake_words(wake_service)
 
         self._attr_name = wake_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
+        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def async_added_to_hass(self) -> None:

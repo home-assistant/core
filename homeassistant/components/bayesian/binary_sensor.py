@@ -318,7 +318,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
-        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
+        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
         self._observations = [
             Observation(

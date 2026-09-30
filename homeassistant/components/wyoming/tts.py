@@ -71,7 +71,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self._rebuild_voices(self._tts_service)
 
         self._attr_name = self._tts_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-tts"
+        self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def async_added_to_hass(self) -> None:

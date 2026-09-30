@@ -1,14 +1,11 @@
 """Tests for the entity_unique_id_format pylint checker."""
 
-from collections.abc import Iterator
 import json
 from pathlib import Path
-from unittest.mock import patch
 
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers import entity_unique_id_format
 from pylint_home_assistant.checkers.entity_unique_id_format import (
     EntityUniqueIdFormatChecker,
 )
@@ -16,9 +13,6 @@ from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker
-
-_REPO_ROOT = Path(__file__).parents[2]
-_COMPONENTS_DIR = _REPO_ROOT / "homeassistant" / "components"
 
 
 @pytest.fixture(name="checker")
@@ -960,113 +954,3 @@ class MySensor(Entity):
         _expect_redundant_platform(value_node, "MySensor", "sensor"),
     ):
         walk_checker(linter, checker, root_node)
-
-
-@pytest.mark.parametrize(
-    ("domain_exemptions", "platform_exemptions", "expected_msg_ids"),
-    [
-        pytest.param(
-            frozenset({"test_integration"}),
-            frozenset(),
-            ["home-assistant-entity-unique-id-redundant-platform"],
-            id="domain_exempted",
-        ),
-        pytest.param(
-            frozenset(),
-            frozenset({"test_integration"}),
-            ["home-assistant-entity-unique-id-redundant-domain"],
-            id="platform_exempted",
-        ),
-        pytest.param(
-            frozenset({"test_integration"}),
-            frozenset({"test_integration"}),
-            [],
-            id="both_exempted",
-        ),
-    ],
-)
-def test_exempted_integration_ignored(
-    linter: UnittestLinter,
-    checker: EntityUniqueIdFormatChecker,
-    tmp_path: Path,
-    domain_exemptions: frozenset[str],
-    platform_exemptions: frozenset[str],
-    expected_msg_ids: list[str],
-) -> None:
-    """Exempted integrations are not flagged for the exempted rule."""
-    integration_dir = _make_integration(tmp_path)
-    root_node = _parse(
-        """
-from homeassistant.helpers.entity import Entity
-from .const import DOMAIN
-
-class MySensor(Entity):
-    def __init__(self, key):
-        self._attr_unique_id = f"{DOMAIN}_sensor_{key}"
-""",
-        integration_dir,
-    )
-
-    with (
-        patch.object(
-            entity_unique_id_format,
-            "REDUNDANT_DOMAIN_EXEMPTIONS",
-            domain_exemptions,
-        ),
-        patch.object(
-            entity_unique_id_format,
-            "REDUNDANT_PLATFORM_EXEMPTIONS",
-            platform_exemptions,
-        ),
-    ):
-        walk_checker(linter, checker, root_node)
-
-    assert [msg.msg_id for msg in linter.release_messages()] == expected_msg_ids
-
-
-def _integration_modules(domain: str) -> Iterator[nodes.Module]:
-    """Yield the parsed modules of a Home Assistant integration."""
-    for path in sorted((_COMPONENTS_DIR / domain).rglob("*.py")):
-        module_name = ".".join(
-            path.relative_to(_REPO_ROOT).with_suffix("").parts
-        ).removesuffix(".__init__")
-        yield astroid.MANAGER.ast_from_file(str(path), module_name)
-
-
-@pytest.mark.parametrize(
-    ("exemptions_name", "msg_id", "domain"),
-    [
-        *(
-            (
-                "REDUNDANT_DOMAIN_EXEMPTIONS",
-                "home-assistant-entity-unique-id-redundant-domain",
-                domain,
-            )
-            for domain in sorted(entity_unique_id_format.REDUNDANT_DOMAIN_EXEMPTIONS)
-        ),
-        *(
-            (
-                "REDUNDANT_PLATFORM_EXEMPTIONS",
-                "home-assistant-entity-unique-id-redundant-platform",
-                domain,
-            )
-            for domain in sorted(entity_unique_id_format.REDUNDANT_PLATFORM_EXEMPTIONS)
-        ),
-    ],
-)
-def test_exemption_still_needed(
-    linter: UnittestLinter,
-    checker: EntityUniqueIdFormatChecker,
-    exemptions_name: str,
-    msg_id: str,
-    domain: str,
-) -> None:
-    """Exempted integrations must still have unique IDs that need the exemption."""
-    with patch.object(entity_unique_id_format, exemptions_name, frozenset()):
-        for module in _integration_modules(domain):
-            walk_checker(linter, checker, module)
-
-    assert msg_id in {msg.msg_id for msg in linter.release_messages()}, (
-        f"`{domain}` no longer needs its exemption, "
-        f"please remove it from `{exemptions_name}`"
-    )
