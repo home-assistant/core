@@ -71,11 +71,11 @@ class TargetSelection:
 
     def __init__(self, config: ConfigType) -> None:
         """Extract ids from the config."""
-        entity_ids: str | list | None = config.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = config.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = config.get(ATTR_AREA_ID)
-        floor_ids: str | list | None = config.get(ATTR_FLOOR_ID)
-        label_ids: str | list | None = config.get(ATTR_LABEL_ID)
+        entity_ids: str | list[str] | None = config.get(ATTR_ENTITY_ID)
+        device_ids: str | list[str] | None = config.get(ATTR_DEVICE_ID)
+        area_ids: str | list[str] | None = config.get(ATTR_AREA_ID)
+        floor_ids: str | list[str] | None = config.get(ATTR_FLOOR_ID)
+        label_ids: str | list[str] | None = config.get(ATTR_LABEL_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
