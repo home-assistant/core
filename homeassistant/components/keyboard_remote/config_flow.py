@@ -72,6 +72,8 @@ def _scan_input_devices_sync(
     udev creates no by-id link for Bluetooth devices, nor for devices without
     a bus ID such as GPIO IR receivers. Those are offered by their event node
     and configured by name, once per name, and only if they can send keys.
+    Host-bus devices such as the ACPI power button are left out, since
+    grabbing one would take it away from the system.
     """
     from evdev import InputDevice, ecodes, list_devices  # noqa: PLC0415
 
@@ -85,7 +87,9 @@ def _scan_input_devices_sync(
         except OSError:
             continue
         name = dev.name
-        sends_keys = ecodes.EV_KEY in dev.capabilities()
+        offer_by_name = (
+            ecodes.EV_KEY in dev.capabilities() and dev.info.bustype != ecodes.BUS_HOST
+        )
         dev.close()
         if (link := links.get(os.path.realpath(dev_path))) is not None:
             by_id_options.append(
@@ -93,7 +97,7 @@ def _scan_input_devices_sync(
                     value=link, label=f"{name} ({os.path.basename(link)})"
                 )
             )
-        elif sends_keys and name not in names and name not in configured_names:
+        elif offer_by_name and name not in names and name not in configured_names:
             names.add(name)
             name_options.append(
                 selector.SelectOptionDict(

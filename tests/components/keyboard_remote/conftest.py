@@ -26,10 +26,12 @@ from tests.common import MockConfigEntry
 # Stable evdev constants for tests (must match the constants used in event mocks
 # so that mocked events behave consistently with the integration under test)
 EV_KEY = 1
+BUS_BLUETOOTH = 0x05
+BUS_HOST = 0x19
 
 # The integration only imports evdev inside functions, so the fixture below
 # covers every import without touching sys.modules for the whole session.
-_mock_ecodes = SimpleNamespace(EV_KEY=EV_KEY)
+_mock_ecodes = SimpleNamespace(EV_KEY=EV_KEY, BUS_HOST=BUS_HOST)
 _mock_evdev = MagicMock()
 _mock_evdev.ecodes = _mock_ecodes
 _mock_evdev.categorize = MagicMock(side_effect=lambda e: f"key event {e.code}")

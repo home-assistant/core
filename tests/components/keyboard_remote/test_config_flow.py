@@ -31,6 +31,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
 
 from .conftest import (
+    BUS_BLUETOOTH,
+    BUS_HOST,
     EV_KEY,
     FAKE_BY_ID_BASENAME,
     FAKE_DEVICE_NAME,
@@ -206,11 +208,14 @@ async def test_user_step_already_configured(
 BT_REMOTE_NAME = "BT Remote"
 
 
-def _input_device(name: str, *, sends_keys: bool = True) -> MagicMock:
+def _input_device(
+    name: str, *, sends_keys: bool = True, bustype: int = BUS_BLUETOOTH
+) -> MagicMock:
     """Create an evdev device that reports key events or only switch events."""
     dev = MagicMock()
     dev.name = name
     dev.capabilities.return_value = {EV_KEY if sends_keys else 5: [30]}
+    dev.info.bustype = bustype
     return dev
 
 
@@ -264,7 +269,8 @@ async def test_user_step_lists_devices_without_by_id_link(
     """Test devices without a by-id link are offered once per name.
 
     udev creates no by-id link for Bluetooth devices. Nodes that cannot send
-    keys, or cannot be opened, are not offered.
+    keys, host-bus devices such as the power button, and nodes that cannot be
+    opened are not offered.
     """
     devices = {
         FAKE_DEVICE_REAL_PATH: _input_device(FAKE_DEVICE_NAME),
@@ -272,6 +278,7 @@ async def test_user_step_lists_devices_without_by_id_link(
         "/dev/input/event8": _input_device(BT_REMOTE_NAME),
         "/dev/input/event9": _input_device("Headphone Jack", sends_keys=False),
         "/dev/input/event10": None,
+        "/dev/input/event11": _input_device("Power Button", bustype=BUS_HOST),
     }
     with _input_devices(devices, {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}):
         result = await hass.config_entries.flow.async_init(
@@ -289,6 +296,7 @@ async def test_user_step_lists_devices_without_by_id_link(
     for path in (FAKE_DEVICE_REAL_PATH, "/dev/input/event7", "/dev/input/event8"):
         devices[path].close.assert_called_once()
     devices["/dev/input/event9"].close.assert_called_once()
+    devices["/dev/input/event11"].close.assert_called_once()
 
 
 @pytest.mark.parametrize(
