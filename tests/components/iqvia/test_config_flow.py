@@ -27,6 +27,7 @@ async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> N
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("setup_iqvia")
 async def test_invalid_zip_code(hass: HomeAssistant) -> None:
     """Test that an invalid ZIP code key throws an error."""
     result = await hass.config_entries.flow.async_init(
