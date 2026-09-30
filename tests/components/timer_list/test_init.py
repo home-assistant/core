@@ -1,19 +1,20 @@
 """Tests for the Timer list integration."""
 
+import asyncio
 from typing import Any
 
 import pytest
 
-from homeassistant.components.timer_list import async_get_timer_list_entity
 from homeassistant.components.timer_list.const import DOMAIN, TimerListEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockPlatform, MockUser, mock_platform
 from tests.typing import WebSocketGenerator
 
 TEST_ENTITY_ID = "timer_list.timers"
@@ -261,26 +262,6 @@ async def test_websocket_unknown_entity(
     assert msg["error"]["code"] == "not_found"
 
 
-async def test_async_get_timer_list_entity(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test resolving the timer list entity belonging to a device."""
-    entity = MockTimerListEntity()
-    config_entry = await create_mock_platform(hass, [entity])
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(TEST_DOMAIN, "satellite")},
-    )
-
-    assert async_get_timer_list_entity(hass, "unknown-device") is None
-    assert async_get_timer_list_entity(hass, device.id) is None
-
-    entity_registry.async_update_entity(TEST_ENTITY_ID, device_id=device.id)
-    assert async_get_timer_list_entity(hass, device.id) is entity
-
-
 @pytest.mark.usefixtures("test_entity")
 @pytest.mark.parametrize(
     "command",
@@ -305,3 +286,51 @@ async def test_websocket_requires_read_permission(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "unauthorized"
+
+
+async def test_websocket_subscribe_survives_config_entry_reload(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a subscription rebinds to the entity object a reload replaces.
+
+    The reload leaves the registry entry alone, so without rebinding the
+    connection stays attached to the discarded object and goes silent.
+    """
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Build a fresh entity per setup, as a real integration does."""
+        entity = MockTimerListEntity()
+        entity._attr_unique_id = "reloaded"
+        async_add_entities([entity])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "timer_list/item/subscribe", "entity_id": TEST_ENTITY_ID}
+    )
+    assert (await client.receive_json())["success"]
+    assert (await client.receive_json())["event"]["type"] == "timers"
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    timer_id = await _create_timer(hass, name="Pasta")
+
+    # Bounded: a subscription left on the old object never sends anything.
+    async with asyncio.timeout(5):
+        msg = await client.receive_json()
+    assert msg["event"]["event_type"] == "created"
+    assert msg["event"]["timer"]["timer_id"] == timer_id
