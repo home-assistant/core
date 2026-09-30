@@ -1,6 +1,5 @@
 """Provide functionality to keep track of devices."""
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, final, override
 
@@ -38,7 +37,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
@@ -114,10 +112,12 @@ def _async_register_mac(
             return
 
         dev_reg = dr.async_get(hass)
-        device_entry = dev_reg.async_get(ev.data["device_id"])
+        device_entry = dev_reg.async_get(
+            ev.data["device_id"], include_child_devices=False
+        )
 
         if device_entry is None:
-            # This should not happen, since the device was just created.
+            # A child device resolves to None here; it has no MAC to match.
             return
 
         # Check if device has a mac
@@ -655,26 +655,24 @@ class ScannerEntity(
             or self._async_mac_address_registered()
         )
 
-    @callback
     @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
+
+        Registers the MAC address before the entity is added so a tracker that is
+        created disabled can still be enabled later when its device becomes known.
+        """
+        await super().async_prepare_to_add_to_hass()
         if self.mac_address and self.unique_id:
             _async_register_mac(
-                hass,
-                platform.platform_name,
+                self.hass,
+                self.platform.platform_name,
                 self.mac_address,
                 self.unique_id,
             )
             if self.is_connected and self.ip_address:
                 _async_connected_device_registered(
-                    hass,
+                    self.hass,
                     self.mac_address,
                     self.ip_address,
                     self.hostname,
@@ -716,7 +714,7 @@ class ScannerEntity(
             config_entry_id=self.platform.config_entry.entry_id,
             config_subentry_id=self.registry_entry.config_subentry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            default_name=self.hostname or self.mac_address,
+            name=self.hostname or self.mac_address,
         )
 
         # Link the entity's registry entry to the device

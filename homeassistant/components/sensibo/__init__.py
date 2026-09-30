@@ -11,7 +11,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS
@@ -88,7 +88,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: SensiboConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: SensiboConfigEntry, device: AnyDeviceEntry
 ) -> bool:
     """Remove Sensibo config entry from a device."""
     entity_registry = er.async_get(hass)

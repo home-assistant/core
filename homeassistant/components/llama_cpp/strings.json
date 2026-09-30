@@ -37,8 +37,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",
-        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-        "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
       },
       "entry_type": "Conversation agent",
       "initiate_flow": {

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
 
-from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
@@ -169,6 +169,8 @@ class RestoreStateData:
         This includes the states of all registered entities, as well as the
         stored states from the previous run, which have not been created as
         entities on this run, and have not expired.
+
+        Stored states that will not be saved are dropped from memory too.
         """
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
@@ -176,7 +178,7 @@ class RestoreStateData:
         current_states_by_entity_id = {
             state.entity_id: state
             for state in all_states
-            if not state.attributes.get(ATTR_RESTORED)
+            if not state.attributes.get(EntityStateAttribute.RESTORED)
         }
 
         # Start with the currently registered states
@@ -199,6 +201,7 @@ class RestoreStateData:
                 )
             )
         expiration_time = now - STATE_EXPIRATION
+        last_states: dict[str, StoredState] = {}
 
         for entity_id, stored_state in self.last_states.items():
             # Don't save old states that have entities in the current run
@@ -212,6 +215,9 @@ class RestoreStateData:
                 continue
 
             stored_states.append(stored_state)
+            last_states[entity_id] = stored_state
+
+        self.last_states = last_states
 
         return stored_states
 

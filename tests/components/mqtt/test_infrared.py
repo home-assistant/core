@@ -392,14 +392,14 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "command_topic": "test-topic",
             },
-            "Error 'not a valid value for dictionary value @ data['schema']'",
+            "Error 'expected 'emitter' or 'receiver' at 'schema''",
         ),
         (
             {
                 "schema": "emitter",
                 "name": "test",
             },
-            "Error 'required key not provided @ data['command_topic']'",
+            "Error 'required key not provided at 'command_topic''",
         ),
         (
             {
@@ -407,14 +407,14 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "state_topic": "test-topic",
             },
-            "Error 'not a valid value for dictionary value @ data['schema']'",
+            "Error 'expected 'emitter' or 'receiver' at 'schema''",
         ),
         (
             {
                 "schema": "receiver",
                 "name": "test",
             },
-            "Error 'required key not provided @ data['state_topic']'",
+            "Error 'required key not provided at 'state_topic''",
         ),
     ],
 )

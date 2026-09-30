@@ -10,6 +10,7 @@ LOGGER = logging.getLogger(__package__)
 
 ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
+ATTR_MEALPLAN_ID = "mealplan_id"
 ATTR_RECIPE_ID = "recipe_id"
 ATTR_URL = "url"
 ATTR_INCLUDE_TAGS = "include_tags"
@@ -19,4 +20,4 @@ ATTR_NOTE_TEXT = "note_text"
 ATTR_SEARCH_TERMS = "search_terms"
 ATTR_RESULT_LIMIT = "result_limit"
 
-MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v2.0.0")
+MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v3.2.0")

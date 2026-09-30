@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 import bthomehub5_devicelist
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_IP = "192.168.1.254"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
+    {probatio.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
 )
 
 

@@ -1,6 +1,5 @@
 """Tests for the Google Drive sensor platform."""
 
-import json
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -123,15 +122,7 @@ async def test_calculate_backups_size(
     assert state.state == "0.0"
 
     mock_api.list_files = AsyncMock(
-        return_value={
-            "files": [
-                {
-                    "id": "HA folder ID",
-                    "name": "HA folder name",
-                    "description": json.dumps(mock_agent_backup.as_dict()),
-                }
-            ]
-        }
+        return_value={"files": [{"size": str(int(mock_agent_backup.size))}]}
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -141,3 +132,26 @@ async def test_calculate_backups_size(
         state := hass.states.get("sensor.testuser_domain_com_total_size_of_backups")
     )
     assert state.state == "100.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calculate_backups_size_ignores_files_without_size(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a file Google Drive reports no size for is skipped."""
+    await setup_integration(hass, config_entry)
+
+    mock_api.list_files = AsyncMock(
+        return_value={"files": [{"size": "1048576"}, {"id": "no size reported"}]}
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        state := hass.states.get("sensor.testuser_domain_com_total_size_of_backups")
+    )
+    assert state.state == "1.0"

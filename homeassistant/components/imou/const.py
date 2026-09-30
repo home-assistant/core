@@ -35,6 +35,9 @@ PARAM_AUDIO_ENCODE_CONTROL = "audio_encode_control"
 PARAM_LIGHT = "light"
 PARAM_PLUG_SWITCH = "switch"
 
+# Binary sensor keys not yet exported by pyimouapi (keep integration-local).
+PARAM_DOOR_CONTACT_STATUS = "door_contact_status"
+
 # How long each PTZ button press moves the camera, in milliseconds (Imou cloud API).
 PTZ_MOVE_DURATION_MS = 500
 
@@ -42,6 +45,7 @@ PTZ_MOVE_DURATION_MS = 500
 UPDATE_TIMEOUT = 300
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.SELECT,

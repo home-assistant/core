@@ -1,7 +1,7 @@
 """Tests for the WiiM config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from wiim.models import WiimProbeResult
@@ -10,9 +10,7 @@ from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
@@ -28,15 +26,6 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
     properties={"uuid": "uuid:test-udn-1234"},
     type="_linkplay._tcp.local.",
 )
-
-
-@pytest.fixture(autouse=True)
-async def setup_internal_url(hass: HomeAssistant) -> None:
-    """Make sure internal url configured."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://192.168.1.10:8123"},
-    )
 
 
 @pytest.mark.usefixtures("mock_probe_player")
@@ -58,24 +47,6 @@ async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     assert result["title"] == "WiiM Pro"
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
     assert result["result"].unique_id == "uuid:test-udn-1234"
-
-
-async def test_user_flow_abort_when_homeassistant_url_missing(
-    hass: HomeAssistant,
-    mock_probe_player: AsyncMock,
-) -> None:
-    """Test the user flow aborts before probing when no URL is available."""
-    with patch(
-        "homeassistant.components.wiim.util.get_url",
-        side_effect=NoURLAvailableError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_homeassistant_url"
-    mock_probe_player.assert_not_called()
 
 
 async def test_user_flow_cannot_connect(

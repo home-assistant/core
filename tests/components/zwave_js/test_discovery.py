@@ -139,6 +139,17 @@ async def test_inovelli_lzw36(
     assert state
 
 
+async def test_leviton_vrf01(
+    hass: HomeAssistant, client, leviton_vrf01, integration
+) -> None:
+    """Test Leviton VRF01 multilevel switch is discovered as a fan, not a light."""
+    node = leviton_vrf01
+    assert node.device_class.specific.label == "Multilevel Scene Switch"
+
+    assert hass.states.get("fan.fan")
+    assert not hass.states.get("light.fan")
+
+
 async def test_vision_security_zl7432(
     hass: HomeAssistant, client, vision_security_zl7432, integration
 ) -> None:

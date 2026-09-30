@@ -10,6 +10,7 @@ import wave
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.error import Error
+from wyoming.info import TtsProgram
 from wyoming.tts import (
     Synthesize,
     SynthesizeChunk,
@@ -25,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_SPEAKER
+from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
 from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
@@ -41,7 +43,7 @@ async def async_setup_entry(
     item = config_entry.runtime_data
     async_add_entities(
         [
-            WyomingTtsProvider(config_entry, item.service),
+            WyomingTtsProvider(config_entry, item.coordinator, item.service),
         ]
     )
 
@@ -55,22 +57,55 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     def __init__(
         self,
         config_entry: WyomingConfigEntry,
+        coordinator: WyomingInfoCoordinator,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
         self.config_entry = config_entry
+        self.coordinator = coordinator
         self.service = service
-        self._tts_service = next(tts for tts in service.info.tts if tts.installed)
 
+        # The platform is only set up when an installed TTS service exists.
+        self._tts_service = next(tts for tts in service.info.tts if tts.installed)
+        self._voices: dict[str, list[tts.Voice]] = {}
+        self._rebuild_voices(self._tts_service)
+
+        self._attr_name = self._tts_service.name
+        self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to info updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._handle_info_update)
+        )
+
+    @callback
+    def _handle_info_update(self) -> None:
+        """Rebuild the voice list when the service reports new info."""
+        tts_service = next(
+            (tts for tts in self.coordinator.data.tts if tts.installed), None
+        )
+        if tts_service is None:
+            # Keep the last known voices if the service reports none.
+            return
+
+        self._tts_service = tts_service
+        self._rebuild_voices(tts_service)
+
+    @callback
+    def _rebuild_voices(self, tts_service: TtsProgram) -> None:
+        """Collect the installed voices, grouped by language."""
         voice_languages: set[str] = set()
-        self._voices: dict[str, list[tts.Voice]] = defaultdict(list)
-        for voice in self._tts_service.voices:
+        voices: dict[str, list[tts.Voice]] = defaultdict(list)
+        for voice in tts_service.voices:
             if not voice.installed:
                 continue
 
             voice_languages.update(voice.languages)
             for language in voice.languages:
-                self._voices[language].append(
+                voices[language].append(
                     tts.Voice(
                         voice_id=voice.name,
                         name=voice.description or voice.name,
@@ -78,17 +113,17 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
                 )
 
         # Sort voices by name
-        for language in self._voices:
-            self._voices[language] = sorted(
-                self._voices[language], key=lambda v: v.name
-            )
+        for language_voices in voices.values():
+            language_voices.sort(key=lambda v: v.name)
 
-        self._attr_supported_languages = list(voice_languages)
-        if self._attr_supported_languages:
+        self._voices = voices
+        self._attr_supported_languages = sorted(voice_languages)
+
+        # Only move the default when the current one is gone so that installing
+        # an unrelated voice cannot change it.
+        current_default = getattr(self, "_attr_default_language", None)
+        if voice_languages and current_default not in voice_languages:
             self._attr_default_language = self._attr_supported_languages[0]
-
-        self._attr_name = self._tts_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @callback
     @override

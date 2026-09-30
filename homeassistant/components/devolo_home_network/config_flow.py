@@ -6,7 +6,7 @@ from typing import Any, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound, DevicePasswordProtected
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,10 +20,10 @@ from .coordinator import DevoloHomeNetworkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD): str}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_IP_ADDRESS): str, probatio.Optional(CONF_PASSWORD): str}
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Optional(CONF_PASSWORD): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
@@ -119,7 +119,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         title = self.context["title_placeholders"][CONF_NAME]
         errors: dict = {}
-        data_schema: vol.Schema | None = None
+        data_schema: probatio.Schema | None = None
 
         if user_input is not None:
             data = {

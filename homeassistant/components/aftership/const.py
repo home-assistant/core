@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import config_validation as cv
 
@@ -26,14 +26,17 @@ MIN_TIME_BETWEEN_UPDATES: Final = timedelta(minutes=15)
 SERVICE_ADD_TRACKING: Final = "add_tracking"
 SERVICE_REMOVE_TRACKING: Final = "remove_tracking"
 
-ADD_TRACKING_SERVICE_SCHEMA: Final = vol.Schema(
+ADD_TRACKING_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_TRACKING_NUMBER): cv.string,
-        vol.Optional(CONF_TITLE): cv.string,
-        vol.Optional(CONF_SLUG): cv.string,
+        probatio.Required(CONF_TRACKING_NUMBER): cv.string,
+        probatio.Optional(CONF_TITLE): cv.string,
+        probatio.Optional(CONF_SLUG): cv.string,
     }
 )
 
-REMOVE_TRACKING_SERVICE_SCHEMA: Final = vol.Schema(
-    {vol.Required(CONF_SLUG): cv.string, vol.Required(CONF_TRACKING_NUMBER): cv.string}
+REMOVE_TRACKING_SERVICE_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required(CONF_SLUG): cv.string,
+        probatio.Required(CONF_TRACKING_NUMBER): cv.string,
+    }
 )

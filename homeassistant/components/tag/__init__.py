@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, final, override
 import uuid
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID, CONF_NAME
@@ -36,18 +36,18 @@ STORAGE_VERSION_MINOR = 3
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 
 CREATE_FIELDS: VolDictType = {
-    vol.Optional(TAG_ID): cv.string,
-    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional("description"): cv.string,
-    vol.Optional(LAST_SCANNED): cv.datetime,
-    vol.Optional(DEVICE_ID): cv.string,
+    probatio.Optional(TAG_ID): cv.string,
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional("description"): cv.string,
+    probatio.Optional(LAST_SCANNED): cv.datetime,
+    probatio.Optional(DEVICE_ID): cv.string,
 }
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional("description"): cv.string,
-    vol.Optional(LAST_SCANNED): cv.datetime,
-    vol.Optional(DEVICE_ID): cv.string,
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional("description"): cv.string,
+    probatio.Optional(LAST_SCANNED): cv.datetime,
+    probatio.Optional(DEVICE_ID): cv.string,
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -124,8 +124,8 @@ class TagStore(Store[collection.SerializedStorageCollection]):
 class TagStorageCollection(collection.DictStorageCollection):
     """Tag collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     def __init__(
         self,

@@ -1,6 +1,8 @@
 """Test the Fully Kiosk Browser switches."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.fully_kiosk.const import DOMAIN
@@ -139,6 +141,21 @@ async def test_switches_mqtt_update(
     )
     entity = hass.states.get("switch.amazon_fire_screen")
     assert entity.state == "on"
+
+
+@pytest.mark.usefixtures("mock_fully_kiosk")
+async def test_switches_mqtt_config_entry_not_enabled(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test no MQTT subscriptions are made without an enabled MQTT config entry."""
+    hass.config.components.add("mqtt")
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.mqtt.async_subscribe") as mock_subscribe:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_subscribe.assert_not_called()
+    assert hass.states.get("switch.amazon_fire_screensaver")
 
 
 def has_subscribed(mqtt_mock: MqttMockHAClient, topic: str) -> bool:

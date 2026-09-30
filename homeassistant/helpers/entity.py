@@ -26,8 +26,8 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -57,7 +57,7 @@ from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
+from .device_registry import ChildDeviceInfo, DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -209,7 +209,7 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     return entry.unit_of_measurement
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
+ENTITY_CATEGORIES_SCHEMA: Final = probatio.Coerce(EntityCategory)
 
 
 class EntityInfo(TypedDict):
@@ -278,6 +278,58 @@ class CalculatedState:
     attributes: dict[str, Any]
 
 
+def _attr_deleter(name: str) -> Callable[[Any], None]:
+    """Create a deleter for an _attr_ property."""
+    private_attr_name = f"__attr_{name}"
+
+    def _deleter(o: Any) -> None:
+        """Delete an _attr_ property.
+
+        Does two things:
+        - Delete the __attr_ attribute
+        - Invalidate the cache of the cached property
+
+        Raises AttributeError if the __attr_ attribute does not exist
+        """
+        # Invalidate the cache of the cached property
+        o.__dict__.pop(name, None)
+        # Delete the __attr_ attribute
+        delattr(o, private_attr_name)
+
+    return _deleter
+
+
+def _attr_setter(name: str) -> Callable[[Any, Any], None]:
+    """Create a setter for an _attr_ property."""
+    private_attr_name = f"__attr_{name}"
+
+    def _setter(o: Any, val: Any) -> None:
+        """Set an _attr_ property to the backing __attr attribute.
+
+        Also invalidates the corresponding cached_property by calling
+        delattr on it.
+        """
+        if (old_val := getattr(o, private_attr_name, _SENTINEL)) == val and type(
+            old_val
+        ) is type(val):
+            return
+        setattr(o, private_attr_name, val)
+        # Invalidate the cache of the cached property
+        o.__dict__.pop(name, None)
+
+    return _setter
+
+
+@ft.cache
+def _make_attr_property(name: str) -> property:
+    """Create an _attr_ property, shared by all classes wrapping the same name."""
+    return property(
+        fget=attrgetter(f"__attr_{name}"),
+        fset=_attr_setter(name),
+        fdel=_attr_deleter(name),
+    )
+
+
 class CachedProperties(type):
     """Metaclass which invalidates cached entity properties on write to _attr_.
 
@@ -320,52 +372,6 @@ class CachedProperties(type):
         Wrap _attr_ for cached properties in property objects.
         """
 
-        def deleter(name: str) -> Callable[[Any], None]:
-            """Create a deleter for an _attr_ property."""
-            private_attr_name = f"__attr_{name}"
-
-            def _deleter(o: Any) -> None:
-                """Delete an _attr_ property.
-
-                Does two things:
-                - Delete the __attr_ attribute
-                - Invalidate the cache of the cached property
-
-                Raises AttributeError if the __attr_ attribute does not exist
-                """
-                # Invalidate the cache of the cached property
-                o.__dict__.pop(name, None)
-                # Delete the __attr_ attribute
-                delattr(o, private_attr_name)
-
-            return _deleter
-
-        def setter(name: str) -> Callable[[Any, Any], None]:
-            """Create a setter for an _attr_ property."""
-            private_attr_name = f"__attr_{name}"
-
-            def _setter(o: Any, val: Any) -> None:
-                """Set an _attr_ property to the backing __attr attribute.
-
-                Also invalidates the corresponding cached_property by calling
-                delattr on it.
-                """
-                if (
-                    old_val := getattr(o, private_attr_name, _SENTINEL)
-                ) == val and type(old_val) is type(val):
-                    return
-                setattr(o, private_attr_name, val)
-                # Invalidate the cache of the cached property
-                o.__dict__.pop(name, None)
-
-            return _setter
-
-        def make_property(name: str) -> property:
-            """Help create a property object."""
-            return property(
-                fget=attrgetter(f"__attr_{name}"), fset=setter(name), fdel=deleter(name)
-            )
-
         def wrap_attr(cls: CachedProperties, property_name: str) -> None:
             """Wrap a cached property's corresponding _attr in a property.
 
@@ -398,7 +404,7 @@ class CachedProperties(type):
                         cls.__annotate__ = wrapped_annotate
 
             # Create the _attr_ property
-            setattr(cls, attr_name, make_property(property_name))
+            setattr(cls, attr_name, _make_attr_property(property_name))
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
         seen_props: set[str] = set()  # Keep track of properties which have been handled
@@ -529,7 +535,7 @@ class Entity(
     _removed_from_registry: bool = False
 
     # The device entry for this entity
-    device_entry: dr.DeviceEntry | None = None
+    device_entry: dr.AnyDeviceEntry | None = None
 
     # Cached friendly name as (original_name, computed_friendly_name)
     # Invalidated on relevant registry changes
@@ -575,7 +581,7 @@ class Entity(
     _attr_available: bool = True
     _attr_capability_attributes: dict[str, Any] | None = None
     _attr_device_class: str | None
-    _attr_device_info: DeviceInfo | None = None
+    _attr_device_info: DeviceInfo | ChildDeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
     _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
@@ -828,7 +834,7 @@ class Entity(
         return None
 
     @cached_property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -1158,7 +1164,7 @@ class Entity(
             if entry is None:
                 name = original_name
             else:
-                name = er.async_get_full_entity_name(
+                name = er.async_get_legacy_friendly_name(
                     self.hass, entry, original_name=original_name
                 )
             self._cached_friendly_name = (original_name, name)
@@ -1466,7 +1472,7 @@ class Entity(
         except BaseException as ex:
             self.__remove_future.set_exception(ex)
             raise
-        finally:
+        else:
             self.__remove_future.set_result(None)
 
     @final
@@ -1497,19 +1503,48 @@ class Entity(
             #
             and not self._removed_from_registry
         ):
-            # Set the entity's state will to unavailable + ATTR_RESTORED: True
+            # Set the entity's state will to unavailable and
+            # EntityStateAttribute.RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)
 
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
+
+        Called on every add attempt, before the platform processes the entity
+        registry and before its state is written, including for adds which
+        will be aborted, e.g. because the entity is disabled. Adding may not
+        complete; register cleanup with async_on_remove.
+
+        To be extended by integrations.
+        """
+
     async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass.
+        """Run when the entity has been added to hass.
+
+        Called as the last step of a successful add: after the entity has its
+        entity_id (and its registry entry, if it has a unique_id) and immediately
+        before its state is written for the first time. Use it to subscribe to
+        events, register update listeners and fetch initial data.
+
+        Not called when adding the entity is aborted, e.g. because the entity is
+        disabled or its entity_id or unique_id collides with an existing entity.
 
         To be extended by integrations.
         """
 
     async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass.
+        """Run when the entity is about to be removed from hass.
+
+        The counterpart to async_added_to_hass: called when the entity is removed
+        for an entity that was successfully added. Use it to undo work done in
+        async_added_to_hass, e.g. unsubscribe from events or release resources.
+
+        Not called when adding the entity is aborted before it finished being
+        added; on that path only the callbacks registered with async_on_remove
+        run. Register cleanup for anything set up before the add completed with
+        async_on_remove so it runs on both an aborted add and a normal removal.
 
         To be extended by integrations.
         """
