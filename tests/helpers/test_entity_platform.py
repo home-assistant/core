@@ -169,6 +169,59 @@ async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> N
     assert len(update_err) == 1
 
 
+async def test_overlapping_update_cycles_never_double_update_an_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test overlapping polling cycles never run the same entity's update twice.
+
+    The polling timer reschedules itself unconditionally every scan
+    interval, so if one cycle is still running when the next one is due
+    (e.g. a platform whose entities collectively take longer than
+    scan_interval to poll, without any single entity actually hanging),
+    two calls to _async_update_entity_states can genuinely run
+    concurrently. This must never result in the same entity's own update
+    code running twice at once: Entity.async_device_update's
+    `_update_staged` guard makes a second concurrent call for the same
+    entity a no-op, and this cycle only tracks the resulting task so a
+    later cycle can tell it is still busy.
+    """
+    scan_interval = timedelta(seconds=1)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+    update_started = asyncio.Event()
+    update_release = asyncio.Event()
+    concurrent_updates = {"n": 0, "max": 0}
+
+    slow = MockEntity(should_poll=True)
+
+    async def _slow_update() -> None:
+        concurrent_updates["n"] += 1
+        concurrent_updates["max"] = max(
+            concurrent_updates["max"], concurrent_updates["n"]
+        )
+        update_started.set()
+        await update_release.wait()
+        concurrent_updates["n"] -= 1
+
+    slow.async_update = _slow_update
+
+    await component.async_add_entities([slow])
+
+    # Start a cycle and let it begin the entity's update, then start a
+    # second, overlapping cycle before the first has returned.
+    cycle1 = asyncio.ensure_future(platform._async_update_entity_states())
+    await update_started.wait()
+    cycle2 = asyncio.ensure_future(platform._async_update_entity_states())
+    await asyncio.sleep(0)
+
+    update_release.set()
+    await asyncio.gather(cycle1, cycle2)
+
+    assert concurrent_updates["max"] == 1
+
+
 async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     """Test polling continues when a single entity update hangs."""
     scan_interval = timedelta(seconds=1)
@@ -259,6 +312,10 @@ async def test_stale_poll_reset_keeps_original_semaphore_for_inflight_updates(
     blocked_update_release.set()
     await hass.async_block_till_done()
 
+    # The hung entity releases the *original* semaphore it acquired, which
+    # must return to exactly its configured limit (never exceed it).
+    assert original_semaphore._value == 1
+
 
 async def test_polling_continues_when_update_hangs_with_parallel_updates(
     hass: HomeAssistant,
@@ -277,13 +334,18 @@ async def test_polling_continues_when_update_hangs_with_parallel_updates(
     platform_handle = list(component._platforms.values())[-1]
     blocked_update_started = asyncio.Event()
     blocked_update_release = asyncio.Event()
+    blocked_update_cancelled = asyncio.Event()
 
     blocked = MockEntity(should_poll=True)
 
     async def _blocked_update() -> None:
         """Block forever until released."""
         blocked_update_started.set()
-        await blocked_update_release.wait()
+        try:
+            await blocked_update_release.wait()
+        except asyncio.CancelledError:
+            blocked_update_cancelled.set()
+            raise
 
     blocked.async_update = _blocked_update
 
@@ -296,17 +358,35 @@ async def test_polling_continues_when_update_hangs_with_parallel_updates(
     await blocked_update_started.wait()
     await asyncio.sleep(0)
     assert healthy.async_update.call_count == 0
+    original_semaphore = blocked.parallel_updates
+    assert original_semaphore is not None
+    assert original_semaphore._value == 0
 
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
     await asyncio.sleep(0)
     assert healthy.async_update.call_count == 1
+    # The hung entity's own update must never be force-cancelled: a
+    # synchronous `update()` couldn't be interrupted anyway, and cancelling
+    # it here would just make it look "idle" again and get retried (and
+    # re-hang) on the very next cycle instead of being permanently skipped.
+    assert not blocked_update_cancelled.is_set()
+    # blocked keeps holding the permit on its original semaphore throughout.
+    assert blocked.parallel_updates is original_semaphore
 
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 3)
     await asyncio.sleep(0)
     assert healthy.async_update.call_count == 2
+    assert not blocked_update_cancelled.is_set()
+    assert blocked.parallel_updates is original_semaphore
 
     blocked_update_release.set()
     await hass.async_block_till_done()
+
+    # Once the hung update finally finishes on its own, it must release the
+    # *original* semaphore it acquired, not the replacement handed to the
+    # healthy entities, or the platform's concurrency limit would be
+    # silently raised above PARALLEL_UPDATES.
+    assert original_semaphore._value == 1
 
 
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
