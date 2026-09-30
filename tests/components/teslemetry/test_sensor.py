@@ -572,15 +572,52 @@ async def test_sensors_streaming_dc_charging_ended(
                 {Signal.DC_CHARGING_POWER: 150},
                 {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateComplete"},
             ],
-            "0.0",
+            "0",
             id="charging_ended_without_ac",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0.6,
+                    Signal.DC_CHARGING_POWER: 0,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+            ],
+            "0",
+            id="ac_charging_ended",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0.6,
+                    Signal.DC_CHARGING_POWER: 0,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.DC_CHARGING_POWER: 150,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateComplete"},
+            ],
+            "0",
+            id="dc_charging_ended_after_ac_session",
+        ),
+        pytest.param(
+            [
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.AC_CHARGING_POWER: 0.6},
+            ],
+            "0",
+            id="late_ac_power_while_not_charging",
         ),
     ],
 )
 async def test_sensors_streaming_charger_power_sequence(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
-    messages: list[dict[Signal, str | int]],
+    messages: list[dict[Signal, str | float]],
     expected_state: str,
 ) -> None:
     """Test charger power once each streamed message has been processed."""

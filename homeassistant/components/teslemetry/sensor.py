@@ -207,25 +207,23 @@ def _listen_charger_power(
     charging = True
 
     def _update(key: str, value: float | None) -> None:
-        power[key] = value
+        # Power is not reliably reset when a charging session ends
+        power[key] = value if charging or value is None else 0
         dc = power["dc"]
         callback(dc or (power["ac"] if power["ac"] is not None else dc))
-
-    def _update_dc(value: float | None) -> None:
-        # DC power is not reliably reset when a DC session ends
-        _update("dc", value if charging or value is None else 0.0)
 
     def _update_charging(state: str | None) -> None:
         nonlocal charging
         charging = state in {"Starting", "Charging"}
-        if not charging and power["dc"]:
-            _update("dc", 0.0)
+        if not charging and (power["ac"] or power["dc"]):
+            power["ac"] = power["dc"] = 0
+            callback(0)
 
     # Listeners run in registration order, so the charge state is registered
-    # first to gate DC power sent in the same message
+    # first to gate power sent in the same message
     unsub_state = vehicle.listen_DetailedChargeState(_update_charging)
     unsub_ac = vehicle.listen_ACChargingPower(lambda value: _update("ac", value))
-    unsub_dc = vehicle.listen_DCChargingPower(_update_dc)
+    unsub_dc = vehicle.listen_DCChargingPower(lambda value: _update("dc", value))
 
     def _unsubscribe() -> None:
         unsub_ac()
