@@ -2,19 +2,19 @@
   "config": {
     "abort": {
       "activation_failed": "GitHub did not complete the connection. Try connecting again.",
-      "could_not_register": "Could not register the device with GitHub.",
+      "could_not_register": "Could not connect to GitHub. Try again later.",
       "single_instance_allowed": "Only a single configuration of the Marketplace is allowed."
     },
     "progress": {
-      "wait_for_device": "1. Open {url} \n2. Paste the following key to authorize the Marketplace: \n```\n{code}\n```"
+      "wait_for_device": "1. Open {url}\n2. Enter this code to connect the Marketplace to your GitHub account:\n```\n{code}\n```\nThis continues on its own once GitHub confirms the connection."
     },
     "step": {
       "device": {
-        "title": "Waiting for device activation"
+        "title": "Connect GitHub"
       },
       "reauth_confirm": {
-        "description": "You need to reauthenticate with GitHub.",
-        "title": "Reauthentication needed"
+        "description": "The GitHub connection of the Marketplace no longer works. Connect GitHub again to keep using it.",
+        "title": "Reconnect GitHub"
       }
     }
   },
@@ -94,7 +94,7 @@
       "message": "{repository} is already in the Marketplace."
     },
     "repository_in_use": {
-      "message": "{repository} is still set up. Delete it under Settings > Devices & services before uninstalling it."
+      "message": "{repository} is still set up, and without its files that setup would fail to load. Delete it under Settings > Devices & services before uninstalling it."
     },
     "repository_installed": {
       "message": "Uninstall {repository} first."
