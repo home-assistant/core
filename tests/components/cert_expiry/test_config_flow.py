@@ -76,8 +76,9 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST, CONF_PORT: PORT}
+        result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
