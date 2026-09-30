@@ -102,7 +102,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.62.1
+PyViCare==2.63.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -470,6 +470,9 @@ aiounifi==96
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
 
+# homeassistant.components.vitesy
+aiovitesy==1.1.0
+
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
 
@@ -718,7 +721,7 @@ bluetooth-data-tools==1.29.24
 bond-async==0.2.1
 
 # homeassistant.components.bosch_alarm
-bosch-alarm-mode2==0.4.10
+bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.13
@@ -2192,7 +2195,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.2.4
+pyeconet==0.3.1
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0
@@ -3224,7 +3227,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.0
+tesla-fleet-api==1.17.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3323,7 +3326,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==17.5.0
+uiprotect==17.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3532,10 +3535,10 @@ zeroconf==0.151.5
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.2.2
+zha-quirks==2.3.0
 
 # homeassistant.components.zha
-zha==2.2.2
+zha==2.3.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21
