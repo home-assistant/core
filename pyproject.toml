@@ -67,7 +67,7 @@ dependencies = [
   "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "python-slugify==9.1.0",
+  "python-slugify==9.1.2",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
@@ -77,11 +77,11 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.17",
-  "probatio==0.12.1",
+  "uv==0.12.20",
+  "probatio==0.12.4",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
-  "zeroconf==0.151.3",
+  "zeroconf==0.151.5",
 ]
 
 [project.urls]
@@ -645,7 +645,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.8"
+required-version = ">=0.16.9"
 
 [tool.ruff.lint]
 select = [
@@ -860,6 +860,8 @@ mark-parentheses = false
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
 "voluptuous".msg = "use probatio instead"
+"homeassistant.helpers.config_validation.ensure_list".msg = "use probatio.EnsureList() instead"
+"homeassistant.helpers.config_validation.port".msg = "use probatio.Port() instead"
 "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]

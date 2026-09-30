@@ -857,9 +857,6 @@
       "drive_state_speed": {
         "name": "Speed"
       },
-      "energy_left": {
-        "name": "Energy left"
-      },
       "energy_remaining": {
         "name": "Energy remaining"
       },
@@ -1130,9 +1127,6 @@
       "total_home_usage": {
         "name": "Home usage"
       },
-      "total_pack_energy": {
-        "name": "Total pack energy"
-      },
       "total_solar_generation": {
         "name": "Solar generated"
       },
@@ -1231,6 +1225,9 @@
     },
     "auth_failed_subscription_required": {
       "message": "Teslemetry subscription required"
+    },
+    "command_connection_error": {
+      "message": "Unable to connect to Teslemetry"
     },
     "command_error": {
       "message": "Command returned error: {error}"

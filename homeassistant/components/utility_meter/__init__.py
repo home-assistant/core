@@ -100,7 +100,7 @@ METER_CONFIG_SCHEMA = probatio.Schema(
                 CONF_METER_PERIODICALLY_RESETTING, default=True
             ): cv.boolean,
             probatio.Optional(CONF_TARIFFS, default=[]): probatio.All(
-                cv.ensure_list, probatio.Unique(), [cv.string]
+                probatio.EnsureList(), probatio.Unique(), [cv.string]
             ),
             probatio.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
             probatio.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,

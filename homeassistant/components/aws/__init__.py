@@ -85,9 +85,9 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Optional(
                     CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL
-                ): probatio.All(cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]),
+                ): probatio.All(probatio.EnsureList(), [AWS_CREDENTIAL_SCHEMA]),
                 probatio.Optional(CONF_NOTIFY, default=[]): probatio.All(
-                    cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
+                    probatio.EnsureList(), [NOTIFY_PLATFORM_SCHEMA]
                 ),
             }
         )

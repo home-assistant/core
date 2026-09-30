@@ -8,10 +8,9 @@ from typing import Any, final, override
 import probatio
 from propcache.api import cached_property
 
-from homeassistant.components import persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -19,7 +18,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_DATA,
@@ -27,6 +25,7 @@ from .const import (  # noqa: F401
     ATTR_RECIPIENTS,
     ATTR_TARGET,
     ATTR_TITLE,
+    DATA_COMPONENT,
     DOMAIN,
     NOTIFY_SERVICE_SCHEMA,
     SERVICE_NOTIFY,
@@ -41,13 +40,13 @@ from .legacy import (  # noqa: F401
     async_setup_legacy,
 )
 from .repairs import migrate_notify_issue  # noqa: F401
+from .services import async_setup_services
 
 # mypy: disallow-any-generics
 
 # Platform specific data
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
-DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -80,35 +79,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DATA_COMPONENT in hass.data:
         return True
 
-    component = hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](
-        _LOGGER, DOMAIN, hass
-    )
-    component.async_register_entity_service(
-        SERVICE_SEND_MESSAGE,
-        {
-            probatio.Required(ATTR_MESSAGE): cv.string,
-            probatio.Optional(ATTR_TITLE): cv.string,
-        },
-        "_async_send_message",
-    )
-
-    async def persistent_notification(service: ServiceCall) -> None:
-        """Send notification via the built-in persistent_notify integration."""
-        message: str = service.data[ATTR_MESSAGE]
-        title: str | None = service.data.get(ATTR_TITLE)
-
-        notification_id = None
-        if data := service.data.get(ATTR_DATA):
-            notification_id = data.get(pn.ATTR_NOTIFICATION_ID)
-
-        pn.async_create(hass, message, title, notification_id)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PERSISTENT_NOTIFICATION,
-        persistent_notification,
-        schema=NOTIFY_SERVICE_SCHEMA,
-    )
+    hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
+    async_setup_services(hass)
 
     return True
 

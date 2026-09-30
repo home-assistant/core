@@ -43,6 +43,43 @@
     }
   },
   "entity": {
+    "event": {
+      "smoke_detector_alarm": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "idle_off": "Idle",
+              "intrusion_alarm": "Intrusion alarm",
+              "intrusion_alarm_off_requested": "Intrusion alarm off requested",
+              "intrusion_alarm_on_requested": "Intrusion alarm on requested",
+              "primary_alarm": "Primary alarm",
+              "secondary_alarm": "Secondary alarm"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "bypass_timeout": {
+        "name": "Break function timeout"
+      },
+      "energy_saving_power_threshold": {
+        "name": "Energy-saving power threshold"
+      },
+      "impulse_length": {
+        "name": "Pulse length"
+      }
+    },
+    "select": {
+      "siren_sound_level": {
+        "name": "Siren volume",
+        "state": {
+          "high": "Loud",
+          "low": "Reduced",
+          "medium": "Medium"
+        }
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
@@ -97,6 +134,15 @@
       },
       "bypass_infinite": {
         "name": "Break function never expires"
+      },
+      "camera_ambientlight": {
+        "name": "Ambient light"
+      },
+      "camera_frontlight": {
+        "name": "Front light"
+      },
+      "camera_light": {
+        "name": "Camera light"
       },
       "child_lock": {
         "name": "Child lock"

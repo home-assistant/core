@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -109,6 +110,20 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             return RESULT_NO_DEVICES_FOUND
         return RESULT_SUCCESS
 
+    async def async_has_smarthome_capabilities(self) -> bool | None:
+        """Test if the device has smarthome capabilities."""
+        return await self.hass.async_add_executor_job(self._has_smarthome_capabilities)
+
+    def _has_smarthome_capabilities(self) -> bool | None:
+        """Test if the device has smarthome capabilities."""
+        fritzbox = Fritzhome(
+            host=self._url,
+            user=None,
+            password=None,
+            ssl_verify=False,
+        )
+        return fritzbox.has_smarthome_capabilities()  # type: ignore[no-any-return]
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -166,7 +181,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured({CONF_HOST: self._url})
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
@@ -174,6 +191,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
+
+        if await self.async_has_smarthome_capabilities() is False:
+            return self.async_abort(reason="not_supported")
 
         self._name = str(discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._url)
 

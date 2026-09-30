@@ -676,6 +676,44 @@ async def test_search_media_results_are_browsable(
         )
 
 
+async def test_search_media_results_can_search(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that only artist, album and playlist results can be searched inside."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    mock = MockSearchResults(
+        ["artist", "album", "track", "playlist", "radio", "podcast", "audiobook"]
+    )
+    for items in (
+        mock.artists,
+        mock.albums,
+        mock.tracks,
+        mock.playlists,
+        mock.radio,
+        mock.podcasts,
+        mock.audiobooks,
+    ):
+        for item in items:
+            # The search inside check needs the real media type.
+            item.media_type = MASSMediaType(item.media_type.value)
+
+    with patch.object(music_assistant_client.music, "search", return_value=mock):
+        search_results = await async_search_media(
+            music_assistant_client, SearchMediaQuery(search_query="test")
+        )
+
+    assert len(search_results.result) == 35
+    assert {
+        item.media_content_id for item in search_results.result if item.can_search
+    } == {
+        f"library://{media_type}/{index}"
+        for media_type in ("artist", "album", "playlist")
+        for index in range(5)
+    }
+
+
 async def test_search_media_websocket_from_library_listing(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,

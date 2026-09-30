@@ -185,7 +185,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     {
                         probatio.Required("id"): str,
                         probatio.Required("sentences"): probatio.All(
-                            cv.ensure_list,
+                            probatio.EnsureList(),
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
