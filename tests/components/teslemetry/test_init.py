@@ -3363,6 +3363,7 @@ async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
     # snapshot from before the refresh.
     await _tick_local_live(hass, freezer, 1)
 
+    assert mock_powerwall_live_status.await_count == 2
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
 
 
@@ -3395,18 +3396,24 @@ async def test_paired_site_live_read_failure_falls_back_and_recovers(
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A failed local live poll shows cloud values (never unavailable) and recovers."""
-    mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
     entry = _entry_with_powerwall()
     await _setup_energy_site_entry(hass, entry, [Platform.SENSOR])
     assert entry.state is ConfigEntryState.LOADED
 
     await _tick_local_live(hass, freezer, 1)
+    assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
+
+    mock_powerwall_live_status.side_effect = PowerwallError("gateway unreachable")
+    await _tick_local_live(hass, freezer, 1)
+    assert mock_powerwall_live_status.await_count == 2
     assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
 
     # The next poll, backed off to two intervals, succeeds.
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
     await _tick_local_live(hass, freezer, 2)
 
+    assert mock_powerwall_live_status.await_count == 3
     assert hass.states.get("sensor.energy_site_solar_power").state == "2.0"
 
 
@@ -3487,20 +3494,25 @@ async def test_paired_site_config_read_failure_falls_back_and_recovers(
     mock_powerwall_local_config: AsyncMock,
 ) -> None:
     """A failed local config poll shows cloud values (never unavailable) and recovers."""
-    mock_powerwall_local_config.side_effect = PowerwallError("gateway unreachable")
+    mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
     entry = _entry_with_powerwall()
     await _setup_energy_site_entry(hass, entry, [Platform.SELECT])
     assert entry.state is ConfigEntryState.LOADED
 
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get("select.energy_site_operation_mode").state == "autonomous"
+
+    mock_powerwall_local_config.side_effect = PowerwallError("gateway unreachable")
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.await_count == 2
     assert (
         hass.states.get("select.energy_site_operation_mode").state == "self_consumption"
     )
 
     mock_powerwall_local_config.side_effect = None
-    mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
 
+    assert mock_powerwall_local_config.await_count == 3
     assert hass.states.get("select.energy_site_operation_mode").state == "autonomous"
 
 
