@@ -74,8 +74,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      The Bluetooth address is the unique ID, and a changed PIN is handled by the reauthentication flow.
   repair-issues:
     status: todo
     comment: Split into a follow-up PR after the initial integration lands.

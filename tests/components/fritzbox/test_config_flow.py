@@ -447,6 +447,35 @@ async def test_ssdp_not_supported(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["reason"] == "not_supported"
 
 
+@pytest.mark.parametrize(
+    ("capabilities", "expected_type", "expected_step", "expected_reason"),
+    [
+        (True, FlowResultType.FORM, "confirm", None),
+        (False, FlowResultType.ABORT, None, "not_supported"),
+        (None, FlowResultType.FORM, "confirm", None),
+    ],
+)
+async def test_ssdp_smarthome_capabilities(
+    hass: HomeAssistant,
+    fritz: Mock,
+    capabilities: bool | None,
+    expected_type: str,
+    expected_step: str | None,
+    expected_reason: str | None,
+) -> None:
+    """Test starting a flow from discovery with SmartHome capabilities."""
+    fritz().has_smarthome_capabilities.return_value = capabilities
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
+    )
+
+    assert result["type"] is expected_type
+    assert result.get("step_id") == expected_step
+    assert result.get("reason") == expected_reason
+    fritz().has_smarthome_capabilities.assert_called_once_with()
+
+
 async def test_ssdp_already_in_progress_unique_id(
     hass: HomeAssistant, fritz: Mock
 ) -> None:

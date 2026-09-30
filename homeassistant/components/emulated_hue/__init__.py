@@ -72,9 +72,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_ADVERTISE_IP): cv.string,
                 probatio.Optional(CONF_ADVERTISE_PORT): cv.port,
                 probatio.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
-                probatio.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
+                probatio.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): probatio.EnsureList(),
                 probatio.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
-                probatio.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
+                probatio.Optional(CONF_EXPOSED_DOMAINS): probatio.EnsureList(),
                 probatio.Optional(CONF_TYPE, default=DEFAULT_TYPE): probatio.Any(
                     TYPE_ALEXA, TYPE_GOOGLE
                 ),

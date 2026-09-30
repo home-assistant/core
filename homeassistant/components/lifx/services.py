@@ -69,7 +69,7 @@ if TYPE_CHECKING:
 LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
     ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
-    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_ZONES: probatio.All(probatio.EnsureList(), [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 }
 
@@ -204,7 +204,7 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
@@ -236,7 +236,7 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
             probatio.Coerce(int), probatio.Clamp(min=0, max=255)
         ),
         ATTR_PALETTE: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=1, max=EFFECT_SKY_PALETTE_MAX),
         ),
@@ -253,7 +253,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),

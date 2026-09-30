@@ -111,7 +111,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
                 ): int,
                 probatio.Optional(CONF_IGNORE_DEVICES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(Platform.BINARY_SENSOR.value): BINARY_SENSOR_PS,
                 probatio.Optional(Platform.COVER.value): COVER_PS,

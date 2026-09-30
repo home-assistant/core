@@ -35,7 +35,7 @@ TRIGGER_SCHEMA = probatio.All(
         {
             probatio.Required(CONF_PLATFORM): PLATFORM_TYPE,
             probatio.Optional(ATTR_DEVICE_ID): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         },

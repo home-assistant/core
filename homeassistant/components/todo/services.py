@@ -77,7 +77,7 @@ TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DA
 
 TODO_SERVICE_GET_ITEMS_SCHEMA = {
     probatio.Optional(ATTR_STATUS): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [probatio.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
     ),
 }
@@ -246,7 +246,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
-                probatio.Required(ATTR_ITEM): probatio.All(cv.ensure_list, [cv.string]),
+                probatio.Required(ATTR_ITEM): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
             }
         ),
         _async_remove_todo_items,
