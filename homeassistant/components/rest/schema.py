@@ -1,6 +1,7 @@
 """The rest component schemas."""
 
 from codecs import lookup as codec_lookup
+from json import dumps as json_dumps
 from typing import Any, override
 
 import probatio
@@ -48,6 +49,8 @@ from homeassistant.helpers.trigger_template_entity import (
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ValueTemplate,
 )
+from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
@@ -55,6 +58,7 @@ from .const import (
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     CONF_PAYLOAD_TEMPLATE,
+    CONF_REST_DATA,
     CONF_SSL_CIPHER_LIST,
     CONF_SSL_SECTION,
     DEFAULT_ENCODING,
@@ -65,7 +69,7 @@ from .const import (
     DOMAIN,
     METHODS,
 )
-from .data import DEFAULT_TIMEOUT
+from .data import DEFAULT_TIMEOUT, RestData
 
 RESOURCE_SCHEMA = {
     probatio.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
@@ -136,6 +140,38 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
+class _RenderingTemplateSelectorConfig(selector.BaseSelectorConfig):
+    rest: RestData
+
+
+class _RenderingTemplateSelector(selector.TemplateSelector):
+    """Custom Template selector.
+
+    Calls render to validate.
+    """
+
+    @override
+    def __init__(self, rest_data: str | None = None) -> None:
+        super().__init__()
+        self.rest_data = rest_data
+
+    @override
+    def __call__(self, data: Any) -> str:
+        template = cv.template(data)
+        template_vars: TemplateVarsType | None = None
+        if self.rest_data is not None:
+            template_vars = {"value": self.rest_data}
+            try:  # noqa: SIM105 - suppress is much slower
+                template_vars["value_json"] = json_loads(self.rest_data)
+            except JSON_DECODE_EXCEPTIONS:
+                pass  # silently swallow exception (and not set value_json)
+        try:
+            template.async_render(variables=template_vars)
+        except TemplateError as ex:
+            raise probatio.Invalid(str(ex)) from ex
+        return template.template
+
+
 class _TemplateURLSelector(selector.TemplateSelector):
     """Selector to validate templated urls."""
 
@@ -159,7 +195,7 @@ class _EncodingSelector(selector.TextSelector):
         try:
             codec_lookup(encoding)
         except LookupError:
-            raise probatio.Invalid("codec not found") from None
+            raise probatio.Invalid("Codec not found") from None
         return encoding
 
 
@@ -201,6 +237,10 @@ class KeyedTemplateSelector(selector.ObjectSelector):
                 raise probatio.Invalid(
                     f"Duplicate keys are not supported. Found multiple `{field['key']}` keys."
                 )
+            try:
+                cv.template(field["value"]).async_render()
+            except TemplateError as ex:
+                raise probatio.Invalid(f"{field['key']}: {ex!s}") from ex
         return data
 
 
@@ -265,7 +305,7 @@ def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:
             probatio.Optional(CONF_PARAMS): KeyedTemplateSelector(
                 translation_key=CONF_PARAMS
             ),
-            probatio.Optional(CONF_PAYLOAD): selector.TemplateSelector(),
+            probatio.Optional(CONF_PAYLOAD): _RenderingTemplateSelector(),
             probatio.Required(CONF_SSL_SECTION): section(
                 probatio.Schema(
                     {
@@ -309,65 +349,107 @@ def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:
     )
 
 
-SUBENTRY_FLOW_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_NAME): selector.TemplateSelector(),
-        probatio.Optional(CONF_ICON): selector.TemplateSelector(),
-        probatio.Optional(CONF_PICTURE): selector.TemplateSelector(),
-        probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-        probatio.Required(
-            CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
-        ): selector.BooleanSelector(),
-    }
-)
+def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
 
-_AVAILABILITY_SCHEMA = {
-    probatio.Optional(CONF_AVAILABILITY): selector.TemplateSelector()
-}
-
-BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
-    {
-        probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-            selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
-        ),
-    }
-).extend(_AVAILABILITY_SCHEMA)
-
-SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
-    {
-        probatio.Optional(CONF_JSON_ATTRS_PATH): selector.TextSelector(),
-        probatio.Optional(CONF_JSON_ATTRS, default=[]): selector.ObjectSelector(
-            selector.ObjectSelectorConfig(
-                multiple=True,
-                fields={
-                    "item": selector.ObjectSelectorField(
-                        required=True, selector=selector.TextSelector()
-                    )
-                },
-                translation_key=CONF_JSON_ATTRS,
-            )
-        ),
-        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=list(
-                    {  # inner set removes duplicates
-                        str(unit)
-                        for units in DEVICE_CLASS_UNITS.values()
-                        for unit in units
-                        if unit is not None
+    pretty_json: str | None = None
+    if rest_data is not None:
+        try:
+            pretty_json = json_dumps(json_loads(rest_data), indent=2, sort_keys=True)
+        except JSON_DECODE_EXCEPTIONS:
+            pretty_json = rest_data
+    return probatio.Schema(
+        {
+            probatio.Optional(CONF_NAME): _RenderingTemplateSelector(),
+            probatio.Optional(CONF_ICON): _RenderingTemplateSelector(),
+            probatio.Optional(CONF_PICTURE): _RenderingTemplateSelector(),
+            probatio.Required(CONF_REST_DATA): section(
+                probatio.Schema(
+                    {
+                        probatio.Optional(
+                            CONF_REST_DATA, default=pretty_json
+                        ): selector.TextSelector(
+                            selector.TextSelectorConfig(read_only=True, multiline=True)
+                        )
                     }
                 ),
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                custom_value=True,
-                sort=True,
-                translation_key="sensor_unit_of_measurement",
-            )
-        ),
-        probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-            selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
-        ),
-        probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(
-            selector.StateClassSelectorConfig()
-        ),
-    }
-).extend(_AVAILABILITY_SCHEMA)
+                {"collapsed": True},
+            ),
+            probatio.Optional(CONF_VALUE_TEMPLATE): _RenderingTemplateSelector(
+                rest_data
+            ),
+            probatio.Required(
+                CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
+            ): selector.BooleanSelector(),
+        }
+    )
+
+
+_AVAILABILITY_SCHEMA = {
+    probatio.Optional(CONF_AVAILABILITY): _RenderingTemplateSelector()
+}
+
+
+def BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
+    """Generate the binary sensor subentry schema."""
+
+    return (
+        _SUBENTRY_FLOW_SCHEMA(rest_data)
+        .extend(
+            {
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
+                ),
+            }
+        )
+        .extend(_AVAILABILITY_SCHEMA)
+    )
+
+
+def SENSOR_SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
+    """Generate the binary sensor subentry schema."""
+
+    return (
+        _SUBENTRY_FLOW_SCHEMA(rest_data)
+        .extend(
+            {
+                probatio.Optional(CONF_JSON_ATTRS_PATH): selector.TextSelector(),
+                probatio.Optional(CONF_JSON_ATTRS, default=[]): selector.ObjectSelector(
+                    selector.ObjectSelectorConfig(
+                        multiple=True,
+                        fields={
+                            "item": selector.ObjectSelectorField(
+                                required=True,
+                                selector=selector.TextSelector(
+                                    selector.TextSelectorConfig()
+                                ),
+                            )
+                        },
+                        translation_key=CONF_JSON_ATTRS,
+                    )
+                ),
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=list(
+                            {  # inner set removes duplicates
+                                str(unit)
+                                for units in DEVICE_CLASS_UNITS.values()
+                                for unit in units
+                                if unit is not None
+                            }
+                        ),
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                        sort=True,
+                        translation_key="sensor_unit_of_measurement",
+                    )
+                ),
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
+                ),
+                probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(
+                    selector.StateClassSelectorConfig()
+                ),
+            }
+        )
+        .extend(_AVAILABILITY_SCHEMA)
+    )

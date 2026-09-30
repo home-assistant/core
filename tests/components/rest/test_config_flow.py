@@ -9,7 +9,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.rest.const import (
     CONF_ENCODING,
-    CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     DOMAIN,
 )
@@ -149,6 +148,19 @@ async def test_sensor_subentry_flow(
     assert state.state == "15"
     assert state.entity_id == "sensor.rest_sensor"
 
+    # regression test for second subentry
+    aioclient_mock.clear_requests()
+    aioclient_mock.get("http://localhost", exc=TimeoutError)
+
+    await entry.runtime_data.async_refresh()
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, Platform.SENSOR),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "timeout_error"
+
 
 async def test_sensor_subentry_flow_no_data(
     hass: HomeAssistant,
@@ -169,13 +181,14 @@ async def test_sensor_subentry_flow_no_data(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        get_subentry_data[SENSOR_DATA]["data"],
-    )
+    with pytest.raises(InvalidData) as ex:
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            get_subentry_data[SENSOR_DATA]["data"],
+        )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "no_json"}
+    assert ex.value and ex.value.path == ["value_template"]
+    assert "'value_json' is undefined" in ex.value.error_message
 
 
 async def test_sensor_subentry_flow_endpoint_failure(
@@ -200,15 +213,12 @@ async def test_sensor_subentry_flow_endpoint_failure(
         (entry.entry_id, Platform.SENSOR),
         context={"source": config_entries.SOURCE_USER},
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        get_subentry_data[SENSOR_DATA]["data"],
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "endpoint_error"}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "endpoint_error"
     assert (
-        result["description_placeholders"]["endpoint_error_message"]
+        result["description_placeholders"]
+        and "endpoint_error_message" in result["description_placeholders"]
+        and result["description_placeholders"]["endpoint_error_message"]
         == "the server is down"
     )
 
@@ -378,7 +388,7 @@ async def test_config_invalid_input(
     with pytest.raises(InvalidData) as ex:
         await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
 
-    assert ex.value.schema_errors[CONF_ENCODING] == "codec not found"
+    assert ex.value.schema_errors[CONF_ENCODING] == "Codec not found"
     assert ex.value.schema_errors[CONF_AUTHENTICATION] == "credentials_missing"
 
 
@@ -430,20 +440,18 @@ async def test_config_flow_template_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        get_config_entry_data
-        | {CONF_HEADERS: [{"key": "Fake-Header", "value": "{{ 1/0 }}"}]},
-    )
+    with pytest.raises(InvalidData) as ex:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            get_config_entry_data
+            | {CONF_HEADERS: [{"key": "Fake-Header", "value": "{{ 1/0 }}"}]},
+        )
 
-    assert (
-        result["errors"]
-        and "base" in result["errors"]
-        and result["errors"]["base"] == "template_error"
-    )
+    assert (ex.value.path) == [CONF_HEADERS]
+    assert "ZeroDivisionError" in str(ex.value.error_message)
 
 
-async def test_config_flow_xml_parse_error(
+async def test_xml_parse_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
@@ -458,6 +466,23 @@ async def test_config_flow_xml_parse_error(
         headers={"Content-Type": "application/xml"},
     )
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert (
+        result["errors"]
+        and "base" in result["errors"]
+        and result["errors"]["base"] == "xml_parse_error"
+    )
+    assert (
+        result["description_placeholders"]
+        and "xml_parse_error_message" in result["description_placeholders"]
+    )
+
     entry = await async_setup_entry(hass, get_config_entry_data)
 
     result = await hass.config_entries.subentries.async_init(
@@ -465,22 +490,8 @@ async def test_config_flow_xml_parse_error(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        (
-            get_subentry_data[SENSOR_DATA]["data"]
-            | {
-                CONF_JSON_ATTRS_PATH: "$.root",
-                CONF_JSON_ATTRS: [{"item": "item"}],
-            }
-        ),
-    )
-
-    assert (
-        result["errors"]
-        and "base" in result["errors"]
-        and result["errors"]["base"] == "xml_parse_error"
-    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "xml_parse_error"
 
 
 async def test_config_flow_decode_error(

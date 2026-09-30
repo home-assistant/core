@@ -1,5 +1,6 @@
 {
   "common": {
+    "abort_endpoint_error": "Error communicating with resource: {endpoint_error_message}. Unable to create entity until the resource is available.",
     "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
     "availability_section": "Availability Options",
     "config_entry_not_loaded": "The configuration entry for this resource is not loaded, unable to create an entity until the entry is loaded.",
@@ -8,12 +9,17 @@
     "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value. See RESTful Sensor [Force update]({docs_url_restful_sensor_force_update}).",
     "icon": "Icon",
     "icon_description": "Defines a template for the icon of the entity.",
+    "invalid_result": "JSON @ \"{json_path}\" was not a dictionary or list with a dictionary @ the 0th element",
+    "no_json": "Expected REST result was empty",
+    "parse_error": "REST result could not be parsed as JSON: {parse_error_message}",
     "picture": "Picture",
     "picture_description": "Defines a template for the picture of the entity.",
+    "rest_data": "REST endpoint data (reference only)",
     "template_error": "Error rendering template: {template_error_message}",
     "timeout_error": "Timeout communicating with resource",
     "value_template": "Value Template",
-    "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
+    "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used.",
+    "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
   },
   "config": {
     "abort": {
@@ -25,8 +31,10 @@
       "decoding_error": "Error decoding response: {decoding_error_message}",
       "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
       "invalid url": "Invalid URL",
+      "no_json": "[%key:component::rest::common::no_json%]",
       "template_error": "[%key:component::rest::common::template_error%]",
-      "timeout_error": "[%key:component::rest::common::timeout_error%]"
+      "timeout_error": "[%key:component::rest::common::timeout_error%]",
+      "xml_parse_error": "[%key:component::rest::common::xml_parse_error%]"
     },
     "initiate_flow": {
       "user": "Add RESTful Resource"
@@ -85,10 +93,18 @@
   "config_subentries": {
     "binary_sensor": {
       "abort": {
+        "abort_endpoint_error": "[%key:component::rest::common::abort_endpoint_error%]",
         "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "timeout_error": "[%key:component::rest::common::timeout_error%]",
+        "xml_parse_error": "[%key:component::rest::common::xml_parse_error%]"
       },
       "entry_type": "[%key:component::binary_sensor::title%]",
+      "error": {
+        "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
+        "invalid_result": "[%key:component::rest::common::invalid_result%]",
+        "no_json": "[%key:component::rest::common::no_json%]",
+        "parse_error": "[%key:component::rest::common::parse_error%]"
+      },
       "initiate_flow": {
         "user": "Add binary sensor"
       },
@@ -112,25 +128,34 @@
             "value_template": "[%key:component::rest::common::value_template_description%]"
           },
           "description": "Configure a binary sensor using the `{entry_title}` resource",
+          "sections": {
+            "rest_data": {
+              "data": {
+                "rest_data": "[%key:component::rest::common::rest_data%]"
+              },
+              "name": "[%key:component::rest::common::rest_data%]"
+            }
+          },
           "title": "RESTful binary sensor"
         }
       }
     },
     "sensor": {
       "abort": {
-        "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]"
+        "abort_endpoint_error": "[%key:component::rest::common::abort_endpoint_error%]",
+        "config_entry_not_loaded": "[%key:component::rest::common::config_entry_not_loaded%]",
+        "timeout_error": "[%key:component::rest::common::timeout_error%]",
+        "xml_parse_error": "[%key:component::rest::common::xml_parse_error%]"
       },
       "entry_type": "[%key:component::sensor::title%]",
       "error": {
         "endpoint_error": "[%key:component::rest::common::endpoint_error%]",
-        "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
-        "no_json": "[%key:component::rest::exceptions::no_json::message%]",
-        "parse_error": "[%key:component::rest::exceptions::parse_error::message%]",
+        "invalid_result": "[%key:component::rest::common::invalid_result%]",
+        "no_json": "[%key:component::rest::common::no_json%]",
+        "parse_error": "[%key:component::rest::common::parse_error%]",
         "state_class_validation_error": "\"{state_class}\" is not a valid state class for device class \"{device_class}\"; expected \"{state_classes_string}\"",
-        "timeout_error": "[%key:component::rest::common::timeout_error%]",
         "unit_required_error": "Device class \"{device_class}\" requires \"{units_string}\"",
-        "unit_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\"",
-        "xml_parse_error": "REST result could not be parsed as XML: {xml_parse_error_message}"
+        "unit_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\""
       },
       "initiate_flow": {
         "user": "Add sensor"
@@ -161,6 +186,14 @@
             "value_template": "[%key:component::rest::common::value_template_description%]"
           },
           "description": "Configure a sensor using the `{entry_title}` resource",
+          "sections": {
+            "rest_data": {
+              "data": {
+                "rest_data": "[%key:component::rest::common::rest_data%]"
+              },
+              "name": "[%key:component::rest::common::rest_data%]"
+            }
+          },
           "title": "RESTful sensor"
         }
       }
@@ -174,13 +207,13 @@
       "message": "Error communicating with {resource}"
     },
     "invalid_result": {
-      "message": "JSON @ \"{json_path}\" was not a dictionary or list with a dictionary @ the 0th element"
+      "message": "[%key:component::rest::common::invalid_result%]"
     },
     "no_json": {
-      "message": "Expected REST result was empty"
+      "message": "[%key:component::rest::common::no_json%]"
     },
     "parse_error": {
-      "message": "REST result could not be parsed as JSON: {parse_error_message}"
+      "message": "[%key:component::rest::common::parse_error%]"
     },
     "template_error": {
       "message": "[%key:component::rest::common::template_error%]"

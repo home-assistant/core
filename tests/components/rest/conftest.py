@@ -10,6 +10,7 @@ from homeassistant.components.rest.const import (
     CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_REST_DATA,
     CONF_SSL_CIPHER_LIST,
     CONF_SSL_SECTION,
     DEFAULT_ENCODING,
@@ -67,7 +68,10 @@ def get_subentry_data() -> list[ConfigSubentryData]:
     """Default subentry data."""
     return [
         ConfigSubentryData(
-            data={CONF_VALUE_TEMPLATE: '{{ value_json["key"] == "on"}}'},
+            data={
+                CONF_VALUE_TEMPLATE: '{{ value_json["key"] == "on"}}',
+                CONF_REST_DATA: {CONF_REST_DATA: ""},
+            },
             subentry_type=Platform.BINARY_SENSOR,
             title="binary sensor",
             unique_id=f"{Platform.BINARY_SENSOR}_1",
@@ -81,6 +85,7 @@ def get_subentry_data() -> list[ConfigSubentryData]:
                 CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 CONF_UNIT_OF_MEASUREMENT: UnitOfArea.SQUARE_METERS,
                 CONF_VALUE_TEMPLATE: '{{ value_json["items"][0]["area"] }}',
+                CONF_REST_DATA: {CONF_REST_DATA: ""},
             },
             subentry_type=Platform.SENSOR,
             title="sensor",

@@ -40,14 +40,16 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import CONFIG_ENTRY_PLATFORMS, create_rest_data_from_config_entry
+from . import create_rest_data_from_config_entry
 from .const import (
     CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_REST_DATA,
     DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_SENSOR_NAME,
     DOCS_URL_AVAILABILITY,
@@ -56,9 +58,9 @@ from .const import (
     DOCS_URL_TEMPLATE_DATA_PROCESSING,
     DOCS_URL_XML_CONVERT_SPEC,
     DOMAIN,
+    PLATFORMS,
 )
 from .coordinator import RestConfigEntry
-from .data import RestData
 from .schema import (
     BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA,
     RESOURCE_FLOW_SCHEMA,
@@ -90,20 +92,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     _title: str
 
     @override
-    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
-        """Create subentry flow after creating the main entry."""
-        if self._next_flow_platform != NO_PLATFORM:
-            subentry_result = await self.hass.config_entries.subentries.async_init(
-                (result["result"].entry_id, self._next_flow_platform),
-                context=SubentryFlowContext(source=SOURCE_USER),
-            )
-            result["next_flow"] = (
-                FlowType.CONFIG_SUBENTRIES_FLOW,
-                subentry_result["flow_id"],
-            )
-        return result
-
-    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,26 +102,30 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {key: value for key, value in user_input.items() if key in MATCH_ON}
             )
+            rest = create_rest_data_from_config_entry(self.hass, user_input)
             try:
-                rest = create_rest_data_from_config_entry(self.hass, user_input)
                 await rest.async_update()
-                if rest.last_exception:
-                    errors["base"] = (
-                        "endpoint_error"
-                        if not isinstance(rest.last_exception, TimeoutError)
-                        else "timeout_error"
-                    )
-                    placeholders["endpoint_error_message"] = str(rest.last_exception)
-                if not errors:
-                    self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
-                    self._data = user_input
-                    return await self.async_step_subentries_menu()
-            except TemplateError as exc:
-                errors["base"] = "template_error"
-                placeholders["template_error_message"] = str(exc)
             except UnicodeDecodeError as exc:
                 errors[CONF_ENCODING] = "decoding_error"
                 placeholders["decoding_error_message"] = str(exc)
+            if rest.last_exception:
+                errors["base"] = (
+                    "endpoint_error"
+                    if not isinstance(rest.last_exception, TimeoutError)
+                    else "timeout_error"
+                )
+                placeholders["endpoint_error_message"] = str(rest.last_exception)
+            else:
+                try:
+                    if rest.data_without_xml() is None:
+                        errors["base"] = "no_json"
+                except ExpatError as ex:
+                    errors["base"] = "xml_parse_error"
+                    placeholders["xml_parse_error_message"] = str(ex)
+            if not errors:
+                self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
+                self._data = user_input
+                return await self.async_step_subentries_menu()
         suggested_values = user_input or {}
         return self.async_show_form(
             step_id="user",
@@ -161,7 +153,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         ) -> ConfigFlowResult:
             return await self.async_step_create_entry({CONF_PLATFORM: platform})
 
-        menu_options = [*CONFIG_ENTRY_PLATFORMS, NO_PLATFORM]
+        menu_options = [*PLATFORMS, NO_PLATFORM]
         for platform in menu_options:
             setattr(
                 self,
@@ -192,7 +184,21 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return dict.fromkeys(CONFIG_ENTRY_PLATFORMS, RestSubentryFlow)
+        return dict.fromkeys(PLATFORMS, RestSubentryFlow)
+
+    @override
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Create subentry flow after creating the main entry."""
+        if self._next_flow_platform != NO_PLATFORM:
+            subentry_result = await self.hass.config_entries.subentries.async_init(
+                (result["result"].entry_id, self._next_flow_platform),
+                context=SubentryFlowContext(source=SOURCE_USER),
+            )
+            result["next_flow"] = (
+                FlowType.CONFIG_SUBENTRIES_FLOW,
+                subentry_result["flow_id"],
+            )
+        return result
 
 
 def _validate_unit(data: dict[str, Any]) -> dict[str, Any]:
@@ -260,15 +266,15 @@ def _validate_state_class(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def _validate_sensor_rest_data(rest: RestData) -> Callable[[Any], Any]:
-    """Parameterized validator for sensor_input."""
+def _validate_sensor_rest_data(rest_data: str | None) -> Callable[[Any], Any]:
+    """Validator for sensor_input."""
 
     def check_data(data: dict[str, Any]) -> dict[str, Any]:
         if data.get(CONF_JSON_ATTRS):
             attrs = [item["item"] for item in data[CONF_JSON_ATTRS]]
             try:
                 parse_json_attributes_raise_error(
-                    rest.data_without_xml(), attrs, data.get(CONF_JSON_ATTRS_PATH)
+                    rest_data, attrs, data.get(CONF_JSON_ATTRS_PATH)
                 )
             except HomeAssistantError as exc:
                 if exc.translation_key is not None:
@@ -276,11 +282,6 @@ def _validate_sensor_rest_data(rest: RestData) -> Callable[[Any], Any]:
                         translation_key=exc.translation_key,
                         placeholders=exc.translation_placeholders,
                     ) from exc
-            except ExpatError as exc:
-                raise probatio.Invalid(
-                    translation_key="xml_parse_error",
-                    placeholders={"xml_parse_error_message": str(exc)},
-                ) from exc
 
         return data
 
@@ -292,9 +293,9 @@ class SubentryConfig:
     """Class to hold subentry config helpers/validators."""
 
     default_name: str
-    flow_schema: probatio.Schema
+    flow_schema: Callable[[str | None], probatio.Schema]
     post_schema_validation: (
-        Callable[[RestData], probatio.Schema] | probatio.Schema | None
+        Callable[[str | None], probatio.Schema] | probatio.Schema | None
     ) = None
 
 
@@ -306,9 +307,11 @@ SUBENTRY_CONFIG: dict[Platform, SubentryConfig] = {
     Platform.SENSOR: SubentryConfig(
         default_name=DEFAULT_SENSOR_NAME,
         flow_schema=SENSOR_SUBENTRY_FLOW_SCHEMA,
-        post_schema_validation=lambda data: probatio.Schema(
+        post_schema_validation=lambda rest_data: probatio.Schema(
             probatio.All(
-                _validate_unit, _validate_state_class, _validate_sensor_rest_data(data)
+                _validate_unit,
+                _validate_state_class,
+                _validate_sensor_rest_data(rest_data),
             )
         ),
     ),
@@ -322,30 +325,34 @@ class RestSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Base step user."""
-        errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {}
         entry: RestConfigEntry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="config_entry_not_loaded")
+        if len(entry.subentries) == 0:
+            await entry.runtime_data.async_refresh()
+        rest_data = None
+        if entry.runtime_data.rest.data is None:
+            ex = cast(UpdateFailed, entry.runtime_data.last_exception)
+            return self.async_abort(
+                reason=ex.translation_key or "endpoint_error",
+                description_placeholders=ex.translation_placeholders
+                or {"endpoint_error_message": str(ex)},
+            )
+        try:
+            rest_data = entry.runtime_data.rest.data_without_xml()
+        except ExpatError as ex:
+            return self.async_abort(
+                reason="xml_parse_error",
+                description_placeholders={"xml_parse_error_message": str(ex)},
+            )
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         if user_input is not None:
             if schema_validator := SUBENTRY_CONFIG[
                 Platform(self._subentry_type)
             ].post_schema_validation:
                 if callable(schema_validator):
-                    if len(entry.subentries) == 0:
-                        await entry.runtime_data.async_refresh()
-                    if entry.runtime_data.rest.data is not None:
-                        schema_validator = schema_validator(entry.runtime_data.rest)
-                    else:
-                        ex = cast(
-                            HomeAssistantError,
-                            entry.runtime_data.last_exception,
-                        )
-                        errors["base"] = ex.translation_key or "endpoint_error"
-                        placeholders = placeholders | (
-                            ex.translation_placeholders
-                            or {"endpoint_error_message": str(ex)}
-                        )
+                    schema_validator = schema_validator(rest_data)
                 if isinstance(schema_validator, probatio.Schema):
                     try:
                         schema_validator(user_input)
@@ -363,6 +370,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
                     CONF_NAME,
                     SUBENTRY_CONFIG[Platform(self._subentry_type)].default_name,
                 )
+                del user_input[CONF_REST_DATA]
                 return self.async_create_entry(
                     title=title,
                     data=user_input,
@@ -382,7 +390,9 @@ class RestSubentryFlow(ConfigSubentryFlow):
             errors=errors,
             data_schema=(
                 self.add_suggested_values_to_schema(
-                    SUBENTRY_CONFIG[Platform(self._subentry_type)].flow_schema,
+                    SUBENTRY_CONFIG[Platform(self._subentry_type)].flow_schema(
+                        rest_data
+                    ),
                     user_input or {},
                 )
             ),
