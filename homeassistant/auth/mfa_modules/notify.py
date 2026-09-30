@@ -24,7 +24,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.9.0"]
+REQUIREMENTS = ["pyotp==2.10.0"]
 
 CONF_MESSAGE = "message"
 
