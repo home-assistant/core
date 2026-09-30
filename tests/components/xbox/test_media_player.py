@@ -1,14 +1,17 @@
 """Test the Xbox media_player platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
     CommandResponse,
+    SmartglassConsoleList,
     SmartglassConsoleStatus,
     VolumeDirection,
 )
@@ -35,6 +38,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -45,6 +49,7 @@ from tests.common import (
     AsyncMock,
     Mock,
     MockConfigEntry,
+    async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
@@ -108,6 +113,56 @@ async def test_media_players(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_media_player_added_before_console_status(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a console that appears before it has been polled for status.
+
+    The status coordinator only polls consoles an entity has registered for, so
+    a console added at runtime has no status data when its entity is created.
+    """
+
+    xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_console_list_empty.json", DOMAIN
+        )  # pyright: ignore[reportArgumentType]
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not config_entry.runtime_data.status.data
+
+    xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_console_list.json", DOMAIN
+        )  # pyright: ignore[reportArgumentType]
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "Error adding entity" not in caplog.text
+    assert entity_registry.async_get("media_player.xonex") is not None
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("xbox_live_client")
