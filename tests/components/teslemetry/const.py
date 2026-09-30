@@ -6,6 +6,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from tests.common import load_json_object_fixture
 
 UNIQUE_ID = "abc-123"
+VIN = "LRW3F7EK4NC700000"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}

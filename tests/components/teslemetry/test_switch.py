@@ -38,11 +38,9 @@ from . import (
     reload_platform,
     setup_platform,
 )
-from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA_ALT, VIN
 
 from tests.common import async_fire_time_changed
-
-VIN = "LRW3F7EK4NC700000"
 
 
 async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:
