@@ -160,6 +160,11 @@
       "wifi_signal_strength": {
         "name": "Wi-Fi signal strength"
       }
+    },
+    "switch": {
+      "bstmode": {
+        "name": "Boost Mode"
+      }
     }
   },
   "exceptions": {
