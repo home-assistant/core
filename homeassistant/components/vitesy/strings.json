@@ -21,6 +21,14 @@
     }
   },
   "entity": {
+    "button": {
+      "filter_changed": {
+        "name": "Mark filter as changed"
+      },
+      "fridge_cleaned": {
+        "name": "Mark fridge as cleaned"
+      }
+    },
     "sensor": {
       "air_quality_score": {
         "name": "Air quality score"
@@ -45,6 +53,9 @@
   "exceptions": {
     "invalid_auth": {
       "message": "Vitesy Hub credentials are no longer valid."
+    },
+    "reset_maintenance_failed": {
+      "message": "Could not reset the maintenance period on Vitesy Hub."
     },
     "update_failed": {
       "message": "Error communicating with Vitesy Hub, check logs for details"
