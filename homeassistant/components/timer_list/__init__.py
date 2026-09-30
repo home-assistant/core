@@ -17,6 +17,7 @@ from typing import Any, NoReturn, final, override
 
 import probatio
 
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
@@ -27,7 +28,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -469,6 +470,9 @@ async def websocket_handle_subscribe(
 ) -> None:
     """Subscribe to timer changes for a timer list, with an initial snapshot."""
     entity_id: str = msg["entity_id"]
+    if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
+        raise Unauthorized(entity_id=entity_id)
+
     if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
         connection.send_error(
             msg["id"],
@@ -516,6 +520,9 @@ async def websocket_handle_list(
 ) -> None:
     """Return the current timers for a timer list."""
     entity_id: str = msg["entity_id"]
+    if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
+        raise Unauthorized(entity_id=entity_id)
+
     if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
         connection.send_error(
             msg["id"],
