@@ -44,7 +44,9 @@ async def _async_snapshot_past(
     filename: Template = service_call.data[CONF_FILENAME]
     snapshot_file = filename.async_render()
 
-    if not hass.config.is_allowed_path(snapshot_file):
+    if not await hass.async_add_executor_job(
+        hass.config.is_allowed_path, snapshot_file
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_access_to_path",
