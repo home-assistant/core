@@ -18,7 +18,8 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.launch_library.async_setup_entry", return_value=True
@@ -46,4 +47,5 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "single_instance_allowed"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
