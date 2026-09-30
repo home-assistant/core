@@ -178,6 +178,7 @@ jobs:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
+  job-discriminator: ${{ github.run_id }}
 steps:
   - name: Download deterministic artifact
     uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
