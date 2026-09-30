@@ -1,13 +1,10 @@
 """Home Assistant command line scripts."""
 
-import argparse
-from collections.abc import Sequence
 import importlib
 import logging
 import os
 import sys
 
-from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util.package import install_package, is_installed
 
@@ -52,15 +49,3 @@ def run(args: list[str]) -> int:
             return 1
 
     return script.run(args[1:])
-
-
-def extract_config_dir(args: Sequence[str] | None = None) -> str:
-    """Extract the config dir from the arguments or get the default."""
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("-c", "--config", default=None)
-    parsed_args = parser.parse_known_args(args)[0]
-    return (
-        os.path.join(os.getcwd(), parsed_args.config)
-        if parsed_args.config
-        else get_default_config_dir()
-    )
