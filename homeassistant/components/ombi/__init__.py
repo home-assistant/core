@@ -73,7 +73,9 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.Exclusive(
                         probatio.Secret(CONF_API_KEY), "auth"
                     ): cv.string,
-                    probatio.Exclusive(CONF_PASSWORD, "auth"): cv.string,
+                    probatio.Exclusive(
+                        probatio.Secret(CONF_PASSWORD), "auth"
+                    ): cv.string,
                     probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                     probatio.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,

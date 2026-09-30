@@ -160,5 +160,7 @@ def build_hub_schema(
     }
     if hub_version == 2:
         schema[probatio.Required(CONF_USERNAME, default=username)] = str
-        schema[probatio.Required(CONF_PASSWORD, default=password)] = str
+        schema[probatio.Required(probatio.Secret(CONF_PASSWORD), default=password)] = (
+            str
+        )
     return probatio.Schema(schema)

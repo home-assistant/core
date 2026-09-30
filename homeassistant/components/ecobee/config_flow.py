@@ -24,12 +24,14 @@ _USER_SCHEMA = probatio.Schema(
     {
         probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
 _MFA_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
-_REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+_REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):

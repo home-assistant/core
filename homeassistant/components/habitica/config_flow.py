@@ -77,7 +77,7 @@ STEP_LOGIN_DATA_SCHEMA = probatio.Schema(
                 autocomplete="email",
             )
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -97,7 +97,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                             autocomplete="email",
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
