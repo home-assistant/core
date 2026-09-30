@@ -63,7 +63,7 @@ DOCK_ACTION_BUTTON_DESCRIPTIONS = [
         key="clean_cleaning_tray",
         translation_key="clean_cleaning_tray",
         # "Amethyst" is Roborock's internal name for the dock's cleaning tray
-        # self-clean routine. The entity is named after the user facing
+        # self-clean routine. The entity is named after the user-facing
         # feature in the Roborock app instead.
         command=RoborockCommand.APP_AMETHYST_SELF_CHECK,
         is_supported=supports_tray_self_clean,
