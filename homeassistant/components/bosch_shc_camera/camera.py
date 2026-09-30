@@ -75,10 +75,3 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     def available(self) -> bool:
         """Return whether the camera is part of the latest camera list."""
         return super().available and self._camera_id in self.coordinator.data
-
-    @override
-    async def async_camera_image(
-        self, width: int | None = None, height: int | None = None
-    ) -> bytes | None:
-        """Return no image, as snapshots are not supported yet."""
-        return None

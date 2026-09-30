@@ -18,7 +18,6 @@ from bosch_shc_camera_client.cameras import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import camera
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
@@ -35,7 +34,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
@@ -359,17 +357,6 @@ async def test_camera_entity(
     assert device.manufacturer == "Bosch"
     assert device.model == "Eyes Outdoor II"
     assert device.sw_version == "9.40.25"
-
-
-async def test_camera_has_no_image(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the camera returns no image instead of raising."""
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
-        await camera.async_get_image(hass, ENTITY_ID)
 
 
 async def test_unknown_model_uses_hardware_version(
