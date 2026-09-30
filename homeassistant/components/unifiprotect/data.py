@@ -804,7 +804,12 @@ class ProtectData:
         """Refetch the public liveviews after a private liveview change."""
         try:
             await self.api.refresh_public_store("liveviews")
-        except (ClientError, NotAuthorized, TimeoutError) as err:
+        except (
+            ClientError,
+            NotAuthorized,
+            ServerDisconnectedError,
+            TimeoutError,
+        ) as err:
             # the periodic library refresh catches up
             _LOGGER.debug("Unable to refresh public liveviews: %s", err)
 
