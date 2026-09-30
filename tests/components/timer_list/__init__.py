@@ -24,8 +24,7 @@ class MockTimerListEntity(InMemoryTimerListEntity):
 
     Subclasses the reference ``InMemoryTimerListEntity`` so the generic
     services, websocket API, and triggers are exercised against the real
-    storage/scheduling logic without depending on the ``local_timer_list``
-    integration.
+    storage and scheduling logic.
     """
 
     def __init__(self, name: str = "Timers") -> None:

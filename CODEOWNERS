@@ -1082,8 +1082,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
-/homeassistant/components/local_timer_list/ @home-assistant/core @synesthesiam
-/tests/components/local_timer_list/ @home-assistant/core @synesthesiam
 /homeassistant/components/local_todo/ @allenporter
 /tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core

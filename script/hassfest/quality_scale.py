@@ -2001,7 +2001,6 @@ NO_QUALITY_SCALE = [
     "input_number",
     "input_select",
     "input_text",
-    "local_timer_list",
     "intent_script",
     "intent",
     "labs",

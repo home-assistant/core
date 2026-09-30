@@ -2,9 +2,8 @@
 
 This is the reference ``TimerListEntity`` implementation: it stores timers in
 memory and schedules their completion with the event helpers. It carries no
-config-flow or device assumptions, so any integration can instantiate it for a
-device it owns (passing ``device_info``) or the ``local_timer_list`` helper can
-create standalone lists from the UI.
+config-flow or device assumptions, so any integration providing voice timers can
+instantiate one for a device it owns, passing ``device_info``.
 """
 
 from datetime import datetime, timedelta
