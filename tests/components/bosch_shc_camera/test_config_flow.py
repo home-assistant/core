@@ -16,7 +16,7 @@ from homeassistant.components.bosch_shc_camera.application_credentials import (
     OAUTH2_SCOPES,
     OAUTH2_TOKEN,
 )
-from homeassistant.components.bosch_shc_camera.config_flow import DOMAIN
+from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

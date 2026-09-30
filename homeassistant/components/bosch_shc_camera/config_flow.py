@@ -15,8 +15,8 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .application_credentials import OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
+from .const import DOMAIN
 
-DOMAIN = "bosch_shc_camera"
 MAX_ACCOUNT_ID_LENGTH = 128
 
 
