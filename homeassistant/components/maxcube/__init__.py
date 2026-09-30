@@ -30,7 +30,7 @@ CONF_GATEWAYS = "gateways"
 CONFIG_GATEWAY = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_SCAN_INTERVAL, default=300): cv.time_period,
     }
 )

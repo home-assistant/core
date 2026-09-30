@@ -84,7 +84,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
                     probatio.Optional(
                         CONF_VERSION, default=DEFAULT_VERSION
                     ): cv.positive_int,
-                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                     probatio.Required(CONF_GROUPS): probatio.All(
                         probatio.EnsureList(),
                         [

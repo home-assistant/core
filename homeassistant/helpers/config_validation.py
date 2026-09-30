@@ -194,7 +194,7 @@ gps = probatio.ExactSequence([latitude, longitude])
 sun_event = probatio.All(
     probatio.Lower, probatio.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
 )
-port = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=65535))
+port = probatio.Port()
 
 
 def path(value: Any) -> str:
