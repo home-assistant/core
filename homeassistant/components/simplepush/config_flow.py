@@ -71,7 +71,9 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
                     probatio.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    probatio.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): str,
+                    probatio.Inclusive(
+                        probatio.Secret(CONF_PASSWORD), ATTR_ENCRYPTED
+                    ): str,
                     probatio.Inclusive(CONF_SALT, ATTR_ENCRYPTED): str,
                 }
             ),

@@ -24,7 +24,7 @@ DEFAULT_IP = "192.168.0.1"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
     }
 )
