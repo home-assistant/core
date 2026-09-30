@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from earn_e_p1 import EarnEP1Device
+from earn_e_p1 import EarnEP1Device, PacketType
 import pytest
 
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
@@ -25,7 +25,11 @@ MOCK_DEVICE_DATA: dict[str, Any] = {
     "power_delivered": 2.5,
     "power_returned": 0.0,
     "voltage_l1": 230.1,
+    "voltage_l2": 229.8,
+    "voltage_l3": 231.5,
     "current_l1": 10.87,
+    "current_l2": 8.2,
+    "current_l3": 4.35,
     "energy_delivered_tariff1": 12345.678,
     "energy_delivered_tariff2": 6789.012,
     "energy_returned_tariff1": 100.0,
@@ -44,17 +48,21 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 def trigger_callback(
     mock_listener: MagicMock,
     device_data: dict[str, Any] | None = None,
+    seen_packet_types: set[PacketType] | None = None,
     model: str | None = "P1 Meter",
     sw_version: str | None = "1.0.0",
 ) -> None:
     """Trigger the registered listener callback with device data."""
     if device_data is None:
         device_data = MOCK_DEVICE_DATA
+    if seen_packet_types is None:
+        seen_packet_types = set(PacketType)
     callback = mock_listener.register.call_args[0][1]
     device = EarnEP1Device(host=MOCK_HOST, serial=MOCK_SERIAL)
     device.model = model
     device.sw_version = sw_version
     device.data = device_data
+    device.seen_packet_types = seen_packet_types
     callback(device, device_data)
 
 

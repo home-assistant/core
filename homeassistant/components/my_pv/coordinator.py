@@ -138,9 +138,25 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             ) from exc
 
     @_my_pv_connection
+    async def set_setup_value(self, key: str, value: Any):
+        """Set a setup value."""
+        result = await self.device.set_setup_value(key, value)
+        self.async_update_listeners()
+        return result
+
+    @_my_pv_connection
     async def set_target_temperature(self, temperature: float) -> bool:
         """Set target temperature."""
         result = await self.device.set_target_temperature(temperature)
+        self.async_update_listeners()
+        return result
+
+    @_my_pv_connection
+    async def send_command(
+        self, key: str, value: bool | float | str | None = None
+    ) -> bool:
+        """Send command."""
+        result = await self.device.send_command(key, value)
         self.async_update_listeners()
         return result
 

@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -36,26 +36,28 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
-                    vol.Coerce(int), vol.Range(min=-1, max=8)
+                probatio.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                probatio.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
+                probatio.Optional(CONF_MMI, default=DEFAULT_MMI): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=-1, max=8)
                 ),
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-                vol.Optional(
+                probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): probatio.Coerce(
+                    float
+                ),
+                probatio.Optional(
                     CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
                 ): cv.positive_float,
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 type GeonetnzQuakesConfigEntry = ConfigEntry[GeonetnzQuakesFeedEntityManager]

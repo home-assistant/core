@@ -10,7 +10,7 @@ from goslideapi.goslideapi import (
     DigestAuthCalcError,
     GoSlideLocal as SlideLocalApi,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -128,10 +128,10 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_PASSWORD): str,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Optional(CONF_PASSWORD): str,
                     }
                 ),
                 {CONF_HOST: self._host},
@@ -165,9 +165,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
+                        probatio.Required(CONF_HOST): str,
                     }
                 ),
                 {
@@ -250,9 +250,9 @@ class SlideOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_INVERT_POSITION): bool,
+                        probatio.Required(CONF_INVERT_POSITION): bool,
                     }
                 ),
                 {CONF_INVERT_POSITION: self.config_entry.options[CONF_INVERT_POSITION]},

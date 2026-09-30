@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
+import probatio
 from synology_dsm import SynologyDSM
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
@@ -16,7 +17,6 @@ from synology_dsm.exceptions import (
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -80,37 +80,43 @@ CONF_OTP_CODE = "otp_code"
 HTTP_SUFFIX = "._http._tcp.local."
 
 
-def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Schema:
-    return vol.Schema(_ordered_shared_schema(discovery_info))
+def _discovery_schema_with_defaults(
+    discovery_info: DiscoveryInfoType,
+) -> probatio.Schema:
+    return probatio.Schema(_ordered_shared_schema(discovery_info))
 
 
-def _reauth_schema() -> vol.Schema:
-    return vol.Schema(
+def _reauth_schema() -> probatio.Schema:
+    return probatio.Schema(
         {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
     )
 
 
-def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
+def _user_schema_with_defaults(user_input: dict[str, Any]) -> probatio.Schema:
     user_schema: VolDictType = {
-        vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+        probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
     }
     user_schema.update(_ordered_shared_schema(user_input))
 
-    return vol.Schema(user_schema)
+    return probatio.Schema(user_schema)
 
 
 def _ordered_shared_schema(schema_input: dict[str, Any]) -> VolDictType:
     return {
-        vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
-        vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
-        vol.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
-        vol.Optional(
+        probatio.Required(
+            CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
+        ): str,
+        probatio.Required(
+            CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")
+        ): str,
+        probatio.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
+        probatio.Optional(
             CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_USE_SSL)
         ): bool,
-        vol.Optional(
+        probatio.Optional(
             CONF_VERIFY_SSL,
             default=schema_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         ): bool,
@@ -400,7 +406,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if not user_input.get(CONF_OTP_CODE):
             return self.async_show_form(
                 step_id="2sa",
-                data_schema=vol.Schema({vol.Required(CONF_OTP_CODE): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_OTP_CODE): str}),
                 errors=errors or {},
             )
 
@@ -419,9 +425,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="backup_share",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_BACKUP_SHARE): SelectSelector(
+                        probatio.Required(CONF_BACKUP_SHARE): SelectSelector(
                             SelectSelectorConfig(
                                 options=[
                                     SelectOptionDict(value=s.path, label=s.name)
@@ -430,10 +436,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                                 mode=SelectSelectorMode.DROPDOWN,
                             ),
                         ),
-                        vol.Required(
+                        probatio.Required(
                             CONF_BACKUP_PATH,
                             default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): vol.All(str, vol.Length(min=1)),
+                        ): probatio.All(str, probatio.Length(min=1)),
                     }
                 ),
             )
@@ -471,14 +477,14 @@ class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
 
         syno_data = self.config_entry.runtime_data
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_SNAPSHOT_QUALITY,
                     default=self.config_entry.options.get(
                         CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
                     ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=2)),
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=2)),
             }
         )
 
@@ -492,7 +498,7 @@ class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
         if shares:
             data_schema = data_schema.extend(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_BACKUP_SHARE,
                         default=self.config_entry.options[CONF_BACKUP_SHARE],
                     ): SelectSelector(
@@ -504,7 +510,7 @@ class SynologyDSMOptionsFlowHandler(OptionsFlowWithReload):
                             mode=SelectSelectorMode.DROPDOWN,
                         ),
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_BACKUP_PATH,
                         default=self.config_entry.options[CONF_BACKUP_PATH],
                     ): str,

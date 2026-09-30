@@ -2,7 +2,6 @@
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import StrEnum
 import logging
 from typing import Any, Self, final, override
 
@@ -25,6 +24,7 @@ from .const import (
     DOMAIN,
     ButtonEventType,
     DoorbellEventType,
+    EventDeviceClass,
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
@@ -35,14 +35,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
-
-
-class EventDeviceClass(StrEnum):
-    """Device class for events."""
-
-    DOORBELL = "doorbell"
-    BUTTON = "button"
-    MOTION = "motion"
 
 
 __all__ = [

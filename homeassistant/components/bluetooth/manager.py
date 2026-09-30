@@ -180,11 +180,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     def _address_disappeared(self, address: str) -> None:
         """Dismiss all discoveries for the given address."""
         self._integration_matcher.async_clear_address(address)
-        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+        self.hass.config_entries.flow.async_dismiss_discovery_flows(
             BluetoothServiceInfoBleak,
             lambda service_info: bool(service_info.address == address),
-        ):
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        )
 
     @override
     async def async_setup(self) -> None:

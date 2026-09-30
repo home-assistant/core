@@ -104,6 +104,9 @@
             }
           }
         }
+      },
+      "atw_zone": {
+        "name": "Zone {zone_number}"
       }
     },
     "number": {
@@ -124,6 +127,18 @@
       "energy_consumed": {
         "name": "Energy consumed (monthly)"
       },
+      "operation_status": {
+        "name": "Operation status",
+        "state": {
+          "cooling": "Cooling",
+          "heating_water": "Heating water",
+          "heating_zones": "Heating zones",
+          "idle": "[%key:common::state::idle%]"
+        }
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "room_temperature": {
         "name": "Room temperature"
       },
@@ -143,6 +158,14 @@
       },
       "overheat_protection": {
         "name": "Overheat protection"
+      },
+      "standby": {
+        "name": "Standby"
+      }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water"
       }
     }
   },

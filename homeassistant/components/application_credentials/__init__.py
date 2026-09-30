@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Protocol, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -52,11 +52,11 @@ CONF_AUTH_DOMAIN = "auth_domain"
 DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required(CONF_DOMAIN): cv.string,
-    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Strip),
-    vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Strip),
-    vol.Optional(CONF_AUTH_DOMAIN): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    probatio.Required(CONF_DOMAIN): cv.string,
+    probatio.Required(CONF_CLIENT_ID): probatio.All(cv.string, probatio.Strip),
+    probatio.Required(CONF_CLIENT_SECRET): probatio.All(cv.string, probatio.Strip),
+    probatio.Optional(CONF_AUTH_DOMAIN): cv.string,
+    probatio.Optional(CONF_NAME): cv.string,
 }
 UPDATE_FIELDS: VolDictType = {}  # Not supported
 
@@ -83,7 +83,7 @@ class AuthorizationServer:
 class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
     """Application credential collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict[str, str]) -> dict[str, str]:
@@ -326,7 +326,7 @@ async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[st
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "application_credentials/config"}
+    {probatio.Required("type"): "application_credentials/config"}
 )
 @websocket_api.async_response
 async def handle_integration_list(
@@ -345,8 +345,8 @@ async def handle_integration_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "application_credentials/config_entry",
-        vol.Required("config_entry_id"): str,
+        probatio.Required("type"): "application_credentials/config_entry",
+        probatio.Required("config_entry_id"): str,
     }
 )
 @websocket_api.require_admin
