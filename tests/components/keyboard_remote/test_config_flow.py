@@ -1,5 +1,7 @@
 """Tests for the Keyboard Remote config flow."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,7 +10,6 @@ import pytest
 from homeassistant.components.keyboard_remote.config_flow import (
     _get_device_name,
     _resolve_yaml_device,
-    _scan_input_devices_sync,
 )
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
@@ -30,6 +31,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
 
 from .conftest import (
+    EV_KEY,
     FAKE_BY_ID_BASENAME,
     FAKE_DEVICE_NAME,
     FAKE_DEVICE_NAME_2,
@@ -199,6 +201,172 @@ async def test_user_step_already_configured(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH_2
+
+
+BT_REMOTE_NAME = "BT Remote"
+
+
+def _input_device(name: str, *, sends_keys: bool = True) -> MagicMock:
+    """Create an evdev device that reports key events or only switch events."""
+    dev = MagicMock()
+    dev.name = name
+    dev.capabilities.return_value = {EV_KEY if sends_keys else 5: [30]}
+    return dev
+
+
+@contextmanager
+def _input_devices(
+    devices: dict[str, MagicMock | None],
+    by_id_links: dict[str, str] | None,
+) -> Iterator[None]:
+    """Mock the event nodes and, unless None, the by-id links pointing at them.
+
+    A device of None cannot be opened.
+    """
+    entries = []
+    for link in by_id_links or {}:
+        entry = MagicMock(spec_set=os.DirEntry)
+        entry.is_symlink.return_value = True
+        entry.path = link
+        entries.append(entry)
+    not_a_link = MagicMock(spec_set=os.DirEntry)
+    not_a_link.is_symlink.return_value = False
+    entries.append(not_a_link)
+    scandir = MagicMock()
+    scandir.return_value.__enter__.return_value = entries
+
+    def _open(path: str) -> MagicMock:
+        if (dev := devices[path]) is None:
+            raise OSError(13, "Permission denied")
+        return dev
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=by_id_links is not None,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir", scandir
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            side_effect=lambda p: (by_id_links or {}).get(p, p),
+        ),
+        patch("evdev.list_devices", return_value=list(devices)),
+        patch("evdev.InputDevice", side_effect=_open),
+    ):
+        yield
+
+
+async def test_user_step_lists_devices_without_by_id_link(
+    hass: HomeAssistant,
+) -> None:
+    """Test devices without a by-id link are offered once per name.
+
+    udev creates no by-id link for Bluetooth devices. Nodes that cannot send
+    keys, or cannot be opened, are not offered.
+    """
+    devices = {
+        FAKE_DEVICE_REAL_PATH: _input_device(FAKE_DEVICE_NAME),
+        "/dev/input/event7": _input_device(BT_REMOTE_NAME),
+        "/dev/input/event8": _input_device(BT_REMOTE_NAME),
+        "/dev/input/event9": _input_device("Headphone Jack", sends_keys=False),
+        "/dev/input/event10": None,
+    }
+    with _input_devices(devices, {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"].schema[CONF_DEVICE_PATH].config["options"] == [
+        {
+            "value": FAKE_DEVICE_PATH,
+            "label": f"{FAKE_DEVICE_NAME} ({FAKE_BY_ID_BASENAME})",
+        },
+        {"value": "/dev/input/event7", "label": f"{BT_REMOTE_NAME} (event7)"},
+    ]
+    for path in (FAKE_DEVICE_REAL_PATH, "/dev/input/event7", "/dev/input/event8"):
+        devices[path].close.assert_called_once()
+    devices["/dev/input/event9"].close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "by_id_links",
+    [pytest.param(None, id="no_by_id_directory"), pytest.param({}, id="no_links")],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_creates_name_matched_entry(
+    hass: HomeAssistant,
+    by_id_links: dict[str, str] | None,
+) -> None:
+    """Test a device without a by-id link is configured by its name.
+
+    Its event node can change when it reconnects, so the entry matches by
+    name, like a YAML entry configured by name.
+    """
+    devices = {"/dev/input/event7": _input_device(BT_REMOTE_NAME)}
+    with _input_devices(devices, by_id_links):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE_PATH: "/dev/input/event7"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == BT_REMOTE_NAME
+    assert result["result"].unique_id == BT_REMOTE_NAME
+    assert result["data"] == {CONF_DEVICE_NAME: BT_REMOTE_NAME}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_hides_configured_name_matched_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test a device already configured by name is not offered again."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=BT_REMOTE_NAME,
+        data={CONF_DEVICE_NAME: BT_REMOTE_NAME},
+    ).add_to_hass(hass)
+    devices = {
+        FAKE_DEVICE_REAL_PATH: _input_device(FAKE_DEVICE_NAME),
+        "/dev/input/event7": _input_device(BT_REMOTE_NAME),
+    }
+    with _input_devices(devices, {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert [
+        option["value"]
+        for option in result["data_schema"].schema[CONF_DEVICE_PATH].config["options"]
+    ] == [FAKE_DEVICE_PATH]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_name_matched_device_configured_meanwhile(
+    hass: HomeAssistant,
+) -> None:
+    """Test submitting a device configured by name in the meantime aborts."""
+    devices = {"/dev/input/event7": _input_device(BT_REMOTE_NAME)}
+    with _input_devices(devices, {}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=BT_REMOTE_NAME,
+            data={CONF_DEVICE_NAME: BT_REMOTE_NAME},
+        ).add_to_hass(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE_PATH: "/dev/input/event7"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -657,99 +825,6 @@ def test_get_device_name_oserror() -> None:
         result = _get_device_name(FAKE_DEVICE_PATH)
 
     assert result is None
-
-
-def test_scan_input_devices_no_dir() -> None:
-    """Test scan returns empty list when /dev/input/by-id does not exist."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-        return_value=False,
-    ):
-        result = _scan_input_devices_sync()
-
-    assert result == []
-
-
-def test_scan_input_devices_with_devices() -> None:
-    """Test scan returns device options for symlinked entries."""
-    entry_symlink = MagicMock(spec_set=os.DirEntry)
-    entry_symlink.is_symlink.return_value = True
-    entry_symlink.path = FAKE_DEVICE_PATH
-    entry_symlink.name = FAKE_BY_ID_BASENAME
-
-    entry_not_symlink = MagicMock(spec_set=os.DirEntry)
-    entry_not_symlink.is_symlink.return_value = False
-    entry_not_symlink.name = "not-a-symlink"
-
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-            return_value=[entry_not_symlink, entry_symlink],
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-    ):
-        result = _scan_input_devices_sync()
-
-    assert len(result) == 1
-    assert result[0]["value"] == FAKE_DEVICE_PATH
-    assert FAKE_DEVICE_NAME in result[0]["label"]
-    assert FAKE_BY_ID_BASENAME in result[0]["label"]
-    mock_dev.close.assert_called_once()
-
-
-def test_scan_input_devices_oserror_on_device() -> None:
-    """Test scan skips devices that raise OSError."""
-    entry_symlink = MagicMock(spec_set=os.DirEntry)
-    entry_symlink.is_symlink.return_value = True
-    entry_symlink.path = FAKE_DEVICE_PATH
-    entry_symlink.name = FAKE_BY_ID_BASENAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-            return_value=[entry_symlink],
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", side_effect=OSError("Permission denied")),
-    ):
-        result = _scan_input_devices_sync()
-
-    assert result == []
-
-
-def test_scan_input_devices_scandir_oserror() -> None:
-    """Test scan returns empty list when scandir raises OSError."""
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-            side_effect=OSError("Permission denied"),
-        ),
-    ):
-        result = _scan_input_devices_sync()
-
-    assert result == []
 
 
 def test_resolve_yaml_descriptor_with_by_id() -> None:

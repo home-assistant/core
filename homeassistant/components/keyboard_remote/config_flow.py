@@ -1,5 +1,6 @@
 """Config flow for Keyboard Remote."""
 
+from collections.abc import Container
 import logging
 import os
 from typing import Any, override
@@ -49,35 +50,59 @@ def _get_device_name(device_path: str) -> str | None:
     return name
 
 
-def _scan_input_devices_sync() -> list[selector.SelectOptionDict]:
-    """Scan /dev/input/by-id/ and return selectable device options."""
-    from evdev import InputDevice  # noqa: PLC0415
-
-    options: list[selector.SelectOptionDict] = []
-
-    if not os.path.isdir(DEVINPUT_BY_ID):
-        return options
-
-    try:
-        entries = sorted(os.scandir(DEVINPUT_BY_ID), key=lambda e: e.name)
-    except OSError:
-        return options
-
-    for entry in entries:
-        if not entry.is_symlink():
-            continue
-        real_path = os.path.realpath(entry.path)
+def _by_id_links() -> dict[str, str]:
+    """Map each event node to its /dev/input/by-id link."""
+    links: dict[str, str] = {}
+    if os.path.isdir(DEVINPUT_BY_ID):
         try:
-            dev = InputDevice(real_path)
+            with os.scandir(DEVINPUT_BY_ID) as entries:
+                for entry in entries:
+                    if entry.is_symlink():
+                        links[os.path.realpath(entry.path)] = entry.path
+        except OSError:
+            pass
+    return links
+
+
+def _scan_input_devices_sync(
+    configured_names: Container[str],
+) -> list[selector.SelectOptionDict]:
+    """List input devices to offer, by their by-id link where they have one.
+
+    udev creates no by-id link for Bluetooth devices, nor for devices without
+    a bus ID such as GPIO IR receivers. Those are offered by their event node
+    and configured by name, once per name, and only if they can send keys.
+    """
+    from evdev import InputDevice, ecodes, list_devices  # noqa: PLC0415
+
+    links = _by_id_links()
+    by_id_options: list[selector.SelectOptionDict] = []
+    name_options: list[selector.SelectOptionDict] = []
+    names: set[str] = set()
+    for dev_path in sorted(list_devices(DEVINPUT)):
+        try:
+            dev = InputDevice(dev_path)
         except OSError:
             continue
-        try:
-            label = f"{dev.name} ({entry.name})"
-        finally:
-            dev.close()
-        options.append(selector.SelectOptionDict(value=entry.path, label=label))
+        name = dev.name
+        sends_keys = ecodes.EV_KEY in dev.capabilities()
+        dev.close()
+        if (link := links.get(os.path.realpath(dev_path))) is not None:
+            by_id_options.append(
+                selector.SelectOptionDict(
+                    value=link, label=f"{name} ({os.path.basename(link)})"
+                )
+            )
+        elif sends_keys and name not in names and name not in configured_names:
+            names.add(name)
+            name_options.append(
+                selector.SelectOptionDict(
+                    value=dev_path, label=f"{name} ({os.path.basename(dev_path)})"
+                )
+            )
 
-    return options
+    by_id_options.sort(key=lambda option: option["value"])
+    return by_id_options + name_options
 
 
 def _exclude_configured_devices(
@@ -93,10 +118,10 @@ def _exclude_configured_devices(
 
 
 async def _scan_input_devices(
-    hass: HomeAssistant,
+    hass: HomeAssistant, configured_names: Container[str]
 ) -> list[selector.SelectOptionDict]:
-    """Scan /dev/input/by-id/ and return selectable device options."""
-    return await hass.async_add_executor_job(_scan_input_devices_sync)
+    """Scan for input devices and return selectable device options."""
+    return await hass.async_add_executor_job(_scan_input_devices_sync, configured_names)
 
 
 def _resolve_yaml_device(
@@ -113,16 +138,7 @@ def _resolve_yaml_device(
     descriptor = import_data.get("device_descriptor")
     name = import_data.get("device_name")
 
-    # Build realpath -> by-id mapping
-    by_id_map: dict[str, str] = {}
-    if os.path.isdir(DEVINPUT_BY_ID):
-        try:
-            with os.scandir(DEVINPUT_BY_ID) as entries:
-                for entry in entries:
-                    if entry.is_symlink():
-                        by_id_map[os.path.realpath(entry.path)] = entry.path
-        except OSError:
-            pass
+    by_id_map = _by_id_links()
 
     if descriptor:
         real_path = os.path.realpath(descriptor)
@@ -193,9 +209,10 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             device_path = user_input[CONF_DEVICE_PATH]
-            unique_id = os.path.basename(device_path)
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            by_id = device_path.startswith(f"{DEVINPUT_BY_ID}/")
+            if by_id:
+                await self.async_set_unique_id(os.path.basename(device_path))
+                self._abort_if_unique_id_configured()
 
             dev_name = await self.hass.async_add_executor_job(
                 _get_device_name, device_path
@@ -203,12 +220,18 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             if dev_name is None:
                 errors["base"] = "cannot_connect"
             else:
+                data = {CONF_DEVICE_NAME: dev_name}
+                if by_id:
+                    data[CONF_DEVICE_PATH] = device_path
+                else:
+                    # Without a by-id link the event node can change when the
+                    # device reconnects, so match by name like a YAML entry
+                    # configured by name.
+                    await self.async_set_unique_id(dev_name)
+                    self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=dev_name,
-                    data={
-                        CONF_DEVICE_PATH: device_path,
-                        CONF_DEVICE_NAME: dev_name,
-                    },
+                    data=data,
                     options={
                         CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
                         CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
@@ -217,13 +240,13 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        available_devices = await _scan_input_devices(self.hass)
+        entries = self._async_current_entries()
+        configured_ids = {entry.unique_id for entry in entries if entry.unique_id}
+        available_devices = await _scan_input_devices(self.hass, configured_ids)
 
         if not available_devices:
             return self.async_abort(reason="no_devices")
 
-        entries = self._async_current_entries()
-        configured_ids = {entry.unique_id for entry in entries}
         # Not the YAML descriptor: runtime matching ignores it, and its eventN
         # may now belong to an unrelated device.
         configured_paths = [

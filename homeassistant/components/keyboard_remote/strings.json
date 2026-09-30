@@ -4,7 +4,7 @@
       "all_devices_configured": "All available input devices are already configured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_identify_device": "Could not identify the device from the YAML configuration. Ensure the device is connected and the configuration is correct.",
-      "no_devices": "No input devices found in /dev/input/by-id/. Ensure input devices are connected and accessible."
+      "no_devices": "No input devices found. Ensure input devices are connected and accessible."
     },
     "error": {
       "cannot_connect": "Could not open the selected input device. Check permissions and that the device is connected."
@@ -17,7 +17,7 @@
         "data_description": {
           "device_path": "Select the input device from the list of detected devices."
         },
-        "description": "Choose an input device to use as a keyboard remote.",
+        "description": "Choose an input device to use as a keyboard remote. Devices without a stable ID, such as Bluetooth devices, are matched by their name.",
         "title": "Select input device"
       }
     }
