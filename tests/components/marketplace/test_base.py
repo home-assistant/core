@@ -1,8 +1,11 @@
 """Tests for the Marketplace base object."""
 
-from unittest.mock import patch
+from http import HTTPStatus
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
 import pytest
+from yarl import URL
 
 from homeassistant.components.marketplace.base import (
     MarketplaceConfiguration,
@@ -19,12 +22,23 @@ from homeassistant.components.marketplace.enums import (
     MarketplaceSignal,
     RepositoryCategory,
 )
+from homeassistant.components.marketplace.exceptions import (
+    ExecutionInProgressError,
+    ExpectedError,
+    MarketplaceError,
+)
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.core import HomeAssistant
 
+from . import mocked_response
+from .conftest import MarketplaceResponses
 from .const import DEFAULT_CATEGORIES, REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 from tests.common import MockConfigEntry, MockUser
+from tests.test_util.aiohttp import AiohttpClientMockResponse
+
+DOWNLOAD_URL = "https://raw.githubusercontent.com/owner/repository/main/file.txt"
+SLEEP = "homeassistant.components.marketplace.base.asyncio.sleep"
 
 
 def test_configuration_reads_only_the_token() -> None:
@@ -318,3 +332,253 @@ async def test_process_queue(
     assert len(ran) == tasks_run
     assert write.called is bool(tasks_run)
     marketplace.queue.clear()
+
+
+def _rate_limit(remaining: int) -> MagicMock:
+    """Return what GitHub answers about the rate limit."""
+    response = MagicMock()
+    response.data.resources.core.remaining = remaining
+    response.data.resources.core.reset = 0
+    return response
+
+
+@pytest.mark.parametrize(
+    ("remaining", "can_update", "reason"),
+    [
+        pytest.param(5000, 400, None, id="room_left"),
+        pytest.param(1005, 0, DisabledReason.RATE_LIMIT, id="nearly_out"),
+    ],
+)
+async def test_rate_limit_decides_how_much_can_update(
+    marketplace: MarketplaceManager,
+    remaining: int,
+    can_update: int,
+    reason: DisabledReason | None,
+) -> None:
+    """Test the rate limit keeps 1000 requests aside, and stops work below that."""
+    with patch.object(
+        marketplace,
+        "async_github_api_method",
+        AsyncMock(return_value=_rate_limit(remaining)),
+    ):
+        assert await marketplace.async_can_update() == can_update
+
+    assert marketplace.system.disabled_reason == reason
+
+
+async def test_rate_limit_that_can_not_be_read_updates_nothing(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an unknown rate limit is treated as none left."""
+    with patch.object(
+        marketplace,
+        "async_github_api_method",
+        AsyncMock(side_effect=MarketplaceError("no route to host")),
+    ):
+        assert await marketplace.async_can_update() == 0
+
+    assert not marketplace.system.disabled
+
+
+@pytest.mark.parametrize(
+    ("can_update", "enabled"),
+    [
+        pytest.param(10, True, id="lifted"),
+        pytest.param(0, False, id="still_limited"),
+    ],
+)
+async def test_rate_limit_check_starts_again_once_it_lifted(
+    marketplace: MarketplaceManager, can_update: int, enabled: bool
+) -> None:
+    """Test the Marketplace carries on with its queue once the limit lifted."""
+    marketplace.disable(DisabledReason.RATE_LIMIT)
+
+    with (
+        patch.object(marketplace, "async_can_update", return_value=can_update),
+        patch.object(marketplace, "async_process_queue") as process_queue,
+    ):
+        await marketplace.async_check_rate_limit()
+
+    assert marketplace.system.disabled is not enabled
+    assert process_queue.called is enabled
+
+
+async def test_rate_limit_check_leaves_other_reasons_alone(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test only a rate limit is checked for lifting, other reasons stay."""
+    marketplace.disable(DisabledReason.REMOVED)
+
+    with patch.object(marketplace, "async_can_update") as can_update:
+        await marketplace.async_check_rate_limit()
+
+    can_update.assert_not_called()
+    assert marketplace.system.disabled_reason == DisabledReason.REMOVED
+
+
+async def test_queue_waits_while_disabled_empty_or_running(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the queue only runs when there is something to run, and room for it."""
+
+    async def task() -> None:
+        """Do nothing, the queue only has to hold it."""
+
+    with patch.object(marketplace.queue, "execute") as execute:
+        # Nothing in it
+        await marketplace.async_process_queue()
+
+        marketplace.queue.add(task())
+        marketplace.disable(DisabledReason.RATE_LIMIT)
+        await marketplace.async_process_queue()
+
+        marketplace.enable()
+        marketplace.queue.running = True
+        await marketplace.async_process_queue()
+
+    execute.assert_not_called()
+    marketplace.queue.running = False
+    marketplace.queue.clear()
+
+
+async def test_queue_stops_when_another_run_took_over(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a run that finds the queue taken leaves it to that one."""
+
+    async def task() -> None:
+        """Do nothing, the queue only has to hold it."""
+
+    marketplace.queue.add(task())
+    with (
+        patch.object(marketplace, "async_can_update", return_value=10),
+        patch.object(
+            marketplace.queue, "execute", side_effect=ExecutionInProgressError
+        ),
+        patch.object(marketplace.data, "async_write") as write,
+    ):
+        await marketplace.async_process_queue()
+
+    write.assert_not_called()
+    marketplace.queue.clear()
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_queue_waits_for_a_github_connection(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the queue does not spend the small anonymous rate limit."""
+
+    async def task() -> None:
+        """Do nothing, the queue only has to hold it."""
+
+    marketplace.queue.add(task())
+    with patch.object(marketplace.queue, "execute") as execute:
+        await marketplace.async_process_queue()
+
+    execute.assert_not_called()
+    marketplace.queue.clear()
+
+
+async def test_download_gives_up_after_five_timeouts(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test a download that keeps timing out stops trying."""
+    response_mocker.add(
+        DOWNLOAD_URL,
+        AiohttpClientMockResponse("get", URL(DOWNLOAD_URL), exc=TimeoutError),
+        keep=True,
+    )
+
+    with patch(SLEEP) as sleep:
+        assert await marketplace.async_download_file(DOWNLOAD_URL) is None
+
+    assert sleep.call_count == 5
+
+
+@pytest.mark.parametrize(
+    ("retry_after", "waited"),
+    [
+        pytest.param("2", 2, id="as_asked"),
+        pytest.param("soon", 10, id="unreadable"),
+        pytest.param("600", 60, id="capped"),
+    ],
+)
+async def test_download_waits_out_a_rate_limit(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    retry_after: str,
+    waited: int,
+) -> None:
+    """Test a rate limited download waits what GitHub asks, within reason."""
+    response_mocker.add(
+        DOWNLOAD_URL,
+        mocked_response(
+            DOWNLOAD_URL,
+            status=HTTPStatus.TOO_MANY_REQUESTS,
+            headers={"retry-after": retry_after},
+        ),
+    )
+    waits: list[int] = []
+
+    async def wait(seconds: int) -> None:
+        # By the time the wait is over, GitHub answers
+        waits.append(seconds)
+        response_mocker.add(DOWNLOAD_URL, mocked_response(DOWNLOAD_URL, content=b"ok"))
+
+    with patch(SLEEP, wait):
+        content = await marketplace.async_download_file(
+            DOWNLOAD_URL, handle_rate_limit=True
+        )
+
+    assert content == b"ok"
+    assert waits == [waited]
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param(
+            mocked_response(DOWNLOAD_URL, status=HTTPStatus.NOT_FOUND), id="status"
+        ),
+        pytest.param(
+            AiohttpClientMockResponse("get", URL(DOWNLOAD_URL), exc=ClientError),
+            id="exception",
+        ),
+    ],
+)
+async def test_download_that_fails_gives_nothing(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    response: AiohttpClientMockResponse,
+) -> None:
+    """Test a download that fails for another reason is not tried again."""
+    response_mocker.add(DOWNLOAD_URL, response)
+
+    with patch(SLEEP) as sleep:
+        assert await marketplace.async_download_file(DOWNLOAD_URL) is None
+
+    sleep.assert_not_called()
+
+
+async def test_register_skips_what_it_was_told_to(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a repository on the skip list is not registered."""
+    marketplace.common.skip.add("owner/skipped")
+
+    with pytest.raises(ExpectedError):
+        await marketplace.async_register_repository(
+            "owner/skipped", RepositoryCategory.INTEGRATION
+        )
+
+
+async def test_register_refuses_an_unknown_category(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a category the Marketplace does not have registers nothing."""
+    assert (
+        await marketplace.async_register_repository("owner/unknown", "python_script")
+        is None
+    )
+    assert marketplace.repositories.get_by_full_name("owner/unknown") is None

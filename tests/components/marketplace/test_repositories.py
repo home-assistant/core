@@ -31,8 +31,12 @@ from homeassistant.components.marketplace.enums import (
     RepositoryCategory,
 )
 from homeassistant.components.marketplace.exceptions import (
+    CatalogContentUnresolvedError,
     GitHubAnonymousRateLimitError,
+    GitHubRateLimitError,
     MarketplaceError,
+    NotModifiedError,
+    RepositoryArchivedError,
 )
 from homeassistant.components.marketplace.repositories import REPOSITORY_CLASSES
 from homeassistant.components.marketplace.repositories.base import (
@@ -3028,3 +3032,227 @@ def test_resource_url_differs_per_version(
     repository.data.installed_version = second
 
     assert repository.generate_dashboard_resource_url() != url
+
+
+async def test_archived_repository_is_refused(marketplace: MarketplaceManager) -> None:
+    """Test an archived repository is not updated, and remembered as archived."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.archived = True
+
+    with pytest.raises(RepositoryArchivedError) as exc_info:
+        repository._raise_when_unusable()
+
+    assert exc_info.value.translation_key == "repository_archived"
+    assert repository.validate.errors == [exc_info.value]
+    assert REPOSITORY_INTEGRATION in marketplace.common.archived_repositories
+
+
+@pytest.mark.parametrize("removal_type", ["critical", "blacklist"])
+async def test_removed_repository_is_refused(
+    marketplace: MarketplaceManager, removal_type: str
+) -> None:
+    """Test a repository the catalog took out for a reason is not updated."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    marketplace.repositories.removed_repository(REPOSITORY_INTEGRATION).update_data(
+        {"removal_type": removal_type}
+    )
+
+    with pytest.raises(MarketplaceError) as exc_info:
+        repository._raise_when_unusable()
+
+    assert exc_info.value.translation_key == "repository_removed"
+    assert repository.validate.errors == [exc_info.value]
+
+
+async def test_repository_removed_on_request_stays_usable(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a plain removal leaves the repository to its user."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    marketplace.repositories.removed_repository(REPOSITORY_INTEGRATION).update_data(
+        {"removal_type": "remove"}
+    )
+
+    repository._raise_when_unusable()
+
+    assert not repository.validate.errors
+
+
+@pytest.mark.parametrize(
+    ("exception", "releases"),
+    [
+        # Running out of requests says nothing about the releases
+        pytest.param(GitHubRateLimitError(), True, id="rate_limited"),
+        pytest.param(
+            MarketplaceError(
+                translation_domain=DOMAIN, translation_key="github_failed"
+            ),
+            False,
+            id="failed",
+        ),
+    ],
+)
+async def test_releases_that_can_not_be_read(
+    marketplace: MarketplaceManager, exception: MarketplaceError, releases: bool
+) -> None:
+    """Test what a failed look at the releases leaves behind."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.releases = True
+
+    with patch.object(repository, "get_releases", side_effect=exception):
+        await repository._async_update_releases()
+
+    assert repository.data.releases is releases
+
+
+async def test_update_that_fails_is_not_an_update(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a failed update reports nothing changed, unless asked to go on."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+
+    with patch.object(
+        repository,
+        "common_update_data",
+        side_effect=MarketplaceError(
+            translation_domain=DOMAIN, translation_key="github_failed"
+        ),
+    ):
+        assert await repository.common_update() is False
+
+
+async def test_update_of_an_unchanged_repository_is_not_an_update(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a repository that is not installed and did not change is left alone."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = False
+    repository.data.etag_repository = "unchanged"
+
+    with (
+        patch.object(repository, "common_update_data") as update_data,
+        patch.object(repository, "async_get_readme_contents") as readme,
+    ):
+        assert await repository.common_update() is False
+
+    update_data.assert_called_once()
+    readme.assert_not_called()
+
+
+async def test_registration_of_an_unchanged_repository(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a registration GitHub has nothing new for keeps what it knew."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.repository_object = None
+    repository.data.last_fetched = None
+
+    with patch.object(
+        repository, "async_get_repository_object", side_effect=NotModifiedError
+    ):
+        await repository.common_registration()
+
+    assert repository.data.last_fetched is None
+
+
+@pytest.mark.parametrize(
+    "method", ["update_dashboard_resources", "remove_dashboard_resources"]
+)
+async def test_dashboard_resources_are_loaded_first(
+    installed_plugin: PluginRepository, method: str
+) -> None:
+    """Test the resources are read before they are changed, or they would be lost."""
+    resources = installed_plugin._get_resource_handler()
+    resources.loaded = False
+
+    with patch.object(resources, "async_load") as load:
+        await getattr(installed_plugin, method)()
+
+    load.assert_called_once()
+    assert resources.loaded
+
+
+async def test_plugin_takes_its_file_from_the_newest_release(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a card that ships its file with the release is installed from there."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.repository_manifest.content_in_root = False
+    repository.repository_manifest.filename = "plugin-basic.js"
+    asset = MagicMock()
+    asset.name = "plugin-basic.js"
+    release = MagicMock()
+    release.assets = [asset]
+    repository.releases.objects = [release]
+
+    repository.update_filenames()
+
+    assert repository.data.file_name == "plugin-basic.js"
+    assert repository.content.path.remote == "release"
+
+
+@pytest.mark.parametrize(
+    ("manifest_name", "integration_manifest", "name"),
+    [
+        pytest.param(
+            "From the catalog",
+            {"name": "From GitHub"},
+            "From the catalog",
+            id="catalog",
+        ),
+        pytest.param(None, {"name": "From GitHub"}, "From GitHub", id="manifest"),
+        pytest.param(None, {}, None, id="none"),
+    ],
+)
+async def test_integration_name(
+    marketplace: MarketplaceManager,
+    manifest_name: str | None,
+    integration_manifest: dict[str, str],
+    name: str | None,
+) -> None:
+    """Test the name of an integration comes from what knows it best."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.manifest_name = manifest_name
+    repository.integration_manifest = integration_manifest
+
+    assert repository._content_name() == name
+
+
+@pytest.mark.parametrize(
+    ("downloaded", "manifest"),
+    [
+        pytest.param(None, None, id="not_there"),
+        pytest.param(b"not json", None, id="not_json"),
+        pytest.param(b'{"domain": "example"}', {"domain": "example"}, id="valid"),
+    ],
+)
+async def test_integration_manifest_of_a_version(
+    marketplace: MarketplaceManager,
+    downloaded: bytes | None,
+    manifest: dict[str, str] | None,
+) -> None:
+    """Test a manifest.json that can not be read is treated as missing."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+
+    with patch.object(
+        marketplace, "async_download_file", AsyncMock(return_value=downloaded)
+    ):
+        assert (
+            await repository._async_download_integration_manifest(
+                "1.0.0", "custom_components/example/manifest.json"
+            )
+            == manifest
+        )
+
+
+async def test_catalog_zip_release_needs_a_domain(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a ZIP release is only installed from the catalog when it names a domain."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.repository_manifest.zip_release = True
+    repository.repository_manifest.filename = "release.zip"
+    repository.data.domain = None
+
+    with pytest.raises(CatalogContentUnresolvedError):
+        await repository._async_resolve_catalog_content("1.0.0", commit=False)
