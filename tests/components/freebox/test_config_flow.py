@@ -139,7 +139,9 @@ async def test_link_bridge_mode_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
     assert not result["errors"]
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -180,7 +182,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 )
 async def test_on_link_failed(
     hass: HomeAssistant,
-    side_effect: Exception,
+    side_effect: type[Exception],
     error_msg: str,
 ) -> None:
     """Test when we have errors during linking the router."""
@@ -204,7 +206,9 @@ async def test_on_link_failed(
         "homeassistant.components.freebox.router.Freepybox.open",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error_msg}
 
