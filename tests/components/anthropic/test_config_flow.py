@@ -14,6 +14,7 @@ from anthropic import (
     NotFoundError,
     types,
 )
+from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo
 from httpx import URL, Request, Response
 import pytest
@@ -50,6 +51,8 @@ from homeassistant.components.anthropic.const import (
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+
+from . import model_list
 
 from tests.common import MockConfigEntry
 
@@ -1143,39 +1146,192 @@ async def test_creating_ai_task_subentry_additional(
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth(
+@pytest.fixture
+async def setup_api_key_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    initial_state: config_entries.ConfigEntryState,
 ) -> None:
-    """Test we can reauthenticate."""
-    # Pretend we already set up a config entry.
-    hass.config.components.add("anthropic")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        state=config_entries.ConfigEntryState.LOADED,
+    """Optionally load the entry to register its real update listener."""
+    if initial_state is config_entries.ConfigEntryState.LOADED:
+        with patch(
+            "anthropic.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+            return_value=AsyncPage(data=model_list),
+        ):
+            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("source", "step_id", "reason"),
+    [
+        pytest.param(
+            config_entries.SOURCE_REAUTH,
+            "reauth_confirm",
+            "reauth_successful",
+            id="reauth",
+        ),
+        pytest.param(
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure",
+            "reconfigure_successful",
+            id="reconfigure",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "initial_state",
+    [
+        pytest.param(config_entries.ConfigEntryState.NOT_LOADED, id="not_loaded"),
+        pytest.param(
+            config_entries.ConfigEntryState.LOADED,
+            id="loaded",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_api_key_entry")
+async def test_update_api_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+    step_id: str,
+    reason: str,
+    initial_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test updating the key preserves subentries and reloads exactly once."""
+    assert mock_config_entry.state is initial_state
+    subentries = dict(mock_config_entry.subentries)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": mock_config_entry.entry_id},
     )
 
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == step_id
 
-    with patch(
-        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
+    with (
+        patch(
+            "anthropic.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+            return_value=AsyncPage(data=model_list),
+        ),
+        patch.object(
+            hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+        ) as mock_reload,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_API_KEY: "new_api_key",
-            },
+            {CONF_API_KEY: "new_api_key"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == reason
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert mock_config_entry.subentries == subentries
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    mock_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("source", "step_id", "reason"),
+    [
+        pytest.param(
+            config_entries.SOURCE_REAUTH,
+            "reauth_confirm",
+            "reauth_successful",
+            id="reauth",
+        ),
+        pytest.param(
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure",
+            "reconfigure_successful",
+            id="reconfigure",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            AuthenticationError(
+                message="invalid x-api-key",
+                response=Response(
+                    401, request=Request("GET", "https://api.anthropic.com")
+                ),
+                body={"error": {"type": "authentication_error"}},
+            ),
+            "authentication_error",
+            id="invalid_key",
+        ),
+        pytest.param(
+            APIConnectionError(request=None), "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_update_api_key_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+    step_id: str,
+    reason: str,
+    side_effect: APIError,
+    error: str,
+) -> None:
+    """Test errors preserve the current key and allow retrying the same step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": mock_config_entry.entry_id},
+    )
+    with patch("anthropic.resources.models.AsyncModels.list", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "invalid_api_key"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_API_KEY] == "bla"
+
+    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(config_entries.SOURCE_REAUTH, id="reauth"),
+        pytest.param(config_entries.SOURCE_RECONFIGURE, id="reconfigure"),
+    ],
+)
+async def test_update_api_key_duplicate(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+) -> None:
+    """Test a key belonging to another entry cannot be used."""
+    MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "other_key"}).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": mock_config_entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "other_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_API_KEY] == "bla"
 
 
 @pytest.mark.parametrize(

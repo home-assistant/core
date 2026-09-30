@@ -129,7 +129,7 @@ THEME_SCHEMA = probatio.Schema(
                     {cv.string: cv.string}
                 ),
             },
-            cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
+            probatio.AtLeastOne(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
         ),
     }
 )
@@ -783,7 +783,7 @@ async def _async_setup_themes(
                     "dark", "light"
                 ),
             },
-            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
+            probatio.AtLeastOne(CONF_NAME, CONF_NAME_DARK),
         ),
     )
 

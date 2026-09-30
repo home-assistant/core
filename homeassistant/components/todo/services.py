@@ -72,7 +72,7 @@ TODO_ITEM_FIELD_SCHEMA = {
 }
 
 
-TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
+TODO_ITEM_FIELD_VALIDATIONS = [probatio.AtMostOne(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 
 
 TODO_SERVICE_GET_ITEMS_SCHEMA = {
@@ -233,7 +233,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 }
             ),
             *TODO_ITEM_FIELD_VALIDATIONS,
-            cv.has_at_least_one_key(
+            probatio.AtLeastOne(
                 ATTR_RENAME,
                 ATTR_STATUS,
                 *[desc.service_field for desc in TODO_ITEM_FIELDS],
