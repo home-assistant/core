@@ -148,7 +148,9 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _show_api_method_form(
         self, device_type: PlaatoDeviceType, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
-        data_schema = probatio.Schema({probatio.Optional(CONF_TOKEN, default=""): str})
+        data_schema = probatio.Schema(
+            {probatio.Optional(probatio.Secret(CONF_TOKEN), default=""): str}
+        )
 
         if device_type == PlaatoDeviceType.Airlock:
             data_schema = data_schema.extend(

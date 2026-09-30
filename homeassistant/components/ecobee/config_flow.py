@@ -22,7 +22,7 @@ from .const import CONF_REFRESH_TOKEN, DOMAIN
 
 _USER_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_API_KEY): str,
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_USERNAME): str,
         probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }

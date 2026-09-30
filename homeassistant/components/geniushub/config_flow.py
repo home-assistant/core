@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CLOUD_API_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 

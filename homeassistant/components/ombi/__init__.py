@@ -70,7 +70,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 {
                     probatio.Required(CONF_HOST): cv.string,
                     probatio.Required(CONF_USERNAME): cv.string,
-                    probatio.Exclusive(CONF_API_KEY, "auth"): cv.string,
+                    probatio.Exclusive(
+                        probatio.Secret(CONF_API_KEY), "auth"
+                    ): cv.string,
                     probatio.Exclusive(
                         probatio.Secret(CONF_PASSWORD), "auth"
                     ): cv.string,

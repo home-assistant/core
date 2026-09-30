@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL): str,
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Required(CONF_API_SECRET): str,
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }

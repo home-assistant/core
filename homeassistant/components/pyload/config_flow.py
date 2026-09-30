@@ -40,7 +40,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
             ),
         ),
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
-        probatio.Exclusive(CONF_API_KEY, "credentials"): cv.string,
+        probatio.Exclusive(probatio.Secret(CONF_API_KEY), "credentials"): cv.string,
         probatio.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
@@ -58,7 +58,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Exclusive(CONF_API_KEY, "credentials"): cv.string,
+        probatio.Exclusive(probatio.Secret(CONF_API_KEY), "credentials"): cv.string,
         probatio.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
