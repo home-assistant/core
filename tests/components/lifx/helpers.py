@@ -24,6 +24,8 @@ from lifx import (
     LightWaveform,
     MatrixLight,
     MatrixLightState,
+    MirrorLight,
+    MirrorLightState,
     MultiZoneLight,
     MultiZoneLightState,
     ThreadInfo,
@@ -44,13 +46,20 @@ GROUP = "My Group"
 INFRARED_SELECT_ENTITY_ID = "select.my_group_my_bulb_infrared_brightness"
 
 type MockDevice = (
-    Light | MultiZoneLight | MatrixLight | CeilingLight | HevLight | InfraredLight
+    Light
+    | MultiZoneLight
+    | MatrixLight
+    | CeilingLight
+    | MirrorLight
+    | HevLight
+    | InfraredLight
 )
 type MockState = (
     LightState
     | MultiZoneLightState
     | MatrixLightState
     | CeilingLightState
+    | MirrorLightState
     | HevLightState
     | InfraredLightState
 )
@@ -471,6 +480,55 @@ def create_reference_ceiling_128_light() -> CeilingLight:
     return _create_reference_ceiling_light(
         model="LIFX Ceiling 13x26", product=201, width=16, zone_count=127
     )
+
+
+MIRROR_ZONES = 25
+
+
+def create_mock_mirror_light() -> MirrorLight:
+    """Create a deterministic Mirror light double."""
+    color = HSBK(0.0, 0.0, 1.0, 3500)
+    front_colors = [color] * MIRROR_ZONES
+    back_colors = [color] * MIRROR_ZONES
+    state = _create_mock_state(
+        MirrorLightState,
+        chain=[_create_mock_tile(product=267, width=4)],
+        tile_orientations={0: "Right Side Up"},
+        tile_colors=[*front_colors, *back_colors],
+        tile_count=1,
+        effect=FirmwareEffect.OFF,
+        front_colors=front_colors,
+        back_colors=back_colors,
+        front_is_on=False,
+        back_is_on=False,
+        front_positions=tuple(range(MIRROR_ZONES)),
+        back_positions=tuple(range(MIRROR_ZONES, 2 * MIRROR_ZONES)),
+    )
+    state.model = "LIFX Mirror"
+    state.capabilities.has_matrix = True
+    device = _create_mock_device(MirrorLight, state)
+    device.set_matrix_colors = AsyncMock()
+    return device
+
+
+def create_reference_mirror_light() -> MirrorLight:
+    """Create a normalized Mirror light with both components on."""
+    device = create_mock_mirror_light()
+    color = HSBK(0.0, 0.0, 0.5, 3500)
+    device.state.front_colors = [color] * MIRROR_ZONES
+    device.state.back_colors = [color] * MIRROR_ZONES
+    device.state.tile_colors = [color] * (2 * MIRROR_ZONES)
+    device.state.front_is_on = True
+    device.state.back_is_on = True
+    _apply_reference_common(
+        device.state,
+        model="LIFX Mirror",
+        color=color,
+        kelvin_min=1500,
+        kelvin_max=9000,
+        firmware=(4, 10),
+    )
+    return device
 
 
 def create_reference_thread_light() -> Light:

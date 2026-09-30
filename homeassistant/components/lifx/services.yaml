@@ -363,6 +363,37 @@ effect_move:
       default: true
       selector:
         boolean:
+effect_colorsweep:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    duration:
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 1
+          unit_of_measurement: seconds
+    palette:
+      example:
+        - "[[0, 0, 100, 1500], [0, 0, 100, 6500]]"
+      selector:
+        object:
+    power_on:
+      default: true
+      selector:
+        boolean:
 effect_flame:
   target:
     entity:
@@ -592,7 +623,16 @@ effect_sky:
       example: 50
       selector:
         number:
-          min: 1
+          min: 0
+          max: 86400
+          step: 1
+          unit_of_measurement: seconds
+    duration:
+      default: 0
+      example: 1800
+      selector:
+        number:
+          min: 0
           max: 86400
           step: 1
           unit_of_measurement: seconds
