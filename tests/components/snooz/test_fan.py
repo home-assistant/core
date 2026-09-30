@@ -87,7 +87,7 @@ async def test_transition(
     # Zero duration makes pysnooz send a plain state write instead of a real-time transition
     with patch(
         f"homeassistant.components.snooz.fan.{command_name}",
-        side_effect=lambda **kwargs: command(**kwargs | {"duration": timedelta()}),
+        side_effect=lambda **kwargs: command(**kwargs | {"duration": None}),
     ) as mock_command:
         await hass.services.async_call(
             DOMAIN,
