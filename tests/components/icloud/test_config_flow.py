@@ -298,6 +298,9 @@ async def test_trusted_device(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -319,7 +322,6 @@ async def test_trusted_device_success(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {}
