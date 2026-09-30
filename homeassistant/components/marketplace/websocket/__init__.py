@@ -145,8 +145,6 @@ async def marketplace_github_connect(
 ) -> None:
     """Start the flow that connects a GitHub account to the Marketplace."""
     config_entry = marketplace.configuration.config_entry
-    assert config_entry is not None
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},

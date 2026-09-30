@@ -2,14 +2,14 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import gzip
 import math
 import os
 import shutil
 import tempfile
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, overload
 
 from aiogithubapi import (
     GitHubAPI,
@@ -21,8 +21,14 @@ from aiogithubapi import (
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, Platform
+from homeassistant.const import (
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    Platform,
+    __version__ as HAVERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -30,12 +36,14 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CLIENT_NAME,
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
@@ -71,6 +79,7 @@ from .repositories.base import (
     REPOSITORY_KEYS_TO_EXPORT,
     REPOSITORY_MANIFEST_KEYS_TO_EXPORT,
 )
+from .utils.data import MarketplaceData
 from .utils.file_system import async_exists
 from .utils.identity import newest_id_per_name
 from .utils.logger import LOGGER
@@ -80,7 +89,6 @@ from .utils.storage import async_load_from_storage, async_save_to_storage
 
 if TYPE_CHECKING:
     from .repositories.base import Repository
-    from .utils.data import MarketplaceData
 
 
 # A release can be large, only a stalled connection counts as a failure
@@ -123,35 +131,30 @@ class RemovedRepository:
 
 @dataclass
 class MarketplaceConfiguration:
-    """Configuration of the Marketplace."""
+    """Configuration of the Marketplace, read from its config entry."""
 
-    config_entry: ConfigEntry | None = None
+    config_entry: MarketplaceConfigEntry
+    token: str | None = None
     debug: bool = False
     plugin_path: str = "www/community/"
     theme_path: str = "themes/"
-    token: str | None = None
 
-    def to_json(self) -> dict[str, Any]:
-        """Return a json representation of the configuration."""
-        return asdict(self)
+    @classmethod
+    def from_entry(cls, config_entry: MarketplaceConfigEntry) -> Self:
+        """Read the configuration from a config entry.
 
-    def update_from_dict(self, data: dict[str, Any]) -> None:
-        """Set attributes from dicts."""
-        if not isinstance(data, dict):
-            raise MarketplaceError("Configuration is not valid.")
-
-        # Entries the custom integration created can carry keys that mean
-        # nothing here, the paths the Marketplace writes to are not settable.
-        for key in ("config_entry", "token"):
-            if key in data:
-                setattr(self, key, data[key])
+        Entries the custom integration created can carry keys that mean
+        nothing here, the paths the Marketplace writes to are not settable.
+        """
+        return cls(config_entry=config_entry, token=config_entry.data.get(CONF_TOKEN))
 
 
+@dataclass
 class MarketplaceCore:
     """Core info the Marketplace needs."""
 
-    config_path: str = ""
-    lovelace_mode: LovelaceMode = LovelaceMode.YAML
+    config_path: str
+    lovelace_mode: LovelaceMode
 
 
 @dataclass
@@ -371,22 +374,34 @@ class Repositories:
 class MarketplaceManager:
     """The Marketplace, its state and everything it manages."""
 
-    data: MarketplaceData
-    data_client: CatalogClient
-    githubapi: GitHubAPI
-    hass: HomeAssistant
-    queue: QueueManager
-    session: ClientSession
-    stage: MarketplaceStage | None = None
-    version: AwesomeVersion
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MarketplaceConfigEntry
+    ) -> None:
+        """Set up the Marketplace of a config entry, nothing runs yet."""
+        self.hass = hass
+        self.configuration = MarketplaceConfiguration.from_entry(config_entry)
+        self.core = MarketplaceCore(
+            config_path=hass.config.path(),
+            lovelace_mode=LovelaceMode(hass.data[LOVELACE_DATA].resource_mode),
+        )
+        self.version = AwesomeVersion(HAVERSION)
 
-    def __init__(self) -> None:
-        """Initialize."""
+        self.session: ClientSession = async_get_clientsession(hass)
+        # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from the
+        # environment, without a connected account the calls are anonymous.
+        self.githubapi = GitHubAPI(
+            token=self.configuration.token or "",
+            session=self.session,
+            client_name=CLIENT_NAME,
+        )
+        self.data_client = CatalogClient(session=self.session, client_name=CLIENT_NAME)
+
+        self.data = MarketplaceData(marketplace=self)
+        self.queue = QueueManager(hass=hass)
+        self.stage: MarketplaceStage | None = None
         self.common = MarketplaceCommon()
         self.critical_repositories: list[dict[str, Any]] = []
-        self.configuration = MarketplaceConfiguration()
         self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
-        self.core = MarketplaceCore()
         self.recurring_tasks: list[Callable[[], None]] = []
         self.recurring_runs: set[asyncio.Task[None]] = set()
         self.startup_task: asyncio.Task[None] | None = None
@@ -421,9 +436,7 @@ class MarketplaceManager:
     @property
     def warning_acceptances(self) -> dict[str, datetime]:
         """Return when each user accepted the current version of the warning."""
-        if (config_entry := self.configuration.config_entry) is None:
-            return {}
-
+        config_entry = self.configuration.config_entry
         return {
             user_id: accepted_at
             for user_id, acceptance in config_entry.data.get(
@@ -449,8 +462,6 @@ class MarketplaceManager:
     def async_forget_warning_acceptance(self, user_id: str) -> None:
         """Forget the acceptance of a user who was removed."""
         config_entry = self.configuration.config_entry
-        assert config_entry is not None
-
         acceptances = config_entry.data.get(CONF_WARNING_ACCEPTED, {})
         if user_id not in acceptances:
             return
@@ -471,8 +482,6 @@ class MarketplaceManager:
     def async_accept_warning(self, user_id: str) -> None:
         """Store that a user accepted the current version of the first-run warning."""
         config_entry = self.configuration.config_entry
-        assert config_entry is not None
-
         self.hass.config_entries.async_update_entry(
             config_entry,
             data={
@@ -509,11 +518,8 @@ class MarketplaceManager:
         # The panel shows the reason, it comes and goes without a write
         self.async_dispatch(MarketplaceSignal.CONFIG, {})
 
-        if (
-            reason == DisabledReason.INVALID_TOKEN
-            and (config_entry := self.configuration.config_entry) is not None
-        ):
-            config_entry.async_start_reauth(self.hass)
+        if reason == DisabledReason.INVALID_TOKEN:
+            self.configuration.config_entry.async_start_reauth(self.hass)
 
     def enable(self) -> None:
         """Enable the Marketplace."""
@@ -724,7 +730,6 @@ class MarketplaceManager:
 
     def _async_move_device(self, previous_id: str, repo_id: str) -> None:
         """Move the device of a repository to its new id."""
-        assert self.configuration.config_entry is not None
         entry_id = self.configuration.config_entry.entry_id
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device_by_identifier(
@@ -841,11 +846,11 @@ class MarketplaceManager:
             self.async_handle_critical_repositories, timedelta(hours=6)
         )
 
-        unsub = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, self.data.async_force_write
+        self.configuration.config_entry.async_on_unload(
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_FINAL_WRITE, self.data.async_force_write
+            )
         )
-        if config_entry := self.configuration.config_entry:
-            config_entry.async_on_unload(unsub)
 
         LOGGER.debug(
             "There are %s scheduled recurring tasks", len(self.recurring_tasks)
@@ -1217,14 +1222,9 @@ class MarketplaceManager:
             for coordinator in self.coordinators.values():
                 coordinator.async_update_listeners()
 
-        if config_entry := self.configuration.config_entry:
-            config_entry.async_create_background_task(
-                self.hass, update_coordinators(), "update_coordinators"
-            )
-        else:
-            self.hass.async_create_background_task(
-                update_coordinators(), "update_coordinators"
-            )
+        self.configuration.config_entry.async_create_background_task(
+            self.hass, update_coordinators(), "update_coordinators"
+        )
 
         LOGGER.debug("Recurring background task for installed custom repositories done")
 

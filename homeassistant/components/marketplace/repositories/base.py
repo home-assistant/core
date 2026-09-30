@@ -1686,9 +1686,7 @@ class Repository:
 
     async def async_remove_entity_device(self) -> None:
         """Remove the entity device."""
-        if (config_entry := self.marketplace.configuration.config_entry) is None:
-            return
-
+        config_entry = self.marketplace.configuration.config_entry
         device_registry: dr.DeviceRegistry = dr.async_get(hass=self.marketplace.hass)
         identifier = (DOMAIN, str(self.data.id))
 

@@ -11,6 +11,7 @@ from homeassistant.components.marketplace.base import (
 )
 from homeassistant.components.marketplace.const import (
     CONF_WARNING_ACCEPTED,
+    DOMAIN,
     WARNING_VERSION,
 )
 from homeassistant.components.marketplace.enums import (
@@ -18,63 +19,37 @@ from homeassistant.components.marketplace.enums import (
     MarketplaceSignal,
     RepositoryCategory,
 )
-from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_CATEGORIES, REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 
 
-def test_configuration_defaults() -> None:
-    """Test the configuration defaults and what a dict can set."""
-    configuration = MarketplaceConfiguration()
-    configuration.update_from_dict({"token": "xxxxxxxxxx"})
+def test_configuration_reads_only_the_token() -> None:
+    """Test the configuration takes the token, and nothing else, from the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "token": "xxxxxxxxxx",
+            # Options an entry of the custom integration can still carry
+            "experimental": True,
+            "netdaemon": True,
+            "release_limit": 5,
+            "plugin_path": "somewhere/else/",
+            "theme_path": "somewhere/else/",
+        },
+    )
 
-    assert isinstance(configuration.to_json(), dict)
+    configuration = MarketplaceConfiguration.from_entry(entry)
+
+    assert configuration.config_entry is entry
     assert configuration.token == "xxxxxxxxxx"
-
-
-@pytest.mark.parametrize(
-    "option",
-    [
-        pytest.param("experimental", id="experimental"),
-        pytest.param("netdaemon", id="netdaemon"),
-        pytest.param("release_limit", id="release_limit"),
-    ],
-)
-def test_configuration_ignores_option(option: str) -> None:
-    """Test the options that are accepted but never stored."""
-    configuration = MarketplaceConfiguration()
-
-    configuration.update_from_dict({option: True})
-
-    assert not hasattr(configuration, option)
-
-
-@pytest.mark.parametrize(
-    ("option", "default"),
-    [
-        pytest.param("plugin_path", "www/community/", id="plugin_path"),
-        pytest.param("theme_path", "themes/", id="theme_path"),
-    ],
-)
-def test_configuration_keeps_its_paths(option: str, default: str) -> None:
-    """Test the paths installs go to can not be changed from entry data."""
-    configuration = MarketplaceConfiguration()
-
-    configuration.update_from_dict({option: "somewhere/else/"})
-
-    assert getattr(configuration, option) == default
-
-
-def test_configuration_rejects_non_dict() -> None:
-    """Test updating from something that is not a dict."""
-    configuration = MarketplaceConfiguration()
-
-    with pytest.raises(MarketplaceError):
-        configuration.update_from_dict(None)
+    assert configuration.plugin_path == "www/community/"
+    assert configuration.theme_path == "themes/"
+    for option in ("experimental", "netdaemon", "release_limit"):
+        assert not hasattr(configuration, option)
 
 
 @pytest.mark.usefixtures("init_integration")

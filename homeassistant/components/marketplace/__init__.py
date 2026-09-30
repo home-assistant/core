@@ -9,17 +9,15 @@ import contextlib
 from functools import partial
 import os
 
-from aiogithubapi import GitHubAPI, GitHubAuthenticationException, GitHubException
+from aiogithubapi import GitHubAuthenticationException, GitHubException
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
-from awesomeversion import AwesomeVersion
 
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.components.http import HomeAssistantView, StaticPathConfig
-from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_SYSTEM
-from homeassistant.const import Platform, __version__ as HAVERSION
+from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -32,7 +30,6 @@ from homeassistant.helpers import (
     discovery_flow,
     issue_registry as ir,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -41,14 +38,12 @@ from homeassistant.util.hass_dict import HassKey
 
 from .base import MarketplaceConfigEntry, MarketplaceManager
 from .const import (
-    CLIENT_NAME,
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_DASHBOARD_RESOURCE_BASE,
     LEGACY_HACS_SYSTEM_ID,
     RESTART_ISSUE_PREFIX,
 )
-from .data_client import CatalogClient
 from .enums import DisabledReason, LovelaceMode, MarketplaceStage
 from .exceptions import MarketplaceError
 from .migration import (
@@ -59,10 +54,8 @@ from .migration import (
     async_remove_legacy_files,
 )
 from .utils.backup import restore_interrupted_backups
-from .utils.data import MarketplaceData
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
-from .utils.queue_manager import QueueManager
 from .utils.storage import STORAGE_CACHE_KEY
 from .websocket import async_register_websocket_commands
 
@@ -180,40 +173,44 @@ async def _async_ensure_www_directory(hass: HomeAssistant) -> bool:
     return True
 
 
-async def _async_initialize_integration(
-    hass: HomeAssistant,
-    config_entry: MarketplaceConfigEntry,
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
 ) -> bool:
-    """Initialize the integration."""
-    config_entry.runtime_data = marketplace = MarketplaceManager()
+    """Set up the Marketplace from its config entry."""
+    async_adopt_legacy_install(hass, config_entry)
+    await async_migrate_dashboard_resources(hass)
 
-    marketplace.configuration.update_from_dict(
-        {
-            "config_entry": config_entry,
-            **config_entry.data,
-        },
-    )
-
-    marketplace.set_stage(None)
-
+    config_entry.runtime_data = marketplace = MarketplaceManager(hass, config_entry)
     LOGGER.info("Starting the Marketplace")
 
-    clientsession = async_get_clientsession(hass)
+    await _async_prepare_config_directory(hass, marketplace)
+    await _async_restore(marketplace)
 
-    marketplace.version = AwesomeVersion(HAVERSION)
-    marketplace.hass = hass
-    marketplace.queue = QueueManager(hass=hass)
-    marketplace.data = MarketplaceData(marketplace=marketplace)
-    marketplace.data_client = CatalogClient(
-        session=clientsession,
-        client_name=CLIENT_NAME,
-    )
-    marketplace.session = clientsession
+    # The restore adopts the legacy storage files, only then can they go. Safe
+    # and recovery mode are the way back to an older version, that needs them.
+    if not hass.config.safe_mode and not hass.config.recovery_mode:
+        await async_remove_legacy_files(hass)
 
-    marketplace.core.lovelace_mode = LovelaceMode(
-        hass.data[LOVELACE_DATA].resource_mode
+    marketplace.set_stage(MarketplaceStage.SETUP)
+    _raise_when_disabled(marketplace)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    marketplace.set_stage(MarketplaceStage.WAITING)
+    LOGGER.info(
+        "Setup complete, waiting for Home Assistant before startup tasks starts"
     )
-    marketplace.core.config_path = marketplace.hass.config.path()
+    _async_start_once_started(hass, config_entry)
+
+    await _async_follow_removed_users(hass, config_entry)
+
+    return True
+
+
+async def _async_prepare_config_directory(
+    hass: HomeAssistant, marketplace: MarketplaceManager
+) -> None:
+    """Get the configuration directory ready for what is installed into it."""
     marketplace.status.created_www_directory = await _async_ensure_www_directory(hass)
     await _async_serve_legacy_plugin_path(hass, marketplace.core.lovelace_mode)
 
@@ -222,14 +219,9 @@ async def _async_initialize_integration(
     if await hass.async_add_executor_job(restore_interrupted_backups, marketplace):
         async_clear_custom_components_cache(hass)
 
-    # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from the
-    # environment, without a connected account the calls are anonymous.
-    marketplace.githubapi = GitHubAPI(
-        token=marketplace.configuration.token or "",
-        session=clientsession,
-        client_name=CLIENT_NAME,
-    )
 
+async def _async_restore(marketplace: MarketplaceManager) -> None:
+    """Restore what the Marketplace stored, and what it knows is installed."""
     try:
         # Trying again reads the same file, it takes the user to fix it
         if not await marketplace.data.restore():
@@ -255,15 +247,12 @@ async def _async_initialize_integration(
             translation_placeholders={"error": str(exception)},
         ) from exception
 
-    # The restore adopts the legacy storage files, only then can they go. Safe
-    # and recovery mode are the way back to an older version, that needs them.
-    if not hass.config.safe_mode and not hass.config.recovery_mode:
-        await async_remove_legacy_files(hass)
 
-    marketplace.set_stage(MarketplaceStage.SETUP)
+def _raise_when_disabled(marketplace: MarketplaceManager) -> None:
+    """Refuse a setup that left the Marketplace disabled.
 
-    # Setting up can leave the Marketplace disabled, an invalid token is for the user
-    # to fix, anything else is worth another try.
+    An invalid token is for the user to fix, anything else is worth another try.
+    """
     if marketplace.system.disabled_reason is DisabledReason.INVALID_TOKEN:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_token"
@@ -275,28 +264,36 @@ async def _async_initialize_integration(
             translation_key=f"disabled_{marketplace.system.disabled_reason}",
         )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    marketplace.set_stage(MarketplaceStage.WAITING)
-    LOGGER.info(
-        "Setup complete, waiting for Home Assistant before startup tasks starts"
-    )
+@callback
+def _async_start_once_started(
+    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
+) -> None:
+    """Run the startup tasks once Home Assistant started, the unload stops them."""
+    marketplace = config_entry.runtime_data
 
     @callback
     def _async_start_tasks(_: HomeAssistant) -> None:
-        """Start the tasks of this entry, the unload stops them."""
         marketplace.startup_task = config_entry.async_create_task(
             hass, marketplace.startup_tasks(), "marketplace_startup_tasks"
         )
 
-    # Once started, the catalog is fetched over the network, Home Assistant
-    # does not wait for it to finish starting
+    # The catalog is fetched over the network, Home Assistant does not wait
+    # for it to finish starting
     config_entry.async_on_unload(
         async_at_started(hass=hass, at_start_cb=_async_start_tasks)
     )
 
-    # Automations install on the word of whoever accepted, not of a removed user,
-    # also one removed while the Marketplace was not loaded
+
+async def _async_follow_removed_users(
+    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
+) -> None:
+    """Forget the warning acceptance of every user who is removed.
+
+    Automations install on the word of whoever accepted, not of a removed
+    user, also one removed while the Marketplace was not loaded.
+    """
+    marketplace = config_entry.runtime_data
     users = {user.id for user in await hass.auth.async_get_users()}
     for user_id in list(config_entry.data.get(CONF_WARNING_ACCEPTED, {})):
         if user_id not in users:
@@ -309,18 +306,6 @@ async def _async_initialize_integration(
     config_entry.async_on_unload(
         hass.bus.async_listen(EVENT_USER_REMOVED, _async_forget_removed_user)
     )
-
-    return True
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
-) -> bool:
-    """Set up this integration using UI."""
-    async_adopt_legacy_install(hass, config_entry)
-    await async_migrate_dashboard_resources(hass)
-
-    return await _async_initialize_integration(hass=hass, config_entry=config_entry)
 
 
 async def async_unload_entry(

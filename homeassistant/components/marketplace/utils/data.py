@@ -4,13 +4,12 @@ import asyncio
 import contextlib
 from datetime import UTC, datetime
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from ..base import MarketplaceManager
 from ..const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, RESTART_ISSUE_PREFIX
 from ..enums import DisabledReason, MarketplaceSignal, RepositoryCategory
 from ..migration import async_forget_retired_repositories
@@ -19,6 +18,9 @@ from .identity import one_stored_entry_per_name
 from .logger import LOGGER
 from .path import is_safe
 from .storage import async_load_from_storage, async_save_to_storage
+
+if TYPE_CHECKING:
+    from ..base import MarketplaceManager
 
 EXPORTED_BASE_DATA: tuple[tuple[str, Any], ...] = (
     ("new", False),
@@ -189,7 +191,6 @@ class MarketplaceData:
         }
 
         config_entry = self.marketplace.configuration.config_entry
-        assert config_entry is not None
         async_forget_retired_repositories(
             self.marketplace.hass, config_entry, repositories
         )
