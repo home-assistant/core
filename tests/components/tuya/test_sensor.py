@@ -1,12 +1,13 @@
 """Test Tuya sensor platform."""
 
+import base64
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice, Manager
+from tuya_sharing import CustomerDevice, DeviceStatusRange, Manager
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.components.tuya.const import DOMAIN
@@ -47,6 +48,35 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.fixture(params=[False, True], ids=["hex", "raw"])
+def indexed_phase_encoding(
+    request: pytest.FixtureRequest,
+    mock_device: CustomerDevice,
+) -> str:
+    """Replay captured hex frames directly or convert their bytes to base64 Raw."""
+    if request.param:
+        # Exercise the same captured frames in Tuya's base64 Raw representation.
+        mock_device.status_range = {
+            code.replace("phase_s", "phase_"): DeviceStatusRange(
+                code=code.replace("phase_s", "phase_"),
+                report_type=definition.report_type,
+                type="Raw",
+                values="{}",
+            )
+            for code, definition in mock_device.status_range.items()
+            if code.startswith("phase_s")
+        }
+        mock_device.status = {
+            code.replace("phase_s", "phase_"): base64.b64encode(
+                bytes.fromhex(value)
+            ).decode()
+            for code, value in mock_device.status.items()
+            if code.startswith("phase_s")
+        }
+        return "phase_"
+    return "phase_s"
+
+
 @pytest.mark.parametrize(
     ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
     [
@@ -54,6 +84,7 @@ async def test_platform_setup_and_discovery(
         pytest.param("zndb_uqzhc4bx5zqwpg2m", 0, 6, id="single_channel"),
     ],
 )
+@pytest.mark.usefixtures("indexed_phase_encoding")
 async def test_indexed_phase_child_devices(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -77,11 +108,62 @@ async def test_indexed_phase_child_devices(
     )
     assert (
         sum(
-            "phase_s" in entry.unique_id
+            "phase_" in entry.unique_id
             for entry in er.async_entries_for_device(entity_registry, parent.id)
         )
         == expected_parent_phase_entities
     )
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    for entry in entries:
+        state = hass.states.get(entry.entity_id)
+        assert state is not None
+        assert state.state not in ("unknown", "unavailable")
+
+    child_ids = {
+        child.id
+        for child in dr.async_entries_for_parent_device(device_registry, parent.id)
+    }
+    for child_id in child_ids:
+        assert len(er.async_entries_for_device(entity_registry, child_id)) == 6
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert {
+        child.id
+        for child in dr.async_entries_for_parent_device(device_registry, parent.id)
+    } == child_ids
+
+
+@pytest.mark.parametrize("mock_device_code", ["zndb_qxlwffgv8avf5rrw"])
+async def test_indexed_phase_measurements(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    indexed_phase_encoding: str,
+) -> None:
+    """Test identical decoding for captured hex frames and their base64 Raw bytes."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    for key, value in {
+        "electriccurrent": 1.1,
+        "power": 0.21,
+        "voltage": 230.1,
+        "reactivepower": 0.05,
+        "apparentpower": 0.22,
+        "powerfactor": 0.95,
+    }.items():
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SENSOR,
+            DOMAIN,
+            f"tuya.{mock_device.id}{indexed_phase_encoding}1{key}",
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == pytest.approx(value)
 
 
 @pytest.mark.parametrize(
