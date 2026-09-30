@@ -420,12 +420,7 @@ async def test_migrate_unique_id(
     new_unique_id: str,
 ) -> None:
     """Test the unique ID migration to the entity description key."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="user-uuid-1",
-        data=MOCK_USER_INPUT,
-        minor_version=1,
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
     entity = entity_registry.async_get_or_create(
         platform, DOMAIN, old_unique_id, config_entry=entry
@@ -445,9 +440,7 @@ async def test_migrate_unique_id(
 
 async def test_migrate_future_version(hass: HomeAssistant) -> None:
     """Test a config entry from a newer version isn't migrated."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="user-uuid-1", data=MOCK_USER_INPUT, version=2
-    )
+    entry = MockConfigEntry(domain=DOMAIN, version=2)
 
     await setup_integration(hass, entry)
 
