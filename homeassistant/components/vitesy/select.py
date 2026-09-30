@@ -16,7 +16,6 @@ from .entity import VitesyEntity
 PARALLEL_UPDATES = 1
 
 # Raw AWS IoT shadow values for Shelfy, not program catalogue ids.
-SHELFY_MODES = ["eco", "shelf", "boost"]
 
 
 async def async_setup_entry(
