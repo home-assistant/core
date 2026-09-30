@@ -8,7 +8,7 @@ from pathlib import PurePath
 import threading
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from asyncinotify import Mask
 import pytest
@@ -479,12 +479,12 @@ async def test_startup_connects_matching_device(
 
     await _set_up(hass, fake_input, entry)
 
-    assert [path for path, dev in added.items() if dev.grab.called] == (
-        expected_grabbed
-    )
-    assert [path for path, dev in added.items() if dev.close.called] == (
-        expected_closed
-    )
+    assert {path: dev.grab.called for path, dev in added.items()} == {
+        path: path in expected_grabbed for path in added
+    }
+    assert {path: dev.close.called for path, dev in added.items()} == {
+        path: path in expected_closed for path in added
+    }
 
 
 async def test_bluetooth_remote_matched_by_address(
@@ -937,7 +937,7 @@ async def test_unplug_stops_key_hold(
     await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
     await _advance(hass, 60)
 
-    assert not [e for e in commands if e.data["type"] == "key_hold"]
+    assert commands == []
 
 
 async def test_unexpected_read_error_releases_device(
@@ -985,12 +985,17 @@ async def test_grab_failure_warns_and_releases(
     assert len(disconnected) == 1
 
 
-async def _stop_home_assistant(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+async def _stop_home_assistant(
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
+) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await fake_input.settle(wait_for_executor=False)
 
 
-async def _unload(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    assert await hass.config_entries.async_unload(entry.entry_id)
+async def _unload(
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
+) -> None:
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -1004,7 +1009,7 @@ async def test_stop_releases_devices(
     hass: HomeAssistant,
     fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    stop: Callable[[HomeAssistant, MockConfigEntry], Awaitable[None]],
+    stop: Callable[[HomeAssistant, FakeInput, MockConfigEntry], Awaitable[None]],
 ) -> None:
     """Test devices are ungrabbed and the watcher closed when stopping.
 
@@ -1015,7 +1020,7 @@ async def test_stop_releases_devices(
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
     await _set_up(hass, fake_input, mock_config_entry)
 
-    await stop(hass, mock_config_entry)
+    await stop(hass, fake_input, mock_config_entry)
     await fake_input.settle()
 
     kbd.ungrab.assert_called_once()
@@ -1025,55 +1030,46 @@ async def test_stop_releases_devices(
     assert fake_input.inotify.closed
 
 
+def _drop_input_directory_watch(fake_input: FakeInput, kbd: MagicMock) -> None:
+    fake_input.rm_watch_errors[DEVINPUT] = OSError(errno.EINVAL, "Invalid argument")
+
+
+def _drop_by_id_watch(fake_input: FakeInput, kbd: MagicMock) -> None:
+    fake_input.rm_watch_errors[DEVINPUT_BY_ID] = OSError(
+        errno.EINVAL, "Invalid argument"
+    )
+
+
+def _fail_ungrab(fake_input: FakeInput, kbd: MagicMock) -> None:
+    kbd.ungrab.side_effect = OSError(errno.ENODEV, "No such device")
+
+
 @pytest.mark.parametrize(
-    "rm_watch_errors",
+    "fail",
     [
-        pytest.param(
-            {DEVINPUT: OSError(errno.EINVAL, "Invalid argument")},
-            id="input_directory_watch_dropped",
-        ),
-        pytest.param(
-            {DEVINPUT_BY_ID: OSError(errno.EINVAL, "Invalid argument")},
-            id="by_id_directory_watch_dropped",
-        ),
+        # The kernel drops a watch when its directory goes away, and removing
+        # it again raises
+        pytest.param(_drop_input_directory_watch, id="input_directory_watch_gone"),
+        pytest.param(_drop_by_id_watch, id="by_id_directory_watch_gone"),
+        pytest.param(_fail_ungrab, id="ungrab_fails"),
     ],
 )
-async def test_unload_releases_devices_when_watch_already_gone(
+async def test_unload_releases_devices_despite_errors(
     hass: HomeAssistant,
     fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    rm_watch_errors: dict[str, OSError],
+    fail: Callable[[FakeInput, MagicMock], None],
 ) -> None:
-    """Test unloading still releases devices when the kernel dropped a watch.
-
-    The kernel drops a watch when its directory goes away, and removing it
-    again raises.
-    """
+    """Test unloading still closes the device when parts of the teardown fail."""
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     await _set_up(hass, fake_input, mock_config_entry)
-    fake_input.rm_watch_errors = rm_watch_errors
+    fail(fake_input, kbd)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await fake_input.settle()
 
     kbd.close.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_unload_survives_ungrab_failure(
-    hass: HomeAssistant,
-    fake_input: FakeInput,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a device that fails to ungrab is still closed on unload."""
-    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
-    kbd.ungrab.side_effect = OSError(errno.ENODEV, "No such device")
-    await _set_up(hass, fake_input, mock_config_entry)
-
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await fake_input.settle()
-
-    kbd.close.assert_called_once()
 
 
 async def test_unload_one_entry_keeps_the_other_device(
@@ -1182,36 +1178,6 @@ async def test_read_failure_during_unplug_teardown(
     replugged.grab.assert_called_once()
 
 
-async def test_device_check_finishing_after_stop_grabs_nothing(
-    hass: HomeAssistant,
-    fake_input: FakeInput,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a device check still scanning when Home Assistant stops grabs nothing.
-
-    Device checks are not tracked, and entries stay registered when Home
-    Assistant stops, so the check would otherwise claim a device after every
-    device was released.
-    """
-    await _set_up(hass, fake_input, mock_config_entry)
-    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
-    listing, release = fake_input.hold_listing()
-    remote_entry = _remote_entry()
-    remote_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(remote_entry.entry_id)
-    await _wait_in_executor(hass, listing)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await fake_input.settle(wait_for_executor=False)
-    assert fake_input.inotify is not None
-    assert fake_input.inotify.closed
-    release.set()
-    await fake_input.settle()
-
-    remote.grab.assert_not_called()
-    remote.close.assert_called()
-
-
 async def test_entry_registered_during_startup_scan_connects(
     hass: HomeAssistant,
     fake_input: FakeInput,
@@ -1239,12 +1205,26 @@ async def test_entry_registered_during_startup_scan_connects(
     remote.grab.assert_called_once()
 
 
-async def test_device_found_for_unloaded_entry_is_not_grabbed(
+@pytest.mark.parametrize(
+    "stop",
+    [
+        # Entries stay registered when Home Assistant stops, so only the
+        # manager stopping keeps the check from claiming the device
+        pytest.param(_stop_home_assistant, id="home_assistant_stop"),
+        pytest.param(_unload, id="entry_unloaded"),
+    ],
+)
+async def test_device_check_finishing_after_stop_grabs_nothing(
     hass: HomeAssistant,
     fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
+    stop: Callable[[HomeAssistant, FakeInput, MockConfigEntry], Awaitable[None]],
 ) -> None:
-    """Test a device found for an entry that unloaded meanwhile is not grabbed."""
+    """Test a device check still scanning when its entry stops grabs nothing.
+
+    Device checks run untracked, so one can find its device after the entry
+    or the whole manager has stopped.
+    """
     await _set_up(hass, fake_input, mock_config_entry)
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
     listing, release = fake_input.hold_listing()
@@ -1253,7 +1233,7 @@ async def test_device_found_for_unloaded_entry_is_not_grabbed(
 
     await hass.config_entries.async_setup(remote_entry.entry_id)
     await _wait_in_executor(hass, listing)
-    await hass.config_entries.async_unload(remote_entry.entry_id)
+    await stop(hass, fake_input, remote_entry)
     release.set()
     await fake_input.settle()
 
