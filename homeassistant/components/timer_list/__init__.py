@@ -12,25 +12,28 @@ import copy
 import dataclasses
 from datetime import datetime, timedelta
 import logging
-from typing import Any, NoReturn, final, override
+from typing import Any, final, override
 
 import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, STATE_UNAVAILABLE
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError, Unauthorized
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -139,44 +142,19 @@ def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
     }
 
 
-def raise_timer_not_found(timer_id: str) -> NoReturn:
-    """Raise the standard error for an unknown timer id.
-
-    Implementations must report an unknown id through this, so every backend
-    fails identically no matter where its timers are stored.
-    """
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="timer_not_found",
-        translation_placeholders={"timer_id": timer_id},
-    )
-
-
 @callback
-def async_get_timer_list_entity(
-    hass: HomeAssistant, device_id: str
-) -> TimerListEntity | None:
-    """Return the timer list entity associated with a device, if any.
+def entity_became_available(event: Event[EventStateChangedData]) -> bool:
+    """Return True if a state change means the entity is newly usable.
 
-    The list is provided by the device's own integration, so it may live on any
-    platform; resolve it by device association rather than assuming the
-    ``timer_list`` platform owns it.
+    A config entry reload builds a new entity object but leaves its registry
+    entry alone, so this transition is the only signal that subscriptions held
+    against the old object are now dangling.
     """
-    entity_registry = er.async_get(hass)
-    entity_id = next(
-        (
-            entry.entity_id
-            for entry in er.async_entries_for_device(
-                entity_registry, device_id, include_disabled_entities=True
-            )
-            if entry.domain == DOMAIN
-        ),
-        None,
-    )
-    if entity_id is None:
-        return None
-
-    return hass.data[DATA_COMPONENT].get_entity(entity_id)
+    new_state = event.data["new_state"]
+    old_state = event.data["old_state"]
+    if new_state is None or new_state.state == STATE_UNAVAILABLE:
+        return False
+    return old_state is None or old_state.state == STATE_UNAVAILABLE
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -284,8 +262,9 @@ class TimerListEntity(Entity):
 
     Every action method takes a timer id and must, unless noted otherwise:
 
-    - raise the ``timer_not_found`` ``ServiceValidationError`` for an unknown
-      id, via ``raise_timer_not_found``;
+    - raise ``ServiceValidationError`` with this integration's
+      ``timer_not_found`` translation key for an unknown id, so every backend
+      reports one identically;
     - do nothing at all if the timer is already ``finished`` or ``cancelled``,
       or is otherwise in a state the action does not apply to, rather than
       raising or emitting an event;
@@ -485,7 +464,30 @@ async def websocket_handle_subscribe(
             message[ATTR_DELTA] = event.delta.total_seconds()
         connection.send_message(websocket_api.event_message(msg["id"], message))
 
-    connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(forward_event)
+    unsub_entity: CALLBACK_TYPE | None = entity.async_subscribe_updates(forward_event)
+
+    @callback
+    def resubscribe(event: Event[EventStateChangedData]) -> None:
+        """Rebind to the entity object a config entry reload replaced."""
+        nonlocal unsub_entity
+        if not entity_became_available(event):
+            return
+        if unsub_entity is not None:
+            unsub_entity()
+            unsub_entity = None
+        if (new_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is not None:
+            unsub_entity = new_entity.async_subscribe_updates(forward_event)
+
+    unsub_state = async_track_state_change_event(hass, [entity_id], resubscribe)
+
+    @callback
+    def unsubscribe() -> None:
+        """Drop both the entity subscription and the reload watch."""
+        unsub_state()
+        if unsub_entity is not None:
+            unsub_entity()
+
+    connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])
 
     now = dt_util.utcnow()

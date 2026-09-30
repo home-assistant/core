@@ -6,12 +6,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 import probatio
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -33,7 +28,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import TimerListEvent, timer_to_dict
+from . import TimerListEvent, entity_became_available, timer_to_dict
 from .const import ATTR_DELTA, ATTR_TIMER, DATA_COMPONENT, DOMAIN, TimerListEventType
 
 TRIGGER_SCHEMA = probatio.Schema(
@@ -101,13 +96,8 @@ class TimerEventListener(TargetEntityChangeTracker):
         entry alone: nothing else would tell us the subscriptions above now
         point at a discarded object.
         """
-        new_state = event.data["new_state"]
-        old_state = event.data["old_state"]
-        if new_state is None or new_state.state == STATE_UNAVAILABLE:
-            return
-        if old_state is not None and old_state.state != STATE_UNAVAILABLE:
-            return
-        self._handle_target_update()
+        if entity_became_available(event):
+            self._handle_target_update()
 
     @override
     @callback

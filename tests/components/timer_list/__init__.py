@@ -2,12 +2,7 @@
 
 from datetime import timedelta
 
-from homeassistant.components.timer_list import (
-    DOMAIN,
-    TimerItem,
-    TimerListEntity,
-    raise_timer_not_found,
-)
+from homeassistant.components.timer_list import DOMAIN, TimerItem, TimerListEntity
 from homeassistant.components.timer_list.const import (
     TimerListEntityFeature,
     TimerListEventType,
@@ -15,6 +10,7 @@ from homeassistant.components.timer_list.const import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
@@ -65,7 +61,11 @@ class MockTimerListEntity(TimerListEntity):
     def _get_timer(self, timer_id: str) -> TimerItem:
         """Return a timer by id or raise if it does not exist."""
         if (timer := self._timers.get(timer_id)) is None:
-            raise_timer_not_found(timer_id)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="timer_not_found",
+                translation_placeholders={"timer_id": timer_id},
+            )
         return timer
 
     async def async_create_timer(self, *, name: str | None, duration: timedelta) -> str:
