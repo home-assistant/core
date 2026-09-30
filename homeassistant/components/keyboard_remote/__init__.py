@@ -71,25 +71,33 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                probatio.Schema(
-                    {
-                        probatio.Exclusive(
-                            _DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP
-                        ): cv.string,
-                        probatio.Exclusive(_DEVICE_NAME, _DEVICE_ID_GROUP): cv.string,
-                        probatio.Optional(_TYPE, default=["key_up"]): probatio.All(
-                            cv.ensure_list, [probatio.In(KEY_VALUE)]
-                        ),
-                        probatio.Optional(_EMULATE_KEY_HOLD, default=False): cv.boolean,
-                        probatio.Optional(
-                            _EMULATE_KEY_HOLD_DELAY, default=0.250
-                        ): float,
-                        probatio.Optional(
-                            _EMULATE_KEY_HOLD_REPEAT, default=0.033
-                        ): float,
-                    }
-                ),
-                cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
+                # All, not a list: a list accepts a block that passes any one
+                # of its validators, so an invalid block would pass unchanged.
+                probatio.All(
+                    cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
+                    probatio.Schema(
+                        {
+                            probatio.Exclusive(
+                                _DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP
+                            ): cv.string,
+                            probatio.Exclusive(
+                                _DEVICE_NAME, _DEVICE_ID_GROUP
+                            ): cv.string,
+                            probatio.Optional(_TYPE, default=["key_up"]): probatio.All(
+                                cv.ensure_list, [probatio.In(KEY_VALUE)]
+                            ),
+                            probatio.Optional(
+                                _EMULATE_KEY_HOLD, default=False
+                            ): cv.boolean,
+                            probatio.Optional(
+                                _EMULATE_KEY_HOLD_DELAY, default=0.250
+                            ): float,
+                            probatio.Optional(
+                                _EMULATE_KEY_HOLD_REPEAT, default=0.033
+                            ): float,
+                        }
+                    ),
+                )
             ],
         )
     },

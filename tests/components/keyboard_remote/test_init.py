@@ -339,6 +339,74 @@ async def test_async_setup_with_yaml_config(hass: HomeAssistant) -> None:
     assert mock_import.call_count == 2
 
 
+@pytest.mark.parametrize(
+    "device_block",
+    [
+        pytest.param(
+            {"device_descriptor": "/dev/input/event5", "type": "bogus"},
+            id="unknown_key_type",
+        ),
+        pytest.param(
+            {"device_descriptor": "/dev/input/event5", "device_name": "Keyboard"},
+            id="descriptor_and_name",
+        ),
+        pytest.param(
+            {"device_descriptor": "/dev/input/event5", "emulate_key_hold_delay": "a"},
+            id="delay_not_a_number",
+        ),
+        pytest.param({"type": "key_up"}, id="no_device"),
+    ],
+)
+async def test_async_setup_rejects_invalid_yaml(
+    hass: HomeAssistant,
+    device_block: dict[str, str],
+) -> None:
+    """Test an invalid YAML block fails setup instead of being imported.
+
+    Imported unchanged, an unknown key type crashed the monitor on the first
+    key press and left the device grabbed.
+    """
+    with patch(
+        "homeassistant.components.keyboard_remote._async_import_yaml_device",
+        new_callable=AsyncMock,
+    ) as mock_import:
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: device_block})
+        await hass.async_block_till_done()
+
+    mock_import.assert_not_called()
+
+
+async def test_async_setup_normalizes_yaml(hass: HomeAssistant) -> None:
+    """Test a valid YAML block is imported with coerced values and defaults."""
+    with patch(
+        "homeassistant.components.keyboard_remote._async_import_yaml_device",
+        new_callable=AsyncMock,
+    ) as mock_import:
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "device_name": "Keyboard",
+                    "type": "key_down",
+                    "emulate_key_hold_delay": 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    mock_import.assert_called_once_with(
+        hass,
+        {
+            "device_name": "Keyboard",
+            "type": ["key_down"],
+            "emulate_key_hold": False,
+            "emulate_key_hold_delay": 1.0,
+            "emulate_key_hold_repeat": 0.033,
+        },
+    )
+
+
 async def test_matches_device_by_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
