@@ -1,7 +1,7 @@
 """Fixtures for Keyboard Remote tests."""
 
 import asyncio
-from collections.abc import AsyncIterator, Generator
+from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import nullcontext
 import errno
 import os
@@ -295,23 +295,58 @@ class FakeInput:
         """Send an input event, or an exception to raise, from a device.
 
         Pass wait=False while an executor job is held, which settling would
-        wait for.
+        wait for. Only the device's monitor is then waited for, which handles
+        the event without executor jobs.
         """
         dev.read_queue.put_nowait(event)
         if wait:
             await self.settle()
         else:
-            for _ in range(10):
-                await asyncio.sleep(0)
+            await self.wait_until(dev.read_queue.empty)
+            await self._spin()
 
     async def settle(self) -> None:
-        """Let the watcher and device monitors handle what was emitted.
+        """Wait until everything emitted so far has been handled.
 
-        Handling one event can take several rounds: the watcher, an executor
-        lookup, then the device monitor starting.
+        Executor jobs started from background tasks, like the watcher and the
+        device monitors, are invisible to async_block_till_done, so wait for
+        those too, until two passes in a row find nothing left to do.
         """
-        for _ in range(10):
+        quiet_passes = 0
+        while quiet_passes < 2:
             await self.hass.async_block_till_done()
+            if pending := [
+                job
+                for job in self.hass._background_tasks
+                if not isinstance(job, asyncio.Task) and not job.done()
+            ]:
+                await asyncio.wait(pending)
+                quiet_passes = 0
+                continue
+            queued = self._queued()
+            await self._spin()
+            quiet_passes = 0 if queued else quiet_passes + 1
+
+    async def wait_until(self, condition: Callable[[], bool]) -> None:
+        """Run the event loop until the condition holds."""
+        for _ in range(1000):
+            if condition():
+                return
+            await asyncio.sleep(0)
+        raise AssertionError("condition was not met")
+
+    def _queued(self) -> bool:
+        if self.inotify is not None and not self.inotify.queue.empty():
+            return True
+        return any(
+            dev is not None and not dev.read_queue.empty()
+            for dev in self.devices.values()
+        )
+
+    @staticmethod
+    async def _spin() -> None:
+        # Lets tasks woken by a queue run up to their next await
+        for _ in range(5):
             await asyncio.sleep(0)
 
     def _emit(
