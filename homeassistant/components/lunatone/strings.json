@@ -35,6 +35,14 @@
       }
     }
   },
+  "device": {
+    "dali_line": {
+      "name": "DALI line {line_id}"
+    },
+    "dali_sensor": {
+      "name": "DALI line {line_id} - A{dali_address}\u00b2"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "scan_status": {
