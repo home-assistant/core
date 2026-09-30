@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 0
@@ -120,16 +120,6 @@ class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
 
     entity_description: MelCloudHomeBinarySensorEntityDescription[ATAUnit]
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeBinarySensorEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, unit)
-
     @property
     @override
     def is_on(self) -> bool | None:
@@ -141,16 +131,6 @@ class ATWBinarySensor(MelCloudHomeATWUnitEntity, BinarySensorEntity):
     """Representation of a MELCloud Home ATW binary sensor."""
 
     entity_description: MelCloudHomeBinarySensorEntityDescription[ATWUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeBinarySensorEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, unit)
 
     @property
     @override

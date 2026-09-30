@@ -27,6 +27,13 @@ from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
 PARALLEL_UPDATES = 1
 
+ATA_UNIT_DESCRIPTION = ClimateEntityDescription(
+    key="ata_unit", translation_key="ata_unit"
+)
+ATW_ZONE_DESCRIPTION = ClimateEntityDescription(
+    key="atw_zone", translation_key="atw_zone"
+)
+
 ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
     HVACMode.HEAT: ATAOperationMode.HEAT,
     HVACMode.COOL: ATAOperationMode.COOL,
@@ -105,9 +112,11 @@ async def async_setup_entry(
     async_setup_unit_entities(
         coordinator,
         async_add_entities,
-        lambda units: (ATAClimateEntity(coordinator, unit) for unit in units),
         lambda units: (
-            ATWZoneClimateEntity(coordinator, unit, zone_number)
+            ATAClimateEntity(coordinator, ATA_UNIT_DESCRIPTION, unit) for unit in units
+        ),
+        lambda units: (
+            ATWZoneClimateEntity(coordinator, ATW_ZONE_DESCRIPTION, unit, zone_number)
             for unit in units
             for zone_number in (
                 [1, 2]
@@ -122,16 +131,18 @@ async def async_setup_entry(
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     """Climate entity for a MELCloud Home Air-to-Air unit."""
 
-    entity_description = ClimateEntityDescription(
-        key="ata_unit", translation_key="ata_unit"
-    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
     _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
-    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: ATAUnit) -> None:
+    def __init__(
+        self,
+        coordinator: MelCloudHomeCoordinator,
+        entity_description: ClimateEntityDescription,
+        unit: ATAUnit,
+    ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
+        super().__init__(coordinator, entity_description, unit)
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
@@ -346,9 +357,6 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
     """Climate entity for a MELCloud Home ATW zone."""
 
-    entity_description = ClimateEntityDescription(
-        key="atw_zone", translation_key="atw_zone"
-    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

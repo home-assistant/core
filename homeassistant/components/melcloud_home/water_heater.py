@@ -19,6 +19,10 @@ from .entity import MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
 
+HOT_WATER_DESCRIPTION = WaterHeaterEntityDescription(
+    key="hot_water", translation_key="hot_water"
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -33,7 +37,7 @@ async def async_setup_entry(
         async_add_entities,
         lambda _: (),  # Needed for the helper
         lambda units: (
-            ATWWaterHeater(coordinator, unit)
+            ATWWaterHeater(coordinator, HOT_WATER_DESCRIPTION, unit)
             for unit in units
             if unit.capabilities and unit.capabilities.has_hot_water
         ),
@@ -43,9 +47,6 @@ async def async_setup_entry(
 class ATWWaterHeater(MelCloudHomeATWUnitEntity, WaterHeaterEntity):
     """Representation of the hot water tank of a MELCloud Home ATW unit."""
 
-    entity_description = WaterHeaterEntityDescription(
-        key="hot_water", translation_key="hot_water"
-    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE

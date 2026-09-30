@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action, unit_ids
 from .const import DOMAIN
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
@@ -206,16 +206,6 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
 
     entity_description: MelCloudHomeNumberEntityDescription[ATAUnit]
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeNumberEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, unit)
-
     @property
     @override
     def available(self) -> bool:
@@ -250,16 +240,6 @@ class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
     """Representation of a MELCloud Home ATW number."""
 
     entity_description: MelCloudHomeNumberEntityDescription[ATWUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeNumberEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, unit)
 
     @property
     @override
