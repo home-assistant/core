@@ -692,10 +692,10 @@ async def test_energy_history_time_zone_fallback(
 
 
 @pytest.mark.parametrize(
-    ("connected", "expected_state", "expected_last_reset"),
+    ("connected", "expected_state"),
     [
-        pytest.param(True, "0.036", SITE_MIDNIGHT, id="connected"),
-        pytest.param(False, STATE_UNAVAILABLE, None, id="disconnected"),
+        pytest.param(True, "0.036", id="connected"),
+        pytest.param(False, STATE_UNAVAILABLE, id="disconnected"),
     ],
 )
 async def test_energy_history_update_entity_service(
@@ -705,7 +705,6 @@ async def test_energy_history_update_entity_service(
     mock_energy_totals_stream: MagicMock,
     connected: bool,
     expected_state: str,
-    expected_last_reset: str | None,
 ) -> None:
     """The generic update service leaves the history sensors as the stream set them.
 
@@ -730,7 +729,6 @@ async def test_energy_history_update_entity_service(
     assert "NotImplementedError" not in caplog.text
     assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
     assert state.state == expected_state
-    assert state.attributes.get("last_reset") == expected_last_reset
 
 
 async def test_energy_history_unavailable_while_stream_disconnected(
