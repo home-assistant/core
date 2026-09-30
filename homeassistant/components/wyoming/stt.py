@@ -54,6 +54,7 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
 
         self._supported_languages = list(model_languages)
         self._attr_name = asr_service.name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}-stt"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
