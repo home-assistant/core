@@ -102,7 +102,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.62.1
+PyViCare==2.63.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -381,7 +381,7 @@ aiopegelonline==0.1.1
 aiopnsense==1.0.10
 
 # homeassistant.components.teslemetry
-aiopowerwall==0.4.0
+aiopowerwall==0.4.1
 
 # homeassistant.components.ptdevices
 aioptdevices==2026.03.2
@@ -469,6 +469,9 @@ aiounifi==96
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
+
+# homeassistant.components.vitesy
+aiovitesy==1.1.0
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
@@ -859,9 +862,6 @@ devolo-home-control-api==0.19.1
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.5.1
 
-# homeassistant.components.de_dietrich
-diematic-modbus==0.8.0
-
 # homeassistant.components.chacon_dio
 dio-chacon-wifi-api==1.3.0
 
@@ -950,7 +950,7 @@ energieleser==0.1.7
 energyflip-api-client==0.3.0
 
 # homeassistant.components.energyid
-energyid-webhooks==0.0.14
+energyid-webhooks==0.0.16
 
 # homeassistant.components.energyzero
 energyzero==5.1.0
@@ -1405,7 +1405,7 @@ influxdb==5.3.2
 infrared-protocols==10.1.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.4.4
+inkbird-ble==1.7.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.7.0
@@ -2528,7 +2528,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.46
+pyportainer==1.0.47
 
 # homeassistant.components.probe_plus
 pyprobeplus==2.1.0
@@ -2687,7 +2687,7 @@ pythinkingcleaner==0.0.3
 python-MotionMount==2.3.0
 
 # homeassistant.components.aidot
-python-aidot==0.3.56
+python-aidot==0.3.58
 
 # homeassistant.components.awair
 python-awair==0.2.5
@@ -2715,9 +2715,6 @@ python-duco-connectivity==0.18.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
-
-# homeassistant.components.etherscan
-python-etherscan-api==0.0.3
 
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
@@ -2929,7 +2926,7 @@ pyzbar==0.1.9
 pyzerproc==0.4.8
 
 # homeassistant.components.zonneplan
-pyzonneplan==0.1.3
+pyzonneplan==0.2.0
 
 # homeassistant.components.qbittorrent
 qbittorrent-api==2026.5.1
@@ -3072,7 +3069,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.10.0
+serialx==1.11.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
@@ -3230,7 +3227,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.13.0
+tesla-fleet-api==1.17.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3329,7 +3326,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==17.5.0
+uiprotect==17.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3352,7 +3349,7 @@ upcloud-api==2.9.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==3.0.0
+url-normalize==3.0.1
 
 # homeassistant.components.uvc
 uvcclient==0.12.1
@@ -3385,7 +3382,7 @@ victron-ble-ha-parser==0.8.0
 victron-mqtt==2026.9.5
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.12
+victron-vrm==0.1.13
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
@@ -3511,7 +3508,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==4.4.2
+yoto-api==4.5.0
 
 # homeassistant.components.youless
 youless-api==2.2.0
@@ -3532,16 +3529,16 @@ zamg==0.4.1
 zcc-helper==3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.151.3
+zeroconf==0.151.5
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.2.2
+zha-quirks==2.3.0
 
 # homeassistant.components.zha
-zha==2.2.2
+zha==2.3.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

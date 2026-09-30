@@ -1232,6 +1232,9 @@
     "auth_failed_subscription_required": {
       "message": "Teslemetry subscription required"
     },
+    "command_connection_error": {
+      "message": "Unable to connect to Teslemetry"
+    },
     "command_error": {
       "message": "Command returned error: {error}"
     },
