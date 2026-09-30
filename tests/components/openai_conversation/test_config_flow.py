@@ -1434,6 +1434,91 @@ async def test_creating_ai_task_subentry_additional(
     }
 
 
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "has_web_search"),
+    [
+        ("gpt-4o", False),
+        ("gpt-5.6", False),
+        ("gpt-6-luna", True),
+        ("gpt-6-astra", True),
+        ("gpt-6.1-sol", True),
+        ("gpt-7-example", True),
+        ("gpt-10-example", True),
+        ("gpt-custom", False),
+    ],
+)
+async def test_ai_task_web_search_generation_scope(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    has_web_search: bool,
+) -> None:
+    """Expose task search only for GPT generation six and newer."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    assert (CONF_WEB_SEARCH in result["data_schema"].schema) == has_web_search
+    assert (
+        CONF_WEB_SEARCH_CONTEXT_SIZE in result["data_schema"].schema
+    ) == has_web_search
+    assert (
+        CONF_WEB_SEARCH_USER_LOCATION in result["data_schema"].schema
+    ) == has_web_search
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("model", ["gpt-6-luna", "gpt-6-astra", "gpt-6.1-sol"])
+@pytest.mark.parametrize("web_search", [False, True])
+async def test_ai_task_gpt6_saved_search_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    web_search: bool,
+) -> None:
+    """Save both tool settings through the native task configuration flow."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "low",
+            CONF_WEB_SEARCH: web_search,
+            CONF_CODE_INTERPRETER: True,
+        },
+    )
+    assert result["reason"] == "reconfigure_successful"
+    saved = mock_config_entry.subentries[subentry.subentry_id].data
+    assert saved[CONF_CHAT_MODEL] == model
+    assert saved[CONF_REASONING_EFFORT] == "low"
+    assert saved[CONF_WEB_SEARCH] == web_search
+    assert saved[CONF_CODE_INTERPRETER] is True
+
+
 async def test_creating_stt_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

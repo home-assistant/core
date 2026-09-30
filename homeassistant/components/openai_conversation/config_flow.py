@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
+import re
 from typing import Any, cast, override
 
 import openai
@@ -518,9 +519,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if options.get(CONF_SERVICE_TIER) not in service_tiers:
             options.pop(CONF_SERVICE_TIER, None)
 
-        if self._subentry_type == "conversation" and not model.startswith(
-            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
-        ):
+        gpt_generation = re.match(r"gpt-(\d+)(?:[.-]|$)", model)
+        if (
+            self._subentry_type == "conversation"
+            or (gpt_generation is not None and int(gpt_generation[1]) >= 6)
+        ) and not model.startswith(tuple(UNSUPPORTED_WEB_SEARCH_MODELS)):
             step_schema.update(
                 {
                     probatio.Optional(
