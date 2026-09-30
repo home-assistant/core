@@ -5,7 +5,6 @@ from typing import Any, override
 from aiomelcloudhome import (
     ATAFanSpeed,
     ATAOperationMode,
-    ATAUnit,
     ATAVaneHorizontal,
     ATAVaneVertical,
     ATWZoneMode,
@@ -13,6 +12,7 @@ from aiomelcloudhome import (
 
 from homeassistant.components.climate import (
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
 PARALLEL_UPDATES = 1
@@ -104,9 +104,21 @@ async def async_setup_entry(
     async_setup_unit_entities(
         coordinator,
         async_add_entities,
-        lambda units: (ATAClimateEntity(coordinator, unit) for unit in units),
         lambda units: (
-            ATWZoneClimateEntity(coordinator, unit, zone_number)
+            ATAClimateEntity(
+                coordinator,
+                ClimateEntityDescription(key="ata_unit", translation_key="ata_unit"),
+                unit,
+            )
+            for unit in units
+        ),
+        lambda units: (
+            ATWZoneClimateEntity(
+                coordinator,
+                ClimateEntityDescription(key="atw_zone", translation_key="atw_zone"),
+                unit,
+                zone_number,
+            )
             for unit in units
             for zone_number in (
                 [1, 2]
@@ -121,26 +133,26 @@ async def async_setup_entry(
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     """Climate entity for a MELCloud Home Air-to-Air unit."""
 
-    _attr_translation_key = "ata_unit"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
     _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
-    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: ATAUnit) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the features supported by this unit based on its settings."""
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if unit.settings is not None:
-            if unit.settings.get("VaneVerticalDirection") is not None:
+        if (settings := self.unit.settings) is not None:
+            if settings.get("VaneVerticalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_MODE
-            if unit.settings.get("VaneHorizontalDirection") is not None:
+            if settings.get("VaneHorizontalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
-        self._attr_supported_features = features
+        return features
 
     @property
     @override
@@ -343,7 +355,6 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
     """Climate entity for a MELCloud Home ATW zone."""
 
-    _attr_translation_key = "atw_zone"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

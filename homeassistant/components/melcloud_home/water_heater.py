@@ -6,6 +6,7 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     WaterHeaterEntity,
+    WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
@@ -32,7 +33,13 @@ async def async_setup_entry(
         async_add_entities,
         lambda _: (),  # Needed for the helper
         lambda units: (
-            ATWWaterHeater(coordinator, unit)
+            ATWWaterHeater(
+                coordinator,
+                WaterHeaterEntityDescription(
+                    key="hot_water", translation_key="hot_water"
+                ),
+                unit,
+            )
             for unit in units
             if unit.capabilities and unit.capabilities.has_hot_water
         ),
@@ -42,7 +49,6 @@ async def async_setup_entry(
 class ATWWaterHeater(MelCloudHomeATWUnitEntity, WaterHeaterEntity):
     """Representation of the hot water tank of a MELCloud Home ATW unit."""
 
-    _attr_translation_key = "hot_water"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE

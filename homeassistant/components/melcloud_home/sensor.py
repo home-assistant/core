@@ -150,12 +150,22 @@ async def async_setup_entry(
                 if entity_description.exists_fn(unit)
             ),
             (
-                ATAEnergySensor(coordinator, telemetry_coordinator, unit)
+                ATAEnergySensor(
+                    coordinator,
+                    telemetry_coordinator,
+                    ENERGY_CONSUMED_DESCRIPTION,
+                    unit,
+                )
                 for unit in units
                 if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
             (
-                ATAOutdoorTemperatureSensor(coordinator, telemetry_coordinator, unit)
+                ATAOutdoorTemperatureSensor(
+                    coordinator,
+                    telemetry_coordinator,
+                    OUTDOOR_TEMPERATURE_DESCRIPTION,
+                    unit,
+                )
                 for unit in units
                 if unit.capabilities
                 and unit.capabilities.has_outdoor_temperature_sensor
@@ -169,7 +179,12 @@ async def async_setup_entry(
                 if entity_description.exists_fn(unit)
             ),
             (
-                ATWEnergySensor(coordinator, telemetry_coordinator, unit)
+                ATWEnergySensor(
+                    coordinator,
+                    telemetry_coordinator,
+                    ENERGY_CONSUMED_DESCRIPTION,
+                    unit,
+                )
                 for unit in units
                 if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
@@ -182,17 +197,6 @@ class ATASensor(MelCloudHomeATAUnitEntity, SensorEntity):
 
     entity_description: MelCloudHomeSensorEntityDescription[ATAUnit]
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeSensorEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
-
     @property
     @override
     def native_value(self) -> StateType:
@@ -204,17 +208,6 @@ class ATWSensor(MelCloudHomeATWUnitEntity, SensorEntity):
     """Representation of a MELCloud Home ATW sensor."""
 
     entity_description: MelCloudHomeSensorEntityDescription[ATWUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeSensorEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
     @override
@@ -230,12 +223,12 @@ class MelCloudHomeATATelemetrySensor(MelCloudHomeATAUnitEntity, SensorEntity):
         self,
         coordinator: MelCloudHomeCoordinator,
         telemetry_coordinator: MelCloudHomeTelemetryCoordinator,
+        entity_description: SensorEntityDescription,
         unit: ATAUnit,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
+        super().__init__(coordinator, entity_description, unit)
         self._telemetry_coordinator = telemetry_coordinator
-        self._attr_unique_id = f"{unit.id}_{self.entity_description.key}"
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -257,8 +250,6 @@ class MelCloudHomeATATelemetrySensor(MelCloudHomeATAUnitEntity, SensorEntity):
 class ATAEnergySensor(MelCloudHomeATATelemetrySensor):
     """Representation of a MELCloud Home ATA energy sensor."""
 
-    entity_description = ENERGY_CONSUMED_DESCRIPTION
-
     @property
     @override
     def native_value(self) -> StateType:
@@ -275,8 +266,6 @@ class ATAEnergySensor(MelCloudHomeATATelemetrySensor):
 class ATAOutdoorTemperatureSensor(MelCloudHomeATATelemetrySensor):
     """Representation of a MELCloud Home ATA outdoor temperature sensor."""
 
-    entity_description = OUTDOOR_TEMPERATURE_DESCRIPTION
-
     @property
     @override
     def native_value(self) -> StateType:
@@ -287,18 +276,16 @@ class ATAOutdoorTemperatureSensor(MelCloudHomeATATelemetrySensor):
 class ATWEnergySensor(MelCloudHomeATWUnitEntity, SensorEntity):
     """Representation of a MELCloud Home ATW energy sensor."""
 
-    entity_description = ENERGY_CONSUMED_DESCRIPTION
-
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
         telemetry_coordinator: MelCloudHomeTelemetryCoordinator,
+        entity_description: SensorEntityDescription,
         unit: ATWUnit,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
+        super().__init__(coordinator, entity_description, unit)
         self._telemetry_coordinator = telemetry_coordinator
-        self._attr_unique_id = f"{unit.id}_{ENERGY_CONSUMED_DESCRIPTION.key}"
 
     @override
     async def async_added_to_hass(self) -> None:
