@@ -1,16 +1,17 @@
 """Tests for the Keyboard Remote integration init."""
 
 import asyncio
-from contextlib import suppress
+from collections.abc import Awaitable, Callable
+from datetime import timedelta
+import errno
 import threading
+from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, call, patch
 
-from asyncinotify import Mask
 import pytest
 
 from homeassistant.components.keyboard_remote import (
-    DeviceHandler,
     KeyboardRemoteManager,
     _async_import_yaml_device,
 )
@@ -25,6 +26,8 @@ from homeassistant.components.keyboard_remote.const import (
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_KEY_TYPES,
+    DEVINPUT,
     DEVINPUT_BY_ID,
     DOMAIN,
     EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
@@ -32,27 +35,75 @@ from homeassistant.components.keyboard_remote.const import (
     EVENT_KEYBOARD_REMOTE_DISCONNECTED,
     KEY_CODE,
     KEY_VALUE,
-    MATCH_DEVICE_NAME,
-    MATCH_DEVICE_PATH,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
-    EV_KEY,
+    EV_REL,
     FAKE_BY_ID_BASENAME,
     FAKE_DEVICE_NAME,
     FAKE_DEVICE_PATH,
     FAKE_DEVICE_REAL_PATH,
-    MockAsyncIterator,
-    make_key_event,
+    FakeInput,
 )
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
+
+REMOTE_PATH = "/dev/input/event7"
+REMOTE_NAME = "BT Remote"
+OTHER_LINK = "/dev/input/by-id/usb-Other-event-kbd"
+
+OPTIONS = {
+    CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+    CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
+    CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
+    CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+}
+
+
+def _entry(
+    data: dict[str, str],
+    *,
+    source: str = SOURCE_USER,
+    unique_id: str | None = None,
+    **options: Any,
+) -> MockConfigEntry:
+    """Create an entry with the default options, overridden by options."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        source=source,
+        unique_id=unique_id or data.get(CONF_DEVICE_PATH) or data[CONF_DEVICE_NAME],
+        title=data.get(CONF_DEVICE_NAME, "Keyboard"),
+        data=data,
+        options={**OPTIONS, **options},
+    )
+
+
+def _remote_entry(**options: Any) -> MockConfigEntry:
+    """Create an entry matched by name, as for a Bluetooth remote."""
+    return _entry({CONF_DEVICE_NAME: REMOTE_NAME}, **options)
+
+
+async def _set_up(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+def _connected(descriptor: str, name: str = FAKE_DEVICE_NAME) -> dict[str, str]:
+    return {CONF_DEVICE_DESCRIPTOR: descriptor, CONF_DEVICE_NAME: name}
 
 
 async def test_setup_entry(
@@ -213,120 +264,6 @@ async def test_yaml_import_framework_abort(
     } == expected_issues
 
 
-@pytest.mark.parametrize(
-    ("inotify_patch", "expected_closes"),
-    [
-        pytest.param(
-            {"side_effect": OSError(24, "Too many open files")},
-            0,
-            id="inotify_instances_exhausted",
-        ),
-        pytest.param(
-            {
-                "return_value": MagicMock(
-                    add_watch=MagicMock(
-                        side_effect=FileNotFoundError(2, "No such file")
-                    )
-                )
-            },
-            1,
-            id="input_directory_missing",
-        ),
-        pytest.param(
-            {
-                "return_value": MagicMock(
-                    add_watch=MagicMock(
-                        side_effect=[MagicMock(), OSError(28, "No space left")]
-                    )
-                )
-            },
-            1,
-            id="by_id_watch_limit",
-        ),
-    ],
-)
-async def test_setup_retries_when_input_directory_cannot_be_watched(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    inotify_patch: dict[str, Any],
-    expected_closes: int,
-) -> None:
-    """Test setup is retried, instead of loading an entry that cannot work.
-
-    A container without /dev/input mapped, or a host out of inotify instances,
-    cannot be watched. Nothing is left behind for the next attempt.
-    """
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.keyboard_remote.Inotify", **inotify_patch
-    ) as mock_cls:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert DOMAIN not in hass.data
-    assert mock_cls.return_value.close.call_count == expected_closes
-
-
-async def test_entry_set_up_during_last_unload_gets_new_manager(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test an entry that sets up while the last one unloads is not orphaned.
-
-    Registering with the manager being stopped would leave it loaded but
-    inactive once that manager is removed.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    old_manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    new_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="usb-Other-event-kbd",
-        data={CONF_DEVICE_PATH: "/dev/input/by-id/usb-Other-event-kbd"},
-    )
-    new_entry.add_to_hass(hass)
-    stop = old_manager.async_stop
-
-    async def _set_up_other_entry_during_stop() -> None:
-        await hass.config_entries.async_setup(new_entry.entry_id)
-        await stop()
-
-    with patch.object(
-        old_manager, "async_stop", side_effect=_set_up_other_entry_during_stop
-    ):
-        await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert new_entry.state is ConfigEntryState.LOADED
-    assert hass.data[DOMAIN] is not old_manager
-    assert new_entry.entry_id in hass.data[DOMAIN]._handlers
-
-
-async def test_unload_before_start_closes_watcher(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test an entry unloaded before Home Assistant started closes the watcher.
-
-    The watcher opens at setup, but the manager only starts once Home
-    Assistant is running.
-    """
-    hass.set_state(CoreState.not_running)
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert not hass.data[DOMAIN]._started
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_inotify.close.assert_called_once()
-    assert DOMAIN not in hass.data
-
-
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
     """Test setup succeeds when DOMAIN not in config."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -422,222 +359,220 @@ async def test_async_setup_normalizes_yaml(hass: HomeAssistant) -> None:
     )
 
 
-async def test_match_rank_by_path(
+@pytest.mark.parametrize(
+    ("inotify_error", "watch_errors", "expected_closed"),
+    [
+        pytest.param(
+            OSError(errno.EMFILE, "Too many open files"),
+            {},
+            None,
+            id="inotify_instances_exhausted",
+        ),
+        pytest.param(
+            None,
+            {DEVINPUT: FileNotFoundError(errno.ENOENT, "No such file")},
+            True,
+            id="input_directory_missing",
+        ),
+        pytest.param(
+            None,
+            {DEVINPUT_BY_ID: OSError(errno.ENOSPC, "No space left on device")},
+            True,
+            id="by_id_watch_limit",
+        ),
+    ],
+)
+async def test_setup_retries_when_devices_cannot_be_watched(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
+    inotify_error: OSError | None,
+    watch_errors: dict[str, OSError],
+    expected_closed: bool | None,
 ) -> None:
-    """Test the configured path matching the device node gives a path match."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
+    """Test setup is retried, instead of loading an entry that cannot work.
 
-    with (
-        patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
-        patch("os.path.exists", return_value=True),
-    ):
-        assert (
-            handler.match_rank(FAKE_DEVICE_REAL_PATH, mock_input_device)
-            == MATCH_DEVICE_PATH
-        )
-
-
-async def test_no_match_on_reused_yaml_descriptor(
-    hass: HomeAssistant,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test the raw YAML descriptor does not match once a by-id path is stored.
-
-    While the by-id link is missing, another device can take over the eventN
-    node the YAML named, and grabbing it would take it from its real user.
+    A container without /dev/input mapped, or a host out of inotify instances
+    or watches, cannot be watched. Nothing is left behind for the retry.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-            CONF_DEVICE_DESCRIPTOR: "/dev/input/event5",
-        },
-        options={
-            CONF_KEY_TYPES: ["key_up"],
-            CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
-            CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
-            CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    fake_input.inotify_error = inotify_error
+    fake_input.watch_errors = watch_errors
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
 
-    with (
-        patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
-        patch("os.path.exists", return_value=False),
-    ):
-        assert handler.match_rank(FAKE_DEVICE_REAL_PATH, mock_input_device) is None
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (fake_input.inotify and fake_input.inotify.closed) == expected_closed
 
-
-async def test_match_rank_by_name(
-    hass: HomeAssistant,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test a name-only entry whose name matches gives a name match."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_DEVICE_NAME,
-        data={CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
-        options={
-            CONF_KEY_TYPES: ["key_up"],
-            CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
-            CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
-            CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    fake_input.inotify_error = None
+    fake_input.watch_errors = {}
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
 
-    with (
-        patch("os.path.realpath", side_effect=lambda p: p),
-        patch("os.path.exists", return_value=False),
-    ):
-        assert (
-            handler.match_rank("/dev/input/event99", mock_input_device)
-            == MATCH_DEVICE_NAME
-        )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_no_name_match_when_entry_has_a_path(
+async def test_devices_connect_once_home_assistant_started(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
 ) -> None:
-    """Test an entry with a configured path does not fall back to the name.
+    """Test devices are only grabbed once Home Assistant has started."""
+    hass.set_state(CoreState.not_running)
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _set_up(hass, mock_config_entry)
 
-    The configured node being absent must leave the entry disconnected rather
-    than binding a sibling node of a composite keyboard reporting the same name.
+    kbd.grab.assert_not_called()
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await fake_input.settle()
+
+    kbd.grab.assert_called_once()
+
+
+async def test_unload_before_start_closes_watcher(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry unloaded before Home Assistant started closes the watcher.
+
+    The watcher opens at setup, but devices are only scanned once Home
+    Assistant is running.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
+    hass.set_state(CoreState.not_running)
+    await _set_up(hass, mock_config_entry)
 
-    with (
-        patch("os.path.realpath", side_effect=lambda p: p),
-        patch("os.path.exists", return_value=False),
-    ):
-        assert handler.match_rank("/dev/input/event99", mock_input_device) is None
-
-
-async def test_match_rank_no_match(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a device that nothing identifies does not match."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    dev = MagicMock()
-    dev.name = "Unknown Device"
-
-    with (
-        patch("os.path.realpath", side_effect=lambda p: p),
-        patch("os.path.exists", return_value=False),
-    ):
-        assert handler.match_rank("/dev/input/event99", dev) is None
-
-
-async def test_scan_prefers_device_path_over_name_match(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a handler binds its configured device_path, not a same-named sibling.
-
-    A composite keyboard exposes several nodes reporting one name, and only the
-    node the user selected carries the by-id symlink. list_devices() returns
-    them in arbitrary order, so the weaker name match must not win by arriving
-    first.
-    """
-    sibling_path = "/dev/input/event9"
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-
-    devices = {}
-    for path in (sibling_path, FAKE_DEVICE_REAL_PATH):
-        dev = MagicMock()
-        dev.name = FAKE_DEVICE_NAME
-        dev.path = path
-        dev.fileno.return_value = int(path.removeprefix("/dev/input/event"))
-        dev.async_read_loop = MagicMock(return_value=MockAsyncIterator())
-        devices[path] = dev
-
-    def _realpath(path: str) -> str:
-        return FAKE_DEVICE_REAL_PATH if path == FAKE_DEVICE_PATH else path
-
-    with (
-        # The by-id node is listed last, so a first-match scan picks the sibling
-        patch("evdev.list_devices", return_value=[sibling_path, FAKE_DEVICE_REAL_PATH]),
-        patch("evdev.InputDevice", side_effect=lambda path: devices[path]),
-        patch("os.path.realpath", side_effect=_realpath),
-        patch("os.path.exists", return_value=True),
-    ):
-        await manager._async_scan_initial_devices()
-        await hass.async_block_till_done()
-
-    assert list(manager._active_handlers_by_descriptor) == [FAKE_DEVICE_REAL_PATH]
-    devices[sibling_path].close.assert_called_once()
-    devices[FAKE_DEVICE_REAL_PATH].close.assert_not_called()
-
-
-async def test_device_start_monitoring_fires_connected_event(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test start monitoring fires the connected event with correct data."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    await handler.async_device_start_monitoring(mock_input_device)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(events) == 1
-    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_PATH
-    assert events[0].data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
-    assert handler.dev is mock_input_device
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert fake_input.inotify is not None
+    assert fake_input.inotify.closed
 
 
 @pytest.mark.parametrize(
-    ("source", "data", "expected_descriptor"),
+    ("entry", "devices", "expected"),
     [
         pytest.param(
-            SOURCE_IMPORT,
-            {
-                CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
-                CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-                CONF_DEVICE_DESCRIPTOR: "/dev/input/event3",
-            },
+            _entry({CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: "Keyboard"}),
+            [(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, FAKE_DEVICE_PATH)],
+            FAKE_DEVICE_REAL_PATH,
+            id="by_path",
+        ),
+        pytest.param(
+            _remote_entry(),
+            [(REMOTE_PATH, REMOTE_NAME, None)],
+            REMOTE_PATH,
+            id="by_name",
+        ),
+        pytest.param(
+            _remote_entry(),
+            [(REMOTE_PATH, REMOTE_NAME, None)],
+            REMOTE_PATH,
+            id="skips_unopenable_node",
+        ),
+        # A composite keyboard reports the same name on each node, and only the
+        # node the user picked carries the configured link.
+        pytest.param(
+            _entry(
+                {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
+            ),
+            [
+                ("/dev/input/event4", FAKE_DEVICE_NAME, None),
+                (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, FAKE_DEVICE_PATH),
+            ],
+            FAKE_DEVICE_REAL_PATH,
+            id="path_over_same_named_sibling",
+        ),
+        pytest.param(
+            _entry(
+                {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
+            ),
+            [("/dev/input/event9", FAKE_DEVICE_NAME, None)],
+            None,
+            id="path_entry_ignores_name_while_link_missing",
+        ),
+        # The node the old YAML named may since belong to an unrelated device
+        pytest.param(
+            _entry(
+                {
+                    CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                    CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                    CONF_DEVICE_DESCRIPTOR: "/dev/input/event3",
+                },
+                source=SOURCE_IMPORT,
+            ),
+            [("/dev/input/event3", "Mouse", None)],
+            None,
+            id="reused_yaml_descriptor",
+        ),
+        pytest.param(
+            _remote_entry(),
+            [("/dev/input/event8", "Mouse", None)],
+            None,
+            id="unrelated_device",
+        ),
+    ],
+)
+async def test_startup_connects_matching_device(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    entry: MockConfigEntry,
+    devices: list[tuple[str, str, str | None]],
+    expected: str | None,
+) -> None:
+    """Test the startup scan grabs the device the entry identifies, and only it.
+
+    Nodes that cannot be opened are skipped.
+    """
+    fake_input.add_unopenable("/dev/input/event1")
+    added = {
+        path: fake_input.add(path, name, link=link) for path, name, link in devices
+    }
+
+    await _set_up(hass, entry)
+
+    assert [path for path, dev in added.items() if dev.grab.called] == (
+        [expected] if expected else []
+    )
+    assert [path for path, dev in added.items() if dev.close.called] == [
+        path for path in added if path != expected
+    ]
+
+
+@pytest.mark.parametrize(
+    ("entry", "expected_descriptor"),
+    [
+        pytest.param(
+            _entry(
+                {
+                    CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                    CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                    CONF_DEVICE_DESCRIPTOR: "/dev/input/event3",
+                },
+                source=SOURCE_IMPORT,
+            ),
             "/dev/input/event3",
             id="yaml_descriptor",
         ),
         pytest.param(
-            SOURCE_IMPORT,
-            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            _entry(
+                {
+                    CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                    CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                },
+                source=SOURCE_IMPORT,
+            ),
             FAKE_DEVICE_REAL_PATH,
             id="yaml_name",
         ),
         pytest.param(
-            SOURCE_USER,
-            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            _entry(
+                {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
+            ),
             FAKE_DEVICE_PATH,
             id="ui",
         ),
@@ -645,9 +580,8 @@ async def test_device_start_monitoring_fires_connected_event(
 )
 async def test_events_report_the_pre_migration_descriptor(
     hass: HomeAssistant,
-    mock_input_device: MagicMock,
-    source: str,
-    data: dict[str, str],
+    fake_input: FakeInput,
+    entry: MockConfigEntry,
     expected_descriptor: str,
 ) -> None:
     """Test events report what the integration reported before the migration.
@@ -656,1332 +590,595 @@ async def test_events_report_the_pre_migration_descriptor(
     the import also resolved a stable by-id path. YAML configured by name
     reported the opened node, and UI entries report their by-id path.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=source,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data=data,
-        options={
-            CONF_KEY_TYPES: ["key_up"],
-            CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
-            CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
-            CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(hass, entry)
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"])
 
-    assert len(events) == 1
-    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == expected_descriptor
+    assert [e.data for e in connected] == [_connected(expected_descriptor)]
+    assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in commands] == [expected_descriptor]
 
 
-async def test_device_start_monitoring_idempotent(
+async def test_plugged_device_connects(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
+    fake_input: FakeInput,
 ) -> None:
-    """Test calling start monitoring twice is a no-op the second time."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    """Test a device without a by-id link connects when plugged in."""
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    await _set_up(hass, _remote_entry())
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
+    remote = await fake_input.plug(REMOTE_PATH, REMOTE_NAME)
 
-    # Only one connected event should fire
-    assert len(events) == 1
+    remote.grab.assert_called_once()
+    assert [e.data for e in connected] == [_connected(REMOTE_PATH, REMOTE_NAME)]
 
 
-async def test_device_stop_monitoring_fires_disconnected_event(
+@pytest.mark.parametrize(
+    "other_links",
+    [
+        pytest.param({}, id="first_link_creates_directory"),
+        pytest.param({OTHER_LINK: "/dev/input/event2"}, id="link_renamed_into_place"),
+    ],
+)
+async def test_plugged_device_connects_through_late_link(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
+    other_links: dict[str, str],
 ) -> None:
-    """Test stop monitoring fires the disconnected event and cleans up."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    """Test a by-id entry connects when its link appears after the node's events.
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    await handler.async_device_stop_monitoring()
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_PATH
-    assert events[0].data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
-    assert handler.dev is None
-    assert handler._monitor_task is None
-    mock_input_device.close.assert_called_once()
-
-
-async def test_device_stop_monitoring_noop_when_not_started(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test stop monitoring is a no-op when not currently monitoring."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-
-    await handler.async_device_stop_monitoring()
-    await hass.async_block_till_done()
-
-    assert len(events) == 0
-
-
-async def test_device_stop_monitoring_ungrab_oserror(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test stop monitoring suppresses OSError from ungrab."""
-    mock_config_entry.add_to_hass(hass)
-    mock_input_device.ungrab.side_effect = OSError("Permission denied")
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    # Should not raise despite OSError from ungrab
-    await handler.async_device_stop_monitoring()
-    await hass.async_block_till_done()
-
-    assert handler.dev is None
-
-
-async def test_device_stop_monitoring_runs_once_when_callers_overlap(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test a read failure during the DELETE teardown does not tear down twice.
-
-    On unplug the DELETE event awaits ungrab while the monitor task hits
-    ENODEV. A second teardown would pass remove_reader the closed fd of -1,
-    which raises and kills the inotify loop that called it.
+    udev adds the link only after the node's CREATE and ATTRIB, which cannot
+    match an entry configured with the link. The link itself arrives by the
+    by-id directory being created with it, or by a rename into place.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    for link, target in other_links.items():
+        fake_input.add(target, "Other", link=link)
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    await _set_up(hass, mock_config_entry)
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
+    kbd = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
+    )
 
-    async def _read_fails_during_ungrab(*args: object) -> None:
-        await handler.async_device_stop_monitoring(from_monitor_task=True)
-
-    with patch.object(
-        hass, "async_add_executor_job", side_effect=_read_fails_during_ungrab
-    ):
-        await handler.async_device_stop_monitoring()
-        await hass.async_block_till_done()
-
-    mock_input_device.close.assert_called_once()
-    assert len(events) == 1
-    assert handler.dev is None
+    kbd.grab.assert_called_once()
+    assert [e.data for e in connected] == [_connected(FAKE_DEVICE_PATH)]
 
 
-async def test_late_read_failure_does_not_release_new_device(
+async def test_by_id_watch_failure_still_connects(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the old monitor's read failure leaves a newly bound device alone.
+    """Test a by-id directory that cannot be watched does not stop monitoring.
 
-    A teardown clears the monitor task before awaiting ungrab, so a new device
-    can bind to the handler before the old monitor reports its read failure.
+    Waiting entries are still rechecked when the directory appears, since its
+    first link is already in it, and later devices still connect.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = manager._handlers[mock_config_entry.entry_id]
+    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, _remote_entry())
+    fake_input.watch_errors[DEVINPUT_BY_ID] = OSError(errno.ENOSPC, "No space")
 
-    class _Reader:
-        """Read loop that fails with ENODEV once released."""
-
-        def __init__(self) -> None:
-            self.fail = asyncio.Event()
-
-        def __aiter__(self) -> _Reader:
-            return self
-
-        async def __anext__(self) -> None:
-            await self.fail.wait()
-            raise OSError(19, "No such device")
-
-    async def _yield_to_monitors() -> None:
-        # The fake read loops block, so async_block_till_done would never return
-        for _ in range(5):
-            await asyncio.sleep(0)
-
-    old_reader = _Reader()
-    mock_input_device.async_read_loop.return_value = old_reader
-    await handler.async_device_start_monitoring(mock_input_device)
-    await _yield_to_monitors()
-
-    # What a teardown does before its first await
-    handler._monitor_task = None
-    new_device = MagicMock()
-    new_device.name = FAKE_DEVICE_NAME
-    new_device.path = "/dev/input/event9"
-    new_device.async_read_loop.return_value = _Reader()
-    manager._active_handlers_by_descriptor["/dev/input/event9"] = handler
-    await handler.async_device_start_monitoring(new_device)
-    await _yield_to_monitors()
-
-    old_reader.fail.set()
-    await _yield_to_monitors()
-
-    assert handler.dev is new_device
-    assert handler.is_monitoring
-    assert manager._active_handlers_by_descriptor["/dev/input/event9"] is handler
-    new_device.close.assert_not_called()
-
-    await handler.async_device_stop_monitoring()
-
-
-async def test_monitor_input_fires_key_event(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test key events from device fire HA bus events."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
-
-    # key_up event (value=0), which is in default key_types
-    key_event = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_up"])
-    mock_input_device.async_read_loop.return_value = MockAsyncIterator([key_event])
-
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data[KEY_CODE] == 30
-    assert events[0].data["type"] == "key_up"
-    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_PATH
-    assert events[0].data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
-
-
-async def test_monitor_input_ignores_non_key_events(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test non-EV_KEY events are ignored."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
-
-    # Non-key event (type=2 is EV_REL for relative movement)
-    non_key_event = make_key_event(event_type=2, code=0, value=1)
-    mock_input_device.async_read_loop.return_value = MockAsyncIterator([non_key_event])
-
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    assert len(events) == 0
-
-
-async def test_monitor_input_filters_unconfigured_key_types(
-    hass: HomeAssistant,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test key events for unconfigured key types do not fire HA events."""
-    # Config only monitors key_up (value=0)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-        },
-        options={
-            CONF_KEY_TYPES: ["key_up"],
-            CONF_EMULATE_KEY_HOLD: False,
-            CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
-            CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-        },
+    kbd = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
     )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    remote = await fake_input.plug(REMOTE_PATH, REMOTE_NAME)
 
-    # key_down event (value=1) — not in configured key_types
-    key_event = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_down"])
-    mock_input_device.async_read_loop.return_value = MockAsyncIterator([key_event])
-
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    assert len(events) == 0
+    assert "Unable to watch /dev/input/by-id" in caplog.text
+    kbd.grab.assert_called_once()
+    remote.grab.assert_called_once()
 
 
-async def test_monitor_input_emulate_key_hold(
+@pytest.mark.parametrize(
+    ("target", "expected_opened"),
+    [
+        pytest.param("/dev/input/mouse0", False, id="not_an_event_node"),
+        pytest.param("/dev/input/event8", True, id="no_matching_entry"),
+    ],
+)
+async def test_by_id_link_without_matching_device(
     hass: HomeAssistant,
-    mock_input_device: MagicMock,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+    target: str,
+    expected_opened: bool,
 ) -> None:
-    """Test key hold emulation creates and cancels repeat tasks."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-        },
-        options={
-            CONF_KEY_TYPES: ["key_up", "key_down"],
-            CONF_EMULATE_KEY_HOLD: True,
-            CONF_EMULATE_KEY_HOLD_DELAY: 0.01,
-            CONF_EMULATE_KEY_HOLD_REPEAT: 0.01,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
-    hold_events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    """Test a new link that leads to no configured device starts nothing.
 
-    # key_down starts repeat, then key_up cancels it
-    key_down = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_down"])
-    key_up = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_up"])
-    mock_input_device.async_read_loop.return_value = MockAsyncIterator(
-        [key_down, key_up]
+    Links to nodes evdev cannot open, like mouse nodes, are not even opened.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    mouse = fake_input.add("/dev/input/event8", "Mouse")
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    await _set_up(hass, mock_config_entry)
+    fake_input.opened.clear()
+
+    await fake_input.link("/dev/input/by-id/usb-Mouse-event-mouse", target)
+
+    assert (target in fake_input.opened) is expected_opened
+    mouse.grab.assert_not_called()
+    assert len(connected) == 1
+
+
+async def test_unrelated_device_is_not_grabbed(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a plugged device that no entry identifies is released again."""
+    await _set_up(hass, _remote_entry())
+
+    mouse = await fake_input.plug("/dev/input/event8", "Mouse")
+
+    mouse.grab.assert_not_called()
+    mouse.close.assert_called()
+
+
+async def test_unplug_and_replug(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device is released when unplugged and connects again when replugged.
+
+    Unplugging the last device also removes the by-id directory, which udev
+    creates again with the link when the device comes back.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    await _set_up(hass, mock_config_entry)
+
+    await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
+
+    kbd.close.assert_called_once()
+    assert [e.data for e in disconnected] == [_connected(FAKE_DEVICE_PATH)]
+
+    replugged = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
     )
 
-    repeat_tasks: list[asyncio.Task] = []
-
-    async def _hold_until_cancelled(*args: object) -> None:
-        repeat_tasks.append(asyncio.current_task())
-        await asyncio.Event().wait()
-
-    with patch.object(
-        handler, "_async_keyrepeat", side_effect=_hold_until_cancelled
-    ) as mock_repeat:
-        await handler.async_device_start_monitoring(mock_input_device)
-        await hass.async_block_till_done()
-
-    # key_down started one repeat with the configured timing, key_up cancelled it
-    mock_repeat.assert_called_once_with(
-        mock_input_device, FAKE_DEVICE_PATH, 30, 0.01, 0.01
-    )
-    assert len(repeat_tasks) == 1
-    assert repeat_tasks[0].cancelled()
-    assert [e.data["type"] for e in hold_events] == ["key_down", "key_up"]
+    replugged.grab.assert_called_once()
+    assert len(connected) == 2
 
 
-async def test_monitor_input_oserror_cleanup(
+async def test_second_node_does_not_replace_connected_device(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
+    fake_input: FakeInput,
 ) -> None:
-    """Test OSError during monitoring releases the handler."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
+    """Test a same-named node is left alone while the entry has a device.
 
-    # Make async_read_loop return an async iterator that raises OSError
-    async def _raise_oserror():
-        raise OSError("Device removed")
-        yield  # pylint: disable=unreachable
+    Mapping it to the entry would let unplugging it stop the device the entry
+    is really reading from.
+    """
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    await _set_up(hass, _remote_entry())
 
-    mock_input_device.async_read_loop.return_value = _raise_oserror()
+    await fake_input.touch(REMOTE_PATH)
+    sibling = await fake_input.plug("/dev/input/event8", REMOTE_NAME)
+    await fake_input.unplug("/dev/input/event8")
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    assert handler.is_monitoring is False
-    assert handler._monitor_task is None
-    assert handler.dev is None
+    sibling.grab.assert_not_called()
+    remote.close.assert_not_called()
+    assert len(connected) == 1
+    assert not disconnected
 
 
-async def test_monitor_input_unexpected_error_releases_device(
+async def test_entry_added_later_connects_present_device(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
+) -> None:
+    """Test an entry added after startup connects a device already present."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    await _set_up(hass, mock_config_entry)
+
+    await _set_up(hass, _remote_entry())
+
+    remote.grab.assert_called_once()
+
+
+async def test_entry_added_later_leaves_claimed_node_alone(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a later entry does not take a node another entry already reads."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+    await _set_up(hass, mock_config_entry)
+
+    await _set_up(
+        hass, _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="by-name")
+    )
+
+    kbd.grab.assert_called_once()
+    assert len(connected) == 1
+
+
+@pytest.mark.parametrize(
+    ("key_types", "expected"),
+    [
+        pytest.param(["key_up"], [(30, "key_up")], id="default_key_up"),
+        pytest.param(
+            ["key_down", "key_hold"],
+            [(30, "key_down"), (30, "key_hold")],
+            id="down_and_hold",
+        ),
+    ],
+)
+async def test_key_events(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    key_types: list[str],
+    expected: list[tuple[int, str]],
+) -> None:
+    """Test configured key events fire commands, and other input is ignored."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(
+        hass,
+        _entry(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            **{CONF_KEY_TYPES: key_types},
+        ),
+    )
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"])
+    await fake_input.press(kbd, 30, KEY_VALUE["key_hold"])
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"])
+    await fake_input.send(kbd, SimpleNamespace(type=EV_REL, code=0, value=5))
+
+    assert [(e.data[KEY_CODE], e.data["type"]) for e in commands] == expected
+    assert {
+        (e.data[CONF_DEVICE_DESCRIPTOR], e.data[CONF_DEVICE_NAME]) for e in commands
+    } == {(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME)}
+
+
+async def _advance(hass: HomeAssistant, seconds: float) -> None:
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+    await hass.async_block_till_done()
+
+
+async def test_key_hold_emulation(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a held key repeats key_hold after the delay until it is released."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(
+        hass,
+        _entry(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            **{
+                CONF_KEY_TYPES: ["key_down"],
+                CONF_EMULATE_KEY_HOLD: True,
+                CONF_EMULATE_KEY_HOLD_DELAY: 1.0,
+                CONF_EMULATE_KEY_HOLD_REPEAT: 0.5,
+            },
+        ),
+    )
+
+    # Each step fires only the timers already scheduled, so one repeat each
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"])
+    await _advance(hass, 60)
+    await _advance(hass, 60)
+    await fake_input.press(kbd, 30, KEY_VALUE["key_up"])
+    await _advance(hass, 60)
+
+    assert [e.data["type"] for e in commands] == ["key_down", "key_hold", "key_hold"]
+    assert {e.data[CONF_DEVICE_DESCRIPTOR] for e in commands} == {FAKE_DEVICE_PATH}
+
+
+async def test_unplug_stops_key_hold(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a key held while the device is unplugged stops repeating."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await _set_up(
+        hass,
+        _entry(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            **{CONF_EMULATE_KEY_HOLD: True, CONF_EMULATE_KEY_HOLD_DELAY: 1.0},
+        ),
+    )
+
+    await fake_input.press(kbd, 30, KEY_VALUE["key_down"])
+    await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
+    await _advance(hass, 60)
+
+    assert not [e for e in commands if e.data["type"] == "key_hold"]
+
+
+async def test_unexpected_read_error_releases_device(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an unexpected error while reading releases the device.
 
-    Otherwise the task ends with the device still grabbed, the handler looks
-    busy so nothing can rebind it, and unloading the entry fails.
+    Otherwise the device stays grabbed, the entry looks busy so the device
+    cannot connect again, and unloading the entry fails.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    await _set_up(hass, mock_config_entry)
 
-    async def _raise_value_error():
-        raise ValueError("unexpected")
-        yield  # pylint: disable=unreachable
-
-    mock_input_device.async_read_loop.return_value = _raise_value_error()
-
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
+    await fake_input.send(kbd, ValueError("unexpected"))
 
     assert "Unexpected error reading Test Keyboard" in caplog.text
-    assert not handler.is_monitoring
-    mock_input_device.close.assert_called_once()
-    assert len(events) == 1
+    kbd.close.assert_called_once()
+    assert len(disconnected) == 1
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_monitor_input_grab_failure_warns(
+async def test_grab_failure_warns_and_releases(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a device held by another program is reported and released."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    mock_input_device.grab.side_effect = OSError(16, "Device or resource busy")
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    kbd.grab.side_effect = OSError(errno.EBUSY, "Device or resource busy")
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
 
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
+    await _set_up(hass, mock_config_entry)
 
     assert "Unable to grab Test Keyboard, it may be in use by another program" in (
         caplog.text
     )
-    assert not handler.is_monitoring
-    mock_input_device.close.assert_called_once()
+    kbd.close.assert_called_once()
+    assert len(disconnected) == 1
 
 
-async def test_monitor_input_oserror_cancels_repeat_tasks(
-    hass: HomeAssistant,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test OSError during monitoring cancels active key repeat tasks."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-        },
-        options={
-            CONF_KEY_TYPES: ["key_down"],
-            CONF_EMULATE_KEY_HOLD: True,
-            CONF_EMULATE_KEY_HOLD_DELAY: 999,
-            CONF_EMULATE_KEY_HOLD_REPEAT: 999,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
-
-    # Yield a key_down (starts a repeat task), then raise OSError
-    key_down = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_down"])
-
-    async def _key_then_oserror():
-        yield key_down
-        raise OSError("Device removed")
-
-    mock_input_device.async_read_loop.return_value = _key_then_oserror()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-
-    await handler.async_device_start_monitoring(mock_input_device)
-    await hass.async_block_till_done()
-
-    # The handler is released rather than left looking like it is still
-    # monitoring, so a later device event can rebind it
-    assert handler._monitor_task is None
-    assert handler.is_monitoring is False
-    assert FAKE_DEVICE_REAL_PATH not in manager._active_handlers_by_descriptor
-    mock_input_device.close.assert_called_once()
-
-
-async def test_devices_are_released_on_hass_stop(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test shutdown ungrabs and closes devices.
-
-    Config entries are not unloaded when Home Assistant stops, so without a
-    stop listener the monitor task is cancelled with the device still grabbed.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    await handler.async_device_start_monitoring(mock_input_device)
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-    await hass.async_block_till_done()
-
+async def _stop_home_assistant(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
 
-    mock_input_device.ungrab.assert_called_once()
-    mock_input_device.close.assert_called_once()
-    assert not manager._active_handlers_by_descriptor
 
-
-async def test_get_handler_for_device_oserror(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test _get_handler_for_device returns (None, None) on OSError."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    with patch("evdev.InputDevice", side_effect=OSError("Permission denied")):
-        result = manager._get_handler_for_device("/dev/input/event5", [handler])
-
-    assert result == (None, None)
-
-
-async def test_get_handler_for_device_match(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test _get_handler_for_device returns device and handler on match."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    with (
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        dev, matched = manager._get_handler_for_device(FAKE_DEVICE_REAL_PATH, [handler])
-
-    assert dev is mock_input_device
-    assert matched is handler
-
-
-async def test_get_handler_for_device_no_match(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test _get_handler_for_device closes device and returns (None, None) when no match."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    with (
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=None),
-    ):
-        result = manager._get_handler_for_device("/dev/input/event99", [handler])
-
-    assert result == (None, None)
-    mock_input_device.close.assert_called_once()
-
-
-async def test_scan_initial_devices_finds_matching_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test initial device scan starts monitoring for matching devices."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    with (
-        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        await manager._async_scan_initial_devices()
-        await hass.async_block_till_done()
-
-    assert FAKE_DEVICE_REAL_PATH in manager._active_handlers_by_descriptor
-    assert len(events) == 1
-
-
-async def test_scan_initial_devices_skips_non_matching(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test initial device scan skips devices with no matching handler."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    with (
-        patch("evdev.list_devices", return_value=["/dev/input/event99"]),
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(
-            list(manager._handlers.values())[0], "match_rank", return_value=None
-        ),
-    ):
-        await manager._async_scan_initial_devices()
-        await hass.async_block_till_done()
-
-    assert len(manager._active_handlers_by_descriptor) == 0
-    assert len(events) == 0
-
-
-async def test_monitor_devices_create_event(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test inotify CREATE event starts monitoring for a new device."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    # Configure inotify to yield a CREATE event then stop
-    inotify_event = MagicMock()
-    inotify_event.name = "event5"
-    inotify_event.mask = Mask.CREATE
-
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with (
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        # Run the monitor loop directly
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert "/dev/input/event5" in manager._active_handlers_by_descriptor
-    assert len(events) == 1
-
-
-async def test_monitor_devices_create_ignored_while_handler_active(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test a second node is not mapped to a handler that already has a device.
-
-    Mapping it would make a later DELETE of that node stop the device the
-    handler is actually reading from.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    handler.dev = mock_input_device
-    handler._descriptor = FAKE_DEVICE_PATH
-    handler._monitor_task = hass.async_create_task(asyncio.sleep(0))
-    manager._active_handlers_by_descriptor["/dev/input/event5"] = handler
-
-    sibling = MagicMock()
-    sibling.name = FAKE_DEVICE_NAME
-    sibling.path = "/dev/input/event9"
-
-    inotify_event = MagicMock()
-    inotify_event.name = "event9"
-    inotify_event.mask = Mask.CREATE
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with (
-        patch("evdev.InputDevice", return_value=sibling),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert "/dev/input/event9" not in manager._active_handlers_by_descriptor
-    assert manager._active_handlers_by_descriptor["/dev/input/event5"] is handler
-    sibling.close.assert_called_once()
-
-
-async def test_monitor_devices_create_ignored_after_unload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test a handler unregistered during the executor call is not started."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    inotify_event = MagicMock()
-    inotify_event.name = "event5"
-    inotify_event.mask = Mask.CREATE
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    def _open_and_unload(path: str) -> MagicMock:
-        # Unload the entry while the executor job is still running
-        manager._handlers.clear()
-        return mock_input_device
-
-    with (
-        patch("evdev.InputDevice", side_effect=_open_and_unload),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert not manager._active_handlers_by_descriptor
-    mock_input_device.close.assert_called_once()
-
-
-async def test_monitor_devices_delete_event(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test inotify DELETE event stops monitoring for a device."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    # Manually set up an active handler to simulate a connected device
-    handler.dev = mock_input_device
-    handler._descriptor = FAKE_DEVICE_PATH
-    handler._monitor_task = hass.async_create_task(asyncio.sleep(999))
-    manager._active_handlers_by_descriptor["/dev/input/event5"] = handler
-
-    disconnect_events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-
-    # Configure inotify to yield a DELETE event then stop
-    inotify_event = MagicMock()
-    inotify_event.name = "event5"
-    inotify_event.mask = Mask.DELETE
-
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    await manager._async_monitor_devices()
-    await hass.async_block_till_done()
-
-    assert "/dev/input/event5" not in manager._active_handlers_by_descriptor
-    assert len(disconnect_events) == 1
-
-
-async def test_monitor_devices_create_no_match(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test inotify CREATE event with no matching handler is ignored."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-
-    inotify_event = MagicMock()
-    inotify_event.name = "event99"
-    inotify_event.mask = Mask.CREATE
-
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with patch("evdev.InputDevice", side_effect=OSError("No device")):
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert "/dev/input/event99" not in manager._active_handlers_by_descriptor
-
-
-async def test_async_stop_with_active_handlers(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test async_stop stops all active device handlers."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    # Manually set up an active handler
-    handler.dev = mock_input_device
-    handler._descriptor = FAKE_DEVICE_PATH
-    handler._monitor_task = hass.async_create_task(asyncio.sleep(999))
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-
-    disconnect_events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-
-    await manager.async_stop()
-    await hass.async_block_till_done()
-
-    assert len(manager._active_handlers_by_descriptor) == 0
-    assert not manager._started
-    assert len(disconnect_events) == 1
-
-
-async def test_async_stop_cancels_running_monitor_task(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test async_stop cancels a still-running monitor task."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-
-    # Replace the monitor task with one that is still running
-    manager._monitor_task = hass.async_create_task(asyncio.sleep(999))
-    assert not manager._monitor_task.done()
-
-    await manager.async_stop()
-    await hass.async_block_till_done()
-
-    assert manager._monitor_task is None
-    assert not manager._started
-
-
-async def test_unregister_handler_with_active_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test unregister_handler removes active handler and stops monitoring."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    entry_id = mock_config_entry.entry_id
-
-    # Manually set up active handler
-    handler.dev = mock_input_device
-    handler._descriptor = FAKE_DEVICE_PATH
-    handler._monitor_task = hass.async_create_task(asyncio.sleep(999))
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-
-    await manager.unregister_handler(entry_id)
-    await hass.async_block_till_done()
-
-    assert entry_id not in manager._handlers
-    assert FAKE_DEVICE_REAL_PATH not in manager._active_handlers_by_descriptor
-
-
-async def test_check_handler_finds_device_after_start(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test _async_check_handler finds and connects a device for a new handler."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    with (
-        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        await manager._async_check_handler(handler)
-        await hass.async_block_till_done()
-
-    assert FAKE_DEVICE_REAL_PATH in manager._active_handlers_by_descriptor
-    assert len(events) == 1
-
-
-async def test_check_handler_skips_already_active(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test _async_check_handler skips descriptors that are already active."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-
-    # Pre-populate an active handler for this descriptor
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    with patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]):
-        await manager._async_check_handler(handler)
-        await hass.async_block_till_done()
-
-    # No new connected event since the descriptor was already active
-    assert len(events) == 0
-
-
-async def test_monitor_devices_cancelled(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test _async_monitor_devices handles CancelledError gracefully."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-
-    # Replace inotify with an async iterator that blocks indefinitely
-    started = asyncio.Event()
-
-    class BlockingInotify:
-        """Async iterator that blocks on first iteration until cancelled."""
-
-        def __aiter__(self):
-            return self
-
-        async def __anext__(self):
-            started.set()
-            await asyncio.sleep(999)  # block until cancelled
-
-        def rm_watch(self, watch):
-            """Accept teardown, which runs when the entry unloads."""
-
-        def close(self):
-            """Accept teardown, which runs when the entry unloads."""
-
-    manager._inotify = BlockingInotify()
-
-    task = hass.async_create_task(manager._async_monitor_devices())
-    await started.wait()  # ensure the loop has started
-
-    task.cancel()
-    with suppress(asyncio.CancelledError):
-        await task
-
-    assert task.done()
+async def _unload(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(
-    "mask",
+    "stop",
     [
-        pytest.param(Mask.CREATE, id="create"),
-        pytest.param(Mask.MOVED_TO, id="moved_to"),
+        pytest.param(_stop_home_assistant, id="home_assistant_stop"),
+        pytest.param(_unload, id="unload"),
     ],
 )
-async def test_monitor_devices_by_id_link_starts_device(
+async def test_stop_releases_devices(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-    mask: Mask,
+    stop: Callable[[HomeAssistant, MockConfigEntry], Awaitable[None]],
 ) -> None:
-    """Test a by-id link appearing after its node starts the matching handler.
+    """Test devices are ungrabbed and the watcher closed when stopping.
 
-    udev adds the link after the node's own CREATE and ATTRIB events, which a
-    handler configured with the by-id path cannot match on.
+    Config entries are not unloaded when Home Assistant stops, so stopping
+    has to release the devices itself.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    await _set_up(hass, mock_config_entry)
+
+    await stop(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-
-    by_id_watch = MagicMock()
-    manager._by_id_watcher = by_id_watch
-    inotify_event = MagicMock(watch=by_id_watch, mask=mask)
-    inotify_event.name = FAKE_BY_ID_BASENAME
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.os.path.realpath",
-            side_effect=lambda p: {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}.get(p, p),
-        ),
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] is handler
-    assert len(events) == 1
+    kbd.ungrab.assert_called_once()
+    kbd.close.assert_called_once()
+    assert len(disconnected) == 1
+    assert fake_input.inotify is not None
+    assert fake_input.inotify.closed
 
 
 @pytest.mark.parametrize(
-    ("target", "mask", "expected_opens"),
+    "rm_watch_errors",
     [
-        pytest.param("/dev/input/mouse0", Mask.CREATE, 0, id="not_an_event_node"),
-        pytest.param(FAKE_DEVICE_REAL_PATH, Mask.DELETE, 0, id="link_removed"),
-        pytest.param(FAKE_DEVICE_REAL_PATH, Mask.CREATE, 1, id="no_matching_entry"),
-    ],
-)
-async def test_monitor_devices_by_id_event_ignored(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-    target: str,
-    mask: Mask,
-    expected_opens: int,
-) -> None:
-    """Test by-id events that do not lead to a configured device start nothing.
-
-    Links to nodes evdev cannot open are not even opened.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    by_id_watch = MagicMock()
-    manager._by_id_watcher = by_id_watch
-    inotify_event = MagicMock(watch=by_id_watch, mask=mask)
-    inotify_event.name = FAKE_BY_ID_BASENAME
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.os.path.realpath",
-            return_value=target,
+        pytest.param(
+            {DEVINPUT: OSError(errno.EINVAL, "Invalid argument")},
+            id="input_directory_watch_dropped",
         ),
-        patch("evdev.InputDevice") as mock_open,
-    ):
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert mock_open.call_count == expected_opens
-    assert not manager._active_handlers_by_descriptor
-
-
-async def test_monitor_devices_by_id_directory_removed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test the by-id watch is dropped when udev removes the directory."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    by_id_watch = MagicMock()
-    manager._by_id_watcher = by_id_watch
-    inotify_event = MagicMock(watch=by_id_watch, mask=Mask.IGNORED)
-    inotify_event.name = None
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    await manager._async_monitor_devices()
-    await hass.async_block_till_done()
-
-    assert manager._by_id_watcher is None
-
-
-@pytest.mark.parametrize(
-    ("already_watching", "expected_checks"),
-    [
-        pytest.param(False, 1, id="new_directory"),
-        pytest.param(True, 0, id="already_watching"),
+        pytest.param(
+            {DEVINPUT_BY_ID: OSError(errno.EINVAL, "Invalid argument")},
+            id="by_id_directory_watch_dropped",
+        ),
     ],
 )
-async def test_monitor_devices_by_id_directory_created(
+async def test_unload_releases_devices_when_watch_already_gone(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-    already_watching: bool,
-    expected_checks: int,
+    rm_watch_errors: dict[str, OSError],
 ) -> None:
-    """Test a by-id directory created after startup is watched and rechecked.
+    """Test unloading still releases devices when the kernel dropped a watch.
 
-    Links udev created before the watch existed produced no event, so the
-    handlers still waiting for a device have to look again.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = list(manager._handlers.values())[0]
-    manager._by_id_watcher = MagicMock() if already_watching else None
-    mock_inotify.add_watch.reset_mock()
-
-    inotify_event = MagicMock(mask=Mask.CREATE | Mask.ISDIR)
-    inotify_event.name = "by-id"
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with patch.object(manager, "_async_check_handler") as mock_check:
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert (
-        mock_inotify.add_watch.call_args_list
-        == [call(DEVINPUT_BY_ID, Mask.CREATE | Mask.MOVED_TO)] * expected_checks
-    )
-    assert mock_check.call_args_list == [call(handler)] * expected_checks
-
-
-async def test_monitor_devices_by_id_watch_failure_keeps_loop(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a by-id watch that cannot be added does not end the monitor loop.
-
-    Waiting handlers are still rechecked, since the links may already exist.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = manager._handlers[mock_config_entry.entry_id]
-    manager._by_id_watcher = None
-    mock_inotify.add_watch.side_effect = OSError(28, "No space left")
-
-    inotify_event = MagicMock(mask=Mask.CREATE | Mask.ISDIR)
-    inotify_event.name = "by-id"
-    inotify_iter = MockAsyncIterator([inotify_event])
-    mock_inotify.__aiter__ = MagicMock(return_value=inotify_iter)
-    mock_inotify.__anext__ = inotify_iter.__anext__
-
-    with patch.object(manager, "_async_check_handler") as mock_check:
-        await manager._async_monitor_devices()
-        await hass.async_block_till_done()
-
-    assert "Unable to watch /dev/input/by-id" in caplog.text
-    assert manager._by_id_watcher is None
-    mock_check.assert_called_once_with(handler)
-
-
-async def test_start_without_by_id_directory(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test the manager starts when udev has not created the by-id directory."""
-    mock_inotify.add_watch.side_effect = [MagicMock(), FileNotFoundError]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    assert manager._started
-    assert manager._by_id_watcher is None
-
-
-async def test_stop_after_by_id_directory_removed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test teardown finishes when the by-id watch is already gone.
-
-    udev removes the directory with its last link, and the kernel drops the
-    watch before the manager reads the IGNORED event.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = manager._handlers[mock_config_entry.entry_id]
-    await handler.async_device_start_monitoring(mock_input_device)
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-    manager._by_id_watcher = MagicMock()
-    mock_inotify.rm_watch.side_effect = [None, OSError(22, "Invalid argument")]
-
-    await manager.async_stop()
-
-    assert not manager._started
-    mock_input_device.close.assert_called_once()
-
-
-async def test_check_handler_does_not_claim_after_stop(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-) -> None:
-    """Test a device check that finishes after stop does not grab the device.
-
-    Check tasks are not tracked, and config entries stay registered when Home
-    Assistant stops, so the handler still looks valid when the check resumes.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = manager._handlers[mock_config_entry.entry_id]
-
-    await manager.async_stop()
-
-    with (
-        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
-        patch("evdev.InputDevice", return_value=mock_input_device),
-        patch.object(handler, "match_rank", return_value=MATCH_DEVICE_PATH),
-    ):
-        await manager._async_check_handler(handler)
-        await hass.async_block_till_done()
-
-    assert not handler.is_monitoring
-    assert not manager._active_handlers_by_descriptor
-    mock_input_device.close.assert_called_once()
-
-
-async def test_stop_after_input_directory_watch_dropped(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
-    mock_inotify: MagicMock,
-) -> None:
-    """Test teardown still releases devices when the main watch is gone.
-
-    The kernel drops the watch if /dev/input is removed, and removing it
+    The kernel drops a watch when its directory goes away, and removing it
     again raises.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
-    handler = manager._handlers[mock_config_entry.entry_id]
-    await handler.async_device_start_monitoring(mock_input_device)
-    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
-    mock_inotify.rm_watch.side_effect = OSError(22, "Invalid argument")
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _set_up(hass, mock_config_entry)
+    fake_input.rm_watch_errors = rm_watch_errors
 
-    await manager.async_stop()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    assert not manager._started
-    mock_input_device.close.assert_called_once()
+    kbd.close.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_start_checks_handler_registered_during_scan(
+async def test_unload_survives_ungrab_failure(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an entry that loads while the initial scan runs still gets checked.
+    """Test a device that fails to ungrab is still closed on unload."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    kbd.ungrab.side_effect = OSError(errno.ENODEV, "No such device")
+    await _set_up(hass, mock_config_entry)
 
-    register_handler skips the check before the manager has started, and the
-    scan took its handler snapshot before this entry existed.
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    kbd.close.assert_called_once()
+
+
+async def test_unload_one_entry_keeps_the_other_device(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading one entry releases only its own device."""
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, _remote_entry())
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    kbd.ungrab.assert_called_once()
+    remote.ungrab.assert_not_called()
+
+    remote_commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await fake_input.press(remote, 30, KEY_VALUE["key_up"])
+
+    assert len(remote_commands) == 1
+
+
+async def test_entry_set_up_during_last_unload_gets_new_manager(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry that sets up while the last one unloads still works.
+
+    Registering with the manager being stopped would leave it loaded but
+    unable to connect its device.
     """
-    manager = KeyboardRemoteManager(hass)
-    manager.open_watcher()
-    first = DeviceHandler(hass, mock_config_entry)
-    manager.register_handler(mock_config_entry.entry_id, first)
-    late_entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE_PATH: "late"})
-    late = DeviceHandler(hass, late_entry)
+    await _set_up(hass, mock_config_entry)
+    remote_entry = _remote_entry()
+    remote_entry.add_to_hass(hass)
+    stop = KeyboardRemoteManager.async_stop
 
-    scanning = asyncio.Event()
-    release = threading.Event()
+    async def _set_up_other_entry_during_stop(manager: KeyboardRemoteManager) -> None:
+        await hass.config_entries.async_setup(remote_entry.entry_id)
+        await stop(manager)
 
-    def _scan(handlers: list[DeviceHandler]) -> list:
-        hass.loop.call_soon_threadsafe(scanning.set)
-        release.wait(5)
-        return []
-
-    with (
-        patch.object(manager, "_scan_and_match_devices", _scan),
-        patch.object(manager, "_async_check_handler") as mock_check,
+    with patch.object(
+        KeyboardRemoteManager,
+        "async_stop",
+        autospec=True,
+        side_effect=_set_up_other_entry_during_stop,
     ):
-        start = hass.async_create_task(manager.async_start())
-        await scanning.wait()
-        manager.register_handler(late_entry.entry_id, late)
-        release.set()
-        await start
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_check.assert_called_once_with(late)
-    await manager.async_stop()
+    assert remote_entry.state is ConfigEntryState.LOADED
+    remote = await fake_input.plug(REMOTE_PATH, REMOTE_NAME)
+    remote.grab.assert_called_once()
 
 
-async def test_keyrepeat_fires_hold_events(
+def _next_event(hass: HomeAssistant, event_type: str) -> asyncio.Future[Any]:
+    """Return a future resolved by the next event of this type."""
+    future: asyncio.Future[Any] = hass.loop.create_future()
+
+    @callback
+    def _resolve(event: Event) -> None:
+        future.set_result(event)
+
+    hass.bus.async_listen_once(event_type, _resolve)
+    return future
+
+
+async def _wait_in_executor(hass: HomeAssistant, event: threading.Event) -> None:
+    assert await hass.async_add_executor_job(event.wait, 5)
+
+
+async def test_read_failure_during_unplug_teardown(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
-    mock_input_device: MagicMock,
 ) -> None:
-    """Test _async_keyrepeat fires key_hold events on a timer.
+    """Test a read failure while the DELETE teardown ungrabs releases once.
 
-    The events carry the descriptor of the device that started the repeat,
-    even if a teardown has since bound another device to the handler.
+    A second teardown would pass remove_reader the closed fd of -1, which
+    raises and ends the watcher, so nothing would connect again.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    await _set_up(hass, mock_config_entry)
+    ungrabbing, release = fake_input.hold_ungrab(kbd)
+    released = _next_event(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+
+    fake_input.remove_node(FAKE_DEVICE_REAL_PATH)
+    await _wait_in_executor(hass, ungrabbing)
+    await fake_input.send(kbd, OSError(errno.ENODEV, "No such device"), wait=False)
+    release.set()
+    await asyncio.wait_for(released, 5)
+    await fake_input.settle()
+
+    kbd.close.assert_called_once()
+    assert len(disconnected) == 1
+
+    replugged = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
+    )
+    replugged.grab.assert_called_once()
+
+
+async def test_late_read_failure_keeps_newly_bound_device(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test the old device's read failure leaves a device bound meanwhile alone.
+
+    A teardown frees the handler before awaiting ungrab. The watcher handles
+    events one at a time, so no device event can bind a new device in that
+    window today, and the test binds it on the handler directly.
+    """
+    old = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    entry = _remote_entry()
+    await _set_up(hass, entry)
+    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+
+    # What a teardown does before its first await
+    handler._monitor_task = None
+    new = fake_input.add("/dev/input/event8", REMOTE_NAME)
+    await handler.async_device_start_monitoring(new)
+    await fake_input.send(old, OSError(errno.ENODEV, "No such device"))
+    await fake_input.press(new, 30, KEY_VALUE["key_up"])
+
+    new.close.assert_not_called()
+    assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in commands] == ["/dev/input/event8"]
+
+
+async def test_key_repeat_reports_the_device_that_started_it(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test key hold events carry the descriptor of the device that started them.
+
+    A teardown can bind another device to the handler while the old device's
+    repeats still run. As above, no device event can do that today, so the
+    test runs the repeat directly with another descriptor on the handler.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _set_up(hass, mock_config_entry)
     handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     handler._descriptor = "/dev/input/event9"
-
-    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
     # The initial delay, two repeats, then cancellation on the third repeat
     with (
@@ -1991,13 +1188,91 @@ async def test_keyrepeat_fires_hold_events(
         ) as mock_sleep,
         pytest.raises(asyncio.CancelledError),
     ):
-        await handler._async_keyrepeat(
-            mock_input_device, FAKE_DEVICE_PATH, 30, 0.25, 0.03
-        )
+        await handler._async_keyrepeat(kbd, FAKE_DEVICE_PATH, 30, 0.25, 0.03)
     await hass.async_block_till_done()
 
     assert mock_sleep.call_args_list == [call(0.25), call(0.03), call(0.03), call(0.03)]
-    assert [(e.data["type"], e.data[KEY_CODE]) for e in events] == [
-        ("key_hold", 30)
+    assert [(e.data["type"], e.data[CONF_DEVICE_DESCRIPTOR]) for e in commands] == [
+        ("key_hold", FAKE_DEVICE_PATH)
     ] * 3
-    assert {e.data[CONF_DEVICE_DESCRIPTOR] for e in events} == {FAKE_DEVICE_PATH}
+
+
+async def test_device_check_finishing_after_stop_grabs_nothing(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device check still scanning when Home Assistant stops grabs nothing.
+
+    Device checks are not tracked, and entries stay registered when Home
+    Assistant stops, so the check would otherwise claim a device after every
+    device was released.
+    """
+    await _set_up(hass, mock_config_entry)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    listing, release = fake_input.hold_listing()
+    remote_entry = _remote_entry()
+    remote_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(remote_entry.entry_id)
+    await _wait_in_executor(hass, listing)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    # The check task is blocked, so async_block_till_done would not return
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert fake_input.inotify is not None
+    assert fake_input.inotify.closed
+    release.set()
+    await hass.async_block_till_done()
+
+    remote.grab.assert_not_called()
+    remote.close.assert_called()
+
+
+async def test_entry_registered_during_startup_scan_connects(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry that loads while the startup scan runs still connects.
+
+    The scan took its list of entries before this one existed, and entries
+    registering before the scan finished were not checked separately.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    listing, release = fake_input.hold_listing()
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await _wait_in_executor(hass, listing)
+    # Added only now, as setting up the domain would load it with the first
+    remote_entry = _remote_entry()
+    remote_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(remote_entry.entry_id)
+    release.set()
+    await hass.async_block_till_done()
+
+    remote.grab.assert_called_once()
+
+
+async def test_device_found_for_unloaded_entry_is_not_grabbed(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device found for an entry that unloaded meanwhile is not grabbed."""
+    await _set_up(hass, mock_config_entry)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+    listing, release = fake_input.hold_listing()
+    remote_entry = _remote_entry()
+    remote_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(remote_entry.entry_id)
+    await _wait_in_executor(hass, listing)
+    await hass.config_entries.async_unload(remote_entry.entry_id)
+    release.set()
+    await hass.async_block_till_done()
+
+    remote.grab.assert_not_called()
+    remote.close.assert_called()
