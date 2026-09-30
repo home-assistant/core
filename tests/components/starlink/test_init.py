@@ -11,6 +11,7 @@ from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .patchers import (
@@ -106,15 +107,15 @@ async def test_setup_with_unimplemented_location_or_sleep(
         assert entry.runtime_data.data
 
 
-async def test_sleep_entities_unavailable_when_sleep_unimplemented(
+async def test_sleep_entities_not_created_when_sleep_unimplemented(
     hass: HomeAssistant,
 ) -> None:
-    """Test sleep-related entities go unavailable, not a false 'off', when unsupported.
+    """Test sleep-related entities aren't created at all when unsupported.
 
-    A fabricated (0, 0, False) fallback would make switch.starlink_sleep_schedule
-    report a normal-looking, interactable "off" even though the dish never
-    actually reported a schedule - and toggling it on would just fail. It
-    should be unavailable instead, same as the two sleep time entities.
+    Rather than creating a switch/time entities that would forever report
+    "unavailable" (or worse, a fabricated but non-functional "off"), don't
+    add them in the first place when the first refresh determines this
+    dish/plan doesn't support sleep config.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -134,11 +135,57 @@ async def test_sleep_entities_unavailable_when_sleep_unimplemented(
 
         assert entry.state is ConfigEntryState.LOADED
         assert entry.runtime_data.data.sleep is None
-        assert _entity_state(hass, "switch.starlink_sleep_schedule") == "unavailable"
-        assert _entity_state(hass, "time.starlink_sleep_start") == "unavailable"
-        assert _entity_state(hass, "time.starlink_sleep_end") == "unavailable"
+        assert hass.states.get("switch.starlink_sleep_schedule") is None
+        assert hass.states.get("time.starlink_sleep_start") is None
+        assert hass.states.get("time.starlink_sleep_end") is None
         # A switch unrelated to sleep config must stay unaffected.
         assert _entity_state(hass, "switch.starlink_stowed") == "off"
+
+
+@pytest.mark.parametrize(
+    ("location_patcher", "expect_registered"),
+    [
+        pytest.param(LOCATION_DATA_SUCCESS_PATCHER, True, id="location_available"),
+        pytest.param(
+            LOCATION_DATA_UNIMPLEMENTED_PATCHER, False, id="location_unimplemented"
+        ),
+    ],
+)
+async def test_device_tracker_only_created_when_location_supported(
+    hass: HomeAssistant,
+    location_patcher: patch,
+    expect_registered: bool,
+) -> None:
+    """Test the device tracker is only registered when location is supported.
+
+    device_location is disabled by default, so checking hass.states wouldn't
+    distinguish "not created" from "created but disabled" - check the entity
+    registry directly instead.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        location_patcher,
+        SLEEP_DATA_SUCCESS_PATCHER,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+        registry = er.async_get(hass)
+        entity_id = registry.async_get_entity_id(
+            "device_tracker",
+            DOMAIN,
+            f"{entry.runtime_data.data.status['id']}_device_location",
+        )
+        assert (entity_id is not None) is expect_registered
 
 
 async def test_sleep_switch_reports_real_off_when_supported(

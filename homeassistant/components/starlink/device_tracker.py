@@ -22,6 +22,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
+    if config_entry.runtime_data.data.location is None:
+        # Location is not supported on this plan/hardware; don't add an
+        # entity that could never report a value.
+        return
     async_add_entities(
         StarlinkDeviceTrackerEntity(config_entry.runtime_data, description)
         for description in DEVICE_TRACKERS

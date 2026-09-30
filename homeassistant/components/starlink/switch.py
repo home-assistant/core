@@ -22,9 +22,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
+    descriptions = list(SWITCHES)
+    if config_entry.runtime_data.data.sleep is None:
+        # Sleep config is not supported on this plan/hardware; don't add
+        # an entity that could never report a value.
+        descriptions.remove(SLEEP_SCHEDULE_SWITCH)
     async_add_entities(
         StarlinkSwitchEntity(config_entry.runtime_data, description)
-        for description in SWITCHES
+        for description in descriptions
     )
 
 
@@ -68,6 +73,16 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
         return await self.entity_description.turn_off_fn(self.coordinator)
 
 
+SLEEP_SCHEDULE_SWITCH = StarlinkSwitchEntityDescription(
+    key="sleep_schedule",
+    translation_key="sleep_schedule",
+    device_class=SwitchDeviceClass.SWITCH,
+    value_fn=lambda data: data.sleep[2] if data.sleep else None,
+    turn_on_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(True),
+    turn_off_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(False),
+    available_fn=lambda data: data.sleep is not None,
+)
+
 SWITCHES = [
     StarlinkSwitchEntityDescription(
         key="stowed",
@@ -78,17 +93,5 @@ SWITCHES = [
         turn_off_fn=lambda coordinator: coordinator.async_stow_starlink(False),
         available_fn=lambda data: True,
     ),
-    StarlinkSwitchEntityDescription(
-        key="sleep_schedule",
-        translation_key="sleep_schedule",
-        device_class=SwitchDeviceClass.SWITCH,
-        value_fn=lambda data: data.sleep[2] if data.sleep else None,
-        turn_on_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
-            True
-        ),
-        turn_off_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
-            False
-        ),
-        available_fn=lambda data: data.sleep is not None,
-    ),
+    SLEEP_SCHEDULE_SWITCH,
 ]

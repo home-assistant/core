@@ -68,6 +68,8 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         self.channel_context = ChannelContext(target=config_entry.data[CONF_IP_ADDRESS])
         self.history_stats_start = None
         self.timezone = ZoneInfo(hass.config.time_zone)
+        self._location_unsupported = False
+        self._sleep_unsupported = False
         super().__init__(
             hass,
             _LOGGER,
@@ -80,25 +82,30 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
-        try:
-            location = location_data(context)
-        except GrpcError as exc:
-            if not _is_unimplemented(exc):
-                raise
-            _LOGGER.debug(
-                "location_data unavailable, continuing without location", exc_info=True
-            )
-            location = None
-        try:
-            sleep = get_sleep_config(context)
-        except GrpcError as exc:
-            if not _is_unimplemented(exc):
-                raise
-            _LOGGER.debug(
-                "get_sleep_config unavailable, continuing without sleep config",
-                exc_info=True,
-            )
-            sleep = None
+        location = None
+        if not self._location_unsupported:
+            try:
+                location = location_data(context)
+            except GrpcError as exc:
+                if not _is_unimplemented(exc):
+                    raise
+                _LOGGER.debug(
+                    "location_data unavailable, not supported on this plan/hardware",
+                    exc_info=True,
+                )
+                self._location_unsupported = True
+        sleep = None
+        if not self._sleep_unsupported:
+            try:
+                sleep = get_sleep_config(context)
+            except GrpcError as exc:
+                if not _is_unimplemented(exc):
+                    raise
+                _LOGGER.debug(
+                    "get_sleep_config unavailable, not supported on this plan/hardware",
+                    exc_info=True,
+                )
+                self._sleep_unsupported = True
         status, obstruction, alert = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
             parse_samples=-1 if self.history_stats_start is not None else 1,
