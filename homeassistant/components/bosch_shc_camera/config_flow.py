@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import jwt
 import probatio
 
 from homeassistant.components.application_credentials import (
@@ -62,8 +63,19 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create the entry, or update the existing one during reauth."""
+        try:
+            # Identify the account from the token's subject; the signature was
+            # already validated by the token endpoint exchange.
+            account_id = jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )["sub"]
+        except jwt.InvalidTokenError, KeyError:
+            return self.async_abort(reason="oauth_error")
+        await self.async_set_unique_id(str(account_id))
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
