@@ -370,7 +370,7 @@ class TeslemetryStreamingClimateEntity(
             None
             if data is None
             else HVACMode.HEAT_COOL
-            if data == "On"
+            if data in {"On", "Precondition"}
             else HVACMode.OFF
         )
         self.async_write_ha_state()
