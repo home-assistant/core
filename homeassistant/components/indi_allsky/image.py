@@ -110,7 +110,7 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         else:
             if content_type := infer_image_type(image_bytes):
                 self._attr_content_type = content_type
-            self._last_fetched = dt_util.utcnow()
-            if media is None:
+            if media is None and self._last_fetched is None:
+                self._last_fetched = dt_util.utcnow()
                 self.async_write_ha_state()
             return image_bytes
