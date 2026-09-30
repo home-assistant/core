@@ -688,6 +688,54 @@ async def test_polling_reraises_base_exceptions_from_update(
     assert id(failing) not in platform._polling_tasks
 
 
+async def test_polling_reraises_base_exceptions_without_waiting_for_hung_sibling(
+    hass: HomeAssistant,
+) -> None:
+    """Test a fatal BaseException propagates even while a sibling hangs.
+
+    Regression contract: parallel polling results are handled as each task
+    completes, instead of via a single `gather` that blocks until every
+    sibling finishes, so a fatal `BaseException` from one entity is not
+    suppressed indefinitely by another entity stuck in an update that
+    never returns.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    class _CustomBaseException(BaseException):
+        """A BaseException that is not Exception or CancelledError."""
+
+    async def _raise_custom_base_exception() -> None:
+        await asyncio.sleep(0)
+        raise _CustomBaseException
+
+    hang_forever = asyncio.Event()
+
+    async def _hang() -> None:
+        await hang_forever.wait()
+
+    failing = MockEntity(should_poll=True)
+    failing.async_update = _raise_custom_base_exception
+    hung = MockEntity(should_poll=True)
+    hung.async_update = _hang
+
+    await component.async_add_entities([failing, hung])
+
+    try:
+        with pytest.raises(_CustomBaseException):
+            await asyncio.wait_for(platform._async_update_entity_states(), timeout=0.5)
+    finally:
+        # Let the still-hung sibling finish so its background drain task
+        # can clean it up before the test ends.
+        hang_forever.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert id(failing) not in platform._polling_tasks
+    assert id(hung) not in platform._polling_tasks
+
+
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)

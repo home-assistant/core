@@ -367,6 +367,49 @@ async def test_async_request_call_releases_permit_after_parallel_updates_reset(
     assert semaphore._value == 1
 
 
+async def test_async_device_update_releases_permit_after_parallel_updates_reset(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_device_update releases the semaphore it actually acquired.
+
+    Regression test: `self.parallel_updates` can be reset to `None` by
+    `add_to_platform_abort` while `async_device_update` is still awaiting
+    its update. If the semaphore to release were re-read from
+    `self.parallel_updates` at that point instead of the one acquired at
+    the start, the permit would never be released.
+    """
+    semaphore = asyncio.Semaphore(1)
+
+    class AsyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self, entity_id: str, lock: asyncio.Semaphore) -> None:
+            """Initialize Async test entity."""
+            self.entity_id = entity_id
+            self.hass = hass
+            self.parallel_updates = lock
+
+        async def async_update(self) -> None:
+            """Test update."""
+            await release.wait()
+
+    ent = AsyncEntity("light.test_1", semaphore)
+    release = asyncio.Event()
+
+    task = hass.async_create_task(ent.async_device_update())
+    while semaphore._value != 0:
+        await asyncio.sleep(0)
+
+    # Simulate removal resetting parallel_updates while the update is
+    # still in flight.
+    ent.parallel_updates = None
+
+    release.set()
+    await task
+
+    assert semaphore._value == 1
+
+
 async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
     """Test parallel updates with 0 (disabled)."""
     updates = []
