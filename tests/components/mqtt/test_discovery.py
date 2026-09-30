@@ -3102,6 +3102,49 @@ async def test_clean_up_registry_monitoring(
     assert len(hooks) == 0
 
 
+async def test_registry_hook_installed_when_readd_after_rename_aborts(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the registry cleanup hook is installed when an aborted re-add follows a rename.
+
+    Renaming an entity_id makes core remove and re-add the same entity object.
+    _added_to_hass is set on a successful add and must be reset on every add
+    attempt, otherwise an aborted re-add would see the stale value and skip
+    installing the registry hook while the registry entry still exists, leaking
+    the retained discovery topic when the entity is later removed.
+    """
+    await mqtt_mock_entry()
+    hooks: dict = hass.data["mqtt"].discovery_registry_hooks
+    config = {
+        "name": "milk",
+        "state_topic": "test-topic",
+        "unique_id": "very_unique",
+    }
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.milk") is not None
+    assert len(hooks) == 0
+
+    async def _raise_on_readd(self: MqttEntity) -> None:
+        raise ValueError("Simulated re-add failure")
+
+    # Renaming the entity_id triggers a remove and re-add of the same object;
+    # the patched hook aborts the re-add.
+    with patch.object(MqttEntity, "async_added_to_hass", _raise_on_readd):
+        entity_registry.async_update_entity(
+            "sensor.milk", new_entity_id="sensor.renamed_milk"
+        )
+        await hass.async_block_till_done()
+
+    # The registry entry survives the aborted re-add, so its retained discovery
+    # topic must be monitored for cleanup.
+    assert entity_registry.async_get("sensor.renamed_milk") is not None
+    assert len(hooks) == 1
+    assert ("sensor", "bla") in hooks
+
+
 async def test_unique_id_collission_has_priority(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

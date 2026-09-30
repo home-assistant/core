@@ -1046,6 +1046,7 @@ class MqttDiscoveryUpdateMixin(Entity):
     @override
     async def async_prepare_to_add_to_hass(self) -> None:
         """Register discovery cleanup that must also run if the add is aborted."""
+        self._added_to_hass = False
         await super().async_prepare_to_add_to_hass()
         if self._discovery_data is not None:
             self.async_on_remove(self._async_teardown_discovery_on_remove)
