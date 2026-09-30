@@ -1,10 +1,11 @@
 """Tests for the Anthropic integration."""
 
-from typing import Any
+from typing import TypedDict
 from unittest.mock import patch
 
 from anthropic import (
     APIConnectionError,
+    APIError,
     APITimeoutError,
     AuthenticationError,
     BadRequestError,
@@ -37,12 +38,23 @@ from tests.common import MockConfigEntry
 MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
 
 
+class ConversationSubentryExpectation(TypedDict):
+    """Expected registry state for a migrated conversation subentry."""
+
+    conversation_entity_id: str
+    device_disabled_by: DeviceEntryDisabler | None
+    entity_disabled_by: RegistryEntryDisabler | None
+    device: int
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=None), "Connection error"),
-        (APITimeoutError(request=None), "Request timed out"),
-        (
+        pytest.param(
+            APIConnectionError(request=None), "Connection error", id="connection_error"
+        ),
+        pytest.param(APITimeoutError(request=None), "Request timed out", id="timeout"),
+        pytest.param(
             BadRequestError(
                 message=(
                     "Your credit balance is too low to access"
@@ -56,15 +68,16 @@ MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
                 body={"type": "error", "error": {"type": "invalid_request_error"}},
             ),
             "Your credit balance is too low to access the Claude API",
+            id="insufficient_credit",
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_config_entry")
 async def test_init_error(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    side_effect,
-    error,
+    side_effect: APIError,
+    error: str,
 ) -> None:
     """Test initialization errors."""
     with patch(
@@ -96,10 +109,10 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_init_repair_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that repair issue is created on deprecated model."""
@@ -247,10 +260,8 @@ async def test_migration_from_v1_to_v2(
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
-    assert migrated_device.config_entries == {mock_config_entry.entry_id}
-    assert migrated_device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert migrated_device.config_entry_id == mock_config_entry.entry_id
+    assert migrated_device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -263,7 +274,7 @@ async def test_migration_from_v1_to_v2(
         "main_config_entry",
     ),
     [
-        (
+        pytest.param(
             [ConfigEntryDisabler.USER, None],
             [DeviceEntryDisabler.CONFIG_ENTRY, None],
             [RegistryEntryDisabler.CONFIG_ENTRY, None],
@@ -283,8 +294,9 @@ async def test_migration_from_v1_to_v2(
                 },
             ],
             1,
+            id="first_entry_disabled",
         ),
-        (
+        pytest.param(
             [None, ConfigEntryDisabler.USER],
             [None, DeviceEntryDisabler.CONFIG_ENTRY],
             [None, RegistryEntryDisabler.CONFIG_ENTRY],
@@ -304,8 +316,9 @@ async def test_migration_from_v1_to_v2(
                 },
             ],
             0,
+            id="second_entry_disabled",
         ),
-        (
+        pytest.param(
             [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
             [DeviceEntryDisabler.CONFIG_ENTRY, DeviceEntryDisabler.CONFIG_ENTRY],
             [RegistryEntryDisabler.CONFIG_ENTRY, RegistryEntryDisabler.CONFIG_ENTRY],
@@ -325,6 +338,7 @@ async def test_migration_from_v1_to_v2(
                 },
             ],
             0,
+            id="both_entries_disabled",
         ),
     ],
 )
@@ -337,7 +351,7 @@ async def test_migration_from_v1_disabled(
     device_disabled_by: list[DeviceEntryDisabler | None],
     entity_disabled_by: list[RegistryEntryDisabler | None],
     merged_config_entry_disabled_by: ConfigEntryDisabler | None,
-    conversation_subentry_data: list[dict[str, Any]],
+    conversation_subentry_data: list[ConversationSubentryExpectation],
     main_config_entry: int,
 ) -> None:
     """Test migration where the config entries are disabled."""
@@ -459,12 +473,8 @@ async def test_migration_from_v1_disabled(
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
@@ -554,8 +564,8 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
             (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -655,10 +665,8 @@ async def test_migration_from_v1_to_v2_with_same_keys(
             (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {mock_config_entry.entry_id}
-        assert dev.config_entries_subentries == {
-            mock_config_entry.entry_id: {subentry.subentry_id}
-        }
+        assert dev.config_entry_id == mock_config_entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -779,10 +787,8 @@ async def test_migration_from_v2_1_to_v2_2(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -800,10 +806,8 @@ async def test_migration_from_v2_1_to_v2_2(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -819,7 +823,7 @@ async def test_migration_from_v2_1_to_v2_2(
     ),
     [
         # Config entry not disabled, update device and entity disabled by config entry
-        (
+        pytest.param(
             None,
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
@@ -828,8 +832,9 @@ async def test_migration_from_v2_1_to_v2_2(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
+            id="enabled_entry_stale_flags",
         ),
-        (
+        pytest.param(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -838,8 +843,9 @@ async def test_migration_from_v2_1_to_v2_2(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
+            id="enabled_entry_device_disabled",
         ),
-        (
+        pytest.param(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -848,8 +854,9 @@ async def test_migration_from_v2_1_to_v2_2(
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
+            id="enabled_entry_entity_disabled",
         ),
-        (
+        pytest.param(
             None,
             None,
             None,
@@ -858,9 +865,10 @@ async def test_migration_from_v2_1_to_v2_2(
             None,
             None,
             None,
+            id="enabled_entry_no_disabled_flags",
         ),
         # Config entry disabled, migration does not run
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
@@ -869,8 +877,9 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
+            id="disabled_entry_config_entry_flags",
         ),
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -879,8 +888,9 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
+            id="disabled_entry_device_disabled",
         ),
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -889,8 +899,9 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
+            id="disabled_entry_entity_disabled",
         ),
-        (
+        pytest.param(
             ConfigEntryDisabler.USER,
             None,
             None,
@@ -899,6 +910,7 @@ async def test_migration_from_v2_1_to_v2_2(
             ConfigEntryDisabler.USER,
             None,
             None,
+            id="disabled_entry_no_disabled_flags",
         ),
     ],
 )
@@ -913,7 +925,7 @@ async def test_migrate_entry_to_v2_3(
     setup_result: bool,
     minor_version_after_migration: int,
     config_entry_disabled_by_after_migration: ConfigEntryDisabler | None,
-    device_disabled_by_after_migration: ConfigEntryDisabler | None,
+    device_disabled_by_after_migration: DeviceEntryDisabler | None,
     entity_disabled_by_after_migration: RegistryEntryDisabler | None,
 ) -> None:
     """Test migration to version 2.3."""

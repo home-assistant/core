@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -49,10 +49,10 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/get",
-        vol.Required("domain"): vol.In(TRACE_DOMAINS),
-        vol.Required("item_id"): str,
-        vol.Required("run_id"): str,
+        probatio.Required("type"): "trace/get",
+        probatio.Required("domain"): probatio.In(TRACE_DOMAINS),
+        probatio.Required("item_id"): str,
+        probatio.Required("run_id"): str,
     }
 )
 @websocket_api.async_response
@@ -83,9 +83,9 @@ async def websocket_trace_get(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/list",
-        vol.Required("domain", "id"): vol.In(TRACE_DOMAINS),
-        vol.Optional("item_id", "id"): str,
+        probatio.Required("type"): "trace/list",
+        probatio.Required("domain", "id"): probatio.In(TRACE_DOMAINS),
+        probatio.Optional("item_id", "id"): str,
     }
 )
 @websocket_api.async_response
@@ -106,9 +106,9 @@ async def websocket_trace_list(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/contexts",
-        vol.Inclusive("domain", "id"): vol.In(TRACE_DOMAINS),
-        vol.Inclusive("item_id", "id"): str,
+        probatio.Required("type"): "trace/contexts",
+        probatio.Inclusive("domain", "id"): probatio.In(TRACE_DOMAINS),
+        probatio.Inclusive("item_id", "id"): str,
     }
 )
 @websocket_api.async_response
@@ -129,11 +129,11 @@ async def websocket_trace_contexts(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/debug/breakpoint/set",
-        vol.Required("domain"): vol.In(TRACE_DOMAINS),
-        vol.Required("item_id"): str,
-        vol.Required("node"): str,
-        vol.Optional("run_id"): str,
+        probatio.Required("type"): "trace/debug/breakpoint/set",
+        probatio.Required("domain"): probatio.In(TRACE_DOMAINS),
+        probatio.Required("item_id"): str,
+        probatio.Required("node"): str,
+        probatio.Optional("run_id"): str,
     }
 )
 def websocket_breakpoint_set(
@@ -160,11 +160,11 @@ def websocket_breakpoint_set(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/debug/breakpoint/clear",
-        vol.Required("domain"): vol.In(TRACE_DOMAINS),
-        vol.Required("item_id"): str,
-        vol.Required("node"): str,
-        vol.Optional("run_id"): str,
+        probatio.Required("type"): "trace/debug/breakpoint/clear",
+        probatio.Required("domain"): probatio.In(TRACE_DOMAINS),
+        probatio.Required("item_id"): str,
+        probatio.Required("node"): str,
+        probatio.Optional("run_id"): str,
     }
 )
 def websocket_breakpoint_clear(
@@ -184,7 +184,9 @@ def websocket_breakpoint_clear(
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "trace/debug/breakpoint/list"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "trace/debug/breakpoint/list"}
+)
 def websocket_breakpoint_list(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -202,7 +204,7 @@ def websocket_breakpoint_list(
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required("type"): "trace/debug/breakpoint/subscribe"}
+    {probatio.Required("type"): "trace/debug/breakpoint/subscribe"}
 )
 def websocket_subscribe_breakpoint_events(
     hass: HomeAssistant,
@@ -251,10 +253,10 @@ def websocket_subscribe_breakpoint_events(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/debug/continue",
-        vol.Required("domain"): vol.In(TRACE_DOMAINS),
-        vol.Required("item_id"): str,
-        vol.Required("run_id"): str,
+        probatio.Required("type"): "trace/debug/continue",
+        probatio.Required("domain"): probatio.In(TRACE_DOMAINS),
+        probatio.Required("item_id"): str,
+        probatio.Required("run_id"): str,
     }
 )
 def websocket_debug_continue(
@@ -275,10 +277,10 @@ def websocket_debug_continue(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/debug/step",
-        vol.Required("domain"): vol.In(TRACE_DOMAINS),
-        vol.Required("item_id"): str,
-        vol.Required("run_id"): str,
+        probatio.Required("type"): "trace/debug/step",
+        probatio.Required("domain"): probatio.In(TRACE_DOMAINS),
+        probatio.Required("item_id"): str,
+        probatio.Required("run_id"): str,
     }
 )
 def websocket_debug_step(
@@ -299,10 +301,10 @@ def websocket_debug_step(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "trace/debug/stop",
-        vol.Required("domain"): vol.In(TRACE_DOMAINS),
-        vol.Required("item_id"): str,
-        vol.Required("run_id"): str,
+        probatio.Required("type"): "trace/debug/stop",
+        probatio.Required("domain"): probatio.In(TRACE_DOMAINS),
+        probatio.Required("item_id"): str,
+        probatio.Required("run_id"): str,
     }
 )
 def websocket_debug_stop(

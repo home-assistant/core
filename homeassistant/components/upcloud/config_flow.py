@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 import requests.exceptions
 import upcloud_api
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -70,12 +70,12 @@ class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
                 }

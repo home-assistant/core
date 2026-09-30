@@ -6,7 +6,7 @@ Used by UI to setup a wiffi integration.
 import errno
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import (
@@ -69,10 +69,12 @@ class WiffiFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_show_form(self, errors=None):
         """Show the config flow form to the user."""
-        data_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
+        data_schema = {probatio.Required(CONF_PORT, default=DEFAULT_PORT): int}
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {}
+            step_id="user",
+            data_schema=probatio.Schema(data_schema),
+            errors=errors or {},
         )
 
 
@@ -88,9 +90,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TIMEOUT,
                         default=self.config_entry.options.get(
                             CONF_TIMEOUT, DEFAULT_TIMEOUT

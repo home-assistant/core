@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -316,7 +316,7 @@ async def test_value_missing_on_node(
     )
     assert checker.async_check() is False
 
-    with pytest.raises(vol.Invalid, match="No targeted node has value"):
+    with pytest.raises(probatio.Invalid, match="No targeted node has value"):
         await _checker(
             hass,
             {
@@ -361,7 +361,7 @@ async def test_no_nodes_resolved(
     other = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id, identifiers={("other", "1")}
     )
-    with pytest.raises(vol.Invalid, match="No nodes found"):
+    with pytest.raises(probatio.Invalid, match="No nodes found"):
         await _checker(
             hass,
             {
@@ -519,7 +519,7 @@ async def test_config_parameter_missing_on_node(
 ) -> None:
     """Test validation fails when no node in the target has the parameter."""
     device_id = _device_id(device_registry, client, lock_schlage_be469, integration)
-    with pytest.raises(vol.Invalid, match="configuration parameter"):
+    with pytest.raises(probatio.Invalid, match="configuration parameter"):
         await _checker(
             hass,
             {
@@ -547,7 +547,7 @@ async def test_condition_description_fields_match_schema(
     fields = description["fields"]
     assert set(fields) == {str(key) for key in schema}
     assert {name for name, field in fields.items() if field["required"]} == {
-        str(key) for key in schema if isinstance(key, vol.Required)
+        str(key) for key in schema if isinstance(key, probatio.Required)
     }
 
 

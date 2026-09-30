@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "pagination": {
+      "total": 1,
+      "count": 1,
+      "per_page": 50,
+      "current_page": 1
+    }
+  },
+  "data": [
+    {
+      "object": "server",
+      "attributes": {
+        "server_owner": true,
+        "identifier": "1",
+        "internal_id": 1,
+        "uuid": "1-1-1-1-1",
+        "name": "Test Server 1",
+        "is_suspended": true,
+        "node": "default_node",
+        "description": "Description of Test Server 1",
+        "limits": {
+          "memory": 1024,
+          "swap": 512,
+          "disk": 10240,
+          "io": 500,
+          "cpu": 50,
+          "threads": null,
+          "oom_disabled": true
+        },
+        "invocation": "java -jar test1.jar",
+        "docker_image": "test_docker_image1",
+        "egg_features": ["java_version"]
+      }
+    }
+  ]
+}

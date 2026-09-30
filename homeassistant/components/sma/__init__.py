@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     )
 
     coordinator = SMADataUpdateCoordinator(hass, entry, sma, sma_modbus)
+    entry.async_on_unload(coordinator.async_close_sma_session)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

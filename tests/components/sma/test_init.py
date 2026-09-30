@@ -128,3 +128,30 @@ async def test_modbus_issue_removed_on_unload(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    "close_session_error",
+    [
+        pytest.param(None, id="closed"),
+        pytest.param(SmaConnectionException, id="unreachable"),
+    ],
+)
+async def test_unload_closes_session(
+    hass: HomeAssistant,
+    mock_sma_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    close_session_error: type[Exception] | None,
+) -> None:
+    """Test unloading the entry closes the SMA session, even if unreachable."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_sma_client.close_session.assert_not_called()
+
+    mock_sma_client.close_session.side_effect = close_session_error
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_sma_client.close_session.assert_called_once()

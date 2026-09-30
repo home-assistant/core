@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, websocket_api
 from homeassistant.core import HomeAssistant
@@ -48,7 +48,7 @@ async def test_async_response_request_context(
         handle_request(http.current_request.get(), connection, msg)
 
     @websocket_api.websocket_command(
-        {"type": "test-get-request-with-arg", vol.Required("arg"): str}
+        {"type": "test-get-request-with-arg", probatio.Required("arg"): str}
     )
     def get_with_arg_request(
         hass: HomeAssistant,

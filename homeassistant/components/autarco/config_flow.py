@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from autarco import Autarco, AutarcoAuthenticationError, AutarcoConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -12,16 +12,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

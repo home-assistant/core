@@ -6,6 +6,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
@@ -43,7 +44,7 @@ LEVEL = {OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3}
 class TeslemetrySelectEntityDescription(SelectEntityDescription):
     """Seat Heater entity description."""
 
-    select_fn: Callable[[Vehicle, int], Awaitable[Any]]
+    select_fn: Callable[[Vehicle | VehicleRouter, int], Awaitable[Any]]
     supported_fn: Callable[[dict], bool] = lambda _: True
     streaming_listener: (
         Callable[
@@ -136,10 +137,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ),
         # Heated third row only on Model X (value 3) that actually has a third
         # row; some 5-seat Model X also report 3 but have no third row.
-        # third_row_seats is a string ("None" when absent), not a bool.
         supported_fn=lambda data: (
-            data.get("rear_seat_heaters") == 3
-            and data.get("third_row_seats", "None") != "None"
+            data.get("rear_seat_heaters") == 3 and bool(data.get("third_row_seats"))
         ),
         entity_registry_enabled_default=False,
         options=[
@@ -156,10 +155,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ),
         # Heated third row only on Model X (value 3) that actually has a third
         # row; some 5-seat Model X also report 3 but have no third row.
-        # third_row_seats is a string ("None" when absent), not a bool.
         supported_fn=lambda data: (
-            data.get("rear_seat_heaters") == 3
-            and data.get("third_row_seats", "None") != "None"
+            data.get("rear_seat_heaters") == 3 and bool(data.get("third_row_seats"))
         ),
         entity_registry_enabled_default=False,
         options=[
@@ -273,7 +270,7 @@ async def async_setup_entry(
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     """Parent vehicle select entity class."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 

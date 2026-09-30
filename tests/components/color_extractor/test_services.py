@@ -7,8 +7,8 @@ from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
 from PIL import UnidentifiedImageError
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.color_extractor.services import (
     ATTR_PATH,
