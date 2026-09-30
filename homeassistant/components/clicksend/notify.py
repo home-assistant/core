@@ -35,7 +35,7 @@ HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_RECIPIENT, default=[]): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
