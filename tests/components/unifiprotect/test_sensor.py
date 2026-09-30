@@ -130,6 +130,28 @@ async def test_sensor_sense_capability_creation_filter(
         assert (entity_registry.async_get(entity_id) is not None) is created, key
 
 
+async def test_sensor_sense_metrics_read_their_own_public_path(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Each environmental sensor reads its own metric from the public object.
+
+    The fixture reports the same number for light, humidity and temperature, so
+    a swapped ``ufp_public_value`` path would go unnoticed without diverging
+    values here.
+    """
+    setup_public_sensor(
+        ufp, light_value=11.0, humidity_value=22.0, temperature_value=33.0
+    )
+    await init_entry(hass, ufp, [sensor_all])
+
+    name = sensor_all.name.lower().replace(" ", "_")
+    assert hass.states.get(f"sensor.{name}_illuminance").state == "11.0"
+    assert hass.states.get(f"sensor.{name}_humidity").state == "22.0"
+    assert hass.states.get(f"sensor.{name}_temperature").state == "33.0"
+
+
 async def test_sensor_setup_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -657,6 +679,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
 ) -> None:
     """Test sensor motion entity with last trip time."""
 
+    setup_public_sensor(ufp, tampering_detected_at=fixed_now - timedelta(hours=3))
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 22)
 
@@ -676,9 +699,37 @@ async def test_sensor_update_alarm_with_last_trip_time(
     assert state
     assert (
         state.state
-        == (fixed_now - timedelta(hours=1)).replace(microsecond=0).isoformat()
+        == (fixed_now - timedelta(hours=2)).replace(microsecond=0).isoformat()
     )
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+    # Door and motion map to different public fields; asserting both with
+    # different offsets is what catches a swapped path.
+    _, motion_entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "motion_last_trip_time"),
+    )
+    motion_state = hass.states.get(motion_entity_id)
+    assert motion_state
+    assert (
+        motion_state.state
+        == (fixed_now - timedelta(hours=1)).replace(microsecond=0).isoformat()
+    )
+
+    _, tamper_entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "tampering_last_trip_time"),
+    )
+    tamper_state = hass.states.get(tamper_entity_id)
+    assert tamper_state
+    assert (
+        tamper_state.state
+        == (fixed_now - timedelta(hours=3)).replace(microsecond=0).isoformat()
+    )
 
 
 async def test_sensor_precision(

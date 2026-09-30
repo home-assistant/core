@@ -15,7 +15,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 from zoneinfo import ZoneInfo
 
-import voluptuous as vol
+import probatio
 from zha.application import Platform as ZhaPlatform
 from zha.application.const import (
     ATTR_DEVICE_IEEE,
@@ -60,6 +60,8 @@ from zha.application.helpers import (
     QuirksConfiguration,
     ZHAConfiguration,
     ZHAData,
+    convert_install_code,
+    qr_to_install_code,
 )
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
@@ -118,27 +120,31 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.logging import HomeAssistantQueueHandler
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
     ATTR_AVAILABLE,
     ATTR_DEVICE_TYPE,
+    ATTR_DURATION,
     ATTR_ENDPOINT_NAMES,
     ATTR_EXPOSES_FEATURES,
     ATTR_IEEE,
+    ATTR_INSTALL_CODE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
     ATTR_MANUFACTURER_CODE,
     ATTR_NEIGHBORS,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
+    ATTR_QR_CODE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
+    ATTR_SOURCE_IEEE,
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
@@ -1196,12 +1202,14 @@ def async_get_zha_device_proxy(hass: HomeAssistant, device_id: str) -> ZHADevice
     return zha_gateway_proxy.device_proxies[ieee]
 
 
-def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
-    """Convert a cluster command schema to a voluptuous schema."""
-    return vol.Schema(
+def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> probatio.Schema:
+    """Convert a cluster command schema to a probatio schema."""
+    return probatio.Schema(
         {
             (
-                vol.Optional(field.name) if field.optional else vol.Required(field.name)
+                probatio.Optional(field.name)
+                if field.optional
+                else probatio.Required(field.name)
             ): schema_type_to_vol(field.type)
             for field in schema.fields
         }
@@ -1209,20 +1217,21 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
 
 
 def schema_type_to_vol(field_type: Any) -> Any:
-    """Convert a schema type to a voluptuous type."""
+    """Convert a schema type to a probatio type."""
     if issubclass(field_type, enum.Flag) and field_type.__members__:
         return cv.multi_select(
             [key.replace("_", " ") for key in field_type.__members__]
         )
     if issubclass(field_type, enum.Enum) and field_type.__members__:
-        return vol.In([key.replace("_", " ") for key in field_type.__members__])
+        return probatio.In([key.replace("_", " ") for key in field_type.__members__])
     if (
         issubclass(field_type, zigpy.types.FixedIntType)
         or issubclass(field_type, enum.Flag)
         or issubclass(field_type, enum.Enum)
     ):
-        return vol.All(
-            vol.Coerce(int), vol.Range(field_type.min_value, field_type.max_value)
+        return probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(field_type.min_value, field_type.max_value),
         )
     return str
 
@@ -1315,33 +1324,37 @@ def async_add_entities(
     entities.clear()
 
 
-CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
+CONF_ZHA_OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=2**16 / 10)
+        probatio.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=2**16 / 10)
         ),
-        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
-        vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
-        vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
-        vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
-        vol.Optional(
+        probatio.Required(
+            CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False
+        ): cv.boolean,
+        probatio.Required(
+            CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True
+        ): cv.boolean,
+        probatio.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
+        probatio.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+        probatio.Optional(
             CONF_CONSIDER_UNAVAILABLE_MAINS,
             default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_CONSIDER_UNAVAILABLE_BATTERY,
             default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
         ): cv.positive_int,
-        vol.Required(CONF_ENABLE_MAINS_STARTUP_POLLING, default=True): cv.boolean,
+        probatio.Required(CONF_ENABLE_MAINS_STARTUP_POLLING, default=True): cv.boolean,
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
-CONF_ZHA_ALARM_SCHEMA = vol.Schema(
+CONF_ZHA_ALARM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
-        vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
-        vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
+        probatio.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
+        probatio.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
+        probatio.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
     }
 )
 
@@ -1466,3 +1479,20 @@ def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
 def get_config_entry_unique_id(network_info: NetworkInfo) -> str:
     """Generate a unique id for a config entry based on the network info."""
     return f"epid={network_info.extended_pan_id}".lower()
+
+
+IEEE_SCHEMA = probatio.All(cv.string, EUI64.convert)
+
+SERVICE_PERMIT_PARAMS: VolDictType = {
+    probatio.Optional(ATTR_IEEE): IEEE_SCHEMA,
+    probatio.Optional(ATTR_DURATION, default=60): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 254)
+    ),
+    probatio.Inclusive(ATTR_SOURCE_IEEE, "install_code"): IEEE_SCHEMA,
+    probatio.Inclusive(ATTR_INSTALL_CODE, "install_code"): probatio.All(
+        cv.string, convert_install_code
+    ),
+    probatio.Exclusive(ATTR_QR_CODE, "install_code"): probatio.All(
+        cv.string, qr_to_install_code
+    ),
+}

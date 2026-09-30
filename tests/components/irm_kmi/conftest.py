@@ -1,9 +1,8 @@
 """Fixtures for the IRM KMI integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from irm_kmi_api import IrmKmiApiError
 import pytest
 
 from homeassistant.components.irm_kmi.const import DOMAIN
@@ -14,6 +13,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
+from .const import CURRENT_WEATHER
+
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
@@ -21,13 +22,13 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Home",
+        title="Brussels",
         domain=DOMAIN,
         data={
             CONF_LOCATION: {ATTR_LATITUDE: 50.84, ATTR_LONGITUDE: 4.35},
-            CONF_UNIQUE_ID: "city country",
+            CONF_UNIQUE_ID: "brussels be",
         },
-        unique_id="50.84-4.35",
+        unique_id="brussels be",
     )
 
 
@@ -39,82 +40,40 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_get_forecast_in_benelux():
-    """Mock get_forecasts_coord() returning valid data in Benelux."""
+def mock_config_flow_forecast() -> Generator[AsyncMock]:
+    """Mock the config flow forecast fetch for a location in Belgium."""
     with patch(
         "homeassistant.components.irm_kmi.config_flow.IrmKmiApiClient.get_forecasts_coord",
         return_value={"cityName": "Brussels", "country": "BE"},
-    ):
-        yield
+    ) as get_forecasts_coord:
+        yield get_forecasts_coord
 
 
 @pytest.fixture
-def mock_get_forecast_out_benelux_then_in_belgium():
-    """Mock get_forecasts_coord() returning outside then inside Benelux."""
-    with patch(
-        "homeassistant.components.irm_kmi.config_flow.IrmKmiApiClient.get_forecasts_coord",
-        side_effect=[
-            {"cityName": "Outside the Benelux (Brussels)", "country": "BE"},
-            {"cityName": "Brussels", "country": "BE"},
-        ],
-    ):
-        yield
-
-
-@pytest.fixture
-def mock_get_forecast_api_error():
-    """Mock get_forecasts_coord() so that it raises an error."""
-    with patch(
-        "homeassistant.components.irm_kmi.config_flow.IrmKmiApiClient.get_forecasts_coord",
-        side_effect=IrmKmiApiError,
-    ):
-        yield
-
-
-@pytest.fixture
-def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[MagicMock]:
-    """Return a mocked IrmKmi api client."""
-    fixture: str = "forecast.json"
-
-    forecast = load_json_object_fixture(fixture, "irm_kmi")
+def mock_irm_kmi_api() -> Generator[MagicMock]:
+    """Return a mocked IRM KMI client serving parsed data."""
     with patch(
         "homeassistant.components.irm_kmi.IrmKmiApiClientHa", autospec=True
     ) as irm_kmi_api_mock:
         irm_kmi = irm_kmi_api_mock.return_value
-        irm_kmi.get_forecasts_coord.return_value = forecast
+        irm_kmi.get_country.return_value = "BE"
+        irm_kmi.get_current_weather.return_value = CURRENT_WEATHER
+        irm_kmi.get_daily_forecast.return_value = []
+        irm_kmi.get_hourly_forecast.return_value = []
         yield irm_kmi
 
 
 @pytest.fixture
-def mock_irm_kmi_api_nl():
-    """Mock get_forecasts_coord() to return a Netherlands forecast."""
-    fixture: str = "forecast_nl.json"
-    forecast = load_json_object_fixture(fixture, "irm_kmi")
-    with patch(
-        "homeassistant.components.irm_kmi.coordinator.IrmKmiApiClientHa.get_forecasts_coord",
-        return_value=forecast,
-    ):
-        yield
+def forecast_fixture() -> str:
+    """Return the name of the recorded forecast to serve."""
+    return "forecast.json"
 
 
 @pytest.fixture
-def mock_irm_kmi_api_high_low_temp():
-    """Mock get_forecasts_coord() to return high_low_temp forecast."""
-    fixture: str = "high_low_temp.json"
-    forecast = load_json_object_fixture(fixture, "irm_kmi")
+def mock_get_forecasts_coord(forecast_fixture: str) -> Generator[AsyncMock]:
+    """Mock get_forecasts_coord() to return a recorded forecast."""
     with patch(
-        "homeassistant.components.irm_kmi.coordinator.IrmKmiApiClientHa.get_forecasts_coord",
-        return_value=forecast,
-    ):
-        yield
-
-
-@pytest.fixture
-def mock_exception_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[MagicMock]:
-    """Return a mocked IrmKmi api client that raises on refresh."""
-    with patch(
-        "homeassistant.components.irm_kmi.IrmKmiApiClientHa", autospec=True
-    ) as irm_kmi_api_mock:
-        irm_kmi = irm_kmi_api_mock.return_value
-        irm_kmi.refresh_forecasts_coord.side_effect = IrmKmiApiError
-        yield irm_kmi
+        "homeassistant.components.irm_kmi.IrmKmiApiClientHa.get_forecasts_coord",
+        return_value=load_json_object_fixture(forecast_fixture, DOMAIN),
+    ) as get_forecasts_coord:
+        yield get_forecasts_coord

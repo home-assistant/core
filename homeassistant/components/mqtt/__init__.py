@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
@@ -229,26 +229,26 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 #       ...
 #     - name: ""
 #       ...
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             cv.remove_falsy,
             [CONFIG_SCHEMA_BASE],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Publish action call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema(
+MQTT_PUBLISH_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, default=None): vol.Any(cv.string, None),
-        vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
+        probatio.Required(ATTR_TOPIC): valid_publish_topic,
+        probatio.Required(ATTR_PAYLOAD, default=None): probatio.Any(cv.string, None),
+        probatio.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
+        probatio.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        probatio.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
     },
     required=True,
 )
@@ -287,7 +287,7 @@ async def async_check_config_schema(
             for config in config_items:
                 try:
                     schema(config)
-                except vol.Invalid as exc:
+                except probatio.Invalid as exc:
                     integration = await async_get_integration(hass, DOMAIN)
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
@@ -370,8 +370,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             message_expiry_interval=message_expiry_interval,
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_PUBLISH, async_publish_service, MQTT_PUBLISH_SCHEMA
     )
 
     async def async_dump_service(call: ServiceCall) -> None:
@@ -395,14 +395,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         ev.async_call_later(hass, call.data["duration"], finish_dump)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DUMP,
         async_dump_service,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("topic"): valid_subscribe_topic,
-                vol.Optional("duration", default=5): int,
+                probatio.Required("topic"): valid_subscribe_topic,
+                probatio.Optional("duration", default=5): int,
             }
         ),
     )
@@ -609,7 +610,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
+    {
+        probatio.Required("type"): "mqtt/device/debug_info",
+        probatio.Required("device_id"): str,
+    }
 )
 @callback
 def websocket_mqtt_info(
@@ -624,9 +628,9 @@ def websocket_mqtt_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "mqtt/subscribe",
-        vol.Required("topic"): valid_subscribe_topic,
-        vol.Optional("qos"): valid_qos_schema,
+        probatio.Required("type"): "mqtt/subscribe",
+        probatio.Required("topic"): valid_subscribe_topic,
+        probatio.Optional("qos"): valid_qos_schema,
     }
 )
 @websocket_api.async_response

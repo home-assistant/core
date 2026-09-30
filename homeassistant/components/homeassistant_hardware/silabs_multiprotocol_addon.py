@@ -8,7 +8,7 @@ from typing import Any, Protocol
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.components.hassio import (
@@ -354,8 +354,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         if user_input is None:
             return self.async_show_form(
                 step_id="addon_not_installed",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
                 ),
                 description_placeholders={"hardware_name": self._hardware_name()},
             )
@@ -591,9 +591,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
             suggested_channel = DEFAULT_CHANNEL
             if (channel := multipan_manager.async_get_channel()) is not None:
                 suggested_channel = channel
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "channel",
                         description={"suggested_value": str(suggested_channel)},
                     ): SelectSelector(
@@ -633,8 +633,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         if user_input is None:
             return self.async_show_form(
                 step_id="uninstall_addon",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_DISABLE_MULTI_PAN, default=False): bool}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_DISABLE_MULTI_PAN, default=False): bool}
                 ),
                 description_placeholders={"hardware_name": self._hardware_name()},
             )

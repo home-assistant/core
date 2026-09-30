@@ -2,9 +2,9 @@
 
 import logging
 
+import probatio
 from pythonegardia import egardiadevice, egardiaserver
 import requests
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
@@ -47,37 +47,39 @@ NOTIFICATION_TITLE = "Egardia"
 
 REPORT_SERVER_CODES_IGNORE = "ignore"
 
-SERVER_CODE_SCHEMA = vol.Schema(
+SERVER_CODE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("arm"): vol.All(cv.ensure_list_csv, [cv.string]),
-        vol.Optional("disarm"): vol.All(cv.ensure_list_csv, [cv.string]),
-        vol.Optional("armhome"): vol.All(cv.ensure_list_csv, [cv.string]),
-        vol.Optional("triggered"): vol.All(cv.ensure_list_csv, [cv.string]),
-        vol.Optional("ignore"): vol.All(cv.ensure_list_csv, [cv.string]),
+        probatio.Optional("arm"): probatio.All(cv.ensure_list_csv, [cv.string]),
+        probatio.Optional("disarm"): probatio.All(cv.ensure_list_csv, [cv.string]),
+        probatio.Optional("armhome"): probatio.All(cv.ensure_list_csv, [cv.string]),
+        probatio.Optional("triggered"): probatio.All(cv.ensure_list_csv, [cv.string]),
+        probatio.Optional("ignore"): probatio.All(cv.ensure_list_csv, [cv.string]),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_REPORT_SERVER_CODES, default={}): SERVER_CODE_SCHEMA,
-                vol.Optional(
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
+                probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(
+                    CONF_REPORT_SERVER_CODES, default={}
+                ): SERVER_CODE_SCHEMA,
+                probatio.Optional(
                     CONF_REPORT_SERVER_ENABLED, default=DEFAULT_REPORT_SERVER_ENABLED
                 ): cv.boolean,
-                vol.Optional(
+                probatio.Optional(
                     CONF_REPORT_SERVER_PORT, default=DEFAULT_REPORT_SERVER_PORT
                 ): cv.port,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

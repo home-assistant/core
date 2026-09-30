@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, patch
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.const import Platform
@@ -121,9 +121,9 @@ async def test_generate_structured_data(
         task_name="Test Task",
         entity_id="ai_task.gemini_1_5_pro",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -198,9 +198,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id="ai_task.gemini_1_5_pro",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,

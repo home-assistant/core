@@ -9,7 +9,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "create_entry": {

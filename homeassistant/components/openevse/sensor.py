@@ -7,7 +7,7 @@ import logging
 from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -387,9 +387,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["status"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_MONITORED_VARIABLES, default=["status"]): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
     }
 )

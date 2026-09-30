@@ -1,44 +1,30 @@
-"""Test the Anthem A/V Receivers config flow."""
+"""Test the Anthem A/V Receivers media player."""
 
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 
-import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_APP_NAME,
-    ATTR_INPUT_SOURCE,
-    ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
+    MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityStateAttribute,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "entity_name"),
-    [
-        ("media_player.anthem_av", "Anthem AV"),
-        ("media_player.zone_2", "Zone 2"),
-    ],
-)
-async def test_zones_loaded(
+async def test_all_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
-    entity_id: str,
-    entity_name: str,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test zones are loaded."""
+    """Test all entities."""
 
-    states = hass.states.get(entity_id)
-
-    assert states
-    assert states.state == STATE_OFF
-    assert states.name == entity_name
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_update_states_zone1(
@@ -64,9 +50,15 @@ async def test_update_states_zone1(
     states = hass.states.get("media_player.anthem_av")
     assert states
     assert states.state == STATE_ON
-    assert states.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 42
-    assert states.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
-    assert states.attributes[ATTR_INPUT_SOURCE] == "TEST INPUT"
-    assert states.attributes[ATTR_MEDIA_TITLE] == "TEST INPUT"
-    assert states.attributes[ATTR_APP_NAME] == "2.0 PCM"
-    assert states.attributes[ATTR_INPUT_SOURCE_LIST] == ["TEST INPUT", "INPUT 2"]
+    assert states.attributes[MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL] == 42
+    assert states.attributes[MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED] is True
+    assert (
+        states.attributes[MediaPlayerEntityStateAttribute.INPUT_SOURCE] == "TEST INPUT"
+    )
+    assert (
+        states.attributes[MediaPlayerEntityStateAttribute.MEDIA_TITLE] == "TEST INPUT"
+    )
+    assert states.attributes[MediaPlayerEntityStateAttribute.APP_NAME] == "2.0 PCM"
+    assert states.attributes[
+        MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST
+    ] == ["TEST INPUT", "INPUT 2"]

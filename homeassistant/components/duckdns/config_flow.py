@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN, CONF_NAME
@@ -19,16 +19,18 @@ from .helpers import update_duckdns
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DOMAIN): TextSelector(
+        probatio.Required(CONF_DOMAIN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, suffix=".duckdns.org")
         ),
-        vol.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(CONF_ACCESS_TOKEN): str,
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_ACCESS_TOKEN): str}
+)
 
 
 class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):

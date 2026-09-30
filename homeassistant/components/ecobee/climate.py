@@ -3,7 +3,7 @@
 import collections
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -185,21 +185,21 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_DST_MODE,
-        {vol.Required(ATTR_DST_ENABLED): cv.boolean},
+        {probatio.Required(ATTR_DST_ENABLED): cv.boolean},
         "set_dst_mode",
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_MIC_MODE,
-        {vol.Required(ATTR_MIC_ENABLED): cv.boolean},
+        {probatio.Required(ATTR_MIC_ENABLED): cv.boolean},
         "set_mic_mode",
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_OCCUPANCY_MODES,
         {
-            vol.Optional(ATTR_AUTO_AWAY): cv.boolean,
-            vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
+            probatio.Optional(ATTR_AUTO_AWAY): cv.boolean,
+            probatio.Optional(ATTR_FOLLOW_ME): cv.boolean,
         },
         "set_occupancy_modes",
     )
@@ -207,8 +207,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SENSORS_USED_IN_CLIMATE,
         {
-            vol.Optional(ATTR_PRESET_MODE): cv.string,
-            vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
+            probatio.Optional(ATTR_PRESET_MODE): cv.string,
+            probatio.Required(ATTR_SENSOR_LIST): cv.ensure_list,
         },
         "set_sensors_used_in_climate",
     )

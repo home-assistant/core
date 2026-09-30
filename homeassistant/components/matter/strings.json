@@ -690,6 +690,9 @@
       }
     },
     "switch": {
+      "audible_alarm_enabled": {
+        "name": "Audible alarm enabled"
+      },
       "child_lock": {
         "name": "Child lock"
       },
@@ -710,6 +713,9 @@
       },
       "switch": {
         "name": "[%key:component::switch::title%]"
+      },
+      "visual_alarm_enabled": {
+        "name": "Visual alarm enabled"
       }
     },
     "vacuum": {

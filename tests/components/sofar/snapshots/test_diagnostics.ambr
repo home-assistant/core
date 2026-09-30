@@ -3,6 +3,22 @@
   dict({
     'active_faults': list([
     ]),
+    'address_masks': dict({
+      '1024': 0,
+      '1088': 0,
+      '1152': 0,
+      '1280': 0,
+      '1408': 0,
+      '1472': 0,
+      '1536': 0,
+      '1600': 0,
+      '1664': 0,
+      '1728': 0,
+      '4096': 0,
+      '4160': 0,
+      '4352': 0,
+      '4480': 0,
+    }),
     'inverter_type': 1537,
     'model': '4.4 KTLX-G3',
     'raw': dict({
@@ -166,6 +182,7 @@
       'grid',
       'pv_1_2',
       'energy',
+      'meter_energy',
     ]),
     'serial_number': '**REDACTED**',
     'settings_components': list([

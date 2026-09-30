@@ -172,7 +172,7 @@ def mock_add_listener():
         def unsubscribe() -> None:
             return
 
-        def side_effect(callback, filters):
+        def side_effect(callback, filters, internal=False):
             mock_add_listener.listeners.append((callback, filters))
             return unsubscribe
 

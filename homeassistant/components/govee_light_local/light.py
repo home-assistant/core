@@ -129,7 +129,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         """
         if not super().available:
             return False
-        return dt_util.naive_now() - self._device.lastseen < DEVICE_TIMEOUT
+        return dt_util.utcnow() - self._device.lastseen < DEVICE_TIMEOUT
 
     @property
     @override

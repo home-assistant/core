@@ -28,6 +28,16 @@
     }
   },
   "entity": {
+    "select": {
+      "charging_mode": {
+        "name": "Charging mode",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "pause": "[%key:common::state::paused%]",
+          "solar": "Solar"
+        }
+      }
+    },
     "sensor": {
       "error": {
         "name": "Error",

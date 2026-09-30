@@ -13,7 +13,7 @@ from broadlink.exceptions import (
     BroadlinkException,
     NetworkTimeoutError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -147,12 +147,12 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=errors["base"])
 
         data_schema = {
-            vol.Required(CONF_HOST): str,
-            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+            probatio.Required(CONF_HOST): str,
+            probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             errors=errors,
         )
 
@@ -280,11 +280,11 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             return await self.async_step_finish()
 
-        data_schema = {vol.Required("unlock", default=False): bool}
+        data_schema = {probatio.Required("unlock", default=False): bool}
         return self.async_show_form(
             step_id="unlock",
             errors=errors,
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             description_placeholders={
                 "name": device.name,
                 "model": device.model,
@@ -317,9 +317,9 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        data_schema = {vol.Required(CONF_NAME, default=device.name): str}
+        data_schema = {probatio.Required(CONF_NAME, default=device.name): str}
         return self.async_show_form(
-            step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="finish", data_schema=probatio.Schema(data_schema), errors=errors
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

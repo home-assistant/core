@@ -39,7 +39,6 @@ def mock_madvr_client() -> Generator[AsyncMock]:
         client.connected.return_value = True
         client.is_device_connectable.return_value = True
         client.loop = AsyncMock()
-        client.tasks = AsyncMock()
         client.set_update_callback = MagicMock()
 
         # mock the property to be off on startup (which it is)

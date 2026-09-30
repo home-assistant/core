@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -43,11 +43,11 @@ SCRIPT_FIELDS = (
     CONF_TURN_ON,
 )
 
-SWITCH_COMMON_SCHEMA = vol.Schema(
+SWITCH_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
     }
 )
 

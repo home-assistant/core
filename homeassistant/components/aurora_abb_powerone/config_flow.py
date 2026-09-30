@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from aurorapy.client import AuroraError, AuroraSerialClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -126,13 +126,13 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If no user input, must be first pass through the config.  Show  initial form.
         config_options = {
-            vol.Required(CONF_PORT, default=self._default_com_port): vol.In(
+            probatio.Required(CONF_PORT, default=self._default_com_port): probatio.In(
                 self._com_ports_list
             ),
-            vol.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): vol.In(
+            probatio.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): probatio.In(
                 range(MIN_ADDRESS, MAX_ADDRESS + 1)
             ),
         }
-        schema = vol.Schema(config_options)
+        schema = probatio.Schema(config_options)
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

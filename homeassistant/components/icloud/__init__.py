@@ -18,7 +18,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .coordinator import IcloudCalendarCoordinator
+from .coordinator import IcloudCalendarCoordinator, IcloudRemindersCoordinator
 from .media_source import async_setup_mediasource, async_setup_photo_cache
 from .services import async_setup_services
 
@@ -63,14 +63,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
 
     await hass.async_add_executor_job(account.setup)
 
-    # Refreshed before the platforms are forwarded so the calendars are known
-    # by the time the calendar platform sets up. This deliberately does not use
-    # async_config_entry_first_refresh: an account that fails to authenticate
-    # still loads and starts a reauth flow, and a calendar outage should not
-    # take device tracking down with it. Calendars that are missing from the
-    # first refresh appear on a later one through the coordinator listener.
+    # Refreshed before the platforms are forwarded so the calendars and lists
+    # are known by the time their platforms set up. This deliberately does not
+    # use async_config_entry_first_refresh: an account that fails to
+    # authenticate still loads and starts a reauth flow, and a calendar or
+    # Reminders outage should not take device tracking down with it. Anything
+    # missing from the first refresh appears on a later one through the
+    # coordinator listener.
     account.calendar_coordinator = IcloudCalendarCoordinator(hass, entry)
     await account.calendar_coordinator.async_refresh()
+
+    account.reminders_coordinator = IcloudRemindersCoordinator(hass, entry)
+    await account.reminders_coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_setup_photo_cache(hass, account)

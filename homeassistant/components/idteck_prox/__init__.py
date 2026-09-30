@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 from rfk101py.rfk101py import rfk101py
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
@@ -21,22 +21,22 @@ DOMAIN = "idteck_prox"
 
 EVENT_IDTECK_PROX_KEYCARD = "idteck_prox_keycard"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_PORT): cv.port,
-                        vol.Required(CONF_NAME): cv.string,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Required(CONF_PORT): cv.port,
+                        probatio.Required(CONF_NAME): cv.string,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

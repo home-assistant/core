@@ -1,15 +1,30 @@
 """Teslemetry helper functions."""
 
+import asyncio
 from collections.abc import Awaitable
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, LOGGER
+from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+
+
+async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
+    """Return a shared TeslaBluetooth parent with the private key loaded."""
+    lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
+    async with lock:
+        existing: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
+        if existing is not None:
+            return existing
+        parent = TeslaBluetooth()
+        await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
+        hass.data[BLE_PARENT_KEY] = parent
+        return parent
 
 
 def flatten(
@@ -77,6 +92,25 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_remove_stale_vehicle_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    domain: str,
+    vins: set[str],
+    valid_unique_ids: set[str],
+) -> None:
+    """Remove registry entries for vehicle entities that are no longer created."""
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, config_entry_id):
+        if (
+            entity.domain == domain
+            and entity.unique_id not in valid_unique_ids
+            and any(entity.unique_id.startswith(f"{vin}-") for vin in vins)
+        ):
+            entity_registry.async_remove(entity.entity_id)
 
 
 @callback

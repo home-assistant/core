@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -48,8 +48,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SLEEP_TIMER,
         {
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=1440)
+            probatio.Required(ATTR_SLEEP_TIME): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=1440)
             ),
         },
         "async_set_fan_sleep_timer",

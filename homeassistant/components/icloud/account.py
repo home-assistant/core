@@ -61,7 +61,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from .coordinator import IcloudCalendarCoordinator
+    from .coordinator import IcloudCalendarCoordinator, IcloudRemindersCoordinator
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,6 +142,7 @@ class IcloudAccount:
 
         # Built in async_setup_entry, before the platforms are forwarded.
         self.calendar_coordinator: IcloudCalendarCoordinator | None = None
+        self.reminders_coordinator: IcloudRemindersCoordinator | None = None
 
         self.photo_cache: PhotoCache | None = None
 
@@ -249,6 +250,11 @@ class IcloudAccount:
 
         try:
             api_devices = self.api.devices
+            # Since pyicloud 2.3.0 device reads are cache-only and the library
+            # requests an active locate from Apple only at service creation, so
+            # explicitly refresh with locate=True to get a fresh GPS fix on
+            # every poll instead of Apple's cached location.
+            api_devices.refresh(locate=True)
         except Exception as err:
             if _is_auth_failure(err):
                 # Refreshing the devices is where a stored session is usually
