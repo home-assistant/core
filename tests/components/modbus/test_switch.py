@@ -552,7 +552,7 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     now = now + timedelta(seconds=2)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 

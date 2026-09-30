@@ -203,8 +203,7 @@ EXCEPTIONS = {
 }
 
 # fmt: off
-TODO = {
-    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
+TODO: dict[str, AwesomeVersion] = {
 }
 # fmt: on
 

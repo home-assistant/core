@@ -308,6 +308,27 @@ class API(ABC):
         raise NotImplementedError
 
 
+@callback
+def async_get_match_preferences(
+    hass: HomeAssistant, llm_context: LLMContext
+) -> intent.MatchTargetsPreferences:
+    """Return target match preferences for the area of the requesting device."""
+    area: ar.AreaEntry | None = None
+    floor: fr.FloorEntry | None = None
+    if (
+        llm_context.device_id
+        and (device := dr.async_get(hass).async_get(llm_context.device_id))
+        and (device_area_id := dr.async_get_effective_area_id(hass, device))
+        and (area := ar.async_get(hass).async_get_area(device_area_id))
+        and area.floor_id
+    ):
+        floor = fr.async_get(hass).async_get_floor(area.floor_id)
+    return intent.MatchTargetsPreferences(
+        area_id=area.id if area else None,
+        floor_id=floor.floor_id if floor else None,
+    )
+
+
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
@@ -357,24 +378,11 @@ class IntentTool(Tool):
             if not intent.is_blank_slot_value(val)
         }
 
-        if self.extra_slots and llm_context.device_id:
-            device_reg = dr.async_get(hass)
-            device = device_reg.async_get(llm_context.device_id)
-
-            area: ar.AreaEntry | None = None
-            floor: fr.FloorEntry | None = None
-            if device:
-                area_reg = ar.async_get(hass)
-                if (
-                    device_area_id := dr.async_get_effective_area_id(hass, device)
-                ) and (area := area_reg.async_get_area(device_area_id)):
-                    if area.floor_id:
-                        floor_reg = fr.async_get(hass)
-                        floor = floor_reg.async_get_floor(area.floor_id)
-
+        if self.extra_slots:
+            preferences = async_get_match_preferences(hass, llm_context)
             for slot_name, slot_value in (
-                ("preferred_area_id", area.id if area else None),
-                ("preferred_floor_id", floor.floor_id if floor else None),
+                ("preferred_area_id", preferences.area_id),
+                ("preferred_floor_id", preferences.floor_id),
             ):
                 if slot_value and slot_name in self.extra_slots:
                     slots[slot_name] = {"value": slot_value}
@@ -514,6 +522,12 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if schema is cv.string or schema is intent.non_empty_string:
         return {"type": "string"}
+    if (
+        schema is cv.entity_id
+        or schema is cv.entity_id_or_uuid
+        or schema is cv.strict_entity_id
+    ):
+        return {"type": "string"}
     if schema is cv.boolean:
         return {"type": "boolean"}
 
@@ -583,7 +597,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return probatio.to_openapi(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.MediaSelector):
-        item_schema = probatio.to_openapi(schema.DATA_SCHEMA)
+        item_schema = probatio.to_openapi(
+            schema.DATA_SCHEMA, custom_serializer=selector_serializer
+        )
         # Media selector allows multiple when configured
         if schema.config.get("multiple"):
             return {
@@ -638,7 +654,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return probatio.to_openapi(cv.TARGET_FIELDS)
+        return probatio.to_openapi(
+            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+        )
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}
