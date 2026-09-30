@@ -1370,11 +1370,10 @@ class Entity(
 
         self._update_staged = True
 
-        # Cache the semaphore instead of re-reading `self.parallel_updates`
-        # after the update returns: removal (e.g. an abort while this entity
-        # is being re-added) can reset it to None in the meantime, which
-        # would otherwise make the `finally` below silently skip releasing
-        # the permit actually acquired here, leaking it forever.
+        # Cache the semaphore: `add_to_platform_abort` can reset
+        # `self.parallel_updates` to None while this update is in flight,
+        # which would otherwise make the `finally` below silently skip
+        # releasing the permit acquired here.
         semaphore = self.parallel_updates
 
         # Process update sequential
@@ -1745,10 +1744,10 @@ class Entity(
 
     async def async_request_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Process request batched."""
-        # Cache the semaphore instead of re-reading `self.parallel_updates`
-        # after `coro` returns: it can be reset to None in the meantime
-        # (e.g. entity removal), which would otherwise make the `finally`
-        # below silently skip releasing the permit acquired here.
+        # Cache the semaphore: `add_to_platform_abort` can reset
+        # `self.parallel_updates` to None while `coro` is in flight, which
+        # would otherwise make the `finally` below silently skip releasing
+        # the permit acquired here.
         semaphore = self.parallel_updates
         if semaphore:
             await semaphore.acquire()

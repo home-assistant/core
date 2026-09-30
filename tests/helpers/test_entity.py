@@ -330,11 +330,11 @@ async def test_async_request_call_releases_permit_after_parallel_updates_reset(
 ) -> None:
     """Test async_request_call releases the semaphore it actually acquired.
 
-    Regression test: `self.parallel_updates` can be reset (e.g. by entity
-    removal) while `async_request_call` is still awaiting its coroutine. If
-    the semaphore to release were re-read from `self.parallel_updates` at
-    that point instead of the one acquired at the start, the permit would
-    never be released.
+    Regression test: `self.parallel_updates` can be reset to `None` by
+    `add_to_platform_abort` while `async_request_call` is still awaiting
+    its coroutine. If the semaphore to release were re-read from
+    `self.parallel_updates` at that point instead of the one acquired at
+    the start, the permit would never be released.
     """
     semaphore = asyncio.Semaphore(1)
 
