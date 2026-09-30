@@ -152,6 +152,7 @@ async def test_failed_card_update_restores_previous_files(
     repository = PluginRepository(marketplace, "review/test-card")
     repository.data.installed = True
     repository.content.single = True
+    repository.content.path.remote = ""
     folder = Path(repository.localpath)
     folder.mkdir(parents=True)
     (folder / "test-card.js").write_bytes(b"old working version")
@@ -194,6 +195,70 @@ async def test_failed_backup_stops_the_install(
 
     download.assert_not_called()
     assert (folder / "test-card.js").read_bytes() == b"old working version"
+
+
+async def test_backup_left_behind_after_an_update_is_not_restored(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a backup the update could not remove never brings back the old version."""
+    repository = PluginRepository(marketplace, "review/test-card")
+    repository.data.installed = True
+    repository.content.single = True
+    repository.content.path.remote = ""
+    folder = Path(repository.localpath)
+    folder.mkdir(parents=True)
+    (folder / "test-card.js").write_bytes(b"old working version")
+
+    async def download() -> None:
+        await repository._async_write_file(
+            FileInformation(
+                name="test-card.js", path="test-card.js", url="https://example.org/card"
+            ),
+            b"new version",
+        )
+
+    with patch(
+        "homeassistant.components.marketplace.utils.backup.shutil.rmtree",
+        side_effect=OSError("device busy"),
+    ):
+        await repository._async_write_content(download)
+
+    # The next start treats what is left like an unfinished install
+    await marketplace.hass.async_add_executor_job(
+        restore_interrupted_backups, marketplace
+    )
+
+    assert (folder / "test-card.js").read_bytes() == b"new version"
+
+
+async def test_backup_that_would_come_back_fails_the_update(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the update says so when its backup would put the old version back."""
+    repository = PluginRepository(marketplace, "review/test-card")
+    repository.data.installed = True
+    repository.content.single = True
+    repository.content.path.remote = ""
+    folder = Path(repository.localpath)
+    folder.mkdir(parents=True)
+    (folder / "test-card.js").write_bytes(b"old working version")
+
+    async def download() -> None:
+        await repository._async_write_file(
+            FileInformation(
+                name="test-card.js", path="test-card.js", url="https://example.org/card"
+            ),
+            b"new version",
+        )
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.utils.backup.os.remove",
+            side_effect=OSError("read-only file system"),
+        ),
+        pytest.raises(MarketplaceError, match="backup"),
+    ):
+        await repository._async_write_content(download)
 
 
 async def test_failed_first_install_keeps_a_manual_install(

@@ -83,16 +83,14 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="could_not_register")
 
         async def _wait_for_activation() -> None:
-            for attempt in range(1, ACTIVATION_ATTEMPTS + 1):
+            # Only the last attempt gives up on a code GitHub does not know yet
+            for _ in range(ACTIVATION_ATTEMPTS - 1):
                 try:
                     activation = await device.activation(
                         device_code=registration.device_code
                     )
                 except GitHubException as exception:
-                    if (
-                        str(exception) != INVALID_DEVICE_CODE
-                        or attempt == ACTIVATION_ATTEMPTS
-                    ):
+                    if str(exception) != INVALID_DEVICE_CODE:
                         raise
                     LOGGER.debug(
                         "GitHub does not know the device code yet, asking again"
@@ -102,6 +100,9 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self._activation = activation.data
                 return
+
+            activation = await device.activation(device_code=registration.device_code)
+            self._activation = activation.data
 
         if self.activation_task is None:
             LOGGER.debug("Waiting for the GitHub activation of flow %s", self.flow_id)

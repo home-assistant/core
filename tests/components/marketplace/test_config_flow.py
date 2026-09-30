@@ -151,6 +151,7 @@ async def test_activation_failure(
     ("invalid_answers", "reason"),
     [
         pytest.param(1, "reconfigure_successful", id="valid_on_the_next_poll"),
+        pytest.param(2, "reconfigure_successful", id="valid_on_the_last_poll"),
         pytest.param(3, "activation_failed", id="stays_invalid"),
     ],
 )

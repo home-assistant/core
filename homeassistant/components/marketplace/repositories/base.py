@@ -1227,13 +1227,19 @@ class Repository:
 
         self._async_dispatch_install_progress(80)
 
-        if backup is not None:
-            await self.marketplace.hass.async_add_executor_job(backup.cleanup)
+        try:
+            if backup is not None:
+                await self.marketplace.hass.async_add_executor_job(backup.cleanup)
 
-        if persistent_directory is not None:
-            await self.marketplace.hass.async_add_executor_job(
-                persistent_directory.cleanup
-            )
+            if persistent_directory is not None:
+                await self.marketplace.hass.async_add_executor_job(
+                    persistent_directory.cleanup
+                )
+        except OSError as exception:
+            raise MarketplaceError(
+                "Installed, but could not remove the backup of the previous "
+                f"version, a restart would put it back: {exception}"
+            ) from exception
 
     def _raise_for_install_errors(self) -> None:
         """Raise for the errors the install ran into, after logging them."""

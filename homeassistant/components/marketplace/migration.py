@@ -9,11 +9,10 @@ first setup after the upgrade.
 from dataclasses import dataclass
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qsl, urlencode
 
 from homeassistant.components import lovelace
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -42,6 +41,9 @@ from .utils.storage import (
     is_adoptable_legacy_file,
 )
 
+if TYPE_CHECKING:
+    from .base import MarketplaceConfigEntry
+
 LEGACY_HACS_DOMAIN = "hacs"
 
 YAML_RESOURCES_ISSUE_ID = "legacy_dashboard_resources"
@@ -67,7 +69,9 @@ RETIRED_CATEGORIES: dict[str, RetiredCategory] = {
 
 
 @callback
-def async_adopt_legacy_install(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def async_adopt_legacy_install(
+    hass: HomeAssistant, entry: MarketplaceConfigEntry
+) -> None:
     """Adopt what the previous install left behind, if there is anything."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -119,7 +123,7 @@ def async_adopt_legacy_install(hass: HomeAssistant, entry: ConfigEntry) -> None:
 @callback
 def _async_adopt_entities(
     entity_registry: er.EntityRegistry,
-    entry: ConfigEntry,
+    entry: MarketplaceConfigEntry,
     legacy_entities: list[er.RegistryEntry],
 ) -> None:
     """Move the registry entries of the previous install to this integration."""
@@ -232,7 +236,9 @@ def _display_name(repository_data: dict[str, Any]) -> str:
 
 @callback
 def async_forget_retired_repositories(
-    hass: HomeAssistant, entry: ConfigEntry, repositories: dict[str, dict[str, Any]]
+    hass: HomeAssistant,
+    entry: MarketplaceConfigEntry,
+    repositories: dict[str, dict[str, Any]],
 ) -> None:
     """Forget the stored repositories of categories the Marketplace no longer has.
 
@@ -246,7 +252,7 @@ def async_forget_retired_repositories(
 @callback
 def _async_forget_category(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MarketplaceConfigEntry,
     repositories: dict[str, dict[str, Any]],
     category: str,
     retired: RetiredCategory,
@@ -318,7 +324,7 @@ async def async_remove_duplicate_entries(hass: HomeAssistant) -> None:
 
     entity_registry = er.async_get(hass)
 
-    def owns_legacy_entities(entry: ConfigEntry) -> bool:
+    def owns_legacy_entities(entry: MarketplaceConfigEntry) -> bool:
         return any(
             entity.platform == LEGACY_HACS_DOMAIN
             for entity in er.async_entries_for_config_entry(

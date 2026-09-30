@@ -1,5 +1,6 @@
 """Backups of installed content, kept while an install replaces it."""
 
+import contextlib
 import os
 from pathlib import Path
 import shutil
@@ -128,11 +129,26 @@ class Backup:
         return self.content_path.exists() or self.content_path.is_symlink()
 
     def cleanup(self) -> None:
-        """Remove the backup."""
+        """Remove the backup.
+
+        Raises when the target stays, a restart would restore the backup.
+        """
         if not self.backup_path.exists():
             return
 
-        shutil.rmtree(self.backup_path)
+        # Without its target, what is left is removed at the next start
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(self.backup_path / TARGET_FILE)
+
+        try:
+            shutil.rmtree(self.backup_path)
+        except OSError as exception:
+            LOGGER.warning(
+                "Could not remove backup %s, it goes at the next start: %s",
+                self.backup_path,
+                exception,
+            )
+            return
         LOGGER.debug("Backup %s removed", self.backup_path)
 
 
