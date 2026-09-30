@@ -1,6 +1,6 @@
 """Test sensor platform of Ping."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from icmplib import Host, NameLookupError
 import pytest
@@ -96,6 +96,47 @@ async def test_packet_loss_initially_unreachable(
     assert state.state == "100.0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "initial_result",
+    [
+        pytest.param(Host("10.10.10.10", 5, []), id="unreachable"),
+        pytest.param(NameLookupError("example.com"), id="dns_failure"),
+        pytest.param(Host("10.10.10.10", 0, []), id="no_packets_sent"),
+    ],
+)
+async def test_sensors_recover_after_initial_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    initial_result: Host | NameLookupError,
+) -> None:
+    """Create all supported sensors even if the first measurement fails."""
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        side_effect=[initial_result, Host("10.10.10.10", 5, [1, 2, 3, 4])],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(hass.states.async_all("sensor")) == 5
+        assert (
+            state := hass.states.get("sensor.10_10_10_10_round_trip_time_average")
+        ) is not None
+        assert state.state == STATE_UNAVAILABLE
+        await config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+    assert {
+        state.entity_id: state.state for state in hass.states.async_all("sensor")
+    } == {
+        "sensor.10_10_10_10_round_trip_time_average": "2.5",
+        "sensor.10_10_10_10_round_trip_time_maximum": "4",
+        "sensor.10_10_10_10_round_trip_time_minimum": "1",
+        "sensor.10_10_10_10_jitter": "1.0",
+        "sensor.10_10_10_10_packet_loss": "20.0",
+    }
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
 @pytest.mark.parametrize(
     "error",
@@ -130,3 +171,69 @@ async def test_packet_loss_unavailable_without_sent_packets(
 
     assert (state := hass.states.get("sensor.10_10_10_10_packet_loss")) is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("ping_output", "expected_states"),
+    [
+        pytest.param(
+            b"rtt min/avg/max/mdev = 1.000/2.000/3.000/0.100 ms\n",
+            {
+                "sensor.10_10_10_10_round_trip_time_average": "2.000",
+                "sensor.10_10_10_10_round_trip_time_maximum": "3.000",
+                "sensor.10_10_10_10_round_trip_time_minimum": "1.000",
+                "sensor.10_10_10_10_round_trip_time_mean_deviation": "0.100",
+            },
+            id="iputils",
+        ),
+        pytest.param(
+            b"round-trip min/avg/max = 1.000/2.000/3.000 ms\n",
+            {
+                "sensor.10_10_10_10_round_trip_time_average": "2.000",
+                "sensor.10_10_10_10_round_trip_time_maximum": "3.000",
+                "sensor.10_10_10_10_round_trip_time_minimum": "1.000",
+            },
+            id="busybox",
+        ),
+    ],
+)
+async def test_subprocess_sensors_recover_after_initial_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ping_output: bytes,
+    expected_states: dict[str, str],
+) -> None:
+    """Discover only the sensors supported by the ping binary after recovery."""
+    failed_ping = Mock(
+        returncode=1,
+        communicate=AsyncMock(
+            return_value=(b"5 packets transmitted, 0 received, 100% packet loss\n", b"")
+        ),
+    )
+    successful_ping = Mock(
+        returncode=0, communicate=AsyncMock(return_value=(ping_output, b""))
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.ping._can_use_icmp_lib_with_privilege",
+            return_value=None,
+        ),
+        patch(
+            "asyncio.create_subprocess_exec",
+            side_effect=[failed_ping, successful_ping, successful_ping],
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        await config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+        await config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+    assert {
+        state.entity_id: state.state for state in hass.states.async_all("sensor")
+    } == expected_states
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

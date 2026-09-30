@@ -12,11 +12,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PingConfigEntry, PingResult, PingUpdateCoordinator
 from .entity import PingEntity
+from .helpers import PingDataICMPLib
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -25,6 +26,7 @@ class PingSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[PingResult], float | None]
     has_fn: Callable[[PingResult], bool]
+    supported_fn: Callable[[PingUpdateCoordinator], bool] = lambda _: True
 
 
 SENSORS: tuple[PingSensorEntityDescription, ...] = (
@@ -60,6 +62,7 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: result.data.get("mdev"),
         has_fn=lambda result: "mdev" in result.data,
+        supported_fn=lambda coordinator: "mdev" in coordinator.data.data,
     ),
     PingSensorEntityDescription(
         key="round_trip_time_min",
@@ -82,6 +85,7 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: result.data.get("jitter"),
         has_fn=lambda result: "jitter" in result.data,
+        supported_fn=lambda coordinator: isinstance(coordinator.ping, PingDataICMPLib),
     ),
     PingSensorEntityDescription(
         key="loss",
@@ -92,6 +96,7 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: result.data.get("loss"),
         has_fn=lambda result: "loss" in result.data,
+        supported_fn=lambda coordinator: isinstance(coordinator.ping, PingDataICMPLib),
     ),
 )
 
@@ -103,12 +108,37 @@ async def async_setup_entry(
 ) -> None:
     """Set up Ping sensors from config entry."""
     coordinator = entry.runtime_data
+    known_sensors: set[str] = set()
+    remove_listener: Callable[[], None] | None = None
 
-    async_add_entities(
-        PingSensor(entry, description, coordinator)
-        for description in SENSORS
-        if description.has_fn(coordinator.data)
-    )
+    @callback
+    def async_add_sensors() -> None:
+        """Add supported sensors that have not been created yet."""
+        nonlocal remove_listener
+        new_sensors = []
+        for description in SENSORS:
+            if description.key in known_sensors or not description.supported_fn(
+                coordinator
+            ):
+                continue
+            known_sensors.add(description.key)
+            new_sensors.append(PingSensor(entry, description, coordinator))
+        if new_sensors:
+            async_add_entities(new_sensors)
+        if remove_listener is not None and coordinator.data.is_alive:
+            remove_listener()
+            remove_listener = None
+
+    async_add_sensors()
+    if (
+        not isinstance(coordinator.ping, PingDataICMPLib)
+        and not coordinator.data.is_alive
+    ):
+        # The ping binary's first successful response determines mdev support.
+        remove_listener = coordinator.async_add_listener(async_add_sensors)
+        entry.async_on_unload(
+            lambda: remove_listener() if remove_listener is not None else None
+        )
 
 
 class PingSensor(PingEntity, SensorEntity):
