@@ -12,9 +12,7 @@ rules:
     comment: This integration does not have a coordinator or entities yet.
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: exempt
-    comment: All communication goes through Home Assistant's OAuth2 helper; no external library is used yet.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: This integration does not have any custom actions.
