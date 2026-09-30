@@ -153,6 +153,7 @@ async def test_sleep_entities_not_created_when_sleep_unimplemented(
 )
 async def test_device_tracker_only_created_when_location_supported(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     location_patcher: patch,
     expect_registered: bool,
 ) -> None:
@@ -179,8 +180,7 @@ async def test_device_tracker_only_created_when_location_supported(
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.LOADED
-        registry = er.async_get(hass)
-        entity_id = registry.async_get_entity_id(
+        entity_id = entity_registry.async_get_entity_id(
             "device_tracker",
             DOMAIN,
             f"{entry.runtime_data.data.status['id']}_device_location",
@@ -190,6 +190,7 @@ async def test_device_tracker_only_created_when_location_supported(
 
 async def test_device_tracker_unavailable_when_location_becomes_unsupported(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the tracker goes unavailable if a later poll finds location unsupported.
 
@@ -214,14 +215,13 @@ async def test_device_tracker_unavailable_when_location_becomes_unsupported(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        registry = er.async_get(hass)
-        entity_id = registry.async_get_entity_id(
+        entity_id = entity_registry.async_get_entity_id(
             "device_tracker",
             DOMAIN,
             f"{entry.runtime_data.data.status['id']}_device_location",
         )
         assert entity_id is not None
-        registry.async_update_entity(entity_id, disabled_by=None)
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
         await hass.async_block_till_done()
 
         # Enabling a previously-disabled entity schedules its own debounced
