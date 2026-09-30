@@ -87,6 +87,9 @@
     "cannot_read_state": {
       "message": "The current state of the LIFX device could not be read, so the requested change was not written to it"
     },
+    "colorsweep_speed_needs_duration": {
+      "message": "The Color Sweep effect needs a duration when its speed is 0, because it then sweeps once across the duration."
+    },
     "component_software_effect": {
       "message": "{entity_id} controls one part of a LIFX light and cannot run {effect} on its own. Target the main light entity to run it on the whole light."
     },
@@ -186,7 +189,7 @@
           "name": "Power on"
         },
         "speed": {
-          "description": "How long one sweep takes. 0 sweeps once across the duration.",
+          "description": "How long one sweep takes. 0 sweeps once across the duration, which then has to be set.",
           "name": "Speed"
         }
       },

@@ -780,6 +780,25 @@ async def test_color_sweep_effect_uses_public_firmware_api(
     )
 
 
+async def test_color_sweep_speed_zero_needs_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 without a duration is refused instead of quietly changed."""
+    device = create_mock_mirror_light()
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_COLORSWEEP,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DURATION: 0},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "colorsweep_speed_needs_duration"
+    device.set_effect.assert_not_awaited()
+
+
 async def test_color_sweep_effect_skips_other_matrix_lights(
     hass: HomeAssistant,
 ) -> None:

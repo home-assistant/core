@@ -207,14 +207,22 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Color Sweep effect."""
+        speed = service.data.get(ATTR_SPEED, EFFECT_COLORSWEEP_DEFAULT_SPEED)
         duration = service.data.get(ATTR_DURATION, EFFECT_COLORSWEEP_DEFAULT_DURATION)
+        # Speed 0 sweeps once across the duration, so it needs one: the
+        # library would otherwise quietly run at its default speed instead
+        if speed == 0 and duration == 0:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="colorsweep_speed_needs_duration",
+            )
         await self._start_matrix_effect(
             devices,
             service,
             FirmwareEffect.COLOR_SWEEP,
             MirrorLight,
-            # Speed 0 sweeps once across the duration, which is in nanoseconds
-            speed=service.data.get(ATTR_SPEED, EFFECT_COLORSWEEP_DEFAULT_SPEED),
+            speed=speed,
+            # The library takes the duration in nanoseconds
             duration=duration * 1_000_000_000,
             palette=self._build_palette(
                 service.data.get(ATTR_PALETTE, EFFECT_COLORSWEEP_DEFAULT_PALETTE)
