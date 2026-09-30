@@ -724,11 +724,11 @@ async def test_sensors_streaming_dc_charging_ended(
             [
                 {
                     Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
-                    Signal.AC_CHARGING_POWER: 7,
-                    Signal.DC_CHARGING_POWER: 150,
+                    Signal.AC_CHARGING_POWER: 11,
+                    Signal.DC_CHARGING_POWER: 3,
                 }
             ],
-            "150",
+            "3",
             id="dc_power_preferred_over_ac",
         ),
         pytest.param(
@@ -894,6 +894,17 @@ async def test_sensors_streaming_charger_power_uninformative_charge_state(
             ],
             "7.2",
             id="dc_power_zero_while_ac_charging",
+        ),
+        pytest.param(
+            "148.2",
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: None,
+                }
+            ],
+            "148.2",
+            id="ac_power_null_while_dc_charging",
         ),
         pytest.param(
             "148.2",
