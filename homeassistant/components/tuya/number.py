@@ -17,7 +17,6 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -518,11 +517,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device_manager: Manager,
         description: TuyaNumberEntityDescription,
         definition: NumberDefinition,
-        *,
-        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Initialize a Tuya number entity."""
-        super().__init__(device, device_manager, description, device_info=device_info)
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.number_wrapper
 
         self._attr_native_max_value = definition.number_wrapper.max_value

@@ -29,11 +29,6 @@
       }
     }
   },
-  "device": {
-    "channel": {
-      "name": "Channel {index}"
-    }
-  },
   "entity": {
     "binary_sensor": {
       "bag_full": {

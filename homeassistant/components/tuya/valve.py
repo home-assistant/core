@@ -16,7 +16,6 @@ from homeassistant.components.valve import (
     ValveEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -91,11 +90,9 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device_manager: Manager,
         description: TuyaValveEntityDescription,
         definition: ValveDefinition,
-        *,
-        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init TuyaValveEntity."""
-        super().__init__(device, device_manager, description, device_info=device_info)
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.control_wrapper
 
     @property

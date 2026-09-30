@@ -53,7 +53,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -1944,11 +1943,9 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
         definition: SensorDefinition,
-        *,
-        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager, description, device_info=device_info)
+        super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.sensor_wrapper
 
         if description.suggested_unit_of_measurement is None:
