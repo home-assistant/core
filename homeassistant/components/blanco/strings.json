@@ -31,9 +31,6 @@
       },
       "error_count_warning": {
         "name": "Warnings"
-      },
-      "online": {
-        "name": "Last online"
       }
     }
   },

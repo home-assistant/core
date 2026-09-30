@@ -20,8 +20,6 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-# ── Test constants ─────────────────────────────────────────────────────────────
-
 TEST_SERIAL = "SN123456"
 TEST_SERVICE_CODE = "ABC-123"
 TEST_TOKEN = "test-bearer-token"
@@ -31,7 +29,6 @@ TEST_DEV_TYPE = 1
 # Expected dev_id derived from serial + service code
 TEST_DEV_ID = BlancoApiClient.compute_dev_id(TEST_SERIAL, TEST_SERVICE_CODE)
 
-# ── Mock response templates ────────────────────────────────────────────────────
 
 # Response for POST /apps/registrations
 APP_REG_RESPONSE = {
@@ -75,9 +72,6 @@ def make_session(app_reg_response: MagicMock, auth_response: MagicMock) -> Magic
     mock_session = MagicMock()
     mock_session.post.side_effect = [app_reg_response, auth_response]
     return mock_session
-
-
-# ── Happy path ─────────────────────────────────────────────────────────────────
 
 
 async def test_form_shows_empty_form(
@@ -151,9 +145,6 @@ async def test_form_auth_request_uses_correct_payload(
     assert auth_call.kwargs["json"]["dev_id"] == TEST_DEV_ID
     assert auth_call.kwargs["json"]["service"] == 1
     assert auth_call.kwargs["headers"]["X-App-Id"] == TEST_APP_ID
-
-
-# ── Error paths ────────────────────────────────────────────────────────────────
 
 
 async def test_access_not_granted(

@@ -105,8 +105,6 @@ async def test_all_endpoints_failing_marks_entities_unavailable(
     assert set(states.values()) == {STATE_UNAVAILABLE}
 
 
-# ── Sample API response payloads ───────────────────────────────────────────────
-
 SYSTEM_RESPONSE = {
     "results": [{"dev_name": "My BLANCO", "sw_ver_comm_con": "1.0"}],
     "info": {"connected": True, "online": 1700000000000, "dev_type": 2},
@@ -116,9 +114,6 @@ AUTH_RESPONSE = {
     "results": [{"token": "renewed-token", "token_type": "Bearer"}],
     "info": {},
 }
-
-
-# ── mask_headers ──────────────────────────────────────────────────────────────
 
 
 class TestMaskHeaders:
@@ -171,9 +166,6 @@ class TestMaskHeaders:
         result = mask_headers(headers)
         assert result["Authorization"].endswith("...")
         assert result["Content-Type"] == "application/json"
-
-
-# ── _static_headers ───────────────────────────────────────────────────────────
 
 
 class TestStaticHeaders:
@@ -233,9 +225,6 @@ class TestStaticHeaders:
             )
 
 
-# ── mask_dev_id ───────────────────────────────────────────────────────────────
-
-
 class TestMaskDevId:
     """Tests for the mask_dev_id helper."""
 
@@ -261,9 +250,6 @@ class TestMaskDevId:
     def test_empty_string_returns_empty_string(self) -> None:
         """An empty string input returns an empty string."""
         assert mask_dev_id("") == ""
-
-
-# ── _async_update_data ─────────────────────────────────────────────────────────
 
 
 class TestAsyncUpdateData:

@@ -2,10 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
-
-if TYPE_CHECKING:
-    from . import BlancoConfigEntry
+from typing import Any, override
 
 from blanco_smart_home_api_client import (
     BlancoApiClient,
@@ -15,6 +12,7 @@ from blanco_smart_home_api_client import (
     HttpStatus,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -27,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 UPDATE_INTERVAL = timedelta(seconds=30)
+
+type BlancoConfigEntry = ConfigEntry[BlancoDataUpdateCoordinator]
 
 
 class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -62,9 +62,8 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except ValueError:
             self.dev_type = None
 
-        session = async_get_clientsession(hass)
         self._api = BlancoApiClient(
-            session,
+            async_get_clientsession(hass),
             app_id=app_id,
             token=token,
             token_type=token_type,
@@ -92,7 +91,6 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         prev: dict[str, Any] = self.data or {}
         fresh_count = 0
 
-        # ── /system ───────────────────────────────────────────────────────────
         try:
             status, result = await self._api.get_device_system(self.dev_id)
             if status == HttpStatus.OK:
@@ -112,7 +110,6 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="token_expired",
             ) from err
 
-        # ── /errors ───────────────────────────────────────────────────────────
         try:
             status, result = await self._api.get_device_errors(self.dev_id)
             if status == HttpStatus.OK:

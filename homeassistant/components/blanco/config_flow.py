@@ -40,10 +40,9 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate user input by performing registration and auth requests."""
-    session = async_get_clientsession(hass)
     locale = hass.config.language.split("-")[0][:2]
 
-    client = BlancoApiClient(session, os_version=HA_VERSION)
+    client = BlancoApiClient(async_get_clientsession(hass), os_version=HA_VERSION)
 
     reg = await client.register_app(locale)
 
@@ -73,7 +72,6 @@ class BlancoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Prevent duplicate entries for the same device.
             await self.async_set_unique_id(user_input[CONF_SERIAL])
             self._abort_if_unique_id_configured()
 

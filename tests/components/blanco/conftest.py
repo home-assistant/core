@@ -21,8 +21,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# ── Shared test constants ──────────────────────────────────────────────────────
-
 TEST_DEV_ID = "abc123devid"
 """Device ID used in all coordinator and entity tests."""
 TEST_SERIAL = "SN123456"
@@ -31,9 +29,6 @@ TEST_TOKEN = "test-bearer-token"
 """Bearer token used in all coordinator and entity tests."""
 TEST_APP_ID = "test-app-id"
 """App registration ID used in all coordinator and entity tests."""
-
-
-# ── Pytest fixtures ────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
@@ -118,9 +113,6 @@ def mock_hass() -> HomeAssistant:
     hass.config.time_zone = "UTC"
     hass.bus = MagicMock()
     return hass  # type: ignore[return-value]
-
-
-# ── Non-fixture helpers ────────────────────────────────────────────────────────
 
 
 def make_mock_entry(data: dict | None = None) -> MagicMock:
