@@ -1348,6 +1348,7 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
             "climate.bla",
             climate.HVACMode.AUTO,
             {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
                 climate.ATTR_HVAC_MODES: [],
                 climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
                 climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
@@ -1363,6 +1364,85 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
         },
         "thermostatTemperatureUnit": "C",
     }
+
+
+@pytest.mark.parametrize(
+    "hvac_modes",
+    [
+        [],
+        [climate.HVACMode.HEAT],
+    ],
+)
+async def test_temperature_setting_climate_query_only(
+    hass: HomeAssistant, hvac_modes: list[climate.HVACMode]
+) -> None:
+    """Test a climate entity that can neither set a target nor switch modes.
+
+    Such an entity (e.g. a template climate that only mirrors sensors) must be
+    reported as query-only so Google doesn't offer controls that would fail.
+    """
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.HEAT,
+            {
+                ATTR_SUPPORTED_FEATURES: 0,
+                climate.ATTR_CURRENT_TEMPERATURE: 21.5,
+                climate.ATTR_CURRENT_HUMIDITY: 48,
+                climate.ATTR_HVAC_MODES: hvac_modes,
+                climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
+                climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        # No made-up "heat" fallback: it only exists to allow setting a temperature.
+        "availableThermostatModes": ["heat"] if hvac_modes else [],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": climate.DEFAULT_MIN_TEMP,
+            "maxThresholdCelsius": climate.DEFAULT_MAX_TEMP,
+        },
+        "thermostatTemperatureUnit": "C",
+        "queryOnlyTemperatureSetting": True,
+    }
+    assert trt.query_attributes() == {
+        "thermostatMode": "heat",
+        "thermostatTemperatureAmbient": 21.5,
+        "thermostatHumidityAmbient": 48,
+    }
+
+
+@pytest.mark.parametrize(
+    ("features", "hvac_modes"),
+    [
+        (ClimateEntityFeature.TARGET_TEMPERATURE, []),
+        (ClimateEntityFeature.TARGET_TEMPERATURE_RANGE, []),
+        (0, [climate.HVACMode.OFF, climate.HVACMode.HEAT]),
+    ],
+)
+async def test_temperature_setting_climate_not_query_only(
+    hass: HomeAssistant,
+    features: ClimateEntityFeature,
+    hvac_modes: list[climate.HVACMode],
+) -> None:
+    """Test a climate entity with any control is not reported as query-only."""
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVACMode.HEAT,
+            {
+                ATTR_SUPPORTED_FEATURES: features,
+                climate.ATTR_HVAC_MODES: hvac_modes,
+                climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
+                climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert "queryOnlyTemperatureSetting" not in trt.sync_attributes()
 
 
 async def test_temperature_setting_climate_range_fahrenheit_precision(
