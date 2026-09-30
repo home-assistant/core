@@ -111,14 +111,11 @@ class ThemeRepository(Repository):
 
     @override
     async def validate_repository(self) -> bool:
-        """Validate."""
-        # Run common validation steps.
+        """Check the repository has content this category installs."""
         await self.common_validate()
 
-        # Custom step 1: Validate content.
         self.resolve_content()
 
-        # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
                 if not self.marketplace.status.startup:
@@ -149,8 +146,7 @@ class ThemeRepository(Repository):
 
     @override
     async def async_post_registration(self) -> None:
-        """Registration."""
-        # Set name
+        """Point the content at the file to install."""
         self.update_filenames()
         self.content.path.local = self.localpath
 
@@ -176,19 +172,16 @@ class ThemeRepository(Repository):
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
-        """Update."""
+        """Refresh the repository from GitHub."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
-        # Get theme objects.
         if self.repository_manifest.content_in_root:
             self.content.path.remote = ""
 
-        # Update name
         self.update_filenames()
         self.content.path.local = self.localpath
 
-        # Signal frontend to refresh
         if self.data.installed:
             self.marketplace.async_dispatch(
                 MarketplaceSignal.REPOSITORY,

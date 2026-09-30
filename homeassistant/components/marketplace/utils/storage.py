@@ -12,8 +12,6 @@ from homeassistant.util.hass_dict import HassKey
 from ..const import LEGACY_HACS_STORAGE_VERSION, STORAGE_VERSION
 from .logger import LOGGER
 
-_LOGGER = LOGGER
-
 STORENAME = "marketplace"
 
 # The keys the custom integration wrote its data under, mapped to the key each
@@ -92,7 +90,7 @@ def _load_legacy_repositories_from_data(path: str) -> dict[str, Any] | None:
 
 
 async def _async_adopt_legacy_data(
-    hass: HomeAssistant, key: str, marketplace: Store[Any]
+    hass: HomeAssistant, key: str, store: Store[Any]
 ) -> Any:
     """Copy the data the custom integration wrote for this key over to our own key.
 
@@ -115,34 +113,26 @@ async def _async_adopt_legacy_data(
     if not data:
         return None
 
-    _LOGGER.info("Adopting the data in '%s' as '%s'", legacy_key, get_storage_key(key))
-    await marketplace.async_save(data)
+    LOGGER.info("Adopting the data in '%s' as '%s'", legacy_key, get_storage_key(key))
+    await store.async_save(data)
     return data
 
 
 async def async_load_from_storage(hass: HomeAssistant, key: str) -> Any:
     """Load the retained data from store and return de-serialized data."""
-    marketplace = get_storage_for_key(hass, key)
-    if (data := await marketplace.async_load()) is not None:
+    store = get_storage_for_key(hass, key)
+    if (data := await store.async_load()) is not None:
         return data or {}
-    return await _async_adopt_legacy_data(hass, key, marketplace) or {}
+    return await _async_adopt_legacy_data(hass, key, store) or {}
 
 
 async def async_save_to_storage(hass: HomeAssistant, key: str, data: Any) -> None:
-    """Generate dynamic data to store and save it to the filesystem.
-
-    The data is only written if the content on the disk has changed
-    by reading the existing content and comparing it.
-
-    If the data has changed this will generate two executor jobs
-
-    If the data has not changed this will generate one executor job
-    """
+    """Save the data, unless it matches what is stored already."""
     current = await async_load_from_storage(hass, key)
     if current is None or current != data:
         await get_storage_for_key(hass, key).async_save(data)
         return
-    _LOGGER.debug(
+    LOGGER.debug(
         "Did not store data for '%s', the content did not change",
         get_storage_key(key),
     )

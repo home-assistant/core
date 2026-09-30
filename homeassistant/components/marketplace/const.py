@@ -28,9 +28,8 @@ SIGNAL_REPOSITORY_INSTALLED: SignalType[Repository] = SignalType(
 
 PACKAGE_NAME = "homeassistant.components.marketplace"
 
-DEFAULT_CONCURRENT_TASKS = 15
 
-# How many releases are fetched to offer as versions to install
+# How many releases the update entity reads the release notes from
 RELEASE_LIMIT = 5
 
 # Ceiling for anything downloaded from a repository, both for the transferred

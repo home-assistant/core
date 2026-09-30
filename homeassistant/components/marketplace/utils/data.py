@@ -35,7 +35,6 @@ EXPORTED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("etag_repository", None),
     ("hide", False),
     ("last_updated", 0),
-    ("new", False),
     ("stargazers_count", 0),
     ("topics", []),
 )
@@ -107,13 +106,10 @@ class MarketplaceData:
                 "custom_repositories": set(self.marketplace.common.custom_repositories),
             },
         )
-        await self._async_store_content_and_repos()
+        await self._async_store_repositories()
 
-    async def _async_store_content_and_repos(
-        self, _: Event | None = None
-    ) -> None:  # bb: ignore
-        """Store the main repos file and each repo that is out of date."""
-        # Repositories
+    async def _async_store_repositories(self) -> None:
+        """Store the repositories file, and tell the panel."""
         self.content = {}
         for repository in self.marketplace.repositories.list_all:
             if repository.data.category in self.marketplace.common.categories:
@@ -199,33 +195,23 @@ class MarketplaceData:
         )
 
         if not common and not repositories:
-            # Assume new install
+            # Nothing stored, a first setup
             self.marketplace.status.new = True
             return True
 
         self.logger.info("Restore started")
 
-        self.marketplace.common.archived_repositories = set()
-        self.marketplace.common.ignored_repositories = set()
-        self.marketplace.common.renamed_repositories = {}
-
-        # Clear out doubble renamed values
         renamed = common.get("renamed_repositories", {})
-        for entry in renamed:
-            value = renamed.get(entry)
-            if value not in renamed:
-                self.marketplace.common.renamed_repositories[entry] = value
-
-        # Clear out doubble archived values
-        for entry in common.get("archived_repositories", set()):
-            if entry not in self.marketplace.common.archived_repositories:
-                self.marketplace.common.archived_repositories.add(entry)
-
-        # Clear out doubble ignored values
-        for entry in common.get("ignored_repositories", set()):
-            if entry not in self.marketplace.common.ignored_repositories:
-                self.marketplace.common.ignored_repositories.add(entry)
-
+        # A rename to a name that was renamed again is dropped, lookups take one step
+        self.marketplace.common.renamed_repositories = {
+            old: new for old, new in renamed.items() if new not in renamed
+        }
+        self.marketplace.common.archived_repositories = set(
+            common.get("archived_repositories", [])
+        )
+        self.marketplace.common.ignored_repositories = set(
+            common.get("ignored_repositories", [])
+        )
         self.marketplace.common.custom_repositories = set(
             common.get("custom_repositories", [])
         )
@@ -245,7 +231,6 @@ class MarketplaceData:
 
             for entry, repo_data in repositories.items():
                 if entry == "0":
-                    # Ignore repositories with ID 0
                     self.logger.debug(
                         "Found repository with ID %s - %s",
                         entry,
@@ -335,10 +320,8 @@ class MarketplaceData:
     async def register_unknown_repositories(
         self, repositories: dict[str, dict[str, Any]], category: str | None = None
     ) -> None:
-        """Registry any unknown repositories."""
+        """Register the stored repositories the catalog does not list."""
         for repo_idx, (entry, repo_data) in enumerate(repositories.items()):
-            # async_register_repository is awaited in a loop
-            # since its unlikely to ever suspend at startup
             repo_category = repo_data.get("category", category)
             if (
                 entry in ("0", LEGACY_HACS_REPOSITORY_ID)
@@ -356,8 +339,8 @@ class MarketplaceData:
                 check=False,
                 repository_id=entry,
             )
+            # Registering rarely suspends at startup, the loop gets a turn now and then
             if repo_idx % 100 == 0:
-                # yield to avoid blocking the event loop
                 await asyncio.sleep(0)
 
     @callback
@@ -379,7 +362,6 @@ class MarketplaceData:
 
         self.marketplace.async_set_repository_id(repository, entry)
 
-        # Restore repository attributes
         repository.data.authors = repository_data.get("authors", [])
         repository.data.description = repository_data.get("description", "")
         repository.data.downloads = repository_data.get("downloads", 0)
@@ -411,7 +393,7 @@ class MarketplaceData:
             "file_name", repository.data.file_name
         )
         repository.data.directory = repository_data.get("directory")
-        # Stored before installs kept their folder, the stored name is where it is
+        # Stored without a folder, the install went to the folder of its name then
         if repository.data.installed and not repository.data.directory:
             if repository.data.category == RepositoryCategory.PLUGIN and full_name:
                 repository.data.directory = full_name.rsplit("/", maxsplit=1)[-1]
@@ -423,7 +405,7 @@ class MarketplaceData:
                     ".yaml", ""
                 )
 
-        # Only decides when catalog data is taken over again, without it right away
+        # Without it, the next catalog fetch takes the data over right away
         if last_fetched := repository_data.get("last_fetched"):
             with contextlib.suppress(TypeError, ValueError, OverflowError):
                 repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)

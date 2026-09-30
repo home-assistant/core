@@ -80,14 +80,11 @@ class PluginRepository(Repository):
 
     @override
     async def validate_repository(self) -> bool:
-        """Validate."""
-        # Run common validation steps.
+        """Check the repository has content this category installs."""
         await self.common_validate()
 
-        # Custom step 1: Validate content.
         self.resolve_content()
 
-        # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
                 if not self.marketplace.status.startup:
@@ -126,11 +123,10 @@ class PluginRepository(Repository):
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
-        """Update."""
+        """Refresh the repository from GitHub."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
-        # Get plugin objects.
         self.update_filenames()
 
         if self.content.path.remote is None:
@@ -141,7 +137,6 @@ class PluginRepository(Repository):
         if self.content.path.remote == "release":
             self.content.single = True
 
-        # Signal frontend to refresh
         if self.data.installed:
             self.marketplace.async_dispatch(
                 MarketplaceSignal.REPOSITORY,

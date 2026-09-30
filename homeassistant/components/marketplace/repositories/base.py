@@ -25,6 +25,7 @@ import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
 from ..enums import (
@@ -54,7 +55,6 @@ from ..utils.file_system import (
     async_remove,
     async_remove_directory,
 )
-from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
@@ -71,10 +71,7 @@ from ..utils.url import (
     ref_version,
 )
 from ..utils.validate import REPOSITORY_MANIFEST_VALUES, Validate, is_valid_ref
-from ..utils.version import (
-    version_left_higher_or_equal_then_right,
-    version_left_higher_then_right,
-)
+from ..utils.version import is_newer_version, is_same_or_newer_version
 
 if TYPE_CHECKING:
     from aiogithubapi.models.release import GitHubReleaseAssetModel, GitHubReleaseModel
@@ -138,9 +135,8 @@ TOPIC_FILTER = (
 )
 
 
+# What a catalog entry leaves out is reset to these
 REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
-    # Keys can not be removed from this list until v3
-    # If keys are added, the action need to be re-run with force
     ("description", ""),
     ("downloads", 0),
     ("domain", None),
@@ -157,10 +153,7 @@ REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
     ("topics", []),
 )
 
-REPOSITORY_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
-    # If keys are added, the action need to be re-run with force
-    ("name", None),
-)
+REPOSITORY_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (("name", None),)
 
 
 def _path_below(path: str, directory: str | None) -> str | None:
@@ -290,7 +283,7 @@ class RepositoryData:
     default_branch: str | None = None
     description: str = ""
     domain: str | None = None
-    # The folder a card was installed to, a rename on GitHub does not move it
+    # The folder a card or theme was installed to, a rename on GitHub does not move it
     directory: str | None = None
     downloads: int = 0
     etag_repository: str | None = None
@@ -366,7 +359,7 @@ class RepositoryManifest:
 
     content_in_root: bool = False
     filename: str | None = None
-    hacs: str | None = None  # Minimum HACS version, the `hacs` key of hacs.json
+    hacs: str | None = None  # The `hacs` key of hacs.json, not compared
     hide_default_branch: bool = False
     homeassistant: str | None = None  # Minimum Home Assistant version
     manifest: dict[str, Any] = attr.field(factory=dict)
@@ -411,7 +404,7 @@ class RepositoryManifest:
 
 
 class RepositoryReleases:
-    """RepositoyReleases."""
+    """The releases of a repository."""
 
     objects: list[GitHubReleaseModel] = []
 
@@ -559,7 +552,7 @@ class Repository:
                 and self.data.installed_version is not None
             ):
                 if (
-                    result := version_left_higher_then_right(
+                    result := is_newer_version(
                         self.display_available_version,
                         self.display_installed_version,
                     )
@@ -575,7 +568,7 @@ class Repository:
         """Return True if we can install."""
         if self.repository_manifest.homeassistant is not None:
             if self.data.releases:
-                if not version_left_higher_or_equal_then_right(
+                if not is_same_or_newer_version(
                     self.marketplace.version.string,
                     self.repository_manifest.homeassistant,
                 ):
@@ -596,7 +589,7 @@ class Repository:
                     return True
         if self.ref == self.data.default_branch:
             return False
-        # A theme comes from its themes directory, the way the catalog installs it
+        # Only dashboard resources ship as release assets
         if self.data.category != "plugin":
             return False
         if not self.data.releases:
@@ -604,7 +597,7 @@ class Repository:
         return True
 
     async def validate_repository(self) -> bool:
-        """Validate."""
+        """Check the repository has content this category installs."""
         return False
 
     @concurrent(concurrenttasks=10)
@@ -617,11 +610,9 @@ class Repository:
         """Common validation steps of the repository."""
         self.validate.errors.clear()
 
-        # Make sure the repository exist.
         self.logger.debug("%s Checking repository.", self.string)
         await self.common_update_data(ignore_issues=ignore_issues)
 
-        # Get the content of hacs.json
         if RepositoryFile.REPOSITORY_MANIFEST in [
             tree_entry_filename(entry) for entry in self.tree
         ]:
@@ -637,7 +628,6 @@ class Repository:
 
     async def common_registration(self) -> None:
         """Common registration steps of the repository."""
-        # Attach repository
         if self.repository_object is None:
             try:
                 (
@@ -668,7 +658,6 @@ class Repository:
         """Common information update steps of the repository."""
         self.logger.debug("%s Getting repository information", self.string)
 
-        # Attach repository
         current_etag = self.data.etag_repository
         try:
             await self.common_update_data(
@@ -700,14 +689,10 @@ class Repository:
             )
             return False
 
-        # Update last updated
         if self.repository_object:
             self.data.last_updated = self.repository_object.pushed_at or 0
-
-            # Update last available commit
             await self.async_set_last_commits()
 
-        # Get the content of hacs.json
         if RepositoryFile.REPOSITORY_MANIFEST in [
             tree_entry_filename(entry) for entry in self.tree
         ]:
@@ -717,13 +702,12 @@ class Repository:
 
         self.additional_info = await self.async_get_readme_contents()
 
-        # Set last fetch attribute
         self.data.last_fetched = dt_util.utcnow()
 
         return True
 
     async def download_zip_files(self, validate: Validate) -> None:
-        """Download ZIP archive from repository release."""
+        """Download the ZIP asset hacs.json names, and extract it."""
         filename = self.repository_manifest.filename or ""
 
         try:
@@ -748,7 +732,7 @@ class Repository:
         content: DownloadableContent,
         validate: Validate,
     ) -> None:
-        """Download ZIP archive from repository release."""
+        """Download a ZIP archive and extract it into the local path."""
         filecontent = await self.marketplace.async_download_file(content["url"])
         if filecontent is None:
             validate.errors.append(f"Failed to download {content['url']}")
@@ -781,7 +765,7 @@ class Repository:
             )
 
     async def download_content(self, version: str | None = None) -> None:
-        """Download the content of a directory."""
+        """Download the content, the archive first when it is a directory."""
         contents: list[FileInformation] | None = None
         if not self.repository_manifest.zip_release and self._installs_a_directory():
             self.logger.info("%s Downloading repository archive", self.string)
@@ -793,9 +777,6 @@ class Repository:
                 )
             else:
                 return
-
-        if self.repository_manifest.filename:
-            self.logger.debug("%s %s", self.string, self.repository_manifest.filename)
 
         if self.content.path.remote == "release" and version is not None:
             contents = await self.release_contents(version)
@@ -821,7 +802,7 @@ class Repository:
         self._download_budget = MAX_DOWNLOAD_SIZE
         download_queue = QueueManager(hass=self.marketplace.hass)
         for content in wanted:
-            download_queue.add(self.dowload_repository_content(content))
+            download_queue.add(self.download_repository_file(content))
 
         await download_queue.execute()
 
@@ -902,9 +883,7 @@ class Repository:
             "%s Content was extracted to %s", self.string, self.content.path.local
         )
 
-    async def async_get_repository_manifest(
-        self, ref: str | None = None
-    ) -> dict[str, Any] | None:
+    async def async_get_repository_manifest(self) -> dict[str, Any] | None:
         """Get the content of the hacs.json file."""
         try:
             response = await self.marketplace.async_github_api_method(
@@ -912,7 +891,7 @@ class Repository:
                 raise_exception=False,
                 repository=self.data.full_name,
                 path=RepositoryFile.REPOSITORY_MANIFEST,
-                params={"ref": ref or self.version_to_install()},
+                params={"ref": self.version_to_install()},
             )
             if response:
                 return json_loads_object(decode_content(response.data.content))
@@ -935,7 +914,7 @@ class Repository:
         )
 
     def remove(self) -> None:
-        """Run remove tasks."""
+        """Forget the repository, its files stay where they are."""
         if self.marketplace.repositories.is_registered(repository_id=str(self.data.id)):
             self.logger.info("%s Starting removal", self.string)
             self.marketplace.repositories.unregister(self)
@@ -979,7 +958,7 @@ class Repository:
         ir.async_delete_issue(self.marketplace.hass, DOMAIN, f"removed_{self.data.id}")
 
     async def remove_local_directory(self) -> bool:
-        """Check the local directory."""
+        """Remove the installed content, return if that worked."""
 
         local_path = self.content.path.local
         if self.data.category == "integration" and not self.data.domain:
@@ -1050,25 +1029,15 @@ class Repository:
         """Run pre registration steps."""
 
     @concurrent(concurrenttasks=10)
-    async def async_registration(self, ref: str | None = None) -> None:
+    async def async_registration(self) -> None:
         """Run registration steps."""
         await self.async_pre_registration()
-
-        if ref is not None:
-            self.data.selected_tag = ref
-            self.ref = ref
-            self.force_branch = True
 
         if not await self.validate_repository():
             return
 
-        # Run common registration steps.
         await self.common_registration()
-
-        # Set correct local path
         self.content.path.local = self.localpath
-
-        # Run local post registration steps.
         await self.async_post_registration()
 
     async def async_post_registration(self) -> None:
@@ -1090,7 +1059,7 @@ class Repository:
         await self.async_pre_install()
         self.logger.info("%s Pre installation steps completed", self.string)
 
-    async def async_install(self, *, version: str | None = None, **_: Any) -> None:
+    async def async_install(self, *, version: str | None = None) -> None:
         """Run install steps."""
         await self._async_run_install(
             partial(self._async_write_version, version=version)
@@ -1145,10 +1114,8 @@ class Repository:
             self.data.new = False
         self.logger.info("%s Post installation steps completed", self.string)
 
-    async def _async_write_version(
-        self, *, version: str | None = None, **_: Any
-    ) -> None:
-        """Common installation steps of the repository."""
+    async def _async_write_version(self, *, version: str | None = None) -> None:
+        """Install a version through the GitHub API."""
         force_update = version is None or (
             self.data.last_version is not None and version != self.data.last_version
         )
@@ -1180,7 +1147,7 @@ class Repository:
                 self.data.installed_version = version_to_install
 
     async def _async_download_version(self, version: str) -> None:
-        """Download the content of a version through the repository tree."""
+        """Download a version, a ZIP release asset or its files."""
         if self.repository_manifest.zip_release and self.repository_manifest.filename:
             await self.download_zip_files(self.validate)
         else:
@@ -1441,7 +1408,6 @@ class Repository:
                 self.marketplace.common.archived_repositories.add(self.data.full_name)
             raise RepositoryArchivedError(f"{self} Repository is archived.")
 
-        # Make sure the repository is not in the blacklist.
         if self.marketplace.repositories.is_removed(self.data.full_name):
             removed = self.marketplace.repositories.removed_repository(
                 self.data.full_name
@@ -1454,7 +1420,6 @@ class Repository:
                     f"{self} Repository has been requested to be removed."
                 )
 
-        # Get releases.
         if not skip_releases:  # pylint: disable=too-many-nested-blocks
             try:
                 releases = await self.get_releases(prerelease=True, returnlimit=30)
@@ -1520,7 +1485,6 @@ class Repository:
                 and self.ref is not None
                 and str(exception).startswith("GitHub returned 404")
             ):
-                # Handle tags/branches being deleted.
                 self.data.selected_tag = None
                 self.ref = self.version_to_install()
                 self.logger.warning(
@@ -1639,7 +1603,7 @@ class Repository:
         ]
 
     @concurrent(concurrenttasks=10)
-    async def dowload_repository_content(self, content: FileInformation) -> None:
+    async def download_repository_file(self, content: FileInformation) -> None:
         """Download content."""
         self.logger.debug("%s Downloading %s", self.string, content.name)
 
@@ -1740,7 +1704,6 @@ class Repository:
         *,
         filename: str | None = None,
         version: str | None = None,
-        **kwargs: Any,
     ) -> str | None:
         """Get the documentation of the repository."""
         if filename is None:
@@ -1780,7 +1743,7 @@ class Repository:
 
     @return_none_on_exception
     async def get_repository_manifest(
-        self, *, version: str | None, **kwargs: Any
+        self, *, version: str | None
     ) -> RepositoryManifest | None:
         """Get the hacs.json file of the repository."""
         if (result := await self.get_repository_manifest_raw(version=version)) is None:
@@ -1792,7 +1755,6 @@ class Repository:
         self,
         *,
         version: str | None,
-        **kwargs: Any,
     ) -> dict[str, Any] | None:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
@@ -1847,9 +1809,7 @@ class Repository:
             return self.data.default_branch
         return version
 
-    async def _ensure_install_capabilities(
-        self, ref: str | None, **kwargs: Any
-    ) -> None:
+    async def _ensure_install_capabilities(self, ref: str | None) -> None:
         """Ensure that the install can be handled."""
         target_manifest: RepositoryManifest | None = None
         if ref is None:
@@ -1891,7 +1851,6 @@ class Repository:
         *,
         ref: str | None = None,
         confirm_replace_built_in: bool = False,
-        **_: Any,
     ) -> None:
         """Install a repository."""
         if self.installing:

@@ -19,7 +19,7 @@ from ..exceptions import (
 )
 from ..utils.logger import LOGGER
 from ..utils.validate import valid_ref
-from ..utils.version import version_left_higher_then_right
+from ..utils.version import is_newer_version
 from .decorators import (
     ERR_GITHUB_RATE_LIMITED,
     marketplace_command,
@@ -34,11 +34,7 @@ if TYPE_CHECKING:
     from ..repositories.base import Repository
 
 
-def _send_rate_limited(
-    connection: websocket_api.ActiveConnection,
-    msg_id: int,
-    exception: GitHubRateLimitError,
-) -> None:
+def _send_rate_limited(connection: websocket_api.ActiveConnection, msg_id: int) -> None:
     """Answer that GitHub refused the request, the rate limit ran out."""
     send_translated_error(connection, msg_id, ERR_GITHUB_RATE_LIMITED, "rate_limited")
 
@@ -214,9 +210,9 @@ async def marketplace_repository_version(
 
     try:
         await repository.update_repository(force=True)
-    except GitHubAnonymousRateLimitError as exception:
+    except GitHubAnonymousRateLimitError:
         repository.data.selected_tag = selected_tag
-        _send_rate_limited(connection, msg["id"], exception)
+        _send_rate_limited(connection, msg["id"])
         return
     except MarketplaceError as exception:
         repository.data.selected_tag = selected_tag
@@ -254,9 +250,9 @@ async def marketplace_repository_beta(
 
     try:
         await repository.update_repository(force=True)
-    except GitHubAnonymousRateLimitError as exception:
+    except GitHubAnonymousRateLimitError:
         repository.data.show_beta = show_beta
-        _send_rate_limited(connection, msg["id"], exception)
+        _send_rate_limited(connection, msg["id"])
         return
     except MarketplaceError as exception:
         repository.data.show_beta = show_beta
@@ -303,8 +299,8 @@ async def marketplace_repository_install(
                 async_dispatcher_send(hass, SIGNAL_REPOSITORY_INSTALLED, repository)
 
         connection.send_message(websocket_api.result_message(msg["id"], {}))
-    except GitHubAnonymousRateLimitError as exception:
-        _send_rate_limited(connection, msg["id"], exception)
+    except GitHubAnonymousRateLimitError:
+        _send_rate_limited(connection, msg["id"])
     except ReplacesBuiltInNotConfirmedError as exception:
         # Confirmed with the first install, updates replace the same integration
         send_translated_error(
@@ -352,7 +348,7 @@ async def marketplace_repository_uninstall(
         _send_repository_busy(connection, msg["id"], repository)
         return
 
-    # The entries run its files, they go first, also the ignored ones
+    # Its config entries run the installed code, ignored ones too, they go first
     if (
         repository.data.category == RepositoryCategory.INTEGRATION
         and repository.data.domain
@@ -422,15 +418,14 @@ async def marketplace_repository_refresh(
 
     try:
         await repository.update_repository(ignore_issues=True, force=True)
-    except GitHubAnonymousRateLimitError as exception:
-        _send_rate_limited(connection, msg["id"], exception)
+    except GitHubAnonymousRateLimitError:
+        _send_rate_limited(connection, msg["id"])
         return
     except MarketplaceError as exception:
         _send_refresh_failed(connection, msg["id"], repository, exception)
         return
 
     await marketplace.data.async_write()
-    # Update state of update entity
     marketplace.coordinators[repository.data.category].async_update_listeners()
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))
@@ -468,9 +463,7 @@ async def marketplace_repository_release_notes(
                 }
                 for x in repository.releases.objects
                 if not repository.data.installed_version
-                or version_left_higher_then_right(
-                    x.tag_name, repository.data.installed_version
-                )
+                or is_newer_version(x.tag_name, repository.data.installed_version)
             ],
         )
     )
@@ -499,11 +492,11 @@ async def marketplace_repository_releases(
 
     try:
         releases = await repository.async_get_releases()
-    except GitHubAnonymousRateLimitError as exception:
-        _send_rate_limited(connection, msg["id"], exception)
+    except GitHubAnonymousRateLimitError:
+        _send_rate_limited(connection, msg["id"])
         return
     except MarketplaceError as exception:
-        # With an account connected, connecting one is no way out, it is said as is
+        # A connected rate limit is expected, and connecting would not help
         if not isinstance(exception, GitHubRateLimitError):
             LOGGER.exception("Could not get the releases for %s", repository.string)
         send_translated_error(

@@ -56,7 +56,7 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_device(
         self, _user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:
-        """Handle device steps."""
+        """Wait for the user to enter the code on GitHub."""
         if not self.device:
             self.device = GitHubDeviceAPI(
                 client_id=CLIENT_ID,
@@ -126,7 +126,7 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_device_done(
         self, user_input: dict[str, bool] | None = None
     ) -> ConfigFlowResult:
-        """Handle device steps."""
+        """Store the token GitHub handed out, and reload the entry."""
         if (activation := self._activation) is None:
             return self.async_abort(reason="could_not_register")
 
@@ -144,12 +144,6 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle an activation GitHub did not complete."""
         return self.async_abort(reason="activation_failed")
-
-    async def async_step_could_not_register(
-        self, _user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle issues that need transition await from progress step."""
-        return self.async_abort(reason="could_not_register")
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

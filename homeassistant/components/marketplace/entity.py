@@ -56,7 +56,7 @@ class RepositoryEntity(
     @property
     @override
     def device_info(self) -> DeviceInfo:
-        """Return device information about the Marketplace itself."""
+        """Return the device of the repository."""
 
         def _manufacturer() -> str:
             if authors := self.repository.data.authors:

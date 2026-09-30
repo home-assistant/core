@@ -138,7 +138,7 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
         AwesomeVersion("0.7.1"),
         "crashes Home Assistant when it can't connect to the API",
     ),
-    # Added in 2026.10.0 because HACS ships with Home Assistant now
+    # Added in 2026.11.0 because HACS ships with Home Assistant now
     "hacs": BlockedIntegration(
         None,
         "is now built into Home Assistant as the Marketplace",
@@ -375,7 +375,7 @@ def async_clear_custom_components_cache(hass: HomeAssistant) -> None:
     """Clear the cached list of custom integrations.
 
     The next call to async_get_custom_components scans the custom_components
-    directory again, which is what makes a freshly downloaded integration
+    directory again, which is what makes a freshly installed integration
     visible. Safe to call when nothing is cached, and when the list is still
     being built: whoever is waiting for that gets the result it was promised.
     """

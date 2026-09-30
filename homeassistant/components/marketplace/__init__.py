@@ -1,7 +1,7 @@
 """The Marketplace integration.
 
-Handles installs of custom integrations, dashboard resources, themes,
-templates and python scripts from GitHub.
+Installs custom integrations, dashboard resources, themes and templates from
+GitHub.
 """
 
 import asyncio
@@ -326,7 +326,7 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MarketplaceConfigEntry
 ) -> bool:
-    """Handle removal of an entry."""
+    """Unload the Marketplace, once the installs that run are done."""
     marketplace = config_entry.runtime_data
 
     # An install writes on its own, a new setup would restore its backup under it
@@ -393,9 +393,8 @@ async def async_remove_config_entry_device(
             translation_key="device_of_the_marketplace",
         )
 
-    if marketplace.repositories.is_installed(repository_id) and (
-        repository := marketplace.repositories.get_by_id(repository_id)
-    ):
+    repository = marketplace.repositories.get_by_id(repository_id)
+    if repository is not None and repository.data.installed:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="repository_still_installed",

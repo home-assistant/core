@@ -8,7 +8,7 @@ class RepositoryCategory(StrEnum):
     """Repository categories the Marketplace knows about."""
 
     INTEGRATION = "integration"
-    PLUGIN = "plugin"  # Kept for legacy purposes
+    PLUGIN = "plugin"  # Dashboard resources, the catalog calls them plugins
     TEMPLATE = "template"
     THEME = "theme"
 

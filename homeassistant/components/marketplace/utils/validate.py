@@ -80,12 +80,12 @@ def validate_repo_data(schema: dict[Any, Any], extra: int) -> Callable[[Any], An
     """Return a validator for repo data.
 
     This is used instead of probatio.All to always try both the repo schema and
-    and the validate_version validator.
+    the validate_version validator.
     """
     _schema = probatio.Schema(schema, extra=extra)
 
     def _validate(data: Any) -> Any:
-        """Validate integration repo data."""
+        """Validate repo data, collecting the errors of both checks."""
         schema_errors: probatio.MultipleInvalid | None = None
         try:
             data = _schema(data)

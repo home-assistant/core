@@ -17,6 +17,7 @@ from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
 )
+from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, RESTART_ISSUE_PREFIX
 from ..enums import MarketplaceSignal, RepositoryCategory, RepositoryFile
@@ -28,7 +29,6 @@ from ..exceptions import (
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
-from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.url import github_raw_file, ref_version
 from ..utils.validate import INTEGRATION_MANIFEST_VALUES, VALID_DOMAIN
@@ -226,20 +226,16 @@ class IntegrationRepository(Repository):
 
     @override
     async def validate_repository(self) -> bool:
-        """Validate."""
+        """Check the repository has content this category installs."""
         await self.common_validate()
 
-        # Custom step 1: Validate content.
         self.resolve_content()
 
-        # Get the content of manifest.json
         if manifest := await self.async_get_integration_manifest():
             self._use_integration_manifest(manifest)
 
-        # Set local path
         self.content.path.local = self.localpath
 
-        # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
                 if not self.marketplace.status.startup:
@@ -251,7 +247,7 @@ class IntegrationRepository(Repository):
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
-        """Update."""
+        """Refresh the repository from GitHub."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
@@ -264,14 +260,11 @@ class IntegrationRepository(Repository):
             name = get_first_directory_in_directory(self.tree, "custom_components")
             self.content.path.remote = f"custom_components/{name}"
 
-        # Get the content of manifest.json
         if manifest := await self.async_get_integration_manifest():
             self._use_integration_manifest(manifest)
 
-        # Set local path
         self.content.path.local = self.localpath
 
-        # Signal frontend to refresh
         if self.data.installed:
             self.marketplace.async_dispatch(
                 MarketplaceSignal.REPOSITORY,
@@ -376,10 +369,8 @@ class IntegrationRepository(Repository):
             return RepositoryFile.MANIFEST_JSON
         return f"{self.content.path.remote}/{RepositoryFile.MANIFEST_JSON}"
 
-    async def async_get_integration_manifest(
-        self, ref: str | None = None
-    ) -> dict[str, Any] | None:
-        """Get the content of the manifest.json file."""
+    async def async_get_integration_manifest(self) -> dict[str, Any] | None:
+        """Get manifest.json through the GitHub API."""
         manifest_path = self._integration_manifest_path()
 
         if manifest_path not in (entry.path for entry in self.tree):
@@ -387,7 +378,7 @@ class IntegrationRepository(Repository):
                 f"No {RepositoryFile.MANIFEST_JSON} file found '{manifest_path}'"
             )
 
-        target_ref = ref or self.version_to_install()
+        target_ref = self.version_to_install()
         self.logger.debug(
             "%s Getting %s for ref=%s", self.string, manifest_path, target_ref
         )
@@ -401,19 +392,6 @@ class IntegrationRepository(Repository):
         if response:
             return json_loads_object(decode_content(response.data.content))
         return None
-
-    async def get_integration_manifest(
-        self, *, version: str | None, **kwargs: Any
-    ) -> dict[str, Any] | None:
-        """Get the content of the manifest.json file."""
-        manifest_path = self._integration_manifest_path()
-
-        if manifest_path not in (entry.path for entry in self.tree):
-            raise MarketplaceError(
-                f"No {RepositoryFile.MANIFEST_JSON} file found '{manifest_path}'"
-            )
-
-        return await self._async_download_integration_manifest(version, manifest_path)
 
     async def _async_download_integration_manifest(
         self, version: str | None, manifest_path: str

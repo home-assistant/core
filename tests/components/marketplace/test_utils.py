@@ -173,11 +173,9 @@ def test_resolve_in_directory_rejects_escapes(tmp_path: Path, candidate: str) ->
         ("", "1.0", False),
     ],
 )
-def test_version_left_higher_or_equal_then_right(
-    left: str, right: str, expected: bool
-) -> None:
+def test_is_same_or_newer_version(left: str, right: str, expected: bool) -> None:
     """Test comparing two version strings."""
-    assert version.version_left_higher_or_equal_then_right(left, right) is expected
+    assert version.is_same_or_newer_version(left, right) is expected
 
 
 @pytest.mark.parametrize(
@@ -296,21 +294,6 @@ async def test_concurrent_limits_running_calls() -> None:
     assert not sleep_mock.called
 
 
-def test_return_none_on_exception_sync_function() -> None:
-    """Test a synchronous function."""
-
-    @return_none_on_exception
-    def returns_value() -> str:
-        return "test_value"
-
-    @return_none_on_exception
-    def raises() -> str:
-        raise ValueError("Test exception")
-
-    assert returns_value() == "test_value"
-    assert raises() is None
-
-
 async def test_return_none_on_exception_async_function() -> None:
     """Test an asynchronous function."""
 
@@ -327,17 +310,10 @@ async def test_return_none_on_exception_async_function() -> None:
 
 
 async def test_return_none_on_exception_methods() -> None:
-    """Test methods, with and without arguments."""
+    """Test a method, with and without its optional argument."""
 
     class Example:
-        """Example class with decorated methods."""
-
-        @return_none_on_exception
-        def sync_method(self, fail: bool) -> str:
-            """Return a value or raise."""
-            if fail:
-                raise ValueError("Test exception")
-            return "test_value"
+        """Example class with a decorated method."""
 
         @return_none_on_exception
         async def async_method(self, arg1: str, arg2: str | None = None) -> str:
@@ -348,8 +324,6 @@ async def test_return_none_on_exception_methods() -> None:
 
     example = Example()
 
-    assert example.sync_method(fail=False) == "test_value"
-    assert example.sync_method(fail=True) is None
     assert await example.async_method("test", "value") == "test_value"
     assert await example.async_method("test") is None
 

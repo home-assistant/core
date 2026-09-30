@@ -95,6 +95,7 @@ async def test_repository_lookups(
     assert marketplace.repositories.get_by_full_name("test/test").data.id == "1337"
     assert marketplace.repositories.is_registered(repository_id="1337")
     assert marketplace.repositories.is_installed(repository_id="1337")
+    assert not marketplace.repositories.is_installed(repository_id="404")
 
 
 @pytest.mark.usefixtures("init_integration")

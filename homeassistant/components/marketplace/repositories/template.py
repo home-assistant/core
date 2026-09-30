@@ -153,14 +153,11 @@ class TemplateRepository(Repository):
 
     @override
     async def validate_repository(self) -> bool:
-        """Validate."""
-        # Run common validation steps.
+        """Check the repository has content this category installs."""
         await self.common_validate()
 
-        # Custom step 1: Validate content.
         self.resolve_content()
 
-        # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
                 if not self.marketplace.status.startup:
@@ -180,7 +177,7 @@ class TemplateRepository(Repository):
 
     @override
     async def async_post_registration(self) -> None:
-        """Registration."""
+        """Point the content at the file to install."""
         self._use_file_name()
         self.content.path.local = self.localpath
 
@@ -204,14 +201,13 @@ class TemplateRepository(Repository):
     async def update_repository(
         self, ignore_issues: bool = False, force: bool = False
     ) -> None:
-        """Update."""
+        """Refresh the repository from GitHub."""
         if not await self.common_update(ignore_issues, force) and not force:
             return
 
         self._use_file_name()
         self.content.path.local = self.localpath
 
-        # Signal frontend to refresh
         if self.data.installed:
             self.marketplace.async_dispatch(
                 MarketplaceSignal.REPOSITORY,

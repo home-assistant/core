@@ -96,7 +96,7 @@ async def marketplace_repositories_clear_new(
     msg: dict[str, Any],
     marketplace: MarketplaceManager,
 ) -> None:
-    """Clear new repositories for specific categories."""
+    """Clear the new flag of a repository, or of whole categories."""
 
     if repo := msg.get("repository"):
         if (repository := marketplace.repositories.get_by_id(repo)) is None:

@@ -94,7 +94,7 @@ class RemovedRepository:
     repository: str | None = None
     reason: str | None = None
     link: str | None = None
-    removal_type: str | None = None  # archived, not_compliant, critical, dev, broken
+    removal_type: str | None = None
     acknowledged: bool = False
 
     def update_data(self, data: dict[str, Any]) -> None:
@@ -337,19 +337,10 @@ class Repositories:
             return repository_full_name in self._repositories_by_full_name
         return False
 
-    def is_installed(
-        self,
-        repository_id: str | None = None,
-        repository_full_name: str | None = None,
-    ) -> bool:
-        """Check if a repository is registered."""
-        if repository_id is not None:
-            repo = self.get_by_id(repository_id)
-        if repository_full_name is not None:
-            repo = self.get_by_full_name(repository_full_name)
-        if repo is None:
-            return False
-        return repo.data.installed
+    def is_installed(self, repository_id: str) -> bool:
+        """Return if a repository is installed."""
+        repository = self.get_by_id(repository_id)
+        return repository is not None and repository.data.installed
 
     def get_by_id(self, repository_id: str | None) -> Repository | None:
         """Get repository by id."""
@@ -368,7 +359,7 @@ class Repositories:
         return repository_full_name in self._removed_repositories_by_full_name
 
     def removed_repository(self, repository_full_name: str) -> RemovedRepository:
-        """Get repository by full name."""
+        """Return the removed entry of a repository, created when there is none."""
         if removed := self._removed_repositories_by_full_name.get(repository_full_name):
             return removed
 
@@ -551,7 +542,6 @@ class MarketplaceManager:
             ) as file_handler:
                 file_handler.write(content)
 
-            # Create gz for .js files
             if os.path.isfile(file_path) and file_path.endswith(".js"):
                 # Swapped in whole, a release can ship this same .gz file
                 # and write it while this one is being compressed
@@ -579,7 +569,7 @@ class MarketplaceManager:
         return await async_exists(self.hass, file_path)
 
     async def async_can_update(self) -> int:
-        """Helper to calculate the number of repositories we can fetch data for."""
+        """Return how many repositories the rate limit leaves room for."""
         # The anonymous rate limit is too small to spend on background work
         if not self.github_connected:
             return 0
@@ -746,9 +736,7 @@ class MarketplaceManager:
         category: RepositoryCategory,
         *,
         check: bool = True,
-        ref: str | None = None,
         repository_id: str | None = None,
-        default: bool = False,
     ) -> list[str] | None:
         """Register a repository."""
         if repository_full_name in self.common.skip:
@@ -781,7 +769,7 @@ class MarketplaceManager:
         )
         if check:
             try:
-                await repository.async_registration(ref)
+                await repository.async_registration()
                 if repository.validate.errors:
                     self.common.skip.add(repository.data.full_name)
                     if not self.status.startup:
@@ -802,7 +790,7 @@ class MarketplaceManager:
         if repository_id is not None:
             repository.data.id = repository_id
 
-        elif self.hass is not None and check and repository.data.new:
+        elif check and repository.data.new:
             self.async_dispatch(
                 MarketplaceSignal.REPOSITORY,
                 {
@@ -812,8 +800,8 @@ class MarketplaceManager:
                 },
             )
 
-        self.repositories.register(repository, default)
-        if check and not default:
+        self.repositories.register(repository)
+        if check:
             self.common.custom_repositories.add(str(repository.data.id))
         return None
 
@@ -879,12 +867,10 @@ class MarketplaceManager:
         self,
         url: str | None,
         *,
-        headers: dict | None = None,
         nolog: bool = False,
         handle_rate_limit: bool = False,
-        **_: Any,
     ) -> bytes | None:
-        """Download files, and return the content."""
+        """Download a file, retrying on timeouts and rate limits."""
         if url is None:
             return None
 
@@ -894,51 +880,48 @@ class MarketplaceManager:
         while attempt_count < 5:
             try:
                 async with self.session.get(
-                    url=url,
-                    timeout=DOWNLOAD_TIMEOUT,
-                    headers=headers,
+                    url=url, timeout=DOWNLOAD_TIMEOUT
                 ) as response:
                     if response.status == 200:
                         return await async_read_limited(response, url)
 
                     status = response.status
                     retry_after_header = response.headers.get("retry-after")
-
-                # Handle rate-limits
-                if handle_rate_limit and status == 429:
-                    try:
-                        header = int(retry_after_header or 10)
-                    except ValueError, TypeError:
-                        header = 10
-                    retry_after = min(header, 60)  # Limit to 60 seconds
-
-                    LOGGER.warning(
-                        "GitHub has imposed a ratelimit on the request for %s, "
-                        "retrying after %s seconds",
-                        url,
-                        retry_after,
-                    )
-                    attempt_count += 1
-                    await asyncio.sleep(retry_after)
-                    continue
-
-                raise MarketplaceError(  # noqa: TRY301 # handled by the retry loop below
-                    f"Got status code {status} when trying to download {url}"
-                )
             except TimeoutError:
                 LOGGER.warning(
-                    "Downloading %s timed out after 60 seconds, %s tries left",
+                    "Downloading %s timed out, %s tries left",
                     url,
                     (4 - attempt_count),
                 )
                 attempt_count += 1
                 await asyncio.sleep(1)
                 continue
-
             except Exception:  # noqa: BLE001
                 if not nolog:
                     LOGGER.exception("Download of %s failed", url)
+                return None
 
+            if handle_rate_limit and status == 429:
+                try:
+                    header = int(retry_after_header or 10)
+                except ValueError, TypeError:
+                    header = 10
+                retry_after = min(header, 60)
+
+                LOGGER.warning(
+                    "GitHub has imposed a ratelimit on the request for %s, "
+                    "retrying after %s seconds",
+                    url,
+                    retry_after,
+                )
+                attempt_count += 1
+                await asyncio.sleep(retry_after)
+                continue
+
+            if not nolog:
+                LOGGER.error(
+                    "Got status code %s when trying to download %s", status, url
+                )
             return None
         return None
 
@@ -986,7 +969,7 @@ class MarketplaceManager:
     async def async_get_category_repositories_from_catalog(
         self, category: RepositoryCategory
     ) -> None:
-        """Update all category repositories."""
+        """Take over the catalog of one category."""
         LOGGER.debug("Fetching updated content for %s", category)
         try:
             category_data = await self.data_client.get_data(category, validate=True)
@@ -1175,7 +1158,7 @@ class MarketplaceManager:
     async def async_update_installed_custom_repositories(
         self, _: datetime | None = None
     ) -> None:
-        """Execute the task."""
+        """Queue an update of every installed custom repository."""
         if self.system.disabled or not self.github_connected:
             return
         LOGGER.info(
@@ -1290,10 +1273,8 @@ class MarketplaceManager:
             stored_critical.append(stored)
             removed_repo.update_data(stored)
 
-        # Save to FS
         await async_save_to_storage(self.hass, "critical", stored_critical)
 
-        # Restart HASS
         if was_installed:
             LOGGER.critical("Restarting Home Assistant")
             self.hass.async_create_task(self.hass.async_stop(100))

@@ -23,7 +23,7 @@ def _get_safe_paths(
         Path(config_path).resolve().as_posix(),
         Path(f"{config_path}/{STORAGE_DIR}").resolve().as_posix(),
         Path(f"{config_path}/{plugin_path}").resolve().as_posix(),
-        # Python scripts are no longer installed, their folder stays off limits
+        # What the retired python_script category installed still runs from here
         Path(f"{config_path}/python_scripts/").resolve().as_posix(),
         Path(f"{config_path}/{theme_path}").resolve().as_posix(),
         Path(f"{config_path}/custom_components/").resolve().as_posix(),

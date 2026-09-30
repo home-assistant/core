@@ -10,8 +10,8 @@ from awesomeversion import (
 
 
 @lru_cache(maxsize=1024)
-def version_left_higher_then_right(left: str, right: str) -> bool | None:
-    """Return a bool if source is newer than target, will also be true if identical."""
+def is_newer_version(left: str, right: str) -> bool | None:
+    """Return if left is newer than right, None when they can not be compared."""
     try:
         left_version = AwesomeVersion(left)
         right_version = AwesomeVersion(right)
@@ -26,9 +26,9 @@ def version_left_higher_then_right(left: str, right: str) -> bool | None:
     return None
 
 
-def version_left_higher_or_equal_then_right(left: str, right: str) -> bool:
-    """Return a bool if source is newer than target, will also be true if identical."""
+def is_same_or_newer_version(left: str, right: str) -> bool:
+    """Return if left is the same as or newer than right."""
     if left == right:
         return True
 
-    return version_left_higher_then_right(left, right) or False
+    return is_newer_version(left, right) or False

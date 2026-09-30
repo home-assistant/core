@@ -74,7 +74,7 @@ class CatalogClient:
         return data
 
     async def get_data(self, section: str | None, *, validate: bool) -> Any:
-        """Get data."""
+        """Fetch a section of the catalog, validated when asked."""
         data = await self._do_request(filename="data.json", section=section)
         if not validate:
             return data

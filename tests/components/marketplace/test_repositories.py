@@ -1426,7 +1426,7 @@ async def test_download_content_outside_the_repository(
     url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/escaped.py"
     response_mocker.add(url, mocked_response(url, content=b""))
 
-    await repository.dowload_repository_content(
+    await repository.download_repository_file(
         FileInformation(url, "escaped.py", "../../escaped.py")
     )
 
@@ -1944,9 +1944,9 @@ async def test_integration_manifest_for_version(
     )
     response_mocker.add(url, mocked_response(url, json_content={"domain": "example"}))
 
-    assert await repository.get_integration_manifest(version="1.0.0") == {
-        "domain": "example"
-    }
+    assert await repository._async_download_integration_manifest(
+        "1.0.0", "custom_components/example/manifest.json"
+    ) == {"domain": "example"}
 
 
 async def test_integration_manifest_for_missing_version(
@@ -1956,7 +1956,12 @@ async def test_integration_manifest_for_missing_version(
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     await repository.update_repository(force=True)
 
-    assert await repository.get_integration_manifest(version="99.99.99") is None
+    assert (
+        await repository._async_download_integration_manifest(
+            "99.99.99", "custom_components/example/manifest.json"
+        )
+        is None
+    )
 
 
 async def test_template_reloads_custom_templates(

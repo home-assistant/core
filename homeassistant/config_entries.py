@@ -2424,19 +2424,19 @@ class ConfigEntries:
         migrated_domains: set[str] = set()
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
-            domain = entry["domain"]
+            entry_domain = entry["domain"]
 
             # A custom integration that a built-in integration took over keeps its
-            # entries, they are simply handed to the built-in domain from now on.
-            # Recovery and safe mode change nothing, they are often the way back
-            # to an older version that still knows the custom integration.
+            # entries, they belong to the built-in domain from now on. Recovery
+            # and safe mode change nothing, they are often the way back to an
+            # older version that still knows the custom integration.
             if (
-                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(domain))
+                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(entry_domain))
                 and not self.hass.config.recovery_mode
                 and not self.hass.config.safe_mode
             ):
-                migrated_domains.add(domain)
-                domain = replacement
+                migrated_domains.add(entry_domain)
+                entry_domain = replacement
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2448,7 +2448,7 @@ class ConfigEntries:
                         for domain, keys in entry["discovery_keys"].items()
                     }
                 ),
-                domain=domain,
+                domain=entry_domain,
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),

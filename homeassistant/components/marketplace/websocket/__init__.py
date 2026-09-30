@@ -36,7 +36,7 @@ from .repository import (
 
 @callback
 def async_register_websocket_commands(hass: HomeAssistant) -> None:
-    """WebSocket API for the Marketplace."""
+    """Register the WebSocket commands of the Marketplace."""
     websocket_api.async_register_command(hass, marketplace_info)
     websocket_api.async_register_command(hass, marketplace_github_connect)
     websocket_api.async_register_command(hass, marketplace_subscribe)
