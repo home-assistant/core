@@ -55,8 +55,12 @@ PLATFORM_SCHEMA: Final = TTS_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_REGION, default=DEFAULT_REGION): probatio.In(
             SUPPORTED_REGIONS
         ),
-        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_ACCESS_KEY_ID), ATTR_CREDENTIALS
+        ): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
         probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): probatio.In(
             SUPPORTED_VOICES

@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
         ),
         probatio.Required(CONF_APP_ID): cv.string,
         probatio.Required(CONF_API_KEY): cv.string,
-        probatio.Required(CONF_SECRET_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_SECRET_KEY)): cv.string,
         probatio.Optional(CONF_SPEED, default=5): probatio.All(
             probatio.Coerce(int), probatio.Range(min=0, max=9)
         ),

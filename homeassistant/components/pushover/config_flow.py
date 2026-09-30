@@ -18,7 +18,7 @@ USER_SCHEMA = probatio.Schema(
         # pylint: disable-next=home-assistant-config-flow-name-field
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         probatio.Required(CONF_API_KEY): str,
-        probatio.Required(CONF_USER_KEY): str,
+        probatio.Required(probatio.Secret(CONF_USER_KEY)): str,
     }
 )
 

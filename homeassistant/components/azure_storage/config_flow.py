@@ -95,7 +95,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_CONTAINER_NAME, default="home-assistant-backups"
                     ): str,
-                    probatio.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_STORAGE_ACCOUNT_KEY)): str,
                 }
             ),
             errors=errors,
@@ -131,7 +131,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_STORAGE_ACCOUNT_KEY)): str,
                 }
             ),
             errors=errors,

@@ -35,8 +35,8 @@ from .const import (
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_ACCESS_KEY_ID): cv.string,
-        probatio.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_ACCESS_KEY_ID)): cv.string,
+        probatio.Required(probatio.Secret(CONF_SECRET_ACCESS_KEY)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_BUCKET): cv.string,

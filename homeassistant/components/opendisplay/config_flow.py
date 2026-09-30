@@ -191,7 +191,9 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
             description_placeholders={"name": name},
             errors=errors,
         )
@@ -237,7 +239,11 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
-                {probatio.Optional(CONF_ENCRYPTION_KEY, default=""): str}
+                {
+                    probatio.Optional(
+                        probatio.Secret(CONF_ENCRYPTION_KEY), default=""
+                    ): str
+                }
             ),
             description_placeholders={"name": reauth_entry.title},
             errors=errors,

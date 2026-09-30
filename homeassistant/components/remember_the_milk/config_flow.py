@@ -34,7 +34,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        probatio.Required(CONF_SHARED_SECRET): TextSelector(
+        probatio.Required(probatio.Secret(CONF_SHARED_SECRET)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }

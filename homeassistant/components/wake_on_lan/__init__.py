@@ -21,7 +21,7 @@ SERVICE_SEND_MAGIC_PACKET = "send_magic_packet"
 WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_MAC): cv.string,
-        probatio.Optional(CONF_SECUREON_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_SECUREON_PASSWORD)): cv.string,
         probatio.Optional(CONF_BROADCAST_ADDRESS): cv.string,
         probatio.Optional(CONF_BROADCAST_PORT): probatio.Port(),
     }
