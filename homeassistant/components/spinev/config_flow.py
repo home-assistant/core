@@ -5,7 +5,7 @@ import re
 from typing import Any, override
 
 from habluetooth import HaBleakClientWrapper
-from spinev_ble import ADVERTISED_NAME_PATTERN, SpinEvCharger, SpinEvError
+from spinev_ble import ADVERTISED_NAME_PATTERN, BleTransport, SpinEvCharger, SpinEvError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -182,7 +182,7 @@ class SpinEvConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
 
         charger = SpinEvCharger(
-            ble_device, client_class=HaBleakClientWrapper, max_attempts=1
+            BleTransport(ble_device, client_class=HaBleakClientWrapper, max_attempts=1)
         )
         try:
             async with charger:

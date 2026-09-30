@@ -6,7 +6,7 @@ from typing import override
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 from habluetooth import HaBleakClientWrapper
-from spinev_ble import ChargerStatus, SpinEvCharger, SpinEvError
+from spinev_ble import BleTransport, ChargerStatus, SpinEvCharger, SpinEvError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
@@ -109,7 +109,7 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
             await self.async_release()
 
         self._charger = SpinEvCharger(
-            self._async_ble_device(), client_class=HaBleakClientWrapper
+            BleTransport(self._async_ble_device(), client_class=HaBleakClientWrapper)
         )
         return self._charger
 
