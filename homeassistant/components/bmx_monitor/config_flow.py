@@ -154,8 +154,12 @@ def process_custom_battery_input(
     user_input[CONF_CUSTOM_NUMPY_VOLTS] = temp_numpy_volts
     user_input[CONF_CUSTOM_NUMPY_PERCENT] = temp_numpy_percent
 
-    # Validate the input - make sure all of the voltage thresholds are increasing in value
-    if not all(a < b for a, b in pairwise(temp_numpy_volts)):
+    voltage_thresholds = [
+        *temp_numpy_volts,
+        float(user_input[CONF_CUSTOM_FLOATING_VOLTAGE]),
+        float(user_input[CONF_CUSTOM_CHARGING_VOLTAGE]),
+    ]
+    if not all(a < b for a, b in pairwise(voltage_thresholds)):
         errors["base"] = "custom_voltages_not_in_order"
 
     return user_input, errors
