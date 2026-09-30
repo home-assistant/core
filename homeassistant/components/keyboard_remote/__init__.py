@@ -20,6 +20,7 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     HomeAssistant,
+    callback,
 )
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -56,6 +57,28 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _list_by_id_links() -> list[str]:
+    """List the names in /dev/input/by-id, if it exists (runs in executor)."""
+    with suppress(OSError), os.scandir(DEVINPUT_BY_ID) as entries:
+        return sorted(entry.name for entry in entries)
+    return []
+
+
+def list_input_devices() -> list[str]:
+    """List the event nodes in /dev/input (runs in executor).
+
+    evdev checks each node after listing the directory, which raises if a node
+    is removed in between. List again then, as the node is simply gone.
+    """
+    from evdev import list_devices  # noqa: PLC0415
+
+    for _ in range(3):
+        with suppress(FileNotFoundError):
+            return list_devices(DEVINPUT)
+    return []
+
 
 DATA_MANAGER: HassKey[KeyboardRemoteManager] = HassKey(DOMAIN)
 
@@ -239,19 +262,23 @@ class KeyboardRemoteManager:
 
         Raises OSError when /dev/input cannot be watched, for example in a
         container without it mapped, or once the inotify instance limit is hit.
+        A by-id watch that fails is only logged and retried on later events,
+        as devices without a by-id link do not need it.
         """
         try:
             self._inotify = Inotify()
             self._watcher = self._inotify.add_watch(
                 DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
             )
-            self._watch_by_id()
         except OSError:
             if self._inotify is not None:
                 self._inotify.close()
                 self._inotify = None
-                self._watcher = None
             raise
+        try:
+            self._watch_by_id()
+        except OSError as err:
+            _LOGGER.warning("Unable to watch %s: %s", DEVINPUT_BY_ID, err)
 
     async def async_start(self) -> None:
         """Scan for devices and start monitoring (idempotent, lock-protected)."""
@@ -333,17 +360,18 @@ class KeyboardRemoteManager:
                     self._inotify.rm_watch(self._by_id_watcher)
                 self._by_id_watcher = None
 
-            if self._monitor_task is not None:
-                if not self._monitor_task.done():
-                    self._monitor_task.cancel()
-                try:
-                    await self._monitor_task
-                except asyncio.CancelledError:
-                    pass
-                except Exception:
-                    # Log it and still release the devices below
-                    _LOGGER.exception("The input device watcher had failed")
+            if (monitor_task := self._monitor_task) is not None:
                 self._monitor_task = None
+                monitor_task.cancel()
+                # Unlike awaiting the task, this neither raises its error nor
+                # swallows a cancellation of this stop
+                await asyncio.wait({monitor_task})
+                if not monitor_task.cancelled() and (err := monitor_task.exception()):
+                    # Log it and still release the devices below
+                    _LOGGER.error(
+                        "The input device watcher had failed",
+                        exc_info=(type(err), err, err.__traceback__),
+                    )
 
             stop_tasks = {
                 self.hass.async_create_task(handler.async_device_stop_monitoring())
@@ -364,12 +392,7 @@ class KeyboardRemoteManager:
 
         The handler stays registered so a later device event can rebind it.
         """
-        for descriptor in [
-            desc
-            for desc, active in self._active_handlers_by_descriptor.items()
-            if active is handler
-        ]:
-            del self._active_handlers_by_descriptor[descriptor]
+        self._forget_handler(handler)
         await handler.async_device_stop_monitoring(from_monitor_task=True)
 
     def register_handler(self, entry_id: str, handler: DeviceHandler) -> None:
@@ -381,17 +404,18 @@ class KeyboardRemoteManager:
 
     async def unregister_handler(self, entry_id: str) -> None:
         """Unregister a DeviceHandler and stop its monitoring."""
-        handler = self._handlers.pop(entry_id, None)
-        if handler is None:
-            return
-        descriptors_to_remove = [
-            desc
-            for desc, h in self._active_handlers_by_descriptor.items()
-            if h is handler
-        ]
-        for desc in descriptors_to_remove:
-            del self._active_handlers_by_descriptor[desc]
+        handler = self._handlers.pop(entry_id)
+        self._forget_handler(handler)
         await handler.async_device_stop_monitoring()
+
+    def _forget_handler(self, handler: DeviceHandler) -> None:
+        """Drop the nodes mapped to a handler."""
+        for descriptor in [
+            descriptor
+            for descriptor, active in self._active_handlers_by_descriptor.items()
+            if active is handler
+        ]:
+            del self._active_handlers_by_descriptor[descriptor]
 
     def _get_handler_for_device(
         self, descriptor: str, handlers: list[DeviceHandler]
@@ -434,11 +458,11 @@ class KeyboardRemoteManager:
         keyboard claim the handler before its exact device_path match is
         reached, and list_devices() returns nodes in arbitrary order.
         """
-        from evdev import InputDevice, list_devices  # noqa: PLC0415
+        from evdev import InputDevice  # noqa: PLC0415
 
         opened: dict[str, InputDevice] = {}
         candidates: list[tuple[int, str, DeviceHandler]] = []
-        for descriptor in list_devices(DEVINPUT):
+        for descriptor in list_input_devices():
             try:
                 dev = InputDevice(descriptor)
             except OSError:
@@ -478,17 +502,9 @@ class KeyboardRemoteManager:
             self._scan_and_match_devices, handlers
         )
 
-        start_tasks: set[asyncio.Task] = set()
         for descriptor, dev, handler in matches:
-            if not self._claim_descriptor(descriptor, dev, handler):
-                continue
-            start_tasks.add(
-                self.hass.async_create_task(handler.async_device_start_monitoring(dev))
-            )
-
-        if start_tasks:
-            await asyncio.wait(start_tasks)
-
+            if self._claim_descriptor(descriptor, dev, handler):
+                handler.async_device_start_monitoring(dev)
         return handlers
 
     def _find_device_for_handler(
@@ -497,27 +513,21 @@ class KeyboardRemoteManager:
         handlers: list[DeviceHandler],
         skip_descriptors: set[str],
     ) -> tuple[str, InputDevice] | None:
-        """Find the best connected device matching a handler (runs in executor)."""
-        from evdev import list_devices  # noqa: PLC0415
+        """Find a connected device matching a handler (runs in executor).
 
-        best: tuple[int, str, InputDevice] | None = None
-        for descriptor in sorted(list_devices(DEVINPUT)):
+        Every device a handler matches gets the same rank from it, so the first
+        one that no other handler matches better will do.
+        """
+        for descriptor in sorted(list_input_devices()):
             if descriptor in skip_descriptors:
                 continue
             dev, matched = self._get_handler_for_device(descriptor, handlers)
             if dev is None:
                 continue
-            rank = handler.match_rank(descriptor, dev) if matched is handler else None
-            if rank is None or (best is not None and rank >= best[0]):
-                dev.close()
-                continue
-            if best is not None:
-                best[2].close()
-            best = (rank, descriptor, dev)
-
-        if best is None:
-            return None
-        return (best[1], best[2])
+            if matched is handler:
+                return descriptor, dev
+            dev.close()
+        return None
 
     def _claim_descriptor(
         self, descriptor: str, dev: InputDevice, handler: DeviceHandler
@@ -537,7 +547,7 @@ class KeyboardRemoteManager:
             or descriptor in self._active_handlers_by_descriptor
             or handler.is_monitoring
         ):
-            dev.close()
+            self.hass.async_add_executor_job(dev.close)
             return False
 
         self._active_handlers_by_descriptor[descriptor] = handler
@@ -551,7 +561,7 @@ class KeyboardRemoteManager:
             self._find_device_for_handler, handler, handlers, skip
         )
         if result is not None:
-            await self._async_claim_and_start(*result, handler)
+            self._claim_and_start(*result, handler)
 
     async def _async_monitor_devices(self) -> None:
         """Monitor /dev/input/ for device add/remove events via inotify."""
@@ -575,7 +585,11 @@ class KeyboardRemoteManager:
             await self._async_handle_by_id_event(event)
             return
 
-        if event.name is not None and str(event.name) == "by-id":
+        # Events on /dev/input itself, like a queue overflow, name no node
+        if event.name is None:
+            return
+
+        if str(event.name) == "by-id":
             if Mask.CREATE in event.mask:
                 await self._async_handle_by_id_created()
             return
@@ -586,7 +600,7 @@ class KeyboardRemoteManager:
             await self._async_retry_by_id_watch()
 
         descriptor = f"{DEVINPUT}/{event.name}"
-        _LOGGER.debug("got event for %s: %s", descriptor, event.mask)
+        _LOGGER.debug("Event for %s: %s", descriptor, event.mask)
 
         descriptor_active = descriptor in self._active_handlers_by_descriptor
 
@@ -608,27 +622,42 @@ class KeyboardRemoteManager:
             self._get_handler_for_device, descriptor, handlers
         )
         if dev is not None and handler is not None:
-            await self._async_claim_and_start(descriptor, dev, handler)
+            self._claim_and_start(descriptor, dev, handler)
 
-    async def _async_claim_and_start(
+    @callback
+    def _claim_and_start(
         self, descriptor: str, dev: InputDevice, handler: DeviceHandler
     ) -> None:
         """Start monitoring a matched device, unless the claim is refused."""
         if self._claim_descriptor(descriptor, dev, handler):
             _LOGGER.debug("adding: %s", descriptor)
-            await handler.async_device_start_monitoring(dev)
+            handler.async_device_start_monitoring(dev)
 
     def _match_linked_device(
-        self, link: str, handlers: list[DeviceHandler], active: set[str]
+        self,
+        link: str,
+        handlers: list[DeviceHandler],
+        holders: dict[str, DeviceHandler],
     ) -> tuple[str, InputDevice, DeviceHandler] | None:
-        """Find the handler for the node a by-id link points to (executor)."""
+        """Find the handler for the node a by-id link points to (executor).
+
+        A node that already has a handler is only returned when the link makes
+        a stronger match for another one.
+        """
         descriptor = os.path.realpath(link)
         # by-id also links mouse and joystick nodes, which evdev cannot open
-        if not descriptor.startswith(f"{DEVINPUT}/event") or descriptor in active:
+        if not descriptor.startswith(f"{DEVINPUT}/event"):
             return None
         dev, handler = self._get_handler_for_device(descriptor, handlers)
         if dev is None or handler is None:
             return None
+        if (holder := holders.get(descriptor)) is not None:
+            holder_rank = holder.match_rank(descriptor, dev)
+            rank = handler.match_rank(descriptor, dev)
+            assert rank is not None
+            if holder is handler or (holder_rank is not None and holder_rank <= rank):
+                dev.close()
+                return None
         return descriptor, dev, handler
 
     async def _async_handle_by_id_event(self, event: InotifyEvent) -> None:
@@ -639,22 +668,38 @@ class KeyboardRemoteManager:
             return
         if event.name is None or not event.mask & (Mask.CREATE | Mask.MOVED_TO):
             return
-        _LOGGER.debug("checking new by-id link: %s", event.name)
+        await self._async_handle_link(str(event.name))
+
+    async def _async_handle_link(self, name: str) -> None:
+        """Start, or hand over, the node that a by-id link points to."""
+        _LOGGER.debug("Checking by-id link %s", name)
+        holders = dict(self._active_handlers_by_descriptor)
         result = await self.hass.async_add_executor_job(
             self._match_linked_device,
-            f"{DEVINPUT_BY_ID}/{event.name}",
+            f"{DEVINPUT_BY_ID}/{name}",
             list(self._handlers.values()),
-            set(self._active_handlers_by_descriptor),
+            holders,
         )
-        if result is not None:
-            await self._async_claim_and_start(*result)
+        if result is None:
+            return
+        descriptor, dev, handler = result
+        holder = holders.get(descriptor)
+        if holder is not None and (
+            self._active_handlers_by_descriptor.get(descriptor) is holder
+        ):
+            # The holder got the node from its node events, before this link
+            # let the entry configured with it match. Hand the node over, then
+            # let the holder look for another node.
+            _LOGGER.debug("Handing %s over for its by-id link", descriptor)
+            del self._active_handlers_by_descriptor[descriptor]
+            await holder.async_device_stop_monitoring()
+            self._claim_and_start(descriptor, dev, handler)
+            await self._async_check_handler(holder)
+            return
+        self._claim_and_start(descriptor, dev, handler)
 
     async def _async_handle_by_id_created(self) -> None:
-        """Start watching a by-id directory that udev just created.
-
-        Links created before the watch was added produced no event, so check
-        every handler that is still waiting for a device.
-        """
+        """Start watching a by-id directory that udev just created."""
         if self._by_id_watcher is not None:
             return
         try:
@@ -663,7 +708,7 @@ class KeyboardRemoteManager:
             # Raising here would end the monitor loop. The watch is retried
             # on later /dev/input events.
             _LOGGER.warning("Unable to watch %s: %s", DEVINPUT_BY_ID, err)
-        await self._async_check_waiting_handlers()
+        await self._async_handle_unseen_links()
 
     async def _async_retry_by_id_watch(self) -> None:
         """Watch the by-id directory after an earlier attempt failed."""
@@ -673,11 +718,16 @@ class KeyboardRemoteManager:
             _LOGGER.debug("Still unable to watch %s: %s", DEVINPUT_BY_ID, err)
             return
         if self._by_id_watcher is not None:
-            # Links added while unwatched produced no event
-            await self._async_check_waiting_handlers()
+            await self._async_handle_unseen_links()
 
-    async def _async_check_waiting_handlers(self) -> None:
-        """Check every handler that is still waiting for a device."""
+    async def _async_handle_unseen_links(self) -> None:
+        """Handle the by-id links added while the directory was unwatched.
+
+        They produced no event, so handle each as a new link, then check the
+        handlers still waiting for a device.
+        """
+        for name in await self.hass.async_add_executor_job(_list_by_id_links):
+            await self._async_handle_link(name)
         for handler in list(self._handlers.values()):
             if not handler.is_monitoring:
                 await self._async_check_handler(handler)
@@ -714,10 +764,10 @@ class DeviceHandler:
         )
 
     def set_monitor_failure_callback(
-        self, callback: Callable[[DeviceHandler], Coroutine[Any, Any, None]]
+        self, on_failure: Callable[[DeviceHandler], Coroutine[Any, Any, None]]
     ) -> None:
         """Set what the manager should run if this device stops being readable."""
-        self._on_monitor_failure = callback
+        self._on_monitor_failure = on_failure
 
     @property
     def is_monitoring(self) -> bool:
@@ -786,17 +836,15 @@ class DeviceHandler:
 
         return None
 
-    async def async_device_start_monitoring(self, dev: InputDevice) -> None:
+    @callback
+    def async_device_start_monitoring(self, dev: InputDevice) -> None:
         """Start event monitoring task and fire connected event."""
-        _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
-        if self._monitor_task is not None:
-            return
-
+        _LOGGER.debug("Starting monitoring of %s", dev.name)
         self.dev = dev
-        # Report what the integration reported before the migration, so that
-        # automations matching it keep firing: the YAML descriptor, or for a
-        # YAML entry configured by name the node that was opened, even though
-        # the import may also have resolved a by-id path.
+        # Events carry the path the entry was set up from, so automations
+        # written against a YAML setup keep matching: the YAML descriptor, or
+        # for a YAML entry configured by name the node that was opened, even
+        # when the import also resolved a by-id path.
         if self._device_descriptor:
             self._descriptor = self._device_descriptor
         elif self.entry.source == SOURCE_IMPORT:
@@ -842,27 +890,32 @@ class DeviceHandler:
         # would call remove_reader on the fd the first one already closed.
         self._monitor_task = None
 
-        if not from_monitor_task:
-            with suppress(OSError):
-                await self.hass.async_add_executor_job(dev.ungrab)
-        # Remove reader and close device before cancelling the task to avoid
-        # triggering unhandled exceptions inside evdev coroutines
-        self.hass.loop.remove_reader(dev.fileno())
-        dev.close()
-        if not from_monitor_task:
-            if not task.done():
+        try:
+            if not from_monitor_task:
+                with suppress(OSError):
+                    await self.hass.async_add_executor_job(dev.ungrab)
+        finally:
+            # Also when this teardown is cancelled, so the device is released.
+            # Remove the reader before closing to avoid unhandled exceptions
+            # inside evdev coroutines, and close in the executor, as closing
+            # an input device can block.
+            self.hass.loop.remove_reader(dev.fileno())
+            self.hass.async_add_executor_job(dev.close)
+            if not from_monitor_task:
                 task.cancel()
-            with suppress(asyncio.CancelledError):
-                await task
-        self.hass.bus.async_fire(
-            EVENT_KEYBOARD_REMOTE_DISCONNECTED,
-            {
-                CONF_DEVICE_DESCRIPTOR: descriptor,
-                CONF_DEVICE_NAME: dev.name,
-            },
-        )
-        _LOGGER.debug("Keyboard disconnected, %s", dev.name)
-        self.dev = None
+            self.hass.bus.async_fire(
+                EVENT_KEYBOARD_REMOTE_DISCONNECTED,
+                {
+                    CONF_DEVICE_DESCRIPTOR: descriptor,
+                    CONF_DEVICE_NAME: dev.name,
+                },
+            )
+            _LOGGER.debug("Keyboard disconnected, %s", dev.name)
+            self.dev = None
+        if not from_monitor_task:
+            # Unlike awaiting the task, this cannot swallow a cancellation of
+            # the caller, which would keep a stopping watcher running
+            await asyncio.wait({task})
 
     async def _async_keyrepeat(
         self, dev: InputDevice, code: int, delay: float, repeat: float
@@ -883,7 +936,7 @@ class DeviceHandler:
 
     async def _async_monitor_input(self) -> None:
         """Monitor one device for key events using evdev with asyncio."""
-        from evdev import categorize, ecodes  # noqa: PLC0415
+        from evdev import ecodes  # noqa: PLC0415
 
         dev = self.dev
         assert dev is not None
@@ -903,10 +956,13 @@ class DeviceHandler:
             async for event in dev.async_read_loop():
                 if event.type == ecodes.EV_KEY:
                     if event.value in self._key_values:
+                        # Not evdev's categorize, which raises for key codes
+                        # missing from its table
                         _LOGGER.debug(
-                            "device: %s: %s",
+                            "Key %s %s on %s",
+                            event.code,
+                            KEY_VALUE_NAME[event.value],
                             dev.name,
-                            categorize(event),
                         )
 
                         self.hass.bus.async_fire(
@@ -920,6 +976,10 @@ class DeviceHandler:
                         )
 
                     if event.value == KEY_VALUE["key_down"] and self._emulate_key_hold:
+                        # A key_up lost while the loop stalled would otherwise
+                        # leave the previous repeat running forever
+                        if previous := repeat_tasks.pop(event.code, None):
+                            previous.cancel()
                         repeat_tasks[event.code] = (
                             self.hass.async_create_background_task(
                                 self._async_keyrepeat(

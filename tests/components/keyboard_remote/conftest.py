@@ -159,6 +159,42 @@ class DeviceCall:
         assert self.call_count == 0, f"called {self.call_count} times"
 
 
+class _Handle:
+    """One open file of a fake device, like each InputDevice evdev returns.
+
+    Calls on it are recorded on the device, so tests assert on the device
+    whichever handle the integration used.
+    """
+
+    def __init__(self, dev: MagicMock, fd: int) -> None:
+        """Open the device with a file descriptor of its own."""
+        self._dev = dev
+        self._fd = fd
+        self.name: str = dev.name
+        self.path: str = dev.path
+        self.uniq: str = dev.uniq
+        self.info = dev.info
+        self.grab: DeviceCall = dev.grab
+        self.ungrab: DeviceCall = dev.ungrab
+
+    def fileno(self) -> int:
+        """Return the file descriptor, -1 once closed like evdev."""
+        return self._fd
+
+    def capabilities(self) -> dict[int, list[int]]:
+        """Return the device's capabilities."""
+        return self._dev.capabilities()
+
+    def async_read_loop(self) -> AsyncIterator[SimpleNamespace]:
+        """Read the device's events."""
+        return self._dev.async_read_loop()
+
+    def close(self) -> None:
+        """Close this handle."""
+        self._dev.close()
+        self._fd = -1
+
+
 class _FakeInotify:
     """Inotify whose events come from FakeInput instead of the kernel."""
 
@@ -339,8 +375,8 @@ class FakeInput:
     async def settle(self, *, wait_for_executor: bool = True) -> None:
         """Wait until everything emitted so far has been handled.
 
-        Done once no executor job is pending and every task is blocked on
-        something, like a queue or a timer. Executor jobs started from
+        Done once no executor job is pending, no callback is scheduled and
+        every task is blocked on something, like a queue or a timer. Executor jobs started from
         background tasks are invisible to async_block_till_done, so they are
         waited for separately. Pass wait_for_executor=False while a test holds
         an executor job, which would otherwise be waited for.
@@ -373,7 +409,9 @@ class FakeInput:
         ]
 
     def _idle(self) -> bool:
-        if self._queued():
+        # Scheduled callbacks, like a finished task waking its waiter, are
+        # work that no task shows yet
+        if self._queued() or self.hass.loop._ready:  # type: ignore[attr-defined]
             return False
         for task in self._tasks():
             if isinstance(task, asyncio.Task) and not task.done():
@@ -417,12 +455,9 @@ class FakeInput:
         dev.name = name
         dev.uniq = uniq
         dev.path = path
-        self._next_fd += 1
-        dev.fileno.return_value = self._next_fd
         dev.grab = DeviceCall(self)
         dev.ungrab = DeviceCall(self)
-        # Like evdev, a closed device reports fd -1
-        dev.close = DeviceCall(self, lambda: setattr(dev.fileno, "return_value", -1))
+        dev.close = DeviceCall(self)
         dev.capabilities.return_value = {EV_KEY if sends_keys else EV_SW: [30]}
         dev.info.bustype = bustype
         dev.read_queue = asyncio.Queue()
@@ -437,17 +472,15 @@ class FakeInput:
         dev.async_read_loop.side_effect = _read
         return dev
 
-    def _open(self, path: str) -> MagicMock:
+    def _open(self, path: str) -> _Handle:
         path = os.fspath(path)
         self.opened.append(path)
         if path not in self.devices:
             raise FileNotFoundError(errno.ENOENT, "No such file or directory", path)
         if (dev := self.devices[path]) is None:
             raise PermissionError(errno.EACCES, "Permission denied", path)
-        # Each open gets a new file descriptor, as a closed one reports -1
         self._next_fd += 1
-        dev.fileno.return_value = self._next_fd
-        return dev
+        return _Handle(dev, self._next_fd)
 
     def _list(self, input_device_dir: str = DEVINPUT) -> list[str]:
         if (gate := self._listing_gate) is not None:
