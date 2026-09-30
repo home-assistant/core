@@ -13,7 +13,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     VEHICLE_INTERVAL,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -337,7 +337,7 @@ def _energy_history(time_series: list[dict[str, Any]]) -> dict[str, Any]:
                     for period in ENERGY_HISTORY_PERIODS
                 ]
             ),
-            dict.fromkeys(ENERGY_HISTORY_STATES, "0.0"),
+            dict.fromkeys(ENERGY_HISTORY_STATES, STATE_UNKNOWN),
             id="all_fields_omitted",
         ),
         pytest.param(
