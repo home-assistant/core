@@ -271,7 +271,9 @@ async def test_no_device(hass: HomeAssistant) -> None:
 
 
 @contextmanager
-def _service_rejecting_the_device_fetch(error: Exception):
+def _service_rejecting_the_device_fetch(
+    error: Exception, delivery: str = "trusted_device"
+):
     """Mock a service that authenticates but is turned down reading devices."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
@@ -283,7 +285,7 @@ def _service_rejecting_the_device_fetch(error: Exception):
         service_mock.return_value.validate_verification_code = Mock(return_value=True)
         # Pinned: a bare mock attribute is never "unknown", so the challenge
         # test would pass whatever the delivery-route check did.
-        service_mock.return_value.two_factor_delivery_method = "trusted_device"
+        service_mock.return_value.two_factor_delivery_method = delivery
         type(service_mock.return_value).devices = PropertyMock(side_effect=error)
         yield service_mock
 
@@ -679,3 +681,27 @@ async def test_device_fetch_during_an_outage_keeps_the_session(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
     service_mock.return_value.session.clear_persistence.assert_not_called()
+
+
+async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a challenge from the fetch with no route goes to the password.
+
+    The same dead end the login path avoids: iCloud reports the challenge but
+    nothing can send a code for it, so the code entry form cannot be
+    completed. A fresh login raises the challenge again with a route behind
+    it.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
+        delivery="unknown",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "send_verification_code"}
