@@ -47,5 +47,5 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
