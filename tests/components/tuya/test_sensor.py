@@ -50,7 +50,7 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
     [
-        pytest.param("zndb_qxlwffgv8avf5rrw", 20, 0, id="multi_channel"),
+        pytest.param("zndb_qxlwffgv8avf5rrw", 0, 120, id="multi_channel"),
         pytest.param("zndb_uqzhc4bx5zqwpg2m", 0, 6, id="single_channel"),
     ],
 )
@@ -64,7 +64,7 @@ async def test_indexed_phase_child_devices(
     expected_children: int,
     expected_parent_phase_entities: int,
 ) -> None:
-    """Test indexed phase sensors only move to child devices for multi-channel meters."""
+    """Test indexed phase sensors stay on the main device."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     parent = device_registry.async_get_device_by_identifier(

@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import timedelta
-from json import JSONDecodeError
 import logging
 from typing import Literal, override
 
@@ -153,8 +152,6 @@ async def async_get_travel_times(
         raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
     except httpx.RequestError as exp:
         raise UpdateFailed(f"Connection error: {exp}") from exp
-    except JSONDecodeError as exp:
-        raise UpdateFailed(f"Invalid response from Waze: {exp}") from exp
 
     else:
         return filtered_routes

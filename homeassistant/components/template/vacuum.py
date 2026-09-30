@@ -77,7 +77,7 @@ CLEAN_AREA_GROUP = "clean_area_group"
 
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(

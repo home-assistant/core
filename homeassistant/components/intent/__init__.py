@@ -285,9 +285,11 @@ class GetStateIntentHandler(intent.IntentHandler):
     description = "Gets or checks the state of a device or entity"
     slot_schema = {
         probatio.Any("name", "area", "floor"): cv.string,
-        probatio.Optional("domain"): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional("state"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Optional("device_class"): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional("state"): probatio.All(probatio.EnsureList(), [cv.string]),
         probatio.Optional("preferred_area_id"): cv.string,
         probatio.Optional("preferred_floor_id"): cv.string,
     }

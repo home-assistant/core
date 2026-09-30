@@ -28,7 +28,7 @@ CONF_DEVICE_NAMES = "device_names"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(CONF_API_KEY): cv.string,

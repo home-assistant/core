@@ -81,7 +81,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         probatio.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         probatio.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
-        probatio.Optional(CONF_OPTIONS): cv.ensure_list,
+        probatio.Optional(CONF_OPTIONS): probatio.EnsureList(),
         probatio.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         probatio.Optional(CONF_STATE_CLASS): probatio.Any(STATE_CLASSES_SCHEMA, None),
         probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),

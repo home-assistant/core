@@ -8,6 +8,8 @@ import logging
 from logging import Logger
 from typing import Any, TypeGuard, override
 
+import probatio
+
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -28,7 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     area_registry as ar,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -78,17 +79,19 @@ class TargetSelection:
         label_ids: str | list[str] | None = config.get(ATTR_LABEL_ID)
 
         self.entity_ids = (
-            set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
+            set(probatio.EnsureList()(entity_ids)) if _has_match(entity_ids) else set()
         )
         self.device_ids = (
-            set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
+            set(probatio.EnsureList()(device_ids)) if _has_match(device_ids) else set()
         )
-        self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+        self.area_ids = (
+            set(probatio.EnsureList()(area_ids)) if _has_match(area_ids) else set()
+        )
         self.floor_ids = (
-            set(cv.ensure_list(floor_ids)) if _has_match(floor_ids) else set()
+            set(probatio.EnsureList()(floor_ids)) if _has_match(floor_ids) else set()
         )
         self.label_ids = (
-            set(cv.ensure_list(label_ids)) if _has_match(label_ids) else set()
+            set(probatio.EnsureList()(label_ids)) if _has_match(label_ids) else set()
         )
 
     @property

@@ -7,7 +7,6 @@ import probatio
 from homeassistant.const import CONF_MODE, CONF_OPTIONS, PERCENTAGE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
@@ -30,7 +29,7 @@ IS_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_MODE): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [str]
+                probatio.EnsureList(), probatio.Length(min=1), [str]
             ),
         },
     }
