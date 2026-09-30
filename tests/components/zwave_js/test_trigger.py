@@ -1931,7 +1931,7 @@ async def test_node_status_trigger_invalid_status(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger.async_validate_trigger_config(
             hass,
             [

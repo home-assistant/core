@@ -3,7 +3,7 @@
 from dataclasses import replace
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID, CONF_FOR, CONF_OPTIONS
@@ -31,20 +31,20 @@ PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-_STATUS_LIST = vol.All(cv.ensure_list, [vol.In(NODE_STATUSES)])
+_STATUS_LIST = probatio.All(probatio.EnsureList(), [probatio.In(NODE_STATUSES)])
 
-_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.In(
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Required(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
+    probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): probatio.In(
         [BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]
     ),
-    vol.Optional(CONF_FOR): cv.positive_time_period,
-    vol.Optional(CONF_FROM): _STATUS_LIST,
-    vol.Optional(CONF_TO): _STATUS_LIST,
+    probatio.Optional(CONF_FOR): cv.positive_time_period,
+    probatio.Optional(CONF_FROM): _STATUS_LIST,
+    probatio.Optional(CONF_TO): _STATUS_LIST,
 }
 
-_TRIGGER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_OPTIONS, default={}): _OPTIONS_SCHEMA_DICT}
+_TRIGGER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default={}): _OPTIONS_SCHEMA_DICT}
 )
 
 
