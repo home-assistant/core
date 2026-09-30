@@ -298,7 +298,6 @@ class EntityPlatform:
         self._polling_tasks: dict[str, asyncio.Task[None]] = {}
 
         self.parallel_updates: asyncio.Semaphore | None = None
-        self._parallel_updates_semaphore_limit: int | None = None
         self._update_in_sequence: bool = False
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
@@ -368,10 +367,7 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
-            self._parallel_updates_semaphore_limit = parallel_updates
             self._update_in_sequence = parallel_updates == 1
-        else:
-            self._parallel_updates_semaphore_limit = None
 
         return self.parallel_updates
 
@@ -876,6 +872,7 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
         try:
+            await entity.async_prepare_to_add_to_hass()
             restored = await self._async_add_entity_impl(
                 entity, update_before_add, entity_registry, config_subentry_id
             )
@@ -1341,9 +1338,10 @@ class EntityPlatform:
         if stale_entity_ids:
             # One or more entities are still running an update from a
             # previous cycle. Log it, and if the platform limits concurrency
-            # via a semaphore, give idle entities a fresh one so they are not
-            # queued forever behind a permit that a hung entity is holding
-            # and may never release.
+            # via a semaphore, give up waiting for any of them that are
+            # actually holding a permit (not just queued waiting for one) so
+            # that other entities queued behind it are not blocked forever
+            # by a permit that a hung entity may never release.
             self.logger.warning(
                 "Updating %s %s took longer than the scheduled update interval "
                 "%s for %s; these entities will keep updating in the "
@@ -1355,45 +1353,28 @@ class EntityPlatform:
                 self.scan_interval,
                 ", ".join(sorted(stale_entity_ids)),
             )
-            if (
-                self._parallel_updates_semaphore_limit is not None
-                and self.parallel_updates is not None
-            ):
-                old_semaphore = self.parallel_updates
-                new_semaphore = asyncio.Semaphore(
-                    self._parallel_updates_semaphore_limit
-                )
-                # Rebind only the entities not already holding a permit on
-                # the stale semaphore. Active holders keep the original
-                # instance so their permit accounting stays consistent while
-                # idle or queued work moves onto the replacement.
-                for entity in self.entities.values():
+            if self.parallel_updates is not None:
+                for entity_id in stale_entity_ids:
+                    entity = self.entities.get(entity_id)
                     if (
-                        not getattr(entity, "_update_acquired", False)
-                        and entity.parallel_updates is old_semaphore
+                        entity is not None
+                        and getattr(entity, "_update_acquired", False)
+                        and not getattr(entity, "_update_permit_compensated", False)
                     ):
-                        entity.parallel_updates = new_semaphore
-                        # An entity that has not acquired a permit can only
-                        # be blocked inside `semaphore.acquire()` itself (its
-                        # own update code has not started yet), so it is
-                        # always safe to cancel its stale task here and let
-                        # it retry immediately on the replacement semaphore,
-                        # instead of leaving it skipped until the acquire()
-                        # it's waiting on - which will now never complete -
-                        # is somehow resolved.
-                        stale_task = self._polling_tasks.pop(entity.entity_id, None)
-                        if stale_task is not None:
-                            # Cancelling only *requests* cancellation; the
-                            # task's own `finally` won't clear
-                            # `_update_staged` until the event loop next
-                            # resumes it. Clear it here too so a task we
-                            # schedule immediately below (in this same
-                            # cycle) isn't bounced by the stale flag.
-                            setattr(entity, "_update_staged", False)  # noqa: B010
-                            stale_task.cancel()
-                            stale_entity_ids.discard(entity.entity_id)
-                # Replace the platform semaphore for future acquirers.
-                self.parallel_updates = new_semaphore
+                        # This entity's own update() has been holding a
+                        # concurrency permit for at least a full scan
+                        # interval with no sign of finishing. Rather than
+                        # swap in a whole new semaphore (which would need to
+                        # separately track every holder and waiter,
+                        # including in-flight service calls made through
+                        # Entity.async_request_call, to avoid corrupting
+                        # permit accounting), give up waiting for this one
+                        # permit and return it to the *same* semaphore now.
+                        # `_update_permit_compensated` tells the entity's own
+                        # `finally` block not to release its permit a second
+                        # time if the update does eventually complete.
+                        entity._update_permit_compensated = True  # noqa: SLF001
+                        self.parallel_updates.release()
 
         pollable_entities = [
             entity

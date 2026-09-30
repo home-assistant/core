@@ -263,10 +263,10 @@ async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_stale_poll_reset_keeps_original_semaphore_for_inflight_updates(
+async def test_stale_poll_reset_releases_compensating_permit_for_hung_update(
     hass: HomeAssistant,
 ) -> None:
-    """Test stale polling recovery does not rebind in-flight updates to a new semaphore."""
+    """Test stale polling recovery compensates the permit instead of swapping semaphores."""
     scan_interval = timedelta(seconds=1)
     platform = MockPlatform()
     platform.PARALLEL_UPDATES = 1
@@ -299,22 +299,31 @@ async def test_stale_poll_reset_keeps_original_semaphore_for_inflight_updates(
     await blocked_update_started.wait()
     await asyncio.sleep(0)
 
-    original_semaphore = blocked.parallel_updates
-    assert original_semaphore is not None
+    # There is only ever one semaphore per platform: entities are never
+    # rebound to a separate replacement instance.
+    semaphore = blocked.parallel_updates
+    assert semaphore is not None
+    assert healthy.parallel_updates is semaphore
+    assert semaphore._value == 0
+    assert healthy.async_update.call_count == 0
 
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
     await asyncio.sleep(0)
 
-    assert blocked.parallel_updates is original_semaphore
-    assert healthy.parallel_updates is not original_semaphore
-    assert healthy.parallel_updates is not None
+    # Stale recovery released a compensating permit on the *same* semaphore
+    # so the healthy entity could proceed, rather than handing it a
+    # separate replacement semaphore.
+    assert blocked.parallel_updates is semaphore
+    assert healthy.parallel_updates is semaphore
+    assert healthy.async_update.call_count == 1
 
     blocked_update_release.set()
     await hass.async_block_till_done()
 
-    # The hung entity releases the *original* semaphore it acquired, which
-    # must return to exactly its configured limit (never exceed it).
-    assert original_semaphore._value == 1
+    # The hung entity's own update eventually finishes, but its permit was
+    # already compensated for, so it must not release a second time and
+    # push the semaphore's value above its configured limit.
+    assert semaphore._value == 1
 
 
 async def test_polling_continues_when_update_hangs_with_parallel_updates(
@@ -387,6 +396,88 @@ async def test_polling_continues_when_update_hangs_with_parallel_updates(
     # healthy entities, or the platform's concurrency limit would be
     # silently raised above PARALLEL_UPDATES.
     assert original_semaphore._value == 1
+
+
+async def test_stale_poll_reset_does_not_strand_or_corrupt_queued_service_calls(
+    hass: HomeAssistant,
+) -> None:
+    """Test Entity.async_request_call is unaffected by stale poll recovery.
+
+    Regression test: recovering from a hung poll must not swap out
+    `entity.parallel_updates` for a different semaphore instance, because
+    `Entity.async_request_call` (used by entity service calls, independent
+    of polling) acquires and releases `self.parallel_updates` by re-reading
+    the attribute each time rather than a task-local snapshot. If recovery
+    ever rebinds the attribute to a new semaphore between a queued service
+    call's `acquire()` and its `release()`, the call would release a permit
+    on the wrong (new) semaphore, corrupting both semaphores' accounting
+    and potentially letting concurrency exceed PARALLEL_UPDATES.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+    blocked_update_started = asyncio.Event()
+    blocked_update_release = asyncio.Event()
+
+    blocked = MockEntity(should_poll=True)
+
+    async def _blocked_update() -> None:
+        """Block forever until released."""
+        blocked_update_started.set()
+        await blocked_update_release.wait()
+
+    blocked.async_update = _blocked_update
+
+    healthy = MockEntity(should_poll=True)
+    healthy.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([blocked, healthy])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await blocked_update_started.wait()
+    await asyncio.sleep(0)
+
+    semaphore = blocked.parallel_updates
+    assert semaphore is not None
+    assert semaphore._value == 0
+
+    # A service call on the healthy entity queues behind the hung poll,
+    # exactly like a queued poll would.
+    service_call_ran = asyncio.Event()
+
+    async def _service_coro() -> None:
+        service_call_ran.set()
+
+    service_call_task = hass.async_create_task(
+        healthy.async_request_call(_service_coro())
+    )
+    await asyncio.sleep(0)
+    assert not service_call_ran.is_set()
+
+    # Stale recovery kicks in and compensates for the hung poll's permit.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+
+    # The queued service call must complete using the *same* semaphore
+    # object, not be stranded forever on an abandoned one.
+    await service_call_task
+    assert service_call_ran.is_set()
+    assert healthy.parallel_updates is semaphore
+
+    blocked_update_release.set()
+    await hass.async_block_till_done()
+
+    # The semaphore's accounting must be exact: never above its configured
+    # limit of 1 after everything settles.
+    assert semaphore._value == 1
 
 
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
