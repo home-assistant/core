@@ -1,4 +1,4 @@
-"""Config flow for Generic hygrostat.
+"""Config flow for Generic Thermostat.
 
 DEVELOPMENT OF THE GENERIC THERMOSTAT INTEGRATION IS FROZEN.
 """
