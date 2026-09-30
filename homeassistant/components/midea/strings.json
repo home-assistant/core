@@ -610,9 +610,9 @@
         "state": {
           "delay": "Delayed",
           "finished": "Finished",
-          "idle": "Idle",
-          "paused": "Paused",
-          "standby": "Standby",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
+          "standby": "[%key:common::state::standby%]",
           "working": "Working"
         }
       },
