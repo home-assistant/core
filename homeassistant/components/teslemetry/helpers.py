@@ -37,10 +37,8 @@ if TYPE_CHECKING:
 
 INSUFFICIENT_CREDITS_ISSUE = "insufficient_credits"
 
-# A credits event clears the insufficient credits issue when the account has
-# quota credits still available, or a balance topup has been applied.
-# These thresholds mirror the Teslemetry service's own credit accounting and
-# must be kept in step with it; the service is the authoritative source.
+# Margins a credits event must clear before the insufficient credits issue is
+# removed, so a nearly exhausted quota or balance keeps the repair up.
 CREDITS_QUOTA_FRACTION_THRESHOLD = 0.95
 CREDITS_BALANCE_THRESHOLD = 25
 
@@ -161,6 +159,7 @@ async def handle_command(
                 DOMAIN,
                 issue_id,
                 is_fixable=False,
+                is_persistent=True,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key=INSUFFICIENT_CREDITS_ISSUE,
                 translation_placeholders={

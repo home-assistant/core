@@ -86,7 +86,10 @@ async def test_insufficient_credits(
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "insufficient_credits"
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    # Setup does not re-probe credits, so the repair must survive a restart.
+    assert issue.is_persistent
 
     # A subsequent successful command does not clear the repair; only a credits
     # stream event does, since not every command consumes command credits.
