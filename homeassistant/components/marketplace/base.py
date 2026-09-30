@@ -672,21 +672,32 @@ class MarketplaceManager:
             self.common.custom_repositories.discard(previous_id)
             self.common.custom_repositories.add(repo_id)
 
+        self._async_move_restart_issues(previous_id, repo_id)
+        self._async_move_entities(previous_id, repo_id)
+        self._async_move_device(previous_id, repo_id)
+
+        LOGGER.info(
+            "%s moved from id %s to %s, it was created again on GitHub",
+            repository.data.full_name,
+            previous_id,
+            repo_id,
+        )
+
+    def _async_move_restart_issues(self, previous_id: str, repo_id: str) -> None:
+        """Move the restart repairs of a repository to its new id."""
         # The repair is how a reload knows the install still waits for a restart
+        previous_prefix = f"{RESTART_ISSUE_PREFIX}{previous_id}_"
         issue_registry = ir.async_get(self.hass)
         for domain, issue_id in list(issue_registry.issues):
-            if domain != DOMAIN or not issue_id.startswith(
-                f"{RESTART_ISSUE_PREFIX}{previous_id}_"
-            ):
+            if domain != DOMAIN or not issue_id.startswith(previous_prefix):
                 continue
+
             issue = issue_registry.issues[(domain, issue_id)]
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
                 issue_id.replace(
-                    f"{RESTART_ISSUE_PREFIX}{previous_id}_",
-                    f"{RESTART_ISSUE_PREFIX}{repo_id}_",
-                    1,
+                    previous_prefix, f"{RESTART_ISSUE_PREFIX}{repo_id}_", 1
                 ),
                 is_fixable=True,
                 issue_domain=issue.issue_domain,
@@ -696,6 +707,8 @@ class MarketplaceManager:
             )
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
+    def _async_move_entities(self, previous_id: str, repo_id: str) -> None:
+        """Move the entities of a repository to its new id."""
         entity_registry = er.async_get(self.hass)
         for platform in (Platform.SWITCH, Platform.UPDATE):
             entity_id = entity_registry.async_get_entity_id(
@@ -703,32 +716,29 @@ class MarketplaceManager:
             )
             if entity_id is None:
                 continue
+
             if entity_registry.async_get_entity_id(platform, DOMAIN, repo_id):
                 entity_registry.async_remove(entity_id)
             else:
                 entity_registry.async_update_entity(entity_id, new_unique_id=repo_id)
 
-        device_registry = dr.async_get(self.hass)
+    def _async_move_device(self, previous_id: str, repo_id: str) -> None:
+        """Move the device of a repository to its new id."""
         assert self.configuration.config_entry is not None
         entry_id = self.configuration.config_entry.entry_id
-        if device := device_registry.async_get_device_by_identifier(
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device_by_identifier(
             (DOMAIN, previous_id), entry_id
-        ):
-            if device_registry.async_get_device_by_identifier(
-                (DOMAIN, repo_id), entry_id
-            ):
-                device_registry.async_remove_device(device.id)
-            else:
-                device_registry.async_update_device(
-                    device.id, new_identifiers={(DOMAIN, repo_id)}
-                )
-
-        LOGGER.info(
-            "%s moved from id %s to %s, it was created again on GitHub",
-            repository.data.full_name,
-            previous_id,
-            repo_id,
         )
+        if device is None:
+            return
+
+        if device_registry.async_get_device_by_identifier((DOMAIN, repo_id), entry_id):
+            device_registry.async_remove_device(device.id)
+        else:
+            device_registry.async_update_device(
+                device.id, new_identifiers={(DOMAIN, repo_id)}
+            )
 
     async def async_register_repository(
         self,
@@ -984,57 +994,73 @@ class MarketplaceManager:
         await self.data.register_unknown_repositories(category_data, category)
 
         for repo_id, repo_data in category_data.items():
-            repo_name = repo_data["full_name"]
-            if self.common.renamed_repositories.get(repo_name):
-                repo_name = self.common.renamed_repositories[repo_name]
-            if self.repositories.is_removed(repo_name):
-                continue
-            if repo_name in self.common.archived_repositories:
-                continue
-            repository = self.repositories.get_by_full_name(repo_name)
-            # Renamed on GitHub, the id is the one thing the catalog keeps
-            if repository is None and (
-                repository := self.repositories.get_by_id(repo_id)
-            ):
-                self.common.renamed_repositories[repository.data.full_name] = repo_name
-                self.repositories.rename(repository, repo_name)
-            if repository:
-                self.async_set_repository_id(repository, repo_id)
-                self.repositories.mark_default(repository)
-                if repository.data.last_fetched is None or (
-                    repository.data.last_fetched.timestamp() < repo_data["last_fetched"]
-                ):
-                    update = {**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data}
-                    # The files on disk are where the install put them, removal
-                    # goes by this domain
-                    if repository.data.installed:
-                        update.pop("domain", None)
-                    repository.data.update_data(update)
-                    if (manifest := repo_data.get("manifest")) is not None:
-                        repository.repository_manifest.update_data(
-                            {**dict(REPOSITORY_MANIFEST_KEYS_TO_EXPORT), **manifest}
-                        )
-                elif not repository.data.installed:
-                    # Storage keeps versions for installed repositories only
-                    repository.data.last_version = repo_data.get("last_version")
-                    repository.data.last_commit = repo_data.get("last_commit")
+            self._async_take_over_catalog_entry(repo_id, repo_data)
 
         # An answer without one usable entry says nothing about what is stale
         if self.stage == MarketplaceStage.STARTUP and category_data:
-            for repository in self.repositories.list_all:
-                if (
-                    repository.data.category == category
-                    and not repository.data.installed
-                    and not self.repositories.is_default(str(repository.data.id))
-                    and str(repository.data.id) not in self.common.custom_repositories
-                ):
-                    repository.logger.debug(
-                        "%s Unregister stale custom repository", repository.string
-                    )
-                    self.repositories.unregister(repository)
+            self._async_unregister_stale_custom_repositories(category)
 
         self.async_dispatch(MarketplaceSignal.REPOSITORY, {})
         self.coordinators[category].async_update_listeners()
+
+    def _async_take_over_catalog_entry(
+        self, repo_id: str, repo_data: dict[str, Any]
+    ) -> None:
+        """Take over what the catalog knows of a repository that is registered."""
+        repo_name = self.common.renamed_repositories.get(
+            repo_data["full_name"], repo_data["full_name"]
+        )
+        if (
+            self.repositories.is_removed(repo_name)
+            or repo_name in self.common.archived_repositories
+        ):
+            return
+
+        repository = self.repositories.get_by_full_name(repo_name)
+        # Renamed on GitHub, the id is the one thing the catalog keeps
+        if repository is None and (repository := self.repositories.get_by_id(repo_id)):
+            self.common.renamed_repositories[repository.data.full_name] = repo_name
+            self.repositories.rename(repository, repo_name)
+        if repository is None:
+            return
+
+        self.async_set_repository_id(repository, repo_id)
+        self.repositories.mark_default(repository)
+
+        if repository.data.last_fetched is None or (
+            repository.data.last_fetched.timestamp() < repo_data["last_fetched"]
+        ):
+            update = {**dict(REPOSITORY_KEYS_TO_EXPORT), **repo_data}
+            # The files on disk are where the install put them, removal goes by
+            # this domain
+            if repository.data.installed:
+                update.pop("domain", None)
+            repository.data.update_data(update)
+            if (manifest := repo_data.get("manifest")) is not None:
+                repository.repository_manifest.update_data(
+                    {**dict(REPOSITORY_MANIFEST_KEYS_TO_EXPORT), **manifest}
+                )
+        elif not repository.data.installed:
+            # Storage keeps versions for installed repositories only
+            repository.data.last_version = repo_data.get("last_version")
+            repository.data.last_commit = repo_data.get("last_commit")
+
+    def _async_unregister_stale_custom_repositories(
+        self, category: RepositoryCategory
+    ) -> None:
+        """Unregister what the catalog no longer lists and nobody added by hand."""
+        for repository in self.repositories.list_all:
+            repository_id = str(repository.data.id)
+            if (
+                repository.data.category == category
+                and not repository.data.installed
+                and not self.repositories.is_default(repository_id)
+                and repository_id not in self.common.custom_repositories
+            ):
+                repository.logger.debug(
+                    "%s Unregister stale custom repository", repository.string
+                )
+                self.repositories.unregister(repository)
 
     async def async_check_rate_limit(self, _: datetime | None = None) -> None:
         """Check rate limit."""
@@ -1066,25 +1092,22 @@ class MarketplaceManager:
             LOGGER.debug("Queue is already running")
             return
 
-        async def _handle_queue() -> None:
-            if not self.queue.has_pending_tasks:
-                await self.data.async_write()
-                return
+        while self.queue.pending_tasks:
             can_update = await self.async_can_update()
             LOGGER.debug(
                 "Can update %s repositories, items in queue %s",
                 can_update,
                 self.queue.pending_tasks,
             )
-            if can_update != 0:
-                try:
-                    await self.queue.execute(can_update)
-                except ExecutionInProgressError:
-                    return
+            if can_update == 0:
+                return
 
-                await _handle_queue()
+            try:
+                await self.queue.execute(can_update)
+            except ExecutionInProgressError:
+                return
 
-        await _handle_queue()
+        await self.data.async_write()
 
     async def async_handle_removed_repositories(
         self, _: datetime | None = None
@@ -1107,46 +1130,51 @@ class MarketplaceManager:
             removed.update_data(item)
 
         for removed in self.repositories.list_removed:
+            repository = self.repositories.get_by_full_name(removed.repository)
             if (
-                repository := self.repositories.get_by_full_name(removed.repository)
-            ) is None:
+                repository is None
+                or repository.data.full_name in self.common.ignored_repositories
+            ):
                 continue
-            if repository.data.full_name in self.common.ignored_repositories:
-                continue
-            if repository.data.installed:
-                if removed.removal_type != "critical":
-                    placeholders = {
-                        "name": repository.data.full_name,
-                        "repository_id": str(repository.data.id),
-                    }
-                    # Many removals come without one, "None" is no reason
-                    if removed.reason:
-                        placeholders["reason"] = removed.reason
-                    async_create_issue(
-                        hass=self.hass,
-                        domain=DOMAIN,
-                        issue_id=f"removed_{repository.data.id}",
-                        is_fixable=False,
-                        issue_domain=DOMAIN,
-                        severity=IssueSeverity.WARNING,
-                        translation_key=(
-                            "removed" if removed.reason else "removed_without_reason"
-                        ),
-                        translation_placeholders=placeholders,
-                    )
-                    LOGGER.warning(
-                        "You have '%s' installed with the Marketplace, "
-                        "this repository has been removed, please consider removing it. "
-                        "Removal reason (%s)",
-                        repository.data.full_name,
-                        removed.reason,
-                    )
-            else:
+
+            if not repository.data.installed:
                 need_to_save = True
                 repository.remove()
+            # A critical removal uninstalls on its own, with its own repair
+            elif removed.removal_type != "critical":
+                self._async_create_removed_issue(repository, removed)
 
         if need_to_save:
             await self.data.async_write()
+
+    def _async_create_removed_issue(
+        self, repository: Repository, removed: RemovedRepository
+    ) -> None:
+        """Tell the user a repository they installed was removed from the catalog."""
+        placeholders = {
+            "name": repository.data.full_name,
+            "repository_id": str(repository.data.id),
+        }
+        # Many removals come without one, "None" is no reason
+        if removed.reason:
+            placeholders["reason"] = removed.reason
+        async_create_issue(
+            hass=self.hass,
+            domain=DOMAIN,
+            issue_id=f"removed_{repository.data.id}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed" if removed.reason else "removed_without_reason",
+            translation_placeholders=placeholders,
+        )
+        LOGGER.warning(
+            "You have '%s' installed with the Marketplace, "
+            "this repository has been removed, please consider removing it. "
+            "Removal reason (%s)",
+            repository.data.full_name,
+            removed.reason,
+        )
 
     async def async_update_installed_custom_repositories(
         self, _: datetime | None = None
@@ -1227,44 +1255,46 @@ class MarketplaceManager:
         }
         stored_critical = []
 
-        for repository in critical:
-            removed_repo = self.repositories.removed_repository(
-                repository["repository"]
-            )
-            removed_repo.removal_type = "critical"
-            repo = self.repositories.get_by_full_name(repository["repository"])
+        for entry in critical:
+            full_name = entry["repository"]
+            removed = self.repositories.removed_repository(full_name)
+            removed.removal_type = "critical"
+            repository = self.repositories.get_by_full_name(full_name)
 
-            previous = previously_stored.get(repository["repository"])
+            previous = previously_stored.get(full_name)
             stored = {
-                "repository": repository["repository"],
-                "reason": repository["reason"],
-                "link": repository["link"],
+                "repository": full_name,
+                "reason": entry["reason"],
+                "link": entry["link"],
                 # Confirming the repair is what acknowledges a removal
                 "acknowledged": previous["acknowledged"] if previous else True,
             }
-            if previous is None and repo is not None and repo.data.installed:
+            if (
+                previous is None
+                and repository is not None
+                and repository.data.installed
+            ):
                 LOGGER.critical(
-                    "Removing repository %s, it is marked as critical",
-                    repository["repository"],
+                    "Removing repository %s, it is marked as critical", full_name
                 )
-                await repo.async_wait_for_install()
+                await repository.async_wait_for_install()
                 try:
-                    await repo.uninstall()
+                    await repository.uninstall()
                 except MarketplaceError as exception:
                     # Not recorded, the next check tries to remove it again
                     LOGGER.error(
                         "Could not remove critical repository %s: %s",
-                        repository["repository"],
+                        full_name,
                         exception,
                     )
                     continue
                 was_installed = True
                 stored["acknowledged"] = False
-                repo.remove()
+                repository.remove()
                 async_create_critical_repository_issue(self.hass, stored)
 
             stored_critical.append(stored)
-            removed_repo.update_data(stored)
+            removed.update_data(stored)
 
         await async_save_to_storage(self.hass, "critical", stored_critical)
 

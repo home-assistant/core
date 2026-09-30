@@ -305,3 +305,33 @@ async def test_acceptance_of_a_user_removed_while_unloaded_is_forgotten(
     assert marketplace.warning_acceptances == {}
     assert marketplace.configuration.config_entry is not None
     assert marketplace.configuration.config_entry.data[CONF_WARNING_ACCEPTED] == {}
+
+
+@pytest.mark.parametrize(
+    ("can_update", "tasks_run"),
+    [
+        pytest.param(1, 2, id="one_at_a_time"),
+        pytest.param(0, 0, id="rate_limited"),
+    ],
+)
+async def test_process_queue(
+    marketplace: MarketplaceManager, can_update: int, tasks_run: int
+) -> None:
+    """Test the queue runs what the rate limit allows and stores the outcome."""
+    ran: list[int] = []
+
+    async def task(number: int) -> None:
+        ran.append(number)
+
+    marketplace.queue.add(task(1))
+    marketplace.queue.add(task(2))
+
+    with (
+        patch.object(marketplace, "async_can_update", return_value=can_update),
+        patch.object(marketplace.data, "async_write") as write,
+    ):
+        await marketplace.async_process_queue()
+
+    assert len(ran) == tasks_run
+    assert write.called is bool(tasks_run)
+    marketplace.queue.clear()

@@ -301,6 +301,31 @@ async def test_removed_repository_repair_reads_as_a_sentence(
     )
 
 
+async def test_critical_removal_gets_no_removed_repair(
+    marketplace: MarketplaceManager, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a critical removal leaves the repair to the critical check."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    await repository.async_install_repository()
+    get_data = marketplace.data_client.get_data
+
+    async def catalog(section: str | None, *, validate: bool) -> object:
+        if section == "removed":
+            return [
+                {"repository": repository.data.full_name, "removal_type": "critical"}
+            ]
+        return await get_data(section, validate=validate)
+
+    with patch.object(marketplace.data_client, "get_data", catalog):
+        await marketplace.async_handle_removed_repositories()
+
+    assert repository.data.installed
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}")
+        is None
+    )
+
+
 async def test_unloaded_before_start_runs_no_startup_tasks(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
