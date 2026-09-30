@@ -1,23 +1,51 @@
 """Repairs for the Teslemetry integration."""
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
+from bleak.exc import BleakError
 import probatio
-from tesla_fleet_api.exceptions import PrivateKeyError, TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    BluetoothTimeout,
+    BluetoothTransportError,
+    PrivateKeyError,
+    TeslaFleetError,
+    TeslaFleetMessageFaultBusy,
+    TeslaFleetMessageFaultInternal,
+    TeslaFleetMessageFaultTimeout,
+    is_key_rejected,
+)
+from tesla_fleet_api.router import VehicleRouter
 
+from homeassistant.components.bluetooth import async_scanner_count
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
+    FlowType,
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntryState,
+    ConfigSubentry,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
-from .const import ISSUE_GATEWAY_NOT_FOUND, LOGGER, VEHICLE_ISSUE_LEARN_MORE
+from .const import (
+    BLE_DISCONNECT_TIMEOUT,
+    BLE_HANDSHAKE_TIMEOUT,
+    CONF_VIN,
+    ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_TYPE_BLE_KEY_REJECTED,
+    LOGGER,
+    SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_ISSUE_LEARN_MORE,
+)
 from .helpers import (
     PowerwallKeyRejectedError,
     async_verify_local_gateway,
@@ -66,6 +94,107 @@ class VehicleMetadataRepairFlow(RepairsFlow):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders=self.placeholders,
+        )
+
+
+class BluetoothKeyRepairFlow(RepairsFlow):
+    """Re-check a rejected Bluetooth key, then hand it to the vehicle's reconfigure flow."""
+
+    def __init__(self, entry_id: str, subentry_id: str) -> None:
+        """Create flow."""
+        self._entry_id = entry_id
+        self._subentry_id = subentry_id
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Check the key with a Bluetooth security handshake and re-approve it if still rejected."""
+        if user_input is None:
+            return self.async_show_form(step_id="confirm")
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        if (router := self._async_get_router()) is None:
+            return self.async_abort(reason="bluetooth_not_loaded")
+        # The router's health check also refreshes the device handle the handshake connects with.
+        if not await router.is_healthy():
+            return self.async_show_form(
+                step_id="confirm", errors={"base": "cannot_connect"}
+            )
+        try:
+            async with asyncio.timeout(BLE_HANDSHAKE_TIMEOUT):
+                # Call the Bluetooth backend directly so no other backend can answer for it.
+                # Vehicle security owns the key whitelist and answers while the vehicle sleeps.
+                await router.primary.handshakeVehicleSecurity()
+        except (
+            TimeoutError,
+            BluetoothTimeout,
+            BluetoothTransportError,
+            # Faults the vehicle asks the caller to retry.
+            TeslaFleetMessageFaultBusy,
+            TeslaFleetMessageFaultInternal,
+            TeslaFleetMessageFaultTimeout,
+        ) as err:
+            LOGGER.debug("Bluetooth handshake could not reach the vehicle: %s", err)
+            return self.async_show_form(
+                step_id="confirm", errors={"base": "cannot_connect"}
+            )
+        except TeslaFleetError as err:
+            if not is_key_rejected(err):
+                LOGGER.error("Bluetooth handshake failed: %s", err)
+                return self.async_show_form(
+                    step_id="confirm", errors={"base": "unknown"}
+                )
+        else:
+            return self.async_create_entry(data={})
+        # Only a rejected key reaches here.
+        return await self._async_reconfigure(router)
+
+    @callback
+    def _async_get_router(self) -> VehicleRouter | None:
+        """Return the vehicle's running Bluetooth router, if the entry is loaded."""
+        entry: TeslemetryConfigEntry | None = self.hass.config_entries.async_get_entry(
+            self._entry_id
+        )
+        if (
+            entry is None
+            or entry.state is not ConfigEntryState.LOADED
+            or (subentry := entry.subentries.get(self._subentry_id)) is None
+        ):
+            return None
+        return next(
+            (
+                vehicle.api
+                for vehicle in entry.runtime_data.vehicles
+                if vehicle.vin == subentry.data[CONF_VIN]
+                and isinstance(vehicle.api, VehicleRouter)
+            ),
+            None,
+        )
+
+    async def _async_reconfigure(self, router: VehicleRouter) -> RepairsFlowResult:
+        """Open the vehicle's reconfigure flow to re-approve the key."""
+        # The reconfigure flow opens its own link to the vehicle, so release this one first.
+        try:
+            async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
+                await router.primary.disconnect()
+        except (BleakError, TeslaFleetError, TimeoutError) as err:
+            LOGGER.debug("Error disconnecting Bluetooth before reconfigure: %s", err)
+        result = await self.hass.config_entries.subentries.async_init(
+            (self._entry_id, SUBENTRY_TYPE_VEHICLE),
+            context={"source": SOURCE_RECONFIGURE, "subentry_id": self._subentry_id},
+        )
+        if result["type"] is FlowResultType.ABORT:
+            return self.async_abort(reason=result["reason"])
+        # Aborting keeps the issue open until the reconfigure reloads the entry.
+        return self.async_abort(
+            reason="reconfigure",
+            next_flow=(FlowType.CONFIG_SUBENTRIES_FLOW, result["flow_id"]),
         )
 
 
@@ -186,6 +315,15 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
+    if (
+        data is not None
+        and data.get("issue_type") == ISSUE_TYPE_BLE_KEY_REJECTED
+        and isinstance(entry_id := data.get("entry_id"), str)
+        and isinstance(subentry_id := data.get("subentry_id"), str)
+        and (entry := hass.config_entries.async_get_entry(entry_id)) is not None
+        and subentry_id in entry.subentries
+    ):
+        return BluetoothKeyRepairFlow(entry_id, subentry_id)
     if (
         data is not None
         and isinstance(entry_id := data.get("entry_id"), str)
