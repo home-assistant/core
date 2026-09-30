@@ -33,6 +33,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
+from typing import get_args
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
@@ -60,6 +61,12 @@ _LOGGER = logging.getLogger(__name__)
 # Streamable HTTP endpoint
 STREAMABLE_API = "/api/mcp"
 TIMEOUT = 60  # Seconds
+
+KNOWN_MCP_METHODS: frozenset[str] = frozenset(
+    req_cls.model_fields["method"].default
+    for req_cls in get_args(types.ClientRequestType)
+    if "method" in req_cls.model_fields
+)
 
 # Legacy SSE endpoint
 SSE_API = f"/{DOMAIN}/sse"
@@ -285,6 +292,20 @@ async def _async_handle_streamable_message(
     if not isinstance(message.root, JSONRPCRequest):
         _LOGGER.debug("Notification or response received, returning 202")
         return web.Response(status=HTTPStatus.ACCEPTED)
+
+    if message.root.method not in KNOWN_MCP_METHODS:
+        error_response = types.JSONRPCError(
+            jsonrpc="2.0",
+            id=message.root.id,
+            error=types.ErrorData(
+                code=types.METHOD_NOT_FOUND,
+                message="Method not found",
+                data=message.root.method,
+            ),
+        )
+        return web.json_response(
+            data=error_response.model_dump(by_alias=True, exclude_none=True),
+        )
 
     # The MCP server runs as a background task for the duration of the
     # request. We open a buffered stream pair to communicate with it. The
