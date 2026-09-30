@@ -405,7 +405,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_DAYS_OF_WEEK): probatio.EnsureList(),
                 probatio.Required(ATTR_ENABLE): cv.boolean,
                 probatio.Optional(ATTR_LOCATION): {
                     probatio.Required(CONF_LATITUDE): cv.latitude,
@@ -501,7 +501,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_DAYS_OF_WEEK): probatio.EnsureList(),
                 probatio.Required(ATTR_ENABLE): cv.boolean,
                 probatio.Optional(ATTR_LOCATION): {
                     probatio.Required(CONF_LATITUDE): cv.latitude,

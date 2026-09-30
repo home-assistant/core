@@ -1088,6 +1088,414 @@
     }),
   ])
 # ---
+# name: test_resume_pause_turn[complete_on_last_request]
+  list([
+    dict({
+      'content': 'Calculate the answer',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_0',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_0',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_1',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_1',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_2',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_2',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_3',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_3',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_4',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_4',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_5',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_5',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_6',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_6',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_7',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_7',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_8',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_resume_pause_turn[multiple_pauses]
+  list([
+    dict({
+      'content': 'Calculate the answer',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_0',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_0',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_1',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              42
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_1',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_2',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_resume_pause_turn[one_pause]
+  list([
+    dict({
+      'content': 'Calculate the answer',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will calculate the answer.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_0',
+          'input': dict({
+            'command': 'echo 42',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
 # name: test_text_editor_code_execution[create_file]
   list([
     dict({

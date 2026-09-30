@@ -23,12 +23,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
-from .const import DOMAIN, TeslemetryClimateSide
+from .const import TeslemetryClimateSide
 from .entity import (
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
@@ -49,6 +48,12 @@ PRESET_MODES = {
     "On": "keep",
     "Dog": "dog",
     "Party": "camp",
+}
+POLLING_PRESET_MODES = {
+    "off": "off",
+    "on": "keep",
+    "dog": "dog",
+    "camp": "camp",
 }
 
 
@@ -243,7 +248,10 @@ class TeslemetryVehiclePollingClimateEntity(
 
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
-        self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
+        keeper_mode = self.get("climate_state_climate_keeper_mode")
+        self._attr_preset_mode = (
+            POLLING_PRESET_MODES.get(keeper_mode) if keeper_mode else None
+        )
         if self.get("climate_state_bioweapon_mode"):
             self._attr_fan_mode = "bioweapon"
         else:
@@ -371,7 +379,7 @@ class TeslemetryStreamingClimateEntity(
             None
             if data is None
             else HVACMode.HEAT_COOL
-            if data == "On"
+            if data in {"On", "Precondition"}
             else HVACMode.OFF
         )
         self.async_write_ha_state()
@@ -427,17 +435,16 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
         """Set the climate temperature."""
 
         if temp := kwargs.get(ATTR_TEMPERATURE):
-            if (cop_mode := COP_TEMPERATURES.get(temp)) is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_cop_temp",
-                )
+            # Temperatures converted from Fahrenheit rarely hit a level exactly
+            level = min(COP_TEMPERATURES, key=lambda t: abs(t - temp))
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(
-                self.hass, self.config_entry, self.api.set_cop_temp(cop_mode)
+                self.hass,
+                self.config_entry,
+                self.api.set_cop_temp(COP_TEMPERATURES[level]),
             )
-            self._attr_target_temperature = temp
+            self._attr_target_temperature = level
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             # Set HVAC mode will call write_ha_state

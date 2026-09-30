@@ -860,6 +860,10 @@ mark-parentheses = false
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
 "voluptuous".msg = "use probatio instead"
+"homeassistant.helpers.config_validation.ensure_list".msg = "use probatio.EnsureList() instead"
+"homeassistant.helpers.config_validation.port".msg = "use probatio.Port() instead"
+"homeassistant.helpers.config_validation.has_at_least_one_key".msg = "use probatio.AtLeastOne instead"
+"homeassistant.helpers.config_validation.has_at_most_one_key".msg = "use probatio.AtMostOne instead"
 "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]

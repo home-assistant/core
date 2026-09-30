@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {

@@ -514,8 +514,8 @@ async def test_position_out_of_bounds(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.MODERN,
             {},
-            "Invalid config for 'template': must contain at least one"
-            " of open_cover, set_cover_position.",
+            "Invalid config for 'template': at least one of"
+            " ['open_cover', 'set_cover_position'] is required",
         ),
         (
             ConfigurationStyle.MODERN,
@@ -526,8 +526,8 @@ async def test_position_out_of_bounds(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.TRIGGER,
             {},
-            "Invalid config for 'template': must contain at least one"
-            " of open_cover, set_cover_position.",
+            "Invalid config for 'template': at least one of"
+            " ['open_cover', 'set_cover_position'] is required",
         ),
         (
             ConfigurationStyle.TRIGGER,

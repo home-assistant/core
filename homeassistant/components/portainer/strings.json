@@ -56,6 +56,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "container_out_of_memory": {
+        "name": "Out of memory"
+      },
       "status": {
         "name": "Status"
       }
@@ -78,6 +81,9 @@
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "update_stack": {
+        "name": "Update stack"
       },
       "volumes_prune": {
         "name": "Prune unused volumes"
@@ -126,6 +132,12 @@
           "starting": "Starting",
           "unhealthy": "Unhealthy"
         }
+      },
+      "container_restart_count": {
+        "name": "Restart count"
+      },
+      "container_started_at": {
+        "name": "Started"
       },
       "container_state": {
         "name": "State",
