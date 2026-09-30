@@ -90,9 +90,16 @@ COMPONENT_FORWARDED_EFFECTS = {
 
 @callback
 def _async_setup_component_sync(
-    hass: HomeAssistant, entry: LIFXConfigEntry, unique_ids: set[str]
+    hass: HomeAssistant,
+    entry: LIFXConfigEntry,
+    main_unique_id: str,
+    unique_ids: set[str],
 ) -> None:
-    """Keep the components of a device enabled together, as each routes by the other."""
+    """Keep components enabled together, and only while their main light is.
+
+    Each component routes by the other, and a component forwards firmware
+    effects through the main light, which does nothing while it is disabled.
+    """
     entity_registry = er.async_get(hass)
 
     @callback
@@ -103,34 +110,49 @@ def _async_setup_component_sync(
         )
 
     @callback
-    def _async_sync_partner(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Mirror an enable or disable onto the other component.
+    def _async_update(
+        unique_id: str, disabled_by: er.RegistryEntryDisabler | None
+    ) -> None:
+        """Set whether one of this device's lights is disabled."""
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                Platform.LIGHT, DOMAIN, unique_id
+            )
+        ) is not None:
+            entity_registry.async_update_entity(entity_id, disabled_by=disabled_by)
+
+    @callback
+    def _async_sync(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Carry an enable or disable over to the device's other lights.
 
         No reentrancy guard is needed: the registry fires no event at all
-        for a partner already at the target disabled_by, which is what the
-        mirrored update always asks for, so the chain runs out on its own.
+        for an entity already at the target disabled_by, which is what each
+        carried-over update ends at, so the chain runs out on its own.
         """
         changed = entity_registry.async_get(event.data["entity_id"])
         if (
             changed is None
             or changed.domain != Platform.LIGHT
             or changed.platform != DOMAIN
-            or changed.unique_id not in unique_ids
         ):
             return
+        if changed.unique_id == main_unique_id:
+            # Re-enabling the main light leaves its components as they were
+            if changed.disabled_by is not None:
+                for unique_id in unique_ids:
+                    _async_update(unique_id, changed.disabled_by)
+            return
+        if changed.unique_id not in unique_ids:
+            return
         for unique_id in unique_ids - {changed.unique_id}:
-            partner_entity_id = entity_registry.async_get_entity_id(
-                Platform.LIGHT, DOMAIN, unique_id
-            )
-            if partner_entity_id is not None:
-                entity_registry.async_update_entity(
-                    partner_entity_id, disabled_by=changed.disabled_by
-                )
+            _async_update(unique_id, changed.disabled_by)
+        if changed.disabled_by is None:
+            _async_update(main_unique_id, None)
 
     entry.async_on_unload(
         hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            _async_sync_partner,
+            _async_sync,
             event_filter=_event_filter,
         )
     )
@@ -175,7 +197,10 @@ async def async_setup_entry(
     async_add_entities([entity, *components])
     if components:
         _async_setup_component_sync(
-            hass, entry, {cast(str, component.unique_id) for component in components}
+            hass,
+            entry,
+            cast(str, entity.unique_id),
+            {cast(str, component.unique_id) for component in components},
         )
 
 

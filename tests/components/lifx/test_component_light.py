@@ -1040,10 +1040,10 @@ async def test_rename_then_later_disable_still_syncs(
     )
 
 
-async def test_unrelated_entity_disable_does_not_touch_components(
+async def test_disabling_the_main_light_disables_its_components(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test disabling the device's main light entity leaves its components alone."""
+    """Test components cannot stay enabled once their main light is disabled."""
     await _setup_components(
         hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
     )
@@ -1054,4 +1054,76 @@ async def test_unrelated_entity_disable_does_not_touch_components(
     await hass.async_block_till_done()
 
     for key in CEILING_KEYS:
+        assert (
+            entity_registry.async_get(entity_id_for(key)).disabled_by
+            is er.RegistryEntryDisabler.USER
+        )
+
+
+async def test_enabling_a_component_enables_the_main_light(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test enabling a component brings back the main light it depends on."""
+    await _setup_components(
+        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+    )
+    entity_registry.async_update_entity(
+        MAIN_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(entity_id_for("uplight"), disabled_by=None)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(MAIN_ENTITY_ID).disabled_by is None
+    assert entity_registry.async_get(entity_id_for("downlight")).disabled_by is None
+
+
+@pytest.mark.parametrize(
+    "platform",
+    [
+        pytest.param("other_integration", id="other-integration"),
+        pytest.param(DOMAIN, id="other-lifx-device"),
+    ],
+)
+async def test_unrelated_light_disable_does_not_touch_components(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, platform: str
+) -> None:
+    """Test disabling a light that is not this device's leaves its lights alone."""
+    await _setup_components(
+        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+    )
+    other = entity_registry.async_get_or_create(
+        Platform.LIGHT, platform, "d073d5000001"
+    )
+
+    entity_registry.async_update_entity(
+        other.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(MAIN_ENTITY_ID).disabled_by is None
+    for key in CEILING_KEYS:
         assert entity_registry.async_get(entity_id_for(key)).disabled_by is None
+
+
+async def test_enabling_the_main_light_leaves_components_disabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test re-enabling the main light does not switch its components on too."""
+    await _setup_components(
+        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+    )
+    entity_registry.async_update_entity(
+        MAIN_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(MAIN_ENTITY_ID, disabled_by=None)
+    await hass.async_block_till_done()
+
+    for key in CEILING_KEYS:
+        assert (
+            entity_registry.async_get(entity_id_for(key)).disabled_by
+            is er.RegistryEntryDisabler.USER
+        )
