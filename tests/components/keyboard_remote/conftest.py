@@ -178,6 +178,7 @@ class FakeInput:
         self.watch_errors: dict[str, OSError] = {}
         self.rm_watch_errors: dict[str, OSError] = {}
         self.inotify_error: OSError | None = None
+        self.by_id_error: OSError | None = None
         self.inotify: _FakeInotify | None = None
         self.opened: list[str] = []
         self._next_fd = 100
@@ -415,6 +416,8 @@ def fake_input(hass: HomeAssistant, mock_evdev_module: None) -> Generator[FakeIn
 
     def _scandir(path: Any = ".") -> Any:
         if os.fspath(path) == DEVINPUT_BY_ID:
+            if fake.by_id_error is not None:
+                raise fake.by_id_error
             return nullcontext(
                 [
                     SimpleNamespace(

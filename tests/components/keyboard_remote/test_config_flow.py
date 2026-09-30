@@ -1,16 +1,11 @@
 """Tests for the Keyboard Remote config flow."""
 
-from collections.abc import Iterator
-from contextlib import contextmanager
-import os
-from unittest.mock import AsyncMock, MagicMock, patch
+import errno
+from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.keyboard_remote.config_flow import (
-    _get_device_name,
-    _resolve_yaml_device,
-)
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
@@ -25,60 +20,69 @@ from homeassistant.components.keyboard_remote.const import (
     DEFAULT_KEY_TYPES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import selector
 
 from .conftest import (
-    BUS_BLUETOOTH,
     BUS_HOST,
-    EV_KEY,
     FAKE_BY_ID_BASENAME,
     FAKE_DEVICE_NAME,
     FAKE_DEVICE_NAME_2,
     FAKE_DEVICE_PATH,
     FAKE_DEVICE_PATH_2,
     FAKE_DEVICE_REAL_PATH,
+    FakeInput,
 )
 
 from tests.common import MockConfigEntry
 
-MOCK_SCAN_RESULT = [
-    selector.SelectOptionDict(
-        value=FAKE_DEVICE_PATH,
-        label=f"{FAKE_DEVICE_NAME} ({FAKE_BY_ID_BASENAME})",
-    ),
-    selector.SelectOptionDict(
-        value=FAKE_DEVICE_PATH_2,
-        label=f"{FAKE_DEVICE_NAME_2} (usb-Test_Remote-event-kbd)",
-    ),
-]
+BT_REMOTE_NAME = "BT Remote"
+BT_REMOTE_PATH = "/dev/input/event7"
+REMOTE_REAL_PATH = "/dev/input/event6"
+REMOTE_BY_ID_BASENAME = "usb-Test_Remote-event-kbd"
+
+DEFAULT_OPTIONS = {
+    CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+    CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
+    CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
+    CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+}
+
+
+def _offered(result: ConfigFlowResult) -> list[dict[str, str]]:
+    """Return the devices the user step offers."""
+    return result["data_schema"].schema[CONF_DEVICE_PATH].config["options"]
+
+
+async def _import(hass: HomeAssistant, data: dict[str, Any]) -> ConfigFlowResult:
+    return await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
-    """Test user step shows a form and creates a config entry on valid selection."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-        return_value=MOCK_SCAN_RESULT,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+async def test_user_step_creates_entry(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test the user step offers a device by its by-id link and adds it."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert _offered(result) == [
+        {
+            "value": FAKE_DEVICE_PATH,
+            "label": f"{FAKE_DEVICE_NAME} ({FAKE_BY_ID_BASENAME})",
+        }
+    ]
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._get_device_name",
-        return_value=FAKE_DEVICE_NAME,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: FAKE_DEVICE_PATH}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FAKE_DEVICE_NAME
@@ -87,342 +91,121 @@ async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
         CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
         CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
     }
-    assert result["options"] == {
-        CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
-        CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
-        CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
-        CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-    }
+    assert result["options"] == DEFAULT_OPTIONS
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user step shows error when device cannot be opened."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-        return_value=MOCK_SCAN_RESULT,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+async def test_user_step_cannot_connect(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a device that cannot be opened when chosen shows an error."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    fake_input.add(REMOTE_REAL_PATH, FAKE_DEVICE_NAME_2, link=FAKE_DEVICE_PATH_2)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow._get_device_name",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-            return_value=MOCK_SCAN_RESULT,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
-        )
+    fake_input.add_unopenable(FAKE_DEVICE_REAL_PATH)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: FAKE_DEVICE_PATH}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    # The form is scanned again, and the device that cannot be opened is gone
+    assert [option["value"] for option in _offered(result)] == [FAKE_DEVICE_PATH_2]
 
-    # Retry with a working device — flow should recover
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._get_device_name",
-        return_value=FAKE_DEVICE_NAME,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: FAKE_DEVICE_PATH_2}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == FAKE_DEVICE_NAME
 
 
-async def test_user_step_no_devices(hass: HomeAssistant) -> None:
-    """Test user step aborts when no devices found."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+async def test_user_step_no_devices(hass: HomeAssistant, fake_input: FakeInput) -> None:
+    """Test the user step aborts when no input device can be offered."""
+    fake_input.add("/dev/input/event1", "Headphone Jack", sends_keys=False)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices"
 
 
+@pytest.mark.parametrize(
+    "entry",
+    [
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                unique_id=FAKE_BY_ID_BASENAME,
+                data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
+            ),
+            id="by_id_link",
+        ),
+        # Imported from YAML before the by-id link existed, so keyed by the
+        # raw node, which the link now listed points at
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                unique_id=FAKE_DEVICE_REAL_PATH,
+                data={
+                    CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+                    CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+                },
+            ),
+            id="raw_node",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_all_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
 ) -> None:
-    """Test user step aborts when all devices are already configured."""
-    # Add an existing entry for the only device in scan results
-    single_device = [MOCK_SCAN_RESULT[0]]
-    mock_config_entry.add_to_hass(hass)
+    """Test the user step aborts when every device is already configured."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-        return_value=single_device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "all_devices_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_user_step_hides_configured_devices(
+    hass: HomeAssistant, fake_input: FakeInput, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test user step filters out already-configured devices."""
+    """Test configured devices are not offered and the others can be added."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    fake_input.add(REMOTE_REAL_PATH, FAKE_DEVICE_NAME_2, link=FAKE_DEVICE_PATH_2)
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
     mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=BT_REMOTE_NAME, data={CONF_DEVICE_NAME: BT_REMOTE_NAME}
+    ).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-        return_value=MOCK_SCAN_RESULT,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    # Should show form with only the second device (first is configured)
-    assert result["type"] is FlowResultType.FORM
+    assert [option["value"] for option in _offered(result)] == [FAKE_DEVICE_PATH_2]
 
-    # The second device can still be configured
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._get_device_name",
-        return_value=FAKE_DEVICE_NAME_2,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH_2},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: FAKE_DEVICE_PATH_2}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH_2
 
 
-BT_REMOTE_NAME = "BT Remote"
-
-
-def _input_device(
-    name: str, *, sends_keys: bool = True, bustype: int = BUS_BLUETOOTH
-) -> MagicMock:
-    """Create an evdev device that reports key events or only switch events."""
-    dev = MagicMock()
-    dev.name = name
-    dev.capabilities.return_value = {EV_KEY if sends_keys else 5: [30]}
-    dev.info.bustype = bustype
-    return dev
-
-
-@contextmanager
-def _input_devices(
-    devices: dict[str, MagicMock | None],
-    by_id_links: dict[str, str] | None,
-) -> Iterator[None]:
-    """Mock the event nodes and, unless None, the by-id links pointing at them.
-
-    A device of None cannot be opened.
-    """
-    entries = []
-    for link in by_id_links or {}:
-        entry = MagicMock(spec_set=os.DirEntry)
-        entry.is_symlink.return_value = True
-        entry.path = link
-        entries.append(entry)
-    not_a_link = MagicMock(spec_set=os.DirEntry)
-    not_a_link.is_symlink.return_value = False
-    entries.append(not_a_link)
-    scandir = MagicMock()
-    scandir.return_value.__enter__.return_value = entries
-
-    def _open(path: str) -> MagicMock:
-        if (dev := devices[path]) is None:
-            raise OSError(13, "Permission denied")
-        return dev
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=by_id_links is not None,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir", scandir
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            side_effect=lambda p: (by_id_links or {}).get(p, p),
-        ),
-        patch("evdev.list_devices", return_value=list(devices)),
-        patch("evdev.InputDevice", side_effect=_open),
-    ):
-        yield
-
-
-async def test_user_step_lists_devices_without_by_id_link(
-    hass: HomeAssistant,
-) -> None:
-    """Test devices without a by-id link are offered once per name.
-
-    udev creates no by-id link for Bluetooth devices. Nodes that cannot send
-    keys, with or without a by-id link, host-bus devices such as the power
-    button, and nodes that cannot be opened are not offered.
-    """
-    devices = {
-        FAKE_DEVICE_REAL_PATH: _input_device(FAKE_DEVICE_NAME),
-        "/dev/input/event7": _input_device(BT_REMOTE_NAME),
-        "/dev/input/event8": _input_device(BT_REMOTE_NAME),
-        "/dev/input/event9": _input_device("Headphone Jack", sends_keys=False),
-        "/dev/input/event10": None,
-        "/dev/input/event11": _input_device("Power Button", bustype=BUS_HOST),
-        "/dev/input/event12": _input_device("Webcam", sends_keys=False),
-    }
-    links = {
-        FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
-        "/dev/input/by-id/usb-Webcam-event-if00": "/dev/input/event12",
-    }
-    with _input_devices(devices, links):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["data_schema"].schema[CONF_DEVICE_PATH].config["options"] == [
-        {
-            "value": FAKE_DEVICE_PATH,
-            "label": f"{FAKE_DEVICE_NAME} ({FAKE_BY_ID_BASENAME})",
-        },
-        {"value": "/dev/input/event7", "label": f"{BT_REMOTE_NAME} (event7)"},
-    ]
-    for path in (FAKE_DEVICE_REAL_PATH, "/dev/input/event7", "/dev/input/event8"):
-        devices[path].close.assert_called_once()
-    devices["/dev/input/event9"].close.assert_called_once()
-    devices["/dev/input/event11"].close.assert_called_once()
-    devices["/dev/input/event12"].close.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    "by_id_links",
-    [pytest.param(None, id="no_by_id_directory"), pytest.param({}, id="no_links")],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_creates_name_matched_entry(
-    hass: HomeAssistant,
-    by_id_links: dict[str, str] | None,
-) -> None:
-    """Test a device without a by-id link is configured by its name.
-
-    Its event node can change when it reconnects, so the entry matches by
-    name, like a YAML entry configured by name.
-    """
-    devices = {"/dev/input/event7": _input_device(BT_REMOTE_NAME)}
-    with _input_devices(devices, by_id_links):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE_PATH: "/dev/input/event7"}
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == BT_REMOTE_NAME
-    assert result["result"].unique_id == BT_REMOTE_NAME
-    assert result["data"] == {CONF_DEVICE_NAME: BT_REMOTE_NAME}
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_hides_configured_name_matched_device(
-    hass: HomeAssistant,
-) -> None:
-    """Test a device already configured by name is not offered again."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=BT_REMOTE_NAME,
-        data={CONF_DEVICE_NAME: BT_REMOTE_NAME},
-    ).add_to_hass(hass)
-    devices = {
-        FAKE_DEVICE_REAL_PATH: _input_device(FAKE_DEVICE_NAME),
-        "/dev/input/event7": _input_device(BT_REMOTE_NAME),
-    }
-    with _input_devices(devices, {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert [
-        option["value"]
-        for option in result["data_schema"].schema[CONF_DEVICE_PATH].config["options"]
-    ] == [FAKE_DEVICE_PATH]
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_name_matched_device_configured_meanwhile(
-    hass: HomeAssistant,
-) -> None:
-    """Test submitting a device configured by name in the meantime aborts."""
-    devices = {"/dev/input/event7": _input_device(BT_REMOTE_NAME)}
-    with _input_devices(devices, {}):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=BT_REMOTE_NAME,
-            data={CONF_DEVICE_NAME: BT_REMOTE_NAME},
-        ).add_to_hass(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE_PATH: "/dev/input/event7"}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_hides_device_configured_by_raw_path(
-    hass: HomeAssistant,
-) -> None:
-    """Test a device imported before its by-id link existed is not offered again.
-
-    That entry is keyed by the raw descriptor, so only the resolved node shows
-    that the by-id link now listed points at the same device.
-    """
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_DEVICE_REAL_PATH,
-        data={
-            CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
-            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
-            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
-        },
-    ).add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-            return_value=[MOCK_SCAN_RESULT[0]],
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            side_effect=lambda p: {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}.get(p, p),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "all_devices_configured"
-
-
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_offers_device_on_reused_yaml_descriptor(
-    hass: HomeAssistant,
+    hass: HomeAssistant, fake_input: FakeInput
 ) -> None:
     """Test a device on an eventN named by an old YAML descriptor is offered.
 
@@ -438,83 +221,169 @@ async def test_user_step_offers_device_on_reused_yaml_descriptor(
             CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
         },
     ).add_to_hass(hass)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME_2, link=FAKE_DEVICE_PATH_2)
 
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-            return_value=[MOCK_SCAN_RESULT[1]],
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            side_effect=lambda p: {FAKE_DEVICE_PATH_2: FAKE_DEVICE_REAL_PATH}.get(p, p),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["data_schema"].schema[CONF_DEVICE_PATH].config["options"] == [
-        MOCK_SCAN_RESULT[1]
+    assert [option["value"] for option in _offered(result)] == [FAKE_DEVICE_PATH_2]
+
+
+async def test_user_step_lists_devices(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test which devices the user step offers.
+
+    udev creates no by-id link for Bluetooth devices, so those are offered by
+    their node, once per name. Nodes that cannot send keys, with or without a
+    by-id link, host-bus devices such as the power button, and nodes that
+    cannot be opened are not offered.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
+    fake_input.add("/dev/input/event8", BT_REMOTE_NAME)
+    fake_input.add("/dev/input/event9", "Headphone Jack", sends_keys=False)
+    fake_input.add_unopenable("/dev/input/event10")
+    fake_input.add("/dev/input/event11", "Power Button", bustype=BUS_HOST)
+    fake_input.add(
+        "/dev/input/event12",
+        "Webcam",
+        sends_keys=False,
+        link="/dev/input/by-id/usb-Webcam-event-if00",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert _offered(result) == [
+        {
+            "value": FAKE_DEVICE_PATH,
+            "label": f"{FAKE_DEVICE_NAME} ({FAKE_BY_ID_BASENAME})",
+        },
+        {"value": BT_REMOTE_PATH, "label": f"{BT_REMOTE_NAME} (event7)"},
     ]
 
 
+@pytest.mark.parametrize(
+    "other_link",
+    [
+        pytest.param(None, id="no_by_id_directory"),
+        pytest.param(FAKE_DEVICE_PATH_2, id="by_id_directory"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_with_descriptor_and_by_id(hass: HomeAssistant) -> None:
-    """Test YAML import resolves descriptor to by-id path."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                "device_descriptor": FAKE_DEVICE_REAL_PATH,
-                "type": ["key_up", "key_down"],
-                "emulate_key_hold": True,
-                "emulate_key_hold_delay": 0.5,
-                "emulate_key_hold_repeat": 0.05,
-            },
-        )
+async def test_user_step_creates_name_matched_entry(
+    hass: HomeAssistant, fake_input: FakeInput, other_link: str | None
+) -> None:
+    """Test a device without a by-id link is configured by its name.
+
+    Its node can change when it reconnects, so the entry matches by name, like
+    a YAML entry configured by name.
+    """
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
+    fake_input.add(REMOTE_REAL_PATH, FAKE_DEVICE_NAME_2, link=other_link)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: BT_REMOTE_PATH}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == BT_REMOTE_NAME
+    assert result["result"].unique_id == BT_REMOTE_NAME
+    assert result["data"] == {CONF_DEVICE_NAME: BT_REMOTE_NAME}
+
+
+@pytest.mark.parametrize(
+    ("device_path", "unique_id"),
+    [
+        pytest.param(FAKE_DEVICE_PATH, FAKE_BY_ID_BASENAME, id="by_id_link"),
+        pytest.param(BT_REMOTE_PATH, BT_REMOTE_NAME, id="by_name"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_device_configured_meanwhile(
+    hass: HomeAssistant, fake_input: FakeInput, device_path: str, unique_id: str
+) -> None:
+    """Test choosing a device configured while the form was open aborts."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data={}).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: device_path}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_with_descriptor_and_by_id(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a YAML descriptor is stored with the by-id link it resolves to."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+
+    result = await _import(
+        hass,
+        {
+            "device_descriptor": FAKE_DEVICE_REAL_PATH,
+            "type": ["key_up", "key_down"],
+            "emulate_key_hold": True,
+            "emulate_key_hold_delay": 0.5,
+            "emulate_key_hold_repeat": 0.05,
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FAKE_DEVICE_NAME
     assert result["result"].unique_id == FAKE_BY_ID_BASENAME
-    assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
-    assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
-    assert result["data"][CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_REAL_PATH
-    assert result["options"][CONF_KEY_TYPES] == ["key_up", "key_down"]
-    assert result["options"][CONF_EMULATE_KEY_HOLD] is True
-    assert result["options"][CONF_EMULATE_KEY_HOLD_DELAY] == 0.5
-    assert result["options"][CONF_EMULATE_KEY_HOLD_REPEAT] == 0.05
+    assert result["data"] == {
+        CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+        CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+        CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+    }
+    assert result["options"] == {
+        CONF_KEY_TYPES: ["key_up", "key_down"],
+        CONF_EMULATE_KEY_HOLD: True,
+        CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
+        CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_with_name(hass: HomeAssistant) -> None:
-    """Test YAML import with device_name resolves to by-id."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_name": FAKE_DEVICE_NAME},
-        )
+async def test_import_with_name_and_by_id(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a YAML name matching one node is stored with that node's by-id link."""
+    fake_input.add_unopenable("/dev/input/event1")
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+
+    result = await _import(hass, {"device_name": FAKE_DEVICE_NAME})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == FAKE_BY_ID_BASENAME
-    assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
-    assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
+    assert result["data"] == {
+        CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+        CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+    }
 
 
 @pytest.mark.parametrize(
-    ("import_data", "resolved", "expected_unique_id", "expected_data"),
+    ("devices", "by_id_error", "import_data", "expected_unique_id", "expected_data"),
     [
         pytest.param(
+            [(FAKE_DEVICE_REAL_PATH, None)],
+            None,
             {"device_descriptor": FAKE_DEVICE_REAL_PATH},
-            (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
             FAKE_DEVICE_REAL_PATH,
             {
                 CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
@@ -524,44 +393,104 @@ async def test_import_with_name(hass: HomeAssistant) -> None:
             id="descriptor_without_by_id_link",
         ),
         pytest.param(
+            [(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_PATH)],
+            OSError(errno.EACCES, "Permission denied"),
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+            FAKE_DEVICE_REAL_PATH,
+            {
+                CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+                CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+            },
+            id="by_id_directory_unreadable",
+        ),
+        # The device name is unknown while it is unplugged, so the descriptor
+        # stands in for it
+        pytest.param(
+            [],
+            None,
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+            FAKE_DEVICE_REAL_PATH,
+            {
+                CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+                CONF_DEVICE_NAME: FAKE_DEVICE_REAL_PATH,
+                CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+            },
+            id="descriptor_device_absent",
+        ),
+        pytest.param(
+            [],
+            None,
             {"device_name": FAKE_DEVICE_NAME},
-            (None, None, None),
             FAKE_DEVICE_NAME,
             {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
             id="name_device_absent",
         ),
-        # The resolved /dev/input/eventN is whatever the kernel assigned this
-        # boot, so storing it would let it outrank the configured name.
+        # The node is whatever the kernel assigned this boot, so storing it
+        # would let it outrank the configured name
         pytest.param(
+            [(FAKE_DEVICE_REAL_PATH, None)],
+            None,
             {"device_name": FAKE_DEVICE_NAME},
-            (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None),
             FAKE_DEVICE_NAME,
             {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
             id="name_without_by_id_link",
+        ),
+        # A composite keyboard reports the same name on each node, and taking
+        # the first node's link would pin the entry to an arbitrary node
+        pytest.param(
+            [(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_PATH), ("/dev/input/event4", None)],
+            None,
+            {"device_name": FAKE_DEVICE_NAME},
+            FAKE_DEVICE_NAME,
+            {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            id="name_on_several_nodes",
         ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_fallback_identity(
     hass: HomeAssistant,
+    fake_input: FakeInput,
+    devices: list[tuple[str, str | None]],
+    by_id_error: OSError | None,
     import_data: dict[str, str],
-    resolved: tuple[str | None, str | None, str | None],
     expected_unique_id: str,
     expected_data: dict[str, str],
 ) -> None:
-    """Test YAML import falls back to the configured identity without a by-id link."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=resolved,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
-        )
+    """Test YAML falls back to its configured identity without a single link."""
+    for path, link in devices:
+        fake_input.add(path, FAKE_DEVICE_NAME, link=link)
+    fake_input.by_id_error = by_id_error
+
+    result = await _import(hass, import_data)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == FAKE_DEVICE_NAME
     assert result["result"].unique_id == expected_unique_id
     assert result["data"] == expected_data
+
+
+@pytest.mark.usefixtures("fake_input")
+async def test_import_cannot_identify(hass: HomeAssistant) -> None:
+    """Test a YAML block with neither descriptor nor name aborts."""
+    result = await _import(hass, {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_identify_device"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_already_configured(
+    hass: HomeAssistant, fake_input: FakeInput, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test YAML import aborts when its device is already configured."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    mock_config_entry.add_to_hass(hass)
+
+    result = await _import(hass, {"device_descriptor": FAKE_DEVICE_REAL_PATH})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -572,24 +501,21 @@ async def test_import_fallback_identity(
             FAKE_DEVICE_REAL_PATH,
             id="descriptor",
         ),
-        pytest.param(
-            {"device_name": FAKE_DEVICE_NAME},
-            FAKE_DEVICE_NAME,
-            id="name",
-        ),
+        pytest.param({"device_name": FAKE_DEVICE_NAME}, FAKE_DEVICE_NAME, id="name"),
     ],
 )
 async def test_import_adopts_entry_created_before_by_id_existed(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_setup_entry: AsyncMock,
     import_data: dict[str, str],
     legacy_unique_id: str,
 ) -> None:
     """Test a re-import migrates the earlier entry instead of duplicating it.
 
-    The first import can run before udev has created the by-id symlink, which
-    leaves the entry keyed by the raw descriptor or name. Once the symlink
-    exists the same YAML resolves to the by-id basename.
+    The first import can run before udev has created the by-id link, which
+    leaves the entry keyed by the raw descriptor or name. Once the link
+    exists, the same YAML resolves to the by-id basename.
     """
     existing = MockConfigEntry(
         domain=DOMAIN,
@@ -597,16 +523,9 @@ async def test_import_adopts_entry_created_before_by_id_existed(
         data={CONF_DEVICE_PATH: legacy_unique_id, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
     )
     existing.add_to_hass(hass)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=import_data,
-        )
+    result = await _import(hass, import_data)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -627,11 +546,9 @@ async def test_import_adopts_entry_created_before_by_id_existed(
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_adoption_refreshes_fallback_name(
-    hass: HomeAssistant,
-    title: str,
-    expected_title: str,
+    hass: HomeAssistant, fake_input: FakeInput, title: str, expected_title: str
 ) -> None:
-    """Test adoption replaces the raw path stored as name when the device was absent.
+    """Test adoption replaces the raw path stored as name while unplugged.
 
     A title the user has changed since is kept.
     """
@@ -646,61 +563,13 @@ async def test_import_adoption_refreshes_fallback_name(
         },
     )
     existing.add_to_hass(hass)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_descriptor": FAKE_DEVICE_REAL_PATH},
-        )
+    result = await _import(hass, {"device_descriptor": FAKE_DEVICE_REAL_PATH})
 
     assert result["type"] is FlowResultType.ABORT
     assert existing.data[CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
     assert existing.title == expected_title
-
-
-@pytest.mark.parametrize(
-    ("delay", "repeat", "expected_delay", "expected_repeat"),
-    [
-        pytest.param(10, 0, 5.0, 0.001, id="above_and_below"),
-        pytest.param(0, 2, 0.01, 1.0, id="below_and_above"),
-    ],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_clamps_hold_timing(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    delay: float,
-    repeat: float,
-    expected_delay: float,
-    expected_repeat: float,
-) -> None:
-    """Test imported hold timing is fitted into the options form's range.
-
-    YAML accepted any number, and a value outside the range would make the
-    options form reject its own pre-filled value.
-    """
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                "device_descriptor": FAKE_DEVICE_REAL_PATH,
-                "emulate_key_hold_delay": delay,
-                "emulate_key_hold_repeat": repeat,
-            },
-        )
-
-    assert result["options"][CONF_EMULATE_KEY_HOLD_DELAY] == expected_delay
-    assert result["options"][CONF_EMULATE_KEY_HOLD_REPEAT] == expected_repeat
-    assert f"Imported emulate_key_hold_delay of {delay} is outside" in caplog.text
-    assert f"Imported emulate_key_hold_repeat of {repeat} is outside" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -711,16 +580,13 @@ async def test_import_clamps_hold_timing(
             FAKE_DEVICE_REAL_PATH,
             id="descriptor",
         ),
-        pytest.param(
-            {"device_name": FAKE_DEVICE_NAME},
-            FAKE_DEVICE_NAME,
-            id="name",
-        ),
+        pytest.param({"device_name": FAKE_DEVICE_NAME}, FAKE_DEVICE_NAME, id="name"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_does_not_adopt_onto_a_taken_unique_id(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
     import_data: dict[str, str],
     legacy_unique_id: str,
@@ -737,16 +603,9 @@ async def test_import_does_not_adopt_onto_a_taken_unique_id(
         data={CONF_DEVICE_PATH: legacy_unique_id, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
     )
     legacy.add_to_hass(hass)
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=import_data,
-        )
+    result = await _import(hass, import_data)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -755,41 +614,43 @@ async def test_import_does_not_adopt_onto_a_taken_unique_id(
     assert legacy.data[CONF_DEVICE_PATH] == legacy_unique_id
 
 
-async def test_import_cannot_identify(hass: HomeAssistant) -> None:
-    """Test YAML import aborts when device cannot be identified."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(None, None, None),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_identify_device"
-
-
+@pytest.mark.parametrize(
+    ("delay", "repeat", "expected_delay", "expected_repeat"),
+    [
+        pytest.param(10, 0, 5.0, 0.001, id="above_and_below"),
+        pytest.param(0, 2, 0.01, 1.0, id="below_and_above"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_import_clamps_hold_timing(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    caplog: pytest.LogCaptureFixture,
+    delay: float,
+    repeat: float,
+    expected_delay: float,
+    expected_repeat: float,
 ) -> None:
-    """Test YAML import aborts when device is already configured."""
-    mock_config_entry.add_to_hass(hass)
+    """Test imported hold timing is fitted into the options form's range.
 
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_descriptor": FAKE_DEVICE_REAL_PATH},
-        )
+    YAML accepted any number, and a value outside the range would make the
+    options form reject its own pre-filled value.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    result = await _import(
+        hass,
+        {
+            "device_descriptor": FAKE_DEVICE_REAL_PATH,
+            "emulate_key_hold_delay": delay,
+            "emulate_key_hold_repeat": repeat,
+        },
+    )
+
+    assert result["options"][CONF_EMULATE_KEY_HOLD_DELAY] == expected_delay
+    assert result["options"][CONF_EMULATE_KEY_HOLD_REPEAT] == expected_repeat
+    assert f"Imported emulate_key_hold_delay of {delay} is outside" in caplog.text
+    assert f"Imported emulate_key_hold_repeat of {repeat} is outside" in caplog.text
 
 
 async def test_options_flow(
@@ -886,271 +747,3 @@ async def test_options_flow_shows_device(
 
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {"device": expected_device}
-
-
-def test_get_device_name_success() -> None:
-    """Test _get_device_name returns device name and closes device."""
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-    ):
-        result = _get_device_name(FAKE_DEVICE_PATH)
-
-    assert result == FAKE_DEVICE_NAME
-    mock_dev.close.assert_called_once()
-
-
-def test_get_device_name_oserror() -> None:
-    """Test _get_device_name returns None on OSError."""
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", side_effect=OSError("No such device")),
-    ):
-        result = _get_device_name(FAKE_DEVICE_PATH)
-
-    assert result is None
-
-
-def test_resolve_yaml_descriptor_with_by_id() -> None:
-    """Test resolve with descriptor that has a by-id symlink."""
-    by_id_entry = MagicMock(spec_set=os.DirEntry)
-    by_id_entry.is_symlink.return_value = True
-    by_id_entry.path = FAKE_DEVICE_PATH
-
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-        ) as mock_scandir,
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.basename",
-            return_value=FAKE_BY_ID_BASENAME,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-    ):
-        mock_scandir.return_value.__enter__ = MagicMock(return_value=[by_id_entry])
-        mock_scandir.return_value.__exit__ = MagicMock(return_value=False)
-        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
-
-    assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)
-    mock_dev.close.assert_called_once()
-
-
-def test_resolve_yaml_descriptor_no_by_id() -> None:
-    """Test resolve with descriptor but no by-id symlink."""
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-    ):
-        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
-
-    assert result == (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None)
-
-
-def test_resolve_yaml_descriptor_oserror() -> None:
-    """Test resolve with descriptor when InputDevice raises OSError."""
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", side_effect=OSError("No device")),
-    ):
-        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
-
-    # Returns descriptor with None name and None unique_id
-    assert result == (FAKE_DEVICE_REAL_PATH, None, None)
-
-
-def test_resolve_yaml_scandir_oserror() -> None:
-    """Test resolve continues when scandir on /dev/input/by-id raises OSError."""
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-            side_effect=OSError("Permission denied"),
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-    ):
-        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
-
-    assert result == (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None)
-
-
-def test_resolve_yaml_name_with_by_id() -> None:
-    """Test resolve with device name that matches a device with by-id symlink."""
-    by_id_entry = MagicMock(spec_set=os.DirEntry)
-    by_id_entry.is_symlink.return_value = True
-    by_id_entry.path = FAKE_DEVICE_PATH
-
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-        ) as mock_scandir,
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.basename",
-            return_value=FAKE_BY_ID_BASENAME,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
-    ):
-        mock_scandir.return_value.__enter__ = MagicMock(return_value=[by_id_entry])
-        mock_scandir.return_value.__exit__ = MagicMock(return_value=False)
-        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
-
-    assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)
-
-
-def test_resolve_yaml_name_matching_several_nodes() -> None:
-    """Test a name shared by several nodes is not promoted to one by-id path.
-
-    A composite keyboard reports the same name on each node, and picking the
-    first would lock the entry to whichever node list_devices returned first.
-    """
-    by_id_entry = MagicMock(spec_set=os.DirEntry)
-    by_id_entry.is_symlink.return_value = True
-    by_id_entry.path = FAKE_DEVICE_PATH
-
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-        ) as mock_scandir,
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            side_effect=lambda p: {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}.get(p, p),
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-        patch(
-            "evdev.list_devices",
-            return_value=[FAKE_DEVICE_REAL_PATH, "/dev/input/event6"],
-        ),
-    ):
-        mock_scandir.return_value.__enter__ = MagicMock(return_value=[by_id_entry])
-        mock_scandir.return_value.__exit__ = MagicMock(return_value=False)
-        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
-
-    assert result == (None, None, None)
-
-
-def test_resolve_yaml_name_no_by_id() -> None:
-    """Test resolve with device name match but no by-id symlink."""
-    mock_dev = MagicMock()
-    mock_dev.name = FAKE_DEVICE_NAME
-
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
-            return_value=FAKE_DEVICE_REAL_PATH,
-        ),
-        patch("evdev.InputDevice", return_value=mock_dev),
-        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
-    ):
-        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
-
-    assert result == (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None)
-
-
-def test_resolve_yaml_no_match() -> None:
-    """Test resolve returns (None, None, None) when nothing matches."""
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=False,
-        ),
-        patch("evdev.list_devices", return_value=[]),
-    ):
-        result = _resolve_yaml_device({"device_name": "Nonexistent Device"})
-
-    assert result == (None, None, None)
-
-
-def test_resolve_yaml_name_oserror_on_device() -> None:
-    """Test resolve with name skips devices that raise OSError."""
-    with (
-        patch(
-            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-            return_value=False,
-        ),
-        patch("evdev.InputDevice", side_effect=OSError("No device")),
-        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
-    ):
-        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
-
-    # OSError causes continue, falls through to (None, None, None)
-    assert result == (None, None, None)
-
-
-def test_resolve_yaml_empty_data() -> None:
-    """Test resolve with empty data returns (None, None, None)."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
-        return_value=False,
-    ):
-        result = _resolve_yaml_device({})
-
-    assert result == (None, None, None)
