@@ -104,6 +104,9 @@
             }
           }
         }
+      },
+      "atw_zone": {
+        "name": "Zone {zone_number}"
       }
     },
     "number": {
@@ -124,6 +127,9 @@
       "energy_consumed": {
         "name": "Energy consumed (monthly)"
       },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "room_temperature": {
         "name": "Room temperature"
       },
@@ -143,6 +149,9 @@
       },
       "overheat_protection": {
         "name": "Overheat protection"
+      },
+      "standby": {
+        "name": "Standby"
       }
     }
   },

@@ -8,9 +8,9 @@ from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError, hass_splunk
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -20,53 +20,36 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
-    EventStateChangedData,
-    HomeAssistant,
-)
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    issue_registry as ir,
-    state as state_helper,
-)
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_FILTER,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DOMAIN,
-)
+from .const import CONF_FILTER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_FILTER: HassKey[EntityFilter] = HassKey(DOMAIN)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_TOKEN): cv.string,
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-            }
+        DOMAIN: probatio.All(
+            cv.removed(CONF_TOKEN, raise_if_present=False),
+            cv.removed(CONF_HOST, raise_if_present=False),
+            cv.removed(CONF_PORT, raise_if_present=False),
+            cv.removed(CONF_SSL, raise_if_present=False),
+            cv.removed(CONF_VERIFY_SSL, raise_if_present=False),
+            cv.removed(CONF_NAME, raise_if_present=False),
+            probatio.Schema(
+                {probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA}
+            ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -74,74 +57,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Splunk component from YAML.
 
     Stores the entity filter in hass.data for use by config entry setup.
-    Triggers config entry import for connection settings (with deprecation warning).
-    Filter-only YAML configs are allowed without deprecation.
     """
     if DOMAIN not in config:
-        # No YAML config - store empty filter for config entry to use
         # Use setdefault to avoid overwriting a filter set for testing
         hass.data.setdefault(DATA_FILTER, FILTER_SCHEMA({}))
         return True
 
-    conf = config[DOMAIN]
-
-    # Store the entity filter in hass.data for async_setup_entry to use
-    hass.data[DATA_FILTER] = conf.pop(CONF_FILTER)
-
-    # Check if YAML has connection settings (anything beyond filter)
-    # If only filter is configured, no deprecation warning is needed
-    if CONF_TOKEN in conf:
-        # Trigger import of connection settings to config entry
-        hass.async_create_task(_async_import_yaml(hass, conf))
-    # If only filter, no import needed - filter is stored and will be used
+    hass.data[DATA_FILTER] = config[DOMAIN][CONF_FILTER]
 
     return True
-
-
-async def _async_import_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> None:
-    """Import YAML config and create deprecation issues."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=conf,
-    )
-
-    if result.get("type") is FlowResultType.ABORT and result.get("reason") not in (
-        "already_configured",
-        "single_instance_allowed",
-    ):
-        # Import failed with error - create error-specific issue
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.9.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Splunk",
-            },
-        )
-        return
-
-    # Import succeeded or already configured - create standard deprecation issue
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2026.9.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Splunk",
-        },
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

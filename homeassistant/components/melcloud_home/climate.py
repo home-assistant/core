@@ -323,6 +323,7 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
     """Climate entity for a MELCloud Home ATW zone."""
 
+    _attr_translation_key = "atw_zone"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

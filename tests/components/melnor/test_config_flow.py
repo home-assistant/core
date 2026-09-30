@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.melnor.const import DOMAIN
@@ -52,7 +52,7 @@ async def test_user_step_discovered_devices(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pick_device"
 
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ADDRESS: "wrong_address"}
             )
@@ -99,7 +99,7 @@ async def test_user_step_with_existing_device(
 
         assert result["type"] is FlowResultType.FORM
 
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ADDRESS: FAKE_ADDRESS_1}
             )

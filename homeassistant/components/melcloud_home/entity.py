@@ -89,7 +89,7 @@ class MelCloudHomeATWZoneEntity(MelCloudHomeATWUnitEntity):
         super().__init__(coordinator, unit)
         self._zone_number = zone_number
         self._attr_unique_id = f"{unit.id}_zone_{zone_number}"
-        self._attr_name = f"Zone {zone_number}"
+        self._attr_translation_placeholders = {"zone_number": str(zone_number)}
 
     @property
     def zone_number(self) -> int:

@@ -15,7 +15,7 @@ from ipaddress import (
 )
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -42,24 +42,26 @@ CONF_ALLOW_BYPASS_LOGIN = "allow_bypass_login"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_TRUSTED_NETWORKS): vol.All(cv.ensure_list, [ip_network]),
-        vol.Optional(CONF_TRUSTED_USERS, default={}): vol.Schema(
+        probatio.Required(CONF_TRUSTED_NETWORKS): probatio.All(
+            cv.ensure_list, [ip_network]
+        ),
+        probatio.Optional(CONF_TRUSTED_USERS, default={}): probatio.Schema(
             # we only validate the format of user_id or group_id
             {
-                ip_network: vol.All(
+                ip_network: probatio.All(
                     cv.ensure_list,
                     [
-                        vol.Or(
+                        probatio.Or(
                             cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): str}),
+                            probatio.Schema({probatio.Required(CONF_GROUP): str}),
                         )
                     ],
                 )
             }
         ),
-        vol.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
+        probatio.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 
@@ -256,7 +258,7 @@ class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {vol.Required("user"): vol.In(self._available_users)}
+            data_schema=probatio.Schema(
+                {probatio.Required("user"): probatio.In(self._available_users)}
             ),
         )

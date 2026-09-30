@@ -9,7 +9,7 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
@@ -43,7 +43,7 @@ AVAILABILITY_TIMEOUT = 50.0
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
-_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+_VALID_QOS_SCHEMA = probatio.All(probatio.Coerce(int), probatio.In([0, 1, 2]))
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,23 +252,29 @@ def valid_topic(topic: Any) -> str:
     try:
         raw_validated_topic = validated_topic.encode("utf-8")
     except UnicodeError as err:
-        raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.") from err
+        raise probatio.Invalid(
+            "MQTT topic name/filter must be valid UTF-8 string."
+        ) from err
     if not raw_validated_topic:
-        raise vol.Invalid("MQTT topic name/filter must not be empty.")
+        raise probatio.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_validated_topic) > 65535:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
 
     for char in validated_topic:
         if char == "\0":
-            raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+            raise probatio.Invalid(
+                "MQTT topic name/filter must not contain null character."
+            )
         if char <= "\u001f" or "\u007f" <= char <= "\u009f":
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "MQTT topic name/filter must not contain control characters."
             )
         if "\ufdd0" <= char <= "\ufdef" or (ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF):
-            raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
+            raise probatio.Invalid(
+                "MQTT topic name/filter must not contain non-characters."
+            )
 
     return validated_topic
 
@@ -282,7 +288,7 @@ def valid_subscribe_topic(topic: Any) -> str:
             if (i > 0 and validated_topic[i - 1] != "/") or (
                 i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
             ):
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "Single-level wildcard must occupy an entire level of the filter"
                 )
 
@@ -290,11 +296,11 @@ def valid_subscribe_topic(topic: Any) -> str:
     if index != -1:
         if index != len(validated_topic) - 1:
             # If there are multiple wildcards, this will also trigger
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Multi-level wildcard must be the last character in the topic filter."
             )
         if len(validated_topic) > 1 and validated_topic[index - 1] != "/":
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Multi-level wildcard must be after a topic level separator."
             )
 
@@ -316,7 +322,7 @@ def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
-        raise vol.Invalid("Wildcards cannot be used in topic names")
+        raise probatio.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
 
 
@@ -326,12 +332,12 @@ def valid_qos_schema(qos: Any) -> int:
     return validated_qos
 
 
-_MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+_MQTT_WILL_BIRTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Required(ATTR_TOPIC): valid_publish_topic,
+        probatio.Required(ATTR_PAYLOAD): cv.string,
+        probatio.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        probatio.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
     required=True,
 )

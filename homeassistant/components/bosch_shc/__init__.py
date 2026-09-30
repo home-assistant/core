@@ -18,8 +18,11 @@ from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)

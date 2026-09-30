@@ -10,7 +10,7 @@ from typing import Any, override
 from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.exceptions import CommandError
 from aiorussound.rnet.client import RussoundRNETClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -43,17 +43,17 @@ RNET_EXCEPTIONS = (
     OSError,
 )
 
-ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+ZONE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
-SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SOURCE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-        vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_ZONES): probatio.Schema({cv.positive_int: ZONE_SCHEMA}),
+        probatio.Required(CONF_SOURCES): probatio.All(cv.ensure_list, [SOURCE_SCHEMA]),
     }
 )
 

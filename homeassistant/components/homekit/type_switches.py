@@ -20,7 +20,6 @@ from homeassistant.components.input_number import (
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
     CONF_MIN as INPUT_NUMBER_CONF_MIN,
     CONF_STEP as INPUT_NUMBER_CONF_STEP,
-    DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.components.input_select import SERVICE_SELECT_OPTION
@@ -404,8 +403,9 @@ class ValveBase(HomeAccessory):
     def set_duration(self, value: int) -> None:
         """Set default duration for how long the valve should remain open."""
         _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
+        assert self.linked_duration_entity
         self.async_call_service(
-            INPUT_NUMBER_DOMAIN,
+            split_entity_id(self.linked_duration_entity)[0],
             INPUT_NUMBER_SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: self.linked_duration_entity,

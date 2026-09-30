@@ -8,7 +8,7 @@ from typing import Any, override
 from caldav.davclient import DAVClient
 from caldav.lib.error import DAVError
 from caldav.lib.http_sync import requests as caldav_requests
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -57,24 +57,26 @@ SUPPORTED_COMPONENT = "VEVENT"
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_URL): vol.Url(),
-        vol.Optional(CONF_CALENDARS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_CUSTOM_CALENDARS, default=[]): vol.All(
+        probatio.Required(CONF_URL): probatio.Url(),
+        probatio.Optional(CONF_CALENDARS, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Optional(CONF_CUSTOM_CALENDARS, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_CALENDAR): cv.string,
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_SEARCH): cv.string,
+                        probatio.Required(CONF_CALENDAR): cv.string,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(CONF_SEARCH): cv.string,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_DAYS, default=1): cv.positive_int,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_DAYS, default=1): cv.positive_int,
     }
 )
 
