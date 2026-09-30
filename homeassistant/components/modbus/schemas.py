@@ -539,7 +539,7 @@ SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
 ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_TYPE): probatio.Any(TCP, UDP, RTUOVERTCP),
     }
 )

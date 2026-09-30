@@ -99,7 +99,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         ),
         probatio.Required(CONF_SENDER): probatio.Email(),
         probatio.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         probatio.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): probatio.In(
             ENCRYPTION_OPTIONS
