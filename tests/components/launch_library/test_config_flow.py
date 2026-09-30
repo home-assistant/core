@@ -17,7 +17,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") is FlowResultType.FORM
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
