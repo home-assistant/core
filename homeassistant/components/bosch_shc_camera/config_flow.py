@@ -66,7 +66,9 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm", data_schema=probatio.Schema({})
             )
-        return await self.async_step_user()
+        return await self.async_step_user(
+            {"implementation": self._get_reauth_entry().data["auth_implementation"]}
+        )
 
     @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
