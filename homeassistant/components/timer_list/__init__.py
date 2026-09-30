@@ -251,7 +251,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         TimerListServices.GET_TIMERS,
         {
             probatio.Optional(ATTR_STATUS): probatio.All(
-                cv.ensure_list, [probatio.Coerce(TimerStatus)]
+                probatio.EnsureList(), [probatio.Coerce(TimerStatus)]
             )
         },
         _async_get_timers,

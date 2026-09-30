@@ -47,7 +47,7 @@ async def _create_timer(
 
 
 async def _get_timers(
-    hass: HomeAssistant, status: list[str] | None = None
+    hass: HomeAssistant, status: str | list[str] | None = None
 ) -> list[dict[str, Any]]:
     """Return the timers via the get_timers service."""
     data: dict[str, Any] = {}
@@ -104,6 +104,8 @@ async def test_get_timers_status_filter(hass: HomeAssistant) -> None:
     assert len(await _get_timers(hass, status=["active"])) == 1
     assert len(await _get_timers(hass, status=["paused"])) == 1
     assert len(await _get_timers(hass, status=["active", "paused"])) == 2
+    # A bare status is accepted too, not just a list
+    assert len(await _get_timers(hass, status="active")) == 1
 
 
 @pytest.mark.usefixtures("test_entity")
