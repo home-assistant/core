@@ -80,12 +80,7 @@ async def test_setup_with_unimplemented_location_or_sleep(
     location_patcher: patch,
     sleep_patcher: patch,
 ) -> None:
-    """Test that setup still succeeds when the dish reports GetLocation/DishGetConfig as Unimplemented.
-
-    Some Starlink plans (e.g. non-Priority) return Unimplemented for these two
-    calls. The integration should still load and simply omit that data,
-    rather than failing setup entirely.
-    """
+    """Test that setup still succeeds when the dish reports GetLocation/DishGetConfig as Unimplemented."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
@@ -105,6 +100,36 @@ async def test_setup_with_unimplemented_location_or_sleep(
         assert entry.state is ConfigEntryState.LOADED
         assert entry.runtime_data
         assert entry.runtime_data.data
+
+
+async def test_unimplemented_rpcs_are_not_retried_on_later_polls(
+    hass: HomeAssistant,
+) -> None:
+    """Test location_data/get_sleep_config aren't called again once found Unimplemented."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        LOCATION_DATA_UNIMPLEMENTED_PATCHER as location_mock,
+        SLEEP_DATA_UNIMPLEMENTED_PATCHER as sleep_mock,
+        STATUS_DATA_SUCCESS_PATCHER as _status_mock,
+        HISTORY_STATS_SUCCESS_PATCHER as _history_mock,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert location_mock.call_count == 1
+        assert sleep_mock.call_count == 1
+
+        await entry.runtime_data.async_refresh()
+        await entry.runtime_data.async_refresh()
+
+        assert location_mock.call_count == 1
+        assert sleep_mock.call_count == 1
 
 
 async def test_sleep_entities_not_created_when_sleep_unimplemented(
@@ -237,11 +262,7 @@ async def test_device_tracker_unavailable_when_location_becomes_unsupported(
 async def test_sleep_switch_reports_real_off_when_supported(
     hass: HomeAssistant,
 ) -> None:
-    """Test the sleep switch reports a real, interactable 'off' when supported.
-
-    Guards against a fix for the above accidentally treating a genuine,
-    supported "schedule disabled" as unavailable too.
-    """
+    """Test the sleep switch reports a real 'off', not unavailable, when supported."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
@@ -258,9 +279,8 @@ async def test_sleep_switch_reports_real_off_when_supported(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        state = hass.states.get("switch.starlink_sleep_schedule")
-        assert state is not None
-        assert state.state in ("on", "off")
+        # sleep_data_success.json's third element (enabled) is false.
+        assert _entity_state(hass, "switch.starlink_sleep_schedule") == "off"
 
 
 async def test_switches_unavailable_when_coordinator_refresh_fails(
