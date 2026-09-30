@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from blanco_smart_home_api_client import BlancoDeviceType
+from blanco_smart_home_api_client import BlancoDeviceType, BlancoErrorType, HttpStatus
 import pytest
 
 from homeassistant.components.blanco.const import (
@@ -13,10 +13,13 @@ from homeassistant.components.blanco.const import (
     CONF_DEV_TYPE,
     CONF_SERIAL,
     CONF_TOKEN_TYPE,
+    DOMAIN,
 )
 from homeassistant.components.blanco.coordinator import BlancoDataUpdateCoordinator
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 # ── Shared test constants ──────────────────────────────────────────────────────
 
@@ -40,6 +43,69 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.blanco.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a BLANCO config entry as created by the config flow."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TEST_SERIAL,
+        unique_id=TEST_SERIAL,
+        data={
+            CONF_SERIAL: TEST_SERIAL,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_TOKEN_TYPE: "Bearer",
+            CONF_DEV_TYPE: int(BlancoDeviceType.AIO),
+            CONF_DEV_ID: TEST_DEV_ID,
+            CONF_APP_ID: TEST_APP_ID,
+            CONF_APP_LOCALE: "en",
+        },
+    )
+
+
+@pytest.fixture
+def mock_blanco_client() -> Generator[MagicMock]:
+    """Mock the BLANCO API client used by the coordinator and on entry removal."""
+    with (
+        patch(
+            "homeassistant.components.blanco.coordinator.BlancoApiClient",
+            autospec=True,
+        ) as mock_client_class,
+        patch("homeassistant.components.blanco.BlancoApiClient", new=mock_client_class),
+    ):
+        client = mock_client_class.return_value
+        client.get_device_system.return_value = (
+            HttpStatus.OK,
+            {
+                "params": {"dev_name": "My BLANCO", "sw_ver_main_con": "1.2.3"},
+                "info": {"online": 1700000000000},
+            },
+        )
+        client.get_device_errors.return_value = (
+            HttpStatus.OK,
+            {
+                "errors": [
+                    {
+                        "err_code": 101,
+                        "err_type": BlancoErrorType.CRITICAL,
+                        "err_ts": 1700000000000,
+                    },
+                    {
+                        "err_code": 202,
+                        "err_type": BlancoErrorType.WARNING,
+                        "err_ts": 1700000001000,
+                    },
+                    {
+                        "err_code": 303,
+                        "err_type": BlancoErrorType.WARNING,
+                        "err_ts": None,
+                    },
+                ],
+                "info": {},
+            },
+        )
+        yield client
 
 
 @pytest.fixture

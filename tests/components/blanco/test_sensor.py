@@ -4,6 +4,8 @@ from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from blanco_smart_home_api_client import BlancoDeviceType, BlancoErrorType
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.blanco.sensor import (
     _DESC_ERROR_COUNT_CRITICAL,
@@ -12,7 +14,27 @@ from homeassistant.components.blanco.sensor import (
     SENSOR_DESCRIPTIONS_COMMON,
     BlancoSensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_blanco_client")
+async def test_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the BLANCO sensors."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
 
 # ── Shared test data ───────────────────────────────────────────────────────────
 
