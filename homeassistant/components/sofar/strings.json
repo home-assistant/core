@@ -9,6 +9,13 @@
       "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
     },
     "step": {
+      "reconfigure": {
+        "description": "Update where this inverter is reached, for example after it moved to another address or its RS485 bus was rewired. Moving it between a network and a serial connection keeps this entry and its history.\n\nIt has to stay the same inverter: the serial number that answers is checked against the one this entry was set up with.",
+        "menu_options": {
+          "reconfigure_serial": "[%key:component::sofar::config::step::user::menu_options::serial%]",
+          "reconfigure_tcp": "[%key:component::sofar::config::step::user::menu_options::tcp%]"
+        }
+      },
       "reconfigure_serial": {
         "data": {
           "baudrate": "[%key:component::sofar::config::step::serial::data::baudrate%]",

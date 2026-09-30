@@ -16,6 +16,7 @@ from homeassistant.components.sofar.config_flow import (
 )
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
+    CONF_UNIT_ID,
     DEFAULT_NAME,
     DOMAIN,
     TYPE_SERIAL,
@@ -256,8 +257,16 @@ _NEW_TCP_INPUT = {**MOCK_TCP_INPUT, CONF_HOST: "192.168.1.200"}
 async def _start_reconfigure(
     hass: HomeAssistant, entry: MockConfigEntry, step_id: str
 ) -> ConfigFlowResult:
-    """Open the reconfigure flow and return the form for the entry's link."""
+    """Open the reconfigure flow, pick a connection, and return its form."""
     result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+    assert result["menu_options"] == [STEP_RECONFIGURE_TCP, STEP_RECONFIGURE_SERIAL]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": step_id}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
@@ -531,3 +540,65 @@ async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -
     assert entry.data == MOCK_SERIAL_ENTRY_DATA
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "step_id", "user_input", "expected_data"),
+    [
+        pytest.param(
+            MOCK_ENTRY_DATA,
+            STEP_RECONFIGURE_SERIAL,
+            MOCK_SERIAL_INPUT,
+            MOCK_SERIAL_ENTRY_DATA,
+            id="network_to_serial",
+        ),
+        pytest.param(
+            MOCK_SERIAL_ENTRY_DATA,
+            STEP_RECONFIGURE_TCP,
+            MOCK_TCP_INPUT,
+            MOCK_ENTRY_DATA,
+            id="serial_to_network",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_moves_between_connections(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    entry_data: dict[str, Any],
+    step_id: str,
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test an entry moves to the other connection, keeping its identity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=entry_data, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, entry, step_id)
+
+    with _patch_temporary_unit(mock_connection):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # Exact equality: the keys of the link it left are gone, not stale.
+    assert entry.data == expected_data
+    assert entry.unique_id == MOCK_SERIAL
+
+
+async def test_reconfigure_other_connection_starts_empty(hass: HomeAssistant) -> None:
+    """Test the other connection's form is not filled from the current one."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
+
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_HOST) is None
+    # The unit ID is the inverter's, so it survives the move.
+    assert (
+        get_schema_suggested_value(schema, CONF_UNIT_ID)
+        == MOCK_SERIAL_INPUT[CONF_UNIT_ID]
+    )
