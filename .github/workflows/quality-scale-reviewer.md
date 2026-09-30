@@ -192,7 +192,7 @@ steps:
       set -euo pipefail
       BASE_SHA=$(git rev-parse HEAD)
       git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
-      # The prepared diff describes HEAD_SHA; a newer push is reviewed by its own run.
+      # The prepared diff describes HEAD_SHA; a newer push requires its own workflow run to be reviewed.
       if [ "$(git rev-parse FETCH_HEAD)" != "${HEAD_SHA}" ]; then
         echo "PR #${PR_NUMBER} head moved since preparation, aborting"
         exit 1
