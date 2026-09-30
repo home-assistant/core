@@ -89,7 +89,7 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ID): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
