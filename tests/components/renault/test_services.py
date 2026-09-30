@@ -307,18 +307,13 @@ async def test_service_get_charge_schedule_formats_local_time(
             ),
         )
     assert len(mock_action.mock_calls) == 1
-    assert response["schedules"][0]["monday"]["start_time"] is None
-    assert response["schedules"][0]["monday"]["local_day"] == "monday"
-    assert response["schedules"][1]["monday"] == {
-        "local_day": "tuesday",
-        "start_time": "01:30",
-        "duration": 16,
-    }
-    assert response["schedules"][1]["sunday"] == {
-        "local_day": "monday",
-        "start_time": "01:30",
-        "duration": 17,
-    }
+    assert response["schedules"][0]["monday"][0]["start_time"] is None
+    assert response["schedules"][1]["tuesday"] == [
+        {"start_time": "01:30", "duration": 16}
+    ]
+    assert response["schedules"][1]["monday"] == [
+        {"start_time": "01:30", "duration": 17}
+    ]
 
 
 async def test_service_set_charge_schedule(

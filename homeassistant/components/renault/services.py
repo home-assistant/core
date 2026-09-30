@@ -224,20 +224,21 @@ def _format_charge_schedule_time(
 
 def _serialize_charge_schedule_days(
     schedule: ChargeSchedule,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, list[dict[str, Any]]]:
     """Serialize charge schedule days for the service response."""
-    days: dict[str, dict[str, Any]] = {}
+    days: dict[str, list[dict[str, Any]]] = {}
     for day in CHARGE_SCHEDULE_DAYS:
         if (day_schedule := getattr(schedule, day)) is None:
             continue
         local_day, start_time = _format_charge_schedule_time(
             day, day_schedule.startTime
         )
-        days[day] = {
-            "local_day": local_day,
-            "start_time": start_time,
-            "duration": day_schedule.duration,
-        }
+        days.setdefault(local_day, []).append(
+            {
+                "start_time": start_time,
+                "duration": day_schedule.duration,
+            }
+        )
     return days
 
 
