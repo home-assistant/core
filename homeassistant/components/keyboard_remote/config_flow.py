@@ -21,6 +21,7 @@ from .const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
+    CONF_DEVICE_UNIQ,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
@@ -58,6 +59,30 @@ def _clamp_imported(key: str, value: float, low: float, high: float) -> float:
             clamped,
         )
     return clamped
+
+
+def _unlinked_unique_id(name: str, uniq: str) -> str:
+    """Return the unique ID of a device that has no by-id link.
+
+    The uniq of a Bluetooth device is its own address, which tells identical
+    remotes apart. The nodes of one composite device share it, so the name
+    stays part of the ID. Without a uniq, as for GPIO IR receivers, only the
+    name is left.
+    """
+    return f"{uniq} {name}" if uniq else name
+
+
+def _get_device_identity(device_path: str) -> tuple[str, str] | None:
+    """Open an input device and return its name and uniq, or None on error."""
+    from evdev import InputDevice  # noqa: PLC0415
+
+    try:
+        dev = InputDevice(os.path.realpath(device_path))
+    except OSError:
+        return None
+    identity = (dev.name, dev.uniq)
+    dev.close()
+    return identity
 
 
 def _get_device_name(device_path: str) -> str | None:
@@ -111,6 +136,7 @@ def _scan_input_devices_sync() -> list[tuple[selector.SelectOptionDict, str]]:
         except OSError:
             continue
         name = dev.name
+        uniq = dev.uniq
         try:
             usable = (
                 ecodes.EV_KEY in dev.capabilities()
@@ -133,15 +159,15 @@ def _scan_input_devices_sync() -> list[tuple[selector.SelectOptionDict, str]]:
                     unique_id,
                 )
             )
-        elif name not in names:
-            names.add(name)
+        elif (unique_id := _unlinked_unique_id(name, uniq)) not in names:
+            names.add(unique_id)
             name_devices.append(
                 (
                     selector.SelectOptionDict(
                         value=dev_path,
-                        label=f"{name} ({os.path.basename(dev_path)})",
+                        label=f"{name} ({uniq or os.path.basename(dev_path)})",
                     ),
-                    name,
+                    unique_id,
                 )
             )
 
@@ -242,21 +268,23 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(os.path.basename(device_path))
                 self._abort_if_unique_id_configured()
 
-            dev_name = await self.hass.async_add_executor_job(
-                _get_device_name, device_path
+            identity = await self.hass.async_add_executor_job(
+                _get_device_identity, device_path
             )
-            if dev_name is None:
+            if identity is None:
                 errors["base"] = "cannot_connect"
             else:
+                dev_name, uniq = identity
                 data = {CONF_DEVICE_NAME: dev_name}
                 if by_id:
                     data[CONF_DEVICE_PATH] = device_path
                 else:
                     # Without a by-id link the event node can change when the
-                    # device reconnects, so match by name like a YAML entry
-                    # configured by name.
-                    await self.async_set_unique_id(dev_name)
+                    # device reconnects, so match by uniq and name instead.
+                    await self.async_set_unique_id(_unlinked_unique_id(dev_name, uniq))
                     self._abort_if_unique_id_configured()
+                    if uniq:
+                        data[CONF_DEVICE_UNIQ] = uniq
                 return self.async_create_entry(
                     title=dev_name,
                     data=data,

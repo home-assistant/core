@@ -32,6 +32,7 @@ from .const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
+    CONF_DEVICE_UNIQ,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
@@ -51,6 +52,7 @@ from .const import (
     KEY_VALUE_NAME,
     MATCH_DEVICE_NAME,
     MATCH_DEVICE_PATH,
+    MATCH_DEVICE_UNIQ,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -732,6 +734,11 @@ class DeviceHandler:
         return self.entry.data.get(CONF_DEVICE_PATH)
 
     @property
+    def _device_uniq(self) -> str | None:
+        """The configured evdev uniq, for devices added without a by-id link."""
+        return self.entry.data.get(CONF_DEVICE_UNIQ)
+
+    @property
     def _device_name_config(self) -> str | None:
         """The configured device name."""
         return self.entry.data.get(CONF_DEVICE_NAME)
@@ -772,6 +779,9 @@ class DeviceHandler:
             and self._device_name_config
             and dev.name == self._device_name_config
         ):
+            # The uniq tells identical Bluetooth remotes apart
+            if uniq := self._device_uniq:
+                return MATCH_DEVICE_UNIQ if dev.uniq == uniq else None
             return MATCH_DEVICE_NAME
 
         return None

@@ -10,6 +10,7 @@ from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
+    CONF_DEVICE_UNIQ,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
@@ -317,6 +318,54 @@ async def test_user_step_creates_name_matched_entry(
     assert result["title"] == BT_REMOTE_NAME
     assert result["result"].unique_id == BT_REMOTE_NAME
     assert result["data"] == {CONF_DEVICE_NAME: BT_REMOTE_NAME}
+
+
+REMOTE_1_UNIQ = "aa:bb:cc:dd:ee:01"
+REMOTE_2_UNIQ = "aa:bb:cc:dd:ee:02"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_tells_bluetooth_remotes_apart(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test identical Bluetooth remotes are told apart by their address.
+
+    evdev reports a Bluetooth device's own address as its uniq. The nodes of
+    one composite device share it, and are told apart by their names.
+    """
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME, uniq=REMOTE_1_UNIQ)
+    fake_input.add(
+        "/dev/input/event8", f"{BT_REMOTE_NAME} Consumer Control", uniq=REMOTE_1_UNIQ
+    )
+    fake_input.add("/dev/input/event9", BT_REMOTE_NAME, uniq=REMOTE_2_UNIQ)
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{REMOTE_1_UNIQ} {BT_REMOTE_NAME}",
+        data={CONF_DEVICE_NAME: BT_REMOTE_NAME, CONF_DEVICE_UNIQ: REMOTE_1_UNIQ},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert _offered(result) == [
+        {
+            "value": "/dev/input/event8",
+            "label": f"{BT_REMOTE_NAME} Consumer Control ({REMOTE_1_UNIQ})",
+        },
+        {"value": "/dev/input/event9", "label": f"{BT_REMOTE_NAME} ({REMOTE_2_UNIQ})"},
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: "/dev/input/event9"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{REMOTE_2_UNIQ} {BT_REMOTE_NAME}"
+    assert result["data"] == {
+        CONF_DEVICE_NAME: BT_REMOTE_NAME,
+        CONF_DEVICE_UNIQ: REMOTE_2_UNIQ,
+    }
 
 
 @pytest.mark.parametrize(

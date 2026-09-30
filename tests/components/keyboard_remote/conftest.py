@@ -192,9 +192,10 @@ class FakeInput:
         link: str | None = None,
         sends_keys: bool = True,
         bustype: int = BUS_USB,
+        uniq: str = "",
     ) -> MagicMock:
         """Add a device that is present before setup, without any events."""
-        dev = self._make_device(path, name, sends_keys, bustype)
+        dev = self._make_device(path, name, sends_keys, bustype, uniq)
         self.devices[path] = dev
         if link is not None:
             self.links[link] = path
@@ -205,7 +206,13 @@ class FakeInput:
         self.devices[path] = None
 
     async def plug(
-        self, path: str, name: str, *, link: str | None = None, wait: bool = True
+        self,
+        path: str,
+        name: str,
+        *,
+        link: str | None = None,
+        uniq: str = "",
+        wait: bool = True,
     ) -> MagicMock:
         """Plug in a device in the order udev reports it.
 
@@ -213,7 +220,7 @@ class FakeInput:
         after they were handled, together with its directory for the first
         link, and is otherwise renamed into place.
         """
-        dev = self._make_device(path, name, True, BUS_USB)
+        dev = self._make_device(path, name, True, BUS_USB, uniq)
         self.devices[path] = dev
         self._emit(os.path.basename(path), Mask.CREATE)
         self._emit(os.path.basename(path), Mask.ATTRIB)
@@ -372,10 +379,11 @@ class FakeInput:
         )
 
     def _make_device(
-        self, path: str, name: str, sends_keys: bool, bustype: int
+        self, path: str, name: str, sends_keys: bool, bustype: int, uniq: str
     ) -> MagicMock:
         dev = MagicMock()
         dev.name = name
+        dev.uniq = uniq
         dev.path = path
         self._next_fd += 1
         dev.fileno.return_value = self._next_fd

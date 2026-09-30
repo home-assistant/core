@@ -8,6 +8,8 @@ DOMAIN: Final = "keyboard_remote"
 CONF_DEVICE_PATH: Final = "device_path"
 CONF_DEVICE_NAME: Final = "device_name"
 CONF_DEVICE_DESCRIPTOR: Final = "device_descriptor"
+# The device's evdev uniq, a Bluetooth device's own address
+CONF_DEVICE_UNIQ: Final = "device_uniq"
 
 # Options keys
 CONF_KEY_TYPES: Final = "key_types"
@@ -43,7 +45,8 @@ KEY_CODE: Final = "key_code"
 # nodes reporting the same name, and only the one the user picked carries the
 # configured by-id path, so a name match must never outrank a path match.
 MATCH_DEVICE_PATH: Final = 0
-MATCH_DEVICE_NAME: Final = 1
+MATCH_DEVICE_UNIQ: Final = 1
+MATCH_DEVICE_NAME: Final = 2
 
 # System paths
 DEVINPUT: Final = "/dev/input"

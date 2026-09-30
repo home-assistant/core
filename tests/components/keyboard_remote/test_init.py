@@ -21,6 +21,7 @@ from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
     CONF_DEVICE_PATH,
+    CONF_DEVICE_UNIQ,
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
@@ -559,6 +560,32 @@ async def test_startup_connects_matching_device(
     assert [path for path, dev in added.items() if dev.close.called] == [
         path for path in added if path != expected
     ]
+
+
+async def test_bluetooth_remote_matched_by_address(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test an entry with a uniq connects only the remote with that address.
+
+    Identical remotes report the same name, and only their Bluetooth address,
+    reported as the evdev uniq, tells them apart.
+    """
+    first = fake_input.add(REMOTE_PATH, REMOTE_NAME, uniq="aa:bb:cc:dd:ee:01")
+    await _set_up(
+        hass,
+        _entry(
+            {CONF_DEVICE_NAME: REMOTE_NAME, CONF_DEVICE_UNIQ: "aa:bb:cc:dd:ee:02"},
+            unique_id="aa:bb:cc:dd:ee:02 BT Remote",
+        ),
+    )
+
+    second = await fake_input.plug(
+        "/dev/input/event8", REMOTE_NAME, uniq="aa:bb:cc:dd:ee:02"
+    )
+
+    first.grab.assert_not_called()
+    second.grab.assert_called_once()
 
 
 @pytest.mark.parametrize(
