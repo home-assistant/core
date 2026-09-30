@@ -1090,7 +1090,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": True,
-        "domain": "spinev",
+        "domain": "spin_ble",
         "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
     },
     {

@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from spinev_ble import ChargerStatus, SpinEvError
 
-from homeassistant.components.spinev.const import (
+from homeassistant.components.spin_ble.const import (
     CHARGING_INTERVAL,
     CONF_CONNECTION_MODE,
     IDLE_INTERVAL,

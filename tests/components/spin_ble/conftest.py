@@ -7,7 +7,7 @@ from bleak.backends.device import BLEDevice
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.spinev.const import DOMAIN
+from homeassistant.components.spin_ble.const import DOMAIN
 
 from .const import (
     ADDRESS,
@@ -64,11 +64,11 @@ def mock_charger() -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.spinev.coordinator.SpinEvCharger",
+            "homeassistant.components.spin_ble.coordinator.SpinEvCharger",
             return_value=charger,
         ),
         patch(
-            "homeassistant.components.spinev.config_flow.SpinEvCharger",
+            "homeassistant.components.spin_ble.config_flow.SpinEvCharger",
             return_value=charger,
         ),
     ):
@@ -88,7 +88,7 @@ def mock_ble_device(
             return_value=ble_device,
         ) as mock_lookup,
         patch(
-            "homeassistant.components.spinev.coordinator.close_stale_connections_by_address"
+            "homeassistant.components.spin_ble.coordinator.close_stale_connections_by_address"
         ),
         patch(
             "homeassistant.components.bluetooth.async_address_reachability_diagnostics",
@@ -118,6 +118,6 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Stop the entry a flow creates from setting the integration up."""
     with patch(
-        "homeassistant.components.spinev.async_setup_entry", return_value=True
+        "homeassistant.components.spin_ble.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry

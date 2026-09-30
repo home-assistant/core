@@ -2,7 +2,7 @@
 
 from spinev_ble import ChargerState, ChargerStatus
 
-from homeassistant.components.spinev.const import (
+from homeassistant.components.spin_ble.const import (
     CONF_CONNECTION_MODE,
     CONF_SERIAL,
     DEFAULT_CONNECTION_MODE,

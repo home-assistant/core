@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:component::spinev::config::error::cannot_connect%]",
+      "cannot_connect": "[%key:component::spin_ble::config::error::cannot_connect%]",
       "no_devices_found": "No Spin EV charger was found over Bluetooth. Check that the charger is powered on, that no phone app is connected to it, and that Home Assistant has a Bluetooth adapter or an ESPHome Bluetooth proxy in range of the charger.",
       "not_supported": "This Bluetooth device is not a Spin EV charger."
     },
