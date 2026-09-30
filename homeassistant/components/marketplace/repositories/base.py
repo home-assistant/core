@@ -174,15 +174,23 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
     members = archive.infolist()
     if len(members) > MAX_ARCHIVE_MEMBERS:
         raise MarketplaceError(
-            f"The archive holds {len(members)} members, "
-            f"the limit is {MAX_ARCHIVE_MEMBERS}"
+            translation_domain=DOMAIN,
+            translation_key="archive_too_many_files",
+            translation_placeholders={
+                "count": str(len(members)),
+                "limit": str(MAX_ARCHIVE_MEMBERS),
+            },
         )
 
     size = sum(info.file_size for info in members)
     if size > MAX_DOWNLOAD_SIZE:
         raise MarketplaceError(
-            f"The archive expands to {size} bytes, "
-            f"the limit is {MAX_DOWNLOAD_SIZE} bytes"
+            translation_domain=DOMAIN,
+            translation_key="archive_too_large",
+            translation_placeholders={
+                "size": str(size),
+                "limit": str(MAX_DOWNLOAD_SIZE),
+            },
         )
 
 
@@ -219,7 +227,11 @@ class RepositoryArchive:
         try:
             return zipfile.ZipFile(io.BytesIO(self._content))
         except zipfile.BadZipFile as exception:
-            raise MarketplaceError(f"Not a ZIP archive: {exception}") from exception
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="archive_not_zip",
+                translation_placeholders={"error": str(exception)},
+            ) from exception
 
     @property
     def tree(self) -> list[GitHubGitTreeEntryModel]:
@@ -261,7 +273,9 @@ class RepositoryArchive:
                 extractable.append(path)
 
             if len(extractable) == 0:
-                raise MarketplaceError("No content to extract")
+                raise MarketplaceError(
+                    translation_domain=DOMAIN, translation_key="archive_without_content"
+                )
             archive.extractall(local, extractable)
 
 
@@ -369,7 +383,9 @@ class RepositoryManifest:
     def from_dict(manifest: dict[str, Any] | None) -> RepositoryManifest:
         """Set attributes from dicts."""
         if manifest is None:
-            raise MarketplaceError("Missing manifest data")
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="repository_manifest_missing"
+            )
 
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {}
@@ -620,8 +636,11 @@ class Repository:
         else:
             # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
-                f"{self.data.full_name} has no {RepositoryFile.REPOSITORY_MANIFEST} "
-                "in its root, the Marketplace needs one to install it"
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="repository_manifest_not_in_root",
+                    translation_placeholders={"repository": self.data.full_name},
+                )
             )
 
     async def common_registration(self) -> None:
@@ -715,7 +734,13 @@ class Repository:
             )
         except MarketplaceError:
             validate.errors.append(
-                f"Download of {self.repository_manifest.filename} was not completed"
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_downloaded",
+                    translation_placeholders={
+                        "file": str(self.repository_manifest.filename)
+                    },
+                )
             )
 
     async def async_download_zip_file(
@@ -726,7 +751,13 @@ class Repository:
         """Download a ZIP archive and extract it into the local path."""
         filecontent = await self.marketplace.async_download_file(content["url"])
         if filecontent is None:
-            validate.errors.append(f"Failed to download {content['url']}")
+            validate.errors.append(
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_downloaded",
+                    translation_placeholders={"file": content["url"]},
+                )
+            )
             return
 
         temp_dir = await self.marketplace.hass.async_add_executor_job(tempfile.mkdtemp)
@@ -734,7 +765,13 @@ class Repository:
             # A scratch file, deliberately not named after the remote manifest
             temp_file = Path(temp_dir, "archive.zip")
             if not await self.marketplace.async_save_file(str(temp_file), filecontent):
-                validate.errors.append(f"[{content['name']}] was not downloaded")
+                validate.errors.append(
+                    MarketplaceError(
+                        translation_domain=DOMAIN,
+                        translation_key="file_not_downloaded",
+                        translation_placeholders={"file": content["name"]},
+                    )
+                )
                 return
 
             def _extract_zip_file() -> None:
@@ -748,8 +785,14 @@ class Repository:
             self.logger.info(
                 "%s Download of %s completed", self.string, content["name"]
             )
-        except OSError, zipfile.BadZipFile:
-            validate.errors.append("Download was not completed")
+        except (OSError, zipfile.BadZipFile) as exception:
+            validate.errors.append(
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="download_incomplete",
+                    translation_placeholders={"error": str(exception)},
+                )
+            )
         finally:
             await self.marketplace.hass.async_add_executor_job(
                 partial(shutil.rmtree, temp_dir, ignore_errors=True)
@@ -786,8 +829,12 @@ class Repository:
         wanted = self._wanted_contents(contents)
         if len(wanted) > MAX_ARCHIVE_MEMBERS:
             raise MarketplaceError(
-                f"The content holds {len(wanted)} files, "
-                f"the limit is {MAX_ARCHIVE_MEMBERS}"
+                translation_domain=DOMAIN,
+                translation_key="content_too_many_files",
+                translation_placeholders={
+                    "count": str(len(wanted)),
+                    "limit": str(MAX_ARCHIVE_MEMBERS),
+                },
             )
 
         self._download_budget = MAX_DOWNLOAD_SIZE
@@ -802,7 +849,9 @@ class Repository:
     ) -> list[FileInformation]:
         """Return the files of the content that have to be written."""
         if not contents:
-            raise MarketplaceError("No content to download")
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="content_empty"
+            )
 
         if (
             self.repository_manifest.content_in_root
@@ -816,7 +865,11 @@ class Repository:
                 ]
             ):
                 raise MarketplaceError(
-                    f"The content has no {self.repository_manifest.filename}"
+                    translation_domain=DOMAIN,
+                    translation_key="content_file_missing",
+                    translation_placeholders={
+                        "file": self.repository_manifest.filename
+                    },
                 )
             return wanted
 
@@ -827,7 +880,9 @@ class Repository:
         ref = ref_version(self.ref)
 
         if not ref:
-            raise MarketplaceError("Missing required elements.")
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="version_unknown"
+            )
 
         archive = await self._async_download_archive(ref)
         await self._async_extract_archive(archive)
@@ -856,7 +911,11 @@ class Repository:
                 )
 
         if filecontent is None:
-            raise MarketplaceError(f"[{self}] Failed to download zipball")
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="archive_download_failed",
+                translation_placeholders={"repository": self.data.full_name},
+            )
 
         return await self.marketplace.hass.async_add_executor_job(
             RepositoryArchive, filecontent
@@ -865,7 +924,9 @@ class Repository:
     async def _async_extract_archive(self, archive: RepositoryArchive) -> None:
         """Extract the remote directory of the content from the archive."""
         if (remote := self.content.path.remote) is None:
-            raise MarketplaceError("Missing required elements.")
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="content_location_unknown"
+            )
 
         await self.marketplace.hass.async_add_executor_job(
             archive.extract_directory, remote, self.content.path.local
@@ -921,7 +982,7 @@ class Repository:
     async def uninstall(self) -> None:
         """Uninstall, not while an install of the repository is running."""
         if self.installing:
-            raise RepositoryBusyError(f"{self.data.full_name} is being installed")
+            raise RepositoryBusyError(self.data.full_name)
 
         async with self._install_lock:
             await self._async_uninstall()
@@ -931,7 +992,9 @@ class Repository:
         self.logger.info("%s Removing", self.string)
         if not await self.remove_local_directory():
             raise MarketplaceError(
-                f"Could not remove {self.data.full_name}, see the log for details"
+                translation_domain=DOMAIN,
+                translation_key="uninstall_failed",
+                translation_placeholders={"repository": self.data.full_name},
             )
         self.data.installed = False
         await self._async_post_uninstall()
@@ -1029,7 +1092,9 @@ class Repository:
             and not self._replace_built_in_confirmed
             and await self.async_replaces_built_in()
         ):
-            raise ReplacesBuiltInNotConfirmedError(str(self.data.domain))
+            raise ReplacesBuiltInNotConfirmedError(
+                self.data.full_name, str(self.data.domain)
+            )
         await self.async_pre_install()
         self.logger.info("%s Pre installation steps completed", self.string)
 
@@ -1076,8 +1141,17 @@ class Repository:
         except GitHubAnonymousRateLimitError, ReplacesBuiltInNotConfirmedError:
             raise
         except MarketplaceError as exception:
+            # What the error tells is translated already, it keeps that
+            if exception.translation_key:
+                raise
             raise MarketplaceError(
-                f"Installing {self.data.full_name} with version {version} failed with ({exception})"
+                translation_domain=DOMAIN,
+                translation_key="install_version_failed",
+                translation_placeholders={
+                    "repository": self.data.full_name,
+                    "version": str(version),
+                    "error": str(exception),
+                },
             ) from exception
 
     def _end_install(self) -> None:
@@ -1108,7 +1182,9 @@ class Repository:
         except Exception as exception:
             # The files are in place, so is what the Marketplace knows of them
             raise MarketplaceError(
-                f"Installed, but a step after writing the files failed: {exception}"
+                translation_domain=DOMAIN,
+                translation_key="post_install_failed",
+                translation_placeholders={"error": str(exception)},
             ) from exception
         finally:
             self.data.new = False
@@ -1121,7 +1197,9 @@ class Repository:
         )
         await self.update_repository(force=force_update)
         if self.content.path.local is None:
-            raise MarketplaceError("repository.content.path.local is None")
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="content_location_unknown"
+            )
         self.validate.errors.clear()
 
         version_to_install = self._branch_for_newest_commit(
@@ -1223,7 +1301,9 @@ class Repository:
             )
             if isinstance(exception, OSError):
                 raise MarketplaceError(
-                    f"Could not write the downloaded content: {exception}"
+                    translation_domain=DOMAIN,
+                    translation_key="content_write_failed",
+                    translation_placeholders={"error": str(exception)},
                 ) from exception
             raise
 
@@ -1239,8 +1319,9 @@ class Repository:
                 )
         except OSError as exception:
             raise MarketplaceError(
-                "Installed, but could not remove the backup of the previous "
-                f"version, a restart would put it back: {exception}"
+                translation_domain=DOMAIN,
+                translation_key="backup_cleanup_failed",
+                translation_placeholders={"error": str(exception)},
             ) from exception
 
     def _raise_for_install_errors(self) -> None:
@@ -1250,7 +1331,11 @@ class Repository:
 
         for error in self.validate.errors:
             self.logger.error("%s %s", self.string, error)
-        raise MarketplaceError("Could not install, see log for details")
+        raise MarketplaceError(
+            translation_domain=DOMAIN,
+            translation_key="install_checks_failed",
+            translation_placeholders={"repository": self.data.full_name},
+        )
 
     async def _async_back_up_persistent_directory(self) -> Backup | None:
         """Move the directory hacs.json keeps across updates out of the way."""
@@ -1273,8 +1358,8 @@ class Repository:
         # Keeping all of the installed content would put the old version back over the new
         if persistent_path == local_path:
             raise MarketplaceError(
-                "The persistent_directory of hacs.json has to be a directory"
-                " inside the installed content"
+                translation_domain=DOMAIN,
+                translation_key="persistent_directory_invalid",
             )
 
         if not await async_exists(self.marketplace.hass, persistent_path):
@@ -1310,16 +1395,24 @@ class Repository:
             raise NotModifiedError(exception) from exception
         except GitHubRatelimitException as exception:
             if not self.marketplace.github_connected:
-                raise GitHubAnonymousRateLimitError(exception) from exception
-            raise MarketplaceError(exception) from exception
+                raise GitHubAnonymousRateLimitError from exception
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="rate_limited"
+            ) from exception
         except GitHubAuthenticationException as exception:
             # Like every other GitHub call, a token that stopped working asks
             # the user to connect again
             if self.marketplace.github_connected:
                 self.marketplace.disable(DisabledReason.INVALID_TOKEN)
-            raise MarketplaceError(exception) from exception
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="invalid_token"
+            ) from exception
         except GitHubException as exception:
-            raise MarketplaceError(exception) from exception
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="github_failed",
+                translation_placeholders={"error": str(exception)},
+            ) from exception
 
         return response.data, response.etag
 
@@ -1336,7 +1429,11 @@ class Repository:
                 params={"recursive": "true"},
             )
         except GitHubException as exception:
-            raise MarketplaceError(exception) from exception
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="github_failed",
+                translation_placeholders={"error": str(exception)},
+            ) from exception
         tree: list[GitHubGitTreeEntryModel] = response.data.tree
         return tree
 
@@ -1396,8 +1493,8 @@ class Repository:
         except MarketplaceError as exception:
             self._not_reached(exception)
             if not ignore_issues:
-                self.validate.errors.append("Repository does not exist.")
-                raise MarketplaceError(exception) from exception
+                self.validate.errors.append(exception)
+                raise
             return True
 
         self._reached()
@@ -1432,19 +1529,27 @@ class Repository:
     def _raise_when_unusable(self) -> None:
         """Refuse a repository that is archived or asked to be removed."""
         if self.data.archived:
-            self.validate.errors.append("Repository is archived.")
+            archived = RepositoryArchivedError(
+                translation_domain=DOMAIN,
+                translation_key="repository_archived",
+                translation_placeholders={"repository": self.data.full_name},
+            )
+            self.validate.errors.append(archived)
             self.marketplace.common.archived_repositories.add(self.data.full_name)
-            raise RepositoryArchivedError(f"{self} Repository is archived.")
+            raise archived
 
         if not self.marketplace.repositories.is_removed(self.data.full_name):
             return
 
         removed = self.marketplace.repositories.removed_repository(self.data.full_name)
         if removed.removal_type != "remove":
-            self.validate.errors.append("Repository has been requested to be removed.")
-            raise MarketplaceError(
-                f"{self} Repository has been requested to be removed."
+            removed_error = MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="repository_removed",
+                translation_placeholders={"repository": self.data.full_name},
             )
+            self.validate.errors.append(removed_error)
+            raise removed_error
 
     async def _async_update_releases(self) -> None:
         """Take the newest version, pre-release and published versions from GitHub."""
@@ -1522,13 +1627,17 @@ class Repository:
                 return
             if not self.marketplace.status.startup:
                 self.logger.error("%s %s", self.string, exception)
-            raise MarketplaceError(exception) from None
+            raise
 
     async def _async_fetch_tree(self) -> None:
         """Fetch the tree of the version to install."""
         LOGGER.debug("%s Running checks against %s", self.string, ref_version(self.ref))
         if not (tree := await self.get_tree(self.ref)):
-            raise MarketplaceError("No files in tree")
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="version_without_files",
+                translation_placeholders={"version": str(ref_version(self.ref))},
+            )
 
         self.tree = tree
         self.tree_ref = ref_version(self.ref)
@@ -1602,8 +1711,12 @@ class Repository:
         # Every asset is downloaded, together they have to fit the download limit
         if sum(asset.get("size") or 0 for asset in assets) > MAX_DOWNLOAD_SIZE:
             raise MarketplaceError(
-                f"The release assets of {version} are larger than the "
-                f"{MAX_DOWNLOAD_SIZE} byte limit"
+                translation_domain=DOMAIN,
+                translation_key="release_too_large",
+                translation_placeholders={
+                    "version": str(version),
+                    "limit": str(MAX_DOWNLOAD_SIZE),
+                },
             )
 
         return [
@@ -1623,14 +1736,26 @@ class Repository:
         filecontent = await self.marketplace.async_download_file(content.download_url)
 
         if filecontent is None:
-            self.validate.errors.append(f"[{content.name}] was not downloaded.")
+            self.validate.errors.append(
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_downloaded",
+                    translation_placeholders={"file": content.name},
+                )
+            )
             return
 
         self._download_budget -= len(filecontent)
         if self._download_budget < 0:
             self.validate.errors.append(
-                f"[{content.name}] was not written, the content is over the "
-                f"limit of {MAX_DOWNLOAD_SIZE} bytes"
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="content_over_limit",
+                    translation_placeholders={
+                        "file": content.name,
+                        "limit": str(MAX_DOWNLOAD_SIZE),
+                    },
+                )
             )
             return
 
@@ -1669,10 +1794,24 @@ class Repository:
                     "%s Download of %s completed", self.string, content.name
                 )
                 return
-            self.validate.errors.append(f"[{content.name}] was not downloaded.")
+            self.validate.errors.append(
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_downloaded",
+                    translation_placeholders={"file": content.name},
+                )
+            )
 
-        except (OSError, MarketplaceError) as exception:
-            self.validate.errors.append(f"Download was not completed [{exception}]")
+        except MarketplaceError as exception:
+            self.validate.errors.append(exception)
+        except OSError as exception:
+            self.validate.errors.append(
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="download_incomplete",
+                    translation_placeholders={"error": str(exception)},
+                )
+            )
 
     async def async_remove_entity_device(self) -> None:
         """Remove the entity device."""
@@ -1827,7 +1966,9 @@ class Repository:
         if ref is None:
             if not self.can_install:
                 raise MarketplaceError(
-                    f"This {self.data.category} is not available to install."
+                    translation_domain=DOMAIN,
+                    translation_key="not_installable",
+                    translation_placeholders={"repository": self.data.full_name},
                 )
             return
 
@@ -1840,8 +1981,12 @@ class Repository:
 
         if target_manifest is None:
             raise MarketplaceError(
-                f"Version {ref} of {self.data.full_name} has no "
-                f"{RepositoryFile.REPOSITORY_MANIFEST}, which installing needs"
+                translation_domain=DOMAIN,
+                translation_key="version_without_repository_manifest",
+                translation_placeholders={
+                    "repository": self.data.full_name,
+                    "version": ref,
+                },
             )
 
         self._check_minimum_version(target_manifest)
@@ -1855,7 +2000,9 @@ class Repository:
             and self.marketplace.version < manifest.homeassistant
         ):
             raise MarketplaceError(
-                f"This version requires Home Assistant {manifest.homeassistant} or newer."
+                translation_domain=DOMAIN,
+                translation_key="requires_newer_home_assistant",
+                translation_placeholders={"version": str(manifest.homeassistant)},
             )
 
     async def async_install_repository(
@@ -1866,7 +2013,7 @@ class Repository:
     ) -> None:
         """Install a repository."""
         if self.installing:
-            raise RepositoryBusyError(f"{self.data.full_name} is already installing")
+            raise RepositoryBusyError(self.data.full_name)
 
         async with self._install_lock:
             self._replace_built_in_confirmed = confirm_replace_built_in
@@ -1943,7 +2090,9 @@ class Repository:
         """Install a version the catalog names, without the GitHub API."""
         if requested is None and not self.can_install:
             raise MarketplaceError(
-                f"This {self.data.category} is not available to install."
+                translation_domain=DOMAIN,
+                translation_key="not_installable",
+                translation_placeholders={"repository": self.data.full_name},
             )
 
         # Without releases the catalog names the last commit instead

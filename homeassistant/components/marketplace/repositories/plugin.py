@@ -109,8 +109,12 @@ class PluginRepository(Repository):
                 and repository.localpath.lower() == self.localpath.lower()
             ):
                 raise MarketplaceError(
-                    f"The '{self.localpath.rsplit('/', 1)[-1]}' directory is owned "
-                    f"by {repository.data.full_name}"
+                    translation_domain=DOMAIN,
+                    translation_key="plugin_owned",
+                    translation_placeholders={
+                        "directory": self.localpath.rsplit("/", 1)[-1],
+                        "owner": repository.data.full_name,
+                    },
                 )
 
     @override
@@ -122,7 +126,9 @@ class PluginRepository(Repository):
         resource = Path(self.content.path.local, self.data.file_name)
         if not await self.marketplace.hass.async_add_executor_job(resource.is_file):
             raise MarketplaceError(
-                f"The installed content has no {self.data.file_name}"
+                translation_domain=DOMAIN,
+                translation_key="installed_resource_missing",
+                translation_placeholders={"file": self.data.file_name},
             )
 
     @override
@@ -165,7 +171,14 @@ class PluginRepository(Repository):
 
         if self.content.path.remote is None:
             self.validate.errors.append(
-                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="structure_not_compliant",
+                    translation_placeholders={
+                        "repository": self.data.full_name,
+                        "version": str(ref_version(self.ref)),
+                    },
+                )
             )
 
         if self.content.path.remote == "release":
@@ -191,7 +204,12 @@ class PluginRepository(Repository):
         """Refuse a repository without a dashboard resource to serve."""
         if self.content.path.remote is None:
             raise MarketplaceError(
-                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                translation_domain=DOMAIN,
+                translation_key="structure_not_compliant",
+                translation_placeholders={
+                    "repository": self.data.full_name,
+                    "version": str(ref_version(self.ref)),
+                },
             )
 
         if self.content.path.remote == "release":

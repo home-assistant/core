@@ -854,10 +854,11 @@ APP_REPOSITORY_MESSAGE = (
 
 
 @pytest.mark.parametrize(
-    ("repository_full_name", "translation_key", "message", "placeholders"),
+    ("repository_full_name", "code", "translation_key", "message", "placeholders"),
     [
         pytest.param(
             "home-assistant/core",
+            "core_repository",
             "core_repository",
             "The integrations of Home Assistant itself come with Home Assistant,"
             " there is nothing to add",
@@ -867,12 +868,14 @@ APP_REPOSITORY_MESSAGE = (
         pytest.param(
             "home-assistant/addons",
             "app_repository",
+            "app_repository",
             APP_REPOSITORY_MESSAGE.format(repository="home-assistant/addons"),
             {"repository": "home-assistant/addons"},
             id="core-addons",
         ),
         pytest.param(
             "hassio-addons/example",
+            "app_repository",
             "app_repository",
             APP_REPOSITORY_MESSAGE.format(repository="hassio-addons/example"),
             {"repository": "hassio-addons/example"},
@@ -881,6 +884,7 @@ APP_REPOSITORY_MESSAGE = (
         pytest.param(
             "hacs-test-org/addon-basic",
             "app_repository",
+            "app_repository",
             APP_REPOSITORY_MESSAGE.format(repository="hacs-test-org/addon-basic"),
             {"repository": "hacs-test-org/addon-basic"},
             id="addon-repository",
@@ -888,14 +892,10 @@ APP_REPOSITORY_MESSAGE = (
         pytest.param(
             "hacs-test-org/integration-invalid",
             "add_failed",
-            "Adding hacs-test-org/integration-invalid failed:"
-            " <Integration hacs-test-org/integration-invalid> Repository structure"
-            " for main is not compliant",
-            {
-                "repository": "hacs-test-org/integration-invalid",
-                "error": "<Integration hacs-test-org/integration-invalid>"
-                " Repository structure for main is not compliant",
-            },
+            "structure_not_compliant",
+            "hacs-test-org/integration-invalid has no content the Marketplace can"
+            " install in version main",
+            {"repository": "hacs-test-org/integration-invalid", "version": "main"},
             id="not-compliant",
         ),
     ],
@@ -905,6 +905,7 @@ async def test_register_repository_failures(
     marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     repository_full_name: str,
+    code: str,
     translation_key: str,
     message: str,
     placeholders: dict[str, str] | None,
@@ -924,7 +925,7 @@ async def test_register_repository_failures(
 
     assert not response["success"]
     assert response["error"] == {
-        "code": translation_key,
+        "code": code,
         "message": message,
         "translation_key": translation_key,
         "translation_domain": DOMAIN,
@@ -967,9 +968,11 @@ async def test_validate_repository_without_content(
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(MarketplaceError, match="is not compliant"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         await repository.validate_repository()
+
+    assert exc_info.value.translation_key == "structure_not_compliant"
 
 
 @pytest.mark.parametrize(
@@ -1004,10 +1007,10 @@ async def test_validate_repository_without_manifest(
     with patch.object(repository, "common_update_data"):
         await repository.common_validate()
 
-    assert repository.validate.errors == [
-        f"{REPOSITORY_INTEGRATION} has no hacs.json in its root, the Marketplace "
-        "needs one to install it"
-    ]
+    assert [
+        (error.translation_key, error.translation_placeholders)
+        for error in repository.validate.errors
+    ] == [("repository_manifest_not_in_root", {"repository": REPOSITORY_INTEGRATION})]
 
 
 async def test_validate_integration_without_content(
@@ -1023,9 +1026,11 @@ async def test_validate_integration_without_content(
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(MarketplaceError, match="is not compliant"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         await repository.validate_repository()
+
+    assert exc_info.value.translation_key == "structure_not_compliant"
 
 
 async def test_validate_plugin_without_content(marketplace: MarketplaceManager) -> None:
@@ -1039,9 +1044,11 @@ async def test_validate_plugin_without_content(marketplace: MarketplaceManager) 
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(MarketplaceError, match="is not compliant"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         await repository.validate_repository()
+
+    assert exc_info.value.translation_key == "structure_not_compliant"
 
 
 @pytest.mark.parametrize(
@@ -1385,7 +1392,10 @@ async def test_download_zip_release_failure(
     await repository.download_zip_files(validate)
 
     assert not validate.success
-    assert validate.errors == [f"Failed to download {url}"]
+    assert [
+        (error.translation_key, error.translation_placeholders)
+        for error in validate.errors
+    ] == [("file_not_downloaded", {"file": url})]
 
 
 async def test_download_repository_zip_without_ref(
@@ -1395,8 +1405,10 @@ async def test_download_repository_zip_without_ref(
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = ""
 
-    with pytest.raises(MarketplaceError, match="Missing required elements"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.download_repository_zip()
+
+    assert exc_info.value.translation_key == "version_unknown"
 
 
 async def test_download_zip_release_escaping_member(
@@ -1496,7 +1508,7 @@ async def test_download_content_outside_the_repository(
         FileInformation(url, "escaped.py", "../../escaped.py")
     )
 
-    assert "is not inside" in repository.validate.errors[0]
+    assert repository.validate.errors[0].translation_key == "path_outside_directory"
     assert _installed_files(config_dir) == []
 
 
@@ -1557,7 +1569,7 @@ async def test_repository_object_with_a_bad_token(
             MarketplaceError("No content to download"), MarketplaceError, id="error"
         ),
         pytest.param(
-            GitHubAnonymousRateLimitError("API rate limit exceeded"),
+            GitHubAnonymousRateLimitError,
             GitHubAnonymousRateLimitError,
             id="rate_limit",
         ),
@@ -1835,9 +1847,10 @@ async def test_integration_manifest_missing_key(
     ):
         assert not await repository.validate_repository()
 
-    assert repository.validate.errors == [
-        "Missing expected key ''domain'' in manifest.json"
-    ]
+    assert [
+        (error.translation_key, error.translation_placeholders)
+        for error in repository.validate.errors
+    ] == [("integration_manifest_key_missing", {"key": "'domain'"})]
 
 
 @pytest.mark.parametrize(
@@ -1897,9 +1910,12 @@ async def test_integration_manifest_domain_changed_after_install(
             "async_get_integration_manifest",
             return_value={"domain": "renamed", "name": "Example"},
         ),
-        pytest.raises(MarketplaceError, match="changed its domain from 'example'"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         await repository.validate_repository()
+
+    assert exc_info.value.translation_key == "domain_changed"
+    assert exc_info.value.translation_placeholders["old_domain"] == "example"
 
     assert repository.data.domain == "example"
 
@@ -1917,8 +1933,11 @@ async def test_integration_domain_owned_by_another_repository(
     other.data.installed = True
     marketplace.repositories.register(other)
 
-    with pytest.raises(MarketplaceError, match="is owned by test/other"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.async_pre_install()
+
+    assert exc_info.value.translation_key == "integration_owned"
+    assert exc_info.value.translation_placeholders["owner"] == "test/other"
 
 
 async def test_plugin_directory_owned_by_another_repository(
@@ -1933,8 +1952,13 @@ async def test_plugin_directory_owned_by_another_repository(
     other.data.installed = True
     marketplace.repositories.register(other)
 
-    with pytest.raises(MarketplaceError, match="is owned by someone-else/Plugin-Basic"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.async_pre_install()
+
+    assert exc_info.value.translation_key == "plugin_owned"
+    assert (
+        exc_info.value.translation_placeholders["owner"] == "someone-else/Plugin-Basic"
+    )
 
 
 @pytest.mark.parametrize(
@@ -2024,8 +2048,10 @@ async def test_integration_manifest_missing_file(
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.tree = []
 
-    with pytest.raises(MarketplaceError, match="No manifest.json file found"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.async_get_integration_manifest()
+
+    assert exc_info.value.translation_key == "integration_manifest_missing"
 
 
 async def test_integration_manifest_for_version(
@@ -2380,8 +2406,10 @@ async def test_uninstall_without_a_domain(marketplace: MarketplaceManager) -> No
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = None
 
-    with pytest.raises(MarketplaceError, match="Could not remove"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.uninstall()
+
+    assert exc_info.value.translation_key == "uninstall_failed"
 
 
 async def test_repository_manifest_of_a_removed_version(
@@ -2946,9 +2974,9 @@ async def test_install_from_the_catalog_requires_newer_core(
     response = await _install(hass, hass_ws_client, repository.data.id)
 
     assert not response["success"]
+    assert response["error"]["translation_key"] == "requires_newer_home_assistant"
     assert response["error"]["message"] == (
-        f"Installing {REPOSITORY_INTEGRATION} failed: This version requires"
-        " Home Assistant 9999.1.0 or newer."
+        "This version requires Home Assistant 9999.1.0 or newer"
     )
     assert repository.data.installed is False
     assert _installed_files(config_dir) == []

@@ -41,6 +41,63 @@
     "app_repository": {
       "message": "{repository} holds apps, the Marketplace does not install apps."
     },
+    "archive_download_failed": {
+      "message": "Could not download the archive of {repository}."
+    },
+    "archive_not_zip": {
+      "message": "The download is not a ZIP archive: {error}"
+    },
+    "archive_too_large": {
+      "message": "The archive expands to {size} bytes, the limit is {limit} bytes."
+    },
+    "archive_too_many_files": {
+      "message": "The archive holds {count} files, the limit is {limit}."
+    },
+    "archive_without_content": {
+      "message": "The archive holds nothing to install."
+    },
+    "backup_cleanup_failed": {
+      "message": "Installed, but could not remove the backup of the previous version, a restart would put it back: {error}"
+    },
+    "backup_failed": {
+      "message": "Could not back up {path}: {error}"
+    },
+    "backup_protected": {
+      "message": "Could not back up {path}, it is protected."
+    },
+    "catalog_invalid_json": {
+      "message": "The catalog sent {endpoint} that is not valid JSON: {error}"
+    },
+    "catalog_not_a_list": {
+      "message": "The catalog of {section} is not a list."
+    },
+    "catalog_not_an_object": {
+      "message": "The catalog of {section} is not an object."
+    },
+    "catalog_timeout": {
+      "message": "The catalog did not answer within 60 seconds."
+    },
+    "catalog_unreachable": {
+      "message": "Could not reach the catalog: {error}"
+    },
+    "content_empty": {
+      "message": "There is no content to download."
+    },
+    "content_file_missing": {
+      "message": "The content has no {file}."
+    },
+    "content_location_unknown": {
+      "message": "It is not known where the content goes."
+    },
+    "content_over_limit": {
+      "message": "{file} was not written, the content is over the limit of {limit} bytes."
+    },
+    "content_too_many_files": {
+      "message": "The content holds {count} files, the limit is {limit}."
+    },
+    "content_write_failed": {
+      "message": "Could not write the downloaded content: {error}"
+    },
     "core_repository": {
       "message": "The integrations of Home Assistant itself come with Home Assistant, there is nothing to add."
     },
@@ -56,17 +113,62 @@
     "disabled_removed": {
       "message": "The Marketplace is being removed."
     },
+    "domain_changed": {
+      "message": "{repository} changed its domain from {old_domain} to {domain}, uninstall it and install it again."
+    },
+    "download_incomplete": {
+      "message": "The download did not complete: {error}"
+    },
+    "download_too_large": {
+      "message": "{url} is larger than the {limit} byte limit."
+    },
+    "file_not_downloaded": {
+      "message": "{file} was not downloaded."
+    },
+    "github_failed": {
+      "message": "GitHub answered with an error: {error}"
+    },
     "github_not_connected": {
       "message": "Connect a GitHub account to the Marketplace first."
     },
     "github_rate_limited": {
       "message": "GitHub limits how often the Marketplace can reach it without a GitHub connection. Try again later, or connect GitHub in the Marketplace for a higher limit."
     },
+    "install_checks_failed": {
+      "message": "Could not install {repository}, see the log for details."
+    },
     "install_failed": {
       "message": "Installing {repository} failed: {error}"
     },
+    "install_version_failed": {
+      "message": "Installing version {version} of {repository} failed: {error}"
+    },
+    "installed_manifest_other_domain": {
+      "message": "The manifest.json of the installed content is for {found}, not {domain}."
+    },
+    "installed_manifest_unusable": {
+      "message": "The installed content has no usable manifest.json where Home Assistant looks for it: {error}"
+    },
+    "installed_manifest_without_version": {
+      "message": "The manifest.json of the installed content has no valid version, Home Assistant would not load it."
+    },
+    "installed_resource_missing": {
+      "message": "The installed content has no {file}."
+    },
+    "integration_manifest_key_missing": {
+      "message": "The manifest.json has no {key}."
+    },
+    "integration_manifest_missing": {
+      "message": "There is no manifest.json at {path}."
+    },
+    "integration_owned": {
+      "message": "The {domain} directory belongs to {owner}."
+    },
     "invalid_category": {
       "message": "Repositories cannot be added to the {category} category."
+    },
+    "invalid_domain": {
+      "message": "{domain} is not a valid integration domain."
     },
     "invalid_repository": {
       "message": "Could not read a GitHub repository from {repository}."
@@ -77,8 +179,23 @@
     "invalid_version": {
       "message": "{version} is not a version the Marketplace can install."
     },
+    "not_installable": {
+      "message": "{repository} is not available to install."
+    },
     "not_loaded": {
       "message": "The Marketplace is not loaded."
+    },
+    "path_outside_directory": {
+      "message": "{path} is not inside {directory}."
+    },
+    "persistent_directory_invalid": {
+      "message": "The persistent_directory of hacs.json has to be a directory inside the installed content."
+    },
+    "plugin_owned": {
+      "message": "The {directory} directory belongs to {owner}."
+    },
+    "post_install_failed": {
+      "message": "Installed, but a step after writing the files failed: {error}"
     },
     "rate_limited": {
       "message": "GitHub limits how often the Marketplace can reach it. Try again later."
@@ -86,11 +203,17 @@
     "refresh_failed": {
       "message": "Could not update the information of {repository}: {error}"
     },
+    "release_too_large": {
+      "message": "The release assets of {version} are larger than the {limit} byte limit."
+    },
     "releases_failed": {
       "message": "Could not get the releases of {repository}: {error}"
     },
     "replaces_built_in_not_confirmed": {
       "message": "{repository} replaces the built-in {domain} integration, confirm that before installing it."
+    },
+    "repository_archived": {
+      "message": "{repository} is archived."
     },
     "repository_busy": {
       "message": "{repository} is being installed, try again once that is done."
@@ -104,11 +227,23 @@
     "repository_installed": {
       "message": "Uninstall {repository} first."
     },
+    "repository_manifest_missing": {
+      "message": "The hacs.json is missing."
+    },
+    "repository_manifest_not_in_root": {
+      "message": "{repository} has no hacs.json in its root, the Marketplace needs one to install it."
+    },
     "repository_not_found": {
       "message": "The Marketplace does not know the repository with ID {repository}."
     },
+    "repository_removed": {
+      "message": "{repository} was removed from the Marketplace."
+    },
     "repository_still_installed": {
       "message": "Cannot remove the service for {repository}, it is still installed."
+    },
+    "requires_newer_home_assistant": {
+      "message": "This version requires Home Assistant {version} or newer."
     },
     "restore_failed": {
       "message": "Could not read the stored data of the Marketplace."
@@ -116,11 +251,47 @@
     "setup_failed": {
       "message": "Could not set up the Marketplace: {error}"
     },
+    "structure_not_compliant": {
+      "message": "{repository} has no content the Marketplace can install in version {version}."
+    },
+    "template_from_zip": {
+      "message": "{repository} is a template, which is one file and can not come from a ZIP release."
+    },
+    "template_not_utf8": {
+      "message": "{file} is not UTF-8 encoded."
+    },
+    "template_owned": {
+      "message": "The {file} template belongs to {owner}."
+    },
+    "template_too_large": {
+      "message": "{file} is larger than the {limit} bytes Home Assistant reads."
+    },
+    "theme_invalid": {
+      "message": "{file} is not a valid theme: {error}"
+    },
+    "theme_invalid_yaml": {
+      "message": "{file} is not valid YAML: {error}"
+    },
+    "theme_owned": {
+      "message": "The {directory} theme folder belongs to {owner}."
+    },
     "uninstall_failed": {
       "message": "Could not uninstall {repository}, see the log for details."
     },
+    "validation_failed": {
+      "message": "Checking {repository} failed: {error}"
+    },
     "version_already_installed": {
       "message": "Version {version} of {repository} is already installed."
+    },
+    "version_unknown": {
+      "message": "It is not known which version to install."
+    },
+    "version_without_files": {
+      "message": "Version {version} has no files."
+    },
+    "version_without_repository_manifest": {
+      "message": "Version {version} of {repository} has no hacs.json, which installing needs."
     },
     "warning_not_accepted": {
       "message": "Open the Marketplace and read the warning first, installing and updating work once it is accepted."

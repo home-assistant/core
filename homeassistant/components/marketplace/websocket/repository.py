@@ -25,6 +25,7 @@ from ..utils.version import is_newer_version
 from .decorators import (
     ERR_GITHUB_RATE_LIMITED,
     marketplace_command,
+    send_marketplace_error,
     send_repository_not_found,
     send_translated_error,
 )
@@ -63,12 +64,13 @@ def _send_refresh_failed(
 ) -> None:
     """Answer that the information of the repository could not be updated."""
     repository.logger.error("%s %s", repository.string, exception)
-    send_translated_error(
+    send_marketplace_error(
         connection,
         msg_id,
         "error",
+        exception,
         "refresh_failed",
-        {"repository": repository.data.full_name, "error": str(exception)},
+        {"repository": repository.data.full_name},
     )
 
 
@@ -301,12 +303,13 @@ async def marketplace_repository_install(
         _send_repository_busy(connection, msg["id"], repository)
     except MarketplaceError as exception:
         repository.logger.error("%s %s", repository.string, exception)
-        send_translated_error(
+        send_marketplace_error(
             connection,
             msg["id"],
             "error",
+            exception,
             "install_failed",
-            {"repository": repository.data.full_name, "error": str(exception)},
+            {"repository": repository.data.full_name},
         )
 
 
@@ -486,12 +489,13 @@ async def marketplace_repository_releases(
         # A connected rate limit is expected, and connecting would not help
         if not isinstance(exception, GitHubRateLimitError):
             LOGGER.exception("Could not get the releases for %s", repository.string)
-        send_translated_error(
+        send_marketplace_error(
             connection,
             msg["id"],
             "unknown",
+            exception,
             "releases_failed",
-            {"repository": repository.data.full_name, "error": str(exception)},
+            {"repository": repository.data.full_name},
         )
         return
 

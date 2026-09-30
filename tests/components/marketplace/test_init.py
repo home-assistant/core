@@ -332,6 +332,14 @@ async def test_custom_repository_update_failure_still_updates_entities(
             "setup_failed",
             id="marketplace",
         ),
+        pytest.param(
+            MarketplaceError(
+                translation_domain=DOMAIN, translation_key="catalog_timeout"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            "catalog_timeout",
+            id="marketplace_translated",
+        ),
     ],
 )
 async def test_setup_failure(

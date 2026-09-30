@@ -568,6 +568,34 @@ async def test_install_without_an_update(
         )
 
 
+async def test_install_failure_without_its_own_message(
+    hass: HomeAssistant, integration_update_entity: str
+) -> None:
+    """Test an error that says nothing translated is named as a failed install."""
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    with (
+        patch.object(
+            repository,
+            "async_install_repository",
+            side_effect=MarketplaceError("the disk made a noise"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "install_failed"
+    assert exc_info.value.translation_placeholders == {
+        "error": "the disk made a noise",
+        "repository": REPOSITORY_INTEGRATION,
+    }
+
+
 async def test_install_version_without_a_manifest(
     hass: HomeAssistant,
     integration_update_entity: str,
@@ -579,19 +607,15 @@ async def test_install_version_without_a_manifest(
         url, mocked_response(url, status=HTTPStatus.NOT_FOUND), keep=True
     )
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=re.escape(
-            f"Installing {REPOSITORY_INTEGRATION} failed: Version 3.0.0 of "
-            f"{REPOSITORY_INTEGRATION} has no hacs.json, which installing needs"
-        ),
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "3.0.0"},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "version_without_repository_manifest"
 
 
 async def test_install_version_requiring_a_newer_core(
@@ -609,19 +633,15 @@ async def test_install_version_requiring_a_newer_core(
         keep=True,
     )
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=re.escape(
-            f"Installing {REPOSITORY_INTEGRATION} failed: This version requires "
-            "Home Assistant 9999.99.99 or newer."
-        ),
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "3.0.0"},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "requires_newer_home_assistant"
 
 
 async def test_install_download_failure(
@@ -643,20 +663,15 @@ async def test_install_download_failure(
             keep=True,
         )
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=re.escape(
-            f"Installing {REPOSITORY_INTEGRATION} failed: Installing "
-            f"{REPOSITORY_INTEGRATION} with version 2.0.0 failed with "
-            "(Could not install, see log for details)"
-        ),
-    ):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: "2.0.0"},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "install_checks_failed"
 
 
 async def test_release_notes(

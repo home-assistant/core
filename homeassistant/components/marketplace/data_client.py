@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.util.json import json_loads
 
+from .const import DOMAIN
 from .exceptions import MarketplaceError, NotModifiedError
 from .utils.logger import LOGGER
 from .utils.response import async_read_limited
@@ -30,7 +31,11 @@ class CatalogClient:
         """Fetch the repositories of a category, by id, the valid ones only."""
         data = await self._async_get_section(category)
         if not isinstance(data, dict):
-            raise MarketplaceError(f"The catalog of {category} is not an object")
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="catalog_not_an_object",
+                translation_placeholders={"section": category},
+            )
 
         validator = VALIDATE_FETCHED_V2_REPO_DATA[category]
         repositories: dict[str, dict[str, Any]] = {}
@@ -71,7 +76,11 @@ class CatalogClient:
         """Fetch a section that is a list, the valid entries only."""
         data = await self._async_get_section(section)
         if not isinstance(data, list):
-            raise MarketplaceError(f"The catalog of {section} is not a list")
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="catalog_not_a_list",
+                translation_placeholders={"section": section},
+            )
 
         entries: list[dict[str, Any]] = []
         for entry in data:
@@ -103,17 +112,26 @@ class CatalogClient:
         except NotModifiedError:
             raise
         except TimeoutError:
-            raise MarketplaceError("Timeout of 60s reached") from None
+            raise MarketplaceError(
+                translation_domain=DOMAIN, translation_key="catalog_timeout"
+            ) from None
         except Exception as exception:
             raise MarketplaceError(
-                f"Error fetching data from the catalog: {exception}"
+                translation_domain=DOMAIN,
+                translation_key="catalog_unreachable",
+                translation_placeholders={"error": str(exception)},
             ) from exception
 
         try:
             data = json_loads(content)
         except ValueError as exception:
             raise MarketplaceError(
-                f"The catalog sent {endpoint} that is not valid JSON: {exception}"
+                translation_domain=DOMAIN,
+                translation_key="catalog_invalid_json",
+                translation_placeholders={
+                    "endpoint": endpoint,
+                    "error": str(exception),
+                },
             ) from exception
 
         # Only for data that was usable, or a broken answer would stick as not modified

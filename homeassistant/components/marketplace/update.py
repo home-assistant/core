@@ -151,6 +151,9 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
                 translation_key="github_rate_limited",
             ) from exception
         except MarketplaceError as exception:
+            # What the error says is translated already
+            if exception.translation_key:
+                raise
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="install_failed",

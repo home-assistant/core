@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from ..const import DOMAIN
 from ..exceptions import MarketplaceError
 
 if TYPE_CHECKING:
@@ -52,7 +53,14 @@ def resolve_in_directory(directory: str | Path, path: str | Path) -> Path:
     resolved = Path(directory, path).resolve()
 
     if resolved != resolved_directory and resolved_directory not in resolved.parents:
-        raise MarketplaceError(f"'{path}' is not inside {resolved_directory}")
+        raise MarketplaceError(
+            translation_domain=DOMAIN,
+            translation_key="path_outside_directory",
+            translation_placeholders={
+                "path": str(path),
+                "directory": str(resolved_directory),
+            },
+        )
 
     return resolved
 
@@ -65,6 +73,10 @@ def entry_in_directory(directory: str | Path, path: str | Path) -> Path:
     """
     path = Path(path)
     if path.name in ("", ".", ".."):
-        raise MarketplaceError(f"'{path}' is not inside {directory}")
+        raise MarketplaceError(
+            translation_domain=DOMAIN,
+            translation_key="path_outside_directory",
+            translation_placeholders={"path": str(path), "directory": str(directory)},
+        )
 
     return resolve_in_directory(directory, path.parent) / path.name

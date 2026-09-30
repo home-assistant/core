@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import MAX_CUSTOM_TEMPLATE_SIZE
 
+from ..const import DOMAIN
 from ..enums import RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
@@ -56,7 +57,12 @@ class TemplateRepository(Repository):
         """Refuse a file name that is not a template in the root of the folder."""
         if not file_name or "/" in file_name or not file_name.endswith(".jinja"):
             raise MarketplaceError(
-                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                translation_domain=DOMAIN,
+                translation_key="structure_not_compliant",
+                translation_placeholders={
+                    "repository": self.data.full_name,
+                    "version": str(ref_version(self.ref)),
+                },
             )
 
     @override
@@ -68,8 +74,9 @@ class TemplateRepository(Repository):
         # A ZIP extracts all of it into the folder the templates share
         if self.repository_manifest.zip_release:
             raise MarketplaceError(
-                f"{self.string} A template is one file, it can not come from a"
-                " ZIP release"
+                translation_domain=DOMAIN,
+                translation_key="template_from_zip",
+                translation_placeholders={"repository": self.data.full_name},
             )
 
         # The folder is shared, a template file belongs to one repository
@@ -80,8 +87,12 @@ class TemplateRepository(Repository):
                 and repository.data.file_name == self._file_name_to_write
             ):
                 raise MarketplaceError(
-                    f"The '{self._file_name_to_write}' template is owned by"
-                    f" {repository.data.full_name}"
+                    translation_domain=DOMAIN,
+                    translation_key="template_owned",
+                    translation_placeholders={
+                        "file": self._file_name_to_write,
+                        "owner": repository.data.full_name,
+                    },
                 )
 
     @override
@@ -134,14 +145,20 @@ class TemplateRepository(Repository):
             # Core skips a larger one without a word
             if len(content) > MAX_CUSTOM_TEMPLATE_SIZE:
                 raise MarketplaceError(
-                    f"{path.name} is larger than the"
-                    f" {MAX_CUSTOM_TEMPLATE_SIZE} bytes Home Assistant reads"
+                    translation_domain=DOMAIN,
+                    translation_key="template_too_large",
+                    translation_placeholders={
+                        "file": path.name,
+                        "limit": str(MAX_CUSTOM_TEMPLATE_SIZE),
+                    },
                 )
             try:
                 content.decode("utf-8")
             except UnicodeDecodeError as exception:
                 raise MarketplaceError(
-                    f"{path.name} is not UTF-8 encoded: {exception}"
+                    translation_domain=DOMAIN,
+                    translation_key="template_not_utf8",
+                    translation_placeholders={"file": path.name},
                 ) from exception
 
         await self.marketplace.hass.async_add_executor_job(_check)
@@ -158,7 +175,12 @@ class TemplateRepository(Repository):
         self._check_file_name(file_name)
         if file_name not in self.treefiles:
             raise MarketplaceError(
-                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                translation_domain=DOMAIN,
+                translation_key="structure_not_compliant",
+                translation_placeholders={
+                    "repository": self.data.full_name,
+                    "version": str(ref_version(self.ref)),
+                },
             )
         self._use_file_name()
 

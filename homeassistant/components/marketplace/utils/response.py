@@ -4,7 +4,7 @@ from collections.abc import Mapping
 
 from aiohttp import ClientResponse
 
-from ..const import DOWNLOAD_CHUNK_SIZE, MAX_DOWNLOAD_SIZE
+from ..const import DOMAIN, DOWNLOAD_CHUNK_SIZE, MAX_DOWNLOAD_SIZE
 from ..exceptions import MarketplaceError
 
 
@@ -22,7 +22,9 @@ async def async_read_limited(response: ClientResponse, url: str) -> bytes:
     """
     if _declared_size(response.headers) > MAX_DOWNLOAD_SIZE:
         raise MarketplaceError(
-            f"{url} declares more than the {MAX_DOWNLOAD_SIZE} byte limit"
+            translation_domain=DOMAIN,
+            translation_key="download_too_large",
+            translation_placeholders={"url": url, "limit": str(MAX_DOWNLOAD_SIZE)},
         )
 
     content = bytearray()
@@ -30,7 +32,9 @@ async def async_read_limited(response: ClientResponse, url: str) -> bytes:
         content.extend(chunk)
         if len(content) > MAX_DOWNLOAD_SIZE:
             raise MarketplaceError(
-                f"{url} is larger than the {MAX_DOWNLOAD_SIZE} byte limit"
+                translation_domain=DOMAIN,
+                translation_key="download_too_large",
+                translation_placeholders={"url": url, "limit": str(MAX_DOWNLOAD_SIZE)},
             )
 
     return bytes(content)

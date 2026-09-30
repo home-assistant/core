@@ -64,21 +64,20 @@ async def test_get_data(
 
 
 @pytest.mark.parametrize(
-    ("exception", "message"),
+    ("exception", "translation_key", "placeholders"),
     [
         pytest.param(
-            Exception("Test"),
-            "Error fetching data from the catalog: Test",
-            id="exception",
+            Exception("Test"), "catalog_unreachable", {"error": "Test"}, id="exception"
         ),
-        pytest.param(TimeoutError, "Timeout of 60s reached", id="timeout"),
+        pytest.param(TimeoutError, "catalog_timeout", None, id="timeout"),
     ],
 )
 async def test_request_exceptions(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
     exception: Exception,
-    message: str,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
     """Test the errors a failing request is reported as."""
     url = "https://data-v2.hacs.xyz/removed/data.json"
@@ -86,8 +85,11 @@ async def test_request_exceptions(
         url, AiohttpClientMockResponse("get", url, exc=exception), keep=True
     )
 
-    with pytest.raises(MarketplaceError, match=message):
+    with pytest.raises(MarketplaceError) as exc_info:
         await marketplace.data_client.async_get_removed()
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == placeholders
 
 
 async def test_catalog_larger_than_the_limit(

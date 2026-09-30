@@ -8,12 +8,15 @@ from typing import Any
 from awesomeversion import AwesomeVersion
 import probatio
 
+from ..exceptions import MarketplaceError
+
 
 @dataclass
 class Validate:
     """Validate."""
 
-    errors: list[str] = field(default_factory=list)
+    # Translated, the log shows them in English and adding one shows the first
+    errors: list[MarketplaceError] = field(default_factory=list)
 
     @property
     def success(self) -> bool:

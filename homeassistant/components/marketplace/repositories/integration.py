@@ -48,7 +48,11 @@ def _validated_domain(domain: Any) -> str:
     written to, so anything else would let a repository pick its own target.
     """
     if not isinstance(domain, str) or not VALID_DOMAIN.match(domain):
-        raise MarketplaceError(f"'{domain}' is not a valid integration domain")
+        raise MarketplaceError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_domain",
+            translation_placeholders={"domain": str(domain)},
+        )
 
     return domain
 
@@ -97,20 +101,25 @@ def _check_loadable_manifest(directory: Path, domain: str | None) -> None:
         )
     except (OSError, ValueError) as exception:
         raise MarketplaceError(
-            f"The installed content has no usable {RepositoryFile.MANIFEST_JSON}"
-            f" where Home Assistant looks for it: {exception}"
+            translation_domain=DOMAIN,
+            translation_key="installed_manifest_unusable",
+            translation_placeholders={"error": str(exception)},
         ) from exception
 
     if manifest.get("domain") != domain:
         raise MarketplaceError(
-            f"The {RepositoryFile.MANIFEST_JSON} of the installed content is for"
-            f" '{manifest.get('domain')}', not '{domain}'"
+            translation_domain=DOMAIN,
+            translation_key="installed_manifest_other_domain",
+            translation_placeholders={
+                "found": str(manifest.get("domain")),
+                "domain": str(domain),
+            },
         )
 
     if not _is_loadable_version(manifest.get("version")):
         raise MarketplaceError(
-            f"The {RepositoryFile.MANIFEST_JSON} of the installed content has no valid"
-            " version, Home Assistant would not load it"
+            translation_domain=DOMAIN,
+            translation_key="installed_manifest_without_version",
         )
 
 
@@ -170,8 +179,12 @@ class IntegrationRepository(Repository):
                 and repository.data.domain == self.data.domain
             ):
                 raise MarketplaceError(
-                    f"The '{self.data.domain}' directory is owned by "
-                    f"{repository.data.full_name}"
+                    translation_domain=DOMAIN,
+                    translation_key="integration_owned",
+                    translation_placeholders={
+                        "domain": str(self.data.domain),
+                        "owner": repository.data.full_name,
+                    },
                 )
 
     @override
@@ -293,9 +306,14 @@ class IntegrationRepository(Repository):
                     or "repository.yaml" in self.treefiles
                     or "repository.yml" in self.treefiles
                 ):
-                    raise AppRepositoryError
+                    raise AppRepositoryError(self.data.full_name)
                 raise MarketplaceError(
-                    f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                    translation_domain=DOMAIN,
+                    translation_key="structure_not_compliant",
+                    translation_placeholders={
+                        "repository": self.data.full_name,
+                        "version": str(ref_version(self.ref)),
+                    },
                 )
             self.content.path.remote = f"custom_components/{name}"
 
@@ -306,9 +324,13 @@ class IntegrationRepository(Repository):
             # The files of an install stay where they are, removal needs to find them
             if self.data.installed and self.data.domain not in (None, domain):
                 raise MarketplaceError(
-                    f"{self.data.full_name} changed its domain from "
-                    f"'{self.data.domain}' to '{domain}', remove it and install "
-                    "it again"
+                    translation_domain=DOMAIN,
+                    translation_key="domain_changed",
+                    translation_placeholders={
+                        "repository": self.data.full_name,
+                        "old_domain": self.data.domain,
+                        "domain": domain,
+                    },
                 )
 
             self.integration_manifest = manifest
@@ -319,7 +341,11 @@ class IntegrationRepository(Repository):
 
         except KeyError as exception:
             self.validate.errors.append(
-                f"Missing expected key '{exception}' in {RepositoryFile.MANIFEST_JSON}"
+                MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="integration_manifest_key_missing",
+                    translation_placeholders={"key": str(exception)},
+                )
             )
             LOGGER.error(
                 "Missing expected key '%s' in '%s'",
@@ -382,7 +408,9 @@ class IntegrationRepository(Repository):
 
         if manifest_path not in (entry.path for entry in self.tree):
             raise MarketplaceError(
-                f"No {RepositoryFile.MANIFEST_JSON} file found '{manifest_path}'"
+                translation_domain=DOMAIN,
+                translation_key="integration_manifest_missing",
+                translation_placeholders={"path": manifest_path},
             )
 
         target_ref = self.version_to_install()

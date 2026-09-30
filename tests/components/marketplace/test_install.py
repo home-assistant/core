@@ -321,9 +321,11 @@ async def test_file_by_file_download_has_the_archive_limits(
             "homeassistant.components.marketplace.repositories.base.MAX_ARCHIVE_MEMBERS",
             2,
         ),
-        pytest.raises(MarketplaceError, match="files, the limit is 2"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         await repository._async_download_files(contents)
+
+    assert exc_info.value.translation_key == "content_too_many_files"
 
     with (
         patch(
@@ -338,7 +340,9 @@ async def test_file_by_file_download_has_the_archive_limits(
         await repository._async_download_files(contents)
 
     assert write.call_count == 1
-    assert any("limit" in error for error in repository.validate.errors)
+    assert {error.translation_key for error in repository.validate.errors} == {
+        "content_over_limit"
+    }
 
 
 def test_archive_with_too_many_members_is_refused() -> None:
@@ -348,9 +352,11 @@ def test_archive_with_too_many_members_is_refused() -> None:
             "homeassistant.components.marketplace.repositories.base.MAX_ARCHIVE_MEMBERS",
             1,
         ),
-        pytest.raises(MarketplaceError, match="members"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         _archive({"a.py": "", "b.py": ""})
+
+    assert exc_info.value.translation_key == "archive_too_many_files"
 
 
 async def test_template_installs_the_file_in_the_root(
@@ -416,9 +422,12 @@ async def test_older_version_checks_the_domain_it_writes_to(
         ),
         patch.object(candidate, "_async_download_version", download),
         patch.object(candidate, "async_post_installation", AsyncMock()),
-        pytest.raises(MarketplaceError, match="is owned by owner/existing"),
+        pytest.raises(MarketplaceError) as exc_info,
     ):
         await candidate.async_install_repository(ref="1.0.0")
+
+    assert exc_info.value.translation_key == "integration_owned"
+    assert exc_info.value.translation_placeholders["owner"] == "owner/existing"
 
     assert original.read_bytes() == b"existing integration"
 
@@ -694,8 +703,10 @@ async def test_template_that_is_not_utf8_keeps_the_old_one(
     url = f"https://github.com/{repository.data.full_name}/archive/refs/tags/2.0.0.zip"
     response_mocker.add(url, mocked_response(url, content=archive), keep=True)
 
-    with pytest.raises(MarketplaceError, match="not UTF-8 encoded"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.async_install_repository()
+
+    assert exc_info.value.translation_key == "template_not_utf8"
     await hass.async_block_till_done()
 
     assert installed.read_bytes() == working
@@ -776,7 +787,7 @@ async def test_second_install_of_a_repository_waits_its_turn(
         first = asyncio.create_task(repository.async_install_repository())
         await started.wait()
 
-        with pytest.raises(MarketplaceError, match="already installing"):
+        with pytest.raises(MarketplaceError, match="is being installed"):
             await repository.async_install_repository()
 
         release.set()
@@ -949,8 +960,10 @@ async def test_template_update_checks_the_file_name(
     repository.repository_manifest.filename = file_name
 
     download = AsyncMock()
-    with pytest.raises(MarketplaceError, match="not compliant"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository._async_write_content(download)
+
+    assert exc_info.value.translation_key == "structure_not_compliant"
 
     download.assert_not_called()
     assert configuration.read_text() == "default_config:\n"
@@ -966,8 +979,10 @@ async def test_plugin_without_a_resource_is_not_written(
     repository.data.file_name = ""
 
     download = AsyncMock()
-    with pytest.raises(MarketplaceError, match="not compliant"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository._async_write_content(download)
+
+    assert exc_info.value.translation_key == "structure_not_compliant"
 
     download.assert_not_called()
     assert not Path(repository.localpath).exists()

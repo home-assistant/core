@@ -15,6 +15,7 @@ from homeassistant.components.frontend import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 
+from ..const import DOMAIN
 from ..enums import RepositoryCategory
 from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
@@ -80,8 +81,12 @@ class ThemeRepository(Repository):
                 and repository.localpath == self.localpath
             ):
                 raise MarketplaceError(
-                    f"The '{Path(self.localpath).name}' theme folder is owned by"
-                    f" {repository.data.full_name}"
+                    translation_domain=DOMAIN,
+                    translation_key="theme_owned",
+                    translation_placeholders={
+                        "directory": Path(self.localpath).name,
+                        "owner": repository.data.full_name,
+                    },
                 )
 
     @override
@@ -113,7 +118,12 @@ class ThemeRepository(Repository):
                     yaml.YAMLError,
                 ) as exception:
                     raise MarketplaceError(
-                        f"{theme.name} is not valid YAML: {exception}"
+                        translation_domain=DOMAIN,
+                        translation_key="theme_invalid_yaml",
+                        translation_placeholders={
+                            "file": theme.name,
+                            "error": str(exception),
+                        },
                     ) from exception
 
                 # The include only merges a mapping, anything else is left out
@@ -124,7 +134,12 @@ class ThemeRepository(Repository):
                     FRONTEND_CONFIG_SCHEMA({FRONTEND_DOMAIN: {CONF_THEMES: themes}})
                 except probatio.Invalid as exception:
                     raise MarketplaceError(
-                        f"{theme.name} is not a valid theme: {exception}"
+                        translation_domain=DOMAIN,
+                        translation_key="theme_invalid",
+                        translation_placeholders={
+                            "file": theme.name,
+                            "error": str(exception),
+                        },
                     ) from exception
 
         await self.marketplace.hass.async_add_executor_job(_check)
@@ -138,7 +153,12 @@ class ThemeRepository(Repository):
             for treefile in self.treefiles
         ):
             raise MarketplaceError(
-                f"{self.string} Repository structure for {ref_version(self.ref)} is not compliant"
+                translation_domain=DOMAIN,
+                translation_key="structure_not_compliant",
+                translation_placeholders={
+                    "repository": self.data.full_name,
+                    "version": str(ref_version(self.ref)),
+                },
             )
 
         if self.repository_manifest.content_in_root:

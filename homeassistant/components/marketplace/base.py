@@ -633,10 +633,10 @@ class MarketplaceManager:
             _exception = exception
         except GitHubRatelimitException as exception:
             if not self.github_connected:
-                raise GitHubAnonymousRateLimitError(exception) from exception
+                raise GitHubAnonymousRateLimitError from exception
             self.disable(DisabledReason.RATE_LIMIT)
             if raise_exception:
-                raise GitHubRateLimitError(exception) from exception
+                raise GitHubRateLimitError from exception
             return None
         except GitHubNotModifiedException:
             raise
@@ -647,7 +647,11 @@ class MarketplaceManager:
             _exception = exception
 
         if raise_exception and _exception is not None:
-            raise MarketplaceError(_exception) from _exception
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="github_failed",
+                translation_placeholders={"error": str(_exception)},
+            ) from _exception
         return None
 
     @callback
@@ -746,7 +750,7 @@ class MarketplaceManager:
         *,
         check: bool = True,
         repository_id: str | None = None,
-    ) -> list[str] | None:
+    ) -> list[MarketplaceError] | None:
         """Register a repository."""
         if repository_full_name in self.common.skip:
             raise ExpectedError(f"Skipping {repository_full_name}")
@@ -758,7 +762,7 @@ class MarketplaceManager:
             repository_full_name == "home-assistant/addons"
             or repository_full_name.startswith("hassio-addons/")
         ):
-            raise AppRepositoryError
+            raise AppRepositoryError(repository_full_name)
 
         if category not in REPOSITORY_CLASSES:
             LOGGER.warning(
@@ -790,7 +794,12 @@ class MarketplaceManager:
             except GitHubException as exception:
                 self.common.skip.add(repository.data.full_name)
                 raise MarketplaceError(
-                    f"Validation for {repository_full_name} failed with {exception}."
+                    translation_domain=DOMAIN,
+                    translation_key="validation_failed",
+                    translation_placeholders={
+                        "repository": repository_full_name,
+                        "error": str(exception),
+                    },
                 ) from exception
 
         if self.status.new:

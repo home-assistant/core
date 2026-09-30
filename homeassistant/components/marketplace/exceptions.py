@@ -1,8 +1,16 @@
 """Custom exceptions for the Marketplace."""
 
+from homeassistant.exceptions import HomeAssistantError
 
-class MarketplaceError(Exception):
-    """The base of every error the Marketplace raises."""
+from .const import DOMAIN
+
+
+class MarketplaceError(HomeAssistantError):
+    """The base of every error the Marketplace raises.
+
+    With a translation key its message comes from the strings of the
+    Marketplace, in English in the log and translated where the user sees it.
+    """
 
 
 class RepositoryArchivedError(MarketplaceError):
@@ -12,12 +20,23 @@ class RepositoryArchivedError(MarketplaceError):
 class GitHubRateLimitError(MarketplaceError):
     """For GitHub API calls refused because the rate limit ran out."""
 
+    rate_limit_translation_key = "rate_limited"
+
+    def __init__(self) -> None:
+        """Initialize the exception, what GitHub answered is the one it came from."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key=self.rate_limit_translation_key,
+        )
+
 
 class GitHubAnonymousRateLimitError(GitHubRateLimitError):
     """For a rate limit hit without a GitHub connection.
 
     It fails the action that hit it, the Marketplace itself carries on.
     """
+
+    rate_limit_translation_key = "github_rate_limited"
 
 
 class CatalogContentUnresolvedError(MarketplaceError):
@@ -31,16 +50,26 @@ class CatalogContentUnresolvedError(MarketplaceError):
 class ReplacesBuiltInNotConfirmedError(MarketplaceError):
     """For a first install over a built-in integration that was not confirmed."""
 
-    def __init__(self, domain: str) -> None:
+    def __init__(self, repository: str, domain: str) -> None:
         """Initialize the exception."""
         super().__init__(
-            f"Replacing the built-in '{domain}' integration was not confirmed"
+            translation_domain=DOMAIN,
+            translation_key="replaces_built_in_not_confirmed",
+            translation_placeholders={"repository": repository, "domain": domain},
         )
         self.domain = domain
 
 
 class RepositoryBusyError(MarketplaceError):
     """For a repository that is being installed, it can not change meanwhile."""
+
+    def __init__(self, repository: str) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="repository_busy",
+            translation_placeholders={"repository": repository},
+        )
 
 
 class NotModifiedError(MarketplaceError):
@@ -62,24 +91,18 @@ class ExecutionInProgressError(MarketplaceError):
 class AppRepositoryError(MarketplaceError):
     """For a repository of apps, the Marketplace does not manage those."""
 
-    exception_message = (
-        "The repository does not seem to be an integration, "
-        "but an app repository. The Marketplace does not manage apps."
-    )
-
-    def __init__(self) -> None:
+    def __init__(self, repository: str) -> None:
         """Initialize the exception."""
-        super().__init__(self.exception_message)
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="app_repository",
+            translation_placeholders={"repository": repository},
+        )
 
 
 class CoreRepositoryError(MarketplaceError):
     """For the repository of Home Assistant itself."""
 
-    exception_message = (
-        "You can not add homeassistant/core, to use core integrations "
-        "check the Home Assistant documentation for how to add them."
-    )
-
     def __init__(self) -> None:
         """Initialize the exception."""
-        super().__init__(self.exception_message)
+        super().__init__(translation_domain=DOMAIN, translation_key="core_repository")

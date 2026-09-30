@@ -240,7 +240,19 @@ async def _async_restore(marketplace: MarketplaceManager) -> None:
             translation_key="setup_failed",
             translation_placeholders={"error": str(exception)},
         ) from exception
-    except (GitHubException, MarketplaceError) as exception:
+    except MarketplaceError as exception:
+        if exception.translation_key:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key=exception.translation_key,
+                translation_placeholders=exception.translation_placeholders,
+            ) from exception
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"error": str(exception)},
+        ) from exception
+    except GitHubException as exception:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_failed",

@@ -147,8 +147,10 @@ def test_resolve_in_directory(tmp_path: Path, candidate: str) -> None:
 )
 def test_resolve_in_directory_rejects_escapes(tmp_path: Path, candidate: str) -> None:
     """Test that a path leaving the target directory is refused."""
-    with pytest.raises(MarketplaceError, match="is not inside"):
+    with pytest.raises(MarketplaceError) as exc_info:
         path.resolve_in_directory(tmp_path, candidate)
+
+    assert exc_info.value.translation_key == "path_outside_directory"
 
 
 @pytest.mark.parametrize(

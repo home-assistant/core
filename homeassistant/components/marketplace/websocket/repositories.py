@@ -13,6 +13,7 @@ from ..utils import regex
 from ..utils.logger import LOGGER
 from .decorators import (
     marketplace_command,
+    send_marketplace_error,
     send_repository_not_found,
     send_translated_error,
 )
@@ -222,22 +223,25 @@ async def marketplace_repositories_add(
         )
         return
     except MarketplaceError as exception:
-        send_translated_error(
+        send_marketplace_error(
             connection,
             msg["id"],
             "add_failed",
+            exception,
             "add_failed",
-            {"repository": repository, "error": str(exception)},
+            {"repository": repository},
         )
         return
 
+    # All of them are in the log already, the first tells what to fix
     if errors:
-        send_translated_error(
+        send_marketplace_error(
             connection,
             msg["id"],
             "add_failed",
+            errors[0],
             "add_failed",
-            {"repository": repository, "error": "; ".join(errors)},
+            {"repository": repository},
         )
         return
 

@@ -1038,7 +1038,15 @@ async def test_repositories_add_invalid_repository(
     client = await hass_ws_client(hass)
 
     async def invalid(self: IntegrationRepository) -> bool:
-        self.validate.errors.append("Invalid repository contents")
+        self.validate.errors.append(
+            MarketplaceError(
+                translation_key="structure_not_compliant",
+                translation_placeholders={
+                    "repository": "owner/invalid",
+                    "version": "main",
+                },
+            )
+        )
         return False
 
     with patch.object(IntegrationRepository, "validate_repository", invalid):
@@ -1054,10 +1062,10 @@ async def test_repositories_add_invalid_repository(
     assert not response["success"]
     assert response["error"] == translated_error(
         "add_failed",
-        "add_failed",
-        "Adding owner/invalid failed: Invalid repository contents",
+        "structure_not_compliant",
+        "owner/invalid has no content the Marketplace can install in version main",
         repository="owner/invalid",
-        error="Invalid repository contents",
+        version="main",
     )
 
 
@@ -1651,7 +1659,8 @@ async def test_repository_releases_rate_limited_with_github(
     response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["translation_key"] == "releases_failed"
+    # Try again later, not connect GitHub, that is connected already
+    assert response["error"]["translation_key"] == "rate_limited"
 
 
 @pytest.mark.parametrize("github_token", [None])

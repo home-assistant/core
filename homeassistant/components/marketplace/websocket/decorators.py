@@ -10,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from ..base import MarketplaceConfigEntry, MarketplaceManager
 from ..const import DOMAIN
+from ..exceptions import MarketplaceError
 
 ERR_GITHUB_NOT_CONNECTED = "github_not_connected"
 ERR_GITHUB_RATE_LIMITED = "github_rate_limited"
@@ -41,6 +42,37 @@ def send_translated_error(
         translation_key=translation_key,
         translation_domain=DOMAIN,
         translation_placeholders=translation_placeholders,
+    )
+
+
+def send_marketplace_error(
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    code: str,
+    exception: MarketplaceError,
+    fallback_key: str,
+    fallback_placeholders: dict[str, str],
+) -> None:
+    """Answer with what the error says, or with the fallback naming it.
+
+    Only an error from a library comes without a translation key of its own.
+    """
+    if exception.translation_key:
+        send_translated_error(
+            connection,
+            msg_id,
+            code,
+            exception.translation_key,
+            exception.translation_placeholders,
+        )
+        return
+
+    send_translated_error(
+        connection,
+        msg_id,
+        code,
+        fallback_key,
+        {**fallback_placeholders, "error": str(exception)},
     )
 
 

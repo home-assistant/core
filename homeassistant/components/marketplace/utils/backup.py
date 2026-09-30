@@ -10,6 +10,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.file import WriteError, write_utf8_file_atomic
 from homeassistant.util.ulid import ulid_now
 
+from ..const import DOMAIN
 from ..exceptions import MarketplaceError
 from .logger import LOGGER
 from .path import is_safe, resolve_in_directory
@@ -61,7 +62,9 @@ class Backup:
 
         if not is_safe(self.marketplace, self.local_path):
             raise MarketplaceError(
-                f"Could not back up {self.local_path}, it is protected"
+                translation_domain=DOMAIN,
+                translation_key="backup_protected",
+                translation_placeholders={"path": str(self.local_path)},
             )
 
         try:
@@ -77,7 +80,12 @@ class Backup:
         except (OSError, WriteError) as exception:
             shutil.rmtree(self.backup_path, ignore_errors=True)
             raise MarketplaceError(
-                f"Could not back up {self.local_path}: {exception}"
+                translation_domain=DOMAIN,
+                translation_key="backup_failed",
+                translation_placeholders={
+                    "path": str(self.local_path),
+                    "error": str(exception),
+                },
             ) from exception
 
         LOGGER.debug("Backup for %s created in %s", self.local_path, self.backup_path)

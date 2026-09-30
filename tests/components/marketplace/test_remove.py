@@ -38,8 +38,11 @@ async def test_theme_can_not_take_the_folder_of_another_theme(
     second.data.file_name = "theme.yaml"
     assert first.localpath == second.localpath
 
-    with pytest.raises(MarketplaceError, match="is owned by owner-one/theme-one"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await second.async_pre_install()
+
+    assert exc_info.value.translation_key == "theme_owned"
+    assert exc_info.value.translation_placeholders["owner"] == "owner-one/theme-one"
 
 
 async def test_removing_a_theme_keeps_a_handwritten_theme(
@@ -156,8 +159,11 @@ async def test_template_can_not_take_the_file_of_another_template(
     repository.data.file_name = "old.jinja"
     repository.repository_manifest.filename = "new.jinja"
 
-    with pytest.raises(MarketplaceError, match="is owned by owner/new-template"):
+    with pytest.raises(MarketplaceError) as exc_info:
         await repository.async_pre_install()
+
+    assert exc_info.value.translation_key == "template_owned"
+    assert exc_info.value.translation_placeholders["owner"] == "owner/new-template"
 
 
 @pytest.mark.parametrize(
