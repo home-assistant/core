@@ -44,6 +44,7 @@ class RepositoryEntity(
         self.repository = repository
         self._attr_unique_id = repository.data.id
         self._repo_last_fetched = repository.data.last_fetched
+        self._last_available = self.available
 
     @property
     @override
@@ -76,13 +77,17 @@ class RepositoryEntity(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        # Going away or coming back changes nothing that was fetched
+        available = self.available
         if (
-            self._repo_last_fetched is not None
+            available == self._last_available
+            and self._repo_last_fetched is not None
             and self.repository.data.last_fetched is not None
             and self._repo_last_fetched >= self.repository.data.last_fetched
         ):
             return
 
+        self._last_available = available
         self._repo_last_fetched = self.repository.data.last_fetched
         self.async_write_ha_state()
 

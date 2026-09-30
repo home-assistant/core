@@ -63,6 +63,15 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Without the catalog or GitHub, the versions it shows are old news
+        return super().available and not self.marketplace.is_unreachable(
+            self.repository
+        )
+
+    @property
+    @override
     def latest_version(self) -> str:
         """Return latest version of the entity."""
         return self.repository.display_available_version

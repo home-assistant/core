@@ -401,6 +401,8 @@ class MarketplaceManager:
         self.common = MarketplaceCommon()
         self.critical_repositories: list[dict[str, Any]] = []
         self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
+        # The catalogs the last request could not reach
+        self.unreachable_categories: set[RepositoryCategory] = set()
         self.recurring_tasks: list[Callable[[], None]] = []
         self.recurring_runs: set[asyncio.Task[None]] = set()
         self.startup_task: asyncio.Task[None] | None = None
@@ -930,6 +932,15 @@ class MarketplaceManager:
         for repository in self.repositories.list_all:
             await repository.async_wait_for_install()
 
+    def is_unreachable(self, repository: Repository) -> bool:
+        """Return if what tells about updates of the repository can not be reached.
+
+        The catalog tells about the repositories in it, GitHub about the others.
+        """
+        if self.repositories.is_default(repository.data.id):
+            return repository.data.category in self.unreachable_categories
+        return repository.unreachable
+
     @callback
     def async_dispatch(
         self, signal: MarketplaceSignal, data: dict[str, Any] | None = None
@@ -966,6 +977,29 @@ class MarketplaceManager:
             ]
         )
 
+    @callback
+    def _async_catalog_not_reached(
+        self, category: RepositoryCategory, exception: MarketplaceError
+    ) -> None:
+        """Mark the catalog of a category unreachable, telling so once."""
+        if category in self.unreachable_categories:
+            LOGGER.debug("The catalog of %s still can not be reached", category)
+            return
+
+        LOGGER.info("The catalog of %s can not be reached: %s", category, exception)
+        self.unreachable_categories.add(category)
+        self.coordinators[category].async_update_listeners()
+
+    @callback
+    def _async_catalog_reached(self, category: RepositoryCategory) -> None:
+        """Mark the catalog of a category reachable, telling so when it was not."""
+        if category not in self.unreachable_categories:
+            return
+
+        LOGGER.info("The catalog of %s can be reached again", category)
+        self.unreachable_categories.discard(category)
+        self.coordinators[category].async_update_listeners()
+
     async def async_get_category_repositories_from_catalog(
         self, category: RepositoryCategory
     ) -> None:
@@ -975,10 +1009,13 @@ class MarketplaceManager:
             category_data = await self.data_client.async_get_category(category)
         except NotModifiedError:
             LOGGER.debug("No updates for %s", category)
+            self._async_catalog_reached(category)
             return
         except MarketplaceError as exception:
-            LOGGER.error("Could not update %s - %s", category, exception)
+            self._async_catalog_not_reached(category, exception)
             return
+
+        self._async_catalog_reached(category)
 
         # The Marketplace is part of Home Assistant, it does not manage itself
         category_data = {

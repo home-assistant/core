@@ -446,6 +446,8 @@ class Repository:
         self.validate = Validate()
         self.releases = RepositoryReleases()
         self.pending_restart = False
+        # The last request for the repository on GitHub could not reach it
+        self.unreachable = False
         self.tree: list[GitHubGitTreeEntryModel] = []
         # The ref the tree was fetched for, its files are downloaded from there
         self.tree_ref: str | None = None
@@ -1387,17 +1389,18 @@ class Repository:
                 else self.data.etag_repository,
             )
         except NotModifiedError:
+            self._reached()
             return False
         except GitHubAnonymousRateLimitError:
             raise
         except MarketplaceError as exception:
-            if not self.marketplace.status.startup:
-                self.logger.error("%s %s", self.string, exception)
+            self._not_reached(exception)
             if not ignore_issues:
                 self.validate.errors.append("Repository does not exist.")
                 raise MarketplaceError(exception) from exception
             return True
 
+        self._reached()
         self.repository_object = repository_object
         if self.data.full_name.lower() != repository_object.full_name.lower():
             self.marketplace.common.renamed_repositories[self.data.full_name] = (
@@ -1408,6 +1411,23 @@ class Repository:
         self.data.update_data(repository_object.as_dict)
         self.data.etag_repository = etag
         return True
+
+    def _not_reached(self, exception: MarketplaceError) -> None:
+        """Mark the repository unreachable on GitHub, telling so once."""
+        if self.unreachable:
+            self.logger.debug("%s still can not be reached on GitHub", self.string)
+            return
+
+        self.logger.info("%s can not be reached on GitHub: %s", self.string, exception)
+        self.unreachable = True
+
+    def _reached(self) -> None:
+        """Mark the repository reachable on GitHub, telling so when it was not."""
+        if not self.unreachable:
+            return
+
+        self.logger.info("%s can be reached on GitHub again", self.string)
+        self.unreachable = False
 
     def _raise_when_unusable(self) -> None:
         """Refuse a repository that is archived or asked to be removed."""

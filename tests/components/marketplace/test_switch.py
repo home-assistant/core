@@ -1,12 +1,15 @@
 """Tests for the Marketplace pre-release switches."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
+from homeassistant.components.marketplace.enums import RepositoryCategory
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -181,3 +184,25 @@ async def test_switch_becomes_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get(switch_entity).state == "unavailable"
+
+
+async def test_switch_stays_while_the_catalog_can_not_be_reached(
+    hass: HomeAssistant, switch_entity: str
+) -> None:
+    """Test choosing pre-releases does not depend on reaching the catalog."""
+    marketplace = get_marketplace(hass)
+
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=True),
+        patch.object(
+            marketplace.data_client,
+            "async_get_category",
+            side_effect=MarketplaceError("no route to host"),
+        ),
+    ):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+        await hass.async_block_till_done()
+
+        assert hass.states.get(switch_entity).state == STATE_OFF

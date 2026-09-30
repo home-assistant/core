@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import json
+import logging
 from pathlib import Path
 import re
 from typing import Any
@@ -16,6 +17,10 @@ from homeassistant.components.marketplace.const import CONF_WARNING_ACCEPTED, DO
 from homeassistant.components.marketplace.enums import (
     MarketplaceSignal,
     RepositoryCategory,
+)
+from homeassistant.components.marketplace.exceptions import (
+    MarketplaceError,
+    NotModifiedError,
 )
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.update import RepositoryUpdateEntity
@@ -111,6 +116,100 @@ async def test_update_entity(
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
+
+
+def _info_about(caplog: pytest.LogCaptureFixture, subject: str) -> list[str]:
+    """Return the info level messages that mention the subject."""
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.levelno == logging.INFO and subject in record.getMessage()
+    ]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        pytest.param(NotModifiedError(), id="not_modified"),
+        pytest.param({}, id="new_catalog"),
+    ],
+)
+async def test_update_entity_follows_its_catalog(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    caplog: pytest.LogCaptureFixture,
+    answer: Exception | dict[str, Any],
+) -> None:
+    """Test a catalog that can not be reached makes its update entities unavailable."""
+    marketplace = get_marketplace(hass)
+
+    with patch.object(marketplace.repositories, "is_default", return_value=True):
+        with patch.object(
+            marketplace.data_client,
+            "async_get_category",
+            side_effect=MarketplaceError("no route to host"),
+        ):
+            # Once to go away, once more that is not news anymore
+            for _ in range(2):
+                await marketplace.async_get_category_repositories_from_catalog(
+                    RepositoryCategory.INTEGRATION
+                )
+        await hass.async_block_till_done()
+        assert hass.states.get(integration_update_entity).state == "unavailable"
+
+        with patch.object(
+            marketplace.data_client, "async_get_category", side_effect=[answer]
+        ):
+            await marketplace.async_get_category_repositories_from_catalog(
+                RepositoryCategory.INTEGRATION
+            )
+        await hass.async_block_till_done()
+        assert hass.states.get(integration_update_entity).state == "off"
+
+    assert _info_about(caplog, "catalog of integration") == [
+        "The catalog of integration can not be reached: no route to host",
+        "The catalog of integration can be reached again",
+    ]
+
+
+async def test_update_entity_follows_its_repository_on_github(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a repository added from a link follows GitHub, not the catalog."""
+    marketplace = get_marketplace(hass)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    coordinator = marketplace.coordinators[repository.data.category]
+
+    with patch.object(marketplace.repositories, "is_default", return_value=False):
+        with patch.object(
+            repository,
+            "async_get_repository_object",
+            side_effect=MarketplaceError("no route to host"),
+        ):
+            for _ in range(2):
+                await repository._async_update_repository_object(
+                    ignore_issues=True, force=False
+                )
+        coordinator.async_update_listeners()
+        await hass.async_block_till_done()
+        assert hass.states.get(integration_update_entity).state == "unavailable"
+
+        with patch.object(
+            repository, "async_get_repository_object", side_effect=NotModifiedError
+        ):
+            await repository._async_update_repository_object(
+                ignore_issues=True, force=False
+            )
+        coordinator.async_update_listeners()
+        await hass.async_block_till_done()
+        assert hass.states.get(integration_update_entity).state == "off"
+
+    assert _info_about(caplog, repository.data.full_name) == [
+        f"{repository.string} can not be reached on GitHub: no route to host",
+        f"{repository.string} can be reached on GitHub again",
+    ]
 
 
 @pytest.mark.usefixtures("stored_repositories")
