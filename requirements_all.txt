@@ -721,7 +721,7 @@ bluetooth-data-tools==1.29.24
 bond-async==0.2.1
 
 # homeassistant.components.bosch_alarm
-bosch-alarm-mode2==0.4.10
+bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.13
