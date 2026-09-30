@@ -703,7 +703,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                         CONF_HOST,
                         default=self._default_gateway_host() or probatio.UNDEFINED,
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
