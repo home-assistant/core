@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
@@ -55,7 +55,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                         " light between 0 and 100, where 0"
                         " is off and 100 is fully lit"
                     ),
-                    value_schema=vol.All(vol.Coerce(int), vol.Range(0, 100)),
+                    value_schema=probatio.All(
+                        probatio.Coerce(int), probatio.Range(0, 100)
+                    ),
                 ),
             },
             description="Sets the brightness percentage or color of a light",
@@ -72,17 +74,17 @@ class SetBrightnessRelativeHandler(intent.IntentHandler):
 
     intent_type = INTENT_SET_BRIGHTNESS_RELATIVE
     slot_schema = {
-        vol.Required("brightness_step"): vol.Any(
+        probatio.Required("brightness_step"): probatio.Any(
             "up",
             "down",
-            vol.All(vol.Coerce(int), vol.Range(min=-100, max=100)),
+            probatio.All(probatio.Coerce(int), probatio.Range(min=-100, max=100)),
         ),
         # Optional name/area/floor slots handled by intent matcher
-        vol.Optional("name"): cv.string,
-        vol.Optional("area"): cv.string,
-        vol.Optional("floor"): cv.string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("name"): cv.string,
+        probatio.Optional("area"): cv.string,
+        probatio.Optional("floor"): cv.string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 

@@ -3,8 +3,8 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
@@ -137,18 +137,18 @@ def test_trigger_target_support() -> None:
             "climate.hvac_mode_changed",
             # Empty hvac_mode list
             {CONF_HVAC_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             # Missing CONF_HVAC_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             {CONF_HVAC_MODE: ["invalid_mode"]},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )

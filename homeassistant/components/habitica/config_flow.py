@@ -13,7 +13,7 @@ from habiticalib import (
     NotAuthorizedError,
     UserData,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -60,24 +60,24 @@ from .const import (
 )
 from .coordinator import HabiticaConfigEntry
 
-STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
+STEP_ADVANCED_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_USER): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_URL, default=DEFAULT_URL): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_API_USER): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Optional(CONF_URL, default=DEFAULT_URL): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
-STEP_LOGIN_DATA_SCHEMA = vol.Schema(
+STEP_LOGIN_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
                 autocomplete="email",
             )
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -86,18 +86,18 @@ STEP_LOGIN_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(SECTION_REAUTH_LOGIN): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_USERNAME): TextSelector(
+                    probatio.Optional(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL,
                             autocomplete="email",
                         )
                     ),
-                    vol.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -107,10 +107,10 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
             ),
             {"collapsed": False},
         ),
-        vol.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_API_KEY): str,
+                    probatio.Optional(CONF_API_KEY): str,
                 },
             ),
             {"collapsed": True},
@@ -118,14 +118,14 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_RECONF_DATA_SCHEMA = vol.Schema(
+STEP_RECONF_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_URL): str,
-                    vol.Required(CONF_VERIFY_SSL): bool,
+                    probatio.Required(CONF_URL): str,
+                    probatio.Required(CONF_VERIFY_SSL): bool,
                 },
             ),
             {"collapsed": True},
@@ -443,9 +443,9 @@ class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
         ]
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PARTY_MEMBER): SelectSelector(
+                    probatio.Required(CONF_PARTY_MEMBER): SelectSelector(
                         SelectSelectorConfig(options=options)
                     )
                 }

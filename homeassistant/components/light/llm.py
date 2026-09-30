@@ -4,13 +4,32 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+)
 
 from .const import DOMAIN
 from .intent import INTENT_SET, INTENT_SET_BRIGHTNESS_RELATIVE
 
+# Setting a value on the user's own lights has no further effect when it is
+# repeated. Stepping the brightness has an effect on every call.
+_CONTROL = ToolAnnotations(idempotent=True, open_world=False)
+_CUMULATIVE = ToolAnnotations(open_world=False)
+
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_SET, INTENT_SET_BRIGHTNESS_RELATIVE)
+LLM_INTENTS = {
+    INTENT_SET: "Set light",
+    INTENT_SET_BRIGHTNESS_RELATIVE: "Change brightness",
+}
+
+INTENT_ANNOTATIONS = {
+    INTENT_SET: _CONTROL,
+    INTENT_SET_BRIGHTNESS_RELATIVE: _CUMULATIVE,
+}
 
 
 @callback
@@ -31,7 +50,13 @@ def async_get_tools(
         return None
 
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=LLM_INTENTS[handler.intent_type],
+            integration=DOMAIN,
+            annotations=INTENT_ANNOTATIONS[handler.intent_type],
+        )
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     ]

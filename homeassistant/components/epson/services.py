@@ -1,7 +1,7 @@
 """Support for Epson projector."""
 
 from epson_projector.const import CMODE_LIST_SET
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +20,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SELECT_CMODE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
+        schema={
+            probatio.Required(ATTR_CMODE): probatio.All(
+                cv.string, probatio.Any(*CMODE_LIST_SET)
+            )
+        },
         func=SERVICE_SELECT_CMODE,
     )

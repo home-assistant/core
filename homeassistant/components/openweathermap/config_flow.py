@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -37,25 +37,25 @@ from .const import (
 )
 from .utils import build_data_and_options, validate_api_key
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION): LocationSelector(
+        probatio.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False)
         ),
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )
 

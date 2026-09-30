@@ -5,7 +5,7 @@ from typing import Any, override
 
 import aiohttp
 import opengarage
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
@@ -18,12 +18,12 @@ from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE_KEY): str,
-        vol.Required(CONF_HOST, default="http://"): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_DEVICE_KEY): str,
+        probatio.Required(CONF_HOST, default="http://"): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 

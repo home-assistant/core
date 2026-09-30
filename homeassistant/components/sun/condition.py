@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Final, Literal, Unpack, cast, override
 
 import astral.sun
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -63,16 +63,16 @@ _PERIOD_MORNING = "morning"
 _PERIOD_EVENING = "evening"
 _PERIODS = (_PERIOD_ANY, _PERIOD_MORNING, _PERIOD_EVENING)
 
-_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Optional("before"): cv.sun_event,
-    vol.Optional("before_offset"): cv.time_period,
-    vol.Optional("after"): cv.sun_event,
-    vol.Optional("after_offset"): cv.time_period,
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Optional("before"): cv.sun_event,
+    probatio.Optional("before_offset"): cv.time_period,
+    probatio.Optional("after"): cv.sun_event,
+    probatio.Optional("after_offset"): cv.time_period,
 }
 
-_CONDITION_SCHEMA = vol.Schema(
+_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        probatio.Required(CONF_OPTIONS): probatio.All(
             _OPTIONS_SCHEMA_DICT,
             cv.has_at_least_one_key("before", "after"),
         )
@@ -205,7 +205,9 @@ class SunCondition(Condition):
 
 
 # The sun is a singleton, so these conditions take no target and no options.
-_STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
+_STATE_CONDITION_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): {}}
+)
 
 # The sun is a singleton, so the elevation condition always targets sun.sun
 # instead of asking the user to pick an entity.
@@ -296,10 +298,12 @@ _TWILIGHT_BANDS = {
     _TWILIGHT_ASTRONOMICAL: (ELEVATION_ASTRONOMICAL, ELEVATION_NAUTICAL),
 }
 
-_TWILIGHT_CONDITION_SCHEMA = vol.Schema(
+_TWILIGHT_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_TYPE, default=_TWILIGHT_ANY): vol.In(_TWILIGHT_BANDS),
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Optional(CONF_TYPE, default=_TWILIGHT_ANY): probatio.In(
+                _TWILIGHT_BANDS
+            ),
         }
     }
 )
@@ -348,10 +352,10 @@ class _EveningTwilightCondition(_TwilightCondition):
     _rising = False
 
 
-_PERIOD_CONDITION_SCHEMA = vol.Schema(
+_PERIOD_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_PERIOD, default=_PERIOD_ANY): vol.In(_PERIODS),
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Optional(CONF_PERIOD, default=_PERIOD_ANY): probatio.In(_PERIODS),
         }
     }
 )
@@ -466,10 +470,10 @@ class _PolarNightCondition(_SunStateCondition):
         return elevation < ELEVATION_HORIZON
 
 
-_ELEVATION_CONDITION_SCHEMA = vol.Schema(
+_ELEVATION_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Required("threshold"): NumericThresholdSelector(
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Required("threshold"): NumericThresholdSelector(
                 NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
             ),
         }

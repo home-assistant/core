@@ -1,25 +1,32 @@
 """Coordinator for Zonneplan."""
 
+import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
 from pyzonneplan import (
     Account,
+    Connection,
     ConsumerPrices,
+    ElectricityChart,
+    GasChart,
     Zonneplan,
     ZonneplanAuthenticationError,
     ZonneplanConnectionError,
+    ZonneplanError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
-from pyzonneplan.const import PriceChart
+from pyzonneplan.const import ConsumptionChart, PriceChart
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -37,6 +44,21 @@ class ZonneplanData:
     account: Account
     electricity_prices: ConsumerPrices | None = None
     gas_prices: ConsumerPrices | None = None
+    electricity_usage: ElectricityChart | None = None
+    gas_usage: GasChart | None = None
+
+
+def _connection(account: Account, market_segment: str) -> Connection | None:
+    """Return the first connection of a market segment, if the account has one."""
+    return next(
+        (
+            connection
+            for connection in account.connections
+            if connection.market_segment is not None
+            and market_segment in connection.market_segment
+        ),
+        None,
+    )
 
 
 class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
@@ -57,32 +79,46 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
         )
         self.zonneplan = zonneplan
 
+    async def _async_fetch_electricity(
+        self, account: Account, today: date
+    ) -> tuple[ConsumerPrices | None, ElectricityChart | None]:
+        """Fetch electricity prices and usage, if the account has electricity."""
+        if (connection := _connection(account, "electricity")) is None:
+            return None, None
+        return await asyncio.gather(
+            self.zonneplan.async_get_consumer_prices(PriceChart.ELECTRICITY_HOURLY),
+            self.zonneplan.async_get_electricity_chart(
+                connection.uuid, today, ConsumptionChart.DAYS
+            ),
+        )
+
+    async def _async_fetch_gas(
+        self, account: Account, today: date
+    ) -> tuple[ConsumerPrices | None, GasChart | None]:
+        """Fetch gas prices and usage, if the account has gas."""
+        if (connection := _connection(account, "gas")) is None:
+            return None, None
+        return await asyncio.gather(
+            self.zonneplan.async_get_consumer_prices(PriceChart.GAS_DAILY),
+            self.zonneplan.async_get_gas_chart(
+                connection.uuid, today, ConsumptionChart.DAYS
+            ),
+        )
+
     @override
     async def _async_update_data(self) -> ZonneplanData:
         """Fetch data from the Zonneplan API."""
         try:
             account = await self.zonneplan.async_get_account()
-            electricity_prices: ConsumerPrices | None = None
-            gas_prices: ConsumerPrices | None = None
-
-            # Depending per contract, fetch the associated consumer prices
-            for connection in account.connections:
-                if (
-                    "electricity" in connection.market_segment
-                    if connection.market_segment is not None
-                    else False
-                ):
-                    electricity_prices = await self.zonneplan.async_get_consumer_prices(
-                        PriceChart.ELECTRICITY_HOURLY
-                    )
-                if (
-                    "gas" in connection.market_segment
-                    if connection.market_segment is not None
-                    else False
-                ):
-                    gas_prices = await self.zonneplan.async_get_consumer_prices(
-                        PriceChart.GAS_DAILY
-                    )
+            # The consumption charts cover the month of the given local day.
+            today = dt_util.now().date()
+            (
+                (electricity_prices, electricity_usage),
+                (gas_prices, gas_usage),
+            ) = await asyncio.gather(
+                self._async_fetch_electricity(account, today),
+                self._async_fetch_gas(account, today),
+            )
         except ZonneplanAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -97,6 +133,17 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+            ) from err
+        except ZonneplanRateLimitError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                retry_after=err.retry_after,
+            ) from err
+        except ZonneplanError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
             ) from err
 
         if TYPE_CHECKING:
@@ -113,4 +160,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
             account=account,
             electricity_prices=electricity_prices,
             gas_prices=gas_prices,
+            electricity_usage=electricity_usage,
+            gas_usage=gas_usage,
         )

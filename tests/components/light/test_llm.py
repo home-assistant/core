@@ -45,9 +45,21 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tools are offered for an exposed light entity."""
-    tool_names = await _tool_names(hass)
-    assert "light__HassLightSet" in tool_names
-    assert "light__HassSetBrightnessRelative" in tool_names
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    tool_names = {"light__HassLightSet", "light__HassSetBrightnessRelative"}
+    assert tools.keys() >= tool_names
+
+    control = llm.ToolAnnotations(idempotent=True, open_world=False)
+    repeats = llm.ToolAnnotations(open_world=False)
+    assert {
+        name: (tool.title, tool.integration, tool.annotations)
+        for name, tool in tools.items()
+        if name in tool_names
+    } == {
+        "light__HassLightSet": ("Set light", "light", control),
+        "light__HassSetBrightnessRelative": ("Change brightness", "light", repeats),
+    }
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
