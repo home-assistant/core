@@ -50,16 +50,15 @@ async def test_user_flow_already_exists(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
+    # Adding the entry before init would filter out the device and abort with no_device
     valid_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_DEVICE_API_ID: valid_config_entry.data[CONF_DEVICE_API_ID]},
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
