@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import errno
+from pathlib import PurePath
 import threading
 from types import SimpleNamespace
 from typing import Any
@@ -55,6 +56,7 @@ from .conftest import (
     FAKE_BY_ID_BASENAME,
     FAKE_DEVICE_NAME,
     FAKE_DEVICE_PATH,
+    FAKE_DEVICE_PATH_2,
     FAKE_DEVICE_REAL_PATH,
     FakeInput,
 )
@@ -656,20 +658,59 @@ async def test_by_id_watch_failure_still_connects(
     """Test a by-id directory that cannot be watched does not stop monitoring.
 
     Waiting entries are still rechecked when the directory appears, since its
-    first link is already in it, and later devices still connect.
+    first link is already in it. The watch is retried on later device events,
+    so a by-id device plugged in once it can be added still connects through
+    its late link.
     """
     await _set_up(hass, mock_config_entry)
-    await _set_up(hass, _remote_entry())
+    await _set_up(
+        hass,
+        _entry({CONF_DEVICE_PATH: FAKE_DEVICE_PATH_2, CONF_DEVICE_NAME: "Remote"}),
+    )
     fake_input.watch_errors[DEVINPUT_BY_ID] = OSError(errno.ENOSPC, "No space")
 
     kbd = await fake_input.plug(
         FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
     )
-    remote = await fake_input.plug(REMOTE_PATH, REMOTE_NAME)
 
     assert "Unable to watch /dev/input/by-id" in caplog.text
     kbd.grab.assert_called_once()
+
+    fake_input.watch_errors.clear()
+    remote = await fake_input.plug(
+        "/dev/input/event6", "Remote", link=FAKE_DEVICE_PATH_2
+    )
+
     remote.grab.assert_called_once()
+
+
+async def test_watcher_survives_an_event_it_cannot_handle(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an error handling one event does not end device monitoring.
+
+    Otherwise no device would connect again, and the error would only surface
+    when unloading, where it would skip releasing the devices.
+    """
+    await _set_up(hass, mock_config_entry)
+    assert fake_input.inotify is not None
+    # An event without a mask makes the handler raise
+    fake_input.inotify.queue.put_nowait(
+        SimpleNamespace(name=PurePath("event9"), watch=None)
+    )
+    await fake_input.settle()
+
+    kbd = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
+    )
+
+    assert "Error handling input device event" in caplog.text
+    kbd.grab.assert_called_once()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(

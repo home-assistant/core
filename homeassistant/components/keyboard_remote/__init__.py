@@ -332,8 +332,13 @@ class KeyboardRemoteManager:
             if self._monitor_task is not None:
                 if not self._monitor_task.done():
                     self._monitor_task.cancel()
-                with suppress(asyncio.CancelledError):
+                try:
                     await self._monitor_task
+                except asyncio.CancelledError:
+                    pass
+                except Exception:
+                    # Log it and still release the devices below
+                    _LOGGER.exception("The input device watcher had failed")
                 self._monitor_task = None
 
             stop_tasks = {
@@ -551,39 +556,46 @@ class KeyboardRemoteManager:
         assert self._inotify is not None
         try:
             async for event in self._inotify:
-                if self._by_id_watcher is not None and (
-                    event.watch is self._by_id_watcher
-                ):
-                    await self._async_handle_by_id_event(event)
-                    continue
-
-                if event.name is not None and str(event.name) == "by-id":
-                    if Mask.CREATE in event.mask:
-                        await self._async_handle_by_id_created()
-                    continue
-
-                descriptor = f"{DEVINPUT}/{event.name}"
-                _LOGGER.debug(
-                    "got event for %s: %s",
-                    descriptor,
-                    event.mask,
-                )
-
-                descriptor_active = descriptor in self._active_handlers_by_descriptor
-
-                if (event.mask & Mask.DELETE) and descriptor_active:
-                    _LOGGER.debug("removing: %s", descriptor)
-                    handler = self._active_handlers_by_descriptor[descriptor]
-                    del self._active_handlers_by_descriptor[descriptor]
-                    await handler.async_device_stop_monitoring()
-                elif (
-                    (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
-                ) and not descriptor_active:
-                    _LOGGER.debug("checking new: %s", descriptor)
-                    await self._async_attach_descriptor(descriptor)
+                try:
+                    await self._async_handle_inotify_event(event)
+                except Exception:
+                    # Ending the loop would stop every device from connecting
+                    _LOGGER.exception("Error handling input device event %s", event)
         except asyncio.CancelledError:
             _LOGGER.debug("Monitoring canceled")
             return
+
+    async def _async_handle_inotify_event(self, event: InotifyEvent) -> None:
+        """Handle one event from /dev/input or /dev/input/by-id."""
+        if self._by_id_watcher is not None and event.watch is self._by_id_watcher:
+            await self._async_handle_by_id_event(event)
+            return
+
+        if event.name is not None and str(event.name) == "by-id":
+            if Mask.CREATE in event.mask:
+                await self._async_handle_by_id_created()
+            return
+
+        # A device plugged in now gets its by-id link after this event, and
+        # that link is only seen with the watch in place.
+        if self._by_id_watcher is None:
+            await self._async_retry_by_id_watch()
+
+        descriptor = f"{DEVINPUT}/{event.name}"
+        _LOGGER.debug("got event for %s: %s", descriptor, event.mask)
+
+        descriptor_active = descriptor in self._active_handlers_by_descriptor
+
+        if (event.mask & Mask.DELETE) and descriptor_active:
+            _LOGGER.debug("removing: %s", descriptor)
+            handler = self._active_handlers_by_descriptor[descriptor]
+            del self._active_handlers_by_descriptor[descriptor]
+            await handler.async_device_stop_monitoring()
+        elif (
+            (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
+        ) and not descriptor_active:
+            _LOGGER.debug("checking new: %s", descriptor)
+            await self._async_attach_descriptor(descriptor)
 
     async def _async_attach_descriptor(self, descriptor: str) -> None:
         """Start the best matching handler on a device node, if any."""
@@ -644,9 +656,24 @@ class KeyboardRemoteManager:
         try:
             self._watch_by_id()
         except OSError as err:
-            # Raising here would end the monitor loop. Devices still connect
-            # on their node events, only a link that lands late is missed.
+            # Raising here would end the monitor loop. The watch is retried
+            # on later /dev/input events.
             _LOGGER.warning("Unable to watch %s: %s", DEVINPUT_BY_ID, err)
+        await self._async_check_waiting_handlers()
+
+    async def _async_retry_by_id_watch(self) -> None:
+        """Watch the by-id directory after an earlier attempt failed."""
+        try:
+            self._watch_by_id()
+        except OSError as err:
+            _LOGGER.debug("Still unable to watch %s: %s", DEVINPUT_BY_ID, err)
+            return
+        if self._by_id_watcher is not None:
+            # Links added while unwatched produced no event
+            await self._async_check_waiting_handlers()
+
+    async def _async_check_waiting_handlers(self) -> None:
+        """Check every handler that is still waiting for a device."""
         for handler in list(self._handlers.values()):
             if not handler.is_monitoring:
                 await self._async_check_handler(handler)

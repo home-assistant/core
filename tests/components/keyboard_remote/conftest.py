@@ -313,7 +313,9 @@ class FakeInput:
         those too, until two passes in a row find nothing left to do.
         """
         quiet_passes = 0
-        while quiet_passes < 2:
+        for _ in range(1000):
+            if quiet_passes == 2:
+                return
             await self.hass.async_block_till_done()
             if pending := [
                 job
@@ -326,6 +328,7 @@ class FakeInput:
             queued = self._queued()
             await self._spin()
             quiet_passes = 0 if queued else quiet_passes + 1
+        raise AssertionError("emitted events were never handled")
 
     async def wait_until(self, condition: Callable[[], bool]) -> None:
         """Run the event loop until the condition holds."""
