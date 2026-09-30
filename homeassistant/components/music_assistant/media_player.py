@@ -1,8 +1,6 @@
 """MediaPlayer platform for Music Assistant integration."""
 
 import asyncio
-from base64 import b64decode
-import binascii
 from collections.abc import Mapping
 from contextlib import suppress
 import os
@@ -68,7 +66,11 @@ from .const import (
     LOGGER,
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
-from .helpers import catch_musicassistant_error, catch_user_not_found
+from .helpers import (
+    catch_musicassistant_error,
+    catch_user_not_found,
+    dashboard_identifier,
+)
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
@@ -136,7 +138,7 @@ MASS_ICON_TO_MDI: Mapping[str, str] = {
 
 MEDIA_CONTENT_TYPE_DASHBOARD = "dashboard"
 NOW_PLAYING_ID_PREFIX = f"{DashboardType.NOW_PLAYING.value}/"
-# the DashboardType value doubles as the provider domain for providers/icon
+# the DashboardType value doubles as the provider domain for get_provider_icon
 DASHBOARD_ICON_TYPES = frozenset({DashboardType.PARTY, DashboardType.MUSIC_QUIZ})
 DASHBOARD_ICON_PROVIDER_DOMAINS = frozenset(
     icon_type.value for icon_type in DASHBOARD_ICON_TYPES
@@ -166,30 +168,6 @@ def _get_player_artwork_url(mass: MusicAssistantClient, player: Player) -> str |
         # fallback to static media item image from queue
         return mass.get_media_item_image_url(queue.current_item)
     return None
-
-
-def _decode_data_uri(data_uri: str) -> tuple[bytes | None, str | None]:
-    """Decode a `data:<content-type>;base64,<data>` URI.
-
-    Returns (None, None) if the URI is malformed rather than raising.
-    """
-    if not data_uri.startswith("data:"):
-        return None, None
-    header, sep, encoded = data_uri.partition(",")
-    if not sep or not encoded:
-        return None, None
-    if not header.endswith(";base64"):
-        return None, None
-    content_type = header.removeprefix("data:").removesuffix(";base64")
-    if not content_type:
-        return None, None
-    try:
-        decoded = b64decode(encoded, validate=True)
-    except binascii.Error, ValueError:
-        return None, None
-    if not decoded:
-        return None, None
-    return decoded, content_type
 
 
 async def async_setup_entry(
@@ -226,7 +204,7 @@ async def async_setup_entry(
                 entity_registry.async_get_entity_id(
                     Platform.MEDIA_PLAYER,
                     DOMAIN,
-                    f"{dashboard.dashboard_id}_dashboard",
+                    dashboard_identifier(dashboard.dashboard_id),
                 )
             ):
                 continue
@@ -869,8 +847,8 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     def __init__(self, mass: MusicAssistantClient, dashboard_id: str) -> None:
         """Initialize MusicAssistantDashboardPlayer."""
         super().__init__(mass, dashboard_id)
-        # decoded provider icons per domain; a failed fetch is cached as None
-        self._provider_icon_cache: dict[str, tuple[bytes, str] | None] = {}
+        # successfully fetched provider icons per domain
+        self._provider_icon_cache: dict[str, tuple[bytes, str]] = {}
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -902,8 +880,12 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         """Show a dashboard on this display."""
         if media_type != MEDIA_CONTENT_TYPE_DASHBOARD:
             raise ServiceValidationError(
-                "Music Assistant dashboard players only accept media_content_type "
-                f"'{MEDIA_CONTENT_TYPE_DASHBOARD}', got '{media_type}'"
+                translation_domain=DOMAIN,
+                translation_key="dashboard_invalid_media_type",
+                translation_placeholders={
+                    "expected": MEDIA_CONTENT_TYPE_DASHBOARD,
+                    "media_type": str(media_type),
+                },
             )
         dashboard_type, player_id = self._parse_play_media_id(media_id)
         await self.mass.dashboard.show(self.dashboard_id, dashboard_type, player_id)
@@ -924,14 +906,23 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         # the browse websocket path doesn't filter on availability
         dashboard = self.mass.dashboard.get(self.dashboard_id)
         if dashboard is None:
-            raise BrowseError(f"Display '{self.dashboard_id}' is not available")
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_display_not_available",
+                translation_placeholders={"display": self.dashboard_id},
+            )
         if media_content_id in (None, ""):
             return self._build_root_listing(dashboard)
-        if media_content_id == DashboardType.NOW_PLAYING.value:
-            if DashboardType.NOW_PLAYING not in dashboard.supported_types:
-                raise BrowseError(f"Media not found: {media_content_id}")
+        if (
+            media_content_id == DashboardType.NOW_PLAYING.value
+            and DashboardType.NOW_PLAYING in dashboard.supported_types
+        ):
             return self._build_now_playing_listing()
-        raise BrowseError(f"Media not found: {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="dashboard_media_not_found",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        )
 
     @property
     @override
@@ -1047,14 +1038,20 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
         dashboard = self.mass.dashboard.get(self.dashboard_id)
         if dashboard is None:
             raise ServiceValidationError(
-                f"Display '{self.dashboard_id}' is not available"
+                translation_domain=DOMAIN,
+                translation_key="dashboard_display_not_available",
+                translation_placeholders={"display": self.dashboard_id},
             )
         valid_ids = self._valid_content_ids(dashboard)
 
         if media_content_id == DashboardType.NOW_PLAYING.value:
             raise ServiceValidationError(
-                f"'{DashboardType.NOW_PLAYING.value}' requires a player, expected "
-                f"{NOW_PLAYING_ID_PREFIX}<player_id>"
+                translation_domain=DOMAIN,
+                translation_key="dashboard_now_playing_requires_player",
+                translation_placeholders={
+                    "dashboard": DashboardType.NOW_PLAYING.value,
+                    "expected": f"{NOW_PLAYING_ID_PREFIX}<player_id>",
+                },
             )
 
         player_id: str | None = None
@@ -1066,19 +1063,30 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
 
         if dashboard_type == DashboardType.UNKNOWN:
             raise ServiceValidationError(
-                f"Unknown dashboard '{media_content_id}', expected one of "
-                f"{', '.join(valid_ids)}"
+                translation_domain=DOMAIN,
+                translation_key="dashboard_unknown_type",
+                translation_placeholders={
+                    "dashboard": media_content_id,
+                    "valid_ids": ", ".join(valid_ids),
+                },
             )
         if dashboard_type not in dashboard.supported_types:
             raise ServiceValidationError(
-                f"Display '{dashboard.name}' does not support "
-                f"'{dashboard_type.value}', expected one of {', '.join(valid_ids)}"
+                translation_domain=DOMAIN,
+                translation_key="dashboard_type_not_supported",
+                translation_placeholders={
+                    "display": dashboard.name,
+                    "dashboard": dashboard_type.value,
+                    "valid_ids": ", ".join(valid_ids),
+                },
             )
         if dashboard_type == DashboardType.NOW_PLAYING:
             player = self.mass.players.get(player_id) if player_id else None
             if player is None or not player.expose_to_ha:
                 raise ServiceValidationError(
-                    f"Unknown or unexposed player '{player_id}'"
+                    translation_domain=DOMAIN,
+                    translation_key="dashboard_player_not_available",
+                    translation_placeholders={"player_id": str(player_id)},
                 )
         return dashboard_type, player_id
 
@@ -1098,34 +1106,21 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     async def _fetch_provider_icon(
         self, provider_domain: str
     ) -> tuple[bytes | None, str | None]:
-        """Fetch and decode a provider icon, caching the decoded result per domain."""
-        if provider_domain not in self._provider_icon_cache:
-            self._provider_icon_cache[
-                provider_domain
-            ] = await self._request_provider_icon(provider_domain)
-        return self._provider_icon_cache[provider_domain] or (None, None)
-
-    async def _request_provider_icon(
-        self, provider_domain: str
-    ) -> tuple[bytes, str] | None:
-        """Fetch and decode a provider icon from the server, logging on failure."""
+        """Fetch a provider icon, caching only successful results per domain."""
+        if (cached := self._provider_icon_cache.get(provider_domain)) is not None:
+            return cached
         try:
-            data_uri = await self.mass.send_command(
-                "providers/icon", provider=provider_domain
-            )
+            icon = await self.mass.get_provider_icon(provider_domain)
         except MusicAssistantError:
             LOGGER.debug(
                 "Failed to fetch provider icon for %s", provider_domain, exc_info=True
             )
-            return None
-        if data_uri is None:
+            return None, None
+        if icon is None:
             LOGGER.debug("No provider icon available for %s", provider_domain)
-            return None
-        decoded, content_type = _decode_data_uri(data_uri)
-        if decoded is None or content_type is None:
-            LOGGER.warning("Malformed provider icon data URI for %s", provider_domain)
-            return None
-        return decoded, content_type
+            return None, None
+        self._provider_icon_cache[provider_domain] = icon
+        return icon
 
     def _build_root_listing(self, dashboard: DashboardDevice) -> BrowseMedia:
         """Build the root browse listing, filtered to this display's dashboards."""

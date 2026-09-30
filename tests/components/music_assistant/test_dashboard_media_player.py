@@ -1,12 +1,12 @@
 """Test Music Assistant dashboard display media player entities."""
 
-from base64 import b64encode
 import dataclasses
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.dashboard import DashboardDevice, DashboardSession
 from music_assistant_models.enums import DashboardType, EventType
+from music_assistant_models.errors import MusicAssistantError
 from music_assistant_models.player import PlayerMedia
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
+    BrowseError,
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.music_assistant.const import ATTR_URL, DOMAIN
@@ -49,21 +50,18 @@ UNMAPPED_ENTITY_ID = "media_player.unmapped_player_display"
 
 PROVIDER_ICON_BYTES = b"<svg/>"
 PROVIDER_ICON_CONTENT_TYPE = "image/svg+xml"
-PROVIDER_ICON_DATA_URI = (
-    f"data:{PROVIDER_ICON_CONTENT_TYPE};base64,"
-    f"{b64encode(PROVIDER_ICON_BYTES).decode()}"
-)
 
 
-def _mock_provider_icon(music_assistant_client: MagicMock) -> None:
-    """Make providers/icon return a real data URI; other commands keep returning None."""
-
-    async def send_command(command: str, **kwargs: Any) -> Any:
-        if command == "providers/icon":
-            return PROVIDER_ICON_DATA_URI
-        return None
-
-    music_assistant_client.send_command = AsyncMock(side_effect=send_command)
+def _mock_provider_icon(
+    music_assistant_client: MagicMock,
+    result: tuple[bytes, str] | None = (
+        PROVIDER_ICON_BYTES,
+        PROVIDER_ICON_CONTENT_TYPE,
+    ),
+) -> AsyncMock:
+    """Mock the client's get_provider_icon and return the mock."""
+    music_assistant_client.get_provider_icon = AsyncMock(return_value=result)
+    return music_assistant_client.get_provider_icon
 
 
 def _get_dashboard_entity(hass: HomeAssistant, entity_id: str) -> Any:
@@ -115,7 +113,7 @@ async def test_dashboard_player_entities_from_cache(
     config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
     )
     assert device
     assert device.manufacturer == "Music Assistant"
@@ -124,7 +122,7 @@ async def test_dashboard_player_entities_from_cache(
 
     entry = entity_registry.async_get(KITCHEN_ENTITY_ID)
     assert entry
-    assert entry.unique_id == "chromecast_kitchen_dashboard"
+    assert entry.unique_id == "dashboard:chromecast_kitchen"
 
     # chromecast_kitchen has an active now_playing session for Test Player 1
     state = hass.states.get(KITCHEN_ENTITY_ID)
@@ -222,7 +220,7 @@ async def test_dashboard_play_media_wrong_content_type(
     setup_dashboards(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    with pytest.raises(ServiceValidationError, match="media_content_type"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -234,6 +232,12 @@ async def test_dashboard_play_media_wrong_content_type(
             blocking=True,
         )
 
+    assert exc_info.value.translation_key == "dashboard_invalid_media_type"
+    assert exc_info.value.translation_placeholders == {
+        "expected": "dashboard",
+        "media_type": "music",
+    }
+
 
 async def test_dashboard_play_media_unknown_type(
     hass: HomeAssistant, music_assistant_client: MagicMock
@@ -242,8 +246,10 @@ async def test_dashboard_play_media_unknown_type(
     setup_dashboards(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    with pytest.raises(ServiceValidationError, match="Unknown dashboard"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _play_media(hass, KITCHEN_ENTITY_ID, "not_a_dashboard")
+
+    assert exc_info.value.translation_key == "dashboard_unknown_type"
 
 
 async def test_dashboard_play_media_unsupported_type(
@@ -254,8 +260,15 @@ async def test_dashboard_play_media_unsupported_type(
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
     # chromecast_kitchen only supports party and now_playing
-    with pytest.raises(ServiceValidationError, match="does not support"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _play_media(hass, KITCHEN_ENTITY_ID, "music_quiz")
+
+    assert exc_info.value.translation_key == "dashboard_type_not_supported"
+    assert exc_info.value.translation_placeholders == {
+        "display": "Kitchen Display",
+        "dashboard": "music_quiz",
+        "valid_ids": "now_playing/<player_id>, party",
+    }
 
 
 async def test_dashboard_play_media_now_playing_missing_player(
@@ -265,8 +278,10 @@ async def test_dashboard_play_media_now_playing_missing_player(
     setup_dashboards(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    with pytest.raises(ServiceValidationError, match="requires a player"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _play_media(hass, HALLWAY_ENTITY_ID, "now_playing")
+
+    assert exc_info.value.translation_key == "dashboard_now_playing_requires_player"
 
 
 async def test_dashboard_play_media_now_playing_unknown_player(
@@ -276,8 +291,11 @@ async def test_dashboard_play_media_now_playing_unknown_player(
     setup_dashboards(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    with pytest.raises(ServiceValidationError, match="Unknown or unexposed"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _play_media(hass, HALLWAY_ENTITY_ID, "now_playing/does-not-exist")
+
+    assert exc_info.value.translation_key == "dashboard_player_not_available"
+    assert exc_info.value.translation_placeholders == {"player_id": "does-not-exist"}
 
 
 async def test_dashboard_play_media_now_playing_unexposed_player(
@@ -295,8 +313,11 @@ async def test_dashboard_play_media_now_playing_unexposed_player(
     )
     music_assistant_client.players._players["hidden-player"] = hidden_player
 
-    with pytest.raises(ServiceValidationError, match="Unknown or unexposed"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _play_media(hass, HALLWAY_ENTITY_ID, "now_playing/hidden-player")
+
+    assert exc_info.value.translation_key == "dashboard_player_not_available"
+    assert exc_info.value.translation_placeholders == {"player_id": "hidden-player"}
 
 
 async def test_dashboard_turn_off(
@@ -452,9 +473,9 @@ async def test_dashboard_browse_media_now_playing_folder(
 async def test_dashboard_async_get_browse_image(
     hass: HomeAssistant, music_assistant_client: MagicMock
 ) -> None:
-    """Test async_get_browse_image decodes the provider icon data URI and caches it."""
+    """Test async_get_browse_image returns the provider icon and caches it."""
     setup_dashboards(music_assistant_client)
-    _mock_provider_icon(music_assistant_client)
+    get_provider_icon = _mock_provider_icon(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
     entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
@@ -464,23 +485,40 @@ async def test_dashboard_async_get_browse_image(
 
     # a second fetch for the same provider domain must not re-hit the server
     await entity.async_get_browse_image("dashboard", "party")
-    icon_calls = [
-        icon_call
-        for icon_call in music_assistant_client.send_command.call_args_list
-        if icon_call.args[:1] == ("providers/icon",)
-    ]
-    assert len(icon_calls) == 1
+    get_provider_icon.assert_awaited_once_with("party")
 
 
-async def test_dashboard_async_get_browse_image_no_icon(
+async def test_dashboard_async_get_browse_image_no_icon_not_cached(
     hass: HomeAssistant, music_assistant_client: MagicMock
 ) -> None:
-    """Test async_get_browse_image returns (None, None) when the server has no icon."""
+    """Test a missing provider icon returns (None, None) and is retried."""
     setup_dashboards(music_assistant_client)
+    get_provider_icon = _mock_provider_icon(music_assistant_client, None)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
     entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
     assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
+    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
+    assert get_provider_icon.await_count == 2
+
+
+async def test_dashboard_async_get_browse_image_error_not_cached(
+    hass: HomeAssistant, music_assistant_client: MagicMock
+) -> None:
+    """Test a failed provider icon fetch returns (None, None) and is retried."""
+    setup_dashboards(music_assistant_client)
+    get_provider_icon = _mock_provider_icon(music_assistant_client)
+    get_provider_icon.side_effect = MusicAssistantError("boom")
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
+
+    # the next request retries and caches the recovered result
+    get_provider_icon.side_effect = None
+    data, content_type = await entity.async_get_browse_image("dashboard", "party")
+    assert (data, content_type) == (PROVIDER_ICON_BYTES, PROVIDER_ICON_CONTENT_TYPE)
+    assert get_provider_icon.await_count == 2
 
 
 async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
@@ -492,7 +530,7 @@ async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
     and must reject before ever touching the cache or the server.
     """
     setup_dashboards(music_assistant_client)
-    _mock_provider_icon(music_assistant_client)
+    get_provider_icon = _mock_provider_icon(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
     entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
@@ -500,44 +538,7 @@ async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
         "dashboard", "now_playing/00:00:00:00:00:01"
     ) == (None, None)
     assert entity._provider_icon_cache == {}
-    icon_calls = [
-        icon_call
-        for icon_call in music_assistant_client.send_command.call_args_list
-        if icon_call.args[:1] == ("providers/icon",)
-    ]
-    assert not icon_calls
-
-
-@pytest.mark.parametrize(
-    "malformed_data_uri",
-    [
-        "not-a-data-uri",
-        "data:image/svg+xml;base64,",
-        "data:image/svg+xml;base64,not_base64!!",
-        "bogus,PHN2Zy8+",  # no data: prefix
-        "data:image/svg+xml,PHN2Zy8+",  # missing ;base64 marker
-        "data:;base64,PHN2Zy8+",  # empty content type
-        "data:image/svg+xml;base64,!!!invalid!!!",  # invalid base64 chars
-    ],
-)
-async def test_dashboard_async_get_browse_image_malformed_icon(
-    hass: HomeAssistant,
-    music_assistant_client: MagicMock,
-    malformed_data_uri: str,
-) -> None:
-    """Test a malformed provider icon data URI is handled without raising."""
-    setup_dashboards(music_assistant_client)
-
-    async def send_command(command: str, **kwargs: Any) -> Any:
-        if command == "providers/icon":
-            return malformed_data_uri
-        return None
-
-    music_assistant_client.send_command = AsyncMock(side_effect=send_command)
-    await setup_integration_from_fixtures(hass, music_assistant_client)
-
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
+    get_provider_icon.assert_not_awaited()
 
 
 async def test_dashboard_dynamic_add_and_unavailable(
@@ -916,6 +917,14 @@ async def test_dashboard_browse_media_unknown_content_id(
     assert response["success"] is False
     assert response["error"]["code"] == "unknown_error"
 
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    with pytest.raises(BrowseError) as exc_info:
+        await entity.async_browse_media("dashboard", "not_a_real_id")
+    assert exc_info.value.translation_key == "dashboard_media_not_found"
+    assert exc_info.value.translation_placeholders == {
+        "media_content_id": "not_a_real_id"
+    }
+
 
 async def test_dashboard_browse_media_display_gone_from_cache(
     hass: HomeAssistant,
@@ -944,6 +953,12 @@ async def test_dashboard_browse_media_display_gone_from_cache(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]["code"] == "unknown_error"
+
+    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
+    with pytest.raises(BrowseError) as exc_info:
+        await entity.async_browse_media()
+    assert exc_info.value.translation_key == "dashboard_display_not_available"
+    assert exc_info.value.translation_placeholders == {"display": "chromecast_kitchen"}
 
 
 async def test_dashboard_browse_media_now_playing_folder_unsupported(
@@ -975,6 +990,11 @@ async def test_dashboard_browse_media_now_playing_folder_unsupported(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]["code"] == "unknown_error"
+
+    entity = _get_dashboard_entity(hass, "media_player.party_only_display")
+    with pytest.raises(BrowseError) as exc_info:
+        await entity.async_browse_media("dashboard", "now_playing")
+    assert exc_info.value.translation_key == "dashboard_media_not_found"
 
 
 async def test_dashboard_media_player_snapshot(
@@ -1035,7 +1055,7 @@ async def test_platform_entity_service_skips_display_indirect_target(
         (DOMAIN, "00:00:00:00:00:01"), config_entry.entry_id
     )
     display_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
     )
     assert player_device
     assert display_device

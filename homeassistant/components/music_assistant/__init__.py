@@ -38,7 +38,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_DEVICE_MODEL, DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_ID_PREFIX, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
 from .services import register_actions
 
@@ -248,10 +248,12 @@ async def async_setup_entry(  # noqa: C901
     dev_reg = dr.async_get(hass)
     dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     for device in dev_entries:
-        if device.model == DASHBOARD_DEVICE_MODEL:
-            continue
         for identifier in device.identifiers:
-            if identifier[0] == DOMAIN and identifier[1] not in player_ids:
+            if (
+                identifier[0] == DOMAIN
+                and not identifier[1].startswith(DASHBOARD_ID_PREFIX)
+                and identifier[1] not in player_ids
+            ):
                 dev_reg.async_remove_device(device.id)
 
     return True
@@ -304,7 +306,7 @@ async def async_remove_config_entry_device(
     if not isinstance(device_entry, dr.DeviceEntry):
         # child devices cannot be removed on their own
         return False
-    # the identifier is a player_id, or f"{dashboard_id}_dashboard" for displays
+    # the identifier is a player_id, or f"dashboard:{dashboard_id}" for displays
     identifier_value = next(
         (
             identifier[1]
@@ -317,8 +319,8 @@ async def async_remove_config_entry_device(
         # this should not be possible at all, but guard it anyways
         return False
     mass = get_music_assistant_client(hass, config_entry.entry_id)
-    if device_entry.model == DASHBOARD_DEVICE_MODEL:
-        dashboard_id = identifier_value.removesuffix("_dashboard")
+    if identifier_value.startswith(DASHBOARD_ID_PREFIX):
+        dashboard_id = identifier_value.removeprefix(DASHBOARD_ID_PREFIX)
         # the display endpoint is still live, refuse removal
         return mass.dashboard.get(dashboard_id) is None
     if mass.players.get(identifier_value) is None:

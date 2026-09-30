@@ -97,7 +97,7 @@ async def test_remove_dashboard_device(
     client = await hass_ws_client(hass)
 
     device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
     )
     assert device_entry
 
@@ -149,7 +149,7 @@ async def test_dashboard_device_survives_reload_with_empty_cache(
     setup_dashboards(music_assistant_client)
     config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
     )
 
     # simulate an MA server restart: the dashboard cache is empty again,
@@ -160,7 +160,7 @@ async def test_dashboard_device_survives_reload_with_empty_cache(
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "chromecast_kitchen_dashboard"), config_entry.entry_id
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
     )
     state = hass.states.get("media_player.kitchen_display")
     assert state
@@ -194,7 +194,7 @@ async def test_dashboard_device_id_namespaced(
         (DOMAIN, collision_id), config_entry.entry_id
     )
     dashboard_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{collision_id}_dashboard"), config_entry.entry_id
+        (DOMAIN, f"dashboard:{collision_id}"), config_entry.entry_id
     )
     assert player_device
     assert dashboard_device

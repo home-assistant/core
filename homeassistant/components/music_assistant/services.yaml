@@ -5,6 +5,7 @@ play_media:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
@@ -58,6 +59,7 @@ play_announcement:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
         - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
@@ -100,6 +102,7 @@ transfer_queue:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
   fields:
     source_player:
       selector:
@@ -116,6 +119,7 @@ get_queue:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
 

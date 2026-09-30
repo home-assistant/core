@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 131840>,
     'translation_key': None,
-    'unique_id': 'fully_kiosk_hallway_dashboard',
+    'unique_id': 'dashboard:fully_kiosk_hallway',
     'unit_of_measurement': None,
   })
 # ---
@@ -86,7 +86,7 @@
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 131840>,
     'translation_key': None,
-    'unique_id': 'chromecast_kitchen_dashboard',
+    'unique_id': 'dashboard:chromecast_kitchen',
     'unit_of_measurement': None,
   })
 # ---
@@ -360,7 +360,7 @@
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 131840>,
     'translation_key': None,
-    'unique_id': 'unmapped_player_display_dashboard',
+    'unique_id': 'dashboard:unmapped_player_display',
     'unit_of_measurement': None,
   })
 # ---

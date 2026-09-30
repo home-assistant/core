@@ -11,6 +11,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from .const import DASHBOARD_DEVICE_MODEL, DOMAIN
+from .helpers import dashboard_identifier
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -145,7 +146,7 @@ class MusicAssistantDashboardEntity(Entity):
         dashboard = mass.dashboard.get(dashboard_id)
         if TYPE_CHECKING:
             assert dashboard is not None
-        self._attr_unique_id = f"{dashboard_id}_dashboard"
+        self._attr_unique_id = dashboard_identifier(dashboard_id)
         # namespaced: Fully Kiosk registers dashboard_id == player_id, and a bare
         # id here would merge this device into the player's own device
         self._attr_device_info = dr.DeviceInfo(
