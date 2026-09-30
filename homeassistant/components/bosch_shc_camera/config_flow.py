@@ -4,12 +4,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from bosch_shc_camera_client.cameras import (
-    BoschCameraAuthError,
-    BoschCameraConnectionError,
-    BoschCameraInvalidResponseError,
-    list_cameras,
-)
 import jwt
 import probatio
 
@@ -18,7 +12,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .application_credentials import OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
@@ -88,18 +81,8 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         await self.async_set_unique_id(account_id)
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_account")
-        else:
-            self._abort_if_unique_id_configured()
-        try:
-            await list_cameras(
-                async_get_clientsession(self.hass), data["token"]["access_token"]
-            )
-        except BoschCameraAuthError:
-            return self.async_abort(reason="invalid_auth")
-        except BoschCameraConnectionError, BoschCameraInvalidResponseError:
-            return self.async_abort(reason="cannot_connect")
-        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)

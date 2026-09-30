@@ -103,17 +103,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(autouse=True)
 def mock_list_cameras() -> Generator[AsyncMock]:
     """Mock the camera list of the library."""
-    with (
-        patch(
-            "homeassistant.components.bosch_shc_camera.coordinator.list_cameras",
-            autospec=True,
-            return_value=list(CAMERAS),
-        ) as mock,
-        patch(
-            "homeassistant.components.bosch_shc_camera.config_flow.list_cameras",
-            new=mock,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.bosch_shc_camera.coordinator.list_cameras",
+        autospec=True,
+        return_value=list(CAMERAS),
+    ) as mock:
         yield mock
 
 
@@ -533,65 +527,3 @@ async def test_stale_device_removed_on_startup(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, CAMERA_ID), mock_config_entry.entry_id
     )
-
-
-@pytest.mark.parametrize(
-    ("error", "reason"),
-    [
-        (BoschCameraAuthError, "invalid_auth"),
-        (BoschCameraConnectionError, "cannot_connect"),
-        (BoschCameraInvalidResponseError, "cannot_connect"),
-    ],
-)
-@pytest.mark.parametrize("reauth", [False, True])
-async def test_api_access_checked_before_entry(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_list_cameras: AsyncMock,
-    error: type[Exception],
-    reason: str,
-    reauth: bool,
-) -> None:
-    """Test the flow aborts when the camera API cannot be reached with the token."""
-    mock_list_cameras.side_effect = error
-    if reauth:
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=ACCOUNT_ID,
-            data={
-                "auth_implementation": DOMAIN,
-                "token": {"access_token": "old", "refresh_token": "old"},
-            },
-        )
-        entry.add_to_hass(hass)
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-    else:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
-    )
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == HTTPStatus.OK
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": _fake_access_token({"sub": ACCOUNT_ID}),
-            "token_type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    expected = 1 if reauth else 0
-    assert len(hass.config_entries.async_entries(DOMAIN)) == expected
