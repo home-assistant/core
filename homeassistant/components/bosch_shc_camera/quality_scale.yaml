@@ -39,9 +39,7 @@ rules:
   runtime-data:
     status: exempt
     comment: This integration does not store runtime data yet.
-  test-before-configure:
-    status: exempt
-    comment: The OAuth2 token exchange is the only step and it is validated by the flow helper.
+  test-before-configure: done
   test-before-setup:
     status: exempt
     comment: This integration does not communicate with the service during setup yet.
