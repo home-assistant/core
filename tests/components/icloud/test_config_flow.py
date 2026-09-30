@@ -727,14 +727,6 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("service")
 async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
     """Test that the iCloud storage directory is created if it does not exist."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
     with (
         patch(
             "homeassistant.components.icloud.config_flow.os.path.exists",
@@ -744,6 +736,14 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
             "homeassistant.components.icloud.config_flow.os.makedirs"
         ) as makedirs_mock,
     ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
