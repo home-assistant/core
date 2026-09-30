@@ -119,7 +119,26 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             return self.async_show_form(step_id="confirm")
         if not async_scanner_count(self.hass, connectable=True):
             return self.async_abort(reason="bluetooth_not_available")
-        if (router := self._async_get_router()) is None:
+        entry: TeslemetryConfigEntry | None = self.hass.config_entries.async_get_entry(
+            self._entry_id
+        )
+        if (
+            entry is None
+            or entry.state is not ConfigEntryState.LOADED
+            or (subentry := entry.subentries.get(self._subentry_id)) is None
+        ):
+            return self.async_abort(reason="bluetooth_not_loaded")
+        # A reload while this flow is open can leave the vehicle without a Bluetooth router.
+        router = next(
+            (
+                vehicle.api
+                for vehicle in entry.runtime_data.vehicles
+                if vehicle.vin == subentry.data[CONF_VIN]
+                and isinstance(vehicle.api, VehicleRouter)
+            ),
+            None,
+        )
+        if router is None:
             return self.async_abort(reason="bluetooth_not_loaded")
         # The router's health check also refreshes the device handle the handshake connects with.
         if not await router.is_healthy():
@@ -152,39 +171,13 @@ class BluetoothKeyRepairFlow(RepairsFlow):
                 )
         else:
             return self.async_create_entry(data={})
-        # Only a rejected key reaches here.
-        return await self._async_reconfigure(router)
-
-    @callback
-    def _async_get_router(self) -> VehicleRouter | None:
-        """Return the vehicle's running Bluetooth router, if the entry is loaded."""
-        entry: TeslemetryConfigEntry | None = self.hass.config_entries.async_get_entry(
-            self._entry_id
-        )
-        if (
-            entry is None
-            or entry.state is not ConfigEntryState.LOADED
-            or (subentry := entry.subentries.get(self._subentry_id)) is None
-        ):
-            return None
-        return next(
-            (
-                vehicle.api
-                for vehicle in entry.runtime_data.vehicles
-                if vehicle.vin == subentry.data[CONF_VIN]
-                and isinstance(vehicle.api, VehicleRouter)
-            ),
-            None,
-        )
-
-    async def _async_reconfigure(self, router: VehicleRouter) -> RepairsFlowResult:
-        """Open the vehicle's reconfigure flow to re-approve the key."""
-        # The reconfigure flow opens its own link to the vehicle, so release this one first.
+        # Only a rejected key reaches here. The reconfigure flow opens its own link
+        # to the vehicle, so release this one first.
         try:
             async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
                 await router.primary.disconnect()
         except (BleakError, TeslaFleetError, TimeoutError) as err:
-            LOGGER.debug("Error disconnecting Bluetooth before reconfigure: %s", err)
+            LOGGER.warning("Error disconnecting Bluetooth before reconfigure: %s", err)
         result = await self.hass.config_entries.subentries.async_init(
             (self._entry_id, SUBENTRY_TYPE_VEHICLE),
             context={"source": SOURCE_RECONFIGURE, "subentry_id": self._subentry_id},
@@ -320,8 +313,6 @@ async def async_create_fix_flow(
         and data.get("issue_type") == ISSUE_TYPE_BLE_KEY_REJECTED
         and isinstance(entry_id := data.get("entry_id"), str)
         and isinstance(subentry_id := data.get("subentry_id"), str)
-        and (entry := hass.config_entries.async_get_entry(entry_id)) is not None
-        and subentry_id in entry.subentries
     ):
         return BluetoothKeyRepairFlow(entry_id, subentry_id)
     if (
