@@ -493,89 +493,79 @@ class Repository:
 
     @property
     def display_status(self) -> str:
-        """Return display_status."""
+        """Return the status the panel shows the repository with."""
         if self.data.new:
-            status = "new"
-        elif self.pending_restart:
-            status = "pending-restart"
-        elif self.pending_update:
-            status = "pending-upgrade"
-        elif self.data.installed:
-            status = "installed"
-        else:
-            status = "default"
-        return status
+            return "new"
+        if self.pending_restart:
+            return "pending-restart"
+        if self.pending_update:
+            return "pending-upgrade"
+        if self.data.installed:
+            return "installed"
+        return "default"
 
     @property
     def display_installed_version(self) -> str:
         """Return the installed version to display."""
         if self.data.installed_version is not None:
-            installed = self.data.installed_version
-        elif self.data.installed_commit is not None:
-            installed = self.data.installed_commit
-        else:
-            installed = ""
-        return str(installed)
+            return str(self.data.installed_version)
+        if self.data.installed_commit is not None:
+            return str(self.data.installed_commit)
+        return ""
 
     @property
     def display_available_version(self) -> str:
         """Return the available version to display."""
         if self.data.show_beta and self.data.prerelease is not None:
-            available = self.data.prerelease
-        elif self.data.last_version is not None:
-            available = self.data.last_version
-        elif self.data.last_commit is not None:
-            available = self.data.last_commit
-        else:
-            available = ""
-        return str(available)
+            return str(self.data.prerelease)
+        if self.data.last_version is not None:
+            return str(self.data.last_version)
+        if self.data.last_commit is not None:
+            return str(self.data.last_commit)
+        return ""
 
     @property
     def display_version_or_commit(self) -> str:
         """Return if the repository is installed by version or by commit."""
-        if self.data.releases:
-            version_or_commit = "version"
-        else:
-            version_or_commit = "commit"
-        return version_or_commit
+        return "version" if self.data.releases else "commit"
 
     @property
     def pending_update(self) -> bool:
-        """Return True if pending update."""
-        if self.data.installed:
-            if self.data.selected_tag is not None:
-                if self.data.selected_tag == self.data.default_branch:
-                    if self.data.installed_commit != self.data.last_commit:
-                        return True
-                    return False
-            # A commit that happens to look like a version is still a commit
-            if (
-                self.display_version_or_commit == "version"
-                and self.data.installed_version is not None
-            ):
-                if (
-                    result := is_newer_version(
-                        self.display_available_version,
-                        self.display_installed_version,
-                    )
-                ) is not None:
-                    return result
-            if self.display_installed_version != self.display_available_version:
-                return True
+        """Return if a newer version than the installed one is available."""
+        if not self.data.installed:
+            return False
 
-        return False
+        # Following the default branch, every new commit is an update
+        if (
+            self.data.selected_tag is not None
+            and self.data.selected_tag == self.data.default_branch
+        ):
+            return self.data.installed_commit != self.data.last_commit
+
+        # A commit that happens to look like a version is still a commit
+        if (
+            self.display_version_or_commit == "version"
+            and self.data.installed_version is not None
+            and (
+                newer := is_newer_version(
+                    self.display_available_version, self.display_installed_version
+                )
+            )
+            is not None
+        ):
+            return newer
+
+        return self.display_installed_version != self.display_available_version
 
     @property
     def can_install(self) -> bool:
-        """Return True if we can install."""
-        if self.repository_manifest.homeassistant is not None:
-            if self.data.releases:
-                if not is_same_or_newer_version(
-                    self.marketplace.version.string,
-                    self.repository_manifest.homeassistant,
-                ):
-                    return False
-        return True
+        """Return if this Home Assistant is new enough for the repository."""
+        if self.repository_manifest.homeassistant is None or not self.data.releases:
+            return True
+
+        return is_same_or_newer_version(
+            self.marketplace.version.string, self.repository_manifest.homeassistant
+        )
 
     @property
     def localpath(self) -> str:
@@ -584,19 +574,16 @@ class Repository:
 
     @property
     def should_try_releases(self) -> bool:
-        """Return a boolean indicating whether to download releases or not."""
-        if self.repository_manifest.zip_release and self.repository_manifest.filename:
-            if self.repository_manifest.filename.endswith(".zip"):
-                if self.ref != self.data.default_branch:
-                    return True
+        """Return if the content comes from the assets of a release."""
         if self.ref == self.data.default_branch:
             return False
+
+        manifest = self.repository_manifest
+        if manifest.zip_release and (manifest.filename or "").endswith(".zip"):
+            return True
+
         # Only dashboard resources ship as release assets
-        if self.data.category != "plugin":
-            return False
-        if not self.data.releases:
-            return False
-        return True
+        return self.data.category == "plugin" and bool(self.data.releases)
 
     async def validate_repository(self) -> bool:
         """Check the repository has content this category installs."""
@@ -1715,23 +1702,25 @@ class Repository:
                 return
 
     def version_to_install(self) -> str:
-        """Determine which version to install."""
+        """Return the version to install.
+
+        Selecting the newest version forgets the selection, so the repository
+        follows the versions that come after it.
+        """
         if self.force_branch and self.ref is not None:
             return self.ref
 
+        selected = self.data.selected_tag
         if self.data.last_version is not None:
-            if self.data.selected_tag is not None:
-                if self.data.selected_tag == self.data.last_version:
-                    self.data.selected_tag = None
-                    return self.data.last_version
-                return self.data.selected_tag
-            return self.data.last_version
+            if selected is None or selected == self.data.last_version:
+                self.data.selected_tag = None
+                return self.data.last_version
+            return selected
 
-        if self.data.selected_tag is not None:
-            if self.data.selected_tag == self.data.default_branch:
-                return self.data.default_branch
-            if self.data.selected_tag in self.data.published_tags:
-                return self.data.selected_tag
+        if selected is not None and (
+            selected == self.data.default_branch or selected in self.data.published_tags
+        ):
+            return selected
 
         return self.data.default_branch or "main"
 

@@ -26,6 +26,7 @@ from .decorators import (
     send_repository_not_found,
     send_translated_error,
 )
+from .repositories import repository_summary
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -111,40 +112,16 @@ async def marketplace_repository_info(
         websocket_api.result_message(
             msg["id"],
             {
+                **repository_summary(marketplace, repository),
                 "additional_info": repository.additional_info,
-                "authors": repository.data.authors,
-                "available_version": repository.display_available_version,
                 "beta": repository.data.show_beta,
-                "can_install": repository.can_install,
-                "category": repository.data.category,
-                "config_flow": repository.data.config_flow,
-                "custom": not marketplace.repositories.is_default(
-                    str(repository.data.id)
-                ),
                 "default_branch": repository.data.default_branch,
-                "description": repository.data.description,
-                "domain": repository.data.domain,
-                "downloads": repository.data.downloads,
-                "file_name": repository.data.file_name,
-                "full_name": repository.data.full_name,
                 "hide_default_branch": repository.repository_manifest.hide_default_branch,
-                "homeassistant": repository.repository_manifest.homeassistant,
-                "id": repository.data.id,
-                "installed_version": repository.display_installed_version,
-                "installed": repository.data.installed,
                 "issues": repository.data.open_issues,
-                "last_updated": repository.data.last_updated,
-                "local_path": repository.content.path.local,
-                "name": repository.display_name,
-                "new": False,
-                "pending_upgrade": repository.pending_update,
                 "releases": repository.data.published_tags,
                 "ref": repository.ref,
                 "replaces_built_in": await repository.async_replaces_built_in(),
                 "selected_tag": repository.data.selected_tag,
-                "stars": repository.data.stargazers_count,
-                "status": repository.display_status,
-                "topics": repository.data.topics,
                 "version_or_commit": repository.display_version_or_commit,
             },
         )

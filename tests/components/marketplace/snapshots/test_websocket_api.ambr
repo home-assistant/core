@@ -23,6 +23,7 @@
     'downloads': 42,
     'file_name': '',
     'full_name': 'hacs-test-org/integration-basic',
+    'hide': False,
     'hide_default_branch': False,
     'homeassistant': None,
     'id': '1296269',

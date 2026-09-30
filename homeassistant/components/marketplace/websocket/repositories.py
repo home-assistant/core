@@ -21,6 +21,39 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
     from ..base import MarketplaceManager
+    from ..repositories.base import Repository
+
+
+def repository_summary(
+    marketplace: MarketplaceManager, repository: Repository
+) -> dict[str, Any]:
+    """Return what the panel shows of a repository in lists and on its page."""
+    return {
+        "authors": repository.data.authors,
+        "available_version": repository.display_available_version,
+        "can_install": repository.can_install,
+        "category": repository.data.category,
+        "config_flow": repository.data.config_flow,
+        "custom": not marketplace.repositories.is_default(str(repository.data.id)),
+        "description": repository.data.description,
+        "domain": repository.data.domain,
+        "downloads": repository.data.downloads,
+        "file_name": repository.data.file_name,
+        "full_name": repository.data.full_name,
+        "hide": repository.data.hide,
+        "homeassistant": repository.repository_manifest.homeassistant,
+        "id": repository.data.id,
+        "installed": repository.data.installed,
+        "installed_version": repository.display_installed_version,
+        "last_updated": repository.data.last_updated,
+        "local_path": repository.content.path.local,
+        "name": repository.display_name,
+        "new": repository.data.new,
+        "pending_upgrade": repository.pending_update,
+        "stars": repository.data.stargazers_count,
+        "status": repository.display_status,
+        "topics": repository.data.topics,
+    }
 
 
 @websocket_api.websocket_command(
@@ -43,38 +76,11 @@ async def marketplace_repositories_list(
         websocket_api.result_message(
             msg["id"],
             [
-                {
-                    "authors": repo.data.authors,
-                    "available_version": repo.display_available_version,
-                    "installed_version": repo.display_installed_version,
-                    "config_flow": repo.data.config_flow,
-                    "can_install": repo.can_install,
-                    "category": repo.data.category,
-                    "custom": not marketplace.repositories.is_default(
-                        str(repo.data.id)
-                    ),
-                    "description": repo.data.description,
-                    "domain": repo.data.domain,
-                    "downloads": repo.data.downloads,
-                    "file_name": repo.data.file_name,
-                    "full_name": repo.data.full_name,
-                    "hide": repo.data.hide,
-                    "homeassistant": repo.repository_manifest.homeassistant,
-                    "id": repo.data.id,
-                    "installed": repo.data.installed,
-                    "last_updated": repo.data.last_updated,
-                    "local_path": repo.content.path.local,
-                    "name": repo.display_name,
-                    "new": repo.data.new,
-                    "pending_upgrade": repo.pending_update,
-                    "stars": repo.data.stargazers_count,
-                    "status": repo.display_status,
-                    "topics": repo.data.topics,
-                }
-                for repo in marketplace.repositories.list_all
-                if repo.data.category
+                repository_summary(marketplace, repository)
+                for repository in marketplace.repositories.list_all
+                if repository.data.category
                 in msg.get("categories", marketplace.common.categories)
-                and repo.data.last_fetched
+                and repository.data.last_fetched
             ],
         )
     )
