@@ -121,9 +121,6 @@ async def marketplace_info(
                 "startup": marketplace.status.startup,
                 "version": marketplace.version,
                 "warning_accepted": marketplace.warning_accepted(connection.user.id),
-                "warning_reminder_due": marketplace.warning_reminder_due(
-                    connection.user.id
-                ),
             },
         )
     )

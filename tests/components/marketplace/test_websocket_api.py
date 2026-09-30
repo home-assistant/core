@@ -16,7 +16,7 @@ from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import (
     CONF_WARNING_ACCEPTED,
     DOMAIN,
-    WARNING_REMINDER_INTERVAL,
+    WARNING_VERSION,
 )
 from homeassistant.components.marketplace.enums import (
     MarketplaceSignal,
@@ -44,7 +44,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from . import get_marketplace, github_api_calls, mocked_response
 from .conftest import MarketplaceResponses
@@ -306,7 +305,6 @@ async def test_info(
         "startup": False,
         "version": HA_VERSION,
         "warning_accepted": True,
-        "warning_reminder_due": False,
     }
 
 
@@ -1756,7 +1754,6 @@ async def test_accept_warning(
     await client.send_json_auto_id({"type": "marketplace/info"})
     result = (await client.receive_json())["result"]
     assert result["warning_accepted"] is False
-    assert result["warning_reminder_due"] is False
 
     signals: list[dict[str, Any]] = []
 
@@ -1785,7 +1782,6 @@ async def test_accept_warning(
     await client.send_json_auto_id({"type": "marketplace/info"})
     result = (await client.receive_json())["result"]
     assert result["warning_accepted"] is True
-    assert result["warning_reminder_due"] is False
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -1818,75 +1814,30 @@ async def test_newer_warning_needs_accepting_again(
     )
 
 
-async def test_warning_reminder(
+async def test_warning_accepted_once(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
     init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the warning is due to be read again, without blocking anything."""
+    """Test an accepted warning is not shown again, but when is still recorded."""
     client = await hass_ws_client(hass)
     freezer.move_to(WARNING_ACCEPTANCE["accepted_at"])
-
-    await client.send_json_auto_id({"type": "marketplace/info"})
-    assert (await client.receive_json())["result"]["warning_reminder_due"] is False
-
-    freezer.tick(WARNING_REMINDER_INTERVAL)
-    await client.send_json_auto_id({"type": "marketplace/info"})
-    assert (await client.receive_json())["result"]["warning_reminder_due"] is False
-
-    freezer.tick(timedelta(seconds=1))
-    await client.send_json_auto_id({"type": "marketplace/info"})
-    result = (await client.receive_json())["result"]
-    assert result["warning_accepted"] is True
-    assert result["warning_reminder_due"] is True
 
     await client.send_json_auto_id({"type": "marketplace/warning/accept"})
     assert (await client.receive_json())["success"]
 
+    freezer.tick(timedelta(days=3650))
     await client.send_json_auto_id({"type": "marketplace/info"})
-    assert (await client.receive_json())["result"]["warning_reminder_due"] is False
+    result = (await client.receive_json())["result"]
+
+    assert result["warning_accepted"] is True
+    assert "warning_reminder_due" not in result
     assert init_integration.data[CONF_WARNING_ACCEPTED][hass_admin_user.id] == {
-        "version": 1,
-        "accepted_at": dt_util.utcnow().isoformat(),
+        "version": WARNING_VERSION,
+        "accepted_at": WARNING_ACCEPTANCE["accepted_at"],
     }
-
-
-@pytest.mark.parametrize(
-    "message",
-    [pytest.param(command, id=command["type"]) for command in WARNING_COMMANDS],
-)
-async def test_commands_allowed_while_reminder_due(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_admin_user: MockUser,
-    init_integration: MockConfigEntry,
-    message: dict[str, Any],
-) -> None:
-    """Test a due reminder only nudges the panel, the accepted warning still counts."""
-    accepted_at = dt_util.utcnow() - WARNING_REMINDER_INTERVAL - timedelta(seconds=1)
-    hass.config_entries.async_update_entry(
-        init_integration,
-        data={
-            **init_integration.data,
-            CONF_WARNING_ACCEPTED: {
-                hass_admin_user.id: {
-                    "version": 1,
-                    "accepted_at": accepted_at.isoformat(),
-                }
-            },
-        },
-    )
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id({"type": "marketplace/info"})
-    assert (await client.receive_json())["result"]["warning_reminder_due"] is True
-
-    await client.send_json_auto_id(message)
-    response = await client.receive_json()
-
-    assert response["success"]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -1896,7 +1847,7 @@ async def test_warning_is_accepted_per_user(
     second_admin_token: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test every admin has to accept the warning, and is reminded, on their own."""
+    """Test every admin has to accept the warning on their own."""
     admin_client = await hass_ws_client(hass)
     second_admin_client = await hass_ws_client(hass, second_admin_token)
     freezer.move_to(WARNING_ACCEPTANCE["accepted_at"])
@@ -1913,17 +1864,12 @@ async def test_warning_is_accepted_per_user(
     await admin_client.send_json_auto_id(WARNING_COMMANDS[0])
     assert (await admin_client.receive_json())["success"]
 
-    freezer.tick(WARNING_REMINDER_INTERVAL + timedelta(seconds=1))
     await second_admin_client.send_json_auto_id({"type": "marketplace/warning/accept"})
     assert (await second_admin_client.receive_json())["success"]
-
-    await admin_client.send_json_auto_id({"type": "marketplace/info"})
-    assert (await admin_client.receive_json())["result"]["warning_reminder_due"] is True
 
     await second_admin_client.send_json_auto_id({"type": "marketplace/info"})
     result = (await second_admin_client.receive_json())["result"]
     assert result["warning_accepted"] is True
-    assert result["warning_reminder_due"] is False
 
 
 @pytest.mark.parametrize("config_entry_source", [SOURCE_SYSTEM])

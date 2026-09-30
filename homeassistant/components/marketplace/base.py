@@ -49,7 +49,6 @@ from .const import (
     LEGACY_HACS_INTEGRATION_REPOSITORY,
     RESTART_ISSUE_PREFIX,
     TV,
-    WARNING_REMINDER_INTERVAL,
     WARNING_VERSION,
 )
 from .coordinator import MarketplaceUpdateCoordinator
@@ -450,13 +449,6 @@ class MarketplaceManager:
     def warning_accepted(self, user_id: str) -> bool:
         """Return if a user accepted the current version of the first-run warning."""
         return user_id in self.warning_acceptances
-
-    def warning_reminder_due(self, user_id: str) -> bool:
-        """Return if the warning a user accepted is due to be shown again."""
-        if (accepted_at := self.warning_acceptances.get(user_id)) is None:
-            return False
-
-        return dt_util.utcnow() - accepted_at > WARNING_REMINDER_INTERVAL
 
     @callback
     def async_forget_warning_acceptance(self, user_id: str) -> None:

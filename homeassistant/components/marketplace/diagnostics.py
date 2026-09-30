@@ -32,10 +32,6 @@ async def async_get_config_entry_diagnostics(
                 if warning_acceptances
                 else None
             ),
-            "warning_reminders_due": sum(
-                marketplace.warning_reminder_due(user_id)
-                for user_id in warning_acceptances
-            ),
             "new": marketplace.status.new,
             "startup": marketplace.status.startup,
             "categories": marketplace.common.categories,

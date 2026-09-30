@@ -125,7 +125,6 @@ async def test_diagnostics_without_accepted_warning(
 
     assert diagnostics["marketplace"]["warning_accepted_users"] == 0
     assert diagnostics["marketplace"]["warning_last_accepted_at"] is None
-    assert diagnostics["marketplace"]["warning_reminders_due"] == 0
 
 
 @pytest.fixture
@@ -162,5 +161,4 @@ async def test_diagnostics_of_several_acceptances(
         diagnostics["marketplace"]["warning_last_accepted_at"]
         == WARNING_ACCEPTANCE["accepted_at"]
     )
-    assert diagnostics["marketplace"]["warning_reminders_due"] == 1
     assert diagnostics["entry"]["data"]["warning_accepted"] == "**REDACTED**"

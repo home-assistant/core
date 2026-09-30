@@ -1,6 +1,5 @@
 """Constants for the Marketplace."""
 
-from datetime import timedelta
 from typing import TYPE_CHECKING, TypeVar
 
 from homeassistant.const import __version__ as HAVERSION
@@ -59,10 +58,6 @@ LEGACY_HACS_SYSTEM_ID = (
 # again, an acceptance of an older version no longer counts.
 WARNING_VERSION = 1
 CONF_WARNING_ACCEPTED = "warning_accepted"
-
-# The panel shows the warning again once an acceptance is this old, installs
-# and updates keep working in the meantime.
-WARNING_REMINDER_INTERVAL = timedelta(days=90)
 
 # Installs that need a restart get an issue per repository and version
 RESTART_ISSUE_PREFIX = "restart_required_"

@@ -42,7 +42,6 @@
       'startup': False,
       'warning_accepted_users': 1,
       'warning_last_accepted_at': '2026-09-01T12:00:00+00:00',
-      'warning_reminders_due': 0,
     }),
     'rate_limit': dict({
       'rate': dict({
