@@ -56,21 +56,7 @@ async def test_get_data(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test reading the repository data of every category."""
-    result = await marketplace.data_client.get_data(
-        category_test_data["category"], validate=True
-    )
-
-    assert result == snapshot
-
-
-@pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
-async def test_get_repositories(
-    marketplace: MarketplaceManager,
-    category_test_data: CategoryTestData,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test reading the repository list of every category."""
-    result = await marketplace.data_client.get_repositories(
+    result = await marketplace.data_client.async_get_category(
         category_test_data["category"]
     )
 
@@ -95,21 +81,21 @@ async def test_request_exceptions(
     message: str,
 ) -> None:
     """Test the errors a failing request is reported as."""
-    url = "https://data-v2.hacs.xyz/integration/repositories.json"
+    url = "https://data-v2.hacs.xyz/removed/data.json"
     response_mocker.add(
         url, AiohttpClientMockResponse("get", url, exc=exception), keep=True
     )
 
     with pytest.raises(MarketplaceError, match=message):
-        await marketplace.data_client.get_repositories("integration")
+        await marketplace.data_client.async_get_removed()
 
 
 async def test_catalog_larger_than_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test a catalog response that is too large is not read into memory."""
-    url = "https://data-v2.hacs.xyz/integration/repositories.json"
-    response_mocker.add(url, mocked_response(url, content=b'["' + b"0" * 20 + b'"]'))
+    url = "https://data-v2.hacs.xyz/removed/data.json"
+    response_mocker.add(url, mocked_response(url, content=b"[" + b" " * 20 + b"]"))
 
     with (
         patch(
@@ -117,7 +103,7 @@ async def test_catalog_larger_than_the_limit(
         ),
         pytest.raises(MarketplaceError, match="larger than the 10 byte limit"),
     ):
-        await marketplace.data_client.get_repositories("integration")
+        await marketplace.data_client.async_get_removed()
 
 
 @pytest.mark.parametrize(
@@ -152,13 +138,13 @@ async def test_request_status_handling(
     expectation: AbstractContextManager[Any],
 ) -> None:
     """Test which response status codes are treated as an error."""
-    url = "https://data-v2.hacs.xyz/integration/repositories.json"
+    url = "https://data-v2.hacs.xyz/removed/data.json"
     response_mocker.add(
         url, mocked_response(url, status=status, json_content=[]), keep=True
     )
 
     with expectation:
-        await marketplace.data_client.get_repositories("integration")
+        await marketplace.data_client.async_get_removed()
 
 
 async def test_etag_is_sent_back(
@@ -167,70 +153,76 @@ async def test_etag_is_sent_back(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that the etag of a response is used for the next request."""
-    url = "https://data-v2.hacs.xyz/integration/repositories.json"
-    await marketplace.data_client.get_repositories("integration")
+    url = "https://data-v2.hacs.xyz/removed/data.json"
+    await marketplace.data_client.async_get_removed()
 
     response_mocker.add(
         url, mocked_response(url, status=HTTPStatus.NOT_MODIFIED), keep=True
     )
 
     with pytest.raises(NotModifiedError):
-        await marketplace.data_client.get_repositories("integration")
+        await marketplace.data_client.async_get_removed()
 
     # The mocked answer is a 304 anyway, the header is what saves the download
     assert aioclient_mock.mock_calls[-1][3]["If-None-Match"] == PROXY_HEADERS["Etag"]
 
 
+# How each section is fetched, the method and what it is called with
+CATEGORY = "async_get_category"
+CRITICAL = ("critical", "async_get_critical", ())
+REMOVED = ("removed", "async_get_removed", ())
+
+
 @pytest.mark.parametrize(
-    ("section", "data"),
+    ("section", "method", "args", "data"),
     [
         pytest.param(
             "integration",
+            CATEGORY,
+            ("integration",),
             {"12345": _without_description(GOOD_INTEGRATION_DATA)},
             id="integration",
         ),
         pytest.param(
-            "plugin", {"12345": _without_description(GOOD_COMMON_DATA)}, id="plugin"
+            "plugin",
+            CATEGORY,
+            ("plugin",),
+            {"12345": _without_description(GOOD_COMMON_DATA)},
+            id="plugin",
         ),
         pytest.param(
             "template",
+            CATEGORY,
+            ("template",),
             {"12345": _without_description(GOOD_COMMON_DATA)},
             id="template",
         ),
         pytest.param(
-            "theme", {"12345": _without_description(GOOD_COMMON_DATA)}, id="theme"
+            "theme",
+            CATEGORY,
+            ("theme",),
+            {"12345": _without_description(GOOD_COMMON_DATA)},
+            id="theme",
         ),
         pytest.param(
-            "critical", [{"repository": "test", "reason": "blah"}], id="critical"
+            *CRITICAL, [{"repository": "test", "reason": "blah"}], id="critical"
         ),
-        pytest.param("removed", [{"repository": "test"}], id="removed"),
+        pytest.param(*REMOVED, [{"repository": "test"}], id="removed"),
     ],
 )
 async def test_invalid_data_is_discarded(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
     section: str,
+    method: str,
+    args: tuple[str, ...],
     data: dict[str, Any] | list[Any],
 ) -> None:
-    """Test that invalid data is dropped when validation is on, and kept when off."""
+    """Test that invalid entries are dropped."""
     url = f"https://data-v2.hacs.xyz/{section}/data.json"
-
     response_mocker.add(url, mocked_response(url, json_content=data))
-    assert await marketplace.data_client.get_data(section, validate=True) in ({}, [])
 
-    response_mocker.add(url, mocked_response(url, json_content=data))
-    assert await marketplace.data_client.get_data(section, validate=False) == data
-
-
-async def test_unknown_section_can_not_be_validated(
-    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
-) -> None:
-    """Test that a section without a schema is refused."""
-    url = "https://data-v2.hacs.xyz/unknown/data.json"
-    response_mocker.add(url, mocked_response(url, json_content=[]))
-
-    with pytest.raises(ValueError, match="Do not know how to validate unknown"):
-        await marketplace.data_client.get_data("unknown", validate=True)
+    assert await getattr(marketplace.data_client, method)(*args) in ({}, [])
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
@@ -267,18 +259,28 @@ async def test_invalid_repository_data_is_not_registered(
 
 
 @pytest.mark.parametrize(
-    ("section", "content"),
+    ("section", "method", "args", "content"),
     [
-        pytest.param("integration", b"{not json", id="not_json"),
-        pytest.param("integration", b'["a list"]', id="list_for_repositories"),
-        pytest.param("critical", b'{"an": "object"}', id="object_for_critical"),
-        pytest.param("removed", b"42", id="number_for_removed"),
+        pytest.param(
+            "integration", CATEGORY, ("integration",), b"{not json", id="not_json"
+        ),
+        pytest.param(
+            "integration",
+            CATEGORY,
+            ("integration",),
+            b'["a list"]',
+            id="list_for_repositories",
+        ),
+        pytest.param(*CRITICAL, b'{"an": "object"}', id="object_for_critical"),
+        pytest.param(*REMOVED, b"42", id="number_for_removed"),
     ],
 )
 async def test_malformed_catalog_is_a_catalog_error(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
     section: str,
+    method: str,
+    args: tuple[str, ...],
     content: bytes,
 ) -> None:
     """Test a broken catalog answer is refused like any failed request."""
@@ -286,7 +288,7 @@ async def test_malformed_catalog_is_a_catalog_error(
     response_mocker.add(url, mocked_response(url, content=content))
 
     with pytest.raises(MarketplaceError):
-        await marketplace.data_client.get_data(section, validate=True)
+        await getattr(marketplace.data_client, method)(*args)
 
 
 async def test_malformed_catalog_is_fetched_again(
@@ -300,7 +302,7 @@ async def test_malformed_catalog_is_fetched_again(
     )
 
     with pytest.raises(MarketplaceError):
-        await marketplace.data_client.get_data("integration", validate=True)
+        await marketplace.data_client.async_get_category("integration")
 
     assert marketplace.data_client._etags.get("integration/data.json") == etag
 
@@ -312,7 +314,7 @@ async def test_catalog_entry_that_is_not_an_object_is_skipped(
     url = "https://data-v2.hacs.xyz/integration/data.json"
     response_mocker.add(url, mocked_response(url, json_content={"1": "broken"}))
 
-    assert await marketplace.data_client.get_data("integration", validate=True) == {}
+    assert await marketplace.data_client.async_get_category("integration") == {}
 
 
 async def test_catalog_entry_without_a_numeric_id_is_skipped(
@@ -328,7 +330,7 @@ async def test_catalog_entry_without_a_numeric_id_is_skipped(
         ),
     )
 
-    assert await marketplace.data_client.get_data("integration", validate=True) == {
+    assert await marketplace.data_client.async_get_category("integration") == {
         "1": data
     }
 

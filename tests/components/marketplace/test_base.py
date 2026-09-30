@@ -170,7 +170,7 @@ async def test_catalog_keeps_the_domain_of_an_installed_integration(
             "manifest_name": "Example",
         }
     }
-    with patch.object(marketplace.data_client, "get_data", return_value=feed):
+    with patch.object(marketplace.data_client, "async_get_category", return_value=feed):
         await marketplace.async_get_category_repositories_from_catalog(
             RepositoryCategory.INTEGRATION
         )
@@ -214,11 +214,19 @@ async def test_catalog_work_does_not_need_github(
     """Test the catalog is still read when only GitHub is out of reach."""
     marketplace.disable(reason)
 
-    with patch.object(marketplace.data_client, "get_data", return_value={}) as get_data:
+    with (
+        patch.object(
+            marketplace.data_client, "async_get_category", return_value={}
+        ) as get_category,
+        patch.object(
+            marketplace.data_client, "async_get_removed", return_value=[]
+        ) as get_removed,
+    ):
         await marketplace.async_get_all_category_repositories()
         await marketplace.async_handle_removed_repositories()
 
-    assert get_data.called is runs
+    assert get_category.called is runs
+    assert get_removed.called is runs
 
 
 async def test_removed_user_takes_the_acceptance_along(

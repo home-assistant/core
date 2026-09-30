@@ -177,13 +177,13 @@ async def test_unload_keeps_running_when_platforms_stay(
 
     # The catalog is still refreshed on its interval
     with patch.object(
-        marketplace.data_client, "get_data", AsyncMock(return_value={})
-    ) as get_data:
+        marketplace.data_client, "async_get_category", AsyncMock(return_value={})
+    ) as get_category:
         freezer.tick(timedelta(hours=6, seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    get_data.assert_called()
+    get_category.assert_called()
 
 
 async def test_unload_with_pending_queue_tasks(

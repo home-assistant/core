@@ -57,23 +57,3 @@
     }),
   })
 # ---
-# name: test_get_repositories[hacs-test-org/integration-basic]
-  list([
-    'hacs-test-org/integration-basic',
-  ])
-# ---
-# name: test_get_repositories[hacs-test-org/plugin-basic]
-  list([
-    'hacs-test-org/plugin-basic',
-  ])
-# ---
-# name: test_get_repositories[hacs-test-org/template-basic]
-  list([
-    'hacs-test-org/template-basic',
-  ])
-# ---
-# name: test_get_repositories[hacs-test-org/theme-basic]
-  list([
-    'hacs-test-org/theme-basic',
-  ])
-# ---

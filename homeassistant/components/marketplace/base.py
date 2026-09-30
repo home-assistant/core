@@ -980,7 +980,7 @@ class MarketplaceManager:
         """Take over the catalog of one category."""
         LOGGER.debug("Fetching updated content for %s", category)
         try:
-            category_data = await self.data_client.get_data(category, validate=True)
+            category_data = await self.data_client.async_get_category(category)
         except NotModifiedError:
             LOGGER.debug("No updates for %s", category)
             return
@@ -1124,9 +1124,7 @@ class MarketplaceManager:
         LOGGER.info("Loading removed repositories")
 
         try:
-            removed_repositories = await self.data_client.get_data(
-                "removed", validate=True
-            )
+            removed_repositories = await self.data_client.async_get_removed()
         except MarketplaceError:
             return
 
@@ -1236,7 +1234,7 @@ class MarketplaceManager:
         was_installed = False
 
         try:
-            critical = await self.data_client.get_data("critical", validate=True)
+            critical = await self.data_client.async_get_critical()
         except GitHubNotModifiedException, NotModifiedError:
             # Unchanged, still checked: a removal that failed before is tried again
             critical = self.critical_repositories

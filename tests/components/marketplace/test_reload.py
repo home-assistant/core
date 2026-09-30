@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -205,8 +206,8 @@ async def test_integer_catalog_timestamp_can_be_stored(
 ) -> None:
     """Test a timestamp the catalog sends as a whole number is stored like any."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    data = await marketplace.data_client.get_data(
-        RepositoryCategory.INTEGRATION, validate=True
+    data = await marketplace.data_client.async_get_category(
+        RepositoryCategory.INTEGRATION
     )
     data[repository.data.id]["last_fetched"] = 2000000000
     VALIDATE_FETCHED_V2_REPO_DATA[RepositoryCategory.INTEGRATION](
@@ -214,7 +215,7 @@ async def test_integer_catalog_timestamp_can_be_stored(
     )
 
     with patch.object(
-        marketplace.data_client, "get_data", AsyncMock(return_value=data)
+        marketplace.data_client, "async_get_category", AsyncMock(return_value=data)
     ):
         await marketplace.async_get_category_repositories_from_catalog(
             RepositoryCategory.INTEGRATION
@@ -230,20 +231,17 @@ async def test_catalog_removal_is_noticed_while_running(
     """Test a repository the catalog removes is noticed without a restart."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.async_install_repository()
-    get_data = marketplace.data_client.get_data
+    removed = [
+        {
+            "repository": repository.data.full_name,
+            "removal_type": "removed",
+            "reason": "Unmaintained",
+        }
+    ]
 
-    async def catalog(section: str | None, *, validate: bool) -> object:
-        if section == "removed":
-            return [
-                {
-                    "repository": repository.data.full_name,
-                    "removal_type": "removed",
-                    "reason": "Unmaintained",
-                }
-            ]
-        return await get_data(section, validate=validate)
-
-    with patch.object(marketplace.data_client, "get_data", catalog):
+    with patch.object(
+        marketplace.data_client, "async_get_removed", AsyncMock(return_value=removed)
+    ):
         freezer.tick(timedelta(hours=6, seconds=1))
         async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
@@ -273,17 +271,13 @@ async def test_removed_repository_repair_reads_as_a_sentence(
     """Test the repair of a removed repository only names a reason it was given."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.async_install_repository()
-    get_data = marketplace.data_client.get_data
+    removed = [
+        {"repository": repository.data.full_name, "removal_type": "removed"} | removal
+    ]
 
-    async def catalog(section: str | None, *, validate: bool) -> object:
-        if section == "removed":
-            return [
-                {"repository": repository.data.full_name, "removal_type": "removed"}
-                | removal
-            ]
-        return await get_data(section, validate=validate)
-
-    with patch.object(marketplace.data_client, "get_data", catalog):
+    with patch.object(
+        marketplace.data_client, "async_get_removed", AsyncMock(return_value=removed)
+    ):
         await marketplace.async_handle_removed_repositories()
 
     issue = issue_registry.async_get_issue(
@@ -307,16 +301,11 @@ async def test_critical_removal_gets_no_removed_repair(
     """Test a critical removal leaves the repair to the critical check."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.async_install_repository()
-    get_data = marketplace.data_client.get_data
+    removed = [{"repository": repository.data.full_name, "removal_type": "critical"}]
 
-    async def catalog(section: str | None, *, validate: bool) -> object:
-        if section == "removed":
-            return [
-                {"repository": repository.data.full_name, "removal_type": "critical"}
-            ]
-        return await get_data(section, validate=validate)
-
-    with patch.object(marketplace.data_client, "get_data", catalog):
+    with patch.object(
+        marketplace.data_client, "async_get_removed", AsyncMock(return_value=removed)
+    ):
         await marketplace.async_handle_removed_repositories()
 
     assert repository.data.installed
@@ -419,20 +408,17 @@ async def test_unload_stops_a_recurring_run(
     """Test a recurring run in flight does not carry on after an unload."""
     started = asyncio.Event()
     cancelled = asyncio.Event()
-    get_data = marketplace.data_client.get_data
 
-    async def catalog(section: str | None, *, validate: bool) -> object:
-        if section == "critical":
-            started.set()
-            try:
-                await asyncio.Event().wait()
-            except asyncio.CancelledError:
-                cancelled.set()
-                raise
-        return await get_data(section, validate=validate)
+    async def critical() -> list[dict[str, Any]]:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+        return []
 
-    assert marketplace.configuration.config_entry is not None
-    with patch.object(marketplace.data_client, "get_data", catalog):
+    with patch.object(marketplace.data_client, "async_get_critical", critical):
         freezer.tick(timedelta(hours=6, seconds=1))
         async_fire_time_changed(hass, dt_util.utcnow())
         await started.wait()

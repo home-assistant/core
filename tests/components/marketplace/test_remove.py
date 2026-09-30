@@ -119,18 +119,16 @@ async def test_renamed_card_stays_installed_after_a_reload(
     installed = Path(repository.localpath)
     assert installed.is_dir()
     marketplace.repositories.rename(repository, "hacs-test-org/renamed-card")
-    get_data = CatalogClient.get_data
+    get_category = CatalogClient.async_get_category
 
-    async def renamed_catalog(
-        self: CatalogClient, section: str | None, *, validate: bool
-    ) -> Any:
-        data = await get_data(self, section, validate=validate)
-        if section == "plugin":
+    async def renamed_catalog(self: CatalogClient, category: str) -> Any:
+        data = await get_category(self, category)
+        if category == "plugin":
             data = deepcopy(data)
             data[REPOSITORY_PLUGIN_ID]["full_name"] = "hacs-test-org/renamed-card"
         return data
 
-    with patch.object(CatalogClient, "get_data", renamed_catalog):
+    with patch.object(CatalogClient, "async_get_category", renamed_catalog):
         await hass.config_entries.async_reload(
             marketplace.configuration.config_entry.entry_id
         )

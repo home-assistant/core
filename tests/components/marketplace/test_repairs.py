@@ -144,7 +144,9 @@ async def test_critical_repository_removal_creates_an_issue(
 
     with (
         patch.object(
-            marketplace.data_client, "get_data", return_value=[CRITICAL_REPOSITORY]
+            marketplace.data_client,
+            "async_get_critical",
+            return_value=[CRITICAL_REPOSITORY],
         ),
         patch.object(repository, "uninstall") as uninstall,
         patch.object(hass, "async_stop") as stop,
@@ -237,7 +239,9 @@ async def test_critical_repository_check_keeps_it_unacknowledged(
     )
 
     with patch.object(
-        marketplace.data_client, "get_data", return_value=[CRITICAL_REPOSITORY]
+        marketplace.data_client,
+        "async_get_critical",
+        return_value=[CRITICAL_REPOSITORY],
     ):
         await marketplace.async_handle_critical_repositories()
 
@@ -259,7 +263,7 @@ async def test_critical_repository_that_can_not_be_removed_is_tried_again(
     with (
         patch.object(
             marketplace.data_client,
-            "get_data",
+            "async_get_critical",
             side_effect=[[CRITICAL_REPOSITORY], NotModifiedError],
         ),
         patch.object(
@@ -295,7 +299,9 @@ async def test_critical_repository_waits_for_its_install(
         patch.object(repository, "_async_install_catalog_version", slow_install),
         patch.object(repository, "_async_uninstall") as uninstall,
         patch.object(
-            marketplace.data_client, "get_data", return_value=[CRITICAL_REPOSITORY]
+            marketplace.data_client,
+            "async_get_critical",
+            return_value=[CRITICAL_REPOSITORY],
         ),
         patch.object(hass, "async_stop"),
     ):

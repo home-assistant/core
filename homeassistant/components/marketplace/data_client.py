@@ -16,11 +16,6 @@ from .utils.validate import (
     VALIDATE_FETCHED_V2_REPO_DATA,
 )
 
-CRITICAL_REMOVED_VALIDATORS: dict[str | None, probatio.Schema] = {
-    "critical": VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
-    "removed": VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
-}
-
 
 class CatalogClient:
     """Fetch the catalog data the Marketplace is built from."""
@@ -31,13 +26,65 @@ class CatalogClient:
         self._etags: dict[str, str | None] = {}
         self._session = session
 
-    async def _do_request(
-        self,
-        filename: str,
-        section: str | None = None,
-    ) -> Any:
-        """Do request."""
-        endpoint = "/".join(v for v in (section, filename) if v is not None)
+    async def async_get_category(self, category: str) -> dict[str, dict[str, Any]]:
+        """Fetch the repositories of a category, by id, the valid ones only."""
+        data = await self._async_get_section(category)
+        if not isinstance(data, dict):
+            raise MarketplaceError(f"The catalog of {category} is not an object")
+
+        validator = VALIDATE_FETCHED_V2_REPO_DATA[category]
+        repositories: dict[str, dict[str, Any]] = {}
+        for key, repo_data in data.items():
+            # The key becomes the repository id, in unique ids and in URLs
+            if not (key.isascii() and key.isdecimal()):
+                LOGGER.info("Got invalid data for %s (not a repository id)", key)
+                continue
+            if not isinstance(repo_data, dict):
+                LOGGER.info("Got invalid data for %s (not an object)", key)
+                continue
+            try:
+                repositories[key] = validator(repo_data)
+            except probatio.Invalid as exception:
+                LOGGER.info(
+                    "Got invalid data for %s (%s)",
+                    repo_data.get("full_name", key),
+                    exception,
+                )
+
+        return repositories
+
+    async def async_get_removed(self) -> list[dict[str, Any]]:
+        """Fetch the repositories removed from the catalog, the valid ones only."""
+        return await self._async_get_list(
+            "removed", VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA
+        )
+
+    async def async_get_critical(self) -> list[dict[str, Any]]:
+        """Fetch the repositories marked as critical, the valid ones only."""
+        return await self._async_get_list(
+            "critical", VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA
+        )
+
+    async def _async_get_list(
+        self, section: str, validator: probatio.Schema
+    ) -> list[dict[str, Any]]:
+        """Fetch a section that is a list, the valid entries only."""
+        data = await self._async_get_section(section)
+        if not isinstance(data, list):
+            raise MarketplaceError(f"The catalog of {section} is not a list")
+
+        entries: list[dict[str, Any]] = []
+        for entry in data:
+            try:
+                entries.append(validator(entry))
+            except probatio.Invalid as exception:
+                LOGGER.info("Got invalid data for %s (%s)", section, exception)
+
+        return entries
+
+    async def _async_get_section(self, section: str) -> Any:
+        """Fetch a section of the catalog, a 304 raises NotModifiedError."""
+        endpoint = f"{section}/data.json"
         url = f"https://data-v2.hacs.xyz/{endpoint}"
         try:
             async with self._session.get(
@@ -72,59 +119,3 @@ class CatalogClient:
         # Only for data that was usable, or a broken answer would stick as not modified
         self._etags[endpoint] = etag
         return data
-
-    async def get_data(self, section: str | None, *, validate: bool) -> Any:
-        """Fetch a section of the catalog, validated when asked."""
-        data = await self._do_request(filename="data.json", section=section)
-        if not validate:
-            return data
-
-        if section is not None and section in VALIDATE_FETCHED_V2_REPO_DATA:
-            if not isinstance(data, dict):
-                raise MarketplaceError(f"The catalog of {section} is not an object")
-
-            validated_repositories: dict[str, Any] = {}
-            for key, repo_data in data.items():
-                # The key becomes the repository id, in unique ids and in URLs
-                if not (key.isascii() and key.isdecimal()):
-                    LOGGER.info("Got invalid data for %s (not a repository id)", key)
-                    continue
-                if not isinstance(repo_data, dict):
-                    LOGGER.info("Got invalid data for %s (not an object)", key)
-                    continue
-                try:
-                    validated_repositories[key] = VALIDATE_FETCHED_V2_REPO_DATA[
-                        section
-                    ](repo_data)
-                except probatio.Invalid as exception:
-                    LOGGER.info(
-                        "Got invalid data for %s (%s)",
-                        repo_data.get("full_name", key),
-                        exception,
-                    )
-                    continue
-
-            return validated_repositories
-
-        if not (validator := CRITICAL_REMOVED_VALIDATORS.get(section)):
-            raise ValueError(f"Do not know how to validate {section}")
-
-        if not isinstance(data, list):
-            raise MarketplaceError(f"The catalog of {section} is not a list")
-
-        validated: list[Any] = []
-        for repo_data in data:
-            try:
-                validated.append(validator(repo_data))
-            except probatio.Invalid as exception:
-                LOGGER.info("Got invalid data for %s (%s)", section, exception)
-                continue
-
-        return validated
-
-    async def get_repositories(self, section: str) -> list[str]:
-        """Get repositories."""
-        repositories: list[str] = await self._do_request(
-            filename="repositories.json", section=section
-        )
-        return repositories
