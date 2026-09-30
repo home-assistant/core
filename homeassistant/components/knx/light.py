@@ -329,7 +329,6 @@ class _KnxLight(LightEntity):
     _attr_max_color_temp_kelvin: int
     _attr_min_color_temp_kelvin: int
     _device: XknxLight
-    _knx_module: KNXModule
 
     @property
     @override
