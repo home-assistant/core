@@ -127,7 +127,7 @@ class _FakeInotify:
     def __init__(self, fake: FakeInput) -> None:
         """Initialize with the fake /dev/input it watches."""
         self._fake = fake
-        self.queue: asyncio.Queue[SimpleNamespace] = asyncio.Queue()
+        self.queue: asyncio.Queue[SimpleNamespace | BaseException] = asyncio.Queue()
         self.watches: dict[str, SimpleNamespace] = {}
         self.closed = False
 
@@ -158,8 +158,11 @@ class _FakeInotify:
         return self
 
     async def __anext__(self) -> SimpleNamespace:
-        """Wait for the next emitted event."""
-        return await self.queue.get()
+        """Wait for the next emitted event, or raise an emitted error."""
+        item = await self.queue.get()
+        if isinstance(item, BaseException):
+            raise item
+        return item
 
 
 class FakeInput:

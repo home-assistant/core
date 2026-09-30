@@ -727,6 +727,30 @@ async def test_by_id_watch_failure_still_connects(
     remote.grab.assert_called_once()
 
 
+async def test_unload_releases_devices_after_the_watcher_failed(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unloading still releases devices when reading inotify had failed.
+
+    Re-raising the watcher's error there would skip releasing the devices and
+    closing inotify, and fail the unload.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _set_up(hass, mock_config_entry)
+    assert fake_input.inotify is not None
+    fake_input.inotify.queue.put_nowait(OSError(errno.EIO, "Input/output error"))
+    await fake_input.settle()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert "The input device watcher had failed" in caplog.text
+    kbd.close.assert_called_once()
+    assert fake_input.inotify.closed
+
+
 async def test_watcher_survives_an_event_it_cannot_handle(
     hass: HomeAssistant,
     fake_input: FakeInput,
