@@ -12,9 +12,15 @@ import orjson
 import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_CONNECTION_MODE,
+    CONF_SITE_ID,
+    CONNECTION_MODE_API_KEY,
+    DOMAIN,
+)
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -33,6 +39,12 @@ DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_PORT = 1234
 DEFAULT_SITE = "site_id"
+
+# The Network Integration API, used with an API key
+DEFAULT_API_KEY = "api-key"
+NETWORK_API_URL = f"https://{DEFAULT_HOST}:{DEFAULT_PORT}/proxy/network/integration"
+NETWORK_SITE_ID = "88f7af54-98f8-306a-a1c7-c9349722b1f6"
+"""UUID of the site; the unique ID of an entry set up with an API key."""
 
 CONTROLLER_HOST = {
     "hostname": "controller_host",
@@ -235,6 +247,125 @@ def fixture_request(
     return __mock_requests
 
 
+@pytest.fixture(name="network_api_config_entry_data")
+def fixture_network_api_config_entry_data() -> MappingProxyType[str, Any]:
+    """Config entry data of a site set up with an API key."""
+    return {
+        CONF_HOST: DEFAULT_HOST,
+        CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY,
+        CONF_API_KEY: DEFAULT_API_KEY,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_SITE_ID: DEFAULT_SITE,
+        CONF_VERIFY_SSL: False,
+    }
+
+
+@pytest.fixture(name="network_api_config_entry")
+def fixture_network_api_config_entry(
+    hass: HomeAssistant,
+    network_api_config_entry_data: MappingProxyType[str, Any],
+    config_entry_options: MappingProxyType[str, Any],
+) -> MockConfigEntry:
+    """Config entry of a site set up with an API key."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="1",
+        unique_id=NETWORK_SITE_ID,
+        data=network_api_config_entry_data,
+        options=config_entry_options,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+def network_api_envelope(items: list[dict[str, Any]]) -> dict[str, Any]:
+    """Wrap items the way the Integration API's list endpoints do."""
+    return {
+        "offset": 0,
+        "limit": 200,
+        "count": len(items),
+        "totalCount": len(items),
+        "data": items,
+    }
+
+
+def mock_network_api_lists(
+    aioclient_mock: AiohttpClientMocker,
+    *,
+    sites: list[dict[str, Any]] | None = None,
+    devices: list[dict[str, Any]] | None = None,
+    clients: list[dict[str, Any]] | None = None,
+    firewall_policies: list[dict[str, Any]] | None = None,
+    wifi_broadcasts: list[dict[str, Any]] | None = None,
+) -> None:
+    """Register the Integration API's info and list endpoints.
+
+    Every polled endpoint gets a mock, so a test that changes one payload
+    after `clear_requests` does not leave the other coordinators without a
+    response. A mock registered without a query string also answers the
+    paged list requests, which carry offset and limit.
+    """
+    site = f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}"
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/info", json={"applicationVersion": "10.6.106"}
+    )
+    aioclient_mock.get(
+        f"{NETWORK_API_URL}/v1/sites",
+        json=network_api_envelope(
+            sites
+            if sites is not None
+            else [
+                {
+                    "id": NETWORK_SITE_ID,
+                    "internalReference": DEFAULT_SITE,
+                    "name": "Site name",
+                }
+            ]
+        ),
+    )
+    aioclient_mock.get(f"{site}/devices", json=network_api_envelope(devices or []))
+    aioclient_mock.get(f"{site}/clients", json=network_api_envelope(clients or []))
+    aioclient_mock.get(
+        f"{site}/firewall/policies",
+        json=network_api_envelope(firewall_policies or []),
+    )
+    aioclient_mock.get(
+        f"{site}/wifi/broadcasts", json=network_api_envelope(wifi_broadcasts or [])
+    )
+
+
+@pytest.fixture(name="mock_network_api_requests")
+def fixture_network_api_requests(
+    aioclient_mock: AiohttpClientMocker,
+    network_client_payload: list[dict[str, Any]],
+    network_device_payload: list[dict[str, Any]],
+    network_firewall_policy_payload: list[dict[str, Any]],
+    network_site_payload: list[dict[str, Any]],
+    network_wifi_broadcast_payload: list[dict[str, Any]],
+) -> None:
+    """Mock the Integration API's responses from the payload fixtures."""
+    mock_network_api_lists(
+        aioclient_mock,
+        sites=network_site_payload,
+        devices=network_device_payload,
+        clients=network_client_payload,
+        firewall_policies=network_firewall_policy_payload,
+        wifi_broadcasts=network_wifi_broadcast_payload,
+    )
+
+
+@pytest.fixture(name="network_api_config_entry_setup")
+async def fixture_network_api_config_entry_setup(
+    hass: HomeAssistant,
+    network_api_config_entry: MockConfigEntry,
+    mock_network_api_requests: None,
+) -> MockConfigEntry:
+    """A set up config entry of a site reached with an API key."""
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return network_api_config_entry
+
+
 # Request payload fixtures
 
 
@@ -329,6 +460,38 @@ def traffic_route_payload_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="wlan_payload")
 def fixture_wlan_data() -> list[dict[str, Any]]:
     """WLAN data."""
+    return []
+
+
+@pytest.fixture(name="network_site_payload")
+def fixture_network_site_payload() -> list[dict[str, Any]]:
+    """Sites of the Integration API."""
+    return [
+        {"id": NETWORK_SITE_ID, "internalReference": DEFAULT_SITE, "name": "Site name"}
+    ]
+
+
+@pytest.fixture(name="network_client_payload")
+def fixture_network_client_payload() -> list[dict[str, Any]]:
+    """Connected clients of the Integration API."""
+    return []
+
+
+@pytest.fixture(name="network_device_payload")
+def fixture_network_device_payload() -> list[dict[str, Any]]:
+    """Adopted devices of the Integration API."""
+    return []
+
+
+@pytest.fixture(name="network_firewall_policy_payload")
+def fixture_network_firewall_policy_payload() -> list[dict[str, Any]]:
+    """Firewall policies of the Integration API."""
+    return []
+
+
+@pytest.fixture(name="network_wifi_broadcast_payload")
+def fixture_network_wifi_broadcast_payload() -> list[dict[str, Any]]:
+    """WiFi broadcasts of the Integration API."""
     return []
 
 

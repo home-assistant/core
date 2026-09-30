@@ -5,14 +5,14 @@ from itertools import chain
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
 from . import UnifiConfigEntry
 
-TO_REDACT = {CONF_PASSWORD}
-REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
+TO_REDACT = {CONF_API_KEY, CONF_PASSWORD}
+REDACT_CONFIG = {CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",

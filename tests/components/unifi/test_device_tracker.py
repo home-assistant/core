@@ -13,10 +13,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
+    CLIENT_RESTORE_MAX_AGE,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_IGNORE_LOCAL_MAC,
     CONF_IGNORE_WIRED_BUG,
+    CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -24,6 +26,14 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DOMAIN,
 )
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
+from homeassistant.components.unifi.device_tracker import NETWORK_DEVICE_HEARTBEAT
+from homeassistant.components.unifi.hub.client_store import (
+    LAST_SEEN_SAVE_DELAY,
+    SAVE_DELAY,
+    storage_key,
+)
+from homeassistant.components.unifi.hub.entity_loader import CLIENT_PRUNE_INTERVAL
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -33,9 +43,16 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
+    mock_network_api_lists,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    flush_store,
+    snapshot_platform,
+)
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 WIRED_CLIENT_1 = {
     "hostname": "wd_client_1",
@@ -843,3 +860,354 @@ async def test_config_entry_options_track(
     assert_state(hass.states.get("device_tracker.ws_client_1"), True)
     assert_state(hass.states.get("device_tracker.wd_client_1"), True)
     assert_state(hass.states.get("device_tracker.switch_1"), True)
+
+
+NETWORK_CLIENT = {
+    "type": "WIRELESS",
+    "id": "f9edef13-b667-369f-9556-bc36978095af",
+    "name": "phone",
+    "connectedAt": "2026-09-24T17:40:52Z",
+    "ipAddress": "10.8.0.20",
+    "macAddress": "00:00:00:00:00:01",
+    "uplinkDeviceId": "72cf3194-b496-3ada-877c-6764792adc4a",
+    "access": {"type": "DEFAULT"},
+}
+NETWORK_DEVICE = {
+    "id": "90edff53-2df1-3c0a-be00-516fb6e88bdc",
+    "macAddress": "00:00:00:00:01:01",
+    "ipAddress": "10.8.0.188",
+    "name": "switch",
+    "model": "USW Enterprise 8 PoE",
+    "state": "ONLINE",
+    "supported": True,
+    "firmwareVersion": "7.5.15",
+    "firmwareUpdatable": False,
+    "features": ["switching"],
+    "interfaces": ["ports"],
+}
+
+
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.usefixtures("mock_device_registry", "network_api_config_entry_setup")
+async def test_network_api_client_tracker(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a client of the Integration API is home until it has been gone a while."""
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+
+    # The console stops listing the client
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME, (
+        "one missed poll is not a departure"
+    )
+
+    # The detection time counts from the last poll that listed the client
+    freezer.tick(timedelta(seconds=DEFAULT_DETECTION_TIME + 1) - POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone").state == STATE_NOT_HOME
+
+
+@pytest.mark.parametrize("network_device_payload", [[NETWORK_DEVICE]])
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_device_tracker(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device of the Integration API follows its reported state."""
+    assert hass.states.get("device_tracker.switch").state == STATE_HOME
+
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(
+        aioclient_mock, devices=[{**NETWORK_DEVICE, "state": "OFFLINE"}]
+    )
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.switch").state == STATE_HOME, (
+        "a device stays home until its heartbeat window lapses, as with the classic API"
+    )
+
+    freezer.tick(NETWORK_DEVICE_HEARTBEAT + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.switch").state == STATE_NOT_HOME
+
+
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_network_api_client_kept_across_restart(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test a client that is away at start still has a tracker, from storage."""
+    config_entry = network_api_config_entry_setup
+    hub = config_entry.runtime_data
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+
+    assert hub.network_clients is not None
+    await flush_store(hub.network_clients._store)
+    stored = hass_storage[storage_key(config_entry)]["data"]
+    assert stored["00:00:00:00:00:01"]["raw"]["name"] == "phone"
+    assert stored["00:00:00:00:00:01"]["last_seen"] is not None
+
+    # Restart later, with the client gone from the console's list
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    freezer.tick(timedelta(seconds=DEFAULT_DETECTION_TIME + 1))
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    phone = hass.states.get("device_tracker.phone")
+    assert phone is not None, "restored from storage"
+    assert phone.state == STATE_NOT_HOME
+
+
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_network_api_client_store_saves_sparingly(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    network_api_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test polls do not write the store; membership changes and an hourly checkpoint do."""
+    config_entry = network_api_config_entry_setup
+    hub = config_entry.runtime_data
+    assert hub.network_clients is not None
+    await flush_store(hub.network_clients._store)
+    key = storage_key(config_entry)
+    first_seen = hass_storage[key]["data"]["00:00:00:00:00:01"]["last_seen"]
+
+    # Three polls list the same client; each moves last_seen in the cache
+    for _ in range(3):
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass_storage[key]["data"]["00:00:00:00:00:01"]["last_seen"] == first_seen, (
+        "a poll alone does not write the store"
+    )
+
+    freezer.tick(timedelta(seconds=LAST_SEEN_SAVE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[key]["data"]["00:00:00:00:00:01"]["last_seen"] > first_seen, (
+        "the checkpoint wrote a newer last_seen"
+    )
+
+    # A new client is written within the short delay
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(
+        aioclient_mock,
+        clients=[NETWORK_CLIENT, {**NETWORK_CLIENT, "macAddress": "00:00:00:00:00:02"}],
+    )
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=SAVE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert set(hass_storage[key]["data"]) == {"00:00:00:00:00:01", "00:00:00:00:00:02"}
+
+
+@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.parametrize("network_client_payload", [[NETWORK_CLIENT]])
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]}]
+)
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_network_api_stale_client_pruned_at_runtime(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    network_api_config_entry: MockConfigEntry,
+    mock_network_api_requests: None,
+) -> None:
+    """Test a client gone past the retention window is dropped without a restart.
+
+    The selected client is kept, however long it has been away.
+    """
+    config_entry = network_api_config_entry
+    now = dt_util.utcnow()
+    hass_storage[storage_key(config_entry)] = {
+        "version": 1,
+        "data": {
+            "00:00:00:00:00:02": {
+                "raw": {
+                    **NETWORK_CLIENT,
+                    "name": "kept",
+                    "macAddress": "00:00:00:00:00:02",
+                },
+                "last_seen": (now - timedelta(days=1)).isoformat(),
+            },
+        },
+    }
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    hub = config_entry.runtime_data
+
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+    assert hass.states.get("device_tracker.kept").state == STATE_NOT_HOME
+
+    # The phone leaves
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone") is not None
+
+    # A month passes with nobody restarting Home Assistant
+    freezer.tick(CLIENT_RESTORE_MAX_AGE + CLIENT_PRUNE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "device_tracker",
+            DOMAIN,
+            f"{config_entry.data[CONF_SITE_ID]}-00:00:00:00:00:01",
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01"), config_entry.entry_id
+        )
+        is None
+    )
+    assert hass.states.get("device_tracker.kept").state == STATE_NOT_HOME, (
+        "a selected client is never pruned"
+    )
+
+    assert hub.network_clients is not None
+    await flush_store(hub.network_clients._store)
+    assert set(hass_storage[storage_key(config_entry)]["data"]) == {"00:00:00:00:00:02"}
+
+
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_network_api_stale_client_pruned(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    network_api_config_entry: MockConfigEntry,
+    mock_network_api_requests: None,
+) -> None:
+    """Test a stored client not listed within the retention window is dropped."""
+    now = dt_util.utcnow()
+    hass_storage[storage_key(network_api_config_entry)] = {
+        "version": 1,
+        "data": {
+            "00:00:00:00:00:01": {
+                "raw": {**NETWORK_CLIENT, "name": "recent"},
+                "last_seen": (
+                    now - CLIENT_RESTORE_MAX_AGE + timedelta(days=1)
+                ).isoformat(),
+            },
+            "00:00:00:00:00:02": {
+                "raw": {
+                    **NETWORK_CLIENT,
+                    "name": "stale",
+                    "macAddress": "00:00:00:00:00:02",
+                },
+                "last_seen": (
+                    now - CLIENT_RESTORE_MAX_AGE - timedelta(days=1)
+                ).isoformat(),
+            },
+        },
+    }
+    stale_entity_id = entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        f"{network_api_config_entry.data[CONF_SITE_ID]}-00:00:00:00:00:02",
+        config_entry=network_api_config_entry,
+    ).entity_id
+
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.recent").state == STATE_NOT_HOME
+    assert entity_registry.async_get(stale_entity_id) is None
+    assert hass.states.get("device_tracker.stale") is None
+
+    # The poll listed no client, so nothing else triggers a save
+    async_fire_time_changed(hass, now + timedelta(seconds=SAVE_DELAY + 1))
+    await hass.async_block_till_done()
+
+    stored = hass_storage[storage_key(network_api_config_entry)]["data"]
+    assert set(stored) == {"00:00:00:00:00:01"}, "the stale client is gone from storage"
+
+
+async def test_network_api_stale_client_device_pruned_without_tracker(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    network_api_config_entry: MockConfigEntry,
+    mock_network_api_requests: None,
+) -> None:
+    """Test a stale client's device goes even when its tracker entity is gone.
+
+    A change of the tracked clients removes the tracker entity but leaves the
+    device, with its uptime sensor, behind. Pruning must still remove those.
+    """
+    now = dt_util.utcnow()
+    stale_mac = "00:00:00:00:00:02"
+    hass_storage[storage_key(network_api_config_entry)] = {
+        "version": 1,
+        "data": {
+            stale_mac: {
+                "raw": {**NETWORK_CLIENT, "name": "stale", "macAddress": stale_mac},
+                "last_seen": (
+                    now - CLIENT_RESTORE_MAX_AGE - timedelta(days=1)
+                ).isoformat(),
+            },
+        },
+    }
+    device = device_registry.async_get_or_create(
+        config_entry_id=network_api_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, stale_mac)},
+        name="stale",
+    )
+    uptime_entity_id = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"uptime-{stale_mac}",
+        config_entry=network_api_config_entry,
+        device_id=device.id,
+    ).entity_id
+
+    await hass.config_entries.async_setup(network_api_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, stale_mac), network_api_config_entry.entry_id
+        )
+        is None
+    ), "the device is gone although no tracker entity pointed at it"
+    assert entity_registry.async_get(uptime_entity_id) is None

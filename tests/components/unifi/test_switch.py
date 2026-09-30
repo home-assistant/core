@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import aiounifi
 from aiounifi.models.message import MessageKey
+import orjson
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,9 +41,12 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import (
     CONTROLLER_HOST,
+    NETWORK_API_URL,
+    NETWORK_SITE_ID,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
+    mock_network_api_lists,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -2063,3 +2067,118 @@ async def test_switch_turn_off_request_failed(
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "action_request_failed"
+
+
+NETWORK_WIFI_BROADCAST = {
+    "type": "STANDARD",
+    "id": "3b7f1c52-8e0a-4d1f-9a55-0c2d7e9b4a11",
+    "name": "Home",
+    "metadata": {"origin": "USER_DEFINED"},
+    "enabled": True,
+    "securityConfiguration": {"type": "WPA2_PERSONAL"},
+}
+NETWORK_WIFI_BROADCAST_DETAILS = {
+    **NETWORK_WIFI_BROADCAST,
+    "securityConfiguration": {"type": "WPA2_PERSONAL", "passphrase": "correct horse"},
+    "hideName": False,
+    "clientIsolationEnabled": False,
+}
+NETWORK_FIREWALL_POLICY = {
+    "id": "7e8f9a0b-0000-4000-8000-000000000100",
+    "enabled": True,
+    "name": "Block kids at night",
+    "action": {"type": "BLOCK"},
+    "source": {"zoneId": "zone-a"},
+    "destination": {"zoneId": "zone-b"},
+    "ipProtocolScope": {"ipVersion": "IPV4_AND_IPV6"},
+    "loggingEnabled": False,
+    "index": 10000,
+    "metadata": {"origin": "USER_DEFINED"},
+}
+NETWORK_SYSTEM_POLICY = {
+    **NETWORK_FIREWALL_POLICY,
+    "id": "7e8f9a0b-0000-4000-8000-000000000101",
+    "name": "Allow Return Traffic",
+    "metadata": {"origin": "SYSTEM_DEFINED"},
+}
+
+
+@pytest.mark.parametrize("network_wifi_broadcast_payload", [[NETWORK_WIFI_BROADCAST]])
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_wlan_switch(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test a WLAN of the Integration API is switched with a full PUT."""
+    assert hass.states.get("switch.home_enabled").state == STATE_ON
+
+    url = (
+        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/wifi/broadcasts/"
+        f"{NETWORK_WIFI_BROADCAST['id']}"
+    )
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, json=NETWORK_WIFI_BROADCAST_DETAILS)
+    aioclient_mock.put(url, json={**NETWORK_WIFI_BROADCAST_DETAILS, "enabled": False})
+    mock_network_api_lists(
+        aioclient_mock, wifi_broadcasts=[{**NETWORK_WIFI_BROADCAST, "enabled": False}]
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.home_enabled"},
+        blocking=True,
+    )
+
+    put_calls = [call for call in aioclient_mock.mock_calls if call[0] == "put"]
+    assert len(put_calls) == 1
+    sent = orjson.loads(put_calls[0][2])
+    assert sent["enabled"] is False
+    assert sent["name"] == "Home"
+    assert sent["securityConfiguration"]["passphrase"] == "correct horse"
+    assert "id" not in sent
+    assert "metadata" not in sent
+    assert hass.states.get("switch.home_enabled").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "network_firewall_policy_payload",
+    [[NETWORK_FIREWALL_POLICY, NETWORK_SYSTEM_POLICY]],
+)
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_firewall_policy_switch(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test firewall policies of the Integration API; console-made ones get none."""
+    assert hass.states.get("switch.unifi_network_block_kids_at_night").state == STATE_ON
+    assert hass.states.get("switch.unifi_network_allow_return_traffic") is None
+
+    url = (
+        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/firewall/policies/"
+        f"{NETWORK_FIREWALL_POLICY['id']}"
+    )
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, json=NETWORK_FIREWALL_POLICY)
+    aioclient_mock.put(url, json={**NETWORK_FIREWALL_POLICY, "enabled": False})
+    mock_network_api_lists(
+        aioclient_mock,
+        firewall_policies=[
+            {**NETWORK_FIREWALL_POLICY, "enabled": False},
+            NETWORK_SYSTEM_POLICY,
+        ],
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.unifi_network_block_kids_at_night"},
+        blocking=True,
+    )
+
+    put_calls = [call for call in aioclient_mock.mock_calls if call[0] == "put"]
+    assert len(put_calls) == 1
+    sent = orjson.loads(put_calls[0][2])
+    assert sent["enabled"] is False
+    assert {"id", "index", "metadata"}.isdisjoint(sent)
+    assert (
+        hass.states.get("switch.unifi_network_block_kids_at_night").state == STATE_OFF
+    )

@@ -10,6 +10,7 @@ import aiounifi
 from aiounifi.models.configuration import Configuration
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -19,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from ..const import CONF_SITE_ID, LOGGER
+from ..const import CONF_CONNECTION_MODE, CONF_SITE_ID, CONNECTION_MODE_API_KEY, LOGGER
 from ..errors import AuthenticationRequired, CannotConnect
 
 
@@ -39,12 +40,14 @@ async def get_unifi_api(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
 
+    uses_api_key = config.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY
     api = aiounifi.Controller(
         Configuration(
             session,
             host=config[CONF_HOST],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
+            username=config.get(CONF_USERNAME) or "",
+            password=config.get(CONF_PASSWORD) or "",
+            api_key=config[CONF_API_KEY] if uses_api_key else "",
             port=config[CONF_PORT],
             site=config[CONF_SITE_ID],
             ssl_context=ssl_context,
@@ -53,7 +56,12 @@ async def get_unifi_api(
 
     try:
         async with asyncio.timeout(10):
-            await api.login()
+            if uses_api_key:
+                # The Integration API has no login; reading the application
+                # version is its cheapest authenticated call.
+                await api.network.get_info()
+            else:
+                await api.login()
 
     except aiounifi.Unauthorized as err:
         LOGGER.warning(
