@@ -8,7 +8,7 @@ from typing import Any
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -90,13 +90,13 @@ def _host_validator(config: dict[str, str]) -> dict[str, str]:
     """Validate that a host is properly configured."""
     if config[CONF_HOST].startswith(("elks://", "elksv1_2://")):
         if CONF_USERNAME not in config or CONF_PASSWORD not in config:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Specify username and password for elks:// or elksv1_2://"
             )
     elif not config[CONF_HOST].startswith("elk://") and not config[
         CONF_HOST
     ].startswith("serial://"):
-        raise vol.Invalid("Invalid host URL")
+        raise probatio.Invalid("Invalid host URL")
     return config
 
 
@@ -105,7 +105,7 @@ def _elk_range_validator(rng: str) -> tuple[int, int]:
         match = re.search(r"^([a-p])(0[1-9]|1[0-6]|[1-9])$", val.lower())
         if match:
             return (ord(match.group(1)) - ord("a")) * 16 + int(match.group(2))
-        raise vol.Invalid("Invalid range")
+        raise probatio.Invalid("Invalid range")
 
     def _elk_value(val: str) -> int:
         return int(val) if val.isdigit() else _housecode_to_int(val)
@@ -122,46 +122,48 @@ def _has_all_unique_prefixes(value: list[dict[str, str]]) -> list[dict[str, str]
     Uniqueness is determined case-independently.
     """
     prefixes = [device[CONF_PREFIX] for device in value]
-    schema = vol.Schema(vol.Unique())
+    schema = probatio.Schema(probatio.Unique())
     schema(prefixes)
     return value
 
 
-DEVICE_SCHEMA_SUBDOMAIN = vol.Schema(
+DEVICE_SCHEMA_SUBDOMAIN = probatio.Schema(
     {
-        vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_INCLUDE, default=[]): [_elk_range_validator],
-        vol.Optional(CONF_EXCLUDE, default=[]): [_elk_range_validator],
+        probatio.Optional(CONF_ENABLED, default=True): cv.boolean,
+        probatio.Optional(CONF_INCLUDE, default=[]): [_elk_range_validator],
+        probatio.Optional(CONF_EXCLUDE, default=[]): [_elk_range_validator],
     }
 )
 
-DEVICE_SCHEMA = vol.All(
+DEVICE_SCHEMA = probatio.All(
     cv.deprecated(CONF_TEMPERATURE_UNIT),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
-            vol.Optional(CONF_USERNAME, default=""): cv.string,
-            vol.Optional(CONF_PASSWORD, default=""): cv.string,
-            vol.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
-            vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): cv.temperature_unit,
-            vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Required(CONF_HOST): cv.string,
+            probatio.Optional(CONF_PREFIX, default=""): probatio.All(
+                cv.string, probatio.Lower
+            ),
+            probatio.Optional(CONF_USERNAME, default=""): cv.string,
+            probatio.Optional(CONF_PASSWORD, default=""): cv.string,
+            probatio.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
+            probatio.Optional(CONF_TEMPERATURE_UNIT, default="F"): cv.temperature_unit,
+            probatio.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+            probatio.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
         },
     ),
     _host_validator,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -249,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
             try:
                 _included(conf[item]["include"], True, config[item]["included"])
                 _included(conf[item]["exclude"], False, config[item]["included"])
-            except (ValueError, vol.Invalid) as err:
+            except (ValueError, probatio.Invalid) as err:
                 _LOGGER.error("Config item: %s; %s", item, err)
                 return False
 
@@ -324,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -> None:
     for rng in ranges:
         if not rng[0] <= rng[1] <= len(values):
-            raise vol.Invalid(f"Invalid range {rng}")
+            raise probatio.Invalid(f"Invalid range {rng}")
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 

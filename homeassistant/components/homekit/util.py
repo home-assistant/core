@@ -9,9 +9,9 @@ import secrets
 import socket
 from typing import Any, cast
 
+import probatio
 from pyhap.accessory import Accessory
 import pyqrcode
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.alarm_control_panel import (
@@ -31,6 +31,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -145,88 +146,96 @@ VALID_VIDEO_CODECS = [
 ]
 VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
-BASIC_INFO_SCHEMA = vol.Schema(
+BASIC_INFO_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
-        vol.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        probatio.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
             BINARY_SENSOR_DOMAIN
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
         ): cv.positive_int,
     }
 )
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list}
+    {probatio.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list}
 )
 
 CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_STREAM_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_STREAM_SOURCE): cv.string,
-        vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): vol.In(
+        probatio.Optional(CONF_STREAM_ADDRESS): probatio.All(
+            ipaddress.ip_address, cv.string
+        ),
+        probatio.Optional(CONF_STREAM_SOURCE): cv.string,
+        probatio.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): probatio.In(
             VALID_AUDIO_CODECS
         ),
-        vol.Optional(CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO): cv.boolean,
-        vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
-        vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
-        vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
-        vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
-        vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
-        vol.Optional(CONF_STREAM_COUNT, default=DEFAULT_STREAM_COUNT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=10)
-        ),
-        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
+        probatio.Optional(
+            CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO
+        ): cv.boolean,
+        probatio.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
+        probatio.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
+        probatio.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
+        probatio.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
+        probatio.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
+        probatio.Optional(
+            CONF_STREAM_COUNT, default=DEFAULT_STREAM_COUNT
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=10)),
+        probatio.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): probatio.In(
             VALID_VIDEO_CODECS
         ),
-        vol.Optional(CONF_VIDEO_PROFILE_NAMES, default=DEFAULT_VIDEO_PROFILE_NAMES): [
-            cv.string
-        ],
-        vol.Optional(
+        probatio.Optional(
+            CONF_VIDEO_PROFILE_NAMES, default=DEFAULT_VIDEO_PROFILE_NAMES
+        ): [cv.string],
+        probatio.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
-        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
+        probatio.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
             [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
-        vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
+        probatio.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
             [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
 
 HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN)}
+    {probatio.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN)}
 )
 
 FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE, default=TYPE_FAN): vol.All(
+        probatio.Optional(CONF_TYPE, default=TYPE_FAN): probatio.All(
             cv.string,
-            vol.In(
+            probatio.In(
                 (
                     TYPE_FAN,
                     TYPE_AIR_PURIFIER,
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
-        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
-        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
-        vol.Optional(CONF_LINKED_FILTER_CHANGE_INDICATION): cv.entity_domain(
+        probatio.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        probatio.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        probatio.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(
+            SENSOR_DOMAIN
+        ),
+        probatio.Optional(CONF_LINKED_FILTER_CHANGE_INDICATION): cv.entity_domain(
             BINARY_SENSOR_DOMAIN
         ),
-        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(SENSOR_DOMAIN),
+        probatio.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(
+            SENSOR_DOMAIN
+        ),
     }
 )
 
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
+        probatio.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
             BINARY_SENSOR_DOMAIN
         )
     }
@@ -235,9 +244,9 @@ COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
 # No default so an unset type keeps the automatic Thermostat/HeaterCooler routing.
 CLIMATE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE): vol.All(
+        probatio.Optional(CONF_TYPE): probatio.All(
             cv.string,
-            vol.In(
+            probatio.In(
                 (
                     TYPE_HEATER_COOLER,
                     TYPE_THERMOSTAT,
@@ -248,22 +257,22 @@ CLIMATE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 )
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string)}
+    {probatio.Optional(ATTR_CODE, default=None): probatio.Any(None, cv.string)}
 )
 
 LOCK_SCHEMA = CODE_SCHEMA.extend(
     {
-        vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
+        probatio.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
             [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
+MEDIA_PLAYER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FEATURE): vol.All(
+        probatio.Required(CONF_FEATURE): probatio.All(
             cv.string,
-            vol.In(
+            probatio.In(
                 (
                     FEATURE_ON_OFF,
                     FEATURE_PLAY_PAUSE,
@@ -277,9 +286,9 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
 
 SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
+        probatio.Optional(CONF_TYPE, default=TYPE_SWITCH): probatio.All(
             cv.string,
-            vol.In(
+            probatio.In(
                 (
                     TYPE_FAUCET,
                     TYPE_OUTLET,
@@ -290,22 +299,30 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
-        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
+        probatio.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
+            [INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
+        ),
+        probatio.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
 SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_THRESHOLD_CO): vol.Any(None, cv.positive_int),
-        vol.Optional(CONF_THRESHOLD_CO2): vol.Any(None, cv.positive_int),
+        probatio.Optional(CONF_THRESHOLD_CO): probatio.Any(None, cv.positive_int),
+        probatio.Optional(CONF_THRESHOLD_CO2): probatio.Any(None, cv.positive_int),
     }
 )
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
-        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
+        probatio.Optional(CONF_TYPE): probatio.All(
+            cv.string,
+            probatio.In((TYPE_FAUCET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_VALVE)),
+        ),
+        probatio.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
+            [INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
+        ),
+        probatio.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
@@ -346,7 +363,7 @@ HOMEKIT_CHAR_TRANSLATIONS = {
 def validate_entity_config(values: dict) -> dict[str, dict]:
     """Validate config entry for CONF_ENTITY."""
     if not isinstance(values, dict):
-        raise vol.Invalid("expected a dictionary")
+        raise probatio.Invalid("expected a dictionary")
 
     entities = {}
     for entity_id, config in values.items():
@@ -354,7 +371,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         domain, _ = split_entity_id(entity)
 
         if not isinstance(config, dict):
-            raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
+            raise probatio.Invalid(
+                f"The configuration for {entity} must be a dictionary."
+            )
 
         if domain == ALARM_CONTROL_PANEL_DOMAIN:
             config = CODE_SCHEMA(config)
@@ -366,7 +385,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
                 params = MEDIA_PLAYER_SCHEMA(feature)
                 key = params.pop(CONF_FEATURE)
                 if key in feature_list:
-                    raise vol.Invalid(f"A feature can be added only once for {entity}")
+                    raise probatio.Invalid(
+                        f"A feature can be added only once for {entity}"
+                    )
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
 

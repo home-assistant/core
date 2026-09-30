@@ -24,6 +24,11 @@ class MockDevicesContainer:
         """Initialize with userinfo and list of device objects."""
         self.user_info = userinfo
         self._devices = devices
+        self.refresh_calls: list[bool] = []
+
+    def refresh(self, locate: bool = False) -> None:
+        """Record refresh calls made by the account."""
+        self.refresh_calls.append(locate)
 
     def __iter__(self):
         """Iterate returns device objects (each must have .status(...))."""

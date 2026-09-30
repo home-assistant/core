@@ -22,8 +22,8 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
 )
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
@@ -115,12 +115,12 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
 _CONFIG_TIMEOUT_SEC = 5
-_WAKE_WORD_CONFIG_SCHEMA = vol.Schema(
+_WAKE_WORD_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required("type"): str,
-        vol.Required("wake_word"): str,
+        probatio.Required("type"): str,
+        probatio.Required("wake_word"): str,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 _DATA_WAKE_WORDS: HassKey[dict[str, VoiceAssistantExternalWakeWord]] = HassKey(
     "wake_word_cache"
@@ -915,7 +915,7 @@ def _get_custom_wake_words(
             config_dict = json.load(config_file)
             try:
                 config = _WAKE_WORD_CONFIG_SCHEMA(config_dict)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 # Invalid config
                 _LOGGER.debug(
                     "Invalid wake word config: path=%s, error=%s",

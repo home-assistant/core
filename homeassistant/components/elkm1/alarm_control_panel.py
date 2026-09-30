@@ -7,7 +7,7 @@ from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.keypads import Keypad
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -34,13 +34,15 @@ from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
-    vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-    vol.Optional("beep", default=False): cv.boolean,
-    vol.Optional("timeout", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=65535)
+    probatio.Optional("clear", default=2): probatio.All(
+        probatio.Coerce(int), probatio.In([0, 1, 2])
     ),
-    vol.Optional("line1", default=""): cv.string,
-    vol.Optional("line2", default=""): cv.string,
+    probatio.Optional("beep", default=False): cv.boolean,
+    probatio.Optional("timeout", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=65535)
+    ),
+    probatio.Optional("line1", default=""): cv.string,
+    probatio.Optional("line2", default=""): cv.string,
 }
 
 SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"

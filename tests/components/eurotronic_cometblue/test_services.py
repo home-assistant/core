@@ -1,13 +1,13 @@
 """Test eurotronic_cometblue services."""
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.eurotronic_cometblue import DOMAIN
-from homeassistant.components.number import ServiceValidationError
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_with_selected_platforms
@@ -121,8 +121,8 @@ async def test_set_schedule_errors(
     """Test set_schedule service error handling."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
-    # voloptuous schema should catch invalid time formats and incorrect data
-    with pytest.raises(vol.Invalid, match="Invalid time specified"):
+    # probatio schema should catch invalid time formats and incorrect data
+    with pytest.raises(probatio.Invalid, match="Invalid time specified"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
@@ -133,7 +133,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="expected a list at 'monday'"):
+    with pytest.raises(probatio.Invalid, match="expected a list at 'monday'"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
@@ -144,7 +144,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="expected a list at 'monday'"):
+    with pytest.raises(probatio.Invalid, match="expected a list at 'monday'"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
@@ -155,7 +155,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="length of value must be at most 4"):
+    with pytest.raises(probatio.Invalid, match="length of value must be at most 4"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
@@ -172,7 +172,7 @@ async def test_set_schedule_errors(
             blocking=True,
         )
 
-    # Errors not caught by voluptous schema
+    # Errors not caught by probatio schema
     with pytest.raises(ServiceValidationError, match="Missing from/to in entry"):
         await hass.services.async_call(
             DOMAIN,

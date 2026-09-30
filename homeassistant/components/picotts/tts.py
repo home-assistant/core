@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -30,7 +30,7 @@ from .issue import deprecate_yaml_issue
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+    {probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(SUPPORT_LANGUAGES)}
 )
 
 

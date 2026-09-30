@@ -1,6 +1,6 @@
 """Support for water heater devices."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
 from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
@@ -41,3 +41,12 @@ STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
+
+
+class WaterHeaterEntityFeature(IntFlag):
+    """Supported features of the water heater entity."""
+
+    TARGET_TEMPERATURE = 1
+    OPERATION_MODE = 2
+    AWAY_MODE = 4
+    ON_OFF = 8

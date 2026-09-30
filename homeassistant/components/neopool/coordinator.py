@@ -1,5 +1,6 @@
 """Data update coordinator for the NeoPool integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -66,6 +67,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
         self._follow_up_unsub: CALLBACK_TYPE | None = None
+        # Serializes masked read-modify-write across siblings sharing a register.
+        self.masked_write_lock = asyncio.Lock()
 
     def request_refresh_with_followup(
         self, delay: float = FOLLOW_UP_REFRESH_DELAY

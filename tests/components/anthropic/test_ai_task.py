@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 from anthropic.types import Message, TextBlock, Usage
 from freezegun import freeze_time
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.anthropic.const import (
@@ -150,9 +150,9 @@ async def test_generate_structured_data_legacy(
         task_name="Test Task",
         entity_id="ai_task.claude_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -202,9 +202,9 @@ async def test_generate_structured_data_legacy_tools(
         task_name="Test Task",
         entity_id="ai_task.claude_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -262,9 +262,9 @@ async def test_generate_structured_data_legacy_extended_thinking(
         task_name="Test Task",
         entity_id="ai_task.claude_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -323,9 +323,9 @@ async def test_generate_structured_data_legacy_extra_text_block(
         task_name="Test Task",
         entity_id="ai_task.claude_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -374,9 +374,9 @@ async def test_generate_invalid_structured_data_legacy(
             task_name="Test Task",
             entity_id="ai_task.claude_ai_task",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -406,9 +406,9 @@ async def test_generate_structured_data(
         task_name="Test Task",
         entity_id="ai_task.claude_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,

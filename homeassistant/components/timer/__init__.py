@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
@@ -67,10 +67,10 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
-    vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
+    probatio.Required(CONF_NAME): cv.string,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
+    probatio.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
 }
 
 
@@ -87,26 +87,28 @@ def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[Any, Any]:
     return value
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 _none_to_empty_dict,
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.All(
-                        cv.time_period, _format_timedelta
-                    ),
-                    vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(
+                        CONF_DURATION, default=DEFAULT_DURATION
+                    ): probatio.All(cv.time_period, _format_timedelta),
+                    probatio.Optional(
+                        CONF_RESTORE, default=DEFAULT_RESTORE
+                    ): cv.boolean,
                 },
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -154,7 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_START,
-        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        {probatio.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_start",
     )
     component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
@@ -162,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
     component.async_register_entity_service(
         SERVICE_CHANGE,
-        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        {probatio.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_change",
     )
 
@@ -172,7 +174,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class TimerStorageCollection(collection.DictStorageCollection):
     """Timer storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = probatio.Schema(STORAGE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:

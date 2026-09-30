@@ -154,6 +154,9 @@
       }
     },
     "switch": {
+      "audible_alarm_enabled": {
+        "default": "mdi:bullhorn"
+      },
       "child_lock": {
         "default": "mdi:lock",
         "state": {
@@ -173,6 +176,9 @@
           "off": "mdi:volume-high",
           "on": "mdi:volume-mute"
         }
+      },
+      "visual_alarm_enabled": {
+        "default": "mdi:alarm-light"
       }
     }
   },

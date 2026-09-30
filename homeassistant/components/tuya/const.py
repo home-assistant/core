@@ -574,6 +574,8 @@ class DeviceCategory(StrEnum):
     """Tank Level Sensor (undocumented)"""
     ZNNBQ = "znnbq"
     """VESKA-micro inverter (undocumented)"""
+    ZNJDQ = "znjdq"
+    """Circuit breaker (undocumented)"""
     ZWJCY = "zwjcy"
     """Soil sensor - plant monitor (undocumented)"""
     ZNJXS = "znjxs"
@@ -639,6 +641,8 @@ class DPCode(StrEnum):
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
+    CHARGE_CUR_SET = "charge_cur_set"
+    CHARGE_ENERGY_ONCE = "charge_energy_once"
     CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"
@@ -884,6 +888,7 @@ class DPCode(StrEnum):
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
     SWITCH_ALARM_LIGHT = "switch_alarm_light"
+    SWITCH_ALARM_PROPEL = "switch_alarm_propel"
     SWITCH_ALARM_SOUND = "switch_alarm_sound"
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
@@ -891,6 +896,7 @@ class DPCode(StrEnum):
     SWITCH_DISTURB = "switch_disturb"
     SWITCH_FAN = "switch_fan"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
+    SWITCH_KB_SOUND = "switch_kb_sound"
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"

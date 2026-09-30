@@ -20,6 +20,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)

@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
@@ -317,7 +317,7 @@ async def test_set_target_temp(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 30)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await common.async_set_temperature(hass, None)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0

@@ -16,6 +16,29 @@
         }
       }
     },
+    "number": {
+      "cl1": {
+        "default": "mdi:test-tube"
+      },
+      "hidro": {
+        "default": "mdi:air-humidifier"
+      },
+      "hidro_cover_reduction": {
+        "default": "mdi:pool"
+      },
+      "hidro_shutdown_temperature": {
+        "default": "mdi:thermometer-alert"
+      },
+      "rx1": {
+        "default": "mdi:gradient-vertical"
+      },
+      "smart_temp_high": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "smart_temp_low": {
+        "default": "mdi:thermometer-chevron-down"
+      }
+    },
     "sensor": {
       "filt_mode": {
         "default": "mdi:water-sync",

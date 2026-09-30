@@ -126,3 +126,7 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+    # An active locate must be requested on every poll (pyicloud >= 2.3.0
+    # only locates at service creation, so the account has to ask for it)
+    assert mock_icloud_service.devices.refresh_calls == [True]
+    assert "device1" in account.devices

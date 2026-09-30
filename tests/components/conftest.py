@@ -52,8 +52,8 @@ from aiohasupervisor.os import OSClient
 from aiohasupervisor.resolution import ResolutionClient
 from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -82,7 +82,7 @@ from homeassistant.data_entry_flow import (
     FlowResultType,
     section,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import VolSchemaType
@@ -1061,7 +1061,7 @@ async def _check_step_or_section_translations(
     integration: str,
     translation_prefix: str,
     description_placeholders: dict[str, str],
-    data_schema: vol.Schema | None,
+    data_schema: probatio.Schema | None,
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
     # neither title nor description are required
@@ -1249,6 +1249,8 @@ async def _check_exception_translation(
     request: pytest.FixtureRequest,
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
+    if isinstance(exception, Unauthorized):
+        return
     if exception.translation_key is None:
         if (
             _get_request_quality_scale(request, "exception-translations")

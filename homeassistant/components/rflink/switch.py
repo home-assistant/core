@@ -1,6 +1,6 @@
 """Support for Rflink switches."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -29,25 +29,25 @@ from .utils import create_issue_yaml_migration
 PARALLEL_UPDATES = 0
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_FIRE_EVENT): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         )
     },
@@ -55,7 +55,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
