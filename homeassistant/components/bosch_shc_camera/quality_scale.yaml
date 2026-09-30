@@ -39,9 +39,7 @@ rules:
   runtime-data:
     status: exempt
     comment: This integration does not store runtime data yet.
-  test-before-configure:
-    status: exempt
-    comment: The integration does not call the service yet; the login itself is the only check.
+  test-before-configure: done
   test-before-setup:
     status: exempt
     comment: This integration does not communicate with the service during setup yet.
