@@ -2804,8 +2804,6 @@ async def test_add_finished_resolved_on_abort(
 
     assert not sensor.add_finished.done()
 
-    # The entity platform calls add_to_platform_abort when an add is rejected; its
-    # on-remove callbacks must resolve the future SensorManager awaits in finish().
     sensor.add_to_platform_abort()
 
     assert sensor.add_finished.done()
