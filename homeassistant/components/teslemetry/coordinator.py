@@ -415,6 +415,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             if self._local_config_generation != generation:
                 return
             self._local_config = local_config
+            if local_config is not None:
+                for key in LOCAL_SITE_INFO_KEYS:
+                    # A key the gateway did not report keeps its held value.
+                    if local_config.get(key) is not None:
+                        self._cloud_optimistic.pop(key, None)
             self.data = self._merged()
             # Not async_set_updated_data: availability stays with the stream.
             self.async_update_listeners()
@@ -424,8 +429,8 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     def async_set_command_value(self, key: str, value: Any) -> None:
         """Hold a paired site's successful command value until its source next reports.
 
-        A locally-owned key is held until the next successful LAN poll, and every
-        key until the next cloud site_info, so neither a poll in between nor a
+        A locally-owned key is held until a LAN poll reports it, and every key
+        until the next cloud site_info, so neither a poll in between nor a
         failed LAN poll can revert it.
         """
         if self._local is None:

@@ -3164,6 +3164,143 @@ async def test_local_command_survives_failed_poll(
     assert hass.states.get(entity_id).state == cloud
 
 
+@pytest.mark.parametrize(
+    (
+        "platform",
+        "command",
+        "service_call",
+        "entity_id",
+        "cloud",
+        "baseline",
+        "commanded",
+        "next_local_config",
+        "after_poll",
+        "after_failed_poll",
+    ),
+    [
+        pytest.param(
+            Platform.NUMBER,
+            "backup",
+            (
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            ),
+            "number.energy_site_backup_reserve",
+            "0",
+            "20.0",
+            "80",
+            {"backup_reserve_percent": 35.0},
+            "35.0",
+            "0",
+            id="backup_reserve_reported_then_falls_back_to_cloud",
+        ),
+        pytest.param(
+            Platform.SELECT,
+            "operation",
+            (
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: "select.energy_site_operation_mode",
+                    ATTR_OPTION: "backup",
+                },
+            ),
+            "select.energy_site_operation_mode",
+            "self_consumption",
+            "autonomous",
+            "backup",
+            {"default_real_mode": "autonomous"},
+            "autonomous",
+            "self_consumption",
+            id="operation_mode_reported_then_falls_back_to_cloud",
+        ),
+        pytest.param(
+            Platform.NUMBER,
+            "backup",
+            (
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            ),
+            "number.energy_site_backup_reserve",
+            "0",
+            "20.0",
+            "80",
+            {"default_real_mode": "autonomous"},
+            "80",
+            "80",
+            id="backup_reserve_unreported_stays_held",
+        ),
+        pytest.param(
+            Platform.SELECT,
+            "operation",
+            (
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: "select.energy_site_operation_mode",
+                    ATTR_OPTION: "backup",
+                },
+            ),
+            "select.energy_site_operation_mode",
+            "self_consumption",
+            "autonomous",
+            "backup",
+            {"backup_reserve_percent": 35.0},
+            "backup",
+            "backup",
+            id="operation_mode_unreported_stays_held",
+        ),
+    ],
+)
+async def test_local_command_released_by_reporting_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_local_config: AsyncMock,
+    platform: Platform,
+    command: str,
+    service_call: tuple[str, str, dict[str, Any]],
+    entity_id: str,
+    cloud: str,
+    baseline: str,
+    commanded: str,
+    next_local_config: dict[str, float | str],
+    after_poll: str,
+    after_failed_poll: str,
+) -> None:
+    """A locally-owned command value is held only until a LAN poll reports that key."""
+    mock_powerwall_local_config.return_value = {
+        "backup_reserve_percent": 20.0,
+        "default_real_mode": "autonomous",
+    }
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [platform])
+    assert hass.states.get(entity_id).state == cloud
+
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.await_count == 1
+    assert hass.states.get(entity_id).state == baseline
+
+    with patch(
+        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(*service_call, blocking=True)
+    assert hass.states.get(entity_id).state == commanded
+
+    mock_powerwall_local_config.return_value = next_local_config
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.await_count == 2
+    assert hass.states.get(entity_id).state == after_poll
+
+    # The failed poll drops the local values, leaving the last cloud site_info
+    # under whatever command value is still held.
+    mock_powerwall_local_config.side_effect = PowerwallError("gateway unreachable")
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert mock_powerwall_local_config.await_count == 3
+    assert hass.states.get(entity_id).state == after_failed_poll
+
+
 async def _push_site_info(
     hass: HomeAssistant, mock_energy_info_stream: MagicMock, entity_id: str
 ) -> None:
