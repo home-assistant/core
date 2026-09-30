@@ -126,11 +126,11 @@ async def _async_import_yaml_device(
         data=dev_block,
     )
 
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and (reason := result.get("reason")) != "already_configured"
-    ):
-        # Framework aborts such as already_in_progress have no issue strings
+    # already_in_progress means another YAML block names the same device and
+    # is being imported right now, so this block is a duplicate, not an error.
+    if result.get("type") is FlowResultType.ABORT and (
+        reason := result.get("reason")
+    ) not in ("already_configured", "already_in_progress"):
         if reason != "cannot_identify_device":
             reason = "unknown"
         ir.async_create_issue(
@@ -859,7 +859,15 @@ class DeviceHandler:
 
         try:
             _LOGGER.debug("Start device monitoring")
-            await self.hass.async_add_executor_job(dev.grab)
+            try:
+                await self.hass.async_add_executor_job(dev.grab)
+            except OSError as err:
+                _LOGGER.warning(
+                    "Unable to grab %s, it may be in use by another program: %s",
+                    dev.name,
+                    err,
+                )
+                raise
             async for event in dev.async_read_loop():
                 if event.type == ecodes.EV_KEY:
                     if event.value in self._key_values:

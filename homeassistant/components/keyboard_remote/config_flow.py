@@ -32,9 +32,32 @@ from .const import (
     DEVINPUT,
     DEVINPUT_BY_ID,
     DOMAIN,
+    EMULATE_KEY_HOLD_DELAY_MAX,
+    EMULATE_KEY_HOLD_DELAY_MIN,
+    EMULATE_KEY_HOLD_REPEAT_MAX,
+    EMULATE_KEY_HOLD_REPEAT_MIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _clamp_imported(key: str, value: float, low: float, high: float) -> float:
+    """Fit an imported YAML value into the range the options form accepts.
+
+    YAML accepted any number, and a value outside the form's range would make
+    the options form reject its own pre-filled value.
+    """
+    clamped = min(max(value, low), high)
+    if clamped != value:
+        _LOGGER.warning(
+            "Imported %s of %s is outside %s to %s, using %s",
+            key,
+            value,
+            low,
+            high,
+            clamped,
+        )
+    return clamped
 
 
 def _get_device_name(device_path: str) -> str | None:
@@ -364,14 +387,19 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if raw_descriptor := import_data.get("device_descriptor"):
             data[CONF_DEVICE_DESCRIPTOR] = raw_descriptor
 
-        # Map YAML options
         key_types = import_data.get("type", DEFAULT_KEY_TYPES)
         emulate_hold = import_data.get("emulate_key_hold", DEFAULT_EMULATE_KEY_HOLD)
-        emulate_delay = import_data.get(
-            "emulate_key_hold_delay", DEFAULT_EMULATE_KEY_HOLD_DELAY
+        emulate_delay = _clamp_imported(
+            CONF_EMULATE_KEY_HOLD_DELAY,
+            import_data.get("emulate_key_hold_delay", DEFAULT_EMULATE_KEY_HOLD_DELAY),
+            EMULATE_KEY_HOLD_DELAY_MIN,
+            EMULATE_KEY_HOLD_DELAY_MAX,
         )
-        emulate_repeat = import_data.get(
-            "emulate_key_hold_repeat", DEFAULT_EMULATE_KEY_HOLD_REPEAT
+        emulate_repeat = _clamp_imported(
+            CONF_EMULATE_KEY_HOLD_REPEAT,
+            import_data.get("emulate_key_hold_repeat", DEFAULT_EMULATE_KEY_HOLD_REPEAT),
+            EMULATE_KEY_HOLD_REPEAT_MIN,
+            EMULATE_KEY_HOLD_REPEAT_MAX,
         )
 
         return self.async_create_entry(
@@ -393,8 +421,12 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            # An entry with no key types would never fire a command event
+            if user_input[CONF_KEY_TYPES]:
+                return self.async_create_entry(data=user_input)
+            errors[CONF_KEY_TYPES] = "no_key_types"
 
         device_path = self.config_entry.data.get(CONF_DEVICE_PATH, "")
 
@@ -419,8 +451,8 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                             CONF_EMULATE_KEY_HOLD_DELAY,
                         ): selector.NumberSelector(
                             selector.NumberSelectorConfig(
-                                min=0.01,
-                                max=5.0,
+                                min=EMULATE_KEY_HOLD_DELAY_MIN,
+                                max=EMULATE_KEY_HOLD_DELAY_MAX,
                                 step=0.001,
                                 unit_of_measurement="s",
                                 mode=selector.NumberSelectorMode.BOX,
@@ -430,8 +462,8 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                             CONF_EMULATE_KEY_HOLD_REPEAT,
                         ): selector.NumberSelector(
                             selector.NumberSelectorConfig(
-                                min=0.001,
-                                max=1.0,
+                                min=EMULATE_KEY_HOLD_REPEAT_MIN,
+                                max=EMULATE_KEY_HOLD_REPEAT_MAX,
                                 step=0.001,
                                 unit_of_measurement="s",
                                 mode=selector.NumberSelectorMode.BOX,
@@ -439,6 +471,7 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                         ),
                     }
                 ),
-                self.config_entry.options,
+                user_input or self.config_entry.options,
             ),
+            errors=errors,
         )

@@ -178,24 +178,38 @@ async def test_yaml_import_failure_creates_issue(
     )
 
 
-async def test_yaml_import_unexpected_abort_uses_unknown_issue(
+@pytest.mark.parametrize(
+    ("reason", "expected_issues"),
+    [
+        pytest.param("already_in_progress", set(), id="duplicate_block_in_progress"),
+        pytest.param(
+            "not_implemented",
+            {"deprecated_yaml_import_issue_unknown"},
+            id="unexpected_reason",
+        ),
+    ],
+)
+async def test_yaml_import_framework_abort(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    reason: str,
+    expected_issues: set[str],
 ) -> None:
-    """Test a framework abort reason creates the issue that has strings."""
+    """Test framework abort reasons get an issue that exists, or none.
+
+    already_in_progress means another YAML block names the same device and is
+    being imported, so this block is a duplicate rather than an error.
+    """
     with patch.object(
         hass.config_entries.flow,
         "async_init",
-        return_value={"type": FlowResultType.ABORT, "reason": "already_in_progress"},
+        return_value={"type": FlowResultType.ABORT, "reason": reason},
     ):
         await _async_import_yaml_device(hass, {})
 
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_yaml_import_issue_unknown"
-    )
-    assert not issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_yaml_import_issue_already_in_progress"
-    )
+    assert {
+        issue_id for (domain, issue_id) in issue_registry.issues if domain == DOMAIN
+    } == expected_issues
 
 
 @pytest.mark.parametrize(
@@ -1033,6 +1047,29 @@ async def test_monitor_input_unexpected_error_releases_device(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_monitor_input_grab_failure_warns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device held by another program is reported and released."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
+    mock_input_device.grab.side_effect = OSError(16, "Device or resource busy")
+
+    await handler.async_device_start_monitoring(mock_input_device)
+    await hass.async_block_till_done()
+
+    assert "Unable to grab Test Keyboard, it may be in use by another program" in (
+        caplog.text
+    )
+    assert not handler.is_monitoring
+    mock_input_device.close.assert_called_once()
 
 
 async def test_monitor_input_oserror_cancels_repeat_tasks(

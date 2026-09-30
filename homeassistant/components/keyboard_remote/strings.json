@@ -33,6 +33,9 @@
     }
   },
   "options": {
+    "error": {
+      "no_key_types": "Select at least one key event type."
+    },
     "step": {
       "init": {
         "data": {

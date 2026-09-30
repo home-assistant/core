@@ -21,6 +21,12 @@ DEFAULT_EMULATE_KEY_HOLD: Final = False
 DEFAULT_EMULATE_KEY_HOLD_DELAY: Final = 0.250
 DEFAULT_EMULATE_KEY_HOLD_REPEAT: Final = 0.033
 
+# Ranges the options form accepts, in seconds
+EMULATE_KEY_HOLD_DELAY_MIN: Final = 0.01
+EMULATE_KEY_HOLD_DELAY_MAX: Final = 5.0
+EMULATE_KEY_HOLD_REPEAT_MIN: Final = 0.001
+EMULATE_KEY_HOLD_REPEAT_MAX: Final = 1.0
+
 # Key value mapping
 KEY_VALUE: Final = {"key_up": 0, "key_down": 1, "key_hold": 2}
 KEY_VALUE_NAME: Final = {value: key for key, value in KEY_VALUE.items()}

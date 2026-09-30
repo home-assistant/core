@@ -663,6 +663,47 @@ async def test_import_adoption_refreshes_fallback_name(
 
 
 @pytest.mark.parametrize(
+    ("delay", "repeat", "expected_delay", "expected_repeat"),
+    [
+        pytest.param(10, 0, 5.0, 0.001, id="above_and_below"),
+        pytest.param(0, 2, 0.01, 1.0, id="below_and_above"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_clamps_hold_timing(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    delay: float,
+    repeat: float,
+    expected_delay: float,
+    expected_repeat: float,
+) -> None:
+    """Test imported hold timing is fitted into the options form's range.
+
+    YAML accepted any number, and a value outside the range would make the
+    options form reject its own pre-filled value.
+    """
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
+        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                "device_descriptor": FAKE_DEVICE_REAL_PATH,
+                "emulate_key_hold_delay": delay,
+                "emulate_key_hold_repeat": repeat,
+            },
+        )
+
+    assert result["options"][CONF_EMULATE_KEY_HOLD_DELAY] == expected_delay
+    assert result["options"][CONF_EMULATE_KEY_HOLD_REPEAT] == expected_repeat
+    assert f"Imported emulate_key_hold_delay of {delay} is outside" in caplog.text
+    assert f"Imported emulate_key_hold_repeat of {repeat} is outside" in caplog.text
+
+
+@pytest.mark.parametrize(
     ("import_data", "legacy_unique_id"),
     [
         pytest.param(
@@ -786,6 +827,41 @@ async def test_options_flow(
         CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
         CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
     }
+
+
+async def test_options_flow_requires_a_key_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow rejects an empty key type list.
+
+    An entry with no key types would never fire a command event.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    options = {
+        CONF_KEY_TYPES: [],
+        CONF_EMULATE_KEY_HOLD: False,
+        CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
+        CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
+    }
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_KEY_TYPES: "no_key_types"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={**options, CONF_KEY_TYPES: ["key_down"]}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_KEY_TYPES] == ["key_down"]
 
 
 async def test_options_flow_shows_device_path(
