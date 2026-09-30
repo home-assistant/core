@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMicromoduleRelay
+from boschshcpy import SHCMicromoduleRelay, SHCShutterContact2
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.number import (
@@ -66,6 +66,21 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         value_fn=_impulse_length_value_fn,
         set_value_fn=_impulse_length_set_value_fn,
     ),
+    "bypass_timeout": SHCNumberEntityDescription[SHCShutterContact2](
+        key="bypass_timeout",
+        translation_key="bypass_timeout",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=1.0,
+        native_max_value=15.0,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: float(device.bypass_timeout),
+        set_value_fn=lambda device, value: device.async_set_bypass_timeout(
+            round(value)
+        ),
+    ),
 }
 
 
@@ -100,6 +115,17 @@ async def async_setup_entry(
                 description=NUMBER_TYPES[IMPULSE_LENGTH],
             )
         )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["bypass_timeout"],
+        )
+        for device in session.device_helper.shutter_contacts2
+    )
 
     async_add_entities(entities)
 

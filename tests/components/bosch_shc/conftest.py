@@ -463,6 +463,7 @@ def shutter_contact2_device(
     name: str = "Shutter contact",
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
+    bypass_timeout: int = 5,
 ) -> SHCShutterContact2:
     """Build a minimal device double for the shutter_contacts2 bucket."""
     device = create_autospec(SHCShutterContact2, instance=True, spec_set=True)
@@ -477,6 +478,7 @@ def shutter_contact2_device(
     device.status = "AVAILABLE"
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
+    device.bypass_timeout = bypass_timeout
     return device
 
 
