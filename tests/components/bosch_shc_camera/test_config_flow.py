@@ -32,10 +32,10 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 ACCOUNT_ID = "fake-account-sub"
 
 
-def _fake_access_token(claims: dict[str, str]) -> str:
+def _fake_access_token(claims: dict[str, object]) -> str:
     """Build an unsigned fake JWT access token from the given claims."""
 
-    def _part(value: dict[str, str]) -> str:
+    def _part(value: dict[str, object]) -> str:
         raw = json.dumps(value).encode()
         return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
 
@@ -220,8 +220,24 @@ async def test_reauth_wrong_account(
 
 @pytest.mark.parametrize(
     "access_token",
-    [_fake_access_token({"iss": "fake"}), "not-a-jwt"],
-    ids=["missing_sub", "malformed"],
+    [
+        _fake_access_token({"iss": "fake"}),
+        "not-a-jwt",
+        _fake_access_token({"sub": 123}),
+        _fake_access_token({"sub": ""}),
+        _fake_access_token({"sub": "   "}),
+        _fake_access_token({"sub": ["a"]}),
+        _fake_access_token({"sub": "a" * 129}),
+    ],
+    ids=[
+        "missing_sub",
+        "malformed",
+        "int_sub",
+        "empty_sub",
+        "whitespace_sub",
+        "list_sub",
+        "too_long_sub",
+    ],
 )
 async def test_invalid_token(
     hass: HomeAssistant,

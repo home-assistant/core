@@ -17,6 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHan
 from .application_credentials import OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 
 DOMAIN = "bosch_shc_camera"
+MAX_ACCOUNT_ID_LENGTH = 128
 
 
 class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -71,7 +72,13 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )["sub"]
         except jwt.InvalidTokenError, KeyError:
             return self.async_abort(reason="oauth_error")
-        await self.async_set_unique_id(str(account_id))
+        if (
+            not isinstance(account_id, str)
+            or not account_id.strip()
+            or len(account_id) > MAX_ACCOUNT_ID_LENGTH
+        ):
+            return self.async_abort(reason="oauth_error")
+        await self.async_set_unique_id(account_id)
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
