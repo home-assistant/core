@@ -96,84 +96,16 @@ def _remote_entry(**options: Any) -> MockConfigEntry:
     return _entry({CONF_DEVICE_NAME: REMOTE_NAME}, **options)
 
 
-async def _set_up(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+async def _set_up(
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
+) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
 
 def _connected(descriptor: str, name: str = FAKE_DEVICE_NAME) -> dict[str, str]:
     return {CONF_DEVICE_DESCRIPTOR: descriptor, CONF_DEVICE_NAME: name}
-
-
-async def test_setup_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setting up a config entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_unload_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test unloading a config entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_multiple_entries_shared_manager(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test multiple entries load and unload independently."""
-    entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="usb-Other_Device-event-kbd",
-        title="Other Device",
-        data={
-            "device_path": "/dev/input/by-id/usb-Other_Device-event-kbd",
-            "device_name": "Other Device",
-        },
-        options=mock_config_entry.options.copy(),
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry2.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry2.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert entry2.state is ConfigEntryState.LOADED
-
-    # Unload first entry — second should still be loaded
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert entry2.state is ConfigEntryState.LOADED
-
-    # Unload second entry
-    await hass.config_entries.async_unload(entry2.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry2.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_yaml_import_creates_entry_and_deprecation_issue(
@@ -187,7 +119,7 @@ async def test_yaml_import_creates_entry_and_deprecation_issue(
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"device_descriptor": FAKE_DEVICE_REAL_PATH}}
     )
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert [entry.data[CONF_DEVICE_PATH] for entry in entries] == [FAKE_DEVICE_PATH]
@@ -375,7 +307,7 @@ async def test_setup_retries_when_devices_cannot_be_watched(
     fake_input.watch_errors = watch_errors
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert [
@@ -385,7 +317,7 @@ async def test_setup_retries_when_devices_cannot_be_watched(
     fake_input.inotify_error = None
     fake_input.watch_errors = {}
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -398,7 +330,7 @@ async def test_devices_connect_once_home_assistant_started(
     """Test devices are only grabbed once Home Assistant has started."""
     hass.set_state(CoreState.not_running)
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     kbd.grab.assert_not_called()
 
@@ -420,10 +352,10 @@ async def test_unload_before_start_closes_watcher(
     Assistant is running.
     """
     hass.set_state(CoreState.not_running)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert fake_input.inotify is not None
@@ -511,7 +443,7 @@ async def test_startup_connects_matching_device(
         path: fake_input.add(path, name, link=link) for path, name, link in devices
     }
 
-    await _set_up(hass, entry)
+    await _set_up(hass, fake_input, entry)
 
     assert [path for path, dev in added.items() if dev.grab.called] == (
         expected_grabbed
@@ -533,6 +465,7 @@ async def test_bluetooth_remote_matched_by_address(
     first = fake_input.add(REMOTE_PATH, REMOTE_NAME, uniq="aa:bb:cc:dd:ee:01")
     await _set_up(
         hass,
+        fake_input,
         _entry(
             {CONF_DEVICE_NAME: REMOTE_NAME, CONF_DEVICE_UNIQ: "aa:bb:cc:dd:ee:02"},
             unique_id="aa:bb:cc:dd:ee:02 BT Remote",
@@ -597,7 +530,7 @@ async def test_events_report_the_pre_migration_descriptor(
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
     commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
-    await _set_up(hass, entry)
+    await _set_up(hass, fake_input, entry)
 
     await fake_input.press(kbd, 30, KEY_VALUE["key_up"])
 
@@ -611,7 +544,7 @@ async def test_plugged_device_connects(
 ) -> None:
     """Test a device without a by-id link connects when plugged in."""
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-    await _set_up(hass, _remote_entry())
+    await _set_up(hass, fake_input, _remote_entry())
 
     remote = await fake_input.plug(REMOTE_PATH, REMOTE_NAME)
 
@@ -641,7 +574,7 @@ async def test_plugged_device_connects_through_late_link(
     for link, target in other_links.items():
         fake_input.add(target, "Other", link=link)
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     kbd = await fake_input.plug(
         FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
@@ -664,9 +597,10 @@ async def test_by_id_watch_failure_still_connects(
     so a by-id device plugged in once it can be added still connects through
     its late link.
     """
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     await _set_up(
         hass,
+        fake_input,
         _entry({CONF_DEVICE_PATH: FAKE_DEVICE_PATH_2, CONF_DEVICE_NAME: "Remote"}),
     )
     fake_input.watch_errors[DEVINPUT_BY_ID] = OSError(errno.ENOSPC, "No space")
@@ -698,7 +632,7 @@ async def test_unload_releases_devices_after_the_watcher_failed(
     closing inotify, and fail the unload.
     """
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     assert fake_input.inotify is not None
     fake_input.inotify.queue.put_nowait(OSError(errno.EIO, "Input/output error"))
     await fake_input.settle()
@@ -721,7 +655,7 @@ async def test_watcher_survives_an_event_it_cannot_handle(
     Otherwise no device would connect again, and the error would only surface
     when unloading, where it would skip releasing the devices.
     """
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     assert fake_input.inotify is not None
     # An event without a mask makes the handler raise
     fake_input.inotify.queue.put_nowait(
@@ -760,7 +694,7 @@ async def test_by_id_link_without_matching_device(
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     mouse = fake_input.add("/dev/input/event8", "Mouse")
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     fake_input.opened.clear()
 
     await fake_input.link("/dev/input/by-id/usb-Mouse-event-mouse", target)
@@ -775,7 +709,7 @@ async def test_unrelated_device_is_not_grabbed(
     fake_input: FakeInput,
 ) -> None:
     """Test a plugged device that no entry identifies is released again."""
-    await _set_up(hass, _remote_entry())
+    await _set_up(hass, fake_input, _remote_entry())
 
     mouse = await fake_input.plug("/dev/input/event8", "Mouse")
 
@@ -796,7 +730,7 @@ async def test_unplug_and_replug(
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
 
@@ -823,7 +757,7 @@ async def test_second_node_does_not_replace_connected_device(
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-    await _set_up(hass, _remote_entry())
+    await _set_up(hass, fake_input, _remote_entry())
 
     await fake_input.touch(REMOTE_PATH)
     sibling = await fake_input.plug("/dev/input/event8", REMOTE_NAME)
@@ -843,9 +777,9 @@ async def test_entry_added_later_connects_present_device(
     """Test an entry added after startup connects a device already present."""
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
-    await _set_up(hass, _remote_entry())
+    await _set_up(hass, fake_input, _remote_entry())
 
     remote.grab.assert_called_once()
 
@@ -858,10 +792,12 @@ async def test_entry_added_later_leaves_claimed_node_alone(
     """Test a later entry does not take a node another entry already reads."""
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     await _set_up(
-        hass, _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="by-name")
+        hass,
+        fake_input,
+        _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="by-name"),
     )
 
     kbd.grab.assert_called_once()
@@ -890,6 +826,7 @@ async def test_key_events(
     commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
     await _set_up(
         hass,
+        fake_input,
         _entry(
             {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
             **{CONF_KEY_TYPES: key_types},
@@ -921,6 +858,7 @@ async def test_key_hold_emulation(
     commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
     await _set_up(
         hass,
+        fake_input,
         _entry(
             {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
             **{
@@ -952,6 +890,7 @@ async def test_unplug_stops_key_hold(
     commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
     await _set_up(
         hass,
+        fake_input,
         _entry(
             {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
             **{CONF_EMULATE_KEY_HOLD: True, CONF_EMULATE_KEY_HOLD_DELAY: 1.0},
@@ -978,7 +917,7 @@ async def test_unexpected_read_error_releases_device(
     """
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     await fake_input.send(kbd, ValueError("unexpected"))
 
@@ -1001,7 +940,7 @@ async def test_grab_failure_warns_and_releases(
     kbd.grab.side_effect = OSError(errno.EBUSY, "Device or resource busy")
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
 
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     assert "Unable to grab Test Keyboard, it may be in use by another program" in (
         caplog.text
@@ -1038,10 +977,10 @@ async def test_stop_releases_devices(
     """
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     await stop(hass, mock_config_entry)
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     kbd.ungrab.assert_called_once()
     kbd.close.assert_called_once()
@@ -1075,7 +1014,7 @@ async def test_unload_releases_devices_when_watch_already_gone(
     again raises.
     """
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     fake_input.rm_watch_errors = rm_watch_errors
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -1092,7 +1031,7 @@ async def test_unload_survives_ungrab_failure(
     """Test a device that fails to ungrab is still closed on unload."""
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     kbd.ungrab.side_effect = OSError(errno.ENODEV, "No such device")
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
@@ -1107,11 +1046,11 @@ async def test_unload_one_entry_keeps_the_other_device(
     """Test unloading one entry releases only its own device."""
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
-    await _set_up(hass, mock_config_entry)
-    await _set_up(hass, _remote_entry())
+    await _set_up(hass, fake_input, mock_config_entry)
+    await _set_up(hass, fake_input, _remote_entry())
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     kbd.ungrab.assert_called_once()
     remote.ungrab.assert_not_called()
@@ -1132,7 +1071,7 @@ async def test_entry_set_up_during_last_unload_gets_new_manager(
     Registering with the manager being stopped would leave it loaded but
     unable to connect its device.
     """
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     remote_entry = _remote_entry()
     remote_entry.add_to_hass(hass)
     stop = KeyboardRemoteManager.async_stop
@@ -1148,7 +1087,7 @@ async def test_entry_set_up_during_last_unload_gets_new_manager(
         side_effect=_set_up_other_entry_during_stop,
     ):
         await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await fake_input.settle()
 
     assert remote_entry.state is ConfigEntryState.LOADED
     remote = await fake_input.plug(REMOTE_PATH, REMOTE_NAME)
@@ -1183,13 +1122,15 @@ async def test_read_failure_during_unplug_teardown(
     """
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
-    await _set_up(hass, mock_config_entry)
-    ungrabbing, release = fake_input.hold_ungrab(kbd)
+    await _set_up(hass, fake_input, mock_config_entry)
+    ungrabbing, release = kbd.ungrab.hold()
     released = _next_event(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
 
     fake_input.remove_node(FAKE_DEVICE_REAL_PATH)
     await _wait_in_executor(hass, ungrabbing)
-    await fake_input.send(kbd, OSError(errno.ENODEV, "No such device"), wait=False)
+    await fake_input.send(
+        kbd, OSError(errno.ENODEV, "No such device"), wait_for_executor=False
+    )
     release.set()
     await asyncio.wait_for(released, 5)
     await fake_input.settle()
@@ -1214,7 +1155,7 @@ async def test_device_check_finishing_after_stop_grabs_nothing(
     Assistant stops, so the check would otherwise claim a device after every
     device was released.
     """
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
     listing, release = fake_input.hold_listing()
     remote_entry = _remote_entry()
@@ -1223,13 +1164,11 @@ async def test_device_check_finishing_after_stop_grabs_nothing(
     await hass.config_entries.async_setup(remote_entry.entry_id)
     await _wait_in_executor(hass, listing)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    # The check task is blocked, so async_block_till_done would not return
-    for _ in range(10):
-        await asyncio.sleep(0)
+    await fake_input.settle(wait_for_executor=False)
     assert fake_input.inotify is not None
     assert fake_input.inotify.closed
     release.set()
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     remote.grab.assert_not_called()
     remote.close.assert_called()
@@ -1257,7 +1196,7 @@ async def test_entry_registered_during_startup_scan_connects(
     remote_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(remote_entry.entry_id)
     release.set()
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     remote.grab.assert_called_once()
 
@@ -1268,7 +1207,7 @@ async def test_device_found_for_unloaded_entry_is_not_grabbed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a device found for an entry that unloaded meanwhile is not grabbed."""
-    await _set_up(hass, mock_config_entry)
+    await _set_up(hass, fake_input, mock_config_entry)
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
     listing, release = fake_input.hold_listing()
     remote_entry = _remote_entry()
@@ -1278,7 +1217,7 @@ async def test_device_found_for_unloaded_entry_is_not_grabbed(
     await _wait_in_executor(hass, listing)
     await hass.config_entries.async_unload(remote_entry.entry_id)
     release.set()
-    await hass.async_block_till_done()
+    await fake_input.settle()
 
     remote.grab.assert_not_called()
     remote.close.assert_called()

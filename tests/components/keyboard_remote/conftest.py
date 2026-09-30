@@ -40,7 +40,6 @@ EV_KEY = 1
 EV_REL = 2
 EV_SW = 5
 BUS_USB = 0x03
-BUS_BLUETOOTH = 0x05
 BUS_HOST = 0x19
 
 # The integration only imports evdev inside functions, so the fixture below
@@ -54,6 +53,7 @@ _mock_evdev.categorize = MagicMock(side_effect=lambda e: f"key event {e.code}")
 @pytest.fixture(autouse=True)
 def mock_evdev_module() -> Generator[None]:
     """Ensure the evdev module is always mocked for these tests."""
+    _mock_evdev.reset_mock()
     with patch.dict(sys.modules, {"evdev": _mock_evdev}):
         yield
 
@@ -87,38 +87,76 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(autouse=True)
-def mock_inotify() -> Generator[MagicMock]:
-    """Mock inotify to prevent real filesystem access."""
-    with patch(
-        "homeassistant.components.keyboard_remote.Inotify",
-    ) as mock_cls:
-        mock_instance = MagicMock()
-        # Make async iteration raise StopAsyncIteration immediately
-        mock_instance.__aiter__ = MagicMock(return_value=mock_instance)
-        mock_instance.__anext__ = AsyncMock(side_effect=StopAsyncIteration)
-        mock_cls.return_value = mock_instance
-        yield mock_instance
-
-
-@pytest.fixture(autouse=True)
-def mock_list_devices() -> Generator[None]:
-    """Mock evdev list_devices to return empty list."""
-    with patch(
-        "evdev.list_devices",
-        return_value=[],
-    ):
-        yield
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Mock async_setup_entry."""
-    with patch(
-        "homeassistant.components.keyboard_remote.async_setup_entry",
-        return_value=True,
-    ) as mock:
+    """Mock setting up and unloading config entries."""
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.async_setup_entry",
+            return_value=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.keyboard_remote.async_unload_entry",
+            return_value=True,
+        ),
+    ):
         yield mock
+
+
+class DeviceCall:
+    """A device method that runs in the executor, like evdev's C calls.
+
+    Home Assistant's tests run mock targets of async_add_executor_job inline on
+    the event loop, so these record their calls as plain callables instead.
+    """
+
+    def __init__(
+        self, fake: FakeInput, action: Callable[[], None] | None = None
+    ) -> None:
+        """Initialize, with an optional action run on each successful call."""
+        self._fake = fake
+        self._action = action
+        self._hold: tuple[threading.Event, threading.Event] | None = None
+        self.call_count = 0
+        self.side_effect: BaseException | None = None
+
+    def __call__(self) -> None:
+        """Record the call, wait if held, then fail or run the action."""
+        self.call_count += 1
+        if (hold := self._hold) is not None:
+            self._hold = None
+            waiting, release = hold
+            waiting.set()
+            release.wait(5)
+        if self.side_effect is not None:
+            raise self.side_effect
+        if self._action is not None:
+            self._action()
+
+    @property
+    def called(self) -> bool:
+        """Whether it was called at all."""
+        return self.call_count > 0
+
+    def hold(self) -> tuple[threading.Event, threading.Event]:
+        """Make the next call wait in the executor until released.
+
+        Returns an event set once the call is waiting, and the one releasing it.
+        """
+        self._hold = self._fake.new_gate()
+        return self._hold
+
+    def assert_called_once(self) -> None:
+        """Assert it was called exactly once."""
+        assert self.call_count == 1, f"called {self.call_count} times"
+
+    def assert_called(self) -> None:
+        """Assert it was called at least once."""
+        assert self.call_count > 0, "not called"
+
+    def assert_not_called(self) -> None:
+        """Assert it was never called."""
+        assert self.call_count == 0, f"called {self.call_count} times"
 
 
 class _FakeInotify:
@@ -182,9 +220,11 @@ class FakeInput:
         self.rm_watch_errors: dict[str, OSError] = {}
         self.inotify_error: OSError | None = None
         self.by_id_error: OSError | None = None
+        self.listing_error: OSError | None = None
         self.inotify: _FakeInotify | None = None
         self.inotify_instances: list[_FakeInotify] = []
         self.opened: list[str] = []
+        self.gates: list[tuple[threading.Event, threading.Event]] = []
         self._next_fd = 100
         self._listing_gate: tuple[threading.Event, threading.Event] | None = None
 
@@ -210,13 +250,7 @@ class FakeInput:
         self.devices[path] = None
 
     async def plug(
-        self,
-        path: str,
-        name: str,
-        *,
-        link: str | None = None,
-        uniq: str = "",
-        wait: bool = True,
+        self, path: str, name: str, *, link: str | None = None, uniq: str = ""
     ) -> MagicMock:
         """Plug in a device in the order udev reports it.
 
@@ -228,8 +262,7 @@ class FakeInput:
         self.devices[path] = dev
         self._emit(os.path.basename(path), Mask.CREATE)
         self._emit(os.path.basename(path), Mask.ATTRIB)
-        if wait:
-            await self.settle()
+        await self.settle()
         if link is not None:
             first_link = not self.links
             self.links[link] = path
@@ -273,21 +306,11 @@ class FakeInput:
         self.devices.pop(path)
         self._emit(os.path.basename(path), Mask.DELETE)
 
-    def hold_ungrab(self, dev: MagicMock) -> tuple[threading.Event, threading.Event]:
-        """Make ungrabbing the device wait in the executor until released.
-
-        Returns an event set once ungrab is waiting, and the one releasing it.
-        """
-        waiting, release = threading.Event(), threading.Event()
-
-        def _ungrab() -> None:
-            waiting.set()
-            release.wait(5)
-
-        # A plain function runs in the executor like evdev's, where a mock
-        # would run inline on the event loop.
-        dev.ungrab = _ungrab
-        return waiting, release
+    def new_gate(self) -> tuple[threading.Event, threading.Event]:
+        """Return a waiting and a release event, released at teardown at the latest."""
+        gate = (threading.Event(), threading.Event())
+        self.gates.append(gate)
+        return gate
 
     def hold_listing(self) -> tuple[threading.Event, threading.Event]:
         """Make the next device listing wait in the executor until released.
@@ -295,59 +318,70 @@ class FakeInput:
         Returns an event set once the listing is waiting, and the one releasing
         it.
         """
-        self._listing_gate = (threading.Event(), threading.Event())
+        self._listing_gate = self.new_gate()
         return self._listing_gate
 
     async def press(self, dev: MagicMock, code: int, value: int) -> None:
         """Send a key event from a device."""
         await self.send(dev, SimpleNamespace(type=EV_KEY, code=code, value=value))
 
-    async def send(self, dev: MagicMock, event: Any, *, wait: bool = True) -> None:
-        """Send an input event, or an exception to raise, from a device.
-
-        Pass wait=False while an executor job is held, which settling would
-        wait for. Only the device's monitor is then waited for, which handles
-        the event without executor jobs.
-        """
+    async def send(
+        self,
+        dev: MagicMock,
+        event: SimpleNamespace | BaseException,
+        *,
+        wait_for_executor: bool = True,
+    ) -> None:
+        """Send an input event, or an exception to raise, from a device."""
         dev.read_queue.put_nowait(event)
-        if wait:
-            await self.settle()
-        else:
-            await self.wait_until(dev.read_queue.empty)
-            await self._spin()
+        await self.settle(wait_for_executor=wait_for_executor)
 
-    async def settle(self) -> None:
+    async def settle(self, *, wait_for_executor: bool = True) -> None:
         """Wait until everything emitted so far has been handled.
 
-        Executor jobs started from background tasks, like the watcher and the
-        device monitors, are invisible to async_block_till_done, so wait for
-        those too, until two passes in a row find nothing left to do.
+        Done once no executor job is pending and every task is blocked on
+        something, like a queue or a timer. Executor jobs started from
+        background tasks are invisible to async_block_till_done, so they are
+        waited for separately. Pass wait_for_executor=False while a test holds
+        an executor job, which would otherwise be waited for.
         """
-        quiet_passes = 0
-        for _ in range(1000):
-            if quiet_passes == 2:
+        for _ in range(10_000):
+            if wait_for_executor:
+                await self.hass.async_block_till_done()
+                if jobs := self._pending_executor_jobs():
+                    await asyncio.wait(jobs)
+                    continue
+            if self._idle():
                 return
-            await self.hass.async_block_till_done()
-            if pending := [
-                job
-                for job in self.hass._background_tasks
-                if not isinstance(job, asyncio.Task) and not job.done()
-            ]:
-                await asyncio.wait(pending)
-                quiet_passes = 0
-                continue
-            queued = self._queued()
-            await self._spin()
-            quiet_passes = 0 if queued else quiet_passes + 1
+            await asyncio.sleep(0)
         raise AssertionError("emitted events were never handled")
 
     async def wait_until(self, condition: Callable[[], bool]) -> None:
         """Run the event loop until the condition holds."""
-        for _ in range(1000):
-            if condition():
-                return
-            await asyncio.sleep(0)
-        raise AssertionError("condition was not met")
+        async with asyncio.timeout(5):
+            while not condition():
+                await asyncio.sleep(0)
+
+    def _tasks(self) -> list[asyncio.Future[Any]]:
+        return [*self.hass._tasks, *self.hass._background_tasks]
+
+    def _pending_executor_jobs(self) -> list[asyncio.Future[Any]]:
+        return [
+            job
+            for job in self._tasks()
+            if not isinstance(job, asyncio.Task) and not job.done()
+        ]
+
+    def _idle(self) -> bool:
+        if self._queued():
+            return False
+        for task in self._tasks():
+            if isinstance(task, asyncio.Task) and not task.done():
+                # A runnable task, or one only yielding, has no pending waiter
+                waiter = task._fut_waiter  # type: ignore[attr-defined]
+                if waiter is None or waiter.done():
+                    return False
+        return True
 
     def _queued(self) -> bool:
         if self.inotify is not None and not self.inotify.queue.empty():
@@ -356,12 +390,6 @@ class FakeInput:
             dev is not None and not dev.read_queue.empty()
             for dev in self.devices.values()
         )
-
-    @staticmethod
-    async def _spin() -> None:
-        # Lets tasks woken by a queue run up to their next await
-        for _ in range(5):
-            await asyncio.sleep(0)
 
     def _emit(
         self,
@@ -391,13 +419,15 @@ class FakeInput:
         dev.path = path
         self._next_fd += 1
         dev.fileno.return_value = self._next_fd
+        dev.grab = DeviceCall(self)
+        dev.ungrab = DeviceCall(self)
         # Like evdev, a closed device reports fd -1
-        dev.close.side_effect = lambda: setattr(dev.fileno, "return_value", -1)
+        dev.close = DeviceCall(self, lambda: setattr(dev.fileno, "return_value", -1))
         dev.capabilities.return_value = {EV_KEY if sends_keys else EV_SW: [30]}
         dev.info.bustype = bustype
         dev.read_queue = asyncio.Queue()
 
-        async def _read() -> AsyncIterator[Any]:
+        async def _read() -> AsyncIterator[SimpleNamespace]:
             while True:
                 item = await dev.read_queue.get()
                 if isinstance(item, BaseException):
@@ -419,12 +449,14 @@ class FakeInput:
         dev.fileno.return_value = self._next_fd
         return dev
 
-    def _list(self, *args: Any) -> list[str]:
+    def _list(self, input_device_dir: str = DEVINPUT) -> list[str]:
         if (gate := self._listing_gate) is not None:
             self._listing_gate = None
             waiting, release = gate
             waiting.set()
             release.wait(5)
+        if self.listing_error is not None:
+            raise self.listing_error
         return list(self.devices)
 
     def _new_inotify(self) -> _FakeInotify:
@@ -435,38 +467,44 @@ class FakeInput:
         return self.inotify
 
 
+def _devinput_path(path: Any) -> str | None:
+    """Return the path as str if it is in /dev/input, else None."""
+    if isinstance(path, os.PathLike):
+        path = os.fspath(path)
+    if isinstance(path, str) and (path == DEVINPUT or path.startswith(f"{DEVINPUT}/")):
+        return path
+    return None
+
+
 @pytest.fixture
-def fake_input(hass: HomeAssistant, mock_evdev_module: None) -> Generator[FakeInput]:
-    """Provide a fake /dev/input that the integration discovers and watches."""
+def fake_input(hass: HomeAssistant) -> Generator[FakeInput]:
+    """Provide a fake /dev/input that the integration discovers and watches.
+
+    Only /dev/input paths are faked; any other path goes to the real function.
+    """
     fake = FakeInput(hass)
     real_realpath = os.path.realpath
     real_exists = os.path.exists
     real_isdir = os.path.isdir
     real_scandir = os.scandir
 
-    def _in_devinput(path: str) -> bool:
-        return path == DEVINPUT or path.startswith(f"{DEVINPUT}/")
-
-    def _realpath(path: Any, *args: Any, **kwargs: Any) -> str:
-        path = os.fspath(path)
-        if _in_devinput(path):
-            return fake.links.get(path, path)
+    def _realpath(path: Any, *args: Any, **kwargs: Any) -> Any:
+        if (devinput := _devinput_path(path)) is not None:
+            return fake.links.get(devinput, devinput)
         return real_realpath(path, *args, **kwargs)
 
     def _exists(path: Any) -> bool:
-        path = os.fspath(path)
-        if _in_devinput(path):
-            return path in fake.links or path in fake.devices
+        if (devinput := _devinput_path(path)) is not None:
+            return devinput in fake.links or devinput in fake.devices
         return real_exists(path)
 
     def _isdir(path: Any) -> bool:
-        path = os.fspath(path)
-        if path == DEVINPUT_BY_ID:
+        if _devinput_path(path) == DEVINPUT_BY_ID:
             return bool(fake.links)
         return real_isdir(path)
 
     def _scandir(path: Any = ".") -> Any:
-        if os.fspath(path) == DEVINPUT_BY_ID:
+        if _devinput_path(path) == DEVINPUT_BY_ID:
             if fake.by_id_error is not None:
                 raise fake.by_id_error
             return nullcontext(
@@ -493,4 +531,10 @@ def fake_input(hass: HomeAssistant, mock_evdev_module: None) -> Generator[FakeIn
         patch("os.path.isdir", _isdir),
         patch("os.scandir", _scandir),
     ):
-        yield fake
+        try:
+            yield fake
+        finally:
+            # A test that failed while holding an executor job must not leave
+            # the thread waiting
+            for _waiting, release in fake.gates:
+                release.set()

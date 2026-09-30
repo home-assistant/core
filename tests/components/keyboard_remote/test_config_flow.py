@@ -723,6 +723,7 @@ async def test_import_clamps_hold_timing(
     assert f"Imported emulate_key_hold_repeat of {repeat} is outside" in caplog.text
 
 
+@pytest.mark.usefixtures("fake_input")
 async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -757,6 +758,7 @@ async def test_options_flow(
     }
 
 
+@pytest.mark.usefixtures("fake_input")
 async def test_options_flow_requires_a_key_type(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
