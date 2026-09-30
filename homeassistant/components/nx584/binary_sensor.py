@@ -37,7 +37,7 @@ ZONE_TYPES_SCHEMA = probatio.Schema(
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_EXCLUDE_ZONES, default=[]): probatio.All(
-            cv.ensure_list, [cv.positive_int]
+            probatio.EnsureList(), [cv.positive_int]
         ),
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

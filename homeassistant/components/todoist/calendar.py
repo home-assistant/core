@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_TOKEN): cv.string,
         probatio.Optional(CONF_EXTRA_PROJECTS, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             probatio.Schema(
                 [
                     probatio.Schema(
@@ -66,12 +66,14 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
                             probatio.Optional(
                                 CONF_PROJECT_WHITELIST, default=[]
                             ): probatio.All(
-                                cv.ensure_list,
+                                probatio.EnsureList(),
                                 [probatio.All(cv.string, probatio.Lower)],
                             ),
                             probatio.Optional(
                                 CONF_PROJECT_LABEL_WHITELIST, default=[]
-                            ): probatio.All(cv.ensure_list, [probatio.All(cv.string)]),
+                            ): probatio.All(
+                                probatio.EnsureList(), [probatio.All(cv.string)]
+                            ),
                         }
                     )
                 ]

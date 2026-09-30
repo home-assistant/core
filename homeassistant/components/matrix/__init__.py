@@ -99,7 +99,7 @@ COMMAND_SCHEMA = probatio.All(
             probatio.Exclusive(CONF_REACTION, "trigger"): cv.string,
             probatio.Required(CONF_NAME): cv.string,
             probatio.Optional(CONF_ROOMS): probatio.All(
-                cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+                probatio.EnsureList(), [cv.matches_regex(CONF_ROOMS_REGEX)]
             ),
         }
     ),
@@ -115,7 +115,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
                 probatio.Required(CONF_PASSWORD): cv.string,
                 probatio.Optional(CONF_ROOMS, default=[]): probatio.All(
-                    cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+                    probatio.EnsureList(), [cv.matches_regex(CONF_ROOMS_REGEX)]
                 ),
                 probatio.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
             }

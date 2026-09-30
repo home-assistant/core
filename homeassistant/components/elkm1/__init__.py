@@ -162,7 +162,11 @@ DEVICE_SCHEMA = probatio.All(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
+    {
+        DOMAIN: probatio.All(
+            probatio.EnsureList(), [DEVICE_SCHEMA], _has_all_unique_prefixes
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 

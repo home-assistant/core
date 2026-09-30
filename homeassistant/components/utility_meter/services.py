@@ -39,5 +39,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_RESET,
         async_reset_meters,
-        probatio.Schema({ATTR_ENTITY_ID: probatio.All(cv.ensure_list, [cv.entity_id])}),
+        probatio.Schema(
+            {ATTR_ENTITY_ID: probatio.All(probatio.EnsureList(), [cv.entity_id])}
+        ),
     )

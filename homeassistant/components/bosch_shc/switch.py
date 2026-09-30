@@ -6,11 +6,15 @@ from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
     BypassService,
+    CameraAmbientLightService,
+    CameraFrontLightService,
     CameraLightService,
     PowerSwitchService,
     PrivacyModeService,
     SHCShutterContact2,
+    SHCShutterContact2Plus,
     SHCSmartPlug,
+    SilentModeService,
     ThermostatService,
 )
 from boschshcpy.device import SHCDevice
@@ -68,11 +72,45 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=CameraLightService.State.ON,
         should_poll=True,
     ),
+    "cameraeyes_cameralight": SHCSwitchEntityDescription(
+        key="cameraeyes_cameralight",
+        translation_key="camera_light",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="cameralight",
+        on_value=CameraLightService.State.ON,
+        should_poll=True,
+    ),
     "camera360": SHCSwitchEntityDescription(
         key="camera360",
         device_class=SwitchDeviceClass.SWITCH,
         on_key="privacymode",
         on_value=PrivacyModeService.State.DISABLED,
+        should_poll=True,
+    ),
+    "cameraoutdoorgen2": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="privacymode",
+        on_value=PrivacyModeService.State.DISABLED,
+        should_poll=True,
+    ),
+    "cameraoutdoorgen2_cameraambientlight": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2_cameraambientlight",
+        translation_key="camera_ambientlight",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="cameraambientlight",
+        on_value=CameraAmbientLightService.State.ON,
+        should_poll=True,
+    ),
+    "cameraoutdoorgen2_camerafrontlight": SHCSwitchEntityDescription(
+        key="cameraoutdoorgen2_camerafrontlight",
+        translation_key="camera_frontlight",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="camerafrontlight",
+        on_value=CameraFrontLightService.State.ON,
         should_poll=True,
     ),
     "child_lock": SHCSwitchEntityDescription(
@@ -126,6 +164,14 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "intrusion_alarm": SHCSwitchEntityDescription(
+        key="intrusion_alarm",
+        translation_key="intrusion_alarm",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="intrusion_alarm",
+        on_value=True,
+        should_poll=False,
+    ),
     "nightly_promise_enabled": SHCSwitchEntityDescription(
         key="nightly_promise_enabled",
         translation_key="nightly_promise_enabled",
@@ -150,6 +196,51 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         on_key="tamper_protection_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "silent_mode": SHCSwitchEntityDescription(
+        key="silent_mode",
+        translation_key="silent_mode",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="silentmode",
+        on_value=SilentModeService.State.MODE_SILENT,
+        should_poll=False,
+    ),
+    "smart_sensitivity_enabled": SHCSwitchEntityDescription(
+        key="smart_sensitivity_enabled",
+        translation_key="smart_sensitivity_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="smart_sensitivity_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "vibration_enabled": SHCSwitchEntityDescription(
+        key="vibration_enabled",
+        translation_key="vibration_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "swap_inputs": SHCSwitchEntityDescription(
+        key="swap_inputs",
+        translation_key="swap_inputs",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="swap_inputs",
+        on_value=True,
+        should_poll=False,
+    ),
+    "swap_outputs": SHCSwitchEntityDescription(
+        key="swap_outputs",
+        translation_key="swap_outputs",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="swap_outputs",
         on_value=True,
         should_poll=False,
     ),
@@ -228,9 +319,56 @@ async def async_setup_entry(
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraeyes_cameralight"],
+            unique_id_suffix="cameraeyes_cameralight",
+        )
+        for switch in session.device_helper.camera_eyes
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["camera360"],
         )
         for switch in session.device_helper.camera_360
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2"],
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2_cameraambientlight"],
+            unique_id_suffix="cameraoutdoorgen2_cameraambientlight",
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraoutdoorgen2_camerafrontlight"],
+            unique_id_suffix="cameraoutdoorgen2_camerafrontlight",
+        )
+        for switch in session.device_helper.camera_outdoor_gen2
     )
 
     entities.extend(
@@ -308,6 +446,19 @@ async def async_setup_entry(
             device=switch,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["vibration_enabled"],
+            unique_id_suffix="vibration_enabled",
+        )
+        for switch in session.device_helper.shutter_contacts2
+        if isinstance(switch, SHCShutterContact2Plus)
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["pet_immunity_enabled"],
             unique_id_suffix="pet_immunity",
         )
@@ -324,6 +475,31 @@ async def async_setup_entry(
             unique_id_suffix="tamper_protection",
         )
         for switch in session.device_helper.motion_detectors2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["intrusion_alarm"],
+        )
+        for switch in session.device_helper.smoke_detectors
+        if switch.supports_intrusion_alarm
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["silent_mode"],
+            unique_id_suffix="silent_mode",
+        )
+        for switch in session.device_helper.thermostats
+        if switch.supports_silentmode
     )
 
     entities.extend(
@@ -377,6 +553,47 @@ async def async_setup_entry(
             *session.device_helper.roomthermostats,
         )
         if getattr(switch, "supports_display_configuration", False)
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["smart_sensitivity_enabled"],
+            unique_id_suffix="smart_sensitivity",
+        )
+        for switch in session.device_helper.motion_detectors2
+        if switch.supports_smart_sensitivity
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["swap_inputs"],
+            unique_id_suffix="swap_inputs",
+        )
+        for switch in session.device_helper.micromodule_relays
+        if getattr(switch, "supports_switch_configuration", False)
+        and getattr(switch, "swap_inputs", None) is not None
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["swap_outputs"],
+            unique_id_suffix="swap_outputs",
+        )
+        for switch in session.device_helper.micromodule_relays
+        if getattr(switch, "supports_switch_configuration", False)
+        and getattr(switch, "swap_outputs", None) is not None
     )
 
     async_add_entities(entities)

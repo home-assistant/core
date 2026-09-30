@@ -6,7 +6,7 @@ import pytest
 from pyweatherflowudp.aioudp import LocalEndpoint
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import (
@@ -15,10 +15,12 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from . import setup_integration
+from . import HUB_ADDRESS, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_fixture_bytes, snapshot_platform
 
+LAST_STRIKE_DISTANCE = "sensor.st_00000001_lightning_last_distance"
+LAST_STRIKE_ENERGY = "sensor.st_00000001_lightning_last_energy"
 RAIN_LAST_MINUTE = "sensor.st_00000001_precipitation"
 STATION_PRESSURE = "sensor.st_00000001_air_pressure"
 VAPOR_PRESSURE = "sensor.st_00000001_vapor_pressure"
@@ -43,7 +45,7 @@ async def test_all_entities(
     ("unit_system", "entity_id", "unit"),
     [
         pytest.param(METRIC_SYSTEM, STATION_PRESSURE, "hPa", id="metric-pressure"),
-        pytest.param(METRIC_SYSTEM, VAPOR_PRESSURE, "mbar", id="metric-vapor"),
+        pytest.param(METRIC_SYSTEM, VAPOR_PRESSURE, "hPa", id="metric-vapor"),
         pytest.param(METRIC_SYSTEM, RAIN_LAST_MINUTE, "mm", id="metric-rain"),
         pytest.param(US_CUSTOMARY_SYSTEM, STATION_PRESSURE, "inHg", id="us-pressure"),
         pytest.param(US_CUSTOMARY_SYSTEM, VAPOR_PRESSURE, "inHg", id="us-vapor"),
@@ -63,3 +65,20 @@ async def test_unit_system(
     await setup_integration(hass, mock_config_entry, mock_udp_endpoint)
 
     assert hass.states.get(entity_id).attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+
+
+async def test_last_strike_out_of_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_endpoint: LocalEndpoint,
+) -> None:
+    """Test the last distance is unknown when the strike is out of range."""
+    await setup_integration(hass, mock_config_entry, mock_udp_endpoint)
+
+    mock_udp_endpoint.feed_datagram(
+        load_fixture_bytes("evt_strike_out_of_range.json", "weatherflow"), HUB_ADDRESS
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LAST_STRIKE_DISTANCE).state == STATE_UNKNOWN
+    assert hass.states.get(LAST_STRIKE_ENERGY).state == "3848"

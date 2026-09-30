@@ -626,10 +626,16 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     domain_schema = schema[key]
 
+    if isinstance(domain_schema, probatio.All) and any(
+        isinstance(validator, probatio.EnsureList)
+        for validator in domain_schema.validators
+    ):
+        return "list"
+
     t_schema = str(domain_schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
         return "dict"
-    if t_schema.startswith(("[", "All(<function ensure_list")):
+    if t_schema.startswith("["):
         return "list"
     return None
 
@@ -652,7 +658,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | Non
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
-                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)
+                probatio.EnsureList()(conf.get(key)) + probatio.EnsureList()(pack_conf)
             )
 
         else:
@@ -747,7 +753,8 @@ async def merge_packages_config(
 
             if merge_list:
                 config[comp_name] = cv.remove_falsy(
-                    cv.ensure_list(config.get(comp_name)) + cv.ensure_list(comp_conf)
+                    probatio.EnsureList()(config.get(comp_name))
+                    + probatio.EnsureList()(comp_conf)
                 )
                 continue
 
