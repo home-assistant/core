@@ -62,6 +62,7 @@ class TuyaEntity(Entity):
         self._attr_device_info = device_info or DeviceInfo(
             identifiers={(DOMAIN, device.id)}
         )
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
