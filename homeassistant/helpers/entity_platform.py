@@ -291,7 +291,11 @@ class EntityPlatform:
         self._async_polling_timer: asyncio.TimerHandle | None = None
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup: CALLBACK_TYPE | None = None
-        self._process_updates: asyncio.Lock | None = None
+        # Per-entity polling tasks from previous cycles that are still
+        # running. An entity with an unfinished task here is skipped by the
+        # next polling cycle instead of being polled again or blocking
+        # siblings, so one slow/hung entity cannot stall the whole platform.
+        self._polling_tasks: dict[str, asyncio.Task[None]] = {}
 
         self.parallel_updates: asyncio.Semaphore | None = None
         self._parallel_updates_semaphore_limit: int | None = None
@@ -1296,22 +1300,61 @@ class EntityPlatform:
     async def _async_update_entity_states(self) -> None:
         """Update the states of all the polling entities.
 
-        To protect from flooding the executor, we will update async entities
-        in parallel and other entities sequential.
+        To protect from flooding the executor, async entities are updated
+        in parallel and other entities are updated one at a time.
+
+        Each entity's update runs as its own task, tracked in
+        `self._polling_tasks`. If a previous cycle's task for an entity is
+        still running when this cycle starts, that single entity is skipped
+        for this cycle (it keeps running in the background and is retried
+        once it finishes) instead of blocking or skipping every other
+        entity on the platform.
+
+        The polling timer reschedules itself unconditionally every
+        scan_interval, so this method can genuinely be called again while a
+        previous call for the same platform is still running (e.g. a
+        platform whose entities collectively take longer than
+        scan_interval to poll). This is intentional and relies on
+        Entity.async_device_update's own `_update_staged` guard to make a
+        second concurrent call for the same entity a no-op rather than
+        polling it twice at once; a stale outer cycle must be allowed to be
+        "overtaken" by a newer one for the recovery above to work when an
+        entity's update never returns at all.
 
         This method must be run in the event loop.
         """
-        if self._process_updates is None:
-            self._process_updates = asyncio.Lock()
-        if self._process_updates.locked():
+        entities_to_poll = [
+            entity
+            for entity in self.entities.values()
+            if entity.should_poll and entity.hass
+        ]
+        if not entities_to_poll:
+            return
+
+        stale_entity_ids = {
+            entity.entity_id
+            for entity in entities_to_poll
+            if (task := self._polling_tasks.get(entity.entity_id)) is not None
+            and not task.done()
+        }
+
+        if stale_entity_ids:
+            # One or more entities are still running an update from a
+            # previous cycle. Log it, and if the platform limits concurrency
+            # via a semaphore, give idle entities a fresh one so they are not
+            # queued forever behind a permit that a hung entity is holding
+            # and may never release.
             self.logger.warning(
-                "Updating %s %s took longer than the scheduled update interval %s; "
-                "resetting the stale polling state to allow future polling",
+                "Updating %s %s took longer than the scheduled update interval "
+                "%s for %s; these entities will keep updating in the "
+                "background and will be skipped until they finish. Entities "
+                "using a synchronous update() method cannot be forcibly "
+                "interrupted",
                 self.platform_name,
                 self.domain,
                 self.scan_interval,
+                ", ".join(sorted(stale_entity_ids)),
             )
-            self._process_updates = asyncio.Lock()
             if (
                 self._parallel_updates_semaphore_limit is not None
                 and self.parallel_updates is not None
@@ -1320,58 +1363,103 @@ class EntityPlatform:
                 new_semaphore = asyncio.Semaphore(
                     self._parallel_updates_semaphore_limit
                 )
-                # Rebind only the entities still attached to the stale
-                # semaphore. Active holders keep the original instance so
-                # their permit accounting stays consistent while idle or
-                # queued work moves onto the replacement.
+                # Rebind only the entities not already holding a permit on
+                # the stale semaphore. Active holders keep the original
+                # instance so their permit accounting stays consistent while
+                # idle or queued work moves onto the replacement.
                 for entity in self.entities.values():
                     if (
                         not getattr(entity, "_update_acquired", False)
                         and entity.parallel_updates is old_semaphore
                     ):
                         entity.parallel_updates = new_semaphore
+                        # An entity that has not acquired a permit can only
+                        # be blocked inside `semaphore.acquire()` itself (its
+                        # own update code has not started yet), so it is
+                        # always safe to cancel its stale task here and let
+                        # it retry immediately on the replacement semaphore,
+                        # instead of leaving it skipped until the acquire()
+                        # it's waiting on - which will now never complete -
+                        # is somehow resolved.
+                        stale_task = self._polling_tasks.pop(entity.entity_id, None)
+                        if stale_task is not None:
+                            # Cancelling only *requests* cancellation; the
+                            # task's own `finally` won't clear
+                            # `_update_staged` until the event loop next
+                            # resumes it. Clear it here too so a task we
+                            # schedule immediately below (in this same
+                            # cycle) isn't bounced by the stale flag.
+                            setattr(entity, "_update_staged", False)  # noqa: B010
+                            stale_task.cancel()
+                            stale_entity_ids.discard(entity.entity_id)
                 # Replace the platform semaphore for future acquirers.
                 self.parallel_updates = new_semaphore
 
-        async with self._process_updates:
-            if self._update_in_sequence or len(self.entities) <= 1:
-                # If we know we will update sequentially, we want to avoid scheduling
-                # the coroutines as tasks that will wait on the semaphore lock.
-                for entity in list(self.entities.values()):
-                    # If the entity is removed from hass during the previous
-                    # entity being updated, we need to skip updating the
-                    # entity.
-                    if entity.should_poll and entity.hass:
-                        await entity.async_update_ha_state(True)
-                return
+        pollable_entities = [
+            entity
+            for entity in entities_to_poll
+            if entity.entity_id not in stale_entity_ids
+        ]
+        if not pollable_entities:
+            return
 
-            entities_to_update = [
-                entity for entity in self.entities.values() if entity.should_poll
-            ]
+        if self._update_in_sequence or len(self.entities) <= 1:
+            # Entities are updated one at a time, in order, so a single
+            # slow synchronous `update()` cannot flood the executor with
+            # concurrent jobs. Each entity's update is still tracked as its
+            # own task so a hung entity can be identified and skipped by a
+            # later cycle without waiting for it here.
+            for entity in pollable_entities:
+                task = create_eager_task(
+                    entity.async_update_ha_state(True), loop=self.hass.loop
+                )
+                self._polling_tasks[entity.entity_id] = task
+                (result,) = await asyncio.gather(task, return_exceptions=True)
+                self._async_handle_entity_update_result(entity, task, result)
+            return
 
-            if entities_to_update:
-                tasks = [
-                    create_eager_task(
-                        entity.async_update_ha_state(True), loop=self.hass.loop
-                    )
-                    for entity in entities_to_update
-                ]
+        new_tasks = [
+            (
+                entity,
+                create_eager_task(
+                    entity.async_update_ha_state(True), loop=self.hass.loop
+                ),
+            )
+            for entity in pollable_entities
+        ]
+        for entity, task in new_tasks:
+            self._polling_tasks[entity.entity_id] = task
 
-                results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(
+            *(task for _, task in new_tasks), return_exceptions=True
+        )
+        for (entity, task), result in zip(new_tasks, results, strict=True):
+            self._async_handle_entity_update_result(entity, task, result)
 
-                for entity, result in zip(entities_to_update, results, strict=True):
-                    if isinstance(result, asyncio.CancelledError):
-                        self.logger.warning(
-                            "Polling for entity %s was cancelled",
-                            entity.entity_id,
-                        )
-                    elif isinstance(result, Exception):
-                        # Preserve original traceback in logs
-                        self.logger.exception(
-                            "Error updating entity %s during poll",
-                            entity.entity_id,
-                            exc_info=result,
-                        )
+    def _async_handle_entity_update_result(
+        self,
+        entity: Entity,
+        task: asyncio.Task[None],
+        result: BaseException | None,
+    ) -> None:
+        """Clear a finished polling task and log its outcome, if any."""
+        # Only clear the tracked task if it is still the one we started;
+        # a fast-finishing entity could already have been re-scheduled by a
+        # later cycle by the time we get here.
+        if self._polling_tasks.get(entity.entity_id) is task:
+            del self._polling_tasks[entity.entity_id]
+        if isinstance(result, asyncio.CancelledError):
+            self.logger.warning(
+                "Polling for entity %s was cancelled",
+                entity.entity_id,
+            )
+        elif isinstance(result, Exception):
+            # Preserve original traceback in logs
+            self.logger.exception(
+                "Error updating entity %s during poll",
+                entity.entity_id,
+                exc_info=result,
+            )
 
     @property
     def domain(self) -> str:
