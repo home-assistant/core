@@ -2881,8 +2881,6 @@ _LOCAL_LIVE_STATUS = {
 # Expected entity states once _LOCAL_LIVE_STATUS is merged over the cloud fixture.
 _LOCAL_LIVE_STATES = {
     "sensor.energy_site_solar_power": "2.0",
-    "sensor.energy_site_energy_left": "20.0",
-    "sensor.energy_site_total_pack_energy": "40.0",
     "sensor.energy_site_percentage_charged": "80.0",
     "sensor.energy_site_battery_power": "3.0",
     "sensor.energy_site_load_power": "4.0",
@@ -2941,7 +2939,7 @@ async def test_paired_site_live_reads_merge_over_cloud(
     freezer: FrozenDateTimeFactory,
     mock_powerwall_live_status: AsyncMock,
 ) -> None:
-    """A paired site overlays the ten local live keys onto the cloud document."""
+    """A paired site overlays the local live keys onto the cloud document."""
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
     await _setup_energy_site_entry(
         hass, _entry_with_powerwall(), [Platform.SENSOR, Platform.BINARY_SENSOR]
