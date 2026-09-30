@@ -692,21 +692,34 @@ async def test_energy_history_time_zone_fallback(
     assert state.attributes["last_reset"] == "2024-09-18T00:00:00-07:00"
 
 
-async def test_energy_history_update_entity_service_is_a_noop(
+@pytest.mark.parametrize(
+    ("connected", "expected_state", "expected_last_reset"),
+    [
+        pytest.param(True, "0.036", SITE_MIDNIGHT, id="connected"),
+        pytest.param(False, STATE_UNAVAILABLE, None, id="disconnected"),
+    ],
+)
+async def test_energy_history_update_entity_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
+    connected: bool,
+    expected_state: str,
+    expected_last_reset: str | None,
 ) -> None:
-    """The generic update service keeps the streamed totals instead of failing.
+    """The generic update service keeps the streamed totals only while the stream is up.
 
     The coordinator has nothing to fetch, so the service must not leave the
-    sensors unavailable on a stream that is perfectly healthy.
+    sensors unavailable on a healthy stream, nor revive them while it is down.
     """
     await setup_platform(hass, [Platform.SENSOR])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    mock_add_connection_listener.send(connected)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -722,8 +735,8 @@ async def test_energy_history_update_entity_service_is_a_noop(
 
     assert "NotImplementedError" not in caplog.text
     assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
-    assert state.state == "0.036"
-    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert state.state == expected_state
+    assert state.attributes.get("last_reset") == expected_last_reset
 
 
 async def test_energy_history_unavailable_while_stream_disconnected(
