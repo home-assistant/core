@@ -4,8 +4,7 @@ A timer list entity holds many independent countdown timers (its *items*),
 mirroring how a to-do list holds many to-do items. The entity state is the
 number of active timers. This module defines the abstract entity, the shared
 data model, and the generic services/websocket API; storing timers and
-scheduling their completion is left to concrete implementations, which can
-reuse ``InMemoryTimerListEntity`` when Home Assistant owns the timers.
+scheduling their completion is left to concrete implementations.
 """
 
 from collections.abc import Callable
@@ -279,12 +278,9 @@ class TimerListEntity(Entity):
     websocket API and triggers. Concrete implementations are responsible for
     storing timers and scheduling their completion.
 
-    Implementations that let Home Assistant own the timers should reuse
-    ``InMemoryTimerListEntity`` rather than subclassing this directly; it
-    implements the whole state machine described below. Subclass this when the
-    timers live somewhere else, such as on a device or behind a remote API.
-    Such a subclass still keeps a local mirror of them: ``timers`` and ``state``
-    are read synchronously and cannot wait on the remote.
+    Subclasses own the timers, wherever they live: in memory, on a device, or
+    behind a remote API. A subclass always keeps a local copy of them, because
+    ``timers`` and ``state`` are read synchronously and cannot wait on a remote.
 
     Every action method takes a timer id and must, unless noted otherwise:
 
@@ -416,10 +412,6 @@ class TimerListEntity(Entity):
         for listener in list(self._update_listeners):
             listener(event)
         self.async_write_ha_state()
-
-
-# Imported at the end so the reusable entity can subclass TimerListEntity above.
-from .local import InMemoryTimerListEntity as InMemoryTimerListEntity  # noqa: E402
 
 
 async def _async_create_timer(

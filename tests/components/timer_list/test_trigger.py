@@ -1,8 +1,5 @@
 """Tests for the Timer list triggers."""
 
-from datetime import timedelta
-
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import automation
@@ -24,7 +21,6 @@ from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
 from tests.common import (
     MockConfigEntry,
     MockPlatform,
-    async_fire_time_changed,
     async_mock_service,
     mock_platform,
 )
@@ -94,10 +90,20 @@ async def _create_timer(hass: HomeAssistant) -> str:
     return result[TEST_ENTITY_ID]["timer_id"]
 
 
+async def _call_timer_service(hass: HomeAssistant, service: str, timer_id: str) -> None:
+    """Call an entity action for a single timer."""
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {"timer_id": timer_id},
+        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+
 async def test_timer_finished_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the timer_finished trigger fires when a timer finishes."""
     await _setup_automation(hass, "timer_finished")
@@ -105,9 +111,7 @@ async def test_timer_finished_trigger(
 
     assert len(service_calls) == 0
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _call_timer_service(hass, "finish_timer", timer_id)
 
     assert len(service_calls) == 1
     assert service_calls[0].data == {
@@ -151,42 +155,33 @@ async def test_timer_cancelled_trigger(
     assert service_calls[0].data["status"] == "cancelled"
 
 
-@pytest.mark.parametrize(
-    ("trigger_type", "service", "expected_status"),
-    [
-        pytest.param("timer_paused", "pause_timer", "paused", id="paused"),
-        pytest.param("timer_unpaused", "unpause_timer", "active", id="unpaused"),
-    ],
-)
-async def test_pause_triggers(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    trigger_type: str,
-    service: str,
-    expected_status: str,
+async def test_timer_paused_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test pausing and unpausing fire their own distinct triggers."""
-    await _setup_automation(hass, trigger_type)
+    """Test pausing a timer fires the paused trigger."""
+    await _setup_automation(hass, "timer_paused")
     timer_id = await _create_timer(hass)
-    # Always pause first, so the unpause case has something to resume.
-    await hass.services.async_call(
-        DOMAIN,
-        "pause_timer",
-        {"timer_id": timer_id},
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        DOMAIN,
-        service,
-        {"timer_id": timer_id},
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
-        blocking=True,
-    )
+
+    await _call_timer_service(hass, "pause_timer", timer_id)
 
     assert len(service_calls) == 1
     assert service_calls[0].data["timer_id"] == timer_id
-    assert service_calls[0].data["status"] == expected_status
+    assert service_calls[0].data["status"] == "paused"
+
+
+async def test_timer_unpaused_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test resuming a timer fires the unpaused trigger, not the paused one."""
+    await _setup_automation(hass, "timer_unpaused")
+    timer_id = await _create_timer(hass)
+    await _call_timer_service(hass, "pause_timer", timer_id)
+
+    await _call_timer_service(hass, "unpause_timer", timer_id)
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["timer_id"] == timer_id
+    assert service_calls[0].data["status"] == "active"
 
 
 @pytest.mark.parametrize(
