@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, time, timedelta
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 import probatio
 from renault_api.kamereon.models import (
@@ -22,6 +22,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_device_and_config_entry
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 from .renault_vehicle import RenaultVehicleProxy
@@ -40,6 +41,13 @@ CHARGE_SCHEDULE_DAYS = (
     "saturday",
     "sunday",
 )
+
+
+class ChargeScheduleDayResponse(TypedDict):
+    """A localized charge schedule day response."""
+
+    start_time: str | None
+    duration: int
 
 
 class RenaultServiceArgument(StrEnum):
@@ -224,22 +232,30 @@ def _format_charge_schedule_time(
 
 def _serialize_charge_schedule_days(
     schedule: ChargeSchedule,
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, JsonValueType]:
     """Serialize charge schedule days for the service response."""
-    days: dict[str, list[dict[str, Any]]] = {}
+    unsorted_days: dict[str, list[ChargeScheduleDayResponse]] = {}
     for day in CHARGE_SCHEDULE_DAYS:
         if (day_schedule := getattr(schedule, day)) is None:
             continue
         local_day, start_time = _format_charge_schedule_time(
             day, day_schedule.startTime
         )
-        days.setdefault(local_day, []).append(
+        unsorted_days.setdefault(local_day, []).append(
             {
                 "start_time": start_time,
                 "duration": day_schedule.duration,
             }
         )
-    return days
+    days: dict[str, list[ChargeScheduleDayResponse]] = {}
+    for day in CHARGE_SCHEDULE_DAYS:
+        if day not in unsorted_days:
+            continue
+        days[day] = sorted(
+            unsorted_days[day],
+            key=lambda entry: entry["start_time"] or "",
+        )
+    return cast(dict[str, JsonValueType], days)
 
 
 def _serialize_charge_schedules(
