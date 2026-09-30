@@ -69,6 +69,10 @@ async def _async_migrate_entity_unique_ids(
             device_entry := device_registry.async_get(entity_entry.device_id)
         ):
             return None
+        if isinstance(device_entry, dr.ChildDeviceEntry) and not (
+            device_entry := device_registry.async_get(device_entry.parent_device_id)
+        ):
+            return None
         device_id = next(
             (
                 identifier[1]

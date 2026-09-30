@@ -356,6 +356,13 @@ async def test_dynamic_remove_device(
             "svjjuwykgijjedurps",
             id="without_key",
         ),
+        pytest.param(
+            "sfkzq_ed7frwissyqrejic",
+            "valve.jie_hashui_fa_channel_1_valve",
+            "tuya.cijerqyssiwrf7deqzkfsswitch_1",
+            "cijerqyssiwrf7deqzkfs.switch_1",
+            id="child_device",
+        ),
     ],
 )
 async def test_entity_unique_id_migration(
