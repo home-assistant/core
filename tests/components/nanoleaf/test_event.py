@@ -5,10 +5,8 @@ from unittest.mock import AsyncMock
 from aionanoleaf2 import TouchEvent
 import pytest
 
-from homeassistant.components.nanoleaf.const import DOMAIN, NANOLEAF_EVENT
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE, STATE_UNKNOWN
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
@@ -30,18 +28,15 @@ async def test_touch_events(
     hass: HomeAssistant,
     mock_nanoleaf: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
     gesture_id: int,
     gesture: str,
     panel_id: int,
 ) -> None:
-    """Test documented gestures update the entity and preserve the bus event format."""
+    """Test documented gestures update the entity state."""
     mock_nanoleaf.model = "NL42"
     await setup_integration(hass, mock_config_entry)
 
-    events: list[Event] = []
-    hass.bus.async_listen(NANOLEAF_EVENT, events.append)
     touch_callback = mock_nanoleaf.listen_events.call_args.kwargs["touch_callback"]
     await touch_callback(TouchEvent({"gesture": gesture_id, "panelId": panel_id}))
     await hass.async_block_till_done()
@@ -52,13 +47,6 @@ async def test_touch_events(
     assert state.attributes["event_type"] == gesture
     assert "Received unknown touch gesture" not in caplog.text
 
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_nanoleaf.serial_no), mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert len(events) == 1
-    assert events[0].data == {CONF_DEVICE_ID: device.id, CONF_TYPE: gesture}
-
 
 async def test_unknown_touch_event(
     hass: HomeAssistant,
@@ -66,18 +54,21 @@ async def test_unknown_touch_event(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an undocumented gesture is ignored and still logged."""
+    """Test an undocumented gesture preserves the last event and is logged."""
     mock_nanoleaf.model = "NL42"
     await setup_integration(hass, mock_config_entry)
 
-    events: list[Event] = []
-    hass.bus.async_listen(NANOLEAF_EVENT, events.append)
     touch_callback = mock_nanoleaf.listen_events.call_args.kwargs["touch_callback"]
+    await touch_callback(TouchEvent({"gesture": 2, "panelId": -1}))
+    await hass.async_block_till_done()
+
+    previous_state = hass.states.get("event.nanoleaf_touch_gesture")
+    assert previous_state is not None
+    assert previous_state.state != STATE_UNKNOWN
+    assert previous_state.attributes["event_type"] == "swipe_up"
+
     await touch_callback(TouchEvent({"gesture": 6, "panelId": 7}))
     await hass.async_block_till_done()
 
-    state = hass.states.get("event.nanoleaf_touch_gesture")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert not events
+    assert hass.states.get("event.nanoleaf_touch_gesture") == previous_state
     assert "Received unknown touch gesture ID 6" in caplog.text
