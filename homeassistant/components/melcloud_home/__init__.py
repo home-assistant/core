@@ -23,11 +23,6 @@ PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 
-UNIQUE_ID_KEYS: dict[str, str] = {
-    Platform.CLIMATE: "ata_unit",
-    Platform.WATER_HEATER: "hot_water",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MelCloudHomeConfigEntry
@@ -74,12 +69,10 @@ async def async_migrate_entry(
         def _add_key_to_unique_id(
             entity_entry: er.RegistryEntry,
         ) -> dict[str, str] | None:
-            # Unit ids are UUIDs, so only bare unit ids lack an underscore
-            if (
-                key := UNIQUE_ID_KEYS.get(entity_entry.domain)
-            ) is None or "_" in entity_entry.unique_id:
+            # Unit ids are UUIDs, so only the bare ATA unit id lacks an underscore
+            if entity_entry.domain != Platform.CLIMATE or "_" in entity_entry.unique_id:
                 return None
-            return {"new_unique_id": f"{entity_entry.unique_id}_{key}"}
+            return {"new_unique_id": f"{entity_entry.unique_id}_ata_unit"}
 
         await er.async_migrate_entries(hass, entry.entry_id, _add_key_to_unique_id)
         hass.config_entries.async_update_entry(entry, minor_version=2)

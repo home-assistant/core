@@ -399,12 +399,6 @@ async def test_telemetry_unavailable_logged_once(
             Platform.CLIMATE, "ata-unit-uuid-1", "ata-unit-uuid-1_ata_unit", id="ata"
         ),
         pytest.param(
-            Platform.WATER_HEATER,
-            "atw-unit-uuid-1",
-            "atw-unit-uuid-1_hot_water",
-            id="water_heater",
-        ),
-        pytest.param(
             Platform.CLIMATE,
             "atw-unit-uuid-1_zone_1",
             "atw-unit-uuid-1_zone_1",
