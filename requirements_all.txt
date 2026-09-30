@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.3.0
+aioamazondevices==16.3.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -670,7 +670,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen
-besen==0.4.7
+besen==0.4.8
 
 # homeassistant.components.bitvis
 bitvis-protobuf==2.0.4
@@ -1312,7 +1312,7 @@ hole==0.9.2
 holidays==0.104
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260826.7
+home-assistant-frontend==20260930.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.9.30
@@ -1472,7 +1472,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.9.4.63549
+knx-frontend==2026.9.29.213422
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.14.0
@@ -1526,7 +1526,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.4.0
+lifx-async==7.6.4
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -3326,7 +3326,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==17.6.0
+uiprotect==17.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

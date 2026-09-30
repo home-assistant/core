@@ -181,7 +181,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="pin",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): str,
+                    probatio.Required(probatio.Secret(CONF_PIN)): str,
                 }
             ),
             errors=errors,
@@ -210,7 +210,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="psk",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): str,
+                    probatio.Required(probatio.Secret(CONF_PIN)): str,
                 }
             ),
             errors=errors,

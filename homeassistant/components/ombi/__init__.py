@@ -77,7 +77,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 }
             ),
-            cv.has_at_least_one_key(CONF_API_KEY, CONF_PASSWORD),
+            probatio.AtLeastOne(CONF_API_KEY, CONF_PASSWORD),
         )
     },
     extra=probatio.ALLOW_EXTRA,

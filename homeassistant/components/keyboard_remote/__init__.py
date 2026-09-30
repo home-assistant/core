@@ -59,7 +59,7 @@ CONFIG_SCHEMA = probatio.Schema(
                         ): float,
                     }
                 ),
-                cv.has_at_least_one_key(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP),
+                probatio.AtLeastOne(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP),
             ],
         )
     },

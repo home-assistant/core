@@ -25,6 +25,7 @@ from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .core_config import _PACKAGE_DEFINITION_SCHEMA, _PACKAGES_CONFIG_SCHEMA
 from .exceptions import ConfigValidationError, HomeAssistantError
 from .helpers import config_validation as cv
+from .helpers.redact import REDACTED
 from .helpers.translation import async_get_exception_message
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
@@ -497,11 +498,14 @@ def stringify_invalid(
     output = Exception.__str__(exc)
     if error_type := exc.error_type:
         output += " for " + error_type
-    offending_item_summary = repr(_get_by_path(config, exc.path))
-    if len(offending_item_summary) > max_sub_error_length:
-        offending_item_summary = (
-            f"{offending_item_summary[: max_sub_error_length - 3]}..."
-        )
+    if exc.secret:
+        offending_item_summary = REDACTED
+    else:
+        offending_item_summary = repr(_get_by_path(config, exc.path))
+        if len(offending_item_summary) > max_sub_error_length:
+            offending_item_summary = (
+                f"{offending_item_summary[: max_sub_error_length - 3]}..."
+            )
     return (
         f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
         f"{message_suffix}"

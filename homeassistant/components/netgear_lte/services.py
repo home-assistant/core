@@ -34,7 +34,7 @@ DELETE_SMS_SCHEMA = probatio.Schema(
 
 SET_OPTION_SCHEMA = probatio.Schema(
     probatio.All(
-        cv.has_at_least_one_key(ATTR_FAILOVER, ATTR_AUTOCONNECT),
+        probatio.AtLeastOne(ATTR_FAILOVER, ATTR_AUTOCONNECT),
         {
             probatio.Optional(ATTR_HOST): cv.string,
             probatio.Optional(ATTR_FAILOVER): probatio.In(FAILOVER_MODES),
