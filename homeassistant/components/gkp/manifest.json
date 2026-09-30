@@ -1,0 +1,13 @@
+{
+  "domain": "gkp",
+  "name": "GKP",
+  "codeowners": ["@theobld-ww"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/gkp",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["gkphomepython"],
+  "quality_scale": "bronze",
+  "requirements": ["gkphomepython==0.1.0"]
+}

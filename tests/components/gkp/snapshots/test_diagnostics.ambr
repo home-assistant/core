@@ -1,0 +1,98 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': dict({
+      'AABBCCDDEE01': dict({
+        'fast_polling_until': None,
+        'last_update_success': True,
+        'thermostat': dict({
+          'boost_remaining_minutes': 120,
+          'boost_setpoint': 24.0,
+          'comfort_setpoint': 22.0,
+          'current_temperature': 21.1,
+          'defrost_setpoint': 8.0,
+          'device_date': '2026-09-30T14:05:07+02:00',
+          'device_id': 'AABBCCDDEE01',
+          'device_type': 'P08073',
+          'eco_setpoint': 18.0,
+          'firmware_version': 'v01.04.00',
+          'installation_id': 'installation-1',
+          'installation_name': 'Home',
+          'is_heating': True,
+          'last_update': '2026-09-30T14:05:07+02:00',
+          'mode': 3,
+          'room_name': 'Living room',
+          'setpoint': 22.0,
+        }),
+      }),
+      'AABBCCDDEE02': dict({
+        'fast_polling_until': None,
+        'last_update_success': True,
+        'thermostat': dict({
+          'boost_remaining_minutes': 120,
+          'boost_setpoint': 24.0,
+          'comfort_setpoint': 21.0,
+          'current_temperature': 19.0,
+          'defrost_setpoint': 8.0,
+          'device_date': '2026-09-30T14:04:30+02:00',
+          'device_id': 'AABBCCDDEE02',
+          'device_type': 'P08073',
+          'eco_setpoint': 18.0,
+          'firmware_version': 'v01.04.00',
+          'installation_id': 'installation-1',
+          'installation_name': 'Home',
+          'is_heating': False,
+          'last_update': '2026-09-30T14:04:30+02:00',
+          'mode': 2,
+          'room_name': 'Bedroom',
+          'setpoint': 18.0,
+        }),
+      }),
+    }),
+    'entry': dict({
+      'created_at': '2026-09-30T12:06:00+00:00',
+      'data': dict({
+        'auth_implementation': 'gkp',
+        'token': dict({
+          'access_token': '**REDACTED**',
+          'expires_at': 9999999999,
+          'refresh_token': '**REDACTED**',
+        }),
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'gkp',
+      'entry_id': '01J0BC4QM2YBRP6H5G933CETI8',
+      'minor_version': 1,
+      'modified_at': '2026-09-30T12:06:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'GKP',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'hub_coordinator': dict({
+      'last_discovery': '2026-09-30T12:06:00+00:00',
+      'last_exception': None,
+      'last_update_success': True,
+      'last_user_connected': '2026-09-30T12:06:00+00:00',
+      'total_devices': 2,
+    }),
+    'installations': dict({
+      'installation-1': dict({
+        'installation_id': 'installation-1',
+        'name': 'Home',
+        'rooms': dict({
+          'AABBCCDDEE01': 'Living room',
+          'AABBCCDDEE02': 'Bedroom',
+        }),
+      }),
+    }),
+  })
+# ---

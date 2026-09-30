@@ -2578,6 +2578,12 @@
       "integration_type": "virtual",
       "supported_by": "matrix"
     },
+    "gkp": {
+      "name": "GKP",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "glances": {
       "name": "Glances",
       "integration_type": "service",
