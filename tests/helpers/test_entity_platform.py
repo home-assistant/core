@@ -179,16 +179,9 @@ async def test_overlapping_update_cycles_never_double_update_an_entity(
 ) -> None:
     """Test overlapping polling cycles never run the same entity's update twice.
 
-    The polling timer reschedules itself unconditionally every scan
-    interval, so if one cycle is still running when the next one is due
-    (e.g. a platform whose entities collectively take longer than
-    scan_interval to poll, without any single entity actually hanging),
-    two calls to _async_update_entity_states can genuinely run
-    concurrently. This must never result in the same entity's own update
-    code running twice at once: Entity.async_device_update's
-    `_update_staged` guard makes a second concurrent call for the same
-    entity a no-op, and this cycle only tracks the resulting task so a
-    later cycle can tell it is still busy.
+    Regression contract: if two `_async_update_entity_states` calls overlap
+    (e.g. a slow platform whose cycle time exceeds `scan_interval`), an
+    entity must never have its update code running concurrently with itself.
     """
     scan_interval = timedelta(seconds=1)
     component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
@@ -232,13 +225,9 @@ async def test_removed_entity_task_does_not_block_reused_entity_id_polling(
 ) -> None:
     """Test a removed hung entity's stale task does not block a same-ID replacement.
 
-    Regression test: polling tasks used to be tracked by entity_id (a
-    string) rather than by entity instance. If a hung entity was removed
-    while its task was still running, and a *different* entity instance
-    later reused the same entity_id (e.g. the same device re-added to the
-    same platform), the lookup would find the removed entity's never-
-    finishing task under that entity_id and treat the new entity as
-    permanently stale, even though it has never been polled at all.
+    Regression contract: a different entity instance that later reuses the
+    same entity_id must be polled normally, never mistaken for a removed
+    entity whose task is still running under its `id()`.
     """
     scan_interval = timedelta(seconds=1)
     component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
@@ -288,15 +277,9 @@ async def test_removing_entity_with_in_flight_sync_update_does_not_allow_concurr
 ) -> None:
     """Test removing an entity does not let a concurrent update start on re-add.
 
-    Regression test: cancelling an entity's tracked polling task on removal
-    used to force `Entity.async_device_update`'s `finally` to run
-    immediately, even if the task was awaiting a synchronous `update()`
-    still actively running in the executor. Cancelling that await does not
-    stop the executor thread, so `_update_staged` was cleared and the
-    permit released while the real `update()` kept running in the
-    background. An entity-id rename removes and re-adds the *same*
-    instance, so a poll right after re-add could then start a second
-    `update()` concurrently with the still-running first one.
+    Regression test: removing and re-adding the same entity instance (as an
+    entity_id rename does) must never allow a second `update()` to run
+    concurrently with one still in progress from before the removal.
     """
     scan_interval = timedelta(seconds=1)
     component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
@@ -402,15 +385,9 @@ async def test_polling_continues_when_update_hangs_with_parallel_updates(
 ) -> None:
     """Test other entities keep polling normally when one update hangs.
 
-    With a `PARALLEL_UPDATES`-limited semaphore, an entity whose update
-    hangs forever keeps holding its permit forever - this is the correct,
-    unavoidable behavior once we stop manufacturing replacement permits
-    (releasing a stuck entity's permit early would let a new update run
-    concurrently with it, breaking the very serialization guarantee
-    `PARALLEL_UPDATES` exists to provide). Entities that share a *different*
-    permit on the same platform (because more than one permit is
-    configured) must still keep polling normally and not be affected by
-    the hang at all.
+    Regression contract: a hung entity's `PARALLEL_UPDATES` permit is never
+    forcibly reclaimed; entities sharing a different, still-available
+    permit on the same platform must keep polling unaffected by the hang.
     """
     scan_interval = timedelta(seconds=1)
     platform = MockPlatform()
@@ -485,18 +462,10 @@ async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
 ) -> None:
     """Test a stale outer polling cycle does not clobber a newer cycle's task.
 
-    Regression test: `pollable_entities` is captured once at the very start
-    of `_async_update_entity_states`, before anything is awaited. In
-    sequential (`PARALLEL_UPDATES = 1`) mode, if this call gets stuck
-    awaiting one entity that never returns, a *different*, later outer
-    call can, in the meantime, have already started its own task for
-    another entity further down this call's own (now stale) snapshot list.
-    If the stuck entity's update eventually completes and this old call's
-    for-loop resumes, it must not blindly create a second, redundant task
-    for that other entity and overwrite the newer cycle's still-running
-    task in `self._polling_tasks` - doing so would corrupt stale-entity
-    bookkeeping for an entity that is, in fact, still being legitimately
-    polled by the newer cycle.
+    Regression contract: in sequential (`PARALLEL_UPDATES = 1`) mode, a
+    resumed, previously-stuck outer call must never overwrite a still-
+    running tracked task that a newer, overlapping call already started
+    for an entity further down its own snapshot list.
     """
     scan_interval = timedelta(seconds=1)
     platform = MockPlatform()
@@ -575,12 +544,8 @@ async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
 async def test_polling_supports_unhashable_entities(hass: HomeAssistant) -> None:
     """Test polling and removal work for entities whose class is unhashable.
 
-    Regression test: `self._polling_tasks` used to be keyed by the `Entity`
-    instance itself. Some real Entity subclasses are mutable dataclasses
-    (e.g. `@dataclass` without `frozen=True`), which Python makes
-    unhashable by default once `__eq__` is generated. Using such an entity
-    as a dict key raises `TypeError`, breaking both polling and their
-    removal/unload path.
+    Regression contract: entities whose class is unhashable (e.g. a mutable
+    `@dataclass`) must still be pollable and removable without `TypeError`.
     """
     scan_interval = timedelta(seconds=1)
     component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)

@@ -292,14 +292,11 @@ class EntityPlatform:
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup: CALLBACK_TYPE | None = None
         # Per-entity polling tasks from previous cycles that are still
-        # running, keyed by `id(entity)` (not the entity instance itself,
-        # since some Entity subclasses are unhashable, e.g. mutable
-        # dataclasses) and not by entity_id (so a removed entity's stale
-        # task can never be mistaken for a different entity that later
-        # reuses the same entity_id). An entity with an unfinished task
-        # here is skipped by the next polling cycle instead of being
-        # polled again or blocking siblings, so one slow/hung entity
-        # cannot stall the whole platform.
+        # running, keyed by `id(entity)` (works for unhashable entities,
+        # and a removed entity's task is never confused with a different
+        # entity that later reuses the same entity_id). An entity with an
+        # unfinished task here is skipped by the next polling cycle
+        # instead of blocking siblings.
         self._polling_tasks: dict[int, asyncio.Task[None]] = {}
 
         self.parallel_updates: asyncio.Semaphore | None = None
@@ -1361,11 +1358,11 @@ class EntityPlatform:
             # would let a new update run concurrently with it and break
             # that guarantee.
             self.logger.warning(
-                "Updating %s %s took longer than the scheduled update interval "
-                "%s for %s; these entities will keep updating in the "
-                "background and will be skipped until they finish. Entities "
-                "using a synchronous update() method cannot be forcibly "
-                "interrupted",
+                "Updating %s %s did not complete within the scheduled update "
+                "interval %s for %s; these entities are still finishing a "
+                "previous update, or waiting their turn for one, and will "
+                "be skipped until they become available. Entities using a "
+                "synchronous update() method cannot be forcibly interrupted",
                 self.platform_name,
                 self.domain,
                 self.scan_interval,
