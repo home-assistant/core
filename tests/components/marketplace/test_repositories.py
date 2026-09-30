@@ -5,6 +5,7 @@ from http import HTTPStatus
 import io
 import json
 from pathlib import Path
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 import zipfile
@@ -1730,7 +1731,7 @@ async def test_remove_refuses_plugin_name_outside_community(
         pytest.param(True, False, {"example"}, False, id="new"),
         pytest.param(True, True, {"example"}, True, id="known_to_the_loader"),
         pytest.param(False, False, {"example"}, True, id="set_up_from_yaml"),
-        # custom_components did not exist at startup, the loader never mounted it
+        # The scan does not find it, like an integration the loader refuses
         pytest.param(True, False, set(), True, id="not_found_by_the_loader"),
     ],
 )
@@ -1778,6 +1779,37 @@ async def test_integration_restart_required_issue(
         "marketplace", f"restart_required_{repository.data.id}_{repository.ref}"
     )
     assert (issue is not None) is restart
+
+
+async def test_first_integration_is_found_without_a_restart(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
+    config_dir: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the first install creates custom_components and can be set up now."""
+    # A fresh instance: nothing mounted custom_components, the folder is not there
+    monkeypatch.delitem(sys.modules, "custom_components", raising=False)
+    assert not (config_dir / "custom_components").exists()
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    use_manifest = IntegrationRepository._use_integration_manifest
+
+    def manifest(self: IntegrationRepository, content: dict[str, Any]) -> None:
+        use_manifest(self, content | {"config_flow": True})
+
+    client = await hass_ws_client(hass)
+    with patch.object(IntegrationRepository, "_use_integration_manifest", manifest):
+        await client.send_json_auto_id(
+            {"type": "marketplace/repository/install", "repository": repository.data.id}
+        )
+        assert (await client.receive_json())["success"]
+
+    assert not repository.pending_restart
+    assert not issue_registry.async_get_issue(
+        "marketplace", f"restart_required_{repository.data.id}_{repository.ref}"
+    )
 
 
 async def test_integration_manifest_missing_key(

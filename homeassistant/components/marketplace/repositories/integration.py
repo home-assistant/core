@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from functools import partial
 from pathlib import Path
+import sys
 from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
@@ -12,10 +13,12 @@ import probatio
 from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import (
+    PACKAGE_CUSTOM_COMPONENTS,
     IntegrationNotLoaded,
     async_clear_custom_components_cache,
     async_get_custom_components,
     async_get_loaded_integration,
+    async_mount_config_dir,
 )
 from homeassistant.util.json import json_loads_object
 
@@ -178,9 +181,7 @@ class IntegrationRepository(Repository):
         if self.data.config_flow:
             found = await self.reload_custom_components()
             # Code new to this run is found like any other integration, code
-            # the loader already knows keeps running until a restart. The scan
-            # finds nothing when custom_components did not exist at startup,
-            # the loader only mounts it then.
+            # the loader already knows keeps running until a restart.
             self.pending_restart = (
                 self._known_to_the_loader() or self.data.domain not in found
             )
@@ -360,6 +361,10 @@ class IntegrationRepository(Repository):
     async def reload_custom_components(self) -> set[str]:
         """Scan custom_components again, return the domains the loader found."""
         self.logger.info("Reloading custom_component cache")
+        # The loader mounts custom_components at startup, a first install
+        # creates the folder after that
+        if PACKAGE_CUSTOM_COMPONENTS not in sys.modules:
+            async_mount_config_dir(self.marketplace.hass)
         async_clear_custom_components_cache(self.marketplace.hass)
         found = await async_get_custom_components(self.marketplace.hass)
         self.logger.info("Custom_component cache reloaded")

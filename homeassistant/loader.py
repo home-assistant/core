@@ -299,7 +299,7 @@ class Manifest(TypedDict, total=False):
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the necessary data structures."""
-    _async_mount_config_dir(hass)
+    async_mount_config_dir(hass)
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
     hass.data[DATA_MISSING_PLATFORMS] = {}
@@ -1740,10 +1740,11 @@ def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     return func
 
 
-def _async_mount_config_dir(hass: HomeAssistant) -> None:
+def async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
-    Async friendly but not a coroutine.
+    Async friendly but not a coroutine. Only a custom_components folder that
+    exists is mounted, one created later needs another call.
     """
 
     sys.path.insert(0, hass.config.config_dir)
