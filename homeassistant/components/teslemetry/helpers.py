@@ -150,10 +150,13 @@ async def handle_command(
             runtime_data.credits_generation != credits_generation
             and runtime_data.credits_available
         )
-        # An unload also unsubscribes the credits-stream listener before this
-        # command settles, so a repair created after that point would have no
-        # listener left able to clear it. Only create it while still loaded.
-        if not stale and entry.state is ConfigEntryState.LOADED:
+        # A response settling after an unload or reload was never checked
+        # against the credit events of the load now running, so it may be stale.
+        if (
+            not stale
+            and entry.state is ConfigEntryState.LOADED
+            and entry.runtime_data is runtime_data
+        ):
             ir.async_create_issue(
                 hass,
                 DOMAIN,

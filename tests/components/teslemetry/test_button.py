@@ -15,8 +15,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from . import assert_entities, setup_platform
+from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_OK
+
+CREDITS_AVAILABLE_EVENT = {
+    "credits": {
+        "type": "command",
+        "cost": 1,
+        "name": "command",
+        "quota": {
+            "used": 5,
+            "fraction": 0.5,
+            "reset_at": "2026-07-10T00:00:00.000Z",
+        },
+        "balance": 0,
+    },
+    "createdAt": "2024-10-04T10:45:17.537Z",
+}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -139,6 +154,44 @@ async def test_insufficient_credits_not_recreated_after_unload(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_insufficient_credits_not_recreated_after_reload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test a command outliving a reload does not recreate a cleared repair.
+
+    A reload starts the entry's credit state afresh, so a response to a command
+    the previous load sent cannot be checked against the events received since.
+    """
+    entry = await setup_platform(hass, [Platform.BUTTON])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    async def reload_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # The entry reloads and its new stream reports credits available, all
+        # while this command is still in flight.
+        await reload_platform(hass, entry, [Platform.BUTTON])
+        mock_add_listener.send(CREDITS_AVAILABLE_EVENT)
+        raise InsufficientCredits
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.wake_up",
+            side_effect=reload_then_fail,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_wake"]},
+            blocking=True,
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_insufficient_credits_stale_response_ignored(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -151,22 +204,7 @@ async def test_insufficient_credits_stale_response_ignored(
     async def send_credits_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
         # A credits-availability event lands while this command is still in
         # flight, then the older response finally raises InsufficientCredits.
-        mock_add_listener.send(
-            {
-                "credits": {
-                    "type": "command",
-                    "cost": 1,
-                    "name": "command",
-                    "quota": {
-                        "used": 5,
-                        "fraction": 0.5,
-                        "reset_at": "2026-07-10T00:00:00.000Z",
-                    },
-                    "balance": 0,
-                },
-                "createdAt": "2024-10-04T10:45:17.537Z",
-            }
-        )
+        mock_add_listener.send(CREDITS_AVAILABLE_EVENT)
         raise InsufficientCredits
 
     with (
@@ -201,22 +239,7 @@ async def test_insufficient_credits_available_then_insufficient(
     async def send_credits_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
         # Credits are briefly reported available, then reported insufficient
         # again, all while this command is still in flight.
-        mock_add_listener.send(
-            {
-                "credits": {
-                    "type": "command",
-                    "cost": 1,
-                    "name": "command",
-                    "quota": {
-                        "used": 5,
-                        "fraction": 0.5,
-                        "reset_at": "2026-07-10T00:00:00.000Z",
-                    },
-                    "balance": 0,
-                },
-                "createdAt": "2024-10-04T10:45:17.537Z",
-            }
-        )
+        mock_add_listener.send(CREDITS_AVAILABLE_EVENT)
         mock_add_listener.send(
             {
                 "credits": {
