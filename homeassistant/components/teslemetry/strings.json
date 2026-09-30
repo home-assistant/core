@@ -857,9 +857,6 @@
       "drive_state_speed": {
         "name": "Speed"
       },
-      "energy_left": {
-        "name": "Energy left"
-      },
       "energy_remaining": {
         "name": "Energy remaining"
       },
@@ -1130,9 +1127,6 @@
       "total_home_usage": {
         "name": "Home usage"
       },
-      "total_pack_energy": {
-        "name": "Total pack energy"
-      },
       "total_solar_generation": {
         "name": "Solar generated"
       },
@@ -1249,9 +1243,6 @@
     },
     "command_reason": {
       "message": "Command was rejected: {reason}"
-    },
-    "invalid_cop_temp": {
-      "message": "Cabin overheat protection does not support that temperature"
     },
     "missing_scope": {
       "message": "Missing required scope: {scope}"

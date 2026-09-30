@@ -67,6 +67,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .utils import async_clear_shell_template_issues
 
 BINARY_SENSOR_DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -191,7 +192,7 @@ COMBINED_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [COMBINED_SCHEMA],
         )
     },
@@ -209,6 +210,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()
+        # Prune stale template deprecation issues; entities still needing one
+        # recreate it on their next update after reload.
+        async_clear_shell_template_issues(hass)
         if not reload_config:
             return
         await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)

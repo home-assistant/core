@@ -43,11 +43,13 @@ PIN_SCHEMA = selector.TextSelector(
 
 PIN_ONLY_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+        probatio.Required(probatio.Secret(CONF_PIN), default=DEFAULT_PIN): PIN_SCHEMA,
     }
 )
 
-REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN): PIN_SCHEMA})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PIN)): PIN_SCHEMA}
+)
 
 
 def _user_schema(
@@ -63,7 +65,9 @@ def _user_schema(
                     for address, discovery in discoveries.items()
                 }
             ),
-            probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+            probatio.Required(
+                probatio.Secret(CONF_PIN), default=DEFAULT_PIN
+            ): PIN_SCHEMA,
         }
     )
 

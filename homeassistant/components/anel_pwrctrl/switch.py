@@ -27,8 +27,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_PORT_RECV): cv.port,
-        probatio.Required(CONF_PORT_SEND): cv.port,
+        probatio.Required(CONF_PORT_RECV): probatio.Port(),
+        probatio.Required(CONF_PORT_SEND): probatio.Port(),
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
         probatio.Optional(CONF_HOST): cv.string,

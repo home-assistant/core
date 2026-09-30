@@ -44,7 +44,7 @@ ETHERNET_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_TYPE): "tcp",
     }
 )

@@ -71,12 +71,12 @@ _EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 # All, not a list: a list accepts a block that passes any one
                 # of its validators, so an invalid block would pass unchanged.
                 probatio.All(
-                    cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
+                    probatio.AtLeastOne(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
                     probatio.Schema(
                         {
                             probatio.Exclusive(
@@ -86,7 +86,7 @@ CONFIG_SCHEMA = probatio.Schema(
                                 _DEVICE_NAME, _DEVICE_ID_GROUP
                             ): cv.string,
                             probatio.Optional(_TYPE, default=["key_up"]): probatio.All(
-                                cv.ensure_list,
+                                probatio.EnsureList(),
                                 [probatio.In(KEY_VALUE)],
                                 probatio.Length(min=1),
                             ),
