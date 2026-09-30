@@ -26,7 +26,7 @@ CONF_BROADCAST = "broadcast"
 INTERFACE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_SERVER): cv.string,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
         probatio.Optional(CONF_BROADCAST): cv.string,
     }
 )
