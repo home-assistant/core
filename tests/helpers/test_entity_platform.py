@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
+import threading
 import types
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
@@ -32,7 +33,11 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    Entity,
+    EntityPlatformState,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -278,6 +283,79 @@ async def test_removed_entity_task_does_not_block_reused_entity_id_polling(
     await hass.async_block_till_done()
 
 
+async def test_removing_entity_with_in_flight_sync_update_does_not_allow_concurrent_rerun(
+    hass: HomeAssistant,
+) -> None:
+    """Test removing an entity does not let a concurrent update start on re-add.
+
+    Regression test: cancelling an entity's tracked polling task on removal
+    used to force `Entity.async_device_update`'s `finally` to run
+    immediately, even if the task was awaiting a synchronous `update()`
+    still actively running in the executor. Cancelling that await does not
+    stop the executor thread, so `_update_staged` was cleared and the
+    permit released while the real `update()` kept running in the
+    background. An entity-id rename removes and re-adds the *same*
+    instance, so a poll right after re-add could then start a second
+    `update()` concurrently with the still-running first one.
+    """
+    scan_interval = timedelta(seconds=1)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    await component.async_setup({})
+
+    update_started = threading.Event()
+    update_release = threading.Event()
+    update_calls = []
+
+    entity = MockEntity(should_poll=True)
+
+    def _sync_update() -> None:
+        """Block in the executor until released, like a slow device."""
+        update_calls.append(1)
+        update_started.set()
+        update_release.wait(timeout=5)
+
+    entity.update = _sync_update
+
+    await component.async_add_entities([entity])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    for _ in range(50):
+        if update_started.is_set():
+            break
+        await asyncio.sleep(0.01)
+    assert update_started.is_set()
+
+    # Remove the entity (e.g. the first half of an entity_id rename) while
+    # its synchronous update() is still actively running in the executor.
+    await entity.async_remove()
+
+    # Re-add the very same instance (as an entity_id rename does).
+    entity._platform_state = EntityPlatformState.NOT_ADDED
+    await component.async_add_entities([entity])
+
+    # Give any (buggy) cancellation of the original task's await on the
+    # executor future time to fully unwind before polling again - this
+    # mirrors production, where a real scan_interval is always far longer
+    # than the handful of event-loop ticks this takes.
+    for _ in range(50):
+        if entity._update_staged is False:
+            break
+        await asyncio.sleep(0.01)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    for _ in range(50):
+        if len(update_calls) >= 2:
+            break
+        await asyncio.sleep(0.01)
+
+    # The still-running first update() must have prevented a second,
+    # concurrent call to update() from starting.
+    assert len(update_calls) == 1
+
+    update_release.set()
+    await hass.async_block_till_done()
+
+
 async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     """Test polling continues when a single entity update hangs."""
     scan_interval = timedelta(seconds=1)
@@ -517,6 +595,7 @@ async def test_polling_supports_unhashable_entities(hass: HomeAssistant) -> None
         __hash__ = None
 
     unhashable = _UnhashableEntity(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     unhashable.async_update = AsyncMock()
     with pytest.raises(TypeError):
         hash(unhashable)
