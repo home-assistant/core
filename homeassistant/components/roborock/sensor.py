@@ -657,6 +657,18 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         self._home_trait = coordinator.properties_api.home
         self._map_content_trait = coordinator.properties_api.map_content
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """The room comes from the parsed map: ask for live map updates."""
+        await super().async_added_to_hass()
+        self.coordinator.map_consumers += 1
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop asking for live map updates."""
+        await super().async_will_remove_from_hass()
+        self.coordinator.map_consumers -= 1
+
     @property
     @override
     def options(self) -> list[str]:

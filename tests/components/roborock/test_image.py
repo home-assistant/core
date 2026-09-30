@@ -4,7 +4,7 @@ import copy
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,6 +15,7 @@ from roborock.devices.traits.v1.map_content import MapContent
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, make_home_trait
@@ -358,3 +359,106 @@ async def test_map_load_delayed(
     # Assert first map entity is removed, second still exists
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+
+
+async def _clean_for_an_hour(
+    hass: HomeAssistant, fake_devices: list[FakeDevice]
+) -> None:
+    """Put every v1 device in cleaning and let an update run an hour later."""
+    now = dt_util.utcnow() + timedelta(minutes=61)
+    for fake_vacuum in fake_devices:
+        if fake_vacuum.v1_properties is not None:
+            status = fake_vacuum.v1_properties.status
+
+            # The mock status re-applies its template on refresh; keep it cleaning.
+            async def _still_cleaning(status: AsyncMock = status) -> None:
+                status.in_cleaning = 1
+
+            status.refresh = AsyncMock(side_effect=_still_cleaning)
+            status.in_cleaning = 1
+            fake_vacuum.v1_properties.home.refresh.reset_mock()
+            fake_vacuum.v1_properties.home.discover_home.reset_mock()
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+
+async def test_map_refreshes_while_cleaning_without_rediscovering_home(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test a timed map refresh does not run home discovery again.
+
+    Discovery re-parses every cached map, and `refresh` runs it on its own
+    until it has completed.
+    """
+    await _clean_for_an_hour(hass, fake_devices)
+    v1 = [d.v1_properties for d in fake_devices if d.v1_properties is not None]
+    assert v1
+    for properties in v1:
+        assert properties.home.refresh.call_count == 1
+        assert properties.home.discover_home.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "platforms", [[Platform.IMAGE, Platform.SENSOR, Platform.VACUUM]]
+)
+async def test_no_timed_map_refresh_when_no_entity_shows_the_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the map is not parsed on a timer when its consumers are disabled.
+
+    The consumers are the map images and the current room sensor.
+    """
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, setup_entry.entry_id
+    ):
+        if entry.domain == Platform.IMAGE or entry.translation_key == "current_room":
+            entity_registry.async_update_entity(
+                entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+    await hass.config_entries.async_reload(setup_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("image")) == 0
+    assert not [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_current_room")
+    ]
+
+    await _clean_for_an_hour(hass, fake_devices)
+    v1 = [d.v1_properties for d in fake_devices if d.v1_properties is not None]
+    assert v1
+    for properties in v1:
+        # The vacuum entity keeps the coordinator polling: status was read...
+        assert properties.status.refresh.call_count >= 1
+        # ...but no map was fetched and parsed.
+        assert properties.home.refresh.call_count == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_the_current_room_sensor_alone_keeps_the_map_refreshing(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the current room sensor, with no map image, still gets a live map."""
+    assert len(hass.states.async_all("image")) == 0
+    assert [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_current_room")
+    ]
+
+    await _clean_for_an_hour(hass, fake_devices)
+    v1 = [d.v1_properties for d in fake_devices if d.v1_properties is not None]
+    assert v1
+    for properties in v1:
+        assert properties.home.refresh.call_count == 1

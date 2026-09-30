@@ -171,6 +171,11 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt = dt_util.utcnow()
         self.last_home_update: datetime | None = None
+        # How many enabled entities show live map content (the map images and
+        # the current room sensor). Parsing a map takes a few hundred
+        # milliseconds on the event loop, so while cleaning it is only
+        # refreshed on a timer when something is there to show it.
+        self.map_consumers = 0
         # Tracks the last successful update to control when we report failure
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
@@ -244,7 +249,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
     async def update_map(self) -> None:
         """Update the currently selected map."""
         try:
-            await self.properties_api.home.discover_home()
+            # `refresh` runs home discovery itself until it has completed.
+            # Calling `discover_home` here as well re-parsed every cached map
+            # on each update, doubling the time spent blocking the event loop.
             await self.properties_api.home.refresh()
         except RoborockException as ex:
             raise HomeAssistantError(
@@ -319,9 +326,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
 
         # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
         # since the last map update, you can update the map.
+        # A state change always refreshes (it keeps rooms current and is
+        # rare); the timer only runs while an entity is showing the map.
         new_status = self.properties_api.status
         if (
             new_status.in_cleaning
+            and self.map_consumers > 0
             and (dt_util.utcnow() - self._last_home_update_attempt)
             > IMAGE_CACHE_INTERVAL
         ) or self.last_update_state != new_status.state_name:
