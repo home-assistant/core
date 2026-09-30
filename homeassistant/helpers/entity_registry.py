@@ -668,9 +668,7 @@ def async_get_legacy_friendly_name(
 
 
 @callback
-def _async_get_computed_entity_name_alias(
-    hass: HomeAssistant, entry: RegistryEntry
-) -> str:
+def async_get_full_entity_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
     """Get the computed name for an entity entry."""
     return _async_get_full_entity_name(
         hass,
@@ -716,7 +714,7 @@ def async_get_entity_aliases(
     aliases = []
     for alias in entry_aliases:
         if alias is COMPUTED_NAME:
-            alias = _async_get_computed_entity_name_alias(hass, entry)
+            alias = async_get_full_entity_name(hass, entry)
         aliases.append(alias.strip())
 
     return aliases
