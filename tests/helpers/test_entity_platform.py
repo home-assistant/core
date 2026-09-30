@@ -222,6 +222,62 @@ async def test_overlapping_update_cycles_never_double_update_an_entity(
     assert concurrent_updates["max"] == 1
 
 
+async def test_removed_entity_task_does_not_block_reused_entity_id_polling(
+    hass: HomeAssistant,
+) -> None:
+    """Test a removed hung entity's stale task does not block a same-ID replacement.
+
+    Regression test: polling tasks used to be tracked by entity_id (a
+    string) rather than by entity instance. If a hung entity was removed
+    while its task was still running, and a *different* entity instance
+    later reused the same entity_id (e.g. the same device re-added to the
+    same platform), the lookup would find the removed entity's never-
+    finishing task under that entity_id and treat the new entity as
+    permanently stale, even though it has never been polled at all.
+    """
+    scan_interval = timedelta(seconds=1)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    await component.async_setup({})
+
+    shared_entity_id = "test_domain.shared"
+    hung_update_started = asyncio.Event()
+    hung_update_release = asyncio.Event()
+
+    hung = MockEntity(should_poll=True, entity_id=shared_entity_id)
+
+    async def _hung_update() -> None:
+        """Block forever until released."""
+        hung_update_started.set()
+        await hung_update_release.wait()
+
+    hung.async_update = _hung_update
+
+    await component.async_add_entities([hung])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await hung_update_started.wait()
+    await asyncio.sleep(0)
+
+    # Remove the hung entity while its update is still running; its task
+    # never finishes, but the entity itself is gone from the platform.
+    await hung.async_remove()
+
+    replacement = MockEntity(should_poll=True, entity_id=shared_entity_id)
+    replacement.async_update = AsyncMock()
+    await component.async_add_entities([replacement])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+
+    # The replacement entity must be polled normally; it must not be
+    # mistaken for the removed, still-hanging entity just because they
+    # share an entity_id.
+    assert replacement.async_update.call_count == 1
+
+    hung_update_release.set()
+    await hass.async_block_till_done()
+
+
 async def test_polling_continues_when_update_hangs(hass: HomeAssistant) -> None:
     """Test polling continues when a single entity update hangs."""
     scan_interval = timedelta(seconds=1)
