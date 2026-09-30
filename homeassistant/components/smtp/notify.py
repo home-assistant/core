@@ -95,7 +95,7 @@ RETRIES = 2
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_RECIPIENT): probatio.All(
-            cv.ensure_list, [probatio.Email()]
+            probatio.EnsureList(), [probatio.Email()]
         ),
         probatio.Required(CONF_SENDER): probatio.Email(),
         probatio.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,

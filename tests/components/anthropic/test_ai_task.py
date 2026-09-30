@@ -1,33 +1,38 @@
 """Tests for the Anthropic integration."""
 
+from json import JSONDecodeError
 from pathlib import Path
 import re
 from unittest.mock import AsyncMock, patch
 
-from anthropic.types import Message, TextBlock, Usage
+from anthropic.types import (
+    Message,
+    MessageDeltaUsage,
+    RawMessageDeltaEvent,
+    StopReason,
+    TextBlock,
+    Usage,
+)
+from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task, media_source
-from homeassistant.components.anthropic.const import (
-    CONF_CHAT_MODEL,
-    CONF_THINKING_BUDGET,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from . import create_content_block, create_thinking_block, create_tool_use_block
+from . import create_content_block, create_server_tool_use_block
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -59,10 +64,8 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_translation_key(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entity translation key."""
@@ -110,10 +113,9 @@ async def test_missing_response(
         )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_stream_wrong_type(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test error if the response is not a stream."""
@@ -135,254 +137,129 @@ async def test_stream_wrong_type(
         )
 
 
-@freeze_time("2026-01-01 12:00:00")
-async def test_generate_structured_data_legacy(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test AI Task structured data generation with legacy method."""
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                CONF_CHAT_MODEL: "claude-sonnet-4-0",
-                CONF_THINKING_BUDGET: 0,
-            },
-        )
-    await hass.async_block_till_done()
-
-    mock_create_stream.return_value = [
-        create_tool_use_block(
-            0,
-            "toolu_0123456789AbCdEfGhIjKlM",
-            "test_task",
-            ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("stop_reason", "translation_key", "message"),
+    [
+        pytest.param(
+            "max_tokens",
+            "response_max_tokens",
+            "Claude reached the output token limit before completing the response",
+            id="max_tokens",
         ),
+        pytest.param(
+            "model_context_window_exceeded",
+            "response_context_window_exceeded",
+            "Claude reached the context window limit before completing the response",
+            id="context_window_exceeded",
+        ),
+        pytest.param(
+            "refusal",
+            "api_refusal",
+            "Potential policy violation detected",
+            id="refusal",
+        ),
+        pytest.param(
+            "stop_sequence",
+            "response_stop_sequence",
+            "Claude stopped after encountering a stop sequence",
+            id="stop_sequence",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("structure", "response_text"),
+    [
+        pytest.param(None, "The generated data starts with", id="plain"),
+        pytest.param(
+            probatio.Schema(
+                {
+                    probatio.Required("characters"): selector.selector(
+                        {"text": {"multiple": True}}
+                    )
+                }
+            ),
+            '{"characters": ["Mario',
+            id="structured",
+        ),
+    ],
+)
+async def test_generate_data_stop_reason_error(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    stop_reason: StopReason,
+    translation_key: str,
+    message: str,
+    structure: probatio.Schema | None,
+    response_text: str,
+) -> None:
+    """Reject unsuccessful stop reasons before parsing structured data."""
+    mock_create_stream.return_value = [
+        [
+            *create_content_block(0, [response_text]),
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason=stop_reason),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ]
     ]
 
-    result = await ai_task.async_generate_data(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.claude_ai_task",
-        instructions="Generate test data",
-        structure=probatio.Schema(
-            {
-                probatio.Required("characters"): selector.selector(
-                    {
-                        "text": {
-                            "multiple": True,
-                        }
-                    }
-                )
-            },
-        ),
-    )
+    with pytest.raises(HomeAssistantError, match=re.escape(message)) as exc_info:
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
+            structure=structure,
+        )
 
-    assert result.data == {"characters": ["Mario", "Luigi"]}
-    assert mock_create_stream.call_args.kwargs.copy() == snapshot
+    assert exc_info.value.translation_key == translation_key
+    mock_create_stream.assert_awaited_once()
 
 
-@freeze_time("2026-01-01 12:00:00")
-async def test_generate_structured_data_legacy_tools(
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_invalid_tool_arguments(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test AI Task structured data generation with legacy method and tools enabled."""
+    """Report invalid tool arguments with the first parsing error as the cause."""
+    incomplete_json = '{"command": "echo'
     mock_create_stream.return_value = [
-        create_tool_use_block(
-            0,
-            "toolu_0123456789AbCdEfGhIjKlM",
-            "test_task",
-            ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
-        ),
+        [
+            *create_server_tool_use_block(
+                0, "srvtoolu_first", "bash_code_execution", [incomplete_json]
+            ),
+            *create_server_tool_use_block(
+                1, "srvtoolu_second", "bash_code_execution", ['{"command":']
+            ),
+        ]
     ]
 
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                "chat_model": "claude-sonnet-4-0",
-                "web_search": True,
-                "thinking_budget": 0,
-            },
+    with pytest.raises(
+        HomeAssistantError, match="Claude returned invalid tool arguments"
+    ) as exc_info:
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
         )
-    await hass.async_block_till_done()
 
-    result = await ai_task.async_generate_data(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.claude_ai_task",
-        instructions="Generate test data",
-        structure=probatio.Schema(
-            {
-                probatio.Required("characters"): selector.selector(
-                    {
-                        "text": {
-                            "multiple": True,
-                        }
-                    }
-                )
-            },
-        ),
-    )
-
-    assert result.data == {"characters": ["Mario", "Luigi"]}
-    assert mock_create_stream.call_args.kwargs.copy() == snapshot
+    assert exc_info.value.translation_key == "tool_args_parse_error"
+    assert isinstance(exc_info.value.__cause__, JSONDecodeError)
+    assert exc_info.value.__cause__.doc == incomplete_json
+    mock_create_stream.assert_awaited_once()
 
 
-@freeze_time("2026-01-01 12:00:00")
-async def test_generate_structured_data_legacy_extended_thinking(
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_invalid_structured_data(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test AI Task structured data generation.
-
-    Uses legacy method with extended_thinking.
-    """
-    mock_create_stream.return_value = [
-        (
-            *create_thinking_block(
-                0,
-                ["Let's use the tool to respond"],
-            ),
-            *create_tool_use_block(
-                1,
-                "toolu_0123456789AbCdEfGhIjKlM",
-                "test_task",
-                ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
-            ),
-        ),
-    ]
-
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                "chat_model": "claude-sonnet-4-0",
-                "thinking_budget": 1500,
-            },
-        )
-    await hass.async_block_till_done()
-
-    result = await ai_task.async_generate_data(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.claude_ai_task",
-        instructions="Generate test data",
-        structure=probatio.Schema(
-            {
-                probatio.Required("characters"): selector.selector(
-                    {
-                        "text": {
-                            "multiple": True,
-                        }
-                    }
-                )
-            },
-        ),
-    )
-
-    assert result.data == {"characters": ["Mario", "Luigi"]}
-    assert mock_create_stream.call_args.kwargs.copy() == snapshot
-
-
-@freeze_time("2026-01-01 12:00:00")
-async def test_generate_structured_data_legacy_extra_text_block(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test AI Task structured data generation.
-
-    Uses legacy method with extra text block.
-    """
-    mock_create_stream.return_value = [
-        (
-            *create_thinking_block(
-                0,
-                ["Let's use the tool to respond"],
-            ),
-            *create_content_block(1, ["Sure!"]),
-            *create_tool_use_block(
-                2,
-                "toolu_0123456789AbCdEfGhIjKlM",
-                "test_task",
-                ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
-            ),
-        ),
-    ]
-
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                "chat_model": "claude-sonnet-4-0",
-                "thinking_budget": 1500,
-            },
-        )
-    await hass.async_block_till_done()
-
-    result = await ai_task.async_generate_data(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.claude_ai_task",
-        instructions="Generate test data",
-        structure=probatio.Schema(
-            {
-                probatio.Required("characters"): selector.selector(
-                    {
-                        "text": {
-                            "multiple": True,
-                        }
-                    }
-                )
-            },
-        ),
-    )
-
-    assert result.data == {"characters": ["Mario", "Luigi"]}
-    assert mock_create_stream.call_args.kwargs.copy() == snapshot
-
-
-async def test_generate_invalid_structured_data_legacy(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task with invalid JSON response with legacy method."""
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                CONF_CHAT_MODEL: "claude-sonnet-4-0",
-            },
-        )
-    await hass.async_block_till_done()
-
+    """Test AI Task with an invalid JSON response."""
     mock_create_stream.return_value = [
-        create_tool_use_block(
-            0,
-            "toolu_0123456789AbCdEfGhIjKlM",
-            "test_task",
-            "INVALID JSON RESPONSE",
-        )
+        create_content_block(0, ["INVALID JSON RESPONSE"])
     ]
 
     with pytest.raises(
@@ -408,10 +285,9 @@ async def test_generate_invalid_structured_data_legacy(
 
 
 @freeze_time("2026-01-01 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_structured_data(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -442,12 +318,10 @@ async def test_generate_structured_data(
     assert mock_create_stream.call_args.kwargs.copy() == snapshot
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_data_with_attachments(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task data generation with attachments."""
     entity_id = "ai_task.claude_ai_task"
@@ -524,12 +398,10 @@ async def test_generate_data_with_attachments(
     assert document_block["source"]["type"] == "base64"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_data_invalid_attachments(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task data generation with attachments of unsupported type."""
     entity_id = "ai_task.claude_ai_task"
@@ -600,10 +472,9 @@ async def test_generate_data_invalid_attachments(
         )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_data_with_attachments_whitespace_instructions(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test whitespace-only instructions with attachments produce no text block.

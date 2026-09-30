@@ -73,7 +73,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
                 probatio.Optional(CONF_ZONES, default=[]): probatio.All(
-                    cv.ensure_list, [ZONE_SCHEMA]
+                    probatio.EnsureList(), [ZONE_SCHEMA]
                 ),
                 probatio.Optional(CONF_INFER_ARMING_STATE, default=False): cv.boolean,
             }

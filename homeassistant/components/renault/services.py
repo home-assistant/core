@@ -82,7 +82,7 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = probatio.Schema(
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
         probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
-            cv.ensure_list, [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
+            probatio.EnsureList(), [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
     }
 )
@@ -123,7 +123,7 @@ SERVICE_AC_SET_SCHEDULE_SCHEMA = probatio.Schema(
 SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
         probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
-            cv.ensure_list, [SERVICE_AC_SET_SCHEDULE_SCHEMA]
+            probatio.EnsureList(), [SERVICE_AC_SET_SCHEDULE_SCHEMA]
         ),
     }
 )

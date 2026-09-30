@@ -512,9 +512,6 @@
 # ---
 # name: test_model_args[subentry_options1]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.5',
     'prompt_cache_retention': '24h',
@@ -532,9 +529,6 @@
 # ---
 # name: test_model_args[subentry_options2]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.6-sol',
     'prompt_cache_options': dict({
@@ -555,9 +549,6 @@
 # ---
 # name: test_model_args[subentry_options3]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-5.6-sol',
     'prompt_cache_options': dict({
@@ -579,9 +570,6 @@
 # ---
 # name: test_model_args[subentry_options4]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-6-astra',
     'prompt_cache_options': dict({
@@ -601,9 +589,6 @@
 # ---
 # name: test_model_args[subentry_options5]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-6-astra',
     'prompt_cache_options': dict({
@@ -624,9 +609,6 @@
 # ---
 # name: test_model_args[subentry_options6]
   dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
     'max_output_tokens': 3000,
     'model': 'gpt-6-astra',
     'prompt_cache_options': dict({
