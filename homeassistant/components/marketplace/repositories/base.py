@@ -285,7 +285,8 @@ class RepositoryData:
     full_name: str = ""
     hide: bool = False
     has_issues: bool = True
-    id: str | int = 0
+    # "0" until the repository is known on GitHub
+    id: str = "0"
     installed_commit: str | None = None
     installed_version: str | None = None
     installed: bool = False
@@ -903,7 +904,7 @@ class Repository:
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""
-        if self.marketplace.repositories.is_registered(repository_id=str(self.data.id)):
+        if self.marketplace.repositories.is_registered(repository_id=self.data.id):
             self.logger.info("%s Starting removal", self.string)
             self.marketplace.repositories.unregister(self)
 
@@ -1648,7 +1649,7 @@ class Repository:
         """Remove the entity device."""
         config_entry = self.marketplace.configuration.config_entry
         device_registry: dr.DeviceRegistry = dr.async_get(hass=self.marketplace.hass)
-        identifier = (DOMAIN, str(self.data.id))
+        identifier = (DOMAIN, self.data.id)
 
         # Looked up through our own config entry, since identifiers are only
         # guaranteed to be unique within a single config entry.
@@ -1897,7 +1898,7 @@ class Repository:
         catalog already names the version, and the files come from hosts
         without that limit. A version the user picked keeps using the API.
         """
-        if not self.marketplace.repositories.is_default(str(self.data.id)):
+        if not self.marketplace.repositories.is_default(self.data.id):
             return None
 
         catalog_version = self.data.last_version or self.data.last_commit

@@ -42,7 +42,7 @@ class RepositoryEntity(
         )
         MarketplaceEntity.__init__(self, marketplace=marketplace)
         self.repository = repository
-        self._attr_unique_id = str(repository.data.id)
+        self._attr_unique_id = repository.data.id
         self._repo_last_fetched = repository.data.last_fetched
 
     @property
@@ -50,7 +50,7 @@ class RepositoryEntity(
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.marketplace.repositories.is_installed(
-            repository_id=str(self.repository.data.id)
+            repository_id=self.repository.data.id
         )
 
     @property
@@ -64,7 +64,7 @@ class RepositoryEntity(
             return self.repository.data.full_name.split("/")[0]
 
         return DeviceInfo(
-            identifiers={(DOMAIN, str(self.repository.data.id))},
+            identifiers={(DOMAIN, self.repository.data.id)},
             name=self.repository.display_name,
             model=self.repository.data.category,
             manufacturer=_manufacturer(),

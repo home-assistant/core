@@ -144,7 +144,7 @@ class MarketplaceData:
         if repository.data.last_fetched:
             data["last_fetched"] = repository.data.last_fetched.timestamp()
 
-        self.content[str(repository.data.id)] = data
+        self.content[repository.data.id] = data
 
     async def _async_load(self, key: str) -> dict[str, Any] | None:
         """Load a storage file, None when it can not be read."""

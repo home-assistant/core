@@ -236,7 +236,7 @@ class Repositories:
 
     def register(self, repository: Repository, default: bool = False) -> None:
         """Register a repository."""
-        repo_id = str(repository.data.id)
+        repo_id = repository.data.id
 
         if repo_id == "0":
             return
@@ -275,7 +275,7 @@ class Repositories:
 
     def unregister(self, repository: Repository) -> None:
         """Unregister a repository."""
-        repo_id = str(repository.data.id)
+        repo_id = repository.data.id
 
         if repo_id == "0":
             return
@@ -299,7 +299,7 @@ class Repositories:
 
     def mark_default(self, repository: Repository) -> None:
         """Mark a repository as default."""
-        repo_id = str(repository.data.id)
+        repo_id = repository.data.id
 
         if repo_id == "0":
             return
@@ -311,7 +311,7 @@ class Repositories:
 
     def set_repository_id(self, repository: Repository, repo_id: str) -> None:
         """Update a repository id."""
-        existing_repo_id = str(repository.data.id)
+        existing_repo_id = repository.data.id
         if existing_repo_id == repo_id:
             return
         if existing_repo_id != "0":
@@ -664,7 +664,7 @@ class MarketplaceManager:
         its name is what stays. What was installed, its entities and its device
         move along to the new id.
         """
-        previous_id = str(repository.data.id)
+        previous_id = repository.data.id
         if previous_id in ("0", repo_id):
             self.repositories.set_repository_id(repository, repo_id)
             return
@@ -810,7 +810,7 @@ class MarketplaceManager:
 
         self.repositories.register(repository)
         if check:
-            self.common.custom_repositories.add(str(repository.data.id))
+            self.common.custom_repositories.add(repository.data.id)
         return None
 
     async def startup_tasks(self, _: HomeAssistant | None = None) -> None:
@@ -1055,7 +1055,7 @@ class MarketplaceManager:
     ) -> None:
         """Unregister what the catalog no longer lists and nobody added by hand."""
         for repository in self.repositories.list_all:
-            repository_id = str(repository.data.id)
+            repository_id = repository.data.id
             if (
                 repository.data.category == category
                 and not repository.data.installed
@@ -1156,7 +1156,7 @@ class MarketplaceManager:
         """Tell the user a repository they installed was removed from the catalog."""
         placeholders = {
             "name": repository.data.full_name,
-            "repository_id": str(repository.data.id),
+            "repository_id": repository.data.id,
         }
         # Many removals come without one, "None" is no reason
         if removed.reason:
@@ -1206,7 +1206,7 @@ class MarketplaceManager:
         for repository in self.repositories.list_installed:
             if (
                 repository.data.category in self.common.categories
-                and not self.repositories.is_default(str(repository.data.id))
+                and not self.repositories.is_default(repository.data.id)
             ):
                 repositories_to_update += 1
                 self.queue.add(update_repository(repository))

@@ -48,7 +48,7 @@ async def async_get_config_entry_diagnostics(
         "custom_repositories": [
             repo.data.full_name
             for repo in marketplace.repositories.list_all
-            if not marketplace.repositories.is_default(str(repo.data.id))
+            if not marketplace.repositories.is_default(repo.data.id)
         ],
         "repositories": [],
     }

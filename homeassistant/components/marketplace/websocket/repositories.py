@@ -34,7 +34,7 @@ def repository_summary(
         "can_install": repository.can_install,
         "category": repository.data.category,
         "config_flow": repository.data.config_flow,
-        "custom": not marketplace.repositories.is_default(str(repository.data.id)),
+        "custom": not marketplace.repositories.is_default(repository.data.id),
         "description": repository.data.description,
         "domain": repository.data.domain,
         "downloads": repository.data.downloads,
@@ -277,7 +277,7 @@ async def marketplace_repositories_remove(
         return
 
     repository.remove()
-    marketplace.common.custom_repositories.discard(str(repository.data.id))
+    marketplace.common.custom_repositories.discard(repository.data.id)
     await marketplace.data.async_write()
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))
