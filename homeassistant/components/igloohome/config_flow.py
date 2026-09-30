@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiohttp import ClientError
 from igloohome_api import Auth as IgloohomeAuth, AuthException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -15,10 +15,10 @@ from .const import API_ACCESS_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CLIENT_ID): str,
-        vol.Required(CONF_CLIENT_SECRET): str,
+        probatio.Required(CONF_CLIENT_ID): str,
+        probatio.Required(CONF_CLIENT_SECRET): str,
     }
 )
 

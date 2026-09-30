@@ -574,6 +574,7 @@ class RoborockWetDryVacUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
+        self._unsub_update = api.add_update_listener(self._handle_update)
         supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
             protocol
@@ -586,13 +587,41 @@ class RoborockWetDryVacUpdateCoordinator(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
         try:
-            return await self.api.query_values(self.request_protocols)
+            await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
+            if not self._should_suppress_update_failure():
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_data_fail",
+                ) from ex
+        return self.api.values
+
+    def _should_suppress_update_failure(self) -> bool:
+        """Determine if we should suppress update failure reporting.
+
+        The device leaves the network while it sleeps on its dock, so a poll can
+        fail while the device is still reporting its state on its own.
+        """
+        if (last_message_time := self.api.last_message_time) is None:
+            return False
+        failure_duration = dt_util.utcnow() - last_message_time
+        _LOGGER.debug("Update failure duration: %s", failure_duration)
+        return failure_duration < MIN_UNAVAILABLE_DURATION
+
+    @callback
+    def _handle_update(self) -> None:
+        """Apply the state the device reported on its own."""
+        _LOGGER.debug("Wet dry vac state updated, updating coordinator data")
+        self.data = self.api.values
+        self.last_update_success = True
+        self.async_update_listeners()
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop following the device state on shutdown."""
+        self._unsub_update()
+        await super().async_shutdown()
 
 
 class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):

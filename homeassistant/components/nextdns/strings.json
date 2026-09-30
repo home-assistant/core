@@ -3,9 +3,7 @@
     "abort": {
       "all_profiles_configured": "All NextDNS profiles are already configured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -212,11 +210,17 @@
       "block_dailymotion": {
         "name": "Block Dailymotion"
       },
+      "block_data_drop_services": {
+        "name": "Block data-drop services"
+      },
       "block_dating": {
         "name": "Block dating"
       },
       "block_ddns": {
         "name": "Block dynamic DNS hostnames"
+      },
+      "block_decentralized_web_gateways": {
+        "name": "Block decentralized web gateways"
       },
       "block_discord": {
         "name": "Block Discord"
@@ -235,6 +239,9 @@
       },
       "block_fortnite": {
         "name": "Block Fortnite"
+      },
+      "block_free_hosting_domains": {
+        "name": "Block free hosting domains"
       },
       "block_gambling": {
         "name": "Block gambling"
@@ -299,6 +306,9 @@
       "block_reddit": {
         "name": "Block Reddit"
       },
+      "block_residential_hosting": {
+        "name": "Block residential hosting"
+      },
       "block_roblox": {
         "name": "Block Roblox"
       },
@@ -331,6 +341,9 @@
       },
       "block_tumblr": {
         "name": "Block Tumblr"
+      },
+      "block_tunneling_endpoints": {
+        "name": "Block tunneling endpoints"
       },
       "block_twitch": {
         "name": "Block Twitch"

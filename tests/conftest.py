@@ -1,7 +1,7 @@
 """Set up some common test helper things."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
@@ -32,6 +32,8 @@ from aiohttp.test_utils import (
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import bcrypt
+from bleak_retry_connector import bleak_manager
+import execnet
 import freezegun
 import multidict
 import pytest
@@ -150,12 +152,15 @@ _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
-# Disable fixtures overriding our beautiful policy
-asyncio.set_event_loop_policy = lambda policy: None
 
 # Capture the real socket functions before any test patches them
 _real_getaddrinfo = socket.getaddrinfo
+
+# Guard for CI jobs that pin the SQLite version via tests.sqlite3_shim
+if expected_sqlite := os.environ.get("EXPECTED_SQLITE_VERSION"):
+    assert sqlite3.sqlite_version == expected_sqlite, (
+        f"Expected SQLite {expected_sqlite}, got {sqlite3.sqlite_version}"
+    )
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -171,6 +176,15 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_setupnodes(
+    config: pytest.Config, specs: Sequence[execnet.XSpec]
+) -> None:
+    """Log the number of xdist workers, also when running with -qq."""
+    if reporter := config.pluginmanager.get_plugin("terminalreporter"):
+        reporter.write_line(f"xdist workers: {len(specs)}")
 
 
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
@@ -201,6 +215,13 @@ def pytest_runtest_setup() -> None:
     - Modified to include
       https://github.com/spulec/freezegun/pull/424
       and improve class str.
+
+    - Modified to not force lazily imported module attributes to be resolved
+      when scanning the loaded modules for time related objects.
+
+    - Modified to tolerate a thread reading the time while another thread
+      stops freeze_time, which otherwise raises IndexError, see
+      https://github.com/spulec/freezegun/issues/345.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
@@ -235,6 +256,12 @@ def pytest_runtest_setup() -> None:
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
+    freezegun.api._get_module_attributes = patch_time.ha_get_module_attributes  # type: ignore[attr-defined]
+    freezegun.api._get_module_attributes_hash = (  # type: ignore[attr-defined]
+        patch_time.ha_get_module_attributes_hash
+    )
+    freezegun.api._should_use_real_time = patch_time.ha_should_use_real_time  # type: ignore[attr-defined]
+    freezegun.api.get_current_time = patch_time.ha_get_current_time
 
     def adapt_datetime(val):
         return val.isoformat(" ")
@@ -369,6 +396,18 @@ def long_repr_strings() -> Generator[None]:
     finally:
         arepr.maxstring = original_maxstring
         arepr.maxother = original_maxother
+
+
+@pytest.fixture(autouse=True)
+async def configure_event_loop() -> None:
+    """Configure the loop the way Home Assistant configures its own."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def configure_session_event_loop() -> None:
+    """Configure the session loop, which session scoped fixtures run on."""
+    runner.configure_event_loop(asyncio.get_running_loop())
 
 
 @pytest.fixture(autouse=True)
@@ -959,22 +998,31 @@ def hass_ws_client(
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(
-        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+        hass: HomeAssistant = hass,
+        access_token: str | None = hass_access_token,
+        supervisor_unix_socket: bool = False,
     ) -> MockHAClientWebSocket:
-        """Create a websocket client."""
+        """Create a client, skipping token auth for Supervisor Unix sockets."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
         auth_resp = await websocket.receive_json()
-        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
-
-        if access_token is None:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        if supervisor_unix_socket:
+            assert auth_resp["type"] == TYPE_AUTH_OK
         else:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
+            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        auth_ok = await websocket.receive_json()
-        assert auth_ok["type"] == TYPE_AUTH_OK
+            if access_token is None:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
+            else:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": access_token}
+                )
+
+            auth_ok = await websocket.receive_json()
+            assert auth_ok["type"] == TYPE_AUTH_OK
 
         def _get_next_id() -> Generator[int]:
             i = 0
@@ -987,11 +1035,10 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
+        async def _remove_device(device_id: str) -> Any:
             await _send_json_auto_id(
                 {
-                    "type": "config/device_registry/remove_config_entry",
-                    "config_entry_id": config_entry_id,
+                    "type": "config/device_registry/remove",
                     "device_id": device_id,
                 }
             )
@@ -1967,6 +2014,8 @@ async def mock_enable_bluetooth(
 @pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
+    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
+
     with (
         # Simulate the Bluetooth management API being unavailable, as it is on
         # CI and most dev machines. Letting the real setup() run would attempt
@@ -2014,7 +2063,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
     # Mock BlueZ management controller to successfully setup
@@ -2024,7 +2072,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
+            bluetooth_scanner.OriginalBleakScanner,
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),

@@ -7,7 +7,7 @@ import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
 from pylint_home_assistant.checkers.quality_scale.test_before_configure import (
-    TestBeforeConfigureChecker,
+    TestBeforeConfigureChecker as BeforeConfigureChecker,
 )
 from pylint_home_assistant.helpers.integration import clear_caches
 from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cache
@@ -30,11 +30,11 @@ class MyConfigFlow(ConfigFlow, domain="test_integration"):
 
 
 @pytest.fixture(name="configure_checker")
-def configure_checker_fixture(linter: UnittestLinter) -> TestBeforeConfigureChecker:
+def configure_checker_fixture(linter: UnittestLinter) -> BeforeConfigureChecker:
     """Fixture to provide a test before configure checker."""
     clear_quality_scale_cache()
     clear_caches()
-    return TestBeforeConfigureChecker(linter)
+    return BeforeConfigureChecker(linter)
 
 
 def _make_integration(
@@ -157,7 +157,7 @@ def _expect_missing(class_node: nodes.ClassDef) -> MessageTest:
 )
 def test_before_configure_evidence_present(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
     flow_body: str,
 ) -> None:
@@ -215,7 +215,7 @@ class MyConfigFlow(ConfigFlow, domain="test_integration"):
 )
 def test_before_configure_missing_fires(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
     flow_source: str,
     manifest: dict | None,
@@ -233,7 +233,7 @@ def test_before_configure_missing_fires(
 
 def test_before_configure_oauth_flow_skipped(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
 ) -> None:
     """No warning for OAuth flows; the token exchange is the connection test."""
@@ -255,7 +255,7 @@ class MyConfigFlow(AbstractOAuth2FlowHandler, domain="test_integration"):
 
 def test_before_configure_inherited_evidence(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
 ) -> None:
     """No warning when surfacing evidence lives in an inherited flow class's module."""
@@ -291,7 +291,7 @@ class MyConfigFlow(BaseHardwareFlow, domain="test_integration"):
 
 def test_before_configure_inherited_entry_creation_fires(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
 ) -> None:
     """Warning when entry creation is inherited and nothing surfaces failures."""
@@ -323,7 +323,7 @@ class MyConfigFlow(BaseSharedFlow, domain="test_integration"):
 
 def test_before_configure_non_config_flow_class(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
 ) -> None:
     """No warning for classes that are not config flows."""
@@ -373,7 +373,7 @@ class MyHelper:
 )
 def test_before_configure_not_fired(
     linter: UnittestLinter,
-    configure_checker: TestBeforeConfigureChecker,
+    configure_checker: BeforeConfigureChecker,
     tmp_path: Path,
     module_name: str,
     rules: dict | None,

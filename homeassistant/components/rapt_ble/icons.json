@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "specific_gravity_velocity": {
+        "default": "mdi:trending-down"
+      }
+    }
+  }
+}

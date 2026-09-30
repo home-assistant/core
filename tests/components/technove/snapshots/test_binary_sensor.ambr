@@ -74,7 +74,7 @@
     'object_id_base': 'Conflict with power sharing mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Conflict with power sharing mode',
     'platform': 'technove',
@@ -89,6 +89,7 @@
 # name: test_sensors[binary_sensor.technove_station_conflict_with_power_sharing_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Conflict with power sharing mode',
     }),
     'context': <ANY>,

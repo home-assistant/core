@@ -294,7 +294,7 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: MusicAssistantConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     player_id = next(

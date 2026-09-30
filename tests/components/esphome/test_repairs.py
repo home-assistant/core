@@ -214,12 +214,14 @@ async def test_device_conflict_migration(
     for entry in entries:
         assert entry.unique_id.startswith("11:22:33:44:55:AB/")
 
-    dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab")}
+    dev_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab"), mock_config_entry.entry_id
     )
     assert dev_entry is not None
 
-    old_dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa"), mock_config_entry.entry_id
+        )
+        is None
     )
-    assert old_dev_entry is None

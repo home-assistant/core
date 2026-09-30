@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any, cast, override
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aioesphomeapi import (
@@ -19,17 +19,22 @@ from aioesphomeapi import (
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerDeviceClass,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ServiceValidationError
 
+from .const import DOMAIN
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -54,31 +59,34 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
     }
 )
 
+# The native API has no commands for these flags, and the entity does not
+# implement search
+_UNSUPPORTED_FEATURES = (
+    EspMediaPlayerEntityFeature.SEEK
+    | EspMediaPlayerEntityFeature.PREVIOUS_TRACK
+    | EspMediaPlayerEntityFeature.NEXT_TRACK
+    | EspMediaPlayerEntityFeature.SELECT_SOURCE
+    | EspMediaPlayerEntityFeature.SELECT_SOUND_MODE
+    | EspMediaPlayerEntityFeature.SHUFFLE_SET
+    | EspMediaPlayerEntityFeature.GROUPING
+    | EspMediaPlayerEntityFeature.SEARCH_MEDIA
+)
+
 _FEATURES = {
     EspMediaPlayerEntityFeature.PAUSE: MediaPlayerEntityFeature.PAUSE,
-    EspMediaPlayerEntityFeature.SEEK: MediaPlayerEntityFeature.SEEK,
     EspMediaPlayerEntityFeature.VOLUME_SET: MediaPlayerEntityFeature.VOLUME_SET,
     EspMediaPlayerEntityFeature.VOLUME_MUTE: MediaPlayerEntityFeature.VOLUME_MUTE,
-    EspMediaPlayerEntityFeature.PREVIOUS_TRACK: MediaPlayerEntityFeature.PREVIOUS_TRACK,
-    EspMediaPlayerEntityFeature.NEXT_TRACK: MediaPlayerEntityFeature.NEXT_TRACK,
     EspMediaPlayerEntityFeature.TURN_ON: MediaPlayerEntityFeature.TURN_ON,
     EspMediaPlayerEntityFeature.TURN_OFF: MediaPlayerEntityFeature.TURN_OFF,
     EspMediaPlayerEntityFeature.PLAY_MEDIA: MediaPlayerEntityFeature.PLAY_MEDIA,
     EspMediaPlayerEntityFeature.VOLUME_STEP: MediaPlayerEntityFeature.VOLUME_STEP,
-    EspMediaPlayerEntityFeature.SELECT_SOURCE: MediaPlayerEntityFeature.SELECT_SOURCE,
     EspMediaPlayerEntityFeature.STOP: MediaPlayerEntityFeature.STOP,
     EspMediaPlayerEntityFeature.CLEAR_PLAYLIST: MediaPlayerEntityFeature.CLEAR_PLAYLIST,
     EspMediaPlayerEntityFeature.PLAY: MediaPlayerEntityFeature.PLAY,
-    EspMediaPlayerEntityFeature.SHUFFLE_SET: MediaPlayerEntityFeature.SHUFFLE_SET,
-    EspMediaPlayerEntityFeature.SELECT_SOUND_MODE: (
-        MediaPlayerEntityFeature.SELECT_SOUND_MODE
-    ),
     EspMediaPlayerEntityFeature.BROWSE_MEDIA: MediaPlayerEntityFeature.BROWSE_MEDIA,
     EspMediaPlayerEntityFeature.REPEAT_SET: MediaPlayerEntityFeature.REPEAT_SET,
-    EspMediaPlayerEntityFeature.GROUPING: MediaPlayerEntityFeature.GROUPING,
     EspMediaPlayerEntityFeature.MEDIA_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
     EspMediaPlayerEntityFeature.MEDIA_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
-    EspMediaPlayerEntityFeature.SEARCH_MEDIA: MediaPlayerEntityFeature.SEARCH_MEDIA,
 }
 
 ATTR_BYPASS_PROXY = "bypass_proxy"
@@ -96,16 +104,19 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        esp_flags = EspMediaPlayerEntityFeature(
-            self._static_info.feature_flags_compat(self._api_version)
+        esp_flags = (
+            EspMediaPlayerEntityFeature(
+                self._static_info.feature_flags_compat(self._api_version)
+            )
+            & ~_UNSUPPORTED_FEATURES
         )
         flags = MediaPlayerEntityFeature(0)
         for espflag in esp_flags:
             flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[self.unique_id] = cast(
-            MediaPlayerInfo, static_info
-        ).supported_formats
+        self._entry_data.media_player_formats[self] = (
+            self._static_info.supported_formats
+        )
 
     @property
     @esphome_state_property
@@ -134,6 +145,14 @@ class EsphomeMediaPlayer(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play command with media url to the media player."""
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
+        # The device can only append to its playlist or replace it
+        if enqueue in (MediaPlayerEnqueue.NEXT, MediaPlayerEnqueue.PLAY):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="enqueue_mode_not_supported",
+                translation_placeholders={"enqueue": enqueue},
+            )
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
@@ -143,9 +162,7 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
-        supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self.unique_id)
-        )
+        supported_formats = self._entry_data.media_player_formats.get(self)
 
         if (
             not bypass_proxy
@@ -162,6 +179,11 @@ class EsphomeMediaPlayer(
 
         self._client.media_player_command(
             self._key,
+            command=(
+                MediaPlayerCommand.ENQUEUE
+                if enqueue == MediaPlayerEnqueue.ADD
+                else None
+            ),
             media_url=media_id,
             announcement=announcement,
             device_id=self._static_info.device_id,
@@ -171,7 +193,7 @@ class EsphomeMediaPlayer(
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self.unique_id, None)
+        self._entry_data.media_player_formats.pop(self, None)
 
     def _get_proxy_url(
         self,
@@ -255,6 +277,26 @@ class EsphomeMediaPlayer(
 
     @convert_api_error_ha_error
     @override
+    async def async_volume_up(self) -> None:
+        """Turn volume up."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.VOLUME_UP,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    @override
+    async def async_volume_down(self) -> None:
+        """Turn volume down."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.VOLUME_DOWN,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         self._client.media_player_command(
@@ -282,6 +324,39 @@ class EsphomeMediaPlayer(
             command=MediaPlayerCommand.STOP,
             device_id=self._static_info.device_id,
         )
+
+    @convert_api_error_ha_error
+    @override
+    async def async_clear_playlist(self) -> None:
+        """Clear the playlist."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.CLEAR_PLAYLIST,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    @override
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set the repeat mode."""
+        if repeat == RepeatMode.ALL:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="repeat_mode_not_supported",
+                translation_placeholders={"repeat_mode": repeat},
+            )
+        self._client.media_player_command(
+            self._key,
+            command=(
+                MediaPlayerCommand.REPEAT_ONE
+                if repeat == RepeatMode.ONE
+                else MediaPlayerCommand.REPEAT_OFF
+            ),
+            device_id=self._static_info.device_id,
+        )
+        # The device does not report its repeat mode
+        self._attr_repeat = repeat
+        self.async_write_ha_state()
 
     @convert_api_error_ha_error
     @override

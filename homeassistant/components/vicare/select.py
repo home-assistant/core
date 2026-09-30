@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_device_serial, is_supported
+from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def _build_entities(
     """Create ViCare select entities for a device."""
     return [
         ViCareDHWOperatingModeSelect(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
         )

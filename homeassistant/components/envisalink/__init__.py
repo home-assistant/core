@@ -3,8 +3,8 @@
 import asyncio
 import logging
 
+import probatio
 from pyenvisalink import EnvisalinkAlarmPanel
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_CODE,
@@ -56,54 +56,58 @@ SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
 SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
 SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
 
-ZONE_SCHEMA = vol.Schema(
+ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ZONENAME): cv.string,
-        vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
+        probatio.Required(CONF_ZONENAME): cv.string,
+        probatio.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
     }
 )
 
-PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_PARTITIONNAME): cv.string})
+PARTITION_SCHEMA = probatio.Schema({probatio.Required(CONF_PARTITIONNAME): cv.string})
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PANEL_TYPE): vol.All(
-                    cv.string, vol.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PANEL_TYPE): probatio.All(
+                    cv.string, probatio.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
                 ),
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASS): cv.string,
-                vol.Optional(CONF_CODE): cv.string,
-                vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
-                vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-                vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-                vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION): vol.All(
-                    vol.Coerce(int), vol.Range(min=3, max=4)
-                ),
-                vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
-                    vol.Coerce(int), vol.Range(min=15)
-                ),
-                vol.Optional(
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASS): cv.string,
+                probatio.Optional(CONF_CODE): cv.string,
+                probatio.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
+                probatio.Optional(CONF_ZONES): {probatio.Coerce(int): ZONE_SCHEMA},
+                probatio.Optional(CONF_PARTITIONS): {
+                    probatio.Coerce(int): PARTITION_SCHEMA
+                },
+                probatio.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(
+                    CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=3, max=4)),
+                probatio.Optional(
+                    CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=15)),
+                probatio.Optional(
                     CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
-                ): vol.Coerce(int),
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+                ): probatio.Coerce(int),
+                probatio.Optional(
+                    CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                ): probatio.Coerce(int),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
 ATTR_CUSTOM_FUNCTION = "pgm"
 ATTR_PARTITION = "partition"
 
-SERVICE_SCHEMA = vol.Schema(
+SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-        vol.Required(ATTR_PARTITION): cv.string,
+        probatio.Required(ATTR_CUSTOM_FUNCTION): cv.string,
+        probatio.Required(ATTR_PARTITION): cv.string,
     }
 )
 

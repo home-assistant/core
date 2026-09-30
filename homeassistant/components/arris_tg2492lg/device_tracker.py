@@ -4,7 +4,7 @@ from typing import override
 
 from aiohttp.client_exceptions import ClientResponseError
 from arris_tg2492lg import ConnectBox, Device
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -21,8 +21,8 @@ DEFAULT_HOST = "192.168.178.1"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     }
 )
 

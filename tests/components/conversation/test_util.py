@@ -24,7 +24,7 @@ async def test_async_get_result_from_chat_log(
                     agent_id="mock-agent-id",
                     tool_call_id="mock-tool-call-id",
                     tool_name="mock-tool-name",
-                    tool_result=tool_result,
+                    result=llm.ToolResult(data=tool_result),
                 ),
                 conversation.AssistantContent(
                     agent_id="mock-agent-id",

@@ -91,7 +91,7 @@
       "setpoint": 13.0,
       "temperature": 28.8,
       "temperature_difference": 2.0,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -115,7 +115,7 @@
       "setpoint": 13.0,
       "temperature": 24.2,
       "temperature_difference": 1.7,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -282,7 +282,7 @@
       "setpoint": 13.0,
       "temperature": 28.7,
       "temperature_difference": 1.9,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -327,30 +327,30 @@
       "flame_state": false,
       "heating_state": false
     },
-    "dev_class": "heater_central",
-    "dhw_mode": "eco",
-    "dhw_modes": ["comfort", "eco"],
-    "location": "9e4433a9d69f40b3aefd15e74395eaec",
-    "max_dhw_temperature": {
-      "current": 37.3,
-      "lower_bound": 40.0,
-      "resolution": 0.01,
-      "setpoint": 60.0,
-      "upper_bound": 60.0
-    },
-    "maximum_boiler_temperature": {
+    "boiler_temperature": {
       "current": 37.3,
       "lower_bound": 20.0,
       "resolution": 0.01,
       "setpoint": 90.0,
       "upper_bound": 90.0
     },
+    "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": ["comfort", "eco"],
+    "dhw_temperature": {
+      "current": 37.3,
+      "lower_bound": 40.0,
+      "resolution": 0.01,
+      "setpoint": 60.0,
+      "upper_bound": 60.0
+    },
+    "location": "9e4433a9d69f40b3aefd15e74395eaec",
     "model": "Generic heater",
     "model_id": "10.20",
     "name": "OpenTherm",
     "sensors": {
       "intended_boiler_temperature": 0.0,
-      "modulation_level": 0.0,
+      "modulation_level": 0,
       "return_temperature": 37.1,
       "water_pressure": 1.4,
       "water_temperature": 37.3

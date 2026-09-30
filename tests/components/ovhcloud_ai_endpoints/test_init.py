@@ -107,8 +107,8 @@ async def test_new_subentry_creates_entity_and_device(
     assert entities[0].domain == "conversation"
     assert entities[0].unique_id == subentry.subentry_id
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, subentry.subentry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), entry.entry_id
     )
     assert device is not None
     assert device.name == "Meta-Llama-3_3-70B-Instruct"

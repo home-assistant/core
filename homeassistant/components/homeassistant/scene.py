@@ -4,7 +4,7 @@ from collections.abc import Mapping, ValuesView
 import logging
 from typing import Any, NamedTuple, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components.light import ATTR_TRANSITION
@@ -56,7 +56,7 @@ def _convert_states(states: dict[str, Any]) -> dict[str, State]:
         if isinstance(state, bool):
             state = STATE_ON if state else STATE_OFF
         elif not isinstance(state, str):
-            raise vol.Invalid(f"State for {entity_id} should be a string")
+            raise probatio.Invalid(f"State for {entity_id} should be a string")
 
         result[entity_id] = State(entity_id, state, attributes)
 
@@ -74,45 +74,45 @@ def _ensure_no_intersection(value: dict[str, Any]) -> dict[str, Any]:
     ):
         return value
 
-    raise vol.Invalid("entities and snapshot_entities must not overlap")
+    raise probatio.Invalid("entities and snapshot_entities must not overlap")
 
 
 CONF_SCENE_ID = "scene_id"
 CONF_SNAPSHOT = "snapshot_entities"
 DATA_PLATFORM = "homeassistant_scene"
 EVENT_SCENE_RELOADED = "scene_reloaded"
-STATES_SCHEMA = vol.All(dict, _convert_states)
+STATES_SCHEMA = probatio.All(dict, _convert_states)
 
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(STATES): vol.All(
+        probatio.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(STATES): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_ID): cv.string,
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Optional(CONF_ICON): cv.icon,
-                        vol.Required(CONF_ENTITIES): STATES_SCHEMA,
-                        vol.Optional("metadata"): dict,
+                        probatio.Optional(CONF_ID): cv.string,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Optional(CONF_ICON): cv.icon,
+                        probatio.Required(CONF_ENTITIES): STATES_SCHEMA,
+                        probatio.Optional("metadata"): dict,
                     }
                 )
             ],
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-CREATE_SCENE_SCHEMA = vol.All(
+CREATE_SCENE_SCHEMA = probatio.All(
     cv.has_at_least_one_key(CONF_ENTITIES, CONF_SNAPSHOT),
     _ensure_no_intersection,
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(CONF_SCENE_ID): cv.slug,
-            vol.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
-            vol.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
+            probatio.Required(CONF_SCENE_ID): cv.slug,
+            probatio.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
+            probatio.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
         }
     ),
 )
@@ -230,12 +230,12 @@ async def async_setup_platform(
         SCENE_DOMAIN,
         SERVICE_APPLY,
         apply_service,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Optional(ATTR_TRANSITION): vol.All(
-                    vol.Coerce(float), vol.Clamp(min=0, max=6553)
+                probatio.Optional(ATTR_TRANSITION): probatio.All(
+                    probatio.Coerce(float), probatio.Clamp(min=0, max=6553)
                 ),
-                vol.Required(CONF_ENTITIES): STATES_SCHEMA,
+                probatio.Required(CONF_ENTITIES): STATES_SCHEMA,
             }
         ),
     )

@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_circuits, get_device_serial
+from .utils import get_circuits
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def _build_entities(
 
     return [
         ViCareWater(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
             circuit,

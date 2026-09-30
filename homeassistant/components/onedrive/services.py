@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 from typing import cast
 
 from onedrive_personal_sdk.exceptions import OneDriveException
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import (
@@ -28,20 +28,20 @@ CONF_DESTINATION_FOLDER = "destination_folder"
 CONF_DESTINATION_PATH = "destination_path"
 
 UPLOAD_SERVICE = "upload"
-UPLOAD_SERVICE_SCHEMA = vol.Schema(
+UPLOAD_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_DESTINATION_FOLDER): cv.string,
+        probatio.Required(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CONF_FILENAME): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_DESTINATION_FOLDER): cv.string,
     }
 )
 
 DELETE_SERVICE = "delete"
-DELETE_SERVICE_SCHEMA = vol.Schema(
+DELETE_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_DESTINATION_PATH): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
+        probatio.Required(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CONF_DESTINATION_PATH): probatio.All(
+            cv.ensure_list, probatio.Length(min=1), [cv.string]
         ),
     }
 )

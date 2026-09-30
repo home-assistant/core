@@ -37,6 +37,17 @@ class MonarchMoneyCashflowSensorEntityDescription(SensorEntityDescription):
     summary_fn: Callable[[MonarchCashflowSummary], StateType]
 
 
+def _account_owner_name(account: MonarchAccount) -> str | None:
+    """Return the account owner's display name."""
+    if not account.account_owner:
+        return None
+    for key in ("displayName", "name"):
+        owner_name = account.account_owner.get(key)
+        if owner_name and (owner_name := owner_name.strip()):
+            return owner_name
+    return None
+
+
 # These sensors include assets like a boat that might have value
 MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
     MonarchMoneyAccountSensorEntityDescription(
@@ -70,6 +81,15 @@ MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda account: account.last_update,
+    ),
+)
+
+MONARCH_MONEY_OWNER_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
+    MonarchMoneyAccountSensorEntityDescription(
+        key="owner",
+        translation_key="owner",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_account_owner_name,
     ),
 )
 
@@ -140,6 +160,15 @@ async def async_setup_entry(
         )
         for account in mm_coordinator.accounts
         for sensor_description in MONARCH_MONEY_AGE_SENSORS
+    )
+    entity_list.extend(
+        MonarchMoneySensor(
+            mm_coordinator,
+            sensor_description,
+            account,
+        )
+        for account in mm_coordinator.accounts
+        for sensor_description in MONARCH_MONEY_OWNER_SENSORS
     )
     entity_list.extend(
         MonarchMoneySensor(

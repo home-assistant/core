@@ -204,10 +204,16 @@ async def test_deleted_device_removed_once(
 
     # The consumption device has several entities (power, energy), all subscribed
     # to the same device uid
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "Test")}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "Test"), entry.entry_id)
+        is not None
+    )
 
     # Emulate websocket message: device was deleted
     test_gateway.publisher.dispatch("Test", ("Test", "del"))
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "Test")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "Test"), entry.entry_id)
+        is None
+    )

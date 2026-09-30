@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,10 +16,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.teslemetry.coordinator import (
-    ENERGY_INFO_INTERVAL,
-    VEHICLE_INTERVAL,
-)
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -67,27 +64,27 @@ async def test_select(
     [
         pytest.param({}, set(), id="no_config"),
         pytest.param(
-            {"rear_seat_heaters": 0, "third_row_seats": "None"},
+            {"rear_seat_heaters": 0, "third_row_seats": False},
             set(),
             id="0_no_rear_heaters",
         ),
         pytest.param(
-            {"rear_seat_heaters": 1, "third_row_seats": "None"},
+            {"rear_seat_heaters": 1, "third_row_seats": False},
             {REAR_LEFT, REAR_CENTER, REAR_RIGHT},
             id="1_heated_rear_bench",
         ),
         pytest.param(
-            {"rear_seat_heaters": 2, "third_row_seats": "None"},
+            {"rear_seat_heaters": 2, "third_row_seats": False},
             {REAR_LEFT, REAR_RIGHT},
             id="2_legacy_model_s_outboard_only",
         ),
         pytest.param(
-            {"rear_seat_heaters": 3, "third_row_seats": "FoldFlatPowerStrutSeats"},
+            {"rear_seat_heaters": 3, "third_row_seats": True},
             {REAR_LEFT, REAR_CENTER, REAR_RIGHT, THIRD_LEFT, THIRD_RIGHT},
             id="3_model_x_with_third_row",
         ),
         pytest.param(
-            {"rear_seat_heaters": 3, "third_row_seats": "None"},
+            {"rear_seat_heaters": 3, "third_row_seats": False},
             {REAR_LEFT, REAR_CENTER, REAR_RIGHT},
             id="3_model_x_five_seat_no_third_row",
         ),
@@ -97,7 +94,7 @@ async def test_rear_seat_heater_configurations(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
-    config: dict[str, int | str],
+    config: dict[str, int | bool],
     expected: set[str],
 ) -> None:
     """Verify which rear seat-heater entities exist per rear_seat_heaters config.
@@ -109,11 +106,13 @@ async def test_rear_seat_heater_configurations(
       2 - outboard rear only: left, right, no center (classic Model S)
       3 - heated rear bench plus third row (Model X)
     Third-row heaters additionally require an actual third row, since some
-    5-seat Model X report 3 without having a third row. third_row_seats is a
-    string ("None" when absent), not a bool.
+    5-seat Model X report 3 without having a third row.
     """
     metadata = deepcopy(METADATA)
     metadata["vehicles"][VEHICLE_VIN]["config"] = config
+    # Rear seat heaters are polling-only, so the vehicle must be a polling
+    # vehicle for them to be created at all.
+    metadata["vehicles"][VEHICLE_VIN]["polling"] = True
     mock_metadata.return_value = metadata
 
     entry = await setup_platform(hass, [Platform.SELECT])
@@ -534,8 +533,8 @@ async def test_export_rule_restore(
 )
 async def test_export_rule_update_attrs_logic(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
+    mock_energy_info_stream: MagicMock,
     previous_data: dict,
     new_data: str | None,
     expected_state: str,
@@ -549,14 +548,12 @@ async def test_export_rule_update_attrs_logic(
     # Set up platform
     await setup_platform(hass, [Platform.SELECT])
 
-    # Change the state
-    test_site_info = deepcopy(SITE_INFO)
-    test_site_info["response"]["components"].update(new_data)
-    mock_site_info.side_effect = lambda: test_site_info
-
-    # Coordinator refresh
-    freezer.tick(ENERGY_INFO_INTERVAL)
-    async_fire_time_changed(hass)
+    # Change the state via a streamed site_info event, driven through the
+    # callback the integration registered with the library.
+    streamed_site_info = deepcopy(SITE_INFO["response"])
+    streamed_site_info.pop("tariff_content_v2", None)
+    streamed_site_info["components"].update(new_data)
+    mock_energy_info_stream.send(streamed_site_info)
     await hass.async_block_till_done()
 
     # Check the final state matches expected

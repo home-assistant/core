@@ -5,6 +5,7 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
     PyiCloudException,
@@ -12,7 +13,6 @@ from pyicloud.exceptions import (
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -65,27 +65,27 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if step_id == "user":
             schema = {
-                vol.Required(
+                probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WITH_FAMILY,
                     default=user_input.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY),
                 ): bool,
             }
         else:
             schema = {
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
             }
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors or {},
             description_placeholders=self._description_placeholders,
         )
@@ -289,10 +289,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="trusted_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TRUSTED_DEVICE): vol.All(
-                        vol.Coerce(int), vol.In(trusted_devices)
+                    probatio.Required(CONF_TRUSTED_DEVICE): probatio.All(
+                        probatio.Coerce(int), probatio.In(trusted_devices)
                     )
                 }
             ),
@@ -370,10 +370,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="verification_code",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_VERIFICATION_CODE): str,
-                    vol.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
+                    probatio.Optional(CONF_VERIFICATION_CODE): str,
+                    probatio.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
                 }
             ),
             errors=errors,

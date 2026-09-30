@@ -19,7 +19,7 @@ from homeassistant.util.percentage import (
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import filter_state, get_device_serial, is_supported
+from .utils import filter_state, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def _build_entities(
 ) -> list[ViCareFan]:
     """Create ViCare climate entities for a device."""
     return [
-        ViCareFan(get_device_serial(device.api), device.config, device.api)
+        ViCareFan(device.serial, device.config, device.api)
         for device in device_list
         if device.api.isVentilationDevice()
     ]
@@ -120,7 +120,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_translation_key = "ventilation"
-    _attributes: dict[str, Any] = {}
 
     def __init__(
         self,
@@ -149,6 +148,7 @@ class ViCareFan(ViCareEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
         # evaluate quickmodes
+        self._attributes: dict[str, Any] = {}
         self._attributes["vicare_quickmodes"] = quickmodes = list[str](
             device.getVentilationQuickmodes()
             if is_supported(

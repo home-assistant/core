@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
@@ -25,7 +25,7 @@ from .const import (
     MODEL_FRANKEVER_WATER_VALVE,
     ROLE_GENERIC,
     SHELLY_GAS_MODELS,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -101,14 +101,18 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="turn_on_the_screen",
         press_action="wall_display_set_screen",
         params={"value": True},
-        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+        supported=lambda coordinator: coordinator.model.startswith(
+            SHELLY_WALL_DISPLAY_MODEL_PREFIX
+        ),
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_off_screen",
         translation_key="turn_off_the_screen",
         press_action="wall_display_set_screen",
         params={"value": False},
-        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+        supported=lambda coordinator: coordinator.model.startswith(
+            SHELLY_WALL_DISPLAY_MODEL_PREFIX
+        ),
     ),
 ]
 
@@ -364,7 +368,6 @@ RPC_BUTTONS = {
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
-        models={MODEL_BLU_GATEWAY_G3},
     ),
     "smoke_mute": RpcButtonDescription(
         key="smoke",

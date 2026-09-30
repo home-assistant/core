@@ -1,7 +1,7 @@
 """Support for EufyHome devices."""
 
 import lakeside
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -19,28 +19,28 @@ from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "eufy"
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Required(CONF_TYPE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ADDRESS): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(CONF_TYPE): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICES, default=[]): vol.All(
+                probatio.Optional(CONF_DEVICES, default=[]): probatio.All(
                     cv.ensure_list, [DEVICE_SCHEMA]
                 ),
-                vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-                vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+                probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+                probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = {

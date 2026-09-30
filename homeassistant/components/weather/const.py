@@ -75,12 +75,15 @@ class WeatherEntityStateAttribute(StrEnum):
 
 
 DOMAIN: Final = "weather"
+
+SERVICE_GET_FORECASTS: Final = "get_forecasts"
 DATA_COMPONENT: HassKey[EntityComponent[WeatherEntity]] = HassKey(DOMAIN)
 
 INTENT_GET_WEATHER = "HassGetWeather"
 
 VALID_UNITS_PRESSURE: set[str] = {
     UnitOfPressure.HPA,
+    UnitOfPressure.KPA,
     UnitOfPressure.MBAR,
     UnitOfPressure.INHG,
     UnitOfPressure.MMHG,
