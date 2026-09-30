@@ -748,10 +748,33 @@ async def test_energy_history_unavailable_while_stream_disconnected(
 
 
 @pytest.mark.parametrize(
-    ("components", "missing"),
+    ("components", "absent"),
     [
-        pytest.param({"battery": False}, "battery", id="solar_only"),
-        pytest.param({"solar": False}, "solar", id="battery_only"),
+        pytest.param(
+            {"battery": False},
+            {
+                "grid_energy_exported_from_battery",
+                "battery_energy_exported",
+                "battery_energy_imported_from_grid",
+                "battery_energy_imported_from_solar",
+                "battery_energy_imported_from_generator",
+                "consumer_energy_imported_from_battery",
+                "total_battery_charge",
+                "total_battery_discharge",
+            },
+            id="solar_only",
+        ),
+        pytest.param(
+            {"solar": False},
+            {
+                "solar_energy_exported",
+                "grid_energy_exported_from_solar",
+                "battery_energy_imported_from_solar",
+                "consumer_energy_imported_from_solar",
+                "total_solar_generation",
+            },
+            id="battery_only",
+        ),
     ],
 )
 async def test_energy_history_sensors_match_site_components(
@@ -759,7 +782,7 @@ async def test_energy_history_sensors_match_site_components(
     entity_registry: er.EntityRegistry,
     mock_site_info: AsyncMock,
     components: dict[str, bool],
-    missing: str,
+    absent: set[str],
 ) -> None:
     """History sensors are only created for the components a site has."""
     site_info = deepcopy(SITE_INFO)
@@ -773,7 +796,7 @@ async def test_energy_history_sensors_match_site_components(
         for key in ENERGY_HISTORY_FIELDS
         if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"123456-{key}")
     }
-    assert created == {key for key in ENERGY_HISTORY_FIELDS if missing not in key}
+    assert created == set(ENERGY_HISTORY_FIELDS) - absent
 
 
 @pytest.mark.parametrize(
