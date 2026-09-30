@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, LockEntityFeature
+from .const import DOMAIN, LockEntityFeature
 
 ACTION_TYPES = {"lock", "unlock", "open"}
 

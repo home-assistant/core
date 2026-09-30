@@ -565,3 +565,36 @@ async def test_light_unexpected_color_mode(
             transitionTime=0,
         ),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
+async def test_dimmable_light_without_level_range(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a light reporting a level range without width uses the default range."""
+    entity_id = "light.mock_dimmable_light"
+    set_node_attribute(matter_node, 1, 8, 2, 5)
+    set_node_attribute(matter_node, 1, 8, 3, 5)
+    set_node_attribute(matter_node, 1, 8, 0, 5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["brightness"] == 4
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, "brightness": 128},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            level=128,
+            transitionTime=0,
+        ),
+    )

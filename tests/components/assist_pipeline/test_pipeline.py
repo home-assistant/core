@@ -1869,7 +1869,7 @@ async def test_chat_log_tts_streaming(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = probatio.Schema({})
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     with (
         patch(
