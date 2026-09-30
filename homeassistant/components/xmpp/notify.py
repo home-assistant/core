@@ -59,7 +59,9 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_SENDER): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Required(CONF_RECIPIENT): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_RECIPIENT): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_RESOURCE, default=DEFAULT_RESOURCE): cv.string,
         probatio.Optional(CONF_ROOM, default=""): cv.string,
         probatio.Optional(CONF_TLS, default=True): cv.boolean,

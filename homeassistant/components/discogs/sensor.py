@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_TOKEN): cv.string,
         probatio.Optional("name"): cv.string,
         probatio.Optional("monitored_conditions"): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )

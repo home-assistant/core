@@ -51,7 +51,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.Optional(CONF_TRV, default={}): {
                         probatio.Optional(
                             CONF_PROXY_PORT, default=DEFAULT_PROXY_PORT
-                        ): cv.port,
+                        ): probatio.Port(),
                         probatio.Optional(CONF_PROXY_IP): cv.string,
                         probatio.Required(CONF_TRVS, default={}): {
                             cv.string: probatio.Schema(
