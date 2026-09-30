@@ -3536,6 +3536,28 @@ async def test_unpaired_site_reads_cloud_only(
     )
 
 
+async def test_paired_site_without_live_status_reads_config_only(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    mock_powerwall_live_status: AsyncMock,
+    mock_powerwall_local_config: AsyncMock,
+) -> None:
+    """A paired site with no cloud live status still reads its config from the gateway."""
+    mock_live_status.side_effect = AsyncMock(return_value={"response": ""})
+    mock_powerwall_local_config.return_value = {"default_real_mode": "autonomous"}
+    await _setup_energy_site_entry(
+        hass, _entry_with_powerwall(), [Platform.SENSOR, Platform.SELECT]
+    )
+    assert hass.states.get("sensor.energy_site_grid_power") is None
+
+    await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+
+    assert mock_powerwall_live_status.await_count == 0
+    assert mock_powerwall_local_config.await_count == 1
+    assert hass.states.get("select.energy_site_operation_mode").state == "autonomous"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_local_live_poll_survives_stream_push_storm(
     hass: HomeAssistant,
