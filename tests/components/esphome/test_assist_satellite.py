@@ -1021,6 +1021,64 @@ async def test_tts_format_from_media_player(
         }
 
 
+async def test_tts_bitrate_from_media_player(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that a declared bitrate reaches the text-to-speech options."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="mymedia_player",
+                key=1,
+                name="my media_player",
+                supports_pause=True,
+                supported_formats=[
+                    MediaPlayerSupportedFormat(
+                        format="mp3",
+                        sample_rate=22050,
+                        num_channels=1,
+                        purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
+                        bitrate=48,
+                    ),
+                ],
+            )
+        ],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+    ) as mock_pipeline_from_audio_stream:
+        await satellite.handle_pipeline_start(
+            conversation_id="",
+            flags=0,
+            audio_settings=VoiceAssistantAudioSettings(),
+            wake_word_phrase=None,
+        )
+
+        mock_pipeline_from_audio_stream.assert_called_once()
+        kwargs = mock_pipeline_from_audio_stream.call_args_list[0].kwargs
+        assert kwargs.get("tts_audio_output") == {
+            tts.ATTR_PREFERRED_FORMAT: "mp3",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            tts.ATTR_PREFERRED_BITRATE: 48,
+        }
+
+
 async def test_tts_minimal_format_from_media_player(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -1155,11 +1213,14 @@ async def test_announce_message(
             assert satellite.state == AssistSatelliteState.IDLE
 
 
+@pytest.mark.parametrize(("bitrate", "expected_bitrate"), [(0, None), (48, 48)])
 async def test_announce_media_id(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     device_registry: dr.DeviceRegistry,
+    bitrate: int,
+    expected_bitrate: int | None,
 ) -> None:
     """Test announcement with media id."""
     mock_device = await mock_esphome_device(
@@ -1177,6 +1238,7 @@ async def test_announce_media_id(
                         num_channels=2,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
                         sample_bytes=2,
+                        bitrate=bitrate,
                     ),
                 ],
             )
@@ -1249,6 +1311,7 @@ async def test_announce_media_id(
             rate=48000,
             channels=2,
             width=2,
+            bitrate=expected_bitrate,
         )
 
 
@@ -1549,6 +1612,7 @@ async def test_start_conversation_media_id(
             rate=48000,
             channels=2,
             width=2,
+            bitrate=None,
         )
 
 
