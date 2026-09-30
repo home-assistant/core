@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError, ExtractorError
 
@@ -102,10 +102,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_EXTRACT_MEDIA_URL,
         extract_media_url,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_URL): cv.string,
-                vol.Optional(
+                probatio.Required(ATTR_URL): cv.string,
+                probatio.Optional(
                     ATTR_FORMAT_QUERY, default=default_format_query
                 ): cv.string,
             }

@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from itertools import chain
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
@@ -103,7 +103,7 @@ class DeviceExtension(BaseTemplateExtension):
 
         try:
             cv.entity_id(lookup_value)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
         else:
             if entity := ent_reg.async_get(lookup_value):

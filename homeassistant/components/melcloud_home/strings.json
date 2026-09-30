@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
     },
     "error": {
@@ -106,6 +104,9 @@
             }
           }
         }
+      },
+      "atw_zone": {
+        "name": "Zone {zone_number}"
       }
     },
     "number": {
@@ -126,6 +127,18 @@
       "energy_consumed": {
         "name": "Energy consumed (monthly)"
       },
+      "operation_status": {
+        "name": "Operation status",
+        "state": {
+          "cooling": "Cooling",
+          "heating_water": "Heating water",
+          "heating_zones": "Heating zones",
+          "idle": "[%key:common::state::idle%]"
+        }
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "room_temperature": {
         "name": "Room temperature"
       },
@@ -145,6 +158,14 @@
       },
       "overheat_protection": {
         "name": "Overheat protection"
+      },
+      "standby": {
+        "name": "Standby"
+      }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water"
       }
     }
   },

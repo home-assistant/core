@@ -1,10 +1,10 @@
 """Base entity for Liebherr integration."""
 
-import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from pyliebherrhomeapi import (
+    DeviceControl,
     LiebherrConnectionError,
     LiebherrTimeoutError,
     TemperatureControl,
@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, REFRESH_DELAY
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import LiebherrCoordinator
 
 # Zone position to translation key mapping
@@ -52,11 +52,13 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
             model_id=device.device_name,
         )
 
-    async def _async_send_command(
+    async def _async_send_command[ControlT: DeviceControl](
         self,
         command: Coroutine[Any, Any, None],
+        control: ControlT | None = None,
+        updater: Callable[[ControlT], ControlT] | None = None,
     ) -> None:
-        """Send a command with error handling and delayed refresh."""
+        """Send a command and optimistically apply its successful result."""
         try:
             await command
         except (LiebherrConnectionError, LiebherrTimeoutError) as err:
@@ -64,9 +66,9 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from err
-
-        await asyncio.sleep(REFRESH_DELAY.total_seconds())
-        await self.coordinator.async_request_refresh()
+        if control is not None:
+            assert updater is not None
+            self.coordinator.async_apply_control(control, updater)
 
 
 class LiebherrZoneEntity(LiebherrEntity):

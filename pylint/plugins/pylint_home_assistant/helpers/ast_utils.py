@@ -68,10 +68,10 @@ def enclosing_function(node: nodes.NodeNG) -> nodes.FunctionDef | None:
 
 
 def get_schema_field_name(node: nodes.Call) -> str | None:
-    """Extract the field name from ``vol.Required(...)`` or ``vol.Optional(...)``.
+    """Extract the field name from ``probatio.Required(...)`` or ``probatio.Optional(...)``.
 
     Returns the string field name (either a literal or a ``Name`` identifier),
-    or ``None`` if *node* is not a voluptuous schema field call.
+    or ``None`` if *node* is not a probatio schema field call.
     """
     match node:
         case nodes.Call(

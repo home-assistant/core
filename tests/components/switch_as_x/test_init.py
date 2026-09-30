@@ -233,7 +233,7 @@ async def test_device_registry_config_entry_1(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     events = []
 
@@ -255,7 +255,7 @@ async def test_device_registry_config_entry_1(
 
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     # Check that the switch_as_x config entry is removed
     assert (
@@ -315,7 +315,7 @@ async def test_device_registry_config_entry_2(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     events = []
 
@@ -338,7 +338,7 @@ async def test_device_registry_config_entry_2(
 
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -400,9 +400,9 @@ async def test_device_registry_config_entry_3(
     assert entity_entry.device_id == switch_entity_entry.device_id
 
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
     device_entry_2 = device_registry.async_get(device_entry_2.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
+    assert device_entry_2.config_entry_id != switch_as_x_config_entry.entry_id
 
     events = []
 
@@ -425,9 +425,9 @@ async def test_device_registry_config_entry_3(
 
     # Check that the switch_as_x config entry is moved to the other device
     device_entry = device_registry.async_get(device_entry.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != switch_as_x_config_entry.entry_id
     device_entry_2 = device_registry.async_get(device_entry_2.id)
-    assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
+    assert device_entry_2.config_entry_id != switch_as_x_config_entry.entry_id
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()

@@ -3,15 +3,15 @@
 import shutil
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_LANG, default=DEFAULT_LANG): probatio.In(SUPPORT_LANGUAGES)}
 )
 
 
@@ -41,8 +41,3 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_create_entry(title=title, data=data)
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import Pico TTS config from yaml."""
-
-        return await self.async_step_user(import_info)
