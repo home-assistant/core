@@ -50,6 +50,12 @@ PRESET_MODES = {
     "Dog": "dog",
     "Party": "camp",
 }
+POLLING_PRESET_MODES = {
+    "off": "off",
+    "on": "keep",
+    "dog": "dog",
+    "camp": "camp",
+}
 
 
 PARALLEL_UPDATES = 0
@@ -233,7 +239,10 @@ class TeslemetryVehiclePollingClimateEntity(
 
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
-        self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
+        keeper_mode = self.get("climate_state_climate_keeper_mode")
+        self._attr_preset_mode = (
+            POLLING_PRESET_MODES.get(keeper_mode) if keeper_mode else None
+        )
         if self.get("climate_state_bioweapon_mode"):
             self._attr_fan_mode = "bioweapon"
         else:

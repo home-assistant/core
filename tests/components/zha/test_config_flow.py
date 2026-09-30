@@ -1788,7 +1788,9 @@ async def test_onboarding_auto_formation_new_hardware(
     """Test auto network formation with new hardware during onboarding."""
     # Initially, no network is formed
     mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
-    mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
+    mock_app.get_device = MagicMock(
+        return_value=MagicMock(spec=zigpy.device.ZigbeeDevice)
+    )
 
     # After form_network is called, load_network_info should return the network settings
     async def form_network_side_effect(*args, **kwargs):

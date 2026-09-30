@@ -626,10 +626,16 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     domain_schema = schema[key]
 
+    if isinstance(domain_schema, probatio.All) and any(
+        isinstance(validator, probatio.EnsureList)
+        for validator in domain_schema.validators
+    ):
+        return "list"
+
     t_schema = str(domain_schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
         return "dict"
-    if t_schema.startswith(("[", "All(<function ensure_list")):
+    if t_schema.startswith("["):
         return "list"
     return None
 

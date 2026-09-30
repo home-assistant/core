@@ -261,6 +261,7 @@ def smart_plug_device(
     routing: RoutingService.State = RoutingService.State.DISABLED,
     supports_energy_saving_mode: bool = False,
     energy_saving_mode_enabled: bool = False,
+    power_threshold: float | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -277,6 +278,7 @@ def smart_plug_device(
     device.routing = routing
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
+    device.power_threshold = power_threshold
     return device
 
 
@@ -285,6 +287,7 @@ def smart_plug_compact_device(
     name: str = "Smart Plug Compact",
     supports_energy_saving_mode: bool = False,
     energy_saving_mode_enabled: bool = False,
+    power_threshold: float | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -300,6 +303,7 @@ def smart_plug_compact_device(
     device.switchstate = PowerSwitchService.State.OFF
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
+    device.power_threshold = power_threshold
     return device
 
 
@@ -463,6 +467,7 @@ def shutter_contact2_device(
     name: str = "Shutter contact",
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
+    bypass_timeout: int = 5,
 ) -> SHCShutterContact2:
     """Build a minimal device double for the shutter_contacts2 bucket."""
     device = create_autospec(SHCShutterContact2, instance=True, spec_set=True)
@@ -477,6 +482,7 @@ def shutter_contact2_device(
     device.status = "AVAILABLE"
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
+    device.bypass_timeout = bypass_timeout
     return device
 
 

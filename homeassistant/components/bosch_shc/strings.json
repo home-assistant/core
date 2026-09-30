@@ -60,6 +60,12 @@
       }
     },
     "number": {
+      "bypass_timeout": {
+        "name": "Break function timeout"
+      },
+      "energy_saving_power_threshold": {
+        "name": "Energy-saving power threshold"
+      },
       "impulse_length": {
         "name": "Pulse length"
       }

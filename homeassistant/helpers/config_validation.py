@@ -19,7 +19,7 @@ from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
 import threading
-from typing import TYPE_CHECKING, Any, cast, overload
+from typing import Any, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -341,29 +341,7 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-@overload
-def ensure_list(value: None) -> list[Any]: ...
-
-
-@overload
-def ensure_list[_T](value: list[_T]) -> list[_T]: ...
-
-
-@overload
-def ensure_list[_T](value: list[_T] | _T) -> list[_T]: ...
-
-
-def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
-    """Wrap value in list if it is not one."""
-    if value is None:
-        return []
-    if isinstance(value, list):
-        if TYPE_CHECKING:
-            # https://github.com/home-assistant/core/pull/71960
-            # cast with a type variable is still slow.
-            return cast(list[_T], value)
-        return value  # type: ignore[unreachable]
-    return [value]
+ensure_list = probatio.EnsureList()
 
 
 def entity_id(value: Any) -> str:

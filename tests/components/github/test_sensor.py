@@ -51,3 +51,17 @@ async def test_sensor_updates_with_empty_release_array(
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)
     assert new_state.state == STATE_UNAVAILABLE
+
+
+async def test_latest_release_downloads_without_assets(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the downloads sensor is unavailable when the release has no assets."""
+    release = github_client.graphql.return_value.data["data"]["repository"]["release"]
+    release["assets"]["nodes"] = []
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.octocat_hello_world_latest_release_downloads")
+    assert state.state == STATE_UNAVAILABLE

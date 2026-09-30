@@ -3,7 +3,11 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import override
+
+from pyzonneplan import ElectricityChartGroup, GasChartGroup
+from pyzonneplan.const import MONEY_FACTOR
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,13 +16,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import ZONNEPLAN_TIMEZONE
-from .coordinator import ZonneplanConfigEntry, ZonneplanCoordinator
+from .coordinator import ZonneplanConfigEntry, ZonneplanCoordinator, ZonneplanData
 from .entity import ZonneplanEntity
 
 PARALLEL_UPDATES = 0
@@ -41,17 +45,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=lambda coordinator: (
             float(point.price_tax_included.euro)
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date <= dt_util.utcnow() < point.end_date
-                    ),
-                    None,
-                )
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(dt_util.utcnow())
             )
             else None
         ),
@@ -65,18 +61,10 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=lambda coordinator: (
             float(point.price_tax_included.euro)
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date
-                        <= dt_util.utcnow() + timedelta(hours=1)
-                        < point.end_date
-                    ),
-                    None,
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(
+                    dt_util.utcnow() + timedelta(hours=1)
                 )
             )
             else None
@@ -90,17 +78,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         options=["low", "normal", "high"],
         value_fn=lambda coordinator: (
             point.tariff_group
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date <= dt_util.utcnow() < point.end_date
-                    ),
-                    None,
-                )
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(dt_util.utcnow())
             )
             else None
         ),
@@ -114,17 +94,9 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         value_fn=lambda coordinator: (
             float(point.sustainability_score.fraction * 100)
-            if (
-                point := next(
-                    (
-                        point
-                        for electricity_prices in (coordinator.data.electricity_prices,)
-                        if electricity_prices is not None
-                        for point in electricity_prices.prices
-                        if point.start_date <= dt_util.utcnow() < point.end_date
-                    ),
-                    None,
-                )
+            if coordinator.data.electricity_prices is not None
+            and (
+                point := coordinator.data.electricity_prices.price_at(dt_util.utcnow())
             )
             and point.sustainability_score is not None
             else None
@@ -325,6 +297,93 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ZonneplanUsageSensorEntityDescription(SensorEntityDescription):
+    """Describes a Zonneplan month-to-date usage sensor."""
+
+    group_fn: Callable[[ZonneplanData], ElectricityChartGroup | GasChartGroup | None]
+    value_fn: Callable[[ZonneplanData], Decimal | None]
+
+
+ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
+    ZonneplanUsageSensorEntityDescription(
+        key="electricity_delivered_this_month",
+        translation_key="electricity_delivered_this_month",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        group_fn=lambda data: (
+            data.electricity_usage.group if data.electricity_usage else None
+        ),
+        value_fn=lambda data: (
+            group.delivered_kwh
+            if data.electricity_usage and (group := data.electricity_usage.group)
+            else None
+        ),
+    ),
+    ZonneplanUsageSensorEntityDescription(
+        key="electricity_produced_this_month",
+        translation_key="electricity_produced_this_month",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        group_fn=lambda data: (
+            data.electricity_usage.group if data.electricity_usage else None
+        ),
+        value_fn=lambda data: (
+            group.produced_kwh
+            if data.electricity_usage and (group := data.electricity_usage.group)
+            else None
+        ),
+    ),
+    ZonneplanUsageSensorEntityDescription(
+        key="gas_delivered_this_month",
+        translation_key="gas_delivered_this_month",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL,
+        group_fn=lambda data: data.gas_usage.group if data.gas_usage else None,
+        value_fn=lambda data: (
+            group.total_m3
+            if data.gas_usage and (group := data.gas_usage.group)
+            else None
+        ),
+    ),
+    ZonneplanUsageSensorEntityDescription(
+        key="electricity_cost_this_month",
+        translation_key="electricity_cost_this_month",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        group_fn=lambda data: (
+            data.electricity_usage.group if data.electricity_usage else None
+        ),
+        value_fn=lambda data: (
+            Decimal(str(group.meta["delivery_costs_incl_tax"])) * MONEY_FACTOR
+            if data.electricity_usage
+            and (group := data.electricity_usage.group)
+            and group.has_data
+            else None
+        ),
+    ),
+    ZonneplanUsageSensorEntityDescription(
+        key="gas_cost_this_month",
+        translation_key="gas_cost_this_month",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        group_fn=lambda data: data.gas_usage.group if data.gas_usage else None,
+        value_fn=lambda data: (
+            Decimal(str(group.meta["delivery_costs_incl_tax"])) * MONEY_FACTOR
+            if data.gas_usage and (group := data.gas_usage.group) and group.has_data
+            else None
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ZonneplanConfigEntry,
@@ -334,8 +393,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        ZonneplanPriceSensor(coordinator, description)
-        for description in ZONNEPLAN_SENSORS
+        [
+            *(
+                ZonneplanPriceSensor(coordinator, description)
+                for description in ZONNEPLAN_SENSORS
+            ),
+            *(
+                ZonneplanUsageSensor(coordinator, description)
+                for description in ZONNEPLAN_USAGE_SENSORS
+            ),
+        ]
     )
 
 
@@ -349,3 +416,22 @@ class ZonneplanPriceSensor(ZonneplanEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator)
+
+
+class ZonneplanUsageSensor(ZonneplanEntity, SensorEntity):
+    """Representation of a Zonneplan month-to-date usage sensor."""
+
+    entity_description: ZonneplanUsageSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> Decimal | None:
+        """Return the month-to-date value, or None until the month has data."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return the start of the month the value covers."""
+        group = self.entity_description.group_fn(self.coordinator.data)
+        return None if group is None else group.start
