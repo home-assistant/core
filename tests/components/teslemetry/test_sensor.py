@@ -710,6 +710,40 @@ async def test_sensors_streaming_dc_charging_ended(
             "0",
             id="late_ac_power_after_unknown_charge_state",
         ),
+        pytest.param(
+            [
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging"},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCalibrating"},
+                {Signal.AC_CHARGING_POWER: 0.6},
+            ],
+            "0",
+            id="late_ac_power_after_calibrating_charge_state",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 7,
+                    Signal.DC_CHARGING_POWER: 150,
+                }
+            ],
+            "150",
+            id="dc_power_preferred_over_ac",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 7,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateDisconnected"},
+                {Signal.AC_CHARGING_POWER: None, Signal.DC_CHARGING_POWER: None},
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateComplete"},
+            ],
+            STATE_UNKNOWN,
+            id="null_power_kept_while_not_charging",
+        ),
     ],
 )
 async def test_sensors_streaming_charger_power_sequence(
@@ -738,6 +772,7 @@ async def test_sensors_streaming_charger_power_sequence(
     [
         pytest.param(None, id="null"),
         pytest.param("DetailedChargeStateUnknown", id="unknown"),
+        pytest.param("DetailedChargeStateCalibrating", id="calibrating"),
     ],
 )
 async def test_sensors_streaming_charger_power_uninformative_charge_state(
