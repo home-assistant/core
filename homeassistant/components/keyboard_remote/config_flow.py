@@ -87,10 +87,11 @@ def _by_id_links() -> dict[str, str]:
     return links
 
 
-def _scan_input_devices_sync(
-    configured_names: Container[str],
-) -> list[selector.SelectOptionDict]:
+def _scan_input_devices_sync() -> list[tuple[selector.SelectOptionDict, str]]:
     """List input devices to offer, by their by-id link where they have one.
+
+    Each device comes with the unique ID an entry for it gets: the by-id link's
+    basename, or the device name.
 
     udev creates no by-id link for Bluetooth devices, nor for devices without
     a bus ID such as GPIO IR receivers. Those are offered by their event node
@@ -101,8 +102,8 @@ def _scan_input_devices_sync(
     from evdev import InputDevice, ecodes, list_devices  # noqa: PLC0415
 
     links = _by_id_links()
-    by_id_options: list[selector.SelectOptionDict] = []
-    name_options: list[selector.SelectOptionDict] = []
+    by_id_devices: list[tuple[selector.SelectOptionDict, str]] = []
+    name_devices: list[tuple[selector.SelectOptionDict, str]] = []
     names: set[str] = set()
     for dev_path in sorted(list_devices(DEVINPUT)):
         try:
@@ -123,21 +124,29 @@ def _scan_input_devices_sync(
         if not usable:
             continue
         if (link := links.get(os.path.realpath(dev_path))) is not None:
-            by_id_options.append(
-                selector.SelectOptionDict(
-                    value=link, label=f"{name} ({os.path.basename(link)})"
+            unique_id = os.path.basename(link)
+            by_id_devices.append(
+                (
+                    selector.SelectOptionDict(
+                        value=link, label=f"{name} ({unique_id})"
+                    ),
+                    unique_id,
                 )
             )
-        elif name not in names and name not in configured_names:
+        elif name not in names:
             names.add(name)
-            name_options.append(
-                selector.SelectOptionDict(
-                    value=dev_path, label=f"{name} ({os.path.basename(dev_path)})"
+            name_devices.append(
+                (
+                    selector.SelectOptionDict(
+                        value=dev_path,
+                        label=f"{name} ({os.path.basename(dev_path)})",
+                    ),
+                    name,
                 )
             )
 
-    by_id_options.sort(key=lambda option: option["value"])
-    return by_id_options + name_options
+    by_id_devices.sort(key=lambda device: device[0]["value"])
+    return by_id_devices + name_devices
 
 
 def _available_devices_sync(
@@ -149,13 +158,13 @@ def _available_devices_sync(
     entry imported from YAML before its by-id link existed is keyed by the raw
     path, so it is matched by node as well as by unique ID.
     """
-    devices = _scan_input_devices_sync(configured_ids)
+    devices = _scan_input_devices_sync()
     configured = {os.path.realpath(path) for path in configured_paths}
     return bool(devices), [
-        device
-        for device in devices
-        if os.path.basename(device["value"]) not in configured_ids
-        and os.path.realpath(device["value"]) not in configured
+        option
+        for option, unique_id in devices
+        if unique_id not in configured_ids
+        and os.path.realpath(option["value"]) not in configured
     ]
 
 

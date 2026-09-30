@@ -177,6 +177,24 @@ async def test_user_step_all_configured(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_all_configured_by_name(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a device configured by name counts as found, not as missing."""
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME)
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=BT_REMOTE_NAME, data={CONF_DEVICE_NAME: BT_REMOTE_NAME}
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "all_devices_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_hides_configured_devices(
     hass: HomeAssistant, fake_input: FakeInput, mock_config_entry: MockConfigEntry
 ) -> None:
