@@ -188,6 +188,58 @@ async def test_device_tracker_only_created_when_location_supported(
         assert (entity_id is not None) is expect_registered
 
 
+async def test_device_tracker_unavailable_when_location_becomes_unsupported(
+    hass: HomeAssistant,
+) -> None:
+    """Test the tracker goes unavailable if a later poll finds location unsupported.
+
+    Regression guard: location can go from supported to None mid-session (the
+    entity was already registered on a prior successful poll), and latitude_fn
+    etc. returning None must not be mistaken for a real "unknown location" -
+    the entity should report unavailable, not a stale/blank location.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        LOCATION_DATA_SUCCESS_PATCHER,
+        SLEEP_DATA_SUCCESS_PATCHER,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        registry = er.async_get(hass)
+        entity_id = registry.async_get_entity_id(
+            "device_tracker",
+            DOMAIN,
+            f"{entry.runtime_data.data.status['id']}_device_location",
+        )
+        assert entity_id is not None
+        registry.async_update_entity(entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+
+        # Enabling a previously-disabled entity schedules its own debounced
+        # reload (RELOAD_AFTER_UPDATE_DELAY); let it fire instead of racing
+        # it with a manual reload, which would leave the timer lingering.
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+        assert _entity_state(hass, entity_id) != "unavailable"
+
+        with LOCATION_DATA_UNIMPLEMENTED_PATCHER:
+            await entry.runtime_data.async_refresh()
+
+        assert entry.runtime_data.last_update_success is True
+        assert entry.runtime_data.data.location is None
+        assert _entity_state(hass, entity_id) == "unavailable"
+
+
 async def test_sleep_switch_reports_real_off_when_supported(
     hass: HomeAssistant,
 ) -> None:
