@@ -1,10 +1,18 @@
 """Test Snooz fan entity."""
 
+from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
 from pysnooz import SnoozDeviceState, UnknownSnoozState
-from pysnooz.commands import SnoozCommandResult, SnoozCommandResultStatus
+from pysnooz.commands import (
+    SnoozCommandData,
+    SnoozCommandResult,
+    SnoozCommandResultStatus,
+    turn_off,
+    turn_on,
+)
 from pysnooz.testing import MockSnoozDevice
 import pytest
 
@@ -45,17 +53,53 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
-async def test_transition_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
-    """Test transitioning on the device."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TRANSITION_ON,
-        {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
-        blocking=True,
-    )
+@pytest.mark.parametrize(
+    ("service", "command_name", "command", "expected_call", "expected_state"),
+    [
+        pytest.param(
+            SERVICE_TRANSITION_ON,
+            "turn_on",
+            turn_on,
+            {"volume": None, "duration": timedelta(seconds=1)},
+            STATE_ON,
+            id="on",
+        ),
+        pytest.param(
+            SERVICE_TRANSITION_OFF,
+            "turn_off",
+            turn_off,
+            {"duration": timedelta(seconds=1)},
+            STATE_OFF,
+            id="off",
+        ),
+    ],
+)
+async def test_transition(
+    hass: HomeAssistant,
+    snooz_fan_entity_id: str,
+    service: str,
+    command_name: str,
+    command: Callable[..., SnoozCommandData],
+    expected_call: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test transitioning the device on and off."""
+    # Run the transition instantly; pysnooz waits the full duration in real time
+    with patch(
+        f"homeassistant.components.snooz.fan.{command_name}",
+        side_effect=lambda **kwargs: command(**kwargs | {"duration": timedelta()}),
+    ) as mock_command:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
+            blocking=True,
+        )
+
+    mock_command.assert_called_once_with(**expected_call)
 
     state = hass.states.get(snooz_fan_entity_id)
-    assert state.state == STATE_ON
+    assert state.state == expected_state
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
@@ -125,20 +169,6 @@ async def test_turn_off(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
         fan.DOMAIN,
         fan.SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
-        blocking=True,
-    )
-
-    state = hass.states.get(snooz_fan_entity_id)
-    assert state.state == STATE_OFF
-    assert ATTR_ASSUMED_STATE not in state.attributes
-
-
-async def test_transition_off(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
-    """Test transitioning off the device."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TRANSITION_OFF,
-        {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
         blocking=True,
     )
 
