@@ -11,7 +11,10 @@ from typing import Any
 import pywemo
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.components.wemo.coordinator import async_get_coordinator
+from homeassistant.components.wemo.coordinator import (
+    DeviceCoordinator,
+    async_get_coordinator,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -48,6 +51,7 @@ def _perform_async_update(coordinator):
 async def _async_multiple_call_helper(
     hass: HomeAssistant,
     pywemo_device: pywemo.WeMoDevice,
+    coordinator: DeviceCoordinator,
     call1: Callable[[], Coroutine[Any, Any, None]],
     call2: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
@@ -76,6 +80,18 @@ async def _async_multiple_call_helper(
     # https://github.com/home-assistant/core/blob/1ba5c1c9fb1e380549cb655986b5f4d3873d7352/tests/common.py#L179
     pywemo_device.get_state = get_state
 
+    # Release the blocked poll only after the other call found the lock held.
+    # A callback from the executor can otherwise arrive after the poll is done.
+    lock_seen_held = asyncio.Event()
+    update_lock_locked = coordinator.update_lock.locked
+
+    def locked() -> bool:
+        if is_locked := update_lock_locked():
+            lock_seen_held.set()
+        return is_locked
+
+    coordinator.update_lock.locked = locked
+
     # One of these two calls will block on `event`. The other will return right
     # away because the `_update_lock` is held.
     done, pending = await asyncio.wait(
@@ -86,6 +102,7 @@ async def _async_multiple_call_helper(
 
     # Allow the blocked call to return.
     await waiting.wait()
+    await lock_seen_held.wait()
     event.set()
 
     if pending:
@@ -111,7 +128,9 @@ async def test_async_update_locked_callback_and_update(
     await async_setup_component(hass, HA_DOMAIN, {})
     callback = _perform_registry_callback(coordinator)
     update = _perform_async_update(coordinator)
-    await _async_multiple_call_helper(hass, pywemo_device, callback, update)
+    await _async_multiple_call_helper(
+        hass, pywemo_device, coordinator, callback, update
+    )
 
 
 async def test_async_update_locked_multiple_updates(
@@ -121,7 +140,7 @@ async def test_async_update_locked_multiple_updates(
     coordinator = async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
     update = _perform_async_update(coordinator)
-    await _async_multiple_call_helper(hass, pywemo_device, update, update)
+    await _async_multiple_call_helper(hass, pywemo_device, coordinator, update, update)
 
 
 async def test_async_update_locked_multiple_callbacks(
@@ -131,7 +150,9 @@ async def test_async_update_locked_multiple_callbacks(
     coordinator = async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
     callback = _perform_registry_callback(coordinator)
-    await _async_multiple_call_helper(hass, pywemo_device, callback, callback)
+    await _async_multiple_call_helper(
+        hass, pywemo_device, coordinator, callback, callback
+    )
 
 
 async def test_avaliable_after_update(
