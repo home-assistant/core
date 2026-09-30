@@ -17,21 +17,19 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DEVICE_CLASS_UNITS,
-    DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity, TuyaEntityDescription, get_child_device_info
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_device_temp_unit_convert
 
 
@@ -275,13 +273,10 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
         *(
             TuyaNumberEntityDescription(
                 key=DPCode(f"countdown_{channel}"),
-                translation_key="irrigation_duration",
+                translation_key="indexed_irrigation_duration",
+                translation_placeholders={"index": str(channel)},
                 device_class=NumberDeviceClass.DURATION,
                 entity_category=EntityCategory.CONFIG,
-                channel_index=channel,
-                channel_condition=lambda device: (
-                    DPCode.COUNTDOWN_2 in device.status_range
-                ),
             )
             for channel in range(1, 9)
         ),
@@ -499,19 +494,8 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
-                parent_device_id = dr.async_get_device_id_by_identifier(
-                    hass, (DOMAIN, device.id), config_entry_id=entry.entry_id
-                )
                 entities.extend(
-                    TuyaNumberEntity(
-                        device,
-                        manager,
-                        description,
-                        definition,
-                        device_info=get_child_device_info(
-                            device, parent_device_id, description
-                        ),
-                    )
+                    TuyaNumberEntity(device, manager, description, definition)
                     for description in descriptions
                     if (definition := get_default_definition(device, description.key))
                 )
