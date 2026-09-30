@@ -897,15 +897,26 @@ class DeviceHandler:
         except asyncio.CancelledError:
             await self._async_cancel_repeats(repeat_tasks)
         except OSError as err:
-            await self._async_cancel_repeats(repeat_tasks)
             _LOGGER.debug("Stopped reading %s: %s", dev.name, err)
-            # A teardown already running may have let a new device bind to
-            # this handler, and the failure callback would release that one.
-            if (
-                self._on_monitor_failure is not None
-                and self._monitor_task is asyncio.current_task()
-            ):
-                await self._on_monitor_failure(self)
+            await self._async_monitor_failed(repeat_tasks)
+        except Exception:
+            # Anything else would end the task with the device still grabbed
+            # and the handler looking busy, so release it the same way.
+            _LOGGER.exception("Unexpected error reading %s", dev.name)
+            await self._async_monitor_failed(repeat_tasks)
+
+    async def _async_monitor_failed(
+        self, repeat_tasks: dict[int, asyncio.Task]
+    ) -> None:
+        """Release this handler's device after its monitor stopped reading."""
+        await self._async_cancel_repeats(repeat_tasks)
+        # A teardown already running may have let a new device bind to this
+        # handler, and the failure callback would release that one.
+        if (
+            self._on_monitor_failure is not None
+            and self._monitor_task is asyncio.current_task()
+        ):
+            await self._on_monitor_failure(self)
 
     async def _async_cancel_repeats(
         self, repeat_tasks: dict[int, asyncio.Task]

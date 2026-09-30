@@ -1000,6 +1000,41 @@ async def test_monitor_input_oserror_cleanup(
     assert handler.dev is None
 
 
+async def test_monitor_input_unexpected_error_releases_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unexpected error while reading releases the device.
+
+    Otherwise the task ends with the device still grabbed, the handler looks
+    busy so nothing can rebind it, and unloading the entry fails.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
+    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+
+    async def _raise_value_error():
+        raise ValueError("unexpected")
+        yield  # pylint: disable=unreachable
+
+    mock_input_device.async_read_loop.return_value = _raise_value_error()
+
+    await handler.async_device_start_monitoring(mock_input_device)
+    await hass.async_block_till_done()
+
+    assert "Unexpected error reading Test Keyboard" in caplog.text
+    assert not handler.is_monitoring
+    mock_input_device.close.assert_called_once()
+    assert len(events) == 1
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_monitor_input_oserror_cancels_repeat_tasks(
     hass: HomeAssistant,
     mock_input_device: MagicMock,
