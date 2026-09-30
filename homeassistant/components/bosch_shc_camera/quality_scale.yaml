@@ -3,12 +3,18 @@ rules:
   action-setup:
     status: exempt
     comment: This integration does not register custom actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: This integration does not poll yet.
   brands: done
-  common-modules: done
+  common-modules:
+    status: exempt
+    comment: This integration does not have a coordinator or entities yet.
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: exempt
+    comment: All communication goes through Home Assistant's OAuth2 helper; no external library is used yet.
   docs-actions:
     status: exempt
     comment: This integration does not have any custom actions.
@@ -23,12 +29,20 @@ rules:
     comment: This integration does not have any custom triggers.
   entity-event-setup:
     status: exempt
-    comment: Entities get their data from the coordinator and do not subscribe to events.
-  entity-unique-id: done
-  has-entity-name: done
-  runtime-data: done
+    comment: This integration does not have entities yet.
+  entity-unique-id:
+    status: exempt
+    comment: This integration does not have entities yet.
+  has-entity-name:
+    status: exempt
+    comment: This integration does not have entities yet.
+  runtime-data:
+    status: exempt
+    comment: This integration does not store runtime data yet.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: This integration does not communicate with the service during setup yet.
   unique-config-entry: done
 
   # Silver
@@ -42,15 +56,15 @@ rules:
   docs-installation-parameters:
     status: exempt
     comment: This integration only asks for an account login.
-  entity-unavailable: done
+  entity-unavailable: todo
   integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: done
+  log-when-unavailable: todo
+  parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices: done
+  devices: todo
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -61,22 +75,20 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices: todo
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations:
-    status: exempt
-    comment: The camera entity uses the device name.
-  exception-translations: done
+  entity-translations: todo
+  exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
-  async-dependency: done
-  inject-websession: done
+  async-dependency: todo
+  inject-websession: todo
   strict-typing: todo
