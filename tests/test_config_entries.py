@@ -11192,6 +11192,73 @@ async def test_discovery_flow_dismiss_protected_on_configure(
         assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
+async def test_async_dismiss_discovery_flows(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test dismissing discovery flows skips the ones the user is working through."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_zeroconf(self, discovery_info):
+            """Test zeroconf step."""
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_confirm(self, user_input=None):
+            """Test confirm step."""
+            return self.async_show_form(step_id="confirm")
+
+    def _service_info(name: str) -> ZeroconfServiceInfo:
+        return ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.1"),
+            ip_addresses=[ip_address("192.168.1.1")],
+            hostname="test.local.",
+            name=name,
+            port=80,
+            properties={},
+            type="_tcp.local.",
+        )
+
+    with mock_config_flow("comp", TestFlow):
+        untouched = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_service_info("other._tcp.local."),
+        )
+        # Matches, and the user has not touched it, so this is the one dismissed
+        await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_service_info("test._tcp.local."),
+        )
+        pairing = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_service_info("test._tcp.local."),
+        )
+        # Interacting with a flow protects it from being dismissed
+        await manager.flow.async_configure(pairing["flow_id"])
+        assert _get_flow_context(manager, pairing["flow_id"])["dismiss_protected"]
+
+        manager.flow.async_dismiss_discovery_flows(
+            ZeroconfServiceInfo,
+            lambda service_info: service_info.name == "test._tcp.local.",
+        )
+
+    assert {flow["flow_id"] for flow in manager.flow.async_progress()} == {
+        untouched["flow_id"],
+        pairing["flow_id"],
+    }
+
+
 async def test_user_flow_not_dismiss_protected_on_configure(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,

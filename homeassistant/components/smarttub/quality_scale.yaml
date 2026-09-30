@@ -43,7 +43,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: This is a cloud-only service with no local discovery mechanism.

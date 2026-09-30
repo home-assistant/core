@@ -15,7 +15,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDeviceSensor, AmazonSchedule
+from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -31,6 +31,8 @@ from .const import (
     TEST_DEVICE_1_SN,
     TEST_DEVICE_2,
     TEST_DEVICE_2_SN,
+    TEST_DEVICE_AQM,
+    TEST_DEVICE_AQM_SN,
     TEST_NOTIFICATIONS,
 )
 
@@ -53,14 +55,24 @@ async def _push_notifications(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param({TEST_DEVICE_1_SN: TEST_DEVICE_1}, id="echo"),
+        pytest.param({TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM}, id="aqm"),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    devices: dict[str, AmazonDevice],
 ) -> None:
     """Test all entities."""
+    mock_amazon_devices_client.get_devices_data.return_value = deepcopy(devices)
+
     with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     await _push_notifications(hass, mock_amazon_devices_client, TEST_NOTIFICATIONS)

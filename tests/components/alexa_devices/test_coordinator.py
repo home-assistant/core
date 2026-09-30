@@ -22,6 +22,8 @@ from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+SYNC_METHODS = ["sync_dnd_state", "sync_media_state", "sync_notifications"]
+
 
 async def test_coordinator_stale_device(
     hass: HomeAssistant,
@@ -59,6 +61,34 @@ async def test_coordinator_stale_device(
 
     # Entity is removed
     assert not hass.states.get(entity_id_1)
+
+
+async def test_coordinator_stale_device_clears_dnd_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a removed device's DND state does not linger after resync."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+        TEST_DEVICE_2_SN: TEST_DEVICE_2,
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert TEST_DEVICE_2_SN in coordinator.dnd_states
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert TEST_DEVICE_2_SN not in coordinator.dnd_states
 
 
 async def test_coordinator_load_previous_devices_from_registry(
@@ -170,6 +200,7 @@ async def test_sync_history_state_error(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize("method_name", SYNC_METHODS)
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
@@ -200,23 +231,23 @@ async def test_sync_history_state_error(
         ),
     ],
 )
-@pytest.mark.parametrize("sync_method", ["sync_media_state", "sync_notifications"])
-async def test_sync_on_first_refresh_errors(
+async def test_sync_state_error(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    sync_method: str,
+    method_name: str,
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test only CannotAuthenticate from a first refresh sync blocks setup."""
-    getattr(mock_amazon_devices_client, sync_method).side_effect = side_effect
+    """Test setup state when a sync method raises during setup."""
+    getattr(mock_amazon_devices_client, method_name).side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize("method_name", SYNC_METHODS)
 @pytest.mark.parametrize(
     "error",
     [
@@ -230,21 +261,20 @@ async def test_sync_on_first_refresh_errors(
         ),
     ],
 )
-@pytest.mark.parametrize("sync_method", ["sync_media_state", "sync_notifications"])
-async def test_sync_failure_logged_on_first_refresh(
+async def test_device_state_sync_failure_logged_on_first_refresh(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    sync_method: str,
+    method_name: str,
     error: Exception,
 ) -> None:
     """Test a failing sync on first refresh is logged but does not block setup."""
-    getattr(mock_amazon_devices_client, sync_method).side_effect = error
+    getattr(mock_amazon_devices_client, method_name).side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
-    assert f"Sync failed for {sync_method}:" in caplog.text
+    assert f"Sync failed for {method_name}:" in caplog.text
     assert str(error) in caplog.text
     assert (
         "Data may be missing or incomplete until updates are pushed by Amazon"
@@ -253,16 +283,16 @@ async def test_sync_failure_logged_on_first_refresh(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("sync_method", ["sync_media_state", "sync_notifications"])
-async def test_sync_on_device_list_change(
+@pytest.mark.parametrize("method_name", SYNC_METHODS)
+async def test_device_state_sync_on_device_list_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    sync_method: str,
+    method_name: str,
 ) -> None:
     """Test per-device state is synced on setup and resynced when a device is added."""
-    sync_mock: AsyncMock = getattr(mock_amazon_devices_client, sync_method)
+    sync_mock: AsyncMock = getattr(mock_amazon_devices_client, method_name)
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: TEST_DEVICE_1,
     }
