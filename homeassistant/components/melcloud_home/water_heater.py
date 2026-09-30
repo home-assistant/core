@@ -2,8 +2,6 @@
 
 from typing import Any, override
 
-from aiomelcloudhome import ATWUnit
-
 from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
@@ -15,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
@@ -51,11 +49,6 @@ class ATWWaterHeater(MelCloudHomeATWUnitEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
     _attr_operation_list = [STATE_HEAT_PUMP, STATE_HIGH_DEMAND]
-
-    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: ATWUnit) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self._attr_unique_id = f"{unit.id}_hot_water"
 
     @property
     @override

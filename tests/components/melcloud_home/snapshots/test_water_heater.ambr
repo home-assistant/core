@@ -40,7 +40,7 @@
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 3>,
     'translation_key': 'hot_water',
-    'unique_id': 'atw-unit-uuid-1_hot_water',
+    'unique_id': 'atw-unit-uuid-1',
     'unit_of_measurement': None,
   })
 # ---
