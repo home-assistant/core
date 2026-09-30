@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.typing import UNDEFINED
 
@@ -132,23 +132,23 @@ def _scan_input_devices_sync(
     return by_id_options + name_options
 
 
-def _exclude_configured_devices(
-    devices: list[selector.SelectOptionDict], configured_paths: list[str]
-) -> list[selector.SelectOptionDict]:
-    """Drop devices whose node an existing entry already points at.
+def _available_devices_sync(
+    configured_ids: Container[str], configured_paths: list[str]
+) -> tuple[bool, list[selector.SelectOptionDict]]:
+    """Scan for devices and drop the ones already configured.
 
-    An entry imported from YAML before its by-id link existed is keyed by the
-    raw path, so the by-id basename alone does not show it as configured.
+    Returns whether any device was found, and the devices left to offer. An
+    entry imported from YAML before its by-id link existed is keyed by the raw
+    path, so it is matched by node as well as by unique ID.
     """
+    devices = _scan_input_devices_sync(configured_ids)
     configured = {os.path.realpath(path) for path in configured_paths}
-    return [d for d in devices if os.path.realpath(d["value"]) not in configured]
-
-
-async def _scan_input_devices(
-    hass: HomeAssistant, configured_names: Container[str]
-) -> list[selector.SelectOptionDict]:
-    """Scan for input devices and return selectable device options."""
-    return await hass.async_add_executor_job(_scan_input_devices_sync, configured_names)
+    return bool(devices), [
+        device
+        for device in devices
+        if os.path.basename(device["value"]) not in configured_ids
+        and os.path.realpath(device["value"]) not in configured
+    ]
 
 
 def _resolve_yaml_device(
@@ -160,7 +160,7 @@ def _resolve_yaml_device(
     Returns (path, name, unique_id) where unique_id is the by-id basename
     if available, or None if no by-id symlink can be found.
     """
-    from evdev import InputDevice, list_devices  # noqa: PLC0415
+    from evdev import list_devices  # noqa: PLC0415
 
     descriptor = import_data.get("device_descriptor")
     name = import_data.get("device_name")
@@ -169,16 +169,7 @@ def _resolve_yaml_device(
 
     if descriptor:
         real_path = os.path.realpath(descriptor)
-        try:
-            dev = InputDevice(real_path)
-        except OSError:
-            dev_name = None
-        else:
-            try:
-                dev_name = dev.name
-            finally:
-                dev.close()
-
+        dev_name = _get_device_name(real_path)
         if real_path in by_id_map:
             by_id_path = by_id_map[real_path]
             return (by_id_path, dev_name, os.path.basename(by_id_path))
@@ -186,18 +177,11 @@ def _resolve_yaml_device(
         return (descriptor, dev_name, None)
 
     if name:
-        matches: list[str] = []
-        for dev_path in list_devices(DEVINPUT):
-            try:
-                dev = InputDevice(dev_path)
-            except OSError:
-                continue
-            try:
-                dev_name = dev.name
-            finally:
-                dev.close()
-            if dev_name == name:
-                matches.append(dev_path)
+        matches = [
+            dev_path
+            for dev_path in list_devices(DEVINPUT)
+            if _get_device_name(dev_path) == name
+        ]
         # A composite keyboard can report the same name on several nodes.
         # Promoting one of them to its by-id path would lock the entry to
         # whichever node list_devices returned first, so keep it name-based.
@@ -269,26 +253,17 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entries = self._async_current_entries()
         configured_ids = {entry.unique_id for entry in entries if entry.unique_id}
-        available_devices = await _scan_input_devices(self.hass, configured_ids)
-
-        if not available_devices:
-            return self.async_abort(reason="no_devices")
-
         # Not the YAML descriptor: runtime matching ignores it, and its eventN
         # may now belong to an unrelated device.
         configured_paths = [
             path for entry in entries if (path := entry.data.get(CONF_DEVICE_PATH))
         ]
-        available_devices = await self.hass.async_add_executor_job(
-            _exclude_configured_devices,
-            [
-                d
-                for d in available_devices
-                if os.path.basename(d["value"]) not in configured_ids
-            ],
-            configured_paths,
+        found, available_devices = await self.hass.async_add_executor_job(
+            _available_devices_sync, configured_ids, configured_paths
         )
 
+        if not found:
+            return self.async_abort(reason="no_devices")
         if not available_devices:
             return self.async_abort(reason="all_devices_configured")
 
@@ -314,7 +289,6 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             _resolve_yaml_device, import_data
         )
 
-        # Determine unique ID and fallback identity
         if unique_id is None:
             raw_descriptor = import_data.get("device_descriptor")
             raw_name = import_data.get("device_name")
@@ -377,7 +351,6 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        # Build entry data
         data: dict[str, Any] = {}
         if device_path:
             data[CONF_DEVICE_PATH] = device_path

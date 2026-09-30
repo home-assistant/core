@@ -166,7 +166,6 @@ async def _async_import_yaml_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a single keyboard remote device from a config entry."""
-    # Get or create the shared manager
     if (manager := hass.data.get(DATA_MANAGER)) is None:
         manager = KeyboardRemoteManager(hass)
         # Open the watcher now rather than at start, so a failure fails setup
@@ -180,7 +179,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from err
         hass.data[DATA_MANAGER] = manager
 
-    # Create the device handler for this entry and register it
     handler = DeviceHandler(hass, entry)
     manager.register_handler(entry.entry_id, handler)
 
@@ -200,7 +198,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = hass.data[DATA_MANAGER]
     await manager.unregister_handler(entry.entry_id)
 
-    # If this was the last loaded entry, tear down the shared manager
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # Detach it before awaiting, so an entry that sets up meanwhile creates
         # a new manager instead of registering with this stopping one.
@@ -224,7 +221,7 @@ class KeyboardRemoteManager:
         self._handlers: dict[str, DeviceHandler] = {}  # entry_id -> handler
         self._active_handlers_by_descriptor: dict[str, DeviceHandler] = {}
         self._inotify: Inotify | None = None
-        self._watcher: Any = None
+        self._watcher: Watch | None = None
         self._by_id_watcher: Watch | None = None
         self._monitor_task: asyncio.Task | None = None
         self._stop_listener: CALLBACK_TYPE | None = None
@@ -339,7 +336,6 @@ class KeyboardRemoteManager:
                     await self._monitor_task
                 self._monitor_task = None
 
-            # Stop all active device handlers
             stop_tasks = {
                 self.hass.async_create_task(handler.async_device_stop_monitoring())
                 for handler in self._active_handlers_by_descriptor.values()
@@ -371,7 +367,6 @@ class KeyboardRemoteManager:
         """Register a DeviceHandler for a config entry."""
         self._handlers[entry_id] = handler
         handler.set_monitor_failure_callback(self._async_release_failed_handler)
-        # If already started, check if this handler's device is connected
         if self._started:
             self.hass.async_create_task(self._async_check_handler(handler))
 
@@ -380,7 +375,6 @@ class KeyboardRemoteManager:
         handler = self._handlers.pop(entry_id, None)
         if handler is None:
             return
-        # Remove from active handlers
         descriptors_to_remove = [
             desc
             for desc, h in self._active_handlers_by_descriptor.items()
@@ -548,9 +542,7 @@ class KeyboardRemoteManager:
             self._find_device_for_handler, handler, handlers, skip
         )
         if result is not None:
-            descriptor, dev = result
-            if self._claim_descriptor(descriptor, dev, handler):
-                await handler.async_device_start_monitoring(dev)
+            await self._async_claim_and_start(*result, handler)
 
     async def _async_monitor_devices(self) -> None:
         """Monitor /dev/input/ for device add/remove events via inotify."""
@@ -599,12 +591,29 @@ class KeyboardRemoteManager:
         dev, handler = await self.hass.async_add_executor_job(
             self._get_handler_for_device, descriptor, handlers
         )
+        if dev is not None and handler is not None:
+            await self._async_claim_and_start(descriptor, dev, handler)
+
+    async def _async_claim_and_start(
+        self, descriptor: str, dev: InputDevice, handler: DeviceHandler
+    ) -> None:
+        """Start monitoring a matched device, unless the claim is refused."""
+        if self._claim_descriptor(descriptor, dev, handler):
+            _LOGGER.debug("adding: %s", descriptor)
+            await handler.async_device_start_monitoring(dev)
+
+    def _match_linked_device(
+        self, link: str, handlers: list[DeviceHandler], active: set[str]
+    ) -> tuple[str, InputDevice, DeviceHandler] | None:
+        """Find the handler for the node a by-id link points to (executor)."""
+        descriptor = os.path.realpath(link)
+        # by-id also links mouse and joystick nodes, which evdev cannot open
+        if not descriptor.startswith(f"{DEVINPUT}/event") or descriptor in active:
+            return None
+        dev, handler = self._get_handler_for_device(descriptor, handlers)
         if dev is None or handler is None:
-            return
-        if not self._claim_descriptor(descriptor, dev, handler):
-            return
-        _LOGGER.debug("adding: %s", descriptor)
-        await handler.async_device_start_monitoring(dev)
+            return None
+        return descriptor, dev, handler
 
     async def _async_handle_by_id_event(self, event: InotifyEvent) -> None:
         """Handle a new by-id symlink by checking the node it points to."""
@@ -614,17 +623,15 @@ class KeyboardRemoteManager:
             return
         if event.name is None or not event.mask & (Mask.CREATE | Mask.MOVED_TO):
             return
-        descriptor = await self.hass.async_add_executor_job(
-            os.path.realpath, f"{DEVINPUT_BY_ID}/{event.name}"
+        _LOGGER.debug("checking new by-id link: %s", event.name)
+        result = await self.hass.async_add_executor_job(
+            self._match_linked_device,
+            f"{DEVINPUT_BY_ID}/{event.name}",
+            list(self._handlers.values()),
+            set(self._active_handlers_by_descriptor),
         )
-        # by-id also links mouse and joystick nodes, which evdev cannot open
-        if (
-            not descriptor.startswith(f"{DEVINPUT}/event")
-            or descriptor in self._active_handlers_by_descriptor
-        ):
-            return
-        _LOGGER.debug("checking new by-id link: %s -> %s", event.name, descriptor)
-        await self._async_attach_descriptor(descriptor)
+        if result is not None:
+            await self._async_claim_and_start(*result)
 
     async def _async_handle_by_id_created(self) -> None:
         """Start watching a by-id directory that udev just created.
@@ -658,6 +665,22 @@ class DeviceHandler:
         self._on_monitor_failure: (
             Callable[[DeviceHandler], Coroutine[Any, Any, None]] | None
         ) = None
+        # The options flow reloads the entry, so these cannot change while
+        # this handler exists.
+        options = entry.options
+        self._key_values = {
+            KEY_VALUE[key_type]
+            for key_type in options.get(CONF_KEY_TYPES, DEFAULT_KEY_TYPES)
+        }
+        self._emulate_key_hold: bool = options.get(
+            CONF_EMULATE_KEY_HOLD, DEFAULT_EMULATE_KEY_HOLD
+        )
+        self._emulate_key_hold_delay: float = options.get(
+            CONF_EMULATE_KEY_HOLD_DELAY, DEFAULT_EMULATE_KEY_HOLD_DELAY
+        )
+        self._emulate_key_hold_repeat: float = options.get(
+            CONF_EMULATE_KEY_HOLD_REPEAT, DEFAULT_EMULATE_KEY_HOLD_REPEAT
+        )
 
     def set_monitor_failure_callback(
         self, callback: Callable[[DeviceHandler], Coroutine[Any, Any, None]]
@@ -688,31 +711,6 @@ class DeviceHandler:
     def _device_descriptor(self) -> str | None:
         """The original YAML device_descriptor, if any."""
         return self.entry.data.get(CONF_DEVICE_DESCRIPTOR)
-
-    @property
-    def _key_values(self) -> set[int]:
-        """Key event values to monitor."""
-        key_types = self.entry.options.get(CONF_KEY_TYPES, DEFAULT_KEY_TYPES)
-        return {KEY_VALUE[kt] for kt in key_types}
-
-    @property
-    def _emulate_key_hold(self) -> bool:
-        """Whether key hold emulation is enabled."""
-        return self.entry.options.get(CONF_EMULATE_KEY_HOLD, DEFAULT_EMULATE_KEY_HOLD)
-
-    @property
-    def _emulate_key_hold_delay(self) -> float:
-        """Delay before key hold emulation starts."""
-        return self.entry.options.get(
-            CONF_EMULATE_KEY_HOLD_DELAY, DEFAULT_EMULATE_KEY_HOLD_DELAY
-        )
-
-    @property
-    def _emulate_key_hold_repeat(self) -> float:
-        """Repeat interval for key hold emulation."""
-        return self.entry.options.get(
-            CONF_EMULATE_KEY_HOLD_REPEAT, DEFAULT_EMULATE_KEY_HOLD_REPEAT
-        )
 
     def match_rank(self, descriptor: str, dev: InputDevice) -> int | None:
         """Return how strongly this handler matches a device, or None.
@@ -748,10 +746,6 @@ class DeviceHandler:
             return MATCH_DEVICE_NAME
 
         return None
-
-    def matches_device(self, descriptor: str, dev: InputDevice) -> bool:
-        """Check if this handler matches the given device."""
-        return self.match_rank(descriptor, dev) is not None
 
     async def async_device_start_monitoring(self, dev: InputDevice) -> None:
         """Start event monitoring task and fire connected event."""

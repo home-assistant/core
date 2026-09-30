@@ -32,6 +32,7 @@ from homeassistant.components.keyboard_remote.const import (
     EVENT_KEYBOARD_REMOTE_DISCONNECTED,
     KEY_CODE,
     KEY_VALUE,
+    MATCH_DEVICE_NAME,
     MATCH_DEVICE_PATH,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
@@ -421,12 +422,12 @@ async def test_async_setup_normalizes_yaml(hass: HomeAssistant) -> None:
     )
 
 
-async def test_matches_device_by_path(
+async def test_match_rank_by_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_input_device: MagicMock,
 ) -> None:
-    """Test matches_device returns True when configured path resolves to same real path."""
+    """Test the configured path matching the device node gives a path match."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -436,7 +437,10 @@ async def test_matches_device_by_path(
         patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
         patch("os.path.exists", return_value=True),
     ):
-        assert handler.matches_device(FAKE_DEVICE_REAL_PATH, mock_input_device) is True
+        assert (
+            handler.match_rank(FAKE_DEVICE_REAL_PATH, mock_input_device)
+            == MATCH_DEVICE_PATH
+        )
 
 
 async def test_no_match_on_reused_yaml_descriptor(
@@ -472,14 +476,14 @@ async def test_no_match_on_reused_yaml_descriptor(
         patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
         patch("os.path.exists", return_value=False),
     ):
-        assert handler.matches_device(FAKE_DEVICE_REAL_PATH, mock_input_device) is False
+        assert handler.match_rank(FAKE_DEVICE_REAL_PATH, mock_input_device) is None
 
 
-async def test_matches_device_by_name(
+async def test_match_rank_by_name(
     hass: HomeAssistant,
     mock_input_device: MagicMock,
 ) -> None:
-    """Test matches_device returns True when a name-only entry's name matches."""
+    """Test a name-only entry whose name matches gives a name match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=FAKE_DEVICE_NAME,
@@ -500,7 +504,10 @@ async def test_matches_device_by_name(
         patch("os.path.realpath", side_effect=lambda p: p),
         patch("os.path.exists", return_value=False),
     ):
-        assert handler.matches_device("/dev/input/event99", mock_input_device) is True
+        assert (
+            handler.match_rank("/dev/input/event99", mock_input_device)
+            == MATCH_DEVICE_NAME
+        )
 
 
 async def test_no_name_match_when_entry_has_a_path(
@@ -522,14 +529,14 @@ async def test_no_name_match_when_entry_has_a_path(
         patch("os.path.realpath", side_effect=lambda p: p),
         patch("os.path.exists", return_value=False),
     ):
-        assert handler.matches_device("/dev/input/event99", mock_input_device) is False
+        assert handler.match_rank("/dev/input/event99", mock_input_device) is None
 
 
-async def test_matches_device_no_match(
+async def test_match_rank_no_match(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test matches_device returns False when no strategy matches."""
+    """Test a device that nothing identifies does not match."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -541,7 +548,7 @@ async def test_matches_device_no_match(
         patch("os.path.realpath", side_effect=lambda p: p),
         patch("os.path.exists", return_value=False),
     ):
-        assert handler.matches_device("/dev/input/event99", dev) is False
+        assert handler.match_rank("/dev/input/event99", dev) is None
 
 
 async def test_scan_prefers_device_path_over_name_match(
@@ -1668,10 +1675,11 @@ async def test_monitor_devices_by_id_link_starts_device(
 
 
 @pytest.mark.parametrize(
-    ("target", "mask"),
+    ("target", "mask", "expected_opens"),
     [
-        pytest.param("/dev/input/mouse0", Mask.CREATE, id="not_an_event_node"),
-        pytest.param(FAKE_DEVICE_REAL_PATH, Mask.DELETE, id="link_removed"),
+        pytest.param("/dev/input/mouse0", Mask.CREATE, 0, id="not_an_event_node"),
+        pytest.param(FAKE_DEVICE_REAL_PATH, Mask.DELETE, 0, id="link_removed"),
+        pytest.param(FAKE_DEVICE_REAL_PATH, Mask.CREATE, 1, id="no_matching_entry"),
     ],
 )
 async def test_monitor_devices_by_id_event_ignored(
@@ -1680,8 +1688,12 @@ async def test_monitor_devices_by_id_event_ignored(
     mock_inotify: MagicMock,
     target: str,
     mask: Mask,
+    expected_opens: int,
 ) -> None:
-    """Test by-id events that cannot bring up an evdev device open nothing."""
+    """Test by-id events that do not lead to a configured device start nothing.
+
+    Links to nodes evdev cannot open are not even opened.
+    """
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -1705,7 +1717,7 @@ async def test_monitor_devices_by_id_event_ignored(
         await manager._async_monitor_devices()
         await hass.async_block_till_done()
 
-    mock_open.assert_not_called()
+    assert mock_open.call_count == expected_opens
     assert not manager._active_handlers_by_descriptor
 
 
