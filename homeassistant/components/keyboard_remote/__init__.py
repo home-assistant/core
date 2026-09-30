@@ -84,17 +84,19 @@ CONFIG_SCHEMA = probatio.Schema(
                                 _DEVICE_NAME, _DEVICE_ID_GROUP
                             ): cv.string,
                             probatio.Optional(_TYPE, default=["key_up"]): probatio.All(
-                                cv.ensure_list, [probatio.In(KEY_VALUE)]
+                                cv.ensure_list,
+                                [probatio.In(KEY_VALUE)],
+                                probatio.Length(min=1),
                             ),
                             probatio.Optional(
                                 _EMULATE_KEY_HOLD, default=False
                             ): cv.boolean,
                             probatio.Optional(
                                 _EMULATE_KEY_HOLD_DELAY, default=0.250
-                            ): float,
+                            ): cv.positive_float,
                             probatio.Optional(
                                 _EMULATE_KEY_HOLD_REPEAT, default=0.033
-                            ): float,
+                            ): cv.positive_float,
                         }
                     ),
                 )

@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import errno
+import math
 from pathlib import PurePath
 import threading
 from types import SimpleNamespace
@@ -309,6 +310,21 @@ async def test_async_setup_with_yaml_config(hass: HomeAssistant) -> None:
             id="delay_not_a_number",
         ),
         pytest.param({"type": "key_up"}, id="no_device"),
+        pytest.param(
+            {"device_descriptor": "/dev/input/event5", "type": []},
+            id="no_key_types",
+        ),
+        pytest.param(
+            {"device_descriptor": "/dev/input/event5", "emulate_key_hold_delay": -1},
+            id="negative_delay",
+        ),
+        pytest.param(
+            {
+                "device_descriptor": "/dev/input/event5",
+                "emulate_key_hold_repeat": math.nan,
+            },
+            id="repeat_not_a_number",
+        ),
     ],
 )
 async def test_async_setup_rejects_invalid_yaml(
