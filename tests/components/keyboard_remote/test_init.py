@@ -9,14 +9,11 @@ from pathlib import PurePath
 import threading
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.keyboard_remote import (
-    KeyboardRemoteManager,
-    _async_import_yaml_device,
-)
+from homeassistant.components.keyboard_remote import KeyboardRemoteManager
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
@@ -55,7 +52,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import (
     EV_REL,
-    FAKE_BY_ID_BASENAME,
     FAKE_DEVICE_NAME,
     FAKE_DEVICE_PATH,
     FAKE_DEVICE_PATH_2,
@@ -180,88 +176,60 @@ async def test_multiple_entries_shared_manager(
     assert entry2.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_yaml_import_triggers_config_flow(hass: HomeAssistant) -> None:
-    """Test that YAML config triggers import flow and creates deprecation issue."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        assert await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_descriptor": "/dev/input/event5"},
-        )
-
-    # Verify config entry was created
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data["device_path"] == FAKE_DEVICE_PATH
-
-
-async def test_yaml_import_creates_deprecation_issue(
+async def test_yaml_import_creates_entry_and_deprecation_issue(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test YAML import creates a deprecation repair issue."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        await _async_import_yaml_device(
-            hass, {"device_descriptor": "/dev/input/event5"}
-        )
+    """Test a YAML device is imported as an entry and YAML is flagged deprecated."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN,
-        issue_id=f"deprecated_yaml_{DOMAIN}",
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"device_descriptor": FAKE_DEVICE_REAL_PATH}}
     )
+    await hass.async_block_till_done()
 
-
-async def test_yaml_import_failure_creates_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test YAML import failure creates an error issue."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(None, None, None),
-    ):
-        await _async_import_yaml_device(hass, {})
-
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert [entry.data[CONF_DEVICE_PATH] for entry in entries] == [FAKE_DEVICE_PATH]
     assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_yaml_import_issue_cannot_identify_device",
+        domain=HOMEASSISTANT_DOMAIN, issue_id=f"deprecated_yaml_{DOMAIN}"
     )
 
 
 @pytest.mark.parametrize(
     ("reason", "expected_issues"),
     [
+        pytest.param(
+            "cannot_identify_device",
+            {"deprecated_yaml_import_issue_cannot_identify_device"},
+            id="cannot_identify_device",
+        ),
+        # Another block names the same device and is being imported
         pytest.param("already_in_progress", set(), id="duplicate_block_in_progress"),
+        pytest.param("already_configured", set(), id="already_configured"),
         pytest.param(
             "not_implemented",
             {"deprecated_yaml_import_issue_unknown"},
-            id="unexpected_reason",
+            id="reason_without_issue_strings",
         ),
     ],
 )
-async def test_yaml_import_framework_abort(
+async def test_yaml_import_abort_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     reason: str,
     expected_issues: set[str],
 ) -> None:
-    """Test framework abort reasons get an issue that exists, or none.
-
-    already_in_progress means another YAML block names the same device and is
-    being imported, so this block is a duplicate rather than an error.
-    """
+    """Test an aborted YAML import raises the issue that has strings, or none."""
     with patch.object(
         hass.config_entries.flow,
         "async_init",
         return_value={"type": FlowResultType.ABORT, "reason": reason},
     ):
-        await _async_import_yaml_device(hass, {})
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {"device_descriptor": FAKE_DEVICE_REAL_PATH}}
+        )
+        await hass.async_block_till_done()
 
     assert {
         issue_id for (domain, issue_id) in issue_registry.issues if domain == DOMAIN
@@ -269,30 +237,52 @@ async def test_yaml_import_framework_abort(
 
 
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
-    """Test setup succeeds when DOMAIN not in config."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    """Test setup without YAML configuration starts no import."""
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    mock_init.assert_not_called()
 
 
-async def test_async_setup_with_yaml_config(hass: HomeAssistant) -> None:
-    """Test setup creates import tasks for YAML device blocks."""
-    with patch(
-        "homeassistant.components.keyboard_remote._async_import_yaml_device",
-        new_callable=AsyncMock,
-    ) as mock_import:
+async def test_async_setup_imports_each_normalized_block(hass: HomeAssistant) -> None:
+    """Test each YAML block is imported with coerced values and defaults."""
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        return_value={"type": FlowResultType.ABORT, "reason": "already_configured"},
+    ) as mock_init:
         assert await async_setup_component(
             hass,
             DOMAIN,
             {
                 DOMAIN: [
-                    {"device_descriptor": "/dev/input/event5"},
-                    {"device_name": "Test Keyboard"},
+                    {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+                    {
+                        "device_name": "Keyboard",
+                        "type": "key_down",
+                        "emulate_key_hold_delay": 1,
+                    },
                 ]
             },
         )
         await hass.async_block_till_done()
 
-    assert mock_import.call_count == 2
+    defaults = {
+        "type": ["key_up"],
+        "emulate_key_hold": False,
+        "emulate_key_hold_delay": 0.25,
+        "emulate_key_hold_repeat": 0.033,
+    }
+    assert [init.kwargs["data"] for init in mock_init.call_args_list] == [
+        {"device_descriptor": FAKE_DEVICE_REAL_PATH, **defaults},
+        {
+            **defaults,
+            "device_name": "Keyboard",
+            "type": ["key_down"],
+            "emulate_key_hold_delay": 1.0,
+        },
+    ]
 
 
 @pytest.mark.parametrize(
@@ -337,45 +327,11 @@ async def test_async_setup_rejects_invalid_yaml(
     Imported unchanged, an unknown key type crashed the monitor on the first
     key press and left the device grabbed.
     """
-    with patch(
-        "homeassistant.components.keyboard_remote._async_import_yaml_device",
-        new_callable=AsyncMock,
-    ) as mock_import:
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: device_block})
         await hass.async_block_till_done()
 
-    mock_import.assert_not_called()
-
-
-async def test_async_setup_normalizes_yaml(hass: HomeAssistant) -> None:
-    """Test a valid YAML block is imported with coerced values and defaults."""
-    with patch(
-        "homeassistant.components.keyboard_remote._async_import_yaml_device",
-        new_callable=AsyncMock,
-    ) as mock_import:
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    "device_name": "Keyboard",
-                    "type": "key_down",
-                    "emulate_key_hold_delay": 1,
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    mock_import.assert_called_once_with(
-        hass,
-        {
-            "device_name": "Keyboard",
-            "type": ["key_down"],
-            "emulate_key_hold": False,
-            "emulate_key_hold_delay": 1.0,
-            "emulate_key_hold_repeat": 0.033,
-        },
-    )
+    mock_init.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -384,19 +340,19 @@ async def test_async_setup_normalizes_yaml(hass: HomeAssistant) -> None:
         pytest.param(
             OSError(errno.EMFILE, "Too many open files"),
             {},
-            None,
+            [],
             id="inotify_instances_exhausted",
         ),
         pytest.param(
             None,
             {DEVINPUT: FileNotFoundError(errno.ENOENT, "No such file")},
-            True,
+            [True],
             id="input_directory_missing",
         ),
         pytest.param(
             None,
             {DEVINPUT_BY_ID: OSError(errno.ENOSPC, "No space left on device")},
-            True,
+            [True],
             id="by_id_watch_limit",
         ),
     ],
@@ -407,7 +363,7 @@ async def test_setup_retries_when_devices_cannot_be_watched(
     mock_config_entry: MockConfigEntry,
     inotify_error: OSError | None,
     watch_errors: dict[str, OSError],
-    expected_closed: bool | None,
+    expected_closed: list[bool],
 ) -> None:
     """Test setup is retried, instead of loading an entry that cannot work.
 
@@ -422,7 +378,9 @@ async def test_setup_retries_when_devices_cannot_be_watched(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert (fake_input.inotify and fake_input.inotify.closed) == expected_closed
+    assert [
+        inotify.closed for inotify in fake_input.inotify_instances
+    ] == expected_closed
 
     fake_input.inotify_error = None
     fake_input.watch_errors = {}
@@ -473,25 +431,21 @@ async def test_unload_before_start_closes_watcher(
 
 
 @pytest.mark.parametrize(
-    ("entry", "devices", "expected"),
+    ("entry", "devices", "expected_grabbed", "expected_closed"),
     [
         pytest.param(
             _entry({CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: "Keyboard"}),
             [(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, FAKE_DEVICE_PATH)],
-            FAKE_DEVICE_REAL_PATH,
+            [FAKE_DEVICE_REAL_PATH],
+            [],
             id="by_path",
         ),
         pytest.param(
             _remote_entry(),
             [(REMOTE_PATH, REMOTE_NAME, None)],
-            REMOTE_PATH,
+            [REMOTE_PATH],
+            [],
             id="by_name",
-        ),
-        pytest.param(
-            _remote_entry(),
-            [(REMOTE_PATH, REMOTE_NAME, None)],
-            REMOTE_PATH,
-            id="skips_unopenable_node",
         ),
         # A composite keyboard reports the same name on each node, and only the
         # node the user picked carries the configured link.
@@ -503,7 +457,8 @@ async def test_unload_before_start_closes_watcher(
                 ("/dev/input/event4", FAKE_DEVICE_NAME, None),
                 (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, FAKE_DEVICE_PATH),
             ],
-            FAKE_DEVICE_REAL_PATH,
+            [FAKE_DEVICE_REAL_PATH],
+            ["/dev/input/event4"],
             id="path_over_same_named_sibling",
         ),
         pytest.param(
@@ -511,7 +466,8 @@ async def test_unload_before_start_closes_watcher(
                 {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
             ),
             [("/dev/input/event9", FAKE_DEVICE_NAME, None)],
-            None,
+            [],
+            ["/dev/input/event9"],
             id="path_entry_ignores_name_while_link_missing",
         ),
         # The node the old YAML named may since belong to an unrelated device
@@ -525,13 +481,15 @@ async def test_unload_before_start_closes_watcher(
                 source=SOURCE_IMPORT,
             ),
             [("/dev/input/event3", "Mouse", None)],
-            None,
+            [],
+            ["/dev/input/event3"],
             id="reused_yaml_descriptor",
         ),
         pytest.param(
             _remote_entry(),
             [("/dev/input/event8", "Mouse", None)],
-            None,
+            [],
+            ["/dev/input/event8"],
             id="unrelated_device",
         ),
     ],
@@ -541,7 +499,8 @@ async def test_startup_connects_matching_device(
     fake_input: FakeInput,
     entry: MockConfigEntry,
     devices: list[tuple[str, str, str | None]],
-    expected: str | None,
+    expected_grabbed: list[str],
+    expected_closed: list[str],
 ) -> None:
     """Test the startup scan grabs the device the entry identifies, and only it.
 
@@ -555,11 +514,11 @@ async def test_startup_connects_matching_device(
     await _set_up(hass, entry)
 
     assert [path for path, dev in added.items() if dev.grab.called] == (
-        [expected] if expected else []
+        expected_grabbed
     )
-    assert [path for path, dev in added.items() if dev.close.called] == [
-        path for path in added if path != expected
-    ]
+    assert [path for path, dev in added.items() if dev.close.called] == (
+        expected_closed
+    )
 
 
 async def test_bluetooth_remote_matched_by_address(

@@ -216,7 +216,6 @@ def _resolve_yaml_device(
         if real_path in by_id_map:
             by_id_path = by_id_map[real_path]
             return (by_id_path, dev_name, os.path.basename(by_id_path))
-        # No by-id symlink; return raw path, no stable unique_id
         return (descriptor, dev_name, None)
 
     if name:
@@ -401,7 +400,8 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_DEVICE_PATH] = device_path
         if device_name:
             data[CONF_DEVICE_NAME] = device_name
-        # Store original YAML descriptor for runtime matching
+        # Reported in events as before the migration, and rules out matching
+        # the entry by name
         if raw_descriptor := import_data.get("device_descriptor"):
             data[CONF_DEVICE_DESCRIPTOR] = raw_descriptor
 

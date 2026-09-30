@@ -183,6 +183,7 @@ class FakeInput:
         self.inotify_error: OSError | None = None
         self.by_id_error: OSError | None = None
         self.inotify: _FakeInotify | None = None
+        self.inotify_instances: list[_FakeInotify] = []
         self.opened: list[str] = []
         self._next_fd = 100
         self._listing_gate: tuple[threading.Event, threading.Event] | None = None
@@ -430,6 +431,7 @@ class FakeInput:
         if self.inotify_error is not None:
             raise self.inotify_error
         self.inotify = _FakeInotify(self)
+        self.inotify_instances.append(self.inotify)
         return self.inotify
 
 
