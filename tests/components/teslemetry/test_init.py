@@ -1,7 +1,7 @@
 """Test the Teslemetry init."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
@@ -2129,6 +2129,50 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     tariff_unsub.assert_called_once()
     totals_unsub.assert_called_once()
     mock_close.assert_called_once()
+
+
+async def _stop_home_assistant(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    await hass.async_stop()
+
+
+async def _unload_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "stop_stream",
+    [
+        pytest.param(_stop_home_assistant, id="home_assistant_stop"),
+        pytest.param(_unload_entry, id="entry_unload"),
+    ],
+)
+async def test_energy_stream_intentional_disconnect_does_not_fail(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_stream_listen: MagicMock,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+    stop_stream: Callable[[HomeAssistant, MockConfigEntry], Awaitable[None]],
+) -> None:
+    """Stopping Home Assistant or unloading does not fail the energy coordinators."""
+
+    async def listen() -> None:
+        # Like the library, report a disconnect when the listen task ends.
+        try:
+            await asyncio.Event().wait()
+        finally:
+            mock_add_connection_listener.send(False)
+
+    mock_stream_listen.side_effect = listen
+    entry = await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+
+    await stop_stream(hass, entry)
+
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
 
 
 async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
