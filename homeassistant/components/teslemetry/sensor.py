@@ -383,7 +383,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         polling_value_fn=lambda x: SHIFT_STATES.get(str(x), "p"),
         nullable=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_Gear(
-            lambda value: callback(SHIFT_STATES.get(str(value), "p"))
+            lambda value: callback("p" if value is None else value.lower())
         ),
         options=list(SHIFT_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
