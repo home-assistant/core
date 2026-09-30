@@ -1,6 +1,6 @@
 """Support for Tuya sensors."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import override
 
 from tuya_device_handlers.definition.sensor import (
@@ -148,13 +148,25 @@ def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]
 
 def _has_multiple_phase_channels(device: CustomerDevice) -> bool:
     """Return if the device reports more than one indexed phase channel."""
-    return DPCode.PHASE_S2 in device.status_range
+    return (
+        DPCode.PHASE_S2 in device.status_range or DPCode.PHASE_2 in device.status_range
+    )
 
 
 def _indexed_electricity_data(
     dpcode: DPCode, index: int
 ) -> tuple[TuyaSensorEntityDescription, ...]:
-    """Build sensors extracted from an indexed hex-string electricity DPCode."""
+    """Build sensors extracted from an indexed electricity DPCode."""
+    if dpcode.removeprefix("phase_").isdigit():
+        return tuple(
+            replace(
+                description,
+                translation_key=None,
+                channel_index=index,
+                channel_condition=_has_multiple_phase_channels,
+            )
+            for description in _electricity_data(dpcode)
+        )
     return (
         TuyaSensorEntityDescription(
             key=f"{dpcode}electriccurrent",
@@ -1784,8 +1796,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *(
             description
             for index in range(1, 21)
+            for prefix in ("phase_s", "phase_")
             for description in _indexed_electricity_data(
-                DPCode(f"phase_s{index}"), index
+                DPCode(f"{prefix}{index}"), index
             )
         ),
     ),
