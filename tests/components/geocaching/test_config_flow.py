@@ -292,6 +292,72 @@ async def test_reauthentication(
     async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauthentication_reloads_unloaded_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_geocaching_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth reloads an entry whose initial setup never finished."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.geocaching.async_get_config_entry_implementation",
+        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+
+    status = GeocachingStatus()
+    status.user.username = "mock_user"
+    status.user.reference_code = "PR12345"
+    mock_geocaching_config_flow.update = AsyncMock(return_value=status)
+
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as async_reload:
+        result = await mock_config_entry.start_reauth_flow(hass)
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+
+        result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+
+        state = config_entry_oauth2_flow._encode_jwt(
+            hass,
+            {
+                "flow_id": result["flow_id"],
+                "redirect_uri": "https://example.com/auth/external/callback",
+            },
+        )
+
+        client = await hass_client_no_auth()
+        resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+        assert resp.status == HTTPStatus.OK
+
+        aioclient_mock.post(
+            CURRENT_ENVIRONMENT_URLS["token_url"],
+            json={
+                "access_token": "mock-access-token",
+                "token_type": "bearer",
+                "expires_in": 3599,
+                "refresh_token": "mock-refresh_token",
+            },
+        )
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
+    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
 def _mock_loaded(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Add the config entry to hass in a loaded state with an OAuth session."""
     config_entry.add_to_hass(hass)
@@ -522,7 +588,9 @@ async def test_subentry_flow_maximum(
 
 
 async def test_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_geocaching_config_flow: MagicMock,
 ) -> None:
     """Test configuring tracked trackables reloads a loaded entry."""
     mock_config_entry.add_to_hass(hass)
@@ -532,6 +600,7 @@ async def test_options_flow(
     status.user.reference_code = "PR12345"
     session = MagicMock()
     session.token = {"access_token": "mock-token"}
+    session.async_ensure_token_valid = AsyncMock()
 
     with (
         patch(
@@ -569,12 +638,14 @@ async def test_options_flow(
     assert result["data"] == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
     assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
     async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    mock_geocaching_config_flow.verify_settings.assert_awaited_once()
 
 
 async def test_options_flow_removes_trackable_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    mock_geocaching_config_flow: MagicMock,
 ) -> None:
     """Test removing a trackable cleans its entities and device before reload."""
     removed_code = "TB12345"
@@ -593,6 +664,7 @@ async def test_options_flow_removes_trackable_registry_entries(
     reloaded_status = _create_status(account_reference_code, retained_code)
     session = MagicMock()
     session.token = {"access_token": "mock-token"}
+    session.async_ensure_token_valid = AsyncMock()
 
     with (
         patch(
@@ -827,3 +899,76 @@ async def test_options_flow_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    ("exception", "errors"),
+    [
+        pytest.param(
+            GeocachingInvalidSettingsError("trackable", {"TB12345"}),
+            {"base": "trackable_not_found"},
+            id="trackable_not_found",
+        ),
+        pytest.param(
+            GeocachingApiError(),
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
+    ],
+)
+async def test_options_flow_verify_error(
+    hass: HomeAssistant,
+    mock_geocaching_config_flow: MagicMock,
+    exception: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test API verification errors when saving trackable options and recovering."""
+    config_entry = MockConfigEntry(
+        title="1234AB 1",
+        domain=DOMAIN,
+        data={"id": "mock_user", "auth_implementation": DOMAIN},
+        options={CONF_TRACKABLE_CODES: ["TB00000"]},
+        unique_id="mock_user",
+    )
+    _mock_loaded(hass, config_entry)
+    mock_geocaching_config_flow.verify_settings.side_effect = exception
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACKABLE_CODES: "TB12345"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
+    assert config_entry.options == {CONF_TRACKABLE_CODES: ["TB00000"]}
+    geocaching_api = config_flow.GeocachingApi
+    assert geocaching_api.call_args.kwargs["settings"].tracked_trackable_codes == {
+        "TB12345"
+    }
+
+    mock_geocaching_config_flow.verify_settings.side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACKABLE_CODES: "TB12345"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345"]}
+
+
+async def test_options_flow_skips_verification_when_not_loaded(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test saving trackable options without live validation while not loaded."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACKABLE_CODES: "TB12345"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345"]}

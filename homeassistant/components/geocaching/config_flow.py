@@ -95,9 +95,15 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if existing_entry := await self.async_set_unique_id(
             status.user.username.lower()
         ):
-            return self.async_update_and_abort(
+            entry_was_loaded = existing_entry.state is ConfigEntryState.LOADED
+            result = self.async_update_and_abort(
                 existing_entry, data=data, reason="reauth_successful"
             )
+            if not entry_was_loaded:
+                # A loaded entry's update listener already reloads it; an entry
+                # that never finished setup has no listener to do that for it.
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return result
         return self.async_create_entry(title=status.user.username, data=data)
 
 
@@ -176,6 +182,18 @@ class GeocachingOptionsFlow(OptionsFlow):
     """Handle Geocaching options."""
 
     @callback
+    def _async_save_trackable_codes(
+        self, trackable_codes: list[str]
+    ) -> ConfigFlowResult:
+        """Persist the tracked trackable codes and clean up removed ones."""
+        current_codes = {
+            code.strip().upper()
+            for code in self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
+        }
+        self._async_remove_trackables(current_codes - set(trackable_codes))
+        return self.async_create_entry(data={CONF_TRACKABLE_CODES: trackable_codes})
+
+    @callback
     def _async_remove_trackables(self, removed_codes: set[str]) -> None:
         """Remove registry entries for trackables removed from the options."""
         device_registry = dr.async_get(self.hass)
@@ -220,15 +238,27 @@ class GeocachingOptionsFlow(OptionsFlow):
                 re.fullmatch(r"TB[A-Z0-9]+", code) is None for code in trackable_codes
             ):
                 errors["base"] = "invalid_trackable_code"
+            elif self.config_entry.state is not ConfigEntryState.LOADED:
+                # Nothing to validate against, and a reload isn't possible either.
+                return self._async_save_trackable_codes(trackable_codes)
             else:
-                current_codes = {
-                    code.strip().upper()
-                    for code in self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
-                }
-                self._async_remove_trackables(current_codes - set(trackable_codes))
-                return self.async_create_entry(
-                    data={CONF_TRACKABLE_CODES: trackable_codes}
-                )
+                session = self.config_entry.runtime_data.session
+                try:
+                    await session.async_ensure_token_valid()
+                    await GeocachingApi(
+                        environment=ENVIRONMENT,
+                        token=session.token["access_token"],
+                        settings=GeocachingSettings(
+                            trackable_codes=set(trackable_codes)
+                        ),
+                        session=async_get_clientsession(self.hass),
+                    ).verify_settings()
+                except GeocachingInvalidSettingsError:
+                    errors["base"] = "trackable_not_found"
+                except GeocachingApiError, OAuth2TokenRequestBaseError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self._async_save_trackable_codes(trackable_codes)
 
         current_codes = self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
         return self.async_show_form(

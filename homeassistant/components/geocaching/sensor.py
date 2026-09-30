@@ -13,12 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_CODE, UnitOfLength
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, SUBENTRY_TYPE_TRACKED_CACHE
+from .const import CONF_TRACKABLE_CODES, DOMAIN, SUBENTRY_TYPE_TRACKED_CACHE
 from .coordinator import (
     GeocachingConfigEntry,
     GeocachingCoordinatorData,
@@ -124,25 +124,52 @@ async def async_setup_entry(
         for description in PROFILE_SENSORS
     )
 
-    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE):
-        reference_code = subentry.data[CONF_CODE].strip().upper()
-        if (cache := coordinator.data.tracked_caches.get(reference_code)) is None:
-            continue
-        async_add_entities(
-            (
-                GeoEntityCacheSensorEntity(
-                    coordinator, cache, reference_code, description
-                )
-                for description in CACHE_SENSORS
-            ),
-            config_subentry_id=subentry.subentry_id,
-        )
+    added_cache_codes: set[str] = set()
+    added_trackable_codes: set[str] = set()
 
-    async_add_entities(
-        GeoEntityTrackableSensorEntity(coordinator, trackable, description)
-        for trackable in coordinator.data.trackables.values()
-        for description in TRACKABLE_SENSORS
-    )
+    @callback
+    def _async_add_tracked_entities() -> None:
+        """Add entities for configured caches and trackables once available.
+
+        Coordinator refreshes do not rerun platform setup, so this also runs
+        on every update to pick up configured codes that were missing from
+        the data at setup time or an earlier refresh.
+        """
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE):
+            reference_code = subentry.data[CONF_CODE].strip().upper()
+            if reference_code in added_cache_codes:
+                continue
+            if (cache := coordinator.data.tracked_caches.get(reference_code)) is None:
+                continue
+            added_cache_codes.add(reference_code)
+            async_add_entities(
+                (
+                    GeoEntityCacheSensorEntity(
+                        coordinator, cache, reference_code, description
+                    )
+                    for description in CACHE_SENSORS
+                ),
+                config_subentry_id=subentry.subentry_id,
+            )
+
+        trackable_codes = {
+            code.strip().upper() for code in entry.options.get(CONF_TRACKABLE_CODES, [])
+        }
+        new_trackable_codes = (
+            trackable_codes & coordinator.data.trackables.keys()
+        ) - added_trackable_codes
+        if new_trackable_codes:
+            added_trackable_codes.update(new_trackable_codes)
+            async_add_entities(
+                GeoEntityTrackableSensorEntity(
+                    coordinator, coordinator.data.trackables[code], description
+                )
+                for code in new_trackable_codes
+                for description in TRACKABLE_SENSORS
+            )
+
+    _async_add_tracked_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_tracked_entities))
 
 
 # Base class for a cache entity.

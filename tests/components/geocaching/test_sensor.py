@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
 
 from homeassistant.components.geocaching.const import (
+    CONF_TRACKABLE_CODES,
     DOMAIN,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
@@ -61,6 +62,7 @@ async def test_entities_are_linked_to_subentries(
         title="1234AB 1",
         domain=DOMAIN,
         data={"id": "mock_user", "auth_implementation": DOMAIN},
+        options={CONF_TRACKABLE_CODES: [trackable_code]},
         unique_id="mock_user",
         subentries_data=[
             ConfigSubentryDataWithId(
@@ -162,7 +164,7 @@ async def test_entities_are_linked_to_subentries(
             entity_registry.async_get_entity_id(
                 "sensor", DOMAIN, f"PR12345_TB99999_{description.key}"
             )
-            is not None
+            is None
         )
     trackable_entity_id = entity_id
     state = hass.states.get(trackable_entity_id)
@@ -251,6 +253,129 @@ async def test_entities_are_linked_to_subentries(
         assert state.state == STATE_UNAVAILABLE
 
 
+async def test_entities_added_when_available_after_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test configured caches/trackables missing at setup get entities later."""
+    cache_code = "GC12345"
+    trackable_code = "TB12345"
+    cache_subentry_id = "cache-subentry"
+    config_entry = MockConfigEntry(
+        title="1234AB 1",
+        domain=DOMAIN,
+        data={"id": "mock_user", "auth_implementation": DOMAIN},
+        options={CONF_TRACKABLE_CODES: [trackable_code]},
+        unique_id="mock_user",
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_CODE: cache_code},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title=cache_code,
+                unique_id=cache_code,
+                subentry_id=cache_subentry_id,
+            ),
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    status = GeocachingStatus()
+    status.user.username = "mock_user"
+    status.user.reference_code = "PR12345"
+    status.tracked_caches = []
+    status.trackables = {}
+
+    await _async_setup_geocaching_entry(hass, config_entry, status)
+
+    for description in CACHE_SENSORS:
+        assert (
+            entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{cache_code}_{description.key}"
+            )
+            is None
+        )
+    for description in TRACKABLE_SENSORS:
+        assert (
+            entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"PR12345_{trackable_code}_{description.key}"
+            )
+            is None
+        )
+
+    owner = MagicMock()
+    owner.username = "CacheOwner"
+    cache = GeocachingCache(
+        reference_code=cache_code,
+        name="Test cache",
+        owner=owner,
+        favorite_points=10,
+    )
+    trackable = GeocachingTrackable(
+        reference_code=trackable_code,
+        name="Test trackable",
+        owner=owner,
+        kilometers_traveled=10.5,
+    )
+
+    coordinator = config_entry.runtime_data
+    coordinator.async_set_updated_data(
+        GeocachingCoordinatorData(
+            user=status.user,
+            trackables={trackable_code: trackable},
+            nearby_caches=[],
+            tracked_caches={cache_code: cache},
+        )
+    )
+    await hass.async_block_till_done()
+
+    cache_entity_ids = []
+    for description in CACHE_SENSORS:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{cache_code}_{description.key}"
+        )
+        assert entity_id is not None
+        entity = entity_registry.async_get(entity_id)
+        assert entity is not None
+        assert entity.config_subentry_id == cache_subentry_id
+        cache_entity_ids.append(entity_id)
+
+    trackable_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"PR12345_{trackable_code}_kilometers_traveled"
+    )
+    assert trackable_entity_id is not None
+    state = hass.states.get(trackable_entity_id)
+    assert state is not None
+    assert state.state == "10.5"
+
+    entities_before = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    }
+
+    # A later refresh with the same data must not create duplicate entities.
+    coordinator.async_set_updated_data(
+        GeocachingCoordinatorData(
+            user=status.user,
+            trackables={trackable_code: trackable},
+            nearby_caches=[],
+            tracked_caches={cache_code: cache},
+        )
+    )
+    await hass.async_block_till_done()
+
+    entities_after = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    }
+    assert entities_after == entities_before
+    for entity_id in (*cache_entity_ids, trackable_entity_id):
+        assert entity_id in entities_after
+
+
 async def test_entities_are_unique_per_account(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -268,6 +393,7 @@ async def test_entities_are_unique_per_account(
             title=account_reference_code,
             domain=DOMAIN,
             data={"id": entry_id, "auth_implementation": DOMAIN},
+            options={CONF_TRACKABLE_CODES: [trackable_code]},
             entry_id=entry_id,
             unique_id=entry_id,
         )

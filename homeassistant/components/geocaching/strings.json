@@ -98,8 +98,10 @@
   },
   "options": {
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_trackable_code": "Enter valid trackable codes starting with TB.",
-      "too_many_trackables": "A maximum of 10 trackables can be tracked."
+      "too_many_trackables": "A maximum of 10 trackables can be tracked.",
+      "trackable_not_found": "One or more trackables do not exist or are not accessible."
     },
     "step": {
       "init": {
