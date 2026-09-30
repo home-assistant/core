@@ -119,3 +119,27 @@ async def test_old_uncached_location_kept(
     await next_fetch(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_LATITUDE] == 1.0
+
+
+async def test_cached_location_without_a_timestamp_is_kept(
+    hass: HomeAssistant,
+    locating_service: tuple,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a cached fix iCloud dates is kept when it dates nothing.
+
+    Age is half of what makes a fix stale, so with no timestamp to read there
+    is nothing to judge it by. Discarding it on the flag alone would throw
+    away the only location such a device reports.
+    """
+    _, status = locating_service
+    await setup_account(hass)
+
+    fix = location(is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3))
+    del fix["timeStamp"]
+    status["location"] = fix
+    await next_fetch(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_LATITUDE] == 1.0
+    assert state.attributes[ATTR_LONGITUDE] == 2.0
