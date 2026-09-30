@@ -152,9 +152,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if add_to_list:
                 if title not in self.source_list:
                     self.source_list.append(title)
-                # The name set on the TV is offered as an extra entry next to the
-                # generic one, so the reported source keeps its generic name. A
-                # label repeating a generic name would select the other input.
+                # Extra entry so the reported source keeps its generic name.
                 label = item.get("label")
                 listed = titles | {name.lower() for name in self.source_list}
                 if label and label.lower() not in listed:
@@ -312,9 +310,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     title: str = item["title"]
                     if query.lower() == title.lower():
                         return await self.async_source_start(uri, source_type)
-                    # A generic name wins over a label, so a label repeating
-                    # another input's name cannot capture it.
-                    if query.lower() == (item.get("label") or "").lower():
+                    # A generic name always wins so a duplicate label can't hijack it.
+                    if (label := item.get("label")) and query.lower() == label.lower():
                         label_uri = label_uri or uri
                     if query.lower() in title.lower():
                         coarse_uri = uri
