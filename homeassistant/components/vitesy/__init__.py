@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, [Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VitesyConfigEntry) -> bool:

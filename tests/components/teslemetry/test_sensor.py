@@ -461,6 +461,46 @@ async def test_sensors_streaming_tpms_none_clears_state(
 
 
 @pytest.mark.parametrize(
+    "raw_value",
+    [
+        pytest.param("FollowDistanceUnknown", id="unknown"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cruise_follow_distance_unknown(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    raw_value: str | None,
+) -> None:
+    """An unknown streamed follow distance must clear the numeric sensor."""
+    entity_id = "sensor.test_cruise_follow_distance"
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: "FollowDistance3"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "3"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: raw_value},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
     ("key", "signal", "raw_value", "state"),
     [
         ("di_state_f", Signal.DI_STATE_F, "Standby", "standby"),

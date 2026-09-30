@@ -632,7 +632,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="cruise_follow_distance",
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_CruiseFollowDistance(callback)
+            vehicle.listen_CruiseFollowDistance(
+                lambda value: callback(
+                    int(value) if value and value.isdigit() else None
+                )
+            )
         ),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,

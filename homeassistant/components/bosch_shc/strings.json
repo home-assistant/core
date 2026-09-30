@@ -60,6 +60,9 @@
       }
     },
     "number": {
+      "bypass_timeout": {
+        "name": "Break function timeout"
+      },
       "impulse_length": {
         "name": "Pulse length"
       }
