@@ -50,16 +50,6 @@ async def _impulse_length_set_value_fn(
     await device.async_set_impulse_length(round(value * 10))
 
 
-def _bypass_timeout_value_fn(device: SHCShutterContact2) -> float | None:
-    return float(device.bypass_timeout)
-
-
-async def _bypass_timeout_set_value_fn(
-    device: SHCShutterContact2, value: float
-) -> None:
-    await device.async_set_bypass_timeout(round(value))
-
-
 IMPULSE_LENGTH = "impulse_length"
 BYPASS_TIMEOUT = "bypass_timeout"
 
@@ -87,8 +77,10 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         native_max_value=15.0,
         native_step=1.0,
         mode=NumberMode.BOX,
-        value_fn=_bypass_timeout_value_fn,
-        set_value_fn=_bypass_timeout_set_value_fn,
+        value_fn=lambda device: float(device.bypass_timeout),
+        set_value_fn=lambda device, value: device.async_set_bypass_timeout(
+            round(value)
+        ),
     ),
 }
 
