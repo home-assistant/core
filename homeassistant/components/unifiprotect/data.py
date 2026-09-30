@@ -751,8 +751,7 @@ class ProtectData:
             return
 
         if model_type is ModelType.LIVEVIEW:
-            # The public devices websocket sends no liveview frames, so refetch
-            # the public liveviews the viewport selects offer
+            # the public websocket sends no liveview frames
             if self.api.has_public_bootstrap and self.api.public_bootstrap.viewers:
                 self._entry.async_create_background_task(
                     self._hass,
@@ -798,7 +797,7 @@ class ProtectData:
         try:
             await self.api.refresh_public_store("liveviews")
         except (ClientError, NotAuthorized, TimeoutError) as err:
-            # the periodic refresh of the library catches up later
+            # the periodic library refresh catches up
             _LOGGER.debug("Unable to refresh public liveviews: %s", err)
 
     @callback
