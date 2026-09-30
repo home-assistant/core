@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-import httpx
+import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
@@ -609,7 +609,7 @@ async def test_subentry_unsupported_reasoning_effort(
         (APIConnectionError(request=None), "cannot_connect"),
         (
             AuthenticationError(
-                response=httpx.Response(status_code=None, request=""),
+                response=httpx2.Response(status_code=None, request=""),
                 body=None,
                 message=None,
             ),
@@ -617,7 +617,7 @@ async def test_subentry_unsupported_reasoning_effort(
         ),
         (
             BadRequestError(
-                response=httpx.Response(status_code=None, request=""),
+                response=httpx2.Response(status_code=None, request=""),
                 body=None,
                 message=None,
             ),
@@ -1686,7 +1686,7 @@ async def test_reconfigure_invalid_auth(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
         new_callable=AsyncMock,
         side_effect=AuthenticationError(
-            response=httpx.Response(status_code=None, request=""),
+            response=httpx2.Response(status_code=None, request=""),
             body=None,
             message=None,
         ),

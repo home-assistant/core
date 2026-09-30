@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Request, Response
+from httpx2 import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -291,8 +291,8 @@ async def test_fetch_image_url_success(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        httpx.RequestError("server offline", request=MagicMock()),
-        httpx.TimeoutException,
+        httpx2.RequestError("server offline", request=MagicMock()),
+        httpx2.TimeoutException,
         ssl.SSLError,
     ],
 )

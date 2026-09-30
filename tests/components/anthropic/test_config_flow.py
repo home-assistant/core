@@ -15,7 +15,7 @@ from anthropic import (
     types,
 )
 from anthropic.types import ModelInfo
-from httpx import URL, Request, Response
+from httpx2 import URL, Request, Response
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

@@ -16,8 +16,9 @@ type SSLALPNProtocols = tuple[str, ...] | None
 SSL_ALPN_NONE: SSLALPNProtocols = None
 # HTTP/1.1 only - used by default and for aiohttp (which doesn't support HTTP/2)
 SSL_ALPN_HTTP11: SSLALPNProtocols = ("http/1.1",)
-# HTTP/1.1 with HTTP/2 support - used when httpx http2=True
-SSL_ALPN_HTTP11_HTTP2: SSLALPNProtocols = ("http/1.1", "h2")
+# HTTP/1.1 with HTTP/2 support - used when httpx2 http2=True
+# Must match the order httpcore2 sets, so it never mutates the cached context
+SSL_ALPN_HTTP11_HTTP2: SSLALPNProtocols = ("h2", "http/1.1")
 
 
 class SSLCipherList(StrEnum):

@@ -116,7 +116,7 @@ with contextlib.suppress(ImportError):
     from anyio._backends import _asyncio  # noqa: F401
 
 with contextlib.suppress(ImportError):
-    # httpx will import trio if it is installed which does
+    # httpcore2 will import trio if it is installed which does
     # blocking I/O in the event loop. We want to avoid that.
     import trio  # noqa: F401
 
@@ -626,7 +626,7 @@ async def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args
