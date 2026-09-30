@@ -84,7 +84,7 @@ async def test_transition(
     expected_state: str,
 ) -> None:
     """Test transitioning the device on and off."""
-    # Run the transition instantly; pysnooz waits the full duration in real time
+    # Zero duration makes pysnooz send a plain state write instead of a real-time transition
     with patch(
         f"homeassistant.components.snooz.fan.{command_name}",
         side_effect=lambda **kwargs: command(**kwargs | {"duration": timedelta()}),
