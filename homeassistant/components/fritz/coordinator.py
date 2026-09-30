@@ -84,6 +84,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
+    guest_wifi: int | None
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -179,6 +180,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
+        self._guest_wifi_registered = False
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -295,6 +297,34 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return unregister_entity_updates
 
+    async def async_register_guest_wifi(self) -> Callable[[], None]:
+        """Register the guest Wi-Fi to be updated by coordinator."""
+
+        def unregister_guest_wifi() -> None:
+            """Unregister the guest Wi-Fi from coordinator updates."""
+            self._guest_wifi_registered = False
+            self.data["guest_wifi"] = None
+
+        self._guest_wifi_registered = True
+        self.data["guest_wifi"] = await self.hass.async_add_executor_job(
+            self._guest_wifi_update
+        )
+        return unregister_guest_wifi
+
+    def _guest_wifi_update(self) -> int | None:
+        """Return a fingerprint of the guest Wi-Fi QR code content."""
+        if not self._guest_wifi_registered:
+            return None
+        # Hashed so the password doesn't end up in coordinator data or logs
+        return hash(
+            (
+                self.fritz_guest_wifi.ssid,
+                self.fritz_guest_wifi.beacontype,
+                self.fritz_guest_wifi.is_hidden,
+                self.fritz_guest_wifi.get_password(),
+            )
+        )
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -312,6 +342,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
+            "guest_wifi": None,
         }
         self.connection.clear_cache()
         try:
@@ -328,6 +359,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_data[
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
+
+            entity_data["guest_wifi"] = await self.hass.async_add_executor_job(
+                self._guest_wifi_update
+            )
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
