@@ -48,6 +48,7 @@ def mock_momonga(exception=None) -> Generator[Mock]:
         client.get_manufacturer_code.return_value = b"\x00\x00\x16"
         client.get_standard_version.return_value = "F.0"
         client.internal_xmit_interval = 0
+        client.is_open = True
         yield mock_momonga
 
 

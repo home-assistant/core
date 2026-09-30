@@ -285,9 +285,11 @@ class GetStateIntentHandler(intent.IntentHandler):
     description = "Gets or checks the state of a device or entity"
     slot_schema = {
         probatio.Any("name", "area", "floor"): cv.string,
-        probatio.Optional("domain"): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional("state"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Optional("device_class"): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional("state"): probatio.All(probatio.EnsureList(), [cv.string]),
         probatio.Optional("preferred_area_id"): cv.string,
         probatio.Optional("preferred_floor_id"): cv.string,
     }
@@ -339,13 +341,19 @@ class GetStateIntentHandler(intent.IntentHandler):
         match_result = intent.async_match_targets(
             hass, match_constraints, match_preferences
         )
+        no_match_reason = match_result.no_match_reason
         if (
             (not match_result.is_match)
-            and (match_result.no_match_reason is not None)
-            and (not match_result.no_match_reason.is_no_entities_reason())
+            and (no_match_reason is not None)
+            and (
+                (not no_match_reason.is_no_entities_reason())
+                or (
+                    entity_name
+                    and (no_match_reason is intent.MatchFailedReason.ASSISTANT)
+                )
+            )
         ):
-            # Don't try to answer questions for certain errors.
-            # Other match failure reasons are OK.
+            # Don't try to answer questions for certain errors or for named entities that are not exposed.
             raise intent.MatchFailedError(
                 result=match_result, constraints=match_constraints
             )

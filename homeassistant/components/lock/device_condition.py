@@ -19,7 +19,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, LockState
+from . import LockState
+from .const import DOMAIN
 
 # mypy: disallow-any-generics
 

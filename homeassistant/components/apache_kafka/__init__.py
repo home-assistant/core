@@ -32,7 +32,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_IP_ADDRESS): cv.string,
-                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_PORT): probatio.Port(),
                 probatio.Required(CONF_TOPIC): cv.string,
                 probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 probatio.Optional(

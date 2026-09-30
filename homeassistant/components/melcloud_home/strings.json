@@ -104,6 +104,9 @@
             }
           }
         }
+      },
+      "atw_zone": {
+        "name": "Zone {zone_number}"
       }
     },
     "number": {
@@ -146,6 +149,14 @@
       },
       "overheat_protection": {
         "name": "Overheat protection"
+      },
+      "standby": {
+        "name": "Standby"
+      }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water"
       }
     }
   },

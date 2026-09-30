@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "solaredged", "tmodbus"],
-  "quality_scale": "bronze",
-  "requirements": ["solaredged==0.2.3"],
+  "quality_scale": "platinum",
+  "requirements": ["solaredged==0.4.0"],
   "zeroconf": ["_solaredge-modbus._tcp.local."]
 }

@@ -13,6 +13,7 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -36,7 +37,9 @@ SERVICE_TRIGGER = "trigger"
 SERVICE_TRIGGER_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_EVENT): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_VALUE1): cv.string,
         probatio.Optional(ATTR_VALUE2): cv.string,
         probatio.Optional(ATTR_VALUE3): cv.string,
@@ -86,9 +89,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 res = pyfttt.send_event(key, event, value1, value2, value3)
                 if res.status_code != HTTPStatus.OK:
                     _LOGGER.error("IFTTT reported error sending event to %s", target)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except requests.exceptions.RequestException:
-            _LOGGER.exception("Error communicating with IFTTT")
+        except requests.exceptions.RequestException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="trigger_failed",
+            ) from err
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_service, schema=SERVICE_TRIGGER_SCHEMA

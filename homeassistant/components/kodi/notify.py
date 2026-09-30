@@ -23,9 +23,12 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +39,7 @@ DEFAULT_TIMEOUT = 5
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
         probatio.Inclusive(CONF_USERNAME, "auth"): cv.string,
         probatio.Inclusive(CONF_PASSWORD, "auth"): cv.string,
@@ -103,6 +106,8 @@ class KodiNotificationService(BaseNotificationService):
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             await self._server.GUI.ShowNotification(title, message, icon, displaytime)
 
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except jsonrpc_async.TransportError:
-            _LOGGER.warning("Unable to fetch Kodi data. Is Kodi online?")
+        except jsonrpc_async.TransportError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_failed",
+            ) from err

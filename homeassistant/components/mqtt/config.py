@@ -22,7 +22,7 @@ from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 SCHEMA_BASE = {
     probatio.Optional(CONF_QOS, default=DEFAULT_QOS): valid_qos_schema,
     probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-    probatio.Optional(CONF_GROUP): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(CONF_GROUP): probatio.All(probatio.EnsureList(), [cv.string]),
 }
 
 MQTT_BASE_SCHEMA = probatio.Schema(SCHEMA_BASE)

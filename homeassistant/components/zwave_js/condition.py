@@ -48,7 +48,7 @@ CONF_STATUS = "status"
 _CONDITION_VALUE_SCHEMA = probatio.Any(bool, int, float, dict, cv.string)
 
 _BASE_SCHEMA_DICT: dict[probatio.Marker, Any] = {
-    probatio.Required(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Required(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): probatio.In(
         [BEHAVIOR_ANY, BEHAVIOR_ALL]
     ),
