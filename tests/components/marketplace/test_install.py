@@ -16,6 +16,7 @@ import pytest
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
+from homeassistant.components.marketplace.enums import MarketplaceSignal
 from homeassistant.components.marketplace.exceptions import (
     MarketplaceError,
     RepositoryBusyError,
@@ -747,6 +748,30 @@ async def test_failed_step_after_writing_keeps_the_install(
     assert entity_registry.async_get_entity_id(
         Platform.UPDATE, DOMAIN, REPOSITORY_PLUGIN_ID
     )
+
+
+async def test_install_tells_the_panel_once(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test one install makes an open panel fetch the repositories once."""
+    client = await hass_ws_client(hass)
+    with patch.object(
+        marketplace, "async_dispatch", wraps=marketplace.async_dispatch
+    ) as dispatch:
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/install",
+                "repository": REPOSITORY_PLUGIN_ID,
+            }
+        )
+        assert (await client.receive_json())["success"]
+        await hass.async_block_till_done()
+
+    signals = [call.args[0] for call in dispatch.call_args_list]
+    assert signals.count(MarketplaceSignal.REPOSITORY) == 1
+    assert signals.count(MarketplaceSignal.CONFIG) == 1
 
 
 async def test_uninstall_during_an_install_is_refused(

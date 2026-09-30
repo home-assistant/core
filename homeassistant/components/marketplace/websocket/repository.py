@@ -6,8 +6,10 @@ import probatio
 
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..enums import MarketplaceSignal, RepositoryCategory
+from ..const import SIGNAL_REPOSITORY_INSTALLED
+from ..enums import RepositoryCategory
 from ..exceptions import (
     GitHubAnonymousRateLimitError,
     GitHubRateLimitError,
@@ -298,10 +300,8 @@ async def marketplace_repository_install(
         finally:
             # Also when a step after writing the files failed, they are installed
             if not was_installed and repository.data.installed:
-                marketplace.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
-                await marketplace.async_recreate_entities()
+                async_dispatcher_send(hass, SIGNAL_REPOSITORY_INSTALLED, repository)
 
-        await marketplace.data.async_write()
         connection.send_message(websocket_api.result_message(msg["id"], {}))
     except GitHubAnonymousRateLimitError as exception:
         _send_rate_limited(connection, msg["id"], exception)

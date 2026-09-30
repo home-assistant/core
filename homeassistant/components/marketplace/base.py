@@ -947,21 +947,6 @@ class MarketplaceManager:
         for repository in self.repositories.list_all:
             await repository.async_wait_for_install()
 
-    async def async_recreate_entities(self) -> None:
-        """Recreate entities."""
-        if (config_entry := self.configuration.config_entry) is None:
-            return
-
-        platforms = [Platform.SWITCH, Platform.UPDATE]
-
-        await self.hass.config_entries.async_unload_platforms(
-            entry=config_entry,
-            platforms=platforms,
-        )
-        await self.hass.config_entries.async_forward_entry_setups(
-            config_entry, platforms
-        )
-
     @callback
     def async_dispatch(
         self, signal: MarketplaceSignal, data: dict[str, Any] | None = None

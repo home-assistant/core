@@ -34,7 +34,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
-from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_clear_custom_components_cache
 from homeassistant.util.hass_dict import HassKey
@@ -288,8 +288,10 @@ async def _async_initialize_integration(
             hass, marketplace.startup_tasks(), "marketplace_startup_tasks"
         )
 
+    # Once started, the catalog is fetched over the network, Home Assistant
+    # does not wait for it to finish starting
     config_entry.async_on_unload(
-        async_at_start(hass=hass, at_start_cb=_async_start_tasks)
+        async_at_started(hass=hass, at_start_cb=_async_start_tasks)
     )
 
     # Automations install on the word of whoever accepted, not of a removed user

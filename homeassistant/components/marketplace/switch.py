@@ -4,10 +4,12 @@ from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import MarketplaceConfigEntry, MarketplaceManager
+from .const import SIGNAL_REPOSITORY_INSTALLED
 from .entity import RepositoryEntity
 from .repositories.base import Repository
 
@@ -24,6 +26,22 @@ async def async_setup_entry(
     async_add_entities(
         RepositoryPreReleaseSwitchEntity(marketplace=marketplace, repository=repository)
         for repository in marketplace.repositories.list_installed
+    )
+
+    @callback
+    def _async_add_installed(repository: Repository) -> None:
+        async_add_entities(
+            [
+                RepositoryPreReleaseSwitchEntity(
+                    marketplace=marketplace, repository=repository
+                )
+            ]
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_REPOSITORY_INSTALLED, _async_add_installed
+        )
     )
 
 

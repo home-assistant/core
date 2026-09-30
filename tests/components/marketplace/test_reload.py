@@ -17,7 +17,11 @@ from homeassistant.components.marketplace.update import RepositoryUpdateEntity
 from homeassistant.components.marketplace.utils.validate import (
     VALIDATE_FETCHED_V2_REPO_DATA,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    Platform,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.loader import IntegrationNotLoaded
@@ -138,6 +142,44 @@ async def test_new_install_gets_its_pre_release_switch(
     )
 
 
+async def test_new_install_leaves_the_other_entities_alone(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a first install adds its own entities, the others stay as they are."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/install", "repository": REPOSITORY_PLUGIN_ID}
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    plugin_update = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, REPOSITORY_PLUGIN_ID
+    )
+    assert plugin_update
+    state = hass.states.get(plugin_update)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    # Removed and added again, the entity would have a new state object
+    assert hass.states.get(plugin_update) is state
+    assert entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, REPOSITORY_INTEGRATION_ID
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, REPOSITORY_INTEGRATION_ID
+    )
+
+
 async def test_beta_release_notes_keep_the_stable_version(
     marketplace: MarketplaceManager,
 ) -> None:
@@ -221,10 +263,31 @@ async def test_unloaded_before_start_runs_no_startup_tasks(
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     startup_tasks.assert_not_called()
+
+
+async def test_startup_tasks_wait_until_home_assistant_started(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a slow catalog does not hold up Home Assistant starting."""
+    hass.set_state(CoreState.not_running)
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(MarketplaceManager, "startup_tasks") as startup_tasks:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        startup_tasks.assert_not_called()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    startup_tasks.assert_called_once()
 
 
 async def test_restart_repair_follows_a_new_repository_id(

@@ -11,10 +11,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import MarketplaceConfigEntry
-from .const import DOMAIN, RELEASE_LIMIT
+from .const import DOMAIN, RELEASE_LIMIT, SIGNAL_REPOSITORY_INSTALLED
 from .entity import RepositoryEntity
 from .enums import MarketplaceSignal, RepositoryCategory
 from .exceptions import GitHubAnonymousRateLimitError, MarketplaceError
+from .repositories.base import Repository
 from .utils.logger import LOGGER
 from .utils.validate import valid_ref
 
@@ -32,6 +33,18 @@ async def async_setup_entry(
     async_add_entities(
         RepositoryUpdateEntity(marketplace=marketplace, repository=repository)
         for repository in marketplace.repositories.list_installed
+    )
+
+    @callback
+    def _async_add_installed(repository: Repository) -> None:
+        async_add_entities(
+            [RepositoryUpdateEntity(marketplace=marketplace, repository=repository)]
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_REPOSITORY_INSTALLED, _async_add_installed
+        )
     )
 
 

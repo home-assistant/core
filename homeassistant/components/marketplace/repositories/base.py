@@ -1143,19 +1143,6 @@ class Repository:
             ) from exception
         finally:
             self.data.new = False
-            self.marketplace.async_dispatch(
-                MarketplaceSignal.REPOSITORY,
-                {
-                    "id": 1337,
-                    "action": "install",
-                    "repository": self.data.full_name,
-                    "repository_id": self.data.id,
-                },
-            )
-
-            # Installs also come from update entities and automations, not only
-            # the panel, so the new state is stored here for all of them
-            await self.marketplace.data.async_write()
         self.logger.info("%s Post installation steps completed", self.string)
 
     async def _async_write_version(
@@ -1916,6 +1903,9 @@ class Repository:
                 await self._async_install_repository(ref)
             finally:
                 self._replace_built_in_confirmed = False
+                # Installs also come from update entities and automations, the
+                # state is stored once for all of them, also when a step failed
+                await self.marketplace.data.async_write()
 
     async def async_wait_for_install(self) -> None:
         """Wait for an install of this repository that is running to finish."""

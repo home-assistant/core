@@ -1,9 +1,13 @@
 """Constants for the Marketplace."""
 
 from datetime import timedelta
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from homeassistant.const import __version__ as HAVERSION
+from homeassistant.util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from .repositories.base import Repository
 
 DOMAIN = "marketplace"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
@@ -15,6 +19,12 @@ DASHBOARD_RESOURCE_BASE = "/local/community"
 LEGACY_DASHBOARD_RESOURCE_BASE = "/hacsfiles"
 
 TV = TypeVar("TV")
+
+# A first install, the platforms add the entities of that repository. Not one
+# of the signals the panel subscribes to, it carries the repository itself.
+SIGNAL_REPOSITORY_INSTALLED: SignalType[Repository] = SignalType(
+    "marketplace_repository_installed"
+)
 
 PACKAGE_NAME = "homeassistant.components.marketplace"
 
