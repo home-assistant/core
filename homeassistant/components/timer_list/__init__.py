@@ -4,8 +4,8 @@ A timer list entity holds many independent countdown timers (its *items*),
 mirroring how a to-do list holds many to-do items. The entity state is the
 number of active timers. This module defines the abstract entity, the shared
 data model, and the generic services/websocket API; storing timers and
-scheduling their completion is left to concrete implementations such as
-``local_timer_list``.
+scheduling their completion is left to concrete implementations, which can
+reuse ``InMemoryTimerListEntity`` when Home Assistant owns the timers.
 """
 
 from collections.abc import Callable
