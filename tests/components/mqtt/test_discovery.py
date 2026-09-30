@@ -26,7 +26,7 @@ from homeassistant.components.mqtt.discovery import (
     MQTTDiscoveryPayload,
     async_start,
 )
-from homeassistant.components.mqtt.entity import async_removed_from_device
+from homeassistant.components.mqtt.entity import MqttEntity, async_removed_from_device
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.mqtt.schemas import (
     DEVICE_DISCOVERY_SCHEMA,
@@ -1699,6 +1699,66 @@ async def test_rapid_reconfigure(
     assert events[2].data["new_state"] is not None
     assert events[2].data["old_state"] is not None
     assert events[2].data["new_state"].attributes["friendly_name"] == "Wine"
+
+
+async def test_discovery_update_queued_until_initial_state(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test a queued discovery update is applied only after the initial state exists.
+
+    The discovery is acknowledged caller-side, after async_add_entities returns,
+    so an update queued for the same discovery hash while the entity add is still
+    in progress must not drain into an entity that has no state yet.
+    """
+    await mqtt_mock_entry()
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    add_started = asyncio.Event()
+    allow_add = asyncio.Event()
+    original_async_added_to_hass = MqttEntity.async_added_to_hass
+
+    async def _blocked_async_added_to_hass(self: MqttEntity) -> None:
+        add_started.set()
+        await allow_add.wait()
+        await original_async_added_to_hass(self)
+
+    with patch.object(MqttEntity, "async_added_to_hass", _blocked_async_added_to_hass):
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/binary_sensor/bla/config",
+            '{ "name": "Beer", "state_topic": "test-topic" }',
+        )
+        # Wait until the first entity add is blocked before its state is written
+        await add_started.wait()
+
+        # A second payload for the same discovery hash is queued while the add
+        # is still in progress
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/binary_sensor/bla/config",
+            '{ "name": "Milk", "state_topic": "test-topic" }',
+        )
+
+        # The initial state does not exist yet and the queued update is not applied
+        assert hass.states.get("binary_sensor.beer") is None
+        assert not events
+
+        allow_add.set()
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Milk"
+
+    # The initial state was written first, then the queued update was applied
+    assert len(events) == 2
+    assert events[0].data["entity_id"] == "binary_sensor.beer"
+    assert events[0].data["old_state"] is None
+    assert events[0].data["new_state"].attributes["friendly_name"] == "Beer"
+    assert events[1].data["entity_id"] == "binary_sensor.beer"
+    assert events[1].data["old_state"].attributes["friendly_name"] == "Beer"
+    assert events[1].data["new_state"].attributes["friendly_name"] == "Milk"
 
 
 async def test_duplicate_removal(

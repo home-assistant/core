@@ -1055,7 +1055,6 @@ class MqttDiscoveryUpdateMixin(Entity):
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
         self._removed_from_hass = False
-        self._added_to_hass = True
         if not self._discovery_data:
             return
         discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
@@ -1597,6 +1596,7 @@ class MqttEntity(
             )
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
+        self._added_to_hass = True
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.
