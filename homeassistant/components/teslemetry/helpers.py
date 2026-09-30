@@ -45,9 +45,9 @@ def listen_active_route[T](
 ) -> Callable[[], None]:
     """Listen for a route field, reporting None while no navigation is active.
 
-    The car keeps reporting the last trip's route fields after navigation ends;
-    only MinutesToArrival goes null. Reports None once MinutesToArrival is null,
-    otherwise the value once both have been seen.
+    After navigation ends MinutesToArrival goes null, but the car keeps the last
+    trip's destination location, arrival energy and traffic delay. Reports None
+    once MinutesToArrival is null, otherwise the value once both have been seen.
     """
     value: T | None = None
     minutes: float | None = None
