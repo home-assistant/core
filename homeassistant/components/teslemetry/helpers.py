@@ -132,20 +132,14 @@ async def handle_command(
     command: Awaitable[dict[str, Any]],
 ) -> dict[str, Any]:
     """Handle a command."""
-    issue_id = insufficient_credits_issue_id(entry)
-    # Snapshot the runtime data instead of re-reading entry.runtime_data after
-    # the await: an unload occurring while the command is in flight deletes
-    # that attribute outright, which would otherwise raise AttributeError here.
+    # An unload while the command is in flight deletes entry.runtime_data.
     runtime_data = entry.runtime_data
     credits_generation = runtime_data.credits_generation
     try:
         result = await command
     except InsufficientCredits as e:
-        # Suppress the repair only when a credit-state event landed while this
-        # command was in flight and the newest state it reported is available:
-        # that response is stale and no further event would clear the repair. An
-        # insufficient event landing mid-flight is a real problem that must still
-        # surface, so only an available latest state suppresses it.
+        # Credits reported available while this command was in flight make the
+        # rejection stale.
         stale = (
             runtime_data.credits_generation != credits_generation
             and runtime_data.credits_available
@@ -160,7 +154,7 @@ async def handle_command(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                issue_id,
+                insufficient_credits_issue_id(entry),
                 is_fixable=False,
                 is_persistent=True,
                 severity=ir.IssueSeverity.ERROR,
@@ -186,9 +180,6 @@ async def handle_command(
             translation_domain=DOMAIN,
             translation_key="command_connection_error",
         ) from e
-    # The repair is cleared by the credits stream (async_handle_credits), not
-    # here: handle_command also wraps energy-site commands, which do not consume
-    # command credits, so a successful command is not proof credits are back.
     LOGGER.debug("Command result: %s", result)
     return result
 
@@ -236,21 +227,11 @@ def async_handle_credits(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: CreditsEvent
 ) -> None:
     """Record the latest credit state and clear the issue when credits return."""
+    # An account without a quota sends none, so the event carries no fraction.
     fraction = credits.quota.get("fraction")
-    quota_available: bool | None = None
-    if isinstance(fraction, (int, float)) and not isinstance(fraction, bool):
-        quota_available = fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
-    balance = credits.balance
-    balance_available: bool | None = None
-    if isinstance(balance, (int, float)) and not isinstance(balance, bool):
-        balance_available = balance > CREDITS_BALANCE_THRESHOLD
-    if quota_available is None and balance_available is None:
-        # No interpretable credit data, so this is not a credit-state transition.
-        return
-
-    # Record every transition, available or not, so handle_command can tell which
-    # state is newest rather than only that something changed.
-    available = bool(quota_available) or bool(balance_available)
+    available = credits.balance > CREDITS_BALANCE_THRESHOLD or (
+        fraction is not None and fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
+    )
     entry.runtime_data.credits_generation += 1
     entry.runtime_data.credits_available = available
     if available:

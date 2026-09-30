@@ -12,7 +12,6 @@ AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
 
-# Where users can purchase more command credits
 CREDITS_URL = "https://teslemetry.com/console/credits"
 
 SUBENTRY_TYPE_VEHICLE = "vehicle"

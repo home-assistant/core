@@ -1064,14 +1064,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> None:
-    """Clean up the insufficient credits repair when the entry is removed.
+    """Remove the insufficient credits repair along with the entry.
 
-    The repair reflects the account's credit state, not this particular load of
-    the entry, so an ordinary unload or reload (for example the metadata- and
-    subentry-change reloads above) must leave it in place: setup does not
-    re-probe credits, and nothing else would recreate it if the account is
-    still short. It is only ever cleared early by a credits-stream event
-    reporting availability, or here, once the entry itself is gone for good.
+    Unload leaves it in place because setup does not re-probe credits, so
+    nothing would recreate it after a reload while the account is still short.
     """
     ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
 

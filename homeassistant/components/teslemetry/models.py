@@ -30,10 +30,8 @@ class TeslemetryData:
     scopes: list[Scope]
     stream: TeslemetryStream | None
     metadata_coordinator: TeslemetryMetadataCoordinator
-    # Bumped each time a credit-state event lands, with the latest state it
-    # reported; lets handle_command tell whether the newest credit state seen
-    # since a command started is available, and so ignore an InsufficientCredits
-    # response that a later availability event has already superseded.
+    # Counts credits events and keeps the newest state, so a command can tell
+    # whether credits were reported available while it was in flight.
     credits_generation: int = 0
     credits_available: bool = False
 

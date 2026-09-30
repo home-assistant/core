@@ -1,6 +1,5 @@
 """Test the Teslemetry button platform."""
 
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -31,6 +30,20 @@ CREDITS_AVAILABLE_EVENT = {
         "balance": 0,
     },
     "createdAt": "2024-10-04T10:45:17.537Z",
+}
+CREDITS_INSUFFICIENT_EVENT = {
+    "credits": {
+        "type": "command",
+        "cost": 1,
+        "name": "command",
+        "quota": {
+            "used": 10,
+            "fraction": 1.0,
+            "reset_at": "2026-07-10T00:00:00.000Z",
+        },
+        "balance": 0,
+    },
+    "createdAt": "2024-10-04T10:45:18.537Z",
 }
 
 
@@ -122,16 +135,11 @@ async def test_insufficient_credits_not_recreated_after_unload(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a command failing after its entry unloads does not orphan a repair.
-
-    The entry's credits-stream listener is unsubscribed as part of the unload,
-    so a repair created afterwards would have no listener left able to clear
-    it; it must not be (re-)created once the entry is no longer loaded.
-    """
+    """Test a command that settles after its entry unloaded creates no repair."""
     entry = await setup_platform(hass, [Platform.BUTTON])
     issue_id = f"insufficient_credits_{entry.entry_id}"
 
-    async def unload_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    async def unload_then_fail() -> None:
         # The entry finishes unloading while this command is still in flight.
         assert await hass.config_entries.async_unload(entry.entry_id)
         raise InsufficientCredits
@@ -159,15 +167,11 @@ async def test_insufficient_credits_not_recreated_after_reload(
     issue_registry: ir.IssueRegistry,
     mock_add_listener: AsyncMock,
 ) -> None:
-    """Test a command outliving a reload does not recreate a cleared repair.
-
-    A reload starts the entry's credit state afresh, so a response to a command
-    the previous load sent cannot be checked against the events received since.
-    """
+    """Test a command that settles after its entry reloaded creates no repair."""
     entry = await setup_platform(hass, [Platform.BUTTON])
     issue_id = f"insufficient_credits_{entry.entry_id}"
 
-    async def reload_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    async def reload_then_fail() -> None:
         # The entry reloads and its new stream reports credits available, all
         # while this command is still in flight.
         await reload_platform(hass, entry, [Platform.BUTTON])
@@ -192,19 +196,31 @@ async def test_insufficient_credits_not_recreated_after_reload(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_insufficient_credits_stale_response_ignored(
+@pytest.mark.parametrize(
+    ("events", "created"),
+    [
+        pytest.param([CREDITS_AVAILABLE_EVENT], False, id="available"),
+        pytest.param(
+            [CREDITS_AVAILABLE_EVENT, CREDITS_INSUFFICIENT_EVENT],
+            True,
+            id="available_then_insufficient",
+        ),
+    ],
+)
+async def test_insufficient_credits_events_while_in_flight(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_add_listener: AsyncMock,
+    events: list[dict[str, object]],
+    created: bool,
 ) -> None:
-    """Test a stale InsufficientCredits response does not recreate a cleared repair."""
+    """Test the newest credits event during a command decides on the repair."""
     entry = await setup_platform(hass, [Platform.BUTTON])
     issue_id = f"insufficient_credits_{entry.entry_id}"
 
-    async def send_credits_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
-        # A credits-availability event lands while this command is still in
-        # flight, then the older response finally raises InsufficientCredits.
-        mock_add_listener.send(CREDITS_AVAILABLE_EVENT)
+    async def send_credits_then_fail() -> None:
+        for event in events:
+            mock_add_listener.send(event)
         raise InsufficientCredits
 
     with (
@@ -221,58 +237,7 @@ async def test_insufficient_credits_stale_response_ignored(
             blocking=True,
         )
 
-    # The command still fails for the caller, but credits are already reported
-    # available so the stale response must not recreate the repair.
+    # The command fails for the caller either way.
     assert error.value.translation_key == "insufficient_credits"
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-
-
-async def test_insufficient_credits_available_then_insufficient(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_add_listener: AsyncMock,
-) -> None:
-    """Test the repair is created when the newest mid-flight state is insufficient."""
-    entry = await setup_platform(hass, [Platform.BUTTON])
-    issue_id = f"insufficient_credits_{entry.entry_id}"
-
-    async def send_credits_then_fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
-        # Credits are briefly reported available, then reported insufficient
-        # again, all while this command is still in flight.
-        mock_add_listener.send(CREDITS_AVAILABLE_EVENT)
-        mock_add_listener.send(
-            {
-                "credits": {
-                    "type": "command",
-                    "cost": 1,
-                    "name": "command",
-                    "quota": {
-                        "used": 10,
-                        "fraction": 1.0,
-                        "reset_at": "2026-07-10T00:00:00.000Z",
-                    },
-                    "balance": 0,
-                },
-                "createdAt": "2024-10-04T10:45:18.537Z",
-            }
-        )
-        raise InsufficientCredits
-
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.Vehicle.wake_up",
-            side_effect=send_credits_then_fail,
-        ),
-        pytest.raises(HomeAssistantError) as error,
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ["button.test_wake"]},
-            blocking=True,
-        )
-
-    # The newest credit state seen since the command started is insufficient, so
-    # the account really is out of credits and the repair must be created.
-    assert error.value.translation_key == "insufficient_credits"
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue is not None) is created
