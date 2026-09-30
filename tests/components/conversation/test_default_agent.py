@@ -875,6 +875,41 @@ async def test_error_no_device_exposed(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components")
+async def test_error_no_device_exposed_query(hass: HomeAssistant) -> None:
+    """Test error message when querying an entity that exists but is not exposed."""
+    hass.states.async_set("light.kitchen_light", "off")
+    expose_entity(hass, "light.kitchen_light", False)
+
+    result = await conversation.async_converse(
+        hass, "is the kitchen light on?", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, kitchen light is not exposed"
+    )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_query_state_no_device_exposed(hass: HomeAssistant) -> None:
+    """Test that a query without a name is answered when no entity is exposed."""
+    hass.states.async_set("light.kitchen_light", "off")
+    expose_entity(hass, "light.kitchen_light", False)
+
+    hass.states.async_set("light.bedroom_light", "on")
+    expose_entity(hass, "light.bedroom_light", False)
+
+    result = await conversation.async_converse(
+        hass, "how many lights are on?", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
+    assert not result.response.matched_states
+
+
+@pytest.mark.usefixtures("init_components")
 async def test_error_no_area(hass: HomeAssistant) -> None:
     """Test error message when area doesn't exist."""
     result = await conversation.async_converse(
