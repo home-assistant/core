@@ -37,7 +37,7 @@ class VitesyModeSelect(VitesyEntity, SelectEntity):
     """Select for the operating mode of a Vitesy device."""
 
     _attr_translation_key = "mode"
-    _attr_options = SHELFY_MODES
+    _attr_options = ["eco", "shelf", "boost"]
 
     def __init__(
         self, coordinator: VitesyDataUpdateCoordinator, device_id: str
