@@ -24,7 +24,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
     TodoServices,
-    _serialize_todo_item,
+    serialize_todo_item,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
@@ -534,7 +534,7 @@ async def test_update_todo_item_service_by_summary_not_found(
     [
         ({}, r"required key not provided at 'item'"),
         ({"status": "needs_action"}, r"required key not provided at 'item'"),
-        ({"item": "Item #1"}, "must contain at least one of"),
+        ({"item": "Item #1"}, "at least one of"),
         (
             {"item": "", "status": "needs_action"},
             "length of value must be at least 1",
@@ -1223,7 +1223,7 @@ async def test_subscribe_entity_does_not_exist(
 def test_serialize_todo_item_matches_asdict() -> None:
     """Test the shallow serialization is equivalent to dataclasses.asdict.
 
-    The websocket subscriber path uses the cheaper shallow _serialize_todo_item
+    The websocket subscriber path uses the cheaper shallow serialize_todo_item
     instead of dataclasses.asdict. This equivalence only holds while TodoItem
     stays a flat dataclass of immutable values.
     """
@@ -1235,14 +1235,14 @@ def test_serialize_todo_item_matches_asdict() -> None:
         description="A description",
         completed=datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE),
     )
-    assert _serialize_todo_item(item) == dataclasses.asdict(item)
+    assert serialize_todo_item(item) == dataclasses.asdict(item)
 
 
 def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
     """Guard the TodoItem fields and their types against changes.
 
     A change here means the flat-immutable-dataclass assumption behind
-    _serialize_todo_item must be re-checked (see test_serialize_todo_item_matches_asdict).
+    serialize_todo_item must be re-checked (see test_serialize_todo_item_matches_asdict).
     """
     assert {
         field.name: str(field.type) for field in dataclasses.fields(TodoItem)

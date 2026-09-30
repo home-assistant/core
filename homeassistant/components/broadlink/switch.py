@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Required(CONF_MAC): mac_address,
             probatio.Optional(CONF_HOST): cv.string,
             probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [SWITCH_SCHEMA],
             ),
         }

@@ -152,7 +152,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.manual_token:
             # in manual token entry mode show token input field
-            schema[probatio.Optional(CONF_TOKEN, default="")] = str
+            schema[probatio.Optional(probatio.Secret(CONF_TOKEN), default="")] = str
         else:
             # in automatic token mode show username and password inputs
             schema[
@@ -260,6 +260,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 # successful authentication, update config
+                # Shares the local string with the unique ID abort in async_step_user
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates=user_input
@@ -268,6 +269,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         if isinstance(envoy.auth, EnvoyTokenAuth)
                         else {}
                     ),
+                    reason="reauth_successful",
                 )
             if token:
                 token_days_left = token_lifetime(token)

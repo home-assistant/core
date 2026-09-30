@@ -208,7 +208,7 @@ async def async_setup_entry(
         SERVICE_SET_SENSORS_USED_IN_CLIMATE,
         {
             probatio.Optional(ATTR_PRESET_MODE): cv.string,
-            probatio.Required(ATTR_SENSOR_LIST): cv.ensure_list,
+            probatio.Required(ATTR_SENSOR_LIST): probatio.EnsureList(),
         },
         "set_sensors_used_in_climate",
     )

@@ -78,7 +78,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_HOST): str,
                     probatio.Optional(CONF_USERNAME): str,
                     probatio.Optional(CONF_PASSWORD): str,
-                    probatio.Optional(CONF_PIN): str,
+                    probatio.Optional(probatio.Secret(CONF_PIN)): str,
                     probatio.Optional(CONF_SSL, default=False): bool,
                 }
             ),

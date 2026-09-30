@@ -171,7 +171,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_NAME): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,

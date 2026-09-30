@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_NAME): cv.string,
         probatio.Required(CONF_HOST): cv.template,
         probatio.Required(CONF_MODEL): probatio.Any(MODEL_YI, MODEL_XIAOFANG),
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
         probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
