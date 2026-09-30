@@ -160,7 +160,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME, default=self.username or default_username
                 )
             ] = str
-            schema[probatio.Optional(CONF_PASSWORD, default="")] = str
+            schema[probatio.Optional(probatio.Secret(CONF_PASSWORD), default="")] = str
 
         # option to switch between automatic and manual token entry modes
         schema[probatio.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool

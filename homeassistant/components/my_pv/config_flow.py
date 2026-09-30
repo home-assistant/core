@@ -31,7 +31,7 @@ HOST_SCHEMA: Final = probatio.Schema(
 )
 AUTH_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
