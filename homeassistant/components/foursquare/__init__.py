@@ -42,7 +42,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             {
-                probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+                probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
                 probatio.Required(CONF_PUSH_SECRET): cv.string,
             }
         )
