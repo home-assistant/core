@@ -45,7 +45,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 {
                     probatio.Required(CONF_CIRCUIT): cv.string,
                     probatio.Required(CONF_HOST): cv.string,
-                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                     probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                     probatio.Optional(
                         CONF_MONITORED_CONDITIONS, default=[]

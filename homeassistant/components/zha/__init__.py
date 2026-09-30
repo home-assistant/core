@@ -108,6 +108,7 @@ PLATFORMS = (
     Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VALVE,
 )
 
 

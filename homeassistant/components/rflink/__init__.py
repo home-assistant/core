@@ -101,7 +101,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             {
-                probatio.Required(CONF_PORT): probatio.Any(cv.port, cv.string),
+                probatio.Required(CONF_PORT): probatio.Any(probatio.Port(), cv.string),
                 probatio.Optional(CONF_HOST): cv.string,
                 probatio.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
                 probatio.Optional(
