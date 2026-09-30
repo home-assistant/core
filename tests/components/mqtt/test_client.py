@@ -454,6 +454,9 @@ async def test_subscribe_and_resubscribe(
         mqtt_client_mock.unsubscribe.assert_called_once_with(["test-topic"])
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_topic_non_async(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,

@@ -346,3 +346,45 @@ async def test_outdoor_temperature_update_cycle_fails(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is not None
+
+
+@pytest.mark.parametrize(
+    ("method", "name"),
+    [
+        pytest.param("get_energy_telemetry", "Energy telemetry", id="energy"),
+        pytest.param(
+            "get_outdoor_temperature", "Outdoor temperature", id="outdoor_temperature"
+        ),
+    ],
+)
+async def test_telemetry_unavailable_logged_once(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+    name: str,
+) -> None:
+    """Test a failing telemetry fetch is logged once, and once when it recovers."""
+    await setup_integration(hass, mock_config_entry)
+    unavailable = f"{name} for ata-unit-uuid-1 is unavailable"
+    available = f"{name} for ata-unit-uuid-1 is available again"
+
+    getattr(mock_melcloud_client, method).side_effect = MelCloudHomeConnectionError
+    for _ in range(2):
+        freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count(unavailable) == 1
+    assert available not in caplog.text
+
+    getattr(mock_melcloud_client, method).side_effect = None
+    for _ in range(2):
+        freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count(unavailable) == 1
+    assert caplog.text.count(available) == 1
