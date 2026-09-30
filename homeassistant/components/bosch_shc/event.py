@@ -259,10 +259,5 @@ class SmokeDetectionSystemEvent(SHCEntity, EventEntity):
     @callback
     def _dispatch_event(self, alarm_state: str) -> None:
         """Trigger the event and write state on the event loop."""
-        event_attributes: dict[str, Any] = {
-            ATTR_DEVICE_ID: self.device_id,
-            ATTR_ID: self._device.id,
-            ATTR_NAME: self._device.name,
-        }
-        self._trigger_event(alarm_state, event_attributes)
+        self._trigger_event(alarm_state)
         self.async_write_ha_state()
