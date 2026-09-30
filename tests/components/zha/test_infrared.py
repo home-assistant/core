@@ -262,11 +262,14 @@ async def test_infrared_receiver_removed(
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
     entity_id, zha_entity = _get_entity(hass, zha_device_proxy, FakeReceiver)
 
+    received_signals: list[InfraredReceivedSignal] = []
+    infrared.async_subscribe_receiver(hass, entity_id, received_signals.append)
+
     entity_registry.async_remove(entity_id)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is None
 
-    # Must not write state for the removed entity
+    # Subscribers live on the removed entity, so they only fire if the listener leaked
     zha_entity.receive(InfraredSignal(timings=[9000, -4500]))
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id) is None
+    assert received_signals == []
