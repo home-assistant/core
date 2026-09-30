@@ -219,7 +219,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
-            if self._client_session.closed:
+            if (
+                self._client_session.closed
+                and self.config_entry.state is not ConfigEntryState.LOADED
+            ):
                 _LOGGER.debug(
                     "%s: Client is closed when reading firmware: %s", self.name, err
                 )
@@ -273,7 +276,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         except RuntimeError as err:
             # We may get session is closed if we still run at unload
-            if self._client_session.closed:
+            if (
+                self._client_session.closed
+                and self.config_entry.state is not ConfigEntryState.LOADED
+            ):
                 _LOGGER.debug(
                     "%s: Client is closed when reading interface information: %s",
                     self.name,
