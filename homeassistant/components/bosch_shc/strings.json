@@ -135,6 +135,9 @@
       "bypass_infinite": {
         "name": "Break function never expires"
       },
+      "camera_ambientlight": {
+        "name": "Ambient light"
+      },
       "camera_light": {
         "name": "Camera light"
       },
