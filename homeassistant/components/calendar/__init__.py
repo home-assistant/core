@@ -1,12 +1,13 @@
 """Support for Calendar event device sensors."""
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Final, cast, final, override
+from typing import Any, cast, final, override
 
 from aiohttp import web
 import probatio
@@ -23,14 +24,7 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EVENT, STATE_OFF, STATE_ON
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
@@ -42,7 +36,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import (
+from .const import (  # noqa: F401
+    CREATE_EVENT_SERVICE,
     DATA_COMPONENT,
     DOMAIN,
     EVENT_DESCRIPTION,
@@ -64,6 +59,8 @@ from .const import (
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
     EVENT_UID,
+    LIST_EVENT_FIELDS,
+    SERVICE_GET_EVENTS,
     CalendarEntityFeature,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
@@ -78,11 +75,14 @@ from .helper import (
     get_datetime_local,
     has_consistent_timezone,
     has_min_duration,
-    has_positive_interval,
     has_same_type,
     has_timezone,
-    list_events_dict_factory,
     validate_rrule,
+)
+from .services import (  # noqa: F401
+    CREATE_EVENT_SCHEMA,
+    async_create_event,
+    async_setup_services,
 )
 
 # mypy: disallow-any-generics
@@ -95,45 +95,6 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
-
-CREATE_EVENT_SERVICE = "create_event"
-CREATE_EVENT_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.make_entity_service_schema(
-        {
-            probatio.Required(EVENT_SUMMARY): cv.string,
-            probatio.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            probatio.Optional(EVENT_LOCATION): cv.string,
-            probatio.Inclusive(
-                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            probatio.Inclusive(
-                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            probatio.Inclusive(
-                EVENT_START_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            probatio.Inclusive(
-                EVENT_END_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            probatio.Optional(EVENT_IN): probatio.Schema(
-                {
-                    probatio.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
-                    probatio.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
-                }
-            ),
-        },
-    ),
-    has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
-    has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
-)
 
 WEBSOCKET_EVENT_SCHEMA = probatio.Schema(
     probatio.All(
@@ -169,22 +130,6 @@ CALENDAR_EVENT_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_GET_EVENTS: Final = "get_events"
-SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
-    cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
-    cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
-    cv.make_entity_service_schema(
-        {
-            probatio.Optional(EVENT_START_DATETIME): cv.datetime,
-            probatio.Optional(EVENT_END_DATETIME): cv.datetime,
-            probatio.Optional(EVENT_DURATION): probatio.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-        }
-    ),
-    has_positive_interval(EVENT_START_DATETIME, EVENT_END_DATETIME, EVENT_DURATION),
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
@@ -202,18 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, handle_calendar_event_update)
     websocket_api.async_register_command(hass, handle_calendar_event_subscribe)
 
-    component.async_register_entity_service(
-        CREATE_EVENT_SERVICE,
-        CREATE_EVENT_SCHEMA,
-        async_create_event,
-        required_features=[CalendarEntityFeature.CREATE_EVENT],
-    )
-    component.async_register_entity_service(
-        SERVICE_GET_EVENTS,
-        SERVICE_GET_EVENTS_SCHEMA,
-        async_get_events_service,
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
     await component.async_setup(config)
     return True
 
@@ -542,8 +476,18 @@ class CalendarEntity(Entity):
         if not self._event_listeners:
             return
 
+        # Expanding the events is the expensive part, and every dashboard
+        # showing the same days asks for the same range, so those listeners
+        # are served from a single fetch.
+        listeners_by_range: defaultdict[
+            tuple[datetime.datetime, datetime.datetime],
+            list[Callable[[list[JsonValueType] | None], None]],
+        ] = defaultdict(list)
         for start_date, end_date, listener in self._event_listeners:
-            self.async_update_single_event_listener(start_date, end_date, listener)
+            listeners_by_range[(start_date, end_date)].append(listener)
+
+        for (start_date, end_date), listeners in listeners_by_range.items():
+            self._async_schedule_listener_update(start_date, end_date, listeners)
 
     @final
     @callback
@@ -554,17 +498,27 @@ class CalendarEntity(Entity):
         listener: Callable[[list[JsonValueType] | None], None],
     ) -> None:
         """Schedule an event fetch and push to a single listener."""
-        self.hass.async_create_task(
-            self._async_update_listener(start_date, end_date, listener)
-        )
+        self._async_schedule_listener_update(start_date, end_date, [listener])
 
-    async def _async_update_listener(
+    @callback
+    def _async_schedule_listener_update(
         self,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-        listener: Callable[[list[JsonValueType] | None], None],
+        listeners: list[Callable[[list[JsonValueType] | None], None]],
     ) -> None:
-        """Fetch events and push to a single listener."""
+        """Schedule an event fetch and push to the given listeners."""
+        self.hass.async_create_task(
+            self._async_update_listeners(start_date, end_date, listeners)
+        )
+
+    async def _async_update_listeners(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        listeners: list[Callable[[list[JsonValueType] | None], None]],
+    ) -> None:
+        """Fetch events and push them to the listeners of that range."""
         try:
             events = await self.async_get_events(self.hass, start_date, end_date)
         except HomeAssistantError as err:
@@ -573,11 +527,13 @@ class CalendarEntity(Entity):
                 self.entity_id,
                 err,
             )
-            listener(None)
+            for listener in listeners:
+                listener(None)
             return
 
         event_list: list[JsonValueType] = [event.as_dict() for event in events]
-        listener(event_list)
+        for listener in listeners:
+            listener(event_list)
 
     async def async_get_events(
         self,
@@ -888,67 +844,3 @@ async def handle_calendar_event_subscribe(
 
     # Push initial events only to the new subscriber
     entity.async_update_single_event_listener(start_date, end_date, event_listener)
-
-
-def _validate_timespan(
-    values: dict[str, Any],
-) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
-    """Parse a create event service call.
-
-    Convert the args for a create event entity call.
-    This converts the input service arguments into a
-    `start` and `end` date or date time. This exists because
-    service calls use `start_date` and `start_date_time`
-    whereas the normal entity methods can take either a
-    `datetime` or `date` as a single `start` argument.
-    It also handles the other service call variations like "in days" as well.
-    """
-
-    if event_in := values.get(EVENT_IN):
-        days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
-        today = dt_util.now().date()
-        return (
-            today + datetime.timedelta(days=days),
-            today + datetime.timedelta(days=days + 1),
-        )
-
-    if EVENT_START_DATE in values and EVENT_END_DATE in values:
-        return (values[EVENT_START_DATE], values[EVENT_END_DATE])
-
-    if EVENT_START_DATETIME in values and EVENT_END_DATETIME in values:
-        return (values[EVENT_START_DATETIME], values[EVENT_END_DATETIME])
-
-    raise ValueError("Missing required fields to set start or end date/datetime")
-
-
-async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
-    """Add a new event to calendar."""
-    # Convert parameters to format used by async_create_event
-    (start, end) = _validate_timespan(call.data)
-    params = {
-        **{k: v for k, v in call.data.items() if k not in EVENT_TIME_FIELDS},
-        EVENT_START: start,
-        EVENT_END: end,
-    }
-    await entity.async_create_event(**params)
-
-
-async def async_get_events_service(
-    calendar: CalendarEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """List events on a calendar during a time range."""
-    start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
-    if EVENT_DURATION in service_call.data:
-        end = start + service_call.data[EVENT_DURATION]
-    else:
-        end = service_call.data[EVENT_END_DATETIME]
-
-    calendar_event_list = await calendar.async_get_events(
-        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
-    )
-    return {
-        "events": [
-            dataclasses.asdict(event, dict_factory=list_events_dict_factory)
-            for event in calendar_event_list
-        ]
-    }

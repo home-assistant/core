@@ -64,7 +64,7 @@ BASE_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
         ),
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_TOKEN, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }

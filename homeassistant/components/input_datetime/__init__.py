@@ -186,9 +186,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     probatio.Optional(ATTR_TIMESTAMP): probatio.Coerce(float),
                 },
             ),
-            cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
-            ),
+            probatio.AtLeastOne(ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP),
             validate_set_datetime_attrs,
         ),
         "async_set_datetime",

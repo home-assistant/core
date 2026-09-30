@@ -350,7 +350,7 @@ class OverkizConfigFlow(
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_HOST, default=self._host): str,
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                     probatio.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),

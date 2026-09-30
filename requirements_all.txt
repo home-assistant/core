@@ -102,7 +102,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.62.1
+PyViCare==2.63.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.3.0
+aioamazondevices==16.3.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -345,7 +345,7 @@ aiolyric==2.1.2
 aiomealie==2.1.2
 
 # homeassistant.components.melcloud_home
-aiomelcloudhome==0.2.3
+aiomelcloudhome==0.2.4
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.3.1
@@ -469,6 +469,9 @@ aiounifi==96
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
+
+# homeassistant.components.vitesy
+aiovitesy==1.3.0
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
@@ -718,7 +721,7 @@ bluetooth-data-tools==1.29.24
 bond-async==0.2.1
 
 # homeassistant.components.bosch_alarm
-bosch-alarm-mode2==0.4.10
+bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.13
@@ -947,7 +950,7 @@ energieleser==0.1.7
 energyflip-api-client==0.3.0
 
 # homeassistant.components.energyid
-energyid-webhooks==0.0.14
+energyid-webhooks==0.0.16
 
 # homeassistant.components.energyzero
 energyzero==5.1.0
@@ -1309,10 +1312,10 @@ hole==0.9.2
 holidays==0.104
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260826.7
+home-assistant-frontend==20260930.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.9.17
+home-assistant-intents==2026.9.30
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -1402,7 +1405,7 @@ influxdb==5.3.2
 infrared-protocols==10.1.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.4.4
+inkbird-ble==1.7.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.7.0
@@ -1469,7 +1472,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.9.4.63549
+knx-frontend==2026.9.29.213422
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.14.0
@@ -2192,7 +2195,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.2.4
+pyeconet==0.3.1
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0
@@ -2495,7 +2498,7 @@ pyotgw==2.2.3
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.9.0
+pyotp==2.10.0
 
 # homeassistant.components.overkiz
 pyoverkiz[nexity]==2.1.2
@@ -2684,7 +2687,7 @@ pythinkingcleaner==0.0.3
 python-MotionMount==2.3.0
 
 # homeassistant.components.aidot
-python-aidot==0.3.58
+python-aidot==0.3.59
 
 # homeassistant.components.awair
 python-awair==0.2.5
@@ -2884,10 +2887,10 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.0
+pywaze==1.2.1
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.6.2
+pyweatherflowudp==1.6.3
 
 # homeassistant.components.html5
 pywebpush==2.3.0
@@ -2923,7 +2926,7 @@ pyzbar==0.1.9
 pyzerproc==0.4.8
 
 # homeassistant.components.zonneplan
-pyzonneplan==0.1.3
+pyzonneplan==0.2.0
 
 # homeassistant.components.qbittorrent
 qbittorrent-api==2026.5.1
@@ -3066,7 +3069,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.10.0
+serialx==1.11.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
@@ -3087,7 +3090,7 @@ simplefin4py==0.0.18
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==2.2.3
+simplepush[legacy]==3.8.0
 
 # homeassistant.components.simplisafe
 simplisafe-python==2026.06.0
@@ -3224,7 +3227,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.0
+tesla-fleet-api==1.17.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3323,7 +3326,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==17.5.0
+uiprotect==17.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3379,7 +3382,7 @@ victron-ble-ha-parser==0.8.0
 victron-mqtt==2026.9.5
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.12
+victron-vrm==0.1.13
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
@@ -3532,10 +3535,10 @@ zeroconf==0.151.5
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.2.2
+zha-quirks==2.3.0
 
 # homeassistant.components.zha
-zha==2.2.2
+zha==2.3.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

@@ -99,7 +99,7 @@ def register_actions(hass: HomeAssistant) -> None:
                 probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
                 probatio.Required(ATTR_SEARCH_NAME): cv.string,
                 probatio.Optional(ATTR_MEDIA_TYPE): probatio.All(
-                    cv.ensure_list, [probatio.Coerce(MediaType)]
+                    probatio.EnsureList(), [probatio.Coerce(MediaType)]
                 ),
                 probatio.Optional(ATTR_SEARCH_ARTIST): cv.string,
                 probatio.Optional(ATTR_SEARCH_ALBUM): cv.string,
@@ -138,7 +138,9 @@ def register_actions(hass: HomeAssistant) -> None:
         SERVICE_PLAY_MEDIA_ADVANCED,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            probatio.Required(ATTR_MEDIA_ID): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(ATTR_MEDIA_ID): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(ATTR_MEDIA_TYPE): probatio.Coerce(MediaType),
             probatio.Optional(ATTR_MEDIA_ENQUEUE): probatio.Coerce(QueueOption),
             probatio.Optional(ATTR_ARTIST): cv.string,
@@ -166,8 +168,8 @@ def register_actions(hass: HomeAssistant) -> None:
                     probatio.Optional(ATTR_ANNOUNCE_VOLUME): probatio.Coerce(int),
                 }
             ),
-            cv.has_at_least_one_key(ATTR_URL, ATTR_MESSAGE),
-            cv.has_at_most_one_key(ATTR_URL, ATTR_MESSAGE),
+            probatio.AtLeastOne(ATTR_URL, ATTR_MESSAGE),
+            probatio.AtMostOne(ATTR_URL, ATTR_MESSAGE),
         ),
         func="_async_handle_play_announcement",
     )
