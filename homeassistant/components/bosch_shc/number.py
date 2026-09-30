@@ -51,7 +51,6 @@ async def _impulse_length_set_value_fn(
 
 
 IMPULSE_LENGTH = "impulse_length"
-BYPASS_TIMEOUT = "bypass_timeout"
 
 NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
     IMPULSE_LENGTH: SHCNumberEntityDescription[SHCMicromoduleRelay](
@@ -67,9 +66,9 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         value_fn=_impulse_length_value_fn,
         set_value_fn=_impulse_length_set_value_fn,
     ),
-    BYPASS_TIMEOUT: SHCNumberEntityDescription[SHCShutterContact2](
-        key=BYPASS_TIMEOUT,
-        translation_key=BYPASS_TIMEOUT,
+    "bypass_timeout": SHCNumberEntityDescription[SHCShutterContact2](
+        key="bypass_timeout",
+        translation_key="bypass_timeout",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -123,7 +122,7 @@ async def async_setup_entry(
             device=device,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
-            description=NUMBER_TYPES[BYPASS_TIMEOUT],
+            description=NUMBER_TYPES["bypass_timeout"],
         )
         for device in session.device_helper.shutter_contacts2
     )
