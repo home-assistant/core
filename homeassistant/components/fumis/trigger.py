@@ -29,7 +29,7 @@ _CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(ATTR_DEVICE_ID): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
             ),
         },
     }
