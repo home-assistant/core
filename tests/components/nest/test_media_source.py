@@ -19,7 +19,6 @@ from freezegun import freeze_time
 import numpy as np
 import pytest
 
-from homeassistant.components.camera.img_util import TurboJPEGSingleton
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     URI_SCHEME,
@@ -1526,7 +1525,11 @@ async def test_camera_image_resize_creates_turbojpeg_in_executor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The first thumbnail creates TurboJPEG off the event loop."""
-    monkeypatch.setattr(TurboJPEGSingleton, "_TurboJPEGSingleton__instance", None)
+    monkeypatch.setattr(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton."
+        "_TurboJPEGSingleton__instance",
+        None,
+    )
     await setup_platform()
 
     device = device_registry.async_get_device_by_identifier(
