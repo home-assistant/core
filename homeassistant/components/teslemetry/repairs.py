@@ -182,6 +182,7 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             (self._entry_id, SUBENTRY_TYPE_VEHICLE),
             context={"source": SOURCE_RECONFIGURE, "subentry_id": self._subentry_id},
         )
+        # Reconfigure aborts when the last Bluetooth scanner went away during the handshake.
         if result["type"] is FlowResultType.ABORT:
             return self.async_abort(reason=result["reason"])
         # Aborting keeps the issue open until the reconfigure reloads the entry.

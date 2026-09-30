@@ -329,7 +329,7 @@ async def _setup_ble_vehicles(
     entry.add_to_hass(hass)
     bluetooth_vehicles: dict[str, AsyncMock] = {}
 
-    def _create_bluetooth(vin: str, **kwargs: str | None) -> AsyncMock:
+    def _create_bluetooth(vin: str, **kwargs: object) -> AsyncMock:
         bluetooth_vehicle = bluetooth_vehicles[vin] = AsyncMock()
         bluetooth_vehicle.set_device = MagicMock()
         return bluetooth_vehicle
@@ -514,12 +514,13 @@ async def test_ble_key_rejected_ignores_cloud_rejection(
         patch(
             "tesla_fleet_api.teslemetry.Vehicle.flash_lights",
             side_effect=NotOnWhitelistFault(),
-        ),
+        ) as cloud,
         pytest.raises(HomeAssistantError),
     ):
         # Out of Bluetooth range, so only the cloud is asked.
         await _press_flash_lights(hass, None)
 
+    cloud.assert_awaited_once()
     bluetooth_vehicles[VEHICLE_VIN].flash_lights.assert_not_awaited()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
 
