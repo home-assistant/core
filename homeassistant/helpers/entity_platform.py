@@ -921,8 +921,10 @@ class EntityPlatform:
             # update keeps running - and an entity-id rename re-adds this
             # same instance, so a new poll could then run concurrently
             # with it. Leaving it tracked keeps the entity correctly
-            # treated as still-updating until its own update genuinely
-            # completes and clears the entry itself.
+            # treated as still-updating until `_async_handle_entity_update_result`
+            # clears the entry once its owning cycle's `gather` resolves
+            # (which, for a parallel cycle, only happens once every
+            # sibling entity in that same cycle has also finished).
 
         entity.async_on_remove(remove_entity_cb)
 
