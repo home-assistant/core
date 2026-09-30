@@ -406,8 +406,8 @@ async def test_telemetry_unavailable_logged_once(
         ),
         pytest.param(
             Platform.SENSOR,
-            "ata-unit-uuid-1",
-            "ata-unit-uuid-1",
+            "ata-unit-uuid-1_room_temperature",
+            "ata-unit-uuid-1_room_temperature",
             id="other_platform",
         ),
     ],
@@ -439,6 +439,8 @@ async def test_migrate_unique_id(
     entity_entry = entity_registry.async_get(entity.entity_id)
     assert entity_entry
     assert entity_entry.unique_id == new_unique_id
+    # The platform must pick up the migrated entry instead of creating a new one
+    assert hass.states.get(entity.entity_id)
 
 
 async def test_migrate_future_version(hass: HomeAssistant) -> None:
