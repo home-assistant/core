@@ -1009,6 +1009,68 @@ async def test_fossil_energy_consumption(
     }
 
 
+@pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
+async def test_fossil_energy_consumption_partial_month(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test fossil_energy_consumption includes a trailing partial month."""
+    now = dt_util.utcnow()
+    later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-15 12:00:00"))
+
+    external_energy_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 5,
+        },
+    )
+    external_energy_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(
+        hass, external_energy_metadata, external_energy_statistics
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "energy/fossil_energy_consumption",
+            "start_time": now.isoformat(),
+            "end_time": later.isoformat(),
+            "energy_statistic_ids": ["test:total_energy_import"],
+            "co2_statistic_id": "test:co2_ratio_missing",
+            "period": "month",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # The data ends mid-month, the partial month must still be reported
+    assert response["result"] == {period1.isoformat(): pytest.approx(5.0)}
+
+
 async def test_fossil_energy_consumption_checks(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
