@@ -1,13 +1,16 @@
 """Config flow for Bosch Smart Home Camera."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
+
+import probatio
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .application_credentials import OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
@@ -39,3 +42,28 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             ),
         )
         return await super().async_step_user(user_input)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Inform the user that reauthentication is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=probatio.Schema({})
+            )
+        return await self.async_step_user()
+
+    @override
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+        """Create the entry, or update the existing one during reauth."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+        return await super().async_oauth_create_entry(data)
