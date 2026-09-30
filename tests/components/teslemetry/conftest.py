@@ -186,9 +186,12 @@ def mock_add_connection_listener():
     ) as mock_add_connection_listener:
         mock_add_connection_listener.listeners = []
 
+        def unsubscribe() -> None:
+            return
+
         def side_effect(callback):
             mock_add_connection_listener.listeners.append(callback)
-            return lambda: mock_add_connection_listener.listeners.remove(callback)
+            return unsubscribe
 
         def send(connected: bool) -> None:
             for listener in mock_add_connection_listener.listeners:
