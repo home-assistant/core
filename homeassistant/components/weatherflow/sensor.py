@@ -66,9 +66,13 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     none_is_unknown: bool = False
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
 
+    def get_raw_value(self, device: WeatherFlowDevice) -> Any:
+        """Return the sensor value as reported by the device."""
+        return getattr(device, self.device_attr or self.key)
+
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
-        if (raw_sensor_data := getattr(device, self.device_attr or self.key)) is None:
+        if (raw_sensor_data := self.get_raw_value(device)) is None:
             return None
         return self.raw_data_conv_fn(raw_sensor_data)
 
@@ -411,7 +415,7 @@ class WeatherFlowSensorEntity(RestoreSensor):
         """Restore the last value if configured, then subscribe to events."""
         if (
             self.entity_description.restore_last_value
-            and self.entity_description.get_native_value(self.device) is None
+            and self.entity_description.get_raw_value(self.device) is None
             and (last_sensor_data := await self.async_get_last_sensor_data())
             and last_sensor_data.native_value is not None
         ):

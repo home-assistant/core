@@ -133,3 +133,33 @@ async def test_last_strike_out_of_range(
 
     assert hass.states.get(LAST_STRIKE_DISTANCE).state == STATE_UNKNOWN
     assert hass.states.get(LAST_STRIKE_ENERGY).state == "3848"
+
+
+async def test_last_strike_out_of_range_not_restored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_endpoint: LocalEndpoint,
+) -> None:
+    """Test a strike cached before the sensors are added isn't replaced on restore."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(LAST_STRIKE_DISTANCE, "5"),
+                {"native_value": 5, "native_unit_of_measurement": "km"},
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The sensors are added once the device status and an observation have arrived.
+    for fixture in ("evt_strike_out_of_range.json", "device.json", "obs_st.json"):
+        mock_udp_endpoint.feed_datagram(
+            load_fixture_bytes(fixture, "weatherflow"), HUB_ADDRESS
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LAST_STRIKE_DISTANCE).state == STATE_UNKNOWN
+    assert hass.states.get(LAST_STRIKE_ENERGY).state == "3848"
