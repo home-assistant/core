@@ -15,7 +15,7 @@
     "id_s": "1234",
     "calendar_enabled": true,
     "api_version": 71,
-    "backseat_token": null,
+    "backseat_token": "backseat-token",
     "backseat_token_updated_at": null,
     "ble_autopair_enrolled": false,
     "charge_state": {

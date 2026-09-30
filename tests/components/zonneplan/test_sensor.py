@@ -60,6 +60,14 @@ async def test_sensor(
             id="missing_electricity",
         ),
         pytest.param("gas", "sensor.zonneplan_gas_price_daily", id="missing_gas"),
+        pytest.param(
+            "electricity",
+            "sensor.zonneplan_electricity_used_this_month",
+            id="missing_electricity_usage",
+        ),
+        pytest.param(
+            "gas", "sensor.zonneplan_gas_used_this_month", id="missing_gas_usage"
+        ),
     ],
 )
 async def test_sensor_unknown_for_missing_market_segment(
@@ -84,6 +92,41 @@ async def test_sensor_unknown_for_missing_market_segment(
             for address_group in MOCK_ACCOUNT.address_groups
         ],
     )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.zonneplan_electricity_used_this_month",
+        "sensor.zonneplan_electricity_returned_this_month",
+        "sensor.zonneplan_electricity_cost_this_month",
+        "sensor.zonneplan_gas_used_this_month",
+        "sensor.zonneplan_gas_cost_this_month",
+    ],
+)
+async def test_usage_sensor_unknown_until_data_arrives(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    entity_id: str,
+) -> None:
+    """Test usage sensors are unknown while the grid operator hasn't delivered data.
+
+    Pending windows report zero totals, which must not be shown as zero usage.
+    """
+    for chart in (
+        mock_zonneplan_client.async_get_electricity_chart.return_value,
+        mock_zonneplan_client.async_get_gas_chart.return_value,
+    ):
+        assert chart.group is not None
+        chart.group.meta["energy_delivered_sum"] = None
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
