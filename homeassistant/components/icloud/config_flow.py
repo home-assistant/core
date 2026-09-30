@@ -200,7 +200,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         attempt back to this same dead end even once the login succeeds.
         """
         _LOGGER.error(
-            "iCloud has no way to send a verification code for %s", self._username
+            "No way to send an iCloud verification code for %s", self._username
         )
         if self.api is not None:
             # Dropping the service only clears it from memory. The stored
@@ -329,7 +329,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             # fault and must not be thrown away over an outage: it carries the
             # trust token that keeps the user from being asked for a code
             # again.
-            _LOGGER.error("iCloud is unavailable for %s: %s", self._username, error)
+            _LOGGER.error("Could not reach iCloud for %s: %s", self._username, error)
             return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
         except (
             PyiCloud2FARequiredException,
