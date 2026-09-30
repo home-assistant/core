@@ -459,6 +459,7 @@ async def test_select_viewer_ignores_other_public_stores(
     ("case", "refreshes"),
     [
         ("public_viewers", True),
+        ("deleted", True),
         ("no_public_viewers", False),
         ("public_bootstrap_not_loaded", False),
     ],
@@ -482,7 +483,11 @@ async def test_select_liveview_change_refreshes_public_liveviews(
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
-    mock_msg.new_obj = copy(liveview)
+    if case == "deleted":
+        mock_msg.new_obj = None
+        mock_msg.old_obj = copy(liveview)
+    else:
+        mock_msg.new_obj = copy(liveview)
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 

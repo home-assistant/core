@@ -17,6 +17,7 @@ from uiprotect.data import (
     Event,
     EventType,
     Light,
+    Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
@@ -727,6 +728,8 @@ class ProtectData:
         if (new_obj := message.new_obj) is None:
             if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
                 self._async_remove_device(message.old_obj)
+            elif isinstance(message.old_obj, Liveview):
+                self._async_schedule_public_liveviews_refresh()
             return
 
         model_type = new_obj.model
@@ -751,13 +754,7 @@ class ProtectData:
             return
 
         if model_type is ModelType.LIVEVIEW:
-            # the public websocket sends no liveview frames
-            if self.api.has_public_bootstrap and self.api.public_bootstrap.viewers:
-                self._entry.async_create_background_task(
-                    self._hass,
-                    self._async_refresh_public_liveviews(),
-                    "unifiprotect public liveview refresh",
-                )
+            self._async_schedule_public_liveviews_refresh()
             return
 
         if message.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
@@ -791,6 +788,17 @@ class ProtectData:
             name=f"{DOMAIN} {self._entry.title} refresh",
             eager_start=True,
         )
+
+    @callback
+    def _async_schedule_public_liveviews_refresh(self) -> None:
+        """Refetch the public liveviews the viewports offer."""
+        # the public websocket sends no liveview frames
+        if self.api.has_public_bootstrap and self.api.public_bootstrap.viewers:
+            self._entry.async_create_background_task(
+                self._hass,
+                self._async_refresh_public_liveviews(),
+                "unifiprotect public liveview refresh",
+            )
 
     async def _async_refresh_public_liveviews(self) -> None:
         """Refetch the public liveviews after a private liveview change."""
