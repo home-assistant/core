@@ -70,15 +70,14 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             report = await self._async_observed_poll()
             if not report.updated:
                 errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                    )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                ) from ExceptionGroup("all components failed to refresh", errors)
+                ) from (
+                    ExceptionGroup("all components failed to refresh", errors)
+                    if errors
+                    else None
+                )
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.

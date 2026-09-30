@@ -42,6 +42,8 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MELCloud Home."""
 
+    MINOR_VERSION = 2
+
     async def _async_validate_credentials(
         self, email: str, password: str
     ) -> tuple[dict[str, str], str | None]:

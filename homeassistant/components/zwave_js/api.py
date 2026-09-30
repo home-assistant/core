@@ -1288,7 +1288,7 @@ async def websocket_unprovision_smart_start_node(
 ) -> None:
     """Unprovision a smart start node."""
     try:
-        cv.has_at_least_one_key(DSK, NODE_ID)(msg)
+        probatio.AtLeastOne(DSK, NODE_ID)(msg)
     except probatio.Invalid as err:
         connection.send_error(
             msg[ID],
@@ -2370,9 +2370,7 @@ async def websocket_subscribe_log_updates(
                     probatio.Optional(FORCE_CONSOLE): cv.boolean,
                 }
             ),
-            cv.has_at_least_one_key(
-                ENABLED, FILENAME, FORCE_CONSOLE, LEVEL, LOG_TO_FILE
-            ),
+            probatio.AtLeastOne(ENABLED, FILENAME, FORCE_CONSOLE, LEVEL, LOG_TO_FILE),
             filename_is_present_if_logging_to_file,
         ),
     },

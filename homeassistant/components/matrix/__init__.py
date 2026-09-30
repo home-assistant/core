@@ -103,7 +103,7 @@ COMMAND_SCHEMA = probatio.All(
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION, CONF_REACTION),
+    probatio.AtLeastOne(CONF_WORD, CONF_EXPRESSION, CONF_REACTION),
 )
 
 CONFIG_SCHEMA = probatio.Schema(

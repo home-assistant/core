@@ -160,7 +160,7 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
             }
         ),
         cv.deprecated(ATTR_ARGS),
-        cv.has_at_least_one_key(ATTR_ARGS, ATTR_PARAMS),
+        probatio.AtLeastOne(ATTR_ARGS, ATTR_PARAMS),
     ),
     SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(
         {
