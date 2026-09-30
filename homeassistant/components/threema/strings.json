@@ -33,7 +33,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "api_secret": "API secret"
+          "api_secret": "[%key:component::threema::config::step::credentials::data::api_secret%]"
         },
         "data_description": {
           "api_secret": "New secret for your Threema Gateway {gateway_id}"
