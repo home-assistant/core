@@ -3582,23 +3582,26 @@ async def test_paired_stream_push_restores_availability_after_disconnect(
     hass: HomeAssistant,
     mock_add_connection_listener: MagicMock,
     mock_energy_live_stream: MagicMock,
-    mock_powerwall_live_status: AsyncMock,
 ) -> None:
     """A paired site's live entities come back with the next stream push after a drop."""
-    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
-    assert hass.states.get("sensor.energy_site_solar_power").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_grid_services_power").state == "0.0"
 
     mock_add_connection_listener.send(False)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.energy_site_grid_services_power").state
+        == STATE_UNAVAILABLE
+    )
 
     push = deepcopy(LIVE_STATUS["response"])
-    push["solar_power"] = 456
+    push["grid_services_power"] = 7000
     mock_energy_live_stream.send(push)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+    # The gateway cannot serve this key, so the push is what it reads whether or
+    # not a LAN poll has run.
+    assert hass.states.get("sensor.energy_site_grid_services_power").state == "7.0"
 
 
 async def test_local_config_poll_does_not_clear_stream_error(
