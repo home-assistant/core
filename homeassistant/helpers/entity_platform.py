@@ -1421,11 +1421,50 @@ class EntityPlatform:
         for entity, task in new_tasks:
             self._polling_tasks[id(entity)] = (cycle_id, task)
 
-        results = await asyncio.gather(
-            *(task for _, task in new_tasks), return_exceptions=True
-        )
-        for (entity, task), result in zip(new_tasks, results, strict=True):
-            self._async_handle_entity_update_result(entity, task, result)
+        await self._async_await_polling_tasks(new_tasks)
+
+    async def _async_await_polling_tasks(
+        self, tasks: list[tuple[Entity, asyncio.Task[None]]]
+    ) -> None:
+        """Handle each polling task's result as soon as it completes.
+
+        Results are handled incrementally, rather than via a single
+        `gather`, so a task that raises a fatal `BaseException` is not
+        held hostage by a sibling that never finishes (e.g. one stuck in
+        a hung synchronous `update()`): it propagates as soon as it
+        occurs. The remaining, still-pending siblings are then drained in
+        a background task so their tracked entries are still cleared and
+        their own results still logged once they eventually finish.
+        """
+        task_entities = {task: entity for entity, task in tasks}
+        pending = set(task_entities)
+        while pending:
+            done, pending = await asyncio.wait(
+                pending, return_when=asyncio.FIRST_COMPLETED
+            )
+            for task in done:
+                entity = task_entities[task]
+                try:
+                    result = task.exception()
+                except asyncio.CancelledError as err:
+                    result = err
+                if (
+                    pending
+                    and result is not None
+                    and not isinstance(result, (asyncio.CancelledError, Exception))
+                ):
+                    self.hass.async_create_background_task(
+                        self._async_await_polling_tasks(
+                            [(task_entities[t], t) for t in pending]
+                        ),
+                        name=(
+                            f"EntityPlatform poll drain "
+                            f"{self.domain}.{self.platform_name}"
+                        ),
+                    )
+                # May raise for a fatal BaseException, propagating it
+                # immediately instead of waiting on `pending` above.
+                self._async_handle_entity_update_result(entity, task, result)
 
     def _async_handle_entity_update_result(
         self,
