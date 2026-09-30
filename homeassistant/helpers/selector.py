@@ -67,7 +67,7 @@ class Selector[_T: Mapping[str, Any]]:
     # context for filtering for example. The selector defines
     # which context keys it supports and what selector types
     # are allowed for each key.
-    allowed_context_keys: Mapping[str, set[str]] = ReadOnlyDict({})
+    allowed_context_keys: Mapping[str, frozenset[str]] = ReadOnlyDict({})
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
@@ -444,7 +444,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
     allowed_context_keys = ReadOnlyDict(
         {
             # Filters the available attributes based on the selected entity
-            "filter_entity": {"entity"}
+            "filter_entity": frozenset({"entity"})
         }
     )
 
@@ -1380,7 +1380,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
     allowed_context_keys = ReadOnlyDict(
         {
             # Filters the available media based on the selected entity
-            "filter_entity": {EntitySelector.selector_type}
+            "filter_entity": frozenset({EntitySelector.selector_type})
         }
     )
 
@@ -2080,11 +2080,11 @@ class StateSelector(Selector[StateSelectorConfig]):
     allowed_context_keys = ReadOnlyDict(
         {
             # Filters the available states based on the selected entity
-            "filter_entity": {EntitySelector.selector_type},
+            "filter_entity": frozenset({EntitySelector.selector_type}),
             # Filters the available states based on the selected target
-            "filter_target": {"target"},
+            "filter_target": frozenset({"target"}),
             # Only show the attribute values of a specific attribute
-            "filter_attribute": {AttributeSelector.selector_type},
+            "filter_attribute": frozenset({AttributeSelector.selector_type}),
         }
     )
 

@@ -58,7 +58,23 @@ def test_allowed_context_keys_read_only(
 ) -> None:
     """Test allowed_context_keys cannot be modified."""
     with pytest.raises(RuntimeError, match="Cannot modify ReadOnlyDict"):
-        selector_class.allowed_context_keys["some_key"] = set()
+        selector_class.allowed_context_keys["some_key"] = frozenset()
+
+
+@pytest.mark.parametrize(
+    "selector_class",
+    [
+        pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.MediaSelector, id="media"),
+        pytest.param(selector.StateSelector, id="state"),
+    ],
+)
+def test_allowed_context_keys_values_immutable(
+    selector_class: type[selector.Selector],
+) -> None:
+    """Test allowed_context_keys values cannot be modified."""
+    for allowed_types in selector_class.allowed_context_keys.values():
+        assert isinstance(allowed_types, frozenset)
 
 
 def _test_selector(
