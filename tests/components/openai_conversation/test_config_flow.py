@@ -1431,6 +1431,10 @@ async def test_creating_ai_task_subentry_additional(
         CONF_TOP_P: 0.9,
         CONF_CODE_INTERPRETER: False,
         CONF_SERVICE_TIER: "auto",
+        CONF_WEB_SEARCH: False,
+        CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+        CONF_WEB_SEARCH_USER_LOCATION: False,
+        CONF_WEB_SEARCH_INLINE_CITATIONS: False,
     }
 
 
@@ -1438,23 +1442,26 @@ async def test_creating_ai_task_subentry_additional(
 @pytest.mark.parametrize(
     ("model", "has_web_search"),
     [
-        ("gpt-4o", False),
-        ("gpt-5.6", False),
+        ("gpt-4o", True),
+        ("gpt-5.6", True),
         ("gpt-6-luna", True),
         ("gpt-6-astra", True),
         ("gpt-6.1-sol", True),
-        ("gpt-7-example", True),
-        ("gpt-10-example", True),
-        ("gpt-custom", False),
+        ("o3", True),
+        ("gpt-3.5-turbo", False),
+        ("gpt-4-turbo", False),
+        ("gpt-4.1-nano-2025-04-14", False),
+        ("o1", False),
+        ("o3-mini", False),
     ],
 )
-async def test_ai_task_web_search_generation_scope(
+async def test_ai_task_web_search_supported_models(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     model: str,
     has_web_search: bool,
 ) -> None:
-    """Expose task search only for GPT generation six and newer."""
+    """Expose task search for models outside the existing exclusion list."""
     subentry = next(
         entry
         for entry in mock_config_entry.subentries.values()
