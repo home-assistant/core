@@ -94,9 +94,9 @@ def _scan_input_devices_sync(
 
     udev creates no by-id link for Bluetooth devices, nor for devices without
     a bus ID such as GPIO IR receivers. Those are offered by their event node
-    and configured by name, once per name, and only if they can send keys.
-    Host-bus devices such as the ACPI power button are left out, since
-    grabbing one would take it away from the system.
+    and configured by name, once per name. Only devices that can send keys
+    are offered, and host-bus devices such as the ACPI power button are left
+    out, since grabbing one would take it away from the system.
     """
     from evdev import InputDevice, ecodes, list_devices  # noqa: PLC0415
 
@@ -110,17 +110,19 @@ def _scan_input_devices_sync(
         except OSError:
             continue
         name = dev.name
-        offer_by_name = (
+        usable = (
             ecodes.EV_KEY in dev.capabilities() and dev.info.bustype != ecodes.BUS_HOST
         )
         dev.close()
+        if not usable:
+            continue
         if (link := links.get(os.path.realpath(dev_path))) is not None:
             by_id_options.append(
                 selector.SelectOptionDict(
                     value=link, label=f"{name} ({os.path.basename(link)})"
                 )
             )
-        elif offer_by_name and name not in names and name not in configured_names:
+        elif name not in names and name not in configured_names:
             names.add(name)
             name_options.append(
                 selector.SelectOptionDict(
@@ -401,11 +403,13 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                 return self.async_create_entry(data=user_input)
             errors[CONF_KEY_TYPES] = "no_key_types"
 
-        device_path = self.config_entry.data.get(CONF_DEVICE_PATH, "")
+        # Entries matched by name store no path
+        data = self.config_entry.data
+        device = data.get(CONF_DEVICE_PATH) or data[CONF_DEVICE_NAME]
 
         return self.async_show_form(
             step_id="init",
-            description_placeholders={"device_path": device_path},
+            description_placeholders={"device": device},
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {

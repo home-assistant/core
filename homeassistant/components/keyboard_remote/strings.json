@@ -50,7 +50,7 @@
           "emulate_key_hold_repeat": "Repeat interval in seconds for emulated key hold events.",
           "key_types": "Select which key events to listen for."
         },
-        "description": "Device path: `{device_path}`",
+        "description": "Device: `{device}`",
         "title": "Keyboard Remote options"
       }
     }

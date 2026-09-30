@@ -269,8 +269,8 @@ async def test_user_step_lists_devices_without_by_id_link(
     """Test devices without a by-id link are offered once per name.
 
     udev creates no by-id link for Bluetooth devices. Nodes that cannot send
-    keys, host-bus devices such as the power button, and nodes that cannot be
-    opened are not offered.
+    keys, with or without a by-id link, host-bus devices such as the power
+    button, and nodes that cannot be opened are not offered.
     """
     devices = {
         FAKE_DEVICE_REAL_PATH: _input_device(FAKE_DEVICE_NAME),
@@ -279,8 +279,13 @@ async def test_user_step_lists_devices_without_by_id_link(
         "/dev/input/event9": _input_device("Headphone Jack", sends_keys=False),
         "/dev/input/event10": None,
         "/dev/input/event11": _input_device("Power Button", bustype=BUS_HOST),
+        "/dev/input/event12": _input_device("Webcam", sends_keys=False),
     }
-    with _input_devices(devices, {FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH}):
+    links = {
+        FAKE_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+        "/dev/input/by-id/usb-Webcam-event-if00": "/dev/input/event12",
+    }
+    with _input_devices(devices, links):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -297,6 +302,7 @@ async def test_user_step_lists_devices_without_by_id_link(
         devices[path].close.assert_called_once()
     devices["/dev/input/event9"].close.assert_called_once()
     devices["/dev/input/event11"].close.assert_called_once()
+    devices["/dev/input/event12"].close.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -855,19 +861,31 @@ async def test_options_flow_requires_a_key_type(
     assert result["data"][CONF_KEY_TYPES] == ["key_down"]
 
 
-async def test_options_flow_shows_device_path(
+@pytest.mark.parametrize(
+    ("data", "expected_device"),
+    [
+        pytest.param(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+            FAKE_DEVICE_PATH,
+            id="by_path",
+        ),
+        pytest.param({CONF_DEVICE_NAME: BT_REMOTE_NAME}, BT_REMOTE_NAME, id="by_name"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_shows_device(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    data: dict[str, str],
+    expected_device: str,
 ) -> None:
-    """Test the options flow shows the device path in description."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test the options flow names the device, by name if it has no path."""
+    entry = MockConfigEntry(domain=DOMAIN, data=data, options={})
+    entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"]["device_path"] == FAKE_DEVICE_PATH
+    assert result["description_placeholders"] == {"device": expected_device}
 
 
 def test_get_device_name_success() -> None:

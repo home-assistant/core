@@ -989,7 +989,9 @@ async def test_monitor_input_emulate_key_hold(
         await hass.async_block_till_done()
 
     # key_down started one repeat with the configured timing, key_up cancelled it
-    mock_repeat.assert_called_once_with(mock_input_device, 30, 0.01, 0.01)
+    mock_repeat.assert_called_once_with(
+        mock_input_device, FAKE_DEVICE_PATH, 30, 0.01, 0.01
+    )
     assert len(repeat_tasks) == 1
     assert repeat_tasks[0].cancelled()
     assert [e.data["type"] for e in hold_events] == ["key_down", "key_up"]
@@ -1968,13 +1970,16 @@ async def test_keyrepeat_fires_hold_events(
     mock_config_entry: MockConfigEntry,
     mock_input_device: MagicMock,
 ) -> None:
-    """Test _async_keyrepeat fires key_hold events on a timer."""
+    """Test _async_keyrepeat fires key_hold events on a timer.
+
+    The events carry the descriptor of the device that started the repeat,
+    even if a teardown has since bound another device to the handler.
+    """
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
-    handler.dev = mock_input_device
-    handler._descriptor = FAKE_DEVICE_PATH
+    handler._descriptor = "/dev/input/event9"
 
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
@@ -1986,11 +1991,13 @@ async def test_keyrepeat_fires_hold_events(
         ) as mock_sleep,
         pytest.raises(asyncio.CancelledError),
     ):
-        await handler._async_keyrepeat(mock_input_device, 30, 0.25, 0.03)
+        await handler._async_keyrepeat(
+            mock_input_device, FAKE_DEVICE_PATH, 30, 0.25, 0.03
+        )
     await hass.async_block_till_done()
 
     assert mock_sleep.call_args_list == [call(0.25), call(0.03), call(0.03), call(0.03)]
     assert [(e.data["type"], e.data[KEY_CODE]) for e in events] == [
         ("key_hold", 30)
     ] * 3
-    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_PATH
+    assert {e.data[CONF_DEVICE_DESCRIPTOR] for e in events} == {FAKE_DEVICE_PATH}
