@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -341,3 +342,38 @@ async def test_manual_trigger_sensor_entity_with_date(
     )
     assert entity.state == "2025-01-01T00:00:00+00:00"
     assert entity.device_class == device_class
+
+
+@pytest.mark.parametrize(
+    ("value", "expected", "log_count"),
+    [
+        pytest.param("5", "5", 0, id="numeric_text"),
+        pytest.param(5, 5, 0, id="number"),
+        pytest.param(None, None, 0, id="none"),
+        pytest.param("None", None, 0, id="rendered_none"),
+        pytest.param("unknown", None, 0, id="unknown"),
+        pytest.param("abc", None, 1, id="text"),
+        pytest.param("nan", None, 1, id="nan"),
+        pytest.param(["1", "2"], None, 1, id="list"),
+    ],
+)
+async def test_manual_trigger_sensor_entity_numeric_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    value: Any,
+    expected: Any,
+    log_count: int,
+) -> None:
+    """Test a numeric manual trigger sensor with numeric and non-numeric values."""
+    config = {
+        CONF_NAME: template.Template("test_entity", hass),
+        CONF_UNIT_OF_MEASUREMENT: "%",
+    }
+    entity = ManualTriggerSensorEntity(hass, config)
+    entity.entity_id = "sensor.test_entity"
+
+    entity._set_native_value_with_possible_timestamp(value)
+    entity._set_native_value_with_possible_timestamp(value)
+
+    assert entity.native_value == expected
+    assert caplog.text.count("which is not a finite number") == log_count

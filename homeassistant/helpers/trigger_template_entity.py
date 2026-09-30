@@ -2,6 +2,7 @@
 
 import itertools
 import logging
+from math import isfinite
 from typing import Any, override
 
 import jinja2
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -393,6 +395,38 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._non_numeric_value_logged = False
+
+    @callback
+    def _numeric_value_or_none(self, value: Any) -> Any:
+        """Return None for a value a numeric sensor cannot hold.
+
+        "None" (a template rendering `none`) and "unknown" mean no value and
+        are not logged. Any other non-numeric value is logged once, until the
+        sensor receives a valid value again.
+        """
+        if value is None or not self._numeric_state_expected:
+            return value
+        if isinstance(value, str) and value in ("None", STATE_UNKNOWN):
+            return None
+        try:
+            is_number = isfinite(float(value))
+        except TypeError, ValueError:
+            is_number = False
+        if is_number:
+            self._non_numeric_value_logged = False
+            return value
+        if not self._non_numeric_value_logged:
+            self._non_numeric_value_logged = True
+            logging.getLogger(
+                f"{__package__}.{self.entity_id.split('.', maxsplit=1)[0]}"
+            ).warning(
+                "Sensor %s expects a numeric value but received '%s', which is"
+                " not a finite number; its state is set to unknown",
+                self.entity_id,
+                value,
+            )
+        return None
 
     @callback
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
@@ -406,7 +440,7 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,
         ):
-            self._attr_native_value = value
+            self._attr_native_value = self._numeric_value_or_none(value)
         elif value is not None:
             self._attr_native_value = async_parse_date_datetime(
                 value, self.entity_id, self.device_class
