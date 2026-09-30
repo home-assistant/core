@@ -731,7 +731,7 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.icloud.config_flow.os.path.exists",
             return_value=False,
-        ),
+        ) as mocked_path,
         patch(
             "homeassistant.components.icloud.config_flow.os.makedirs"
         ) as makedirs_mock,
@@ -743,6 +743,8 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
+
+        mocked_path.return_value = True
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
