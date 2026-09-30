@@ -82,6 +82,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=CameraLightService.State.ON,
         should_poll=True,
     ),
+    "cameraeyes_notification": SHCSwitchEntityDescription(
+        key="cameraeyes_notification",
+        translation_key="camera_notification",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="cameranotification",
+        on_value=CameraNotificationService.State.ENABLED,
+        should_poll=True,
+    ),
     "camera360": SHCSwitchEntityDescription(
         key="camera360",
         device_class=SwitchDeviceClass.SWITCH,
@@ -331,6 +340,18 @@ async def async_setup_entry(
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["cameraeyes_cameralight"],
             unique_id_suffix="cameraeyes_cameralight",
+        )
+        for switch in session.device_helper.camera_eyes
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["cameraeyes_notification"],
+            unique_id_suffix="cameraeyes_notification",
         )
         for switch in session.device_helper.camera_eyes
     )
