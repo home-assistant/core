@@ -18,5 +18,13 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with Bosch failed, please sign in again."
+    },
+    "cannot_connect": {
+      "message": "Unable to fetch the cameras from Bosch."
+    }
   }
 }

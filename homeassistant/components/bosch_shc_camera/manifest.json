@@ -8,5 +8,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
+  "requirements": ["bosch-shc-camera-client==0.5.10"],
   "single_config_entry": true
 }
