@@ -203,7 +203,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         elif auth_type == AUTH_API_TOKEN:
             data_schema = probatio.Schema(
                 {
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                     probatio.Required(
                         CONF_REGION, default=current_region
                     ): SelectSelector(
@@ -349,7 +349,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the API token form to the user."""
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_TOKEN): str,
+                probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                 probatio.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),

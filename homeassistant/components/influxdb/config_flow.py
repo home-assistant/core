@@ -102,7 +102,7 @@ INFLUXDB_V2_SCHEMA = probatio.Schema(
                 type=TextSelectorType.TEXT,
             ),
         ),
-        probatio.Required(CONF_TOKEN): TextSelector(
+        probatio.Required(probatio.Secret(CONF_TOKEN)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             ),
