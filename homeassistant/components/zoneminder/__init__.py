@@ -46,7 +46,7 @@ HOST_CONFIG_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [HOST_CONFIG_SCHEMA])},
     extra=probatio.ALLOW_EXTRA,
 )
 

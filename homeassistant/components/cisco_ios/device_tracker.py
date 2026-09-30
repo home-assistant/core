@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Required(CONF_HOST): cv.string,
             probatio.Required(CONF_USERNAME): cv.string,
             probatio.Optional(CONF_PASSWORD, default=""): cv.string,
-            probatio.Optional(CONF_PORT): cv.port,
+            probatio.Optional(CONF_PORT): probatio.Port(),
         }
     )
 )

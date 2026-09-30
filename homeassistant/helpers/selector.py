@@ -175,16 +175,16 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = probatio.Schema(
         # Integration that provided the entity
         probatio.Optional("integration"): str,
         # Domain the entity belongs to
-        probatio.Optional("domain"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [str]),
         # Device class of the entity
-        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("device_class"): probatio.All(probatio.EnsureList(), [str]),
         # Features supported by the entity
         probatio.Optional("supported_features"): [
-            probatio.All(cv.ensure_list, [str], _validate_supported_features)
+            probatio.All(probatio.EnsureList(), [str], _validate_supported_features)
         ],
         # Unit of measurement of the entity
         probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.All(
-            cv.ensure_list, [str]
+            probatio.EnsureList(), [str]
         ),
     }
 )
@@ -209,9 +209,9 @@ _LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT = {
     # Integration that provided the entity
     probatio.Optional("integration"): str,
     # Domain the entity belongs to
-    probatio.Optional("domain"): probatio.All(cv.ensure_list, [str]),
+    probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [str]),
     # Device class of the entity
-    probatio.Optional("device_class"): probatio.All(cv.ensure_list, [str]),
+    probatio.Optional("device_class"): probatio.All(probatio.EnsureList(), [str]),
 }
 
 
@@ -378,11 +378,11 @@ class AreaSelector(Selector[AreaSelectorConfig]):
         make_selector_config_schema(
             {
                 probatio.Optional("entity"): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
                 ),
                 probatio.Optional("device"): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
                 ),
                 probatio.Optional("multiple", default=False): cv.boolean,
@@ -1016,11 +1016,11 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
             **_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT,
             # Device has to contain entities matching this selector
             probatio.Optional("entity"): probatio.All(
-                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+                probatio.EnsureList(), [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
             ),
             probatio.Optional("multiple", default=False): cv.boolean,
             probatio.Optional("filter"): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
         },
@@ -1116,7 +1116,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
                 probatio.Optional("multiple", default=False): cv.boolean,
                 probatio.Optional("reorder", default=False): cv.boolean,
                 probatio.Optional("filter"): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
                 ),
             }
@@ -1138,7 +1138,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
             e_or_u = cv.entity_id_or_uuid(e_or_u)
             if not valid_entity_id(e_or_u):
                 return e_or_u
-            if allowed_domains := cv.ensure_list(self.config.get("domain")):
+            if allowed_domains := probatio.EnsureList()(self.config.get("domain")):
                 domain = split_entity_id(e_or_u)[0]
                 if domain not in allowed_domains:
                     raise probatio.Invalid(
@@ -1208,11 +1208,11 @@ class FloorSelector(Selector[FloorSelectorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             probatio.Optional("entity"): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             probatio.Optional("device"): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             probatio.Optional("multiple", default=False): cv.boolean,
@@ -1737,7 +1737,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
             probatio.Optional("unit_of_measurement"): [probatio.Any(str, None)],
             probatio.Optional("number"): NumberSelector.CONFIG_SCHEMA,
             probatio.Optional("entity"): probatio.All(
-                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+                probatio.EnsureList(), [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
             ),
         }
     )
@@ -2029,7 +2029,7 @@ class StateClassSelector(Selector[StateClassSelectorConfig]):
             {
                 probatio.Optional("multiple", default=False): cv.boolean,
                 probatio.Optional("state_classes"): probatio.All(
-                    cv.ensure_list, [str], [_valid_state_classes]
+                    probatio.EnsureList(), [str], [_valid_state_classes]
                 ),
             },
         ),
@@ -2155,11 +2155,11 @@ class TargetSelector(Selector[TargetSelectorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             probatio.Optional("entity"): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             probatio.Optional("device"): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             probatio.Optional("primary_entities_only"): cv.boolean,

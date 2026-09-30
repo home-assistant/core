@@ -205,16 +205,16 @@ BRIDGE_SCHEMA = probatio.All(
             probatio.Optional(CONF_NAME, default=BRIDGE_NAME): probatio.All(
                 cv.string, probatio.Length(min=3, max=25)
             ),
-            probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
             probatio.Optional(CONF_IP_ADDRESS): probatio.All(
                 ipaddress.ip_address, cv.string
             ),
             probatio.Optional(CONF_ADVERTISE_IP): probatio.All(
-                cv.ensure_list, [ipaddress.ip_address], [cv.string]
+                probatio.EnsureList(), [ipaddress.ip_address], [cv.string]
             ),
             probatio.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
             probatio.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-            probatio.Optional(CONF_DEVICES): cv.ensure_list,
+            probatio.Optional(CONF_DEVICES): probatio.EnsureList(),
         },
         extra=probatio.ALLOW_EXTRA,
     ),
@@ -223,7 +223,7 @@ BRIDGE_SCHEMA = probatio.All(
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list, [BRIDGE_SCHEMA], _has_all_unique_names_and_ports
+            probatio.EnsureList(), [BRIDGE_SCHEMA], _has_all_unique_names_and_ports
         )
     },
     extra=probatio.ALLOW_EXTRA,
@@ -236,7 +236,7 @@ RESET_ACCESSORY_SERVICE_SCHEMA = probatio.Schema(
 
 
 UNPAIR_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [str])}
+    {probatio.Required(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [str])}
 )
 
 

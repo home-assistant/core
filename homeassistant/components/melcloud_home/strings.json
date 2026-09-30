@@ -104,6 +104,9 @@
             }
           }
         }
+      },
+      "atw_zone": {
+        "name": "Zone {zone_number}"
       }
     },
     "number": {
@@ -149,6 +152,11 @@
       },
       "standby": {
         "name": "Standby"
+      }
+    },
+    "water_heater": {
+      "hot_water": {
+        "name": "Hot water"
       }
     }
   },

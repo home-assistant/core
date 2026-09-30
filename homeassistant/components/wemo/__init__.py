@@ -56,7 +56,7 @@ def coerce_host_port(value: str) -> HostPortTuple:
     if not host:
         raise probatio.Invalid("host cannot be empty")
 
-    port = cv.port(port_str) if port_str else None
+    port = probatio.Port()(port_str) if port_str else None
 
     return host, port
 
