@@ -3,7 +3,7 @@
 from typing import Any, override
 
 import probatio
-from simplepush import UnknownError, send
+from simplepush.legacy import UnknownError, send
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD

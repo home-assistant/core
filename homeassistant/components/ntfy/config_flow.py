@@ -101,7 +101,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                 autocomplete="current-password",
             ),
         ),
-        probatio.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
+        probatio.Exclusive(probatio.Secret(CONF_TOKEN), ATTR_CREDENTIALS): str,
     }
 )
 
@@ -119,7 +119,7 @@ STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
                 autocomplete="current-password",
             ),
         ),
-        probatio.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
+        probatio.Exclusive(probatio.Secret(CONF_TOKEN), ATTR_CREDENTIALS): str,
     }
 )
 
