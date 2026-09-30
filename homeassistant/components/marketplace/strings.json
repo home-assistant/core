@@ -146,7 +146,11 @@
       "title": "Python scripts are no longer managed by the Marketplace"
     },
     "removed": {
-      "description": "Because {reason}, `{name}` has been removed from the Marketplace. Please visit the [Marketplace panel](/marketplace/repository/{repository_id}) to uninstall it.",
+      "description": "`{name}` is removed from the Marketplace and no longer gets updates.\n\nThe reason given: {reason}\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
+      "title": "Repository removed from the Marketplace"
+    },
+    "removed_without_reason": {
+      "description": "`{name}` is removed from the Marketplace and no longer gets updates.\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
       "title": "Repository removed from the Marketplace"
     },
     "restart_required": {

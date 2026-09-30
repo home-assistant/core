@@ -251,6 +251,56 @@ async def test_catalog_removal_is_noticed_while_running(
     assert marketplace.repositories.is_removed(repository.data.full_name)
 
 
+@pytest.mark.parametrize(
+    ("removal", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            {"reason": "Unmaintained"},
+            "removed",
+            {"reason": "Unmaintained"},
+            id="with_a_reason",
+        ),
+        pytest.param({}, "removed_without_reason", {}, id="without_a_reason"),
+    ],
+)
+async def test_removed_repository_repair_reads_as_a_sentence(
+    marketplace: MarketplaceManager,
+    issue_registry: ir.IssueRegistry,
+    removal: dict[str, str],
+    translation_key: str,
+    placeholders: dict[str, str],
+) -> None:
+    """Test the repair of a removed repository only names a reason it was given."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    await repository.async_install_repository()
+    get_data = marketplace.data_client.get_data
+
+    async def catalog(section: str | None, *, validate: bool) -> object:
+        if section == "removed":
+            return [
+                {"repository": repository.data.full_name, "removal_type": "removed"}
+                | removal
+            ]
+        return await get_data(section, validate=validate)
+
+    with patch.object(marketplace.data_client, "get_data", catalog):
+        await marketplace.async_handle_removed_repositories()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+    )
+    assert issue is not None
+    assert issue.translation_key == translation_key
+    assert (
+        issue.translation_placeholders
+        == {
+            "name": repository.data.full_name,
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+        | placeholders
+    )
+
+
 async def test_unloaded_before_start_runs_no_startup_tasks(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

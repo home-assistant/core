@@ -1139,6 +1139,13 @@ class MarketplaceManager:
                 continue
             if repository.data.installed:
                 if removed.removal_type != "critical":
+                    placeholders = {
+                        "name": repository.data.full_name,
+                        "repository_id": str(repository.data.id),
+                    }
+                    # Many removals come without one, "None" is no reason
+                    if removed.reason:
+                        placeholders["reason"] = removed.reason
                     async_create_issue(
                         hass=self.hass,
                         domain=DOMAIN,
@@ -1146,12 +1153,10 @@ class MarketplaceManager:
                         is_fixable=False,
                         issue_domain=DOMAIN,
                         severity=IssueSeverity.WARNING,
-                        translation_key="removed",
-                        translation_placeholders={
-                            "name": repository.data.full_name,
-                            "reason": str(removed.reason),
-                            "repository_id": str(repository.data.id),
-                        },
+                        translation_key=(
+                            "removed" if removed.reason else "removed_without_reason"
+                        ),
+                        translation_placeholders=placeholders,
                     )
                     LOGGER.warning(
                         "You have '%s' installed with the Marketplace, "
