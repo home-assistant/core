@@ -892,12 +892,15 @@ def test_selector_in_serializer() -> None:
 def test_selector_with_context_in_serializer() -> None:
     """Test selector with context with custom_serializer."""
     assert cv.custom_serializer(
-        selector.UnitOfMeasurementSelector().with_context(
-            {"filter_device_class": "device_class"}
+        selector.UnitOfMeasurementSelector(
+            selector.UnitOfMeasurementSelectorConfig(
+                context={"filter_device_class": "device_class"}
+            )
         )
     ) == {
-        "selector": {"unit_of_measurement": {}},
-        "context": {"filter_device_class": "device_class"},
+        "selector": {
+            "unit_of_measurement": {"context": {"filter_device_class": "device_class"}}
+        },
     }
 
 
@@ -910,8 +913,10 @@ def test_selector_context_in_field_list() -> None:
             ),
             probatio.Optional(
                 "unit_of_measurement"
-            ): selector.UnitOfMeasurementSelector().with_context(
-                {"filter_device_class": "device_class"}
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": "device_class"}
+                )
             ),
         }
     )
@@ -926,8 +931,11 @@ def test_selector_context_in_field_list() -> None:
             "name": "unit_of_measurement",
             "optional": True,
             "required": False,
-            "selector": {"unit_of_measurement": {}},
-            "context": {"filter_device_class": "device_class"},
+            "selector": {
+                "unit_of_measurement": {
+                    "context": {"filter_device_class": "device_class"}
+                }
+            },
         },
     ]
 

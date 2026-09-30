@@ -4229,7 +4229,10 @@ async def test_subentry_configflow_unit_of_measurement_context(
             result["data_schema"], custom_serializer=cv.custom_serializer
         )
     }
-    assert fields["unit_of_measurement"]["context"] == expected_context
+    assert (
+        fields["unit_of_measurement"]["selector"]["unit_of_measurement"]["context"]
+        == expected_context
+    )
     # The frontend reads the context values from sibling fields in the same form
     allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
     for context_key, field_name in expected_context.items():

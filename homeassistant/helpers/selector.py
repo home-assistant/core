@@ -5,16 +5,7 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    Required,
-    Self,
-    TypedDict,
-    cast,
-    override,
-)
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import probatio
@@ -77,23 +68,10 @@ class Selector[_T: Mapping[str, Any]]:
     # which context keys it supports and what selector types
     # are allowed for each key.
     allowed_context_keys: Mapping[str, frozenset[str]] = ReadOnlyDict({})
-    # Maps context keys to the names of the fields providing their value
-    context: dict[str, str]
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
-        self.context = {}
-
-    def with_context(self, context: Mapping[str, str]) -> Self:
-        """Set the context used by the selector in a data entry flow schema."""
-        if invalid_keys := set(context) - set(self.allowed_context_keys):
-            raise ValueError(
-                f"Context keys {sorted(invalid_keys)} are not allowed for "
-                f"{self.selector_type} selector"
-            )
-        self.context = dict(context)
-        return self
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -101,11 +79,7 @@ class Selector[_T: Mapping[str, Any]]:
         if not isinstance(other, Selector):
             return NotImplemented
 
-        return (
-            self.selector_type == other.selector_type
-            and self.config == other.config
-            and self.context == other.context
-        )
+        return self.selector_type == other.selector_type and self.config == other.config
 
     def serialize(self) -> dict[str, dict[str, _T]]:
         """Serialize Selector for to_field_list."""
@@ -2400,11 +2374,20 @@ def _units_set(dict_name: str, keys: tuple[str, ...]) -> set[str | None] | None:
     return units
 
 
+class UnitOfMeasurementSelectorContext(TypedDict, total=False):
+    """Class to represent a unit of measurement selector context."""
+
+    filter_device_class: str
+    filter_state_class: str
+
+
 class UnitOfMeasurementSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a unit of measurement selector config."""
 
     device_classes: str | list[str] | None
     state_classes: str | list[str] | None
+    # Maps context keys to the names of the fields providing their value
+    context: UnitOfMeasurementSelectorContext
 
 
 @SELECTORS.register("unit_of_measurement")
@@ -2434,6 +2417,10 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
                 probatio.Optional("state_classes"): probatio.Any(
                     None, probatio.All(cv.ensure_list, [_valid_state_class])
                 ),
+                probatio.Optional("context"): {
+                    probatio.Optional("filter_device_class"): str,
+                    probatio.Optional("filter_state_class"): str,
+                },
             },
         ),
     )

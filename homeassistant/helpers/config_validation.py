@@ -1159,9 +1159,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
         return {"type": "multi_select", "options": schema.options}
 
     if isinstance(schema, selector.Selector):
-        if not schema.context:
-            return schema.serialize()
-        return schema.serialize() | {"context": dict(schema.context)}
+        return schema.serialize()
 
     return probatio.UNSUPPORTED
 

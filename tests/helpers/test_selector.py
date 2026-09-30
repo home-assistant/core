@@ -78,48 +78,6 @@ def test_allowed_context_keys_values_immutable(
         assert isinstance(allowed_types, frozenset)
 
 
-def test_selector_with_context() -> None:
-    """Test setting the context of a selector."""
-    context = {"filter_device_class": "device_class"}
-    uom_selector = selector.UnitOfMeasurementSelector()
-    assert uom_selector.context == {}
-
-    assert uom_selector.with_context(context) is uom_selector
-    assert uom_selector.context == context
-    # The context is copied
-    context["filter_state_class"] = "state_class"
-    assert uom_selector.context == {"filter_device_class": "device_class"}
-
-    assert uom_selector != selector.UnitOfMeasurementSelector()
-    assert uom_selector == selector.UnitOfMeasurementSelector().with_context(
-        {"filter_device_class": "device_class"}
-    )
-
-
-@pytest.mark.parametrize(
-    ("selector_instance", "context"),
-    [
-        pytest.param(
-            selector.UnitOfMeasurementSelector(),
-            {"filter_entity": "entity_id"},
-            id="uom_filter_entity",
-        ),
-        pytest.param(
-            selector.TextSelector(),
-            {"filter_entity": "entity_id"},
-            id="text_any_key",
-        ),
-    ],
-)
-def test_selector_with_invalid_context(
-    selector_instance: selector.Selector, context: dict[str, str]
-) -> None:
-    """Test setting a context key the selector does not allow raises."""
-    with pytest.raises(ValueError, match="are not allowed"):
-        selector_instance.with_context(context)
-    assert selector_instance.context == {}
-
-
 def _test_selector(
     selector_type: str,
     schema: dict | None,
@@ -1887,6 +1845,20 @@ def test_state_class_selector_schema(
         ({"device_classes": "invalid"}, pytest.raises(probatio.Invalid)),
         ({"device_classes": ["temperature", "humidity"]}, does_not_raise()),
         ({"device_classes": ["invalid"]}, pytest.raises(probatio.Invalid)),
+        ({"context": {}}, does_not_raise()),
+        ({"context": {"filter_device_class": "device_class"}}, does_not_raise()),
+        (
+            {
+                "context": {
+                    "filter_device_class": "device_class",
+                    "filter_state_class": "state_class",
+                }
+            },
+            does_not_raise(),
+        ),
+        ({"context": {"filter_entity": "entity_id"}}, pytest.raises(probatio.Invalid)),
+        ({"context": {"filter_device_class": 1}}, pytest.raises(probatio.Invalid)),
+        ({"context": "device_class"}, pytest.raises(probatio.Invalid)),
     ],
 )
 def test_uom_selector_validate_schema(
@@ -2090,6 +2062,23 @@ def test_uom_selector_schema(
 ) -> None:
     """Test uom class selector."""
     _test_selector("unit_of_measurement", schema, valid_selections, invalid_selections)
+
+
+def test_uom_selector_context_in_config() -> None:
+    """Test the uom selector context is kept in the selector config."""
+    context = {
+        "filter_device_class": "device_class",
+        "filter_state_class": "state_class",
+    }
+    uom_selector = selector.selector({"unit_of_measurement": {"context": context}})
+
+    assert uom_selector.serialize() == {
+        "selector": {"unit_of_measurement": {"context": context}}
+    }
+    assert uom_selector == selector.UnitOfMeasurementSelector(
+        selector.UnitOfMeasurementSelectorConfig(context=context)
+    )
+    assert uom_selector != selector.UnitOfMeasurementSelector()
 
 
 def test_uom_selector_allowed_context_keys() -> None:

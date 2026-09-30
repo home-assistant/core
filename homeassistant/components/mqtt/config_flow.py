@@ -128,6 +128,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
     UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -763,11 +764,16 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     )
 )
 SENSOR_STATE_CLASS_SELECTOR = StateClassSelector()
-NUMBER_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector().with_context(
-    {"filter_device_class": CONF_DEVICE_CLASS}
+NUMBER_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector(
+    UnitOfMeasurementSelectorConfig(context={"filter_device_class": CONF_DEVICE_CLASS})
 )
-SENSOR_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector().with_context(
-    {"filter_device_class": CONF_DEVICE_CLASS, "filter_state_class": CONF_STATE_CLASS}
+SENSOR_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector(
+    UnitOfMeasurementSelectorConfig(
+        context={
+            "filter_device_class": CONF_DEVICE_CLASS,
+            "filter_state_class": CONF_STATE_CLASS,
+        }
+    )
 )
 STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
