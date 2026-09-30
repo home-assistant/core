@@ -7,6 +7,7 @@ from aiomelcloudhome import (
     ATAOperationMode,
     ATAVaneHorizontal,
     ATAVaneVertical,
+    ATWOperationMode,
     ATWZoneMode,
 )
 
@@ -14,6 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -90,6 +92,15 @@ ATW_ZONE_MODE_TO_HVAC_MODE: dict[ATWZoneMode, HVACMode] = {
 HVAC_MODE_TO_ATW_ZONE_MODE: dict[HVACMode, ATWZoneMode] = {
     HVACMode.HEAT: ATWZoneMode.HEAT_ROOM_TEMPERATURE,
     HVACMode.COOL: ATWZoneMode.COOL_ROOM_TEMPERATURE,
+}
+
+# The unit heats either the tank or the zones, so heating the tank idles the zones
+ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
+    ATWOperationMode.STOP: HVACAction.IDLE,
+    ATWOperationMode.HOT_WATER: HVACAction.IDLE,
+    ATWOperationMode.HEAT: HVACAction.HEATING,
+    ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
+    ATWOperationMode.COOL: HVACAction.COOLING,
 }
 
 
@@ -440,6 +451,16 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
             if self.unit.power and self._zone_mode
             else HVACMode.OFF
         )
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return what the unit is doing for this zone."""
+        if self.hvac_mode == HVACMode.OFF:
+            return HVACAction.OFF
+        if self.unit.operation_mode is None:
+            return None
+        return ATW_OPERATION_TO_HVAC_ACTION[self.unit.operation_mode]
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
