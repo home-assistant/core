@@ -177,6 +177,7 @@ class HassIOView(HomeAssistantView):
             if PATHS_LOGS.match(path) and request.headers.get(RANGE):
                 headers[RANGE] = request.headers[RANGE]
 
+        client = None
         try:
             client = await self._websession.request(
                 method=request.method,
@@ -208,6 +209,9 @@ class HassIOView(HomeAssistantView):
         except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
             raise HTTPBadGateway from err
+        finally:
+            if client is not None:
+                client.release()
         return response
 
     get = _handle
