@@ -1,0 +1,148 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FMD Configuration",
+        "description": "Set up your FMD (Find My Device) server connection and tracking preferences",
+        "data": {
+          "url": "Server URL",
+          "id": "Account ID",
+          "password": "Password",
+          "polling_interval": "Update Interval (minutes)",
+          "allow_inaccurate_locations": "Allow Inaccurate Location Updates",
+          "use_imperial": "Use Imperial Units"
+        },
+        "data_description": {
+          "url": "The full URL to your FMD server including protocol",
+          "id": "Your FMD account ID",
+          "password": "Your FMD account password",
+          "polling_interval": "How often to check for location updates (1-1440 minutes)",
+          "allow_inaccurate_locations": "Allow location updates even with poor accuracy",
+          "use_imperial": "Convert distance/speed to imperial units (feet, miles, mph)"
+        }
+      },
+      "reauth": {
+        "title": "Reauthenticate FMD",
+        "description": "Re-authenticate with your FMD server. New artifacts will be stored and the password removed.",
+        "data": {
+          "url": "[%key:component::fmd::config::step::user::data::url%]",
+          "id": "[%key:component::fmd::config::step::user::data::id%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "url": "[%key:component::fmd::config::step::user::data_description::url%]",
+          "id": "[%key:component::fmd::config::step::user::data_description::id%]",
+          "password": "Your FMD account password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "An unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "FMD is already configured for this account ID",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "device_tracker": {
+      "fmd_tracker": {
+        "name": "Device Location"
+      }
+    },
+    "button": {
+      "location_update": {
+        "name": "Location Update"
+      },
+      "ring": {
+        "name": "Volume: Ring Device"
+      },
+      "lock": {
+        "name": "Lock Device"
+      },
+      "capture_front_camera": {
+        "name": "Photo: Capture Front"
+      },
+      "capture_rear_camera": {
+        "name": "Photo: Capture Rear"
+      },
+      "download_photos": {
+        "name": "Photo: Download"
+      },
+      "wipe_device": {
+        "name": "Wipe: ⚠️ Execute ⚠️"
+      }
+    },
+    "switch": {
+      "high_frequency_mode": {
+        "name": "High Frequency Mode"
+      },
+      "allow_inaccurate": {
+        "name": "Location: Allow Inaccurate Updates"
+      },
+      "photo_auto_cleanup": {
+        "name": "Photo: Auto-Cleanup"
+      },
+      "wipe_safety_switch": {
+        "name": "Wipe: ⚠️ Safety Switch ⚠️"
+      }
+    },
+    "select": {
+      "location_source": {
+        "name": "Location Source"
+      },
+      "bluetooth": {
+        "name": "Bluetooth"
+      },
+      "do_not_disturb": {
+        "name": "Volume: Do Not Disturb"
+      },
+      "ringer_mode": {
+        "name": "Volume: Ringer Mode"
+      }
+    },
+    "number": {
+      "update_interval": {
+        "name": "Update Interval"
+      },
+      "high_frequency_interval": {
+        "name": "High Frequency Interval"
+      },
+      "max_photos": {
+        "name": "Photo: Max to Retain"
+      }
+    },
+    "sensor": {
+      "photo_count": {
+        "name": "Photo Count"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "FMD Options",
+        "description": "Adjust FMD integration settings",
+        "data": {
+          "polling_interval": "Update Interval (minutes)",
+          "allow_inaccurate_locations": "Allow Inaccurate Location Updates",
+          "use_imperial": "Use Imperial Units"
+        },
+        "data_description": {
+          "polling_interval": "How often to check for location updates (1-1440 minutes)",
+          "allow_inaccurate_locations": "Allow location updates even with poor accuracy",
+          "use_imperial": "Convert distance/speed to imperial units (feet, miles, mph)"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed: {error}"
+    },
+    "command_failed": {
+      "message": "{command} command failed: {error}"
+    }
+  }
+}
