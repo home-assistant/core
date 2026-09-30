@@ -466,6 +466,30 @@ async def test_sensors_streaming_dc_charging(
     assert hass.states.get("sensor.test_charger_power").state == "7"
 
 
+async def test_sensors_streaming_ac_charging_energy_added(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test charge energy added uses battery energy rather than wall energy on AC."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.AC_CHARGING_ENERGY_IN: 1.543,
+                Signal.AC_CHARGING_POWER: 7,
+                Signal.DC_CHARGING_ENERGY_IN: 1.24,
+                Signal.DC_CHARGING_POWER: 0,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_charge_energy_added").state == "1.24"
+    assert hass.states.get("sensor.test_charger_power").state == "7"
+
+
 async def test_sensors_streaming_dc_charging_ended(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
