@@ -2,6 +2,7 @@
 
 import asyncio
 from contextlib import suppress
+import hashlib
 import re
 import shlex
 from typing import Literal, overload
@@ -239,9 +240,13 @@ def render_template_args(
 
     # Template substitution occurred. Determine the safe execution path.
     # The name makes the issue id unique per entity so two entities that happen
-    # to share a command string get their own issue. The id is kept stable
-    # across command edits so following the repair instructions clears it.
-    issue_id = f"{_ISSUE_ID_PREFIX}{platform}_{slugify(name)}"
+    # to share a command string get their own issue. A hash of the raw name is
+    # appended because slugify is not injective (e.g. "Test More" and
+    # "Test_(More)" both slugify to "test_more"), which would otherwise let one
+    # entity clear another's issue. Hashing the name rather than the command
+    # keeps the id stable across command edits so the repair instructions clear it.
+    name_hash = hashlib.sha256(name.encode()).hexdigest()[:8]
+    issue_id = f"{_ISSUE_ID_PREFIX}{platform}_{slugify(name)}_{name_hash}"
 
     # Classify and parse the whole command, not just the rendered args, so shell
     # features and quoting in the executable token are handled too.

@@ -1358,3 +1358,18 @@ async def test_template_issue_id_stable_across_command_edits(
     # id would instead leave the original issue behind.
     render_template_args(hass, "echo {{ 'clean' }}", "sensor", "Test")
     assert not [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
+
+
+async def test_template_issue_id_distinct_for_slugify_collision(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Names that slugify identically get distinct issue ids."""
+    # Both names slugify to "test_more", so a slug-only id would collide.
+    render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test More")
+    render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test_(More)")
+    assert len([iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]) == 2
+
+    # Clearing one entity's issue with a safe command leaves the other's intact.
+    render_template_args(hass, "echo {{ 'clean' }}", "sensor", "Test More")
+    assert len([iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]) == 1
