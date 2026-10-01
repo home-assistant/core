@@ -890,6 +890,30 @@ async def test_sensors_streaming_charger_power_uninformative_charge_state(
             id="ac_power_zero_while_dc_charging",
         ),
         pytest.param(
+            "148.2",
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0,
+                },
+                {Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateComplete"},
+            ],
+            "0",
+            id="held_ac_power_zero_released_when_charging_ends",
+        ),
+        pytest.param(
+            "148.2",
+            [
+                {
+                    Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+                    Signal.AC_CHARGING_POWER: 0,
+                },
+                {Signal.DC_CHARGING_POWER: 150},
+            ],
+            "150",
+            id="held_ac_power_zero_superseded_by_dc_power",
+        ),
+        pytest.param(
             "7.2",
             [
                 {
@@ -955,7 +979,7 @@ async def test_sensors_streaming_charger_power_restored(
     messages: list[dict[Signal, str | float | None]],
     expected_state: str,
 ) -> None:
-    """Test a charger power restored mid-session is kept until it is superseded."""
+    """Test when a restored charger power is kept or replaced."""
     mock_restore_cache_with_extra_data(
         hass,
         (

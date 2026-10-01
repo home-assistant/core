@@ -212,8 +212,8 @@ def _listen_charger_power(
         power[key] = value if charging is not False or value is None else 0
         seen.add(key)
         ac, dc = power["ac"], power["dc"]
-        # A restored power may come from the other source while charging, but an
-        # unused source never reports, so only wait for it then
+        # While charging, a lone zero may precede the other source's restored power;
+        # otherwise that source may never report
         if charging and len(seen) < 2 and not (ac or dc):
             return
         seen.update(power)
