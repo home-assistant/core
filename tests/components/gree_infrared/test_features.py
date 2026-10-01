@@ -160,6 +160,50 @@ async def test_econo_switch_cool_only_and_cancel_on_mode_change(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("hvac_modes", [[HVACMode.HEAT, HVACMode.DRY]])
+async def test_absence_switch_heat_only_and_cancel_on_mode_change(
+    hass: HomeAssistant, mock_infrared_emitter_entity: MockInfraredEmitterEntity
+) -> None:
+    """Absence is available only in heat and clears when leaving heat."""
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    entity_id = _entity_id(hass, "switch", "absence")
+    await hass.services.async_call(
+        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert _last_command(mock_infrared_emitter_entity).absence is True
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.DRY},
+        blocking=True,
+    )
+    assert _last_command(mock_infrared_emitter_entity).absence is False
+    assert hass.states.get(entity_id).state == "unavailable"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_absence_blocked_outside_heat(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Absence is rejected by the climate owner when not in heat mode."""
+    await _turn_on_cool(hass)
+    entity_id = _entity_id(hass, "switch", "absence")
+    assert hass.states.get(entity_id).state == "unavailable"
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    with pytest.raises(HomeAssistantError):
+        await climate.async_set_option("absence", True)
+    assert mock_infrared_emitter_entity.send_command_calls[-1].absence is False
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_sleep_switch_and_cancel_on_mode_change(
     hass: HomeAssistant, mock_infrared_emitter_entity: MockInfraredEmitterEntity
 ) -> None:
@@ -290,6 +334,7 @@ async def test_new_fields_restore_after_restart(
                     "timer_hours": 1.5,
                     "swing_h_position": 4,
                     "econo": True,
+                    "absence": True,
                     "fahrenheit": True,
                     "display_temp": 3,
                 },
@@ -309,6 +354,7 @@ async def test_new_fields_restore_after_restart(
     assert state.timer_hours == 1.5
     assert state.swing_h_position == 4
     assert state.econo is True
+    assert state.absence is True
     assert state.fahrenheit is True
     assert state.display_temp == 3
     await hass.services.async_call(

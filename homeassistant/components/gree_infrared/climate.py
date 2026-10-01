@@ -127,6 +127,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
     timer_hours: float | None = None
     swing_h_position: int = 0
     econo: bool = False
+    absence: bool = False
     fahrenheit: bool = False
     display_temp: int = 2
 
@@ -148,6 +149,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
             "timer_hours": self.timer_hours,
             "swing_h_position": self.swing_h_position,
             "econo": self.econo,
+            "absence": self.absence,
             "fahrenheit": self.fahrenheit,
             "display_temp": self.display_temp,
         }
@@ -191,12 +193,14 @@ class _GreeAcExtraStoredData(ExtraStoredData):
             return None
         swing_h_position = restored.get("swing_h_position", 0)
         econo = restored.get("econo", False)
+        absence = restored.get("absence", False)
         fahrenheit = restored.get("fahrenheit", False)
         display_temp = restored.get("display_temp", 2)
         if (
             not isinstance(swing_h_position, int)
             or swing_h_position not in range(7)
             or not isinstance(econo, bool)
+            or not isinstance(absence, bool)
             or not isinstance(fahrenheit, bool)
             or not isinstance(display_temp, int)
             or display_temp not in range(4)
@@ -210,6 +214,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
             None if timer_hours is None else float(timer_hours),
             swing_h_position,
             econo,
+            absence,
             fahrenheit,
             display_temp,
         )
@@ -387,6 +392,7 @@ class GreeAcClimateEntity(
                 self._state.sleep = False
             self._state.swing_h_position = restored.swing_h_position
             self._state.econo = restored.econo
+            self._state.absence = restored.absence
             self._state.fahrenheit = restored.fahrenheit
             self._state.display_temp = restored.display_temp
         self._state.async_notify_switches()
@@ -410,6 +416,7 @@ class GreeAcClimateEntity(
             self._state.timer_hours,
             self._state.swing_h_position,
             self._state.econo,
+            self._state.absence,
             self._state.fahrenheit,
             self._state.display_temp,
         )
@@ -442,6 +449,9 @@ class GreeAcClimateEntity(
         if new_hvac_mode is not HVACMode.COOL and self._state.econo:
             self._state.econo = False
             self._state.async_notify_switches()
+        if new_hvac_mode is not HVACMode.HEAT and self._state.absence:
+            self._state.absence = False
+            self._state.async_notify_switches()
 
     async def async_set_option(self, option: str, value: bool) -> None:
         """Set an option flag and send the updated state when active."""
@@ -450,7 +460,7 @@ class GreeAcClimateEntity(
                 raise ValueError(f"Unsupported Gree option: {option}")
         elif option == "sleep":
             pass
-        elif option in ("ifeel", "econo"):
+        elif option in ("ifeel", "econo", "absence"):
             if not self._is_yap1f:
                 raise ValueError(f"Unsupported Gree option: {option}")
         else:
@@ -467,6 +477,8 @@ class GreeAcClimateEntity(
             raise HomeAssistantError("Sleep is not available in this HVAC mode")
         if option == "econo" and value and self._attr_hvac_mode is not HVACMode.COOL:
             raise HomeAssistantError("Econo is only available in cool mode")
+        if option == "absence" and value and self._attr_hvac_mode is not HVACMode.HEAT:
+            raise HomeAssistantError("Absence is only available in heat mode")
         async with self._state.command_lock:
             previous = getattr(self._state, option)
             setattr(self._state, option, value)
@@ -766,6 +778,7 @@ class GreeAcClimateEntity(
             ),
             fahrenheit=self._state.fahrenheit if self._is_yap1f else False,
             econo=self._state.econo if self._is_yap1f else False,
+            absence=self._state.absence if self._is_yap1f else False,
             display_temp=self._state.display_temp if self._is_yap1f else None,
         )
 
@@ -823,6 +836,10 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         if self._is_yap1f:
             self._state.ifeel = command.ifeel
             self._state.swing_v_position = command.swing_v_position
+            # Byte 7 0x04 is econo in cool and absence in heat; one wire bit.
+            self._state.absence = (
+                command.absence and embedded_hvac_mode is HVACMode.HEAT
+            )
         if self._supports_options:
             self._state.turbo = command.turbo
             self._state.light = command.display

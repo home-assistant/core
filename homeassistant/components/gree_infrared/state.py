@@ -25,6 +25,7 @@ class GreeAcState:
         self.swing_h: bool = False
         self.swing_h_position: int = 0
         self.econo: bool = False
+        self.absence: bool = False
         self.fahrenheit: bool = False
         self.display_temp: int = 2
         self.swing_v_position: int | None = None
