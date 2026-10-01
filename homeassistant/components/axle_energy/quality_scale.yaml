@@ -39,10 +39,10 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: The household event feed is a cloud service with no local endpoint.

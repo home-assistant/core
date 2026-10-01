@@ -39,12 +39,14 @@ def user_form_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
         {
             probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
             probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:

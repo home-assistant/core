@@ -56,7 +56,9 @@ def _get_config_schema(
         input_dict = {}
 
     api_key_schema = {
-        probatio.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
+        probatio.Required(
+            probatio.Secret(CONF_API_KEY), default=input_dict.get(CONF_API_KEY)
+        ): str,
     }
 
     default_location = input_dict.get(

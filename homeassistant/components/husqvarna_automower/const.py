@@ -13,7 +13,6 @@ ERROR_STATES = [
     MowerStates.ERROR,
     MowerStates.FATAL_ERROR,
     MowerStates.OFF,
-    MowerStates.STOPPED,
     MowerStates.WAIT_POWER_UP,
     MowerStates.WAIT_UPDATING,
 ]

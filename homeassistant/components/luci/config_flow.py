@@ -22,7 +22,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
@@ -103,7 +103,7 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

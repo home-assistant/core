@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your Vitesy Hub account.",
+          "password": "The password of your Vitesy Hub account."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "filter_changed": {
+        "name": "Mark filter as changed"
+      },
+      "fridge_cleaned": {
+        "name": "Mark fridge as cleaned"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "boost": "Boost",
+          "eco": "Eco",
+          "shelf": "Shelf"
+        }
+      }
+    },
+    "sensor": {
+      "air_quality_score": {
+        "name": "Air quality score"
+      },
+      "door_open_duration": {
+        "name": "Door open duration"
+      },
+      "door_openings": {
+        "name": "Door openings"
+      },
+      "filter_change_due": {
+        "name": "Filter change due"
+      },
+      "fridge_cleaning_due": {
+        "name": "Fridge cleaning due"
+      },
+      "fridge_temperature": {
+        "name": "Fridge temperature"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Vitesy Hub credentials are no longer valid."
+    },
+    "reset_maintenance_failed": {
+      "message": "Could not reset the maintenance period on Vitesy Hub."
+    },
+    "set_mode_failed": {
+      "message": "Could not change the mode on Vitesy Hub."
+    },
+    "update_failed": {
+      "message": "Error communicating with Vitesy Hub, check logs for details"
+    }
+  }
+}

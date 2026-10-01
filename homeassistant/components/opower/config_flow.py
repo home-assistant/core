@@ -107,10 +107,10 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema_dict: VolDictType = {
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
         if utility.accepts_totp_secret():
-            schema_dict[probatio.Optional(CONF_TOTP_SECRET)] = str
+            schema_dict[probatio.Optional(probatio.Secret(CONF_TOTP_SECRET))] = str
 
         return self.async_show_form(
             step_id="credentials",
@@ -226,10 +226,10 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         utility = select_utility(self._data[CONF_UTILITY])
         schema_dict: VolDictType = {
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
         if utility.accepts_totp_secret():
-            schema_dict[probatio.Optional(CONF_TOTP_SECRET)] = str
+            schema_dict[probatio.Optional(probatio.Secret(CONF_TOTP_SECRET))] = str
 
         return self.async_show_form(
             step_id="reauth_confirm",

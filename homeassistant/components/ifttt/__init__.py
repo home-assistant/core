@@ -37,7 +37,9 @@ SERVICE_TRIGGER = "trigger"
 SERVICE_TRIGGER_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_EVENT): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_VALUE1): cv.string,
         probatio.Optional(ATTR_VALUE2): cv.string,
         probatio.Optional(ATTR_VALUE3): cv.string,

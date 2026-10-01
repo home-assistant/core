@@ -23,7 +23,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=VACUUM_DOMAIN,
         schema={
             probatio.Required(ATTR_ROOMS): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
             ),
         },
         func="async_clean_room",

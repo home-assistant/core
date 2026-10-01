@@ -41,7 +41,11 @@ type EVENT_TYPE = Event[dict[str, Any]]
 # the protocol information. Ensure that protocol is in a list otherwise
 # segfault in pilight-daemon, https://github.com/pilight/pilight/issues/296
 RF_CODE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_PROTOCOL): probatio.All(cv.ensure_list, [cv.string])},
+    {
+        probatio.Required(CONF_PROTOCOL): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 
@@ -52,7 +56,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                 probatio.Optional(CONF_WHITELIST, default={}): {cv.string: [cv.string]},
                 probatio.Optional(
                     CONF_SEND_DELAY, default=DEFAULT_SEND_DELAY
