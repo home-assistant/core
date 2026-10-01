@@ -352,19 +352,6 @@ async def test_async_update_call_deflections_empty_paths(
     assert await fritz_tools.async_update_call_deflections() == {}
 
 
-async def test_async_scan_devices_stopping_returns(
-    hass: HomeAssistant,
-    fritz_tools,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test scan devices exits when Home Assistant is stopping."""
-
-    with patch.object(hass, "is_stopping", True):
-        await fritz_tools.async_scan_devices()
-
-    assert "Cannot execute scan devices: HomeAssistant is shutting down" in caplog.text
-
-
 async def test_async_scan_devices_old_discovery_branch(
     fritz_tools,
 ) -> None:

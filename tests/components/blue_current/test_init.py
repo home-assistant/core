@@ -9,8 +9,8 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.blue_current.const import (
     CHARGING_CARD_ID,

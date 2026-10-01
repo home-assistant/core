@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast, override
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.device import Device
 
 from homeassistant.components.sensor import (
@@ -38,17 +38,14 @@ def _get_air_quality(device: Device) -> int | None:
     ):  # The sensor returns 65535 if the fan is turned off
         return None
 
-    return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
+    return device.air_purifier_control.air_purifiers[0].air_quality
 
 
 def _get_filter_time_left(device: Device) -> int:
     """Fetch the filter's remaining lifetime (in hours)."""
     assert device.air_purifier_control is not None
     return round(
-        cast(
-            int, device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
-        )
-        / 60
+        device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining / 60
     )
 
 
@@ -163,7 +160,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         gateway_id: str,
         description: TradfriSensorEntityDescription,
     ) -> None:

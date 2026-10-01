@@ -742,6 +742,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
+        },
+    ],
     "_linkplay._tcp.local.": [
         {
             "domain": "linkplay",
@@ -886,6 +891,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
         },
     ],
     "_powerview._tcp.local.": [

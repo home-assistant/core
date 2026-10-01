@@ -1,6 +1,6 @@
 """YoLink services."""
 
-import voluptuous as vol
+import probatio
 from yolink.client_request import ClientRequest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -66,16 +66,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         domain=DOMAIN,
         service=SERVICE_PLAY_ON_SPEAKER_HUB,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_TARGET_DEVICE): cv.string,
-                vol.Optional(ATTR_TONE): cv.string,
-                vol.Required(ATTR_TEXT_MESSAGE): cv.string,
-                vol.Optional(ATTR_VOLUME): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=15)
+                probatio.Required(ATTR_TARGET_DEVICE): cv.string,
+                probatio.Optional(ATTR_TONE): cv.string,
+                probatio.Required(ATTR_TEXT_MESSAGE): cv.string,
+                probatio.Optional(ATTR_VOLUME): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=15)
                 ),
-                vol.Optional(ATTR_REPEAT, default=0): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=10)
+                probatio.Optional(ATTR_REPEAT, default=0): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=10)
                 ),
             },
         ),

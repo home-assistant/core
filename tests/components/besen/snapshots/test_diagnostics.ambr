@@ -1,0 +1,171 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'auth_failed': False,
+      'authenticated': True,
+      'available': True,
+      'charge': dict({
+        'charger_status': True,
+        'charging_status': 'Start',
+        'charging_status_description': 'EV is connected, please press start',
+        'charging_time_limit': None,
+        'current_state': 'Charging',
+        'emergency_btn_state': None,
+        'error_details': 'No Error',
+        'error_info': None,
+        'inner_temp_c': 24.5,
+        'inner_temp_f': None,
+        'l1_amperage': 15.2,
+        'l1_voltage': 230.0,
+        'l2_amperage': 15.1,
+        'l2_voltage': 231.0,
+        'l3_amperage': 15.0,
+        'l3_voltage': 232.0,
+        'line_id': None,
+        'new_protocol': None,
+        'outer_temp': 22.5,
+        'output_state': 'Charging',
+        'plug_state': 'Connected Locked',
+        'power': 3500,
+        'scheduled_start': None,
+        'session_current_limit': None,
+        'session_duration': None,
+        'session_energy': 1.2,
+        'session_start': None,
+        'total_energy': 12.3,
+      }),
+      'config': dict({
+        'charge_amps': 16,
+        'device_name': '**REDACTED**',
+        'language': None,
+        'lcd_brightness': None,
+        'rssi': -55,
+        'system_time': None,
+        'system_time_raw': None,
+        'temperature_unit': 'Celsius',
+      }),
+      'info': dict({
+        'address': '**REDACTED**',
+        'advertised_name': '**REDACTED**',
+        'board_revision': 'new',
+        'charger_type': None,
+        'feature': None,
+        'hardware_version': 'HW1',
+        'manufacturer': 'Besen',
+        'model': 'BS20',
+        'output_max_amps': 32,
+        'output_power': None,
+        'phases': 1,
+        'serial': '**REDACTED**',
+        'software_version': 'SW1',
+        'support': None,
+      }),
+    }),
+    'entry_data': dict({
+      'address': '**REDACTED**',
+      'name': '**REDACTED**',
+      'pin': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics_connection_state[authentication-failed]
+  dict({
+    'auth_failed': True,
+    'authenticated': False,
+    'available': False,
+  })
+# ---
+# name: test_diagnostics_connection_state[connected-not-authenticated]
+  dict({
+    'auth_failed': False,
+    'authenticated': False,
+    'available': True,
+  })
+# ---
+# name: test_diagnostics_connection_state[disconnected]
+  dict({
+    'auth_failed': False,
+    'authenticated': False,
+    'available': False,
+  })
+# ---
+# name: test_diagnostics_missing_readings
+  dict({
+    'data': dict({
+      'auth_failed': False,
+      'authenticated': False,
+      'available': False,
+      'charge': dict({
+        'charger_status': None,
+        'charging_status': None,
+        'charging_status_description': None,
+        'charging_time_limit': None,
+        'current_state': None,
+        'emergency_btn_state': None,
+        'error_details': None,
+        'error_info': None,
+        'inner_temp_c': None,
+        'inner_temp_f': None,
+        'l1_amperage': None,
+        'l1_voltage': None,
+        'l2_amperage': None,
+        'l2_voltage': None,
+        'l3_amperage': None,
+        'l3_voltage': None,
+        'line_id': None,
+        'new_protocol': None,
+        'outer_temp': None,
+        'output_state': None,
+        'plug_state': None,
+        'power': None,
+        'scheduled_start': None,
+        'session_current_limit': None,
+        'session_duration': None,
+        'session_energy': None,
+        'session_start': None,
+        'total_energy': None,
+      }),
+      'config': dict({
+        'charge_amps': None,
+        'device_name': None,
+        'language': None,
+        'lcd_brightness': None,
+        'rssi': None,
+        'system_time': None,
+        'system_time_raw': None,
+        'temperature_unit': None,
+      }),
+      'info': dict({
+        'address': '**REDACTED**',
+        'advertised_name': None,
+        'board_revision': None,
+        'charger_type': None,
+        'feature': None,
+        'hardware_version': None,
+        'manufacturer': None,
+        'model': None,
+        'output_max_amps': None,
+        'output_power': None,
+        'phases': None,
+        'serial': None,
+        'software_version': None,
+        'support': None,
+      }),
+    }),
+    'entry_data': dict({
+      'address': '**REDACTED**',
+      'name': '**REDACTED**',
+      'pin': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics_without_runtime_data
+  dict({
+    'entry_data': dict({
+      'address': '**REDACTED**',
+      'name': '**REDACTED**',
+      'pin': '**REDACTED**',
+    }),
+  })
+# ---

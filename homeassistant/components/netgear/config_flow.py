@@ -4,8 +4,8 @@ import logging
 from typing import Any, cast, override
 from urllib.parse import urlparse
 
+import probatio
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -46,20 +46,26 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _discovery_schema_with_defaults(discovery_info):
-    return vol.Schema(_ordered_shared_schema(discovery_info))
+    return probatio.Schema(_ordered_shared_schema(discovery_info))
 
 
 def _user_schema_with_defaults(user_input):
-    user_schema = {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
+    user_schema = {
+        probatio.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str
+    }
     user_schema.update(_ordered_shared_schema(user_input))
 
-    return vol.Schema(user_schema)
+    return probatio.Schema(user_schema)
 
 
 def _ordered_shared_schema(schema_input):
     return {
-        vol.Optional(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
-        vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
+        probatio.Optional(
+            CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
+        ): str,
+        probatio.Required(
+            CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")
+        ): str,
     }
 
 
@@ -73,9 +79,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
+        settings_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()

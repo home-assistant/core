@@ -1,6 +1,6 @@
 """Roborock services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
@@ -45,8 +45,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=VACUUM_DOMAIN,
         schema=cv.make_entity_service_schema(
             {
-                vol.Required("x"): vol.Coerce(int),
-                vol.Required("y"): vol.Coerce(int),
+                probatio.Required("x"): probatio.Coerce(int),
+                probatio.Required("y"): probatio.Coerce(int),
             },
         ),
         func="async_set_vacuum_goto_position",
@@ -60,12 +60,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=VACUUM_DOMAIN,
         schema=cv.make_entity_service_schema(
             {
-                vol.Required("x1"): vol.Coerce(int),
-                vol.Required("y1"): vol.Coerce(int),
-                vol.Required("x2"): vol.Coerce(int),
-                vol.Required("y2"): vol.Coerce(int),
-                vol.Required("repeats"): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=2)
+                probatio.Required("x1"): probatio.Coerce(int),
+                probatio.Required("y1"): probatio.Coerce(int),
+                probatio.Required("x2"): probatio.Coerce(int),
+                probatio.Required("y2"): probatio.Coerce(int),
+                probatio.Required("repeats"): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=2)
                 ),
             },
         ),
