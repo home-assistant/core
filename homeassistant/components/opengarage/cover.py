@@ -1,6 +1,7 @@
-"""Platform for the opengarage.io cover component."""
+"""Cover support for OpenGarage."""
 
-import logging
+from collections.abc import Awaitable, Callable
+from datetime import datetime, timedelta
 from typing import Any, cast, override
 
 from homeassistant.components.cover import (
@@ -10,14 +11,15 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-STATES_MAP = {0: CoverState.CLOSED, 1: CoverState.OPEN}
+# Legacy firmware reports only the endpoints, including during travel and alarms.
+MOVEMENT_TIMEOUT = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -25,14 +27,14 @@ async def async_setup_entry(
     entry: OpenGarageConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the OpenGarage covers."""
+    """Set up the OpenGarage cover."""
     async_add_entities(
         [OpenGarageCover(entry.runtime_data, cast(str, entry.unique_id))]
     )
 
 
 class OpenGarageCover(OpenGarageEntity, CoverEntity):
-    """Representation of a OpenGarage cover."""
+    """Representation of an OpenGarage cover."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -42,92 +44,94 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self, coordinator: OpenGarageDataUpdateCoordinator, device_id: str
     ) -> None:
         """Initialize the cover."""
-        self._state: str | None = None
-        self._state_before_move: str | None = None
-
+        self._state = "unknown"
+        self._state_before_move = "unknown"
+        self._movement_deadline: datetime | None = None
         super().__init__(coordinator, device_id)
 
     @property
     @override
     def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        if self._state is None:
+        """Return whether the cover is closed."""
+        if self._state == "unknown":
             return None
         return self._state == CoverState.CLOSED
 
     @property
     @override
-    def is_closing(self) -> bool | None:
-        """Return if the cover is closing."""
-        if self._state is None:
-            return None
+    def is_closing(self) -> bool:
+        """Return whether the cover is closing."""
         return self._state == CoverState.CLOSING
 
     @property
     @override
-    def is_opening(self) -> bool | None:
-        """Return if the cover is opening."""
-        if self._state is None:
-            return None
+    def is_opening(self) -> bool:
+        """Return whether the cover is opening."""
         return self._state == CoverState.OPENING
-
-    @override
-    async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
-            return
-        self._state_before_move = self._state
-        self._state = CoverState.CLOSING
-        self.async_write_ha_state()
-        await self._push_button()
-
-    @override
-    async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        if self._state in [CoverState.OPEN, CoverState.OPENING]:
-            return
-        self._state_before_move = self._state
-        self._state = CoverState.OPENING
-        self.async_write_ha_state()
-        await self._push_button()
-
-    @callback
-    @override
-    def _update_attr(self) -> None:
-        """Update the state and attributes."""
-        status = self.coordinator.data
-
-        state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
-        if self._state_before_move is not None:
-            if self._state_before_move != state:
-                self._state = state
-                self._state_before_move = None
-        else:
-            self._state = state
 
     @property
     @override
     def current_cover_position(self) -> int | None:
-        """Return current position of cover (0=closed, 100=open)."""
+        """Return an endpoint position when known."""
         if self._state == CoverState.CLOSED:
             return 0
         if self._state == CoverState.OPEN:
             return 100
         return None
 
-    async def _push_button(self):
-        """Send commands to API."""
-        result = await self.coordinator.open_garage_connection.push_button()
-        if result is None:
-            _LOGGER.error("Unable to connect to OpenGarage device")
-        if result == 1:
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        if self._state in (CoverState.CLOSED, CoverState.CLOSING):
             return
+        await self._async_move(
+            CoverState.CLOSING,
+            self.coordinator.open_garage_connection.push_close_button,
+        )
 
-        if result == 2:
-            _LOGGER.error("Unable to control %s: Device key is incorrect", self.name)
-        elif result > 2:
-            _LOGGER.error("Unable to control %s: Error code %s", self.name, result)
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        if self._state in (CoverState.OPEN, CoverState.OPENING):
+            return
+        await self._async_move(
+            CoverState.OPENING, self.coordinator.open_garage_connection.push_open_button
+        )
 
-        self._state = self._state_before_move
-        self._state_before_move = None
+    @override
+    async def async_toggle(self, **kwargs: Any) -> None:
+        """Choose direction from the current state."""
+        if self._state in (CoverState.CLOSED, CoverState.CLOSING):
+            await self.async_open_cover(**kwargs)
+        else:
+            await self.async_close_cover(**kwargs)
+
+    async def _async_move(
+        self, state: CoverState, command: Callable[[], Awaitable[int | None]]
+    ) -> None:
+        """Send a directional command and track its pending state."""
+        self._state_before_move = self.coordinator.data.door_state
+        self._movement_deadline = dt_util.utcnow() + MOVEMENT_TIMEOUT
+        self._state = state
         self.async_write_ha_state()
+        try:
+            await self.coordinator.async_command(command)
+        except HomeAssistantError:
+            self._movement_deadline = None
+            self._state = self.coordinator.data.door_state
+            self.async_write_ha_state()
+            raise
+
+    @callback
+    @override
+    def _update_attr(self) -> None:
+        """Reconcile reported state with a pending command."""
+        state = self.coordinator.data.door_state
+        if (
+            self._movement_deadline is not None
+            and dt_util.utcnow() < self._movement_deadline
+            and state == self._state_before_move
+        ):
+            return
+        self._movement_deadline = None
+        self._state = state

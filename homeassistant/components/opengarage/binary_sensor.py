@@ -4,6 +4,7 @@ import logging
 from typing import cast, override
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -11,7 +12,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
-from .entity import OpenGarageEntity
+from .entity import (
+    OpenGarageCapabilityEntity,
+    OpenGarageEntity,
+    async_add_capability_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +45,22 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     )
 
+    async_add_capability_entities(
+        entry.runtime_data,
+        async_add_entities,
+        {
+            "obstruction": lambda: OpenGarageObstructionSensor(
+                entry.runtime_data,
+                cast(str, entry.unique_id),
+                BinarySensorEntityDescription(
+                    key="obstruction",
+                    translation_key="obstruction",
+                    device_class=BinarySensorDeviceClass.SAFETY,
+                ),
+            )
+        },
+    )
+
 
 class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
     """Representation of a OpenGarage binary sensor."""
@@ -64,7 +85,7 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
     @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
-        state = self.coordinator.data.get(self.entity_description.key)
+        state = self.coordinator.data.raw.get(self.entity_description.key)
         if state == 1:
             self._attr_is_on = True
             self._available = True
@@ -73,3 +94,15 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
             self._available = True
         else:
             self._available = False
+
+
+class OpenGarageObstructionSensor(OpenGarageCapabilityEntity, BinarySensorEntity):
+    """Representation of the opener's obstruction detector."""
+
+    capability = "obstruction"
+
+    @callback
+    @override
+    def _update_attr(self) -> None:
+        """Update the reported obstruction state."""
+        self._attr_is_on = self.coordinator.data.obstruction

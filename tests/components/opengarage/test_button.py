@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import button
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -56,3 +57,26 @@ async def test_device_info_sw_version_is_string(
     assert device_entry
     assert device_entry.sw_version == "120"
     assert "non-string value" not in caplog.text
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "result",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param(2, id="bad_key"),
+        pytest.param(99, id="error"),
+    ],
+)
+async def test_restart_failure(
+    hass: HomeAssistant, mock_opengarage: MagicMock, result: int | None
+) -> None:
+    """Report failed restart commands."""
+    mock_opengarage.reboot.return_value = result
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            button.DOMAIN,
+            button.SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.garage_abcdef_restart"},
+            blocking=True,
+        )
