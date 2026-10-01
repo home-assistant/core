@@ -1,5 +1,6 @@
 """Test the native Shelly remote setup and credential management flows."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioshelly.exceptions import InvalidAuthError
@@ -169,3 +170,64 @@ async def test_revoke_remote_access_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert entry.data[CONF_REMOTE_CREDENTIAL] is None
     assert manager.lookup(URL(url).query["remote_key"]) is None
+
+
+async def confirm_rotation(hass: HomeAssistant, flow_id: str) -> None:
+    """Confirm a replacement credential."""
+    await hass.config_entries.flow.async_configure(flow_id, {})
+
+
+async def cancel_rotation(hass: HomeAssistant, flow_id: str) -> None:
+    """Cancel a replacement credential."""
+    hass.config_entries.flow.async_abort(flow_id)
+
+
+@pytest.mark.parametrize(
+    ("finish", "confirm"), [(confirm_rotation, True), (cancel_rotation, False)]
+)
+async def test_regenerate_remote_credential(
+    hass: HomeAssistant,
+    finish: Callable[[HomeAssistant, str], Awaitable[None]],
+    confirm: bool,
+) -> None:
+    """Commit rotation revokes only the old credential; cancellation revokes only the new."""
+    manager = RemoteConnectionManager(hass)
+    old_record, old_url = manager.create_credential(URL("https://ha.example.com"))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+            CONF_REMOTE_CREDENTIAL: old_record.digest,
+        },
+    )
+    entry.add_to_hass(hass)
+    manager.register_entry(entry)
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_get_remote_manager",
+            return_value=manager,
+        ),
+        patch.object(hass.config_entries, "async_reload", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "remote_regenerate"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_EXTERNAL_URL: "https://ha.example.com"}
+        )
+        url = result["description_placeholders"]["connection_url"]
+        new_record = manager.lookup(URL(url).query["remote_key"])
+        assert new_record.device_id == entry.unique_id
+        assert new_record.entry_id == entry.entry_id
+        await finish(hass, result["flow_id"])
+        await hass.async_block_till_done()
+    assert (manager.lookup(URL(old_url).query["remote_key"]) is None) is confirm
+    assert (manager.lookup(URL(url).query["remote_key"]) is not None) is confirm
+    assert entry.data[CONF_REMOTE_CREDENTIAL] == (
+        new_record.digest if confirm else old_record.digest
+    )
+    assert URL(url).query["remote_key"] not in repr(entry.as_dict())

@@ -18,7 +18,7 @@ from .coordinator import ShellyConfigEntry
 from .remote_connection import (
     async_get_remote_manager,
     is_remote_entry,
-    redact_remote_url,
+    redact_remote_data,
 )
 from .utils import get_rpc_ws_url
 
@@ -132,5 +132,5 @@ async def async_get_config_entry_diagnostics(
             "last_connected": record.last_connected if record else None,
             "last_disconnected": record.last_disconnected if record else None,
         }
-        diagnostics["last_error"] = redact_remote_url(last_error)
+        diagnostics = redact_remote_data(diagnostics)
     return diagnostics

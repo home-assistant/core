@@ -26,6 +26,7 @@ from homeassistant.components.shelly.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.components.shelly.remote_connection import RemoteConnectionManager
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_MODEL,
     STATE_OFF,
@@ -45,6 +46,12 @@ from .test_remote import DEVICE_INFO, make_request
 from tests.common import MockConfigEntry, async_capture_events
 
 REAL_CREATE = RpcDevice.create
+
+
+def notify_loaded(entry: MockConfigEntry, event: asyncio.Event) -> None:
+    """Wake a test waiting for setup, ignoring intermediate state changes."""
+    if entry.state is ConfigEntryState.LOADED:
+        event.set()
 
 
 class RemoteShellySocket:
@@ -255,3 +262,54 @@ async def test_remote_native_entities_and_reconnect(
             assert replacement.calls[-1]["method"] == "Switch.Set"
             await hass.config_entries.async_unload(entry.entry_id)
             await handler
+
+
+async def test_remote_setup_resumes_when_device_connects(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Restore a hash-only entry at HA startup and resume setup on its first socket."""
+    monkeypatch.setattr(RpcDevice, "create", REAL_CREATE)
+    manager = RemoteConnectionManager(hass)
+    record, url = manager.create_credential(URL("https://ha.example.com"))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DEVICE_INFO["mac"],
+        title="Remote relay",
+        minor_version=3,
+        data={
+            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+            CONF_REMOTE_CREDENTIAL: record.digest,
+            CONF_GEN: 2,
+            CONF_MODEL: DEVICE_INFO["model"],
+            CONF_SLEEP_PERIOD: 0,
+        },
+    )
+    entry.add_to_hass(hass)
+    socket = RemoteShellySocket(url)
+    with (
+        patch(
+            "homeassistant.components.shelly.async_get_remote_manager",
+            return_value=manager,
+        ),
+        patch(
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
+            return_value=socket,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is False
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+        loaded = asyncio.Event()
+        unsubscribe = entry.async_on_state_change(lambda: notify_loaded(entry, loaded))
+        handler = hass.async_create_background_task(
+            manager.accept(make_request(URL(url).query["remote_key"]), record),
+            "Test restored remote device",
+            eager_start=True,
+        )
+        await asyncio.wait_for(loaded.wait(), 5)
+        assert entry.state is ConfigEntryState.LOADED
+        unsubscribe()
+        await hass.async_block_till_done()
+        assert entry.runtime_data.rpc.device.connected
+        assert entry.runtime_data.rpc.device.options.ip_address is None
+        await hass.config_entries.async_unload(entry.entry_id)
+        await handler

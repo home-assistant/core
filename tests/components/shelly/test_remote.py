@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import quote
 
 from aiohttp import WSMessage, WSMsgType, web
 from aioshelly.json import json_dumps
@@ -20,6 +21,7 @@ from homeassistant.components.shelly.remote_connection import (
     REMOTE_LOGGERS,
     RemoteConnectionManager,
     ShellyRemoteReceiver,
+    redact_remote_data,
     validate_external_url,
 )
 from homeassistant.core import HomeAssistant
@@ -215,6 +217,28 @@ async def test_pairing_urls_are_redacted_in_logs(
     assert URL(url).query["remote_key"] not in caplog.text
     assert url not in caplog.text
     assert "[REDACTED REMOTE URL]" in caplog.text
+
+
+async def test_pairing_response_is_redacted_in_websocket_logs(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The frontend's outgoing bytes and encoded requests also contain secrets."""
+    manager = RemoteConnectionManager(hass)
+    _, url = manager.create_credential(URL("https://ha.example.com"))
+    logger = logging.getLogger("homeassistant.components.websocket_api.http.connection")
+    logger.warning("Sending %s", json_dumps({"connection_url": url}).encode())
+    logger.warning("Request %s", quote(url, safe=""))
+    assert URL(url).query["remote_key"] not in caplog.text
+    assert quote(url, safe="") not in caplog.text
+
+
+async def test_nested_diagnostics_urls_are_redacted(hass: HomeAssistant) -> None:
+    """Device-supplied diagnostic strings cannot reveal a stored server URL."""
+    manager = RemoteConnectionManager(hass)
+    _, url = manager.create_credential(URL("https://ha.example.com"))
+    diagnostics = redact_remote_data({"sys": {"errors": [url, quote(url, safe="")]}})
+    assert URL(url).query["remote_key"] not in repr(diagnostics)
+    assert diagnostics == {"sys": {"errors": ["[REDACTED REMOTE URL]"] * 2}}
 
 
 async def test_duplicate_registered_device(hass: HomeAssistant) -> None:

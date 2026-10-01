@@ -9,12 +9,13 @@ import logging
 import re
 import secrets
 from typing import Any, override
+from urllib.parse import unquote
 
 from aiohttp import WSMsgType, web
 from aioshelly.rpc_device import WsServer
 from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
@@ -43,7 +44,10 @@ REMOTE_LOGGERS = (
     "homeassistant.components.http.auth",
     "homeassistant.components.http.ban",
     "homeassistant.components.http.security_filter",
+    "homeassistant.components.http.server",
+    "homeassistant.components.websocket_api.http.connection",
     "homeassistant.components.shelly",
+    "homeassistant.core",
     "homeassistant.config_entries",
     "homeassistant.data_entry_flow",
     "aiohttp.access",
@@ -56,7 +60,20 @@ REMOTE_LOGGERS = (
 @callback
 def redact_remote_url(value: str) -> str:
     """Redact complete pairing URLs, including relative URLs in access logs."""
+    if "%" in value and REMOTE_URL_PATTERN.search(decoded := unquote(value)):
+        value = decoded
     return REMOTE_URL_PATTERN.sub("[REDACTED REMOTE URL]", value)
+
+
+def redact_remote_data(value: Any) -> Any:
+    """Remove pairing URLs recursively from diagnostics values."""
+    if isinstance(value, str):
+        return redact_remote_url(value)
+    if isinstance(value, dict):
+        return {key: redact_remote_data(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [redact_remote_data(item) for item in value]
+    return value
 
 
 class RemoteURLLogFilter(logging.Filter):
@@ -151,7 +168,7 @@ class RemoteConnectionManager:
 
     @callback
     def create_credential(self, origin: URL) -> tuple[RemoteCredential, str]:
-        """Create a temporary pairing credential and its one-time connection URL."""
+        """Create a temporary credential; its URL is available only to the flow."""
         token = secrets.token_urlsafe(32)
         digest = hashlib.sha256(token.encode()).hexdigest()
         record = RemoteCredential(
@@ -290,6 +307,12 @@ class RemoteConnectionManager:
                 eager_start=True,
             )
             record.ready.set()
+            if (
+                record.entry_id
+                and (entry := self.hass.config_entries.async_get_entry(record.entry_id))
+                and entry.state is ConfigEntryState.SETUP_RETRY
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             await handler
             return websocket
         finally:
