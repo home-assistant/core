@@ -22,6 +22,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
@@ -65,6 +66,7 @@ def _user_schema(hass: HomeAssistant) -> probatio.Schema:
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
+            probatio.Optional(CONF_GENERIC_OPTIONS, default=False): probatio.Boolean(),
             probatio.Required(
                 CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
             ): probatio.All(
@@ -109,6 +111,9 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match(
                     {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
                 )
+
+            if not user_input.get(CONF_GENERIC_OPTIONS):
+                user_input.pop(CONF_GENERIC_OPTIONS, None)
 
             return self.async_create_entry(
                 title=f"Gree AC via {self._entity_name(emitter_id)}",

@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
+    CONF_GENERIC_OPTIONS,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_MODEL,
     DOMAIN,
@@ -29,18 +30,19 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up YAP1F option switches."""
-    if entry.data.get(CONF_MODEL, MODEL_GENERIC) != MODEL_YAP1F:
+    """Set up option switches for supported profiles."""
+    if entry.data.get(CONF_MODEL, MODEL_GENERIC) != MODEL_YAP1F and not (
+        entry.data.get(CONF_MODEL, MODEL_GENERIC) == MODEL_GENERIC
+        and entry.data.get(CONF_GENERIC_OPTIONS, False)
+    ):
         return
     state: GreeAcState = hass.data[DOMAIN][entry.entry_id]
     entities = [GreeAcOptionSwitch(entry, state, key) for key in _OPTIONS]
     async_add_entities(entities)
 
 
-class GreeAcOptionSwitch(
-    GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEntity
-):
-    """An assumed YAP1F option delegated to this entry's climate owner."""
+class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEntity):
+    """An assumed option delegated to this entry's climate owner."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -60,6 +62,7 @@ class GreeAcOptionSwitch(
         self._state.switches.append(self)
         climate = self._state.climate
         if climate is not None and climate.entity_id is not None:
+
             @callback
             def _handle_climate_state_change(
                 event: Event[EventStateChangedData],
@@ -114,4 +117,3 @@ class GreeAcOptionSwitch(
         await super().async_will_remove_from_hass()
         if self in self._state.switches:
             self._state.switches.remove(self)
-
