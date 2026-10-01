@@ -997,8 +997,6 @@ class DeviceHandler:
             async for event in dev.async_read_loop():
                 if event.type == ecodes.EV_KEY:
                     if event.value in self._key_values:
-                        # Not evdev's categorize, which raises for key codes
-                        # missing from its table
                         _LOGGER.debug(
                             "Key %s %s on %s",
                             event.code,
