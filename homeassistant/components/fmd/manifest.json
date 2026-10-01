@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["fmd_api"],
   "quality_scale": "bronze",
-  "requirements": ["fmd-api==3.1.1"]
+  "requirements": ["fmd-api==3.1.2"]
 }
