@@ -96,3 +96,26 @@ async def test_form_already_configured(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_trailing_slash_url_canonicalized_in_entry_data(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test a trailing-slash URL is stored canonically.
+
+    The entity/device identity derives from the stored URL, so it must
+    match the canonical entry unique_id exactly.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(USER_INPUT, **{CONF_URL: f"{TEST_URL}/"})
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_entries()[0]
+    assert entry.unique_id == f"{TEST_URL}/{TEST_ID}"
+    assert entry.data[CONF_URL] == TEST_URL

@@ -53,11 +53,16 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Account IDs are scoped per server: include the canonical base
-            # URL so the same account ID on two different servers can
-            # coexist, and trailing-slash variants do not create duplicates.
+            # Canonicalize once so the entry unique_id, the stored data,
+            # and the entity/device identity derived from it all agree;
+            # trailing-slash variants must not produce mismatched
+            # registry identities for the same server.
+            user_input[CONF_URL] = _canonical_url(user_input[CONF_URL])
+            # Account IDs are scoped per server: the canonical base URL
+            # plus the account ID lets the same account on two different
+            # servers coexist.
             await self.async_set_unique_id(
-                f"{_canonical_url(user_input[CONF_URL])}/{user_input[CONF_ID]}"
+                f"{user_input[CONF_URL]}/{user_input[CONF_ID]}"
             )
             self._abort_if_unique_id_configured()
             try:
