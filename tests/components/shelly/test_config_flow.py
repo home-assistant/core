@@ -28,9 +28,12 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
+    CONF_CONNECTION_TYPE,
     CONF_GEN,
+    CONF_REMOTE_CREDENTIAL,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
+    CONNECTION_REMOTE_WS,
     DOMAIN,
     BLEScannerMode,
 )
@@ -3003,6 +3006,28 @@ async def test_options_flow_disabled_sleepy_gen_2(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_flow_disabled_remote(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Remote entries do not advertise the unsupported BLE scanner options."""
+    await async_setup_component(hass, "config", {})
+    await init_integration(
+        hass,
+        2,
+        skip_setup=True,
+        data={
+            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+            CONF_REMOTE_CREDENTIAL: "0" * 64,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            CONF_SLEEP_PERIOD: 0,
+        },
+    )
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 5, "type": "config_entries/get", "domain": DOMAIN})
+    response = await ws_client.receive_json()
+    assert response["result"][0]["supports_options"] is False
 
 
 async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> None:

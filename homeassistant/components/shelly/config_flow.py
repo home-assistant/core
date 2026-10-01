@@ -1673,9 +1673,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return get_device_entry_gen(
-            config_entry
-        ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
+        return (
+            not is_remote_entry(config_entry)
+            and get_device_entry_gen(config_entry) in RPC_GENERATIONS
+            and not config_entry.data.get(CONF_SLEEP_PERIOD)
+        )
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):

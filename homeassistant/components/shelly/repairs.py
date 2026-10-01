@@ -223,6 +223,9 @@ def async_manage_rtsp_disabled_issue(
 ) -> None:
     """Manage the RTSP disabled issue."""
     issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=entry.unique_id)
+    if is_remote_entry(entry):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
 
     if TYPE_CHECKING:
         assert entry.runtime_data.rpc is not None
@@ -254,9 +257,7 @@ def async_manage_rtsp_disabled_issue(
             translation_key="rtsp_disabled",
             translation_placeholders={
                 "device_name": device.name,
-                "ip_address": device.hostname
-                if is_remote_entry(entry)
-                else device.ip_address,
+                "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
         )

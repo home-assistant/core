@@ -11,6 +11,10 @@ from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
+    CONF_CONNECTION_TYPE,
+    CONF_REMOTE_CREDENTIAL,
+    CONF_SLEEP_PERIOD,
+    CONNECTION_REMOTE_WS,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
     OPEN_WIFI_AP_ISSUE_ID,
@@ -20,6 +24,8 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
     DeprecatedFirmwareInfo,
 )
+from homeassistant.components.shelly.repairs import async_manage_rtsp_disabled_issue
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.network import NoURLAvailableError
@@ -812,6 +818,46 @@ async def test_no_rtsp_disabled_issue_when_enabled(
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+async def test_no_rtsp_disabled_issue_for_remote_entry(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Remote camera entries neither create nor retain an unusable RTSP repair."""
+    monkeypatch.setitem(
+        mock_camera_rpc_device.config["camera:0"]["rtsp"], "enable", False
+    )
+    entry = await init_integration(
+        hass,
+        3,
+        data={
+            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+            CONF_REMOTE_CREDENTIAL: "0" * 64,
+            CONF_MODEL: MODEL_CAMERA,
+            CONF_SLEEP_PERIOD: 0,
+        },
+    )
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="rtsp_disabled",
+        translation_placeholders={
+            "device_name": mock_camera_rpc_device.name,
+            "ip_address": mock_camera_rpc_device.hostname,
+        },
+    )
+    async_manage_rtsp_disabled_issue(hass, entry)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_rtsp_disabled_issue_ignore(
