@@ -28,6 +28,5 @@ navigation_gps_request:
           radius: false
     order:
       required: false
-      default: 1
       selector:
         number:
