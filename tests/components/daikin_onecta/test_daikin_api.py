@@ -20,15 +20,13 @@ async def test_get_device_details_propagates_connection_error(
     config_entry: MockConfigEntry,
 ) -> None:
     """Propagate library connection errors to the coordinator."""
-    with (
-        patch(
-            "homeassistant.components.daikin_onecta.daikin_api.OnectaClient.get_gateway_devices",
-            new=AsyncMock(side_effect=OnectaConnectionError("network unavailable")),
-        ),
-        pytest.raises(OnectaConnectionError, match="network unavailable"),
+    with patch(
+        "homeassistant.components.daikin_onecta.daikin_api.OnectaClient.get_gateway_devices",
+        new=AsyncMock(side_effect=OnectaConnectionError("network unavailable")),
     ):
         api = DaikinApi(hass, config_entry, MagicMock())
-        await api.get_cloud_device_details()
+        with pytest.raises(OnectaConnectionError, match="network unavailable"):
+            await api.get_cloud_device_details()
 
 
 async def test_access_token(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

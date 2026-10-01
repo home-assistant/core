@@ -1,3 +1,5 @@
+"""Device support for Daikin Onecta."""
+
 import logging
 from typing import Any
 

@@ -47,6 +47,11 @@ class DaikinApi:
         self._cloud_lock = asyncio.Lock()
 
     @property
+    def last_patch_call(self) -> datetime | None:
+        """Return the timestamp of the last successful write."""
+        return self._last_patch_call
+
+    @property
     def rate_limits(self) -> dict[str, int]:
         """Return rate limits using the existing diagnostics field names."""
         rate_limit = self._client.rate_limit

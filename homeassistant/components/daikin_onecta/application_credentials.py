@@ -1,3 +1,5 @@
+"""Application credentials support for Daikin Onecta."""
+
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
 
