@@ -13,6 +13,7 @@ from roborock.data import CombinedMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -452,3 +453,23 @@ async def test_q7_map_image_coordinator_update(
     resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b"\x89PNG-q7-new"
+
+
+async def test_q7_map_initial_fetch_exception(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test Q7 map initial fetch handles RoborockException gracefully."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.roborock")
+    assert fake_q7_vacuum.b01_q7_properties is not None
+
+    fake_q7_vacuum.b01_q7_properties.map.refresh.side_effect = RoborockException("boom")
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("image.roborock_q7_map") is not None
+    assert "Initial Q7 map fetch failed (will retry on next poll)" in caplog.text
