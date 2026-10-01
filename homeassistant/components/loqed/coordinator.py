@@ -1,9 +1,8 @@
 """Provides the coordinator for a LOQED lock."""
 
 import asyncio
-from datetime import timedelta
 import logging
-from typing import TypedDict, override
+from typing import Any, TypedDict, override
 
 import aiohttp
 from aiohttp.web import Request
@@ -18,9 +17,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import CONF_CLOUDHOOK_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-# Fallback for webhooks the bridge fails to deliver or HA rejects.
-SCAN_INTERVAL = timedelta(minutes=5)
 
 type LoqedConfigEntry = ConfigEntry[LoqedDataCoordinator]
 
@@ -75,6 +71,19 @@ class StatusMessage(TypedDict):
     ble_strength: int
 
 
+def _lock_connected(message: dict[str, Any]) -> bool | None:
+    """Return the lock connection a signal or battery message reports, if any.
+
+    The bridge reports -1 for the Bluetooth strength and the battery level while the
+    lock is disconnected.
+    """
+    if "ble_strength" in message:
+        return message["ble_strength"] != -1
+    if "battery_percentage" in message:
+        return message["battery_percentage"] != -1
+    return None
+
+
 class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     """Data update coordinator for the loqed platform."""
 
@@ -88,16 +97,11 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         lock: loqed.Lock,
     ) -> None:
         """Initialize the Loqed Data Update coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name="Loqed sensors",
-            update_interval=SCAN_INTERVAL,
-        )
+        super().__init__(hass, _LOGGER, config_entry=config_entry, name="Loqed sensors")
         self._api = api
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
+        self._lock_offline = False
 
     @override
     async def _async_update_data(self) -> StatusMessage:
@@ -106,6 +110,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             data = await self._api.async_get_lock_details()
         # Webhooks also call the listeners, so the bolt state is applied here only.
         await self.lock.updateState(data["bolt_state"])
+        self._lock_offline = not data["lock_online"]
         return data
 
     async def _handle_webhook(
@@ -124,10 +129,15 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return
 
-        # The bridge sends battery and signal messages after a restart; lock events
-        # during the restart are not sent, so the bolt state is fetched again.
-        if "event_type" not in event_data:
-            await self.async_request_refresh()
+        # Lock events are not sent while the lock is disconnected from the bridge,
+        # so the status is read once when it reconnects.
+        if "event_type" in event_data:
+            self._lock_offline = False
+        elif (connected := _lock_connected(event_data)) is not None:
+            was_offline = self._lock_offline
+            self._lock_offline = not connected
+            if connected and was_offline:
+                await self.async_request_refresh()
 
         self.async_update_listeners()
 
