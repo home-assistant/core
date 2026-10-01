@@ -820,10 +820,10 @@ async def test_charge_on_solar_lower_limit_removed_without_command_scope(
     assert entity_registry.async_get("number.test_charge_on_solar_lower_limit") is None
 
 
-async def test_charge_on_solar_locally_set_charge_limit_survives_reload(
+async def test_charge_on_solar_echoed_charge_limit_survives_reload(
     hass: HomeAssistant,
 ) -> None:
-    """Test a charge limit set from Home Assistant is the upper bound after a reload."""
+    """Test a charge limit set from Home Assistant and echoed back survives a reload."""
     await _async_enable_charge_on_solar_preview_feature(hass)
 
     with patch(
@@ -916,4 +916,37 @@ async def test_charge_on_solar_switch_uses_locally_set_charge_limit(
             enabled=True,
             lower_charge_limit=20,
             upper_charge_limit=95,
+        )
+
+
+@pytest.mark.usefixtures("mock_legacy")
+async def test_charge_on_solar_unknown_polled_charge_limit(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test a polled vehicle without a charge limit leaves the upper bound unset."""
+    vehicle_data = deepcopy(VEHICLE_DATA)
+    vehicle_data["response"]["charge_state"]["charge_limit_soc"] = None
+    mock_vehicle_data.return_value = vehicle_data
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 100
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=20,
+            upper_charge_limit=None,
         )
