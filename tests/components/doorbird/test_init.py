@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import mock_not_found_exception, mock_unauthorized_exception
-from .conftest import DoorbirdMockerType
+from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
 
 async def test_basic_setup(
@@ -79,8 +79,9 @@ async def test_events_changed(
     api.change_favorite.reset_mock()
     api.schedule.reset_mock()
 
-    hass.config_entries.async_update_entry(entry, options={"events": ["xyz"]})
-    await hass.async_block_till_done()
+    with patch_doorbird_api_entry_points(api):
+        hass.config_entries.async_update_entry(entry, options={"events": ["xyz"]})
+        await hass.async_block_till_done()
     assert len(api.favorites.mock_calls) == 2
     assert len(api.schedule.mock_calls) == 1
 
@@ -89,5 +90,5 @@ async def test_events_changed(
     assert favorite_type == "http"
     assert title == "Home Assistant (mydoorbird_xyz)"
     assert url == (
-        f"http://10.10.10.10:8123/api/doorbird/mydoorbird_xyz?token={entry.entry_id}"
+        f"http://127.0.0.1:8123/api/doorbird/mydoorbird_xyz?token={entry.entry_id}"
     )

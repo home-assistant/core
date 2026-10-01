@@ -114,7 +114,6 @@ async def _async_register_events(
 
 async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Handle options update."""
-    door_station = entry.runtime_data.door_station
-    door_station.update_events(entry.options[CONF_EVENTS])
-    # Subscribe to doorbell or motion events
-    await _async_register_events(hass, door_station, entry)
+    # The entities derive both their existence and their subscriptions from the
+    # configured events, so they are rebuilt rather than patched in place.
+    await hass.config_entries.async_reload(entry.entry_id)
