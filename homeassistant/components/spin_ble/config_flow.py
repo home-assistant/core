@@ -6,7 +6,13 @@ from typing import Any, override
 
 from habluetooth import HaBleakClientWrapper
 import probatio
-from spinev_ble import ADVERTISED_NAME_PATTERN, BleTransport, SpinEvCharger, SpinEvError
+from spinev_ble import (
+    ADVERTISED_NAME_PATTERN,
+    SERVICE_UUID,
+    BleTransport,
+    SpinEvCharger,
+    SpinEvError,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -157,7 +163,7 @@ class SpinEvConfigFlow(ConfigFlow, domain=DOMAIN):
 
             current = self._async_current_ids(include_ignore=False)
             for info in async_discovered_service_info(self.hass, connectable=True):
-                if info.address in current:
+                if info.address in current or SERVICE_UUID not in info.service_uuids:
                     continue
                 if (found := serial_from_name(info.name)) is not None:
                     self._discovered[info.address] = found

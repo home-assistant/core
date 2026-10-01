@@ -19,7 +19,14 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import ADDRESS, ENTRY_DATA, ENTRY_OPTIONS, SERIAL
+from .const import (
+    ADDRESS,
+    ADVERTISED_NAME,
+    ENTRY_DATA,
+    ENTRY_OPTIONS,
+    SERIAL,
+    SERVICE_UUID,
+)
 
 from tests.common import MockConfigEntry
 
@@ -151,6 +158,37 @@ async def test_user_flow(
 async def test_user_flow_with_nothing_to_offer(hass: HomeAssistant) -> None:
     """Nothing recognisable in range means there is nothing to configure."""
     with patch_discovered([]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+@pytest.mark.parametrize(
+    ("name", "service_uuids"),
+    [
+        pytest.param(
+            "Some other serial-over-BLE gadget",
+            [SERVICE_UUID],
+            id="name_does_not_match",
+        ),
+        pytest.param(ADVERTISED_NAME, [], id="service_uuid_missing"),
+    ],
+)
+@pytest.mark.usefixtures("mock_charger")
+async def test_user_flow_skips_other_devices(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    name: str,
+    service_uuids: list[str],
+) -> None:
+    """Only a device with both the charger's name and service UUID is offered."""
+    service_info.name = name
+    service_info.service_uuids = service_uuids
+
+    with patch_discovered([service_info]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
