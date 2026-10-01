@@ -184,7 +184,6 @@ async def test_map_status_change(
                 "image.roborock_s7_maxv_upstairs",
                 "image.roborock_q7_map",
                 "image.roborock_q10_s5_map",
-                "image.roborock_q7_map",
             },
         ),
         (
@@ -196,7 +195,6 @@ async def test_map_status_change(
                 # Expect default names based on map flags
                 "image.roborock_s7_maxv_map_0",
                 "image.roborock_s7_maxv_map_1",
-                "image.roborock_q7_map",
                 "image.roborock_q10_s5_map",
             },
         ),
@@ -280,13 +278,13 @@ async def test_q10_map_image(
     assert await resp.read() == b"\x89PNG-q10-new"
 
 
-async def test_q7_map_image(
+async def test_q7_map_image_push_update(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     fake_devices: list[FakeDevice],
 ) -> None:
-    """Test the Q7 map image is fetched and updated."""
+    """Test the Q7 map image is updated from a push notification."""
     entity_id = "image.roborock_q7_map"
     assert hass.states.get(entity_id) is not None
 
@@ -395,14 +393,14 @@ async def test_map_load_delayed(
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
 
 
-async def test_q7_map_image(
+async def test_q7_map_image_coordinator_update(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     fake_q7_vacuum: FakeDevice,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the coordinator-driven Q7 map image."""
+    """Test the Q7 map image is updated by the coordinator."""
     entity_id = "image.roborock_q7_map"
     assert hass.states.get(entity_id) is not None
 

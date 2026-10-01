@@ -265,6 +265,13 @@ class RoborockMapQ7(RoborockCoordinatedEntityB01Q7, ImageEntity):
         self._handle_map_update()
 
     @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle a coordinator update."""
+        self._handle_map_update()
+        super()._handle_coordinator_update()
+
+    @callback
     def _handle_map_update(self) -> None:
         """Cache the newly fetched/pushed map if its content changed."""
         image_content = self._map_content_trait.image_content
