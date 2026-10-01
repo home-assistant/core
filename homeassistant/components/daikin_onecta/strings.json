@@ -1,0 +1,339 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "invalid_token": "Invalid or expired token; please reconfigure the integration.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Failed due to an unexpected error.",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Daikin Onecta integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "daylightsavingtimeenabled": {
+        "name": "Daylight saving time enabled"
+      },
+      "iscoolheatmaster": {
+        "name": "Is cool\/heat master"
+      },
+      "isfirmwareupdatesupported": {
+        "name": "Is firmware update supported"
+      },
+      "isholidaymodeactive": {
+        "name": "Is holiday mode active"
+      },
+      "isincautionstate": {
+        "name": "Is in caution state"
+      },
+      "isinemergencystate": {
+        "name": "Is in emergency state"
+      },
+      "isinerrorstate": {
+        "name": "Is in error state"
+      },
+      "isininstallerstate": {
+        "name": "Is in installer state"
+      },
+      "isinmodeconflict": {
+        "name": "Is in mode conflict"
+      },
+      "isinwarningstate": {
+        "name": "Is in warning state"
+      },
+      "islockfunctionenabled": {
+        "name": "Is lock function enabled"
+      },
+      "ispowerfulmodeactive": {
+        "name": "Is powerful mode active"
+      },
+      "ledenabled": {
+        "name": "LED enabled"
+      }
+    },
+    "climate": {
+      "roomtemperature": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "1": "1",
+              "2": "2",
+              "3": "3",
+              "4": "4",
+              "5": "5",
+              "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "stop": "Stop",
+              "swing": "Swing"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "floorheatingairflow": "FloorHeating Airflow",
+              "stop": "Stop",
+              "swing": "Swing",
+              "windnice": "Comfort Airflow"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "schedule": {
+        "name": "Schedule"
+      }
+    },
+    "sensor": {
+      "airpurificationmode": {
+        "name": "Air purification mode"
+      },
+      "calculatedleavingwatertemperature": {
+        "name": "Calculated leaving water temperature"
+      },
+      "controlmode": {
+        "name": "Control mode"
+      },
+      "coolingdailyelectricalconsumption": {
+        "name": "Cooling daily electrical consumption"
+      },
+      "coolingdailygasconsumption": {
+        "name": "Cooling daily gas consumption"
+      },
+      "coolingmonthlyelectricalconsumption": {
+        "name": "Cooling monthly electrical consumption"
+      },
+      "coolingmonthlygasconsumption": {
+        "name": "Cooling monthly gas consumption"
+      },
+      "coolingmonthlythermaloutput": {
+        "name": "Cooling monthly thermal output"
+      },
+      "coolingweeklyelectricalconsumption": {
+        "name": "Cooling weekly electrical consumption"
+      },
+      "coolingweeklygasconsumption": {
+        "name": "Cooling weekly gas consumption"
+      },
+      "coolingyearlyelectricalconsumption": {
+        "name": "Cooling yearly electrical consumption"
+      },
+      "coolingyearlygasconsumption": {
+        "name": "Cooling yearly gas consumption"
+      },
+      "coolingyearlythermaloutput": {
+        "name": "Cooling yearly thermal output"
+      },
+      "currentpowerconsumption": {
+        "name": "Current power consumption"
+      },
+      "currentthermaloutput": {
+        "name": "Current thermal output"
+      },
+      "datetime": {
+        "name": "Date\/time"
+      },
+      "deltad": {
+        "name": "DeltaD"
+      },
+      "drykeepsetting": {
+        "name": "Dry keep setting"
+      },
+      "errorcode": {
+        "name": "Error code"
+      },
+      "fanmotorrotationspeed": {
+        "name": "Fan motor rotation speed"
+      },
+      "heatexchangertemperature": {
+        "name": "Heat exchanger temperature"
+      },
+      "heatingdailyelectricalconsumption": {
+        "name": "Heating daily electrical consumption"
+      },
+      "heatingdailygasconsumption": {
+        "name": "Heating daily gas consumption"
+      },
+      "heatingmonthlyelectricalconsumption": {
+        "name": "Heating monthly electrical consumption"
+      },
+      "heatingmonthlygasconsumption": {
+        "name": "Heating monthly gas consumption"
+      },
+      "heatingmonthlythermaloutput": {
+        "name": "Heating monthly thermal output"
+      },
+      "heatingweeklyelectricalconsumption": {
+        "name": "Heating weekly electrical consumption"
+      },
+      "heatingweeklygasconsumption": {
+        "name": "Heating weekly gas consumption"
+      },
+      "heatingyearlyelectricalconsumption": {
+        "name": "Heating yearly electrical consumption"
+      },
+      "heatingyearlygasconsumption": {
+        "name": "Heating yearly gas consumption"
+      },
+      "heatingyearlythermaloutput": {
+        "name": "Heating yearly thermal output"
+      },
+      "heatupmode": {
+        "name": "Heat up mode"
+      },
+      "ipaddress": {
+        "name": "IP address"
+      },
+      "leavingwateroffset": {
+        "name": "Leaving water offset"
+      },
+      "leavingwatertemperature": {
+        "name": "Leaving water temperature"
+      },
+      "onoffmode": {
+        "name": "On\/Off mode"
+      },
+      "operationmode": {
+        "name": "Operation mode"
+      },
+      "outdoortemperature": {
+        "name": "Outdoor temperature"
+      },
+      "pm10concentration": {
+        "name": "PM10 concentration"
+      },
+      "pm1concentration": {
+        "name": "PM1 concentration"
+      },
+      "pm25concentration": {
+        "name": "PM2.5 concentration"
+      },
+      "powerfulmode": {
+        "name": "Powerful mode"
+      },
+      "ratelimitremainingday": {
+        "name": "Ratelimit remaining day"
+      },
+      "regioncode": {
+        "name": "Region code"
+      },
+      "roomhumidity": {
+        "name": "Room humidity"
+      },
+      "roomtemperature": {
+        "name": "Room temperature"
+      },
+      "setpointmode": {
+        "name": "Setpoint mode"
+      },
+      "sgtin": {
+        "name": "SGTIN"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "suctiontemperature": {
+        "name": "Suction temperature"
+      },
+      "tanktemperature": {
+        "name": "Tank temperature"
+      },
+      "timezone": {
+        "name": "Time zone"
+      },
+      "wificonnectionssid": {
+        "name": "WiFi connection SSID"
+      },
+      "wificonnectionstrength": {
+        "name": "WiFi connection strength"
+      }
+    },
+    "switch": {
+      "economode": {
+        "name": "Econo mode"
+      },
+      "streamermode": {
+        "name": "Streamer mode"
+      }
+    },
+    "update": {
+      "firmwareupdate": {
+        "name": "Firmware update"
+      }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "issues": {
+    "day_rate_limit": {
+      "description": "You have reached your daily rate limit to the Daikin Cloud, check your polling frequency in the Daikin Onecta configuration.",
+      "title": "The daily rate limit has been reached"
+    },
+    "minute_rate_limit": {
+      "description": "You have reached your minute rate limit to the Daikin Cloud, don't make so many calls to your Daikin devices in one minute.",
+      "title": "The minute rate limit has been reached"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "high_scan_interval": "High frequency period update interval (minutes)",
+          "high_scan_start": "High frequency period start time",
+          "homekit_fan_mode_aliases": "Expose HomeKit compatible fan speed aliases",
+          "low_scan_interval": "Low frequency period update interval (minutes)",
+          "low_scan_start": "Low frequency period start time",
+          "scan_ignore": "Number of seconds that a data refresh is ignored after a command"
+        },
+        "description": "Configure Daikin Onecta Cloud polling",
+        "title": "Daikin Onecta"
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_status": "API server",
+      "max_day": "Maximum day",
+      "max_minute": "Maximum minute",
+      "oauth2_status": "OAuth2 server",
+      "oauth2_token_valid": "OAuth2 token valid",
+      "ratelimit_reset": "Rate limit reset",
+      "remaining_day": "Remaining day",
+      "remaining_minute": "Remaining minute",
+      "retry_after": "Retry after"
+    }
+  }
+}
