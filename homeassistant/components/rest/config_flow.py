@@ -332,13 +332,15 @@ class RestSubentryFlow(ConfigSubentryFlow):
         rest_data = None
         if not entry.runtime_data.last_update_success:
             ex = entry.runtime_data.last_exception
+            reason = "endpoint_error"
+            description_placeholders = {"endpoint_error_message": str(ex)}
             if isinstance(ex, HomeAssistantError):
-                reason = ex.translation_key
-                description_placeholders = ex.translation_placeholders
+                reason = ex.translation_key or reason
+                description_placeholders = (
+                    ex.translation_placeholders or description_placeholders
+                )
             return self.async_abort(
-                reason=reason or "endpoint_error",
-                description_placeholders=description_placeholders
-                or {"endpoint_error_message": str(ex)},
+                reason=reason, description_placeholders=description_placeholders
             )
         try:
             rest_data = entry.runtime_data.rest.data_without_xml()
