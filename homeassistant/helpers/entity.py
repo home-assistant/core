@@ -554,6 +554,11 @@ class Entity(
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
 
+    # Incremented every time the entity is (re)attached to a platform via
+    # `add_to_platform_start`, so a polling task queued for an earlier
+    # attachment can detect it is stale once its permit is finally granted.
+    _platform_generation = 0
+
     # Attributes to exclude from recording, only set by base components, e.g. light
     _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
     # Additional integration specific attributes to exclude from recording, set by
@@ -973,13 +978,29 @@ class Entity(
         """
         return self.registry_entry is None or not self.registry_entry.disabled
 
+    @property
+    def platform_generation(self) -> int:
+        """Return the generation of the entity's current platform attachment.
+
+        Used by the entity platform to detect a polling task queued for an
+        earlier attachment of this entity instance (e.g. before an
+        entity-id rename removed and re-added it) once that task's permit
+        is finally granted.
+        """
+        return self._platform_generation
+
     @callback
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
         self._context_set = time.time()
 
-    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
+    async def async_update_ha_state(
+        self,
+        force_refresh: bool = False,
+        *,
+        _expected_platform_generation: int | None = None,
+    ) -> None:
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -997,7 +1018,9 @@ class Entity(
         # update entity data
         if force_refresh:
             try:
-                await self.async_device_update()
+                await self.async_device_update(
+                    _expected_platform_generation=_expected_platform_generation
+                )
             except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
@@ -1358,7 +1381,12 @@ class Entity(
             SLOW_UPDATE_WARNING,
         )
 
-    async def async_device_update(self, warning: bool = True) -> None:
+    async def async_device_update(
+        self,
+        warning: bool = True,
+        *,
+        _expected_platform_generation: int | None = None,
+    ) -> None:
         """Process 'update' or 'async_update' from entity.
 
         This method is a coroutine.
@@ -1403,6 +1431,17 @@ class Entity(
                 # it waited, its removal teardown may already have released
                 # resources its update() depends on, so skip running it now
                 # that a permit is finally available.
+                return
+            if (
+                _expected_platform_generation is not None
+                and _expected_platform_generation != self._platform_generation
+            ):
+                # This is a polling task queued for an earlier attachment of
+                # this entity instance (e.g. it was removed and re-added for
+                # an entity-id rename while the task waited for its permit).
+                # The re-add's own initialization (`async_added_to_hass`)
+                # may not have finished restoring resources update() depends
+                # on yet, so skip this now-stale task rather than run it.
                 return
             if hasattr(self, "async_update"):
                 await self.async_update()
@@ -1449,6 +1488,7 @@ class Entity(
         self.platform_data = platform.platform_data
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDING
+        self._platform_generation += 1
 
     def _call_on_remove_callbacks(self) -> None:
         """Call callbacks registered by async_on_remove."""

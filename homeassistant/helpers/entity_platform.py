@@ -1395,7 +1395,11 @@ class EntityPlatform:
                 if existing is not None and existing[0] > cycle_id:
                     continue
                 task = create_eager_task(
-                    entity.async_update_ha_state(True), loop=self.hass.loop
+                    entity.async_update_ha_state(
+                        True,
+                        _expected_platform_generation=entity.platform_generation,
+                    ),
+                    loop=self.hass.loop,
                 )
                 self._polling_tasks[id(entity)] = (cycle_id, task)
                 (result,) = await asyncio.gather(task, return_exceptions=True)
@@ -1409,7 +1413,11 @@ class EntityPlatform:
             (
                 entity,
                 create_eager_task(
-                    entity.async_update_ha_state(True), loop=self.hass.loop
+                    entity.async_update_ha_state(
+                        True,
+                        _expected_platform_generation=entity.platform_generation,
+                    ),
+                    loop=self.hass.loop,
                 ),
             )
             for entity in pollable_entities
