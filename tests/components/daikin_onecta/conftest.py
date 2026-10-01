@@ -1,4 +1,5 @@
 """Global fixtures for the Daikin Onecta integration."""
+
 import json
 import time
 from typing import Any
@@ -33,9 +34,10 @@ FAKE_AUTH_IMPL = "conftest-imported-cred"
 
 def load_fixture_json(name):
     """Load a Daikin Onecta JSON fixture."""
-    with open(f"tests/components/daikin_onecta/fixtures/{name}.json", encoding="utf-8") as json_file:
+    with open(
+        f"tests/components/daikin_onecta/fixtures/{name}.json", encoding="utf-8"
+    ) as json_file:
         return json.load(json_file)
-
 
 
 @pytest.mark.freeze_time("2026-01-01 12:00:00+00:00")
@@ -54,12 +56,18 @@ async def snapshot_platform_entities(
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ):
-        aioclient_mock.get(DAIKIN_API_URL + "/v1/gateway-devices", status=200, json=load_fixture_json(fixture_device_json))
+        aioclient_mock.get(
+            DAIKIN_API_URL + "/v1/gateway-devices",
+            status=200,
+            json=load_fixture_json(fixture_device_json),
+        )
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
 
     assert entity_entries
 

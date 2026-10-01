@@ -1,4 +1,5 @@
 """Constants for Daikin Onecta."""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -13,11 +14,11 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfDensity,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    EntityCategory,
 )
 
 DOMAIN = "daikin_onecta"

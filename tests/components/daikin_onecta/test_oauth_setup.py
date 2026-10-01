@@ -1,4 +1,5 @@
 """Tests for OAuth2 setup error handling (HA 2026.3+)."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import RequestInfo
@@ -106,7 +107,9 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     if exc_info.value.translation_domain != DOMAIN:
-        pytest.fail(f"unexpected translation_domain: {exc_info.value.translation_domain}")
+        pytest.fail(
+            f"unexpected translation_domain: {exc_info.value.translation_domain}"
+        )
     if exc_info.value.translation_key != "oauth2_implementation_unavailable":
         pytest.fail(f"unexpected translation_key: {exc_info.value.translation_key}")
 

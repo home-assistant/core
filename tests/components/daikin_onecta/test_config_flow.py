@@ -1,4 +1,5 @@
 """Test the daikin_onecta config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -23,8 +24,8 @@ from homeassistant.setup import async_setup_component
 from .conftest import FAKE_ACCESS_TOKEN
 
 from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "emU20GdJDiiUxI_HnFGz69dD"
 CLIENT_SECRET = "TNL1ePwnOkf6o2gKiI8InS8nVwTz2G__VYkv6WznzJGUnwLHLTmKYp-7RZc6FA3yS6D0Wgj_snvqsU5H_LPHQA"
@@ -51,9 +52,13 @@ async def test_full_flow(
     """Check full flow."""
     assert await async_setup_component(hass, "daikin_onecta", {})
 
-    await async_import_client_credential(hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET))
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
 
-    result = await hass.config_entries.flow.async_init("daikin_onecta", context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_init(
+        "daikin_onecta", context={"source": config_entries.SOURCE_USER}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -84,7 +89,9 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.daikin_onecta.async_setup_entry", return_value=True) as mock_setup:
+    with patch(
+        "homeassistant.components.daikin_onecta.async_setup_entry", return_value=True
+    ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -135,7 +142,9 @@ async def test_zeroconf_flow(
     """Test zeroconf flow."""
     assert await async_setup_component(hass, "daikin_onecta", {})
 
-    await async_import_client_credential(hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET))
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -176,7 +185,9 @@ async def test_zeroconf_flow(
     assert result["type"] == "external"
     assert result["url"].startswith(OAUTH2_AUTHORIZE)
 
-    with patch("homeassistant.components.daikin_onecta.async_setup_entry", return_value=True) as mock_setup:
+    with patch(
+        "homeassistant.components.daikin_onecta.async_setup_entry", return_value=True
+    ) as mock_setup:
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -209,7 +220,10 @@ async def test_reauth_confirm_form(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": config_entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
         data=config_entry.data,
     )
 
@@ -292,7 +306,9 @@ async def test_reauth_confirm_continue(
     flow = config_entries.HANDLERS[DOMAIN]()
     flow.hass = hass
 
-    with patch.object(flow, "async_step_user", return_value={"type": "external"}) as step_user:
+    with patch.object(
+        flow, "async_step_user", return_value={"type": "external"}
+    ) as step_user:
         result = await flow.async_step_reauth_confirm({})
 
     assert result == {"type": "external"}

@@ -1,4 +1,5 @@
 """Support for Daikin AC sensors."""
+
 import logging
 from typing import Any, cast, override
 
@@ -103,20 +104,33 @@ async def async_setup_entry(
         "climateControlMainZone",
     }
     for device in onecta_data.devices.values():
-        sensors.append(DaikinLimitSensor(hass, config_entry, device, coordinator, "remaining_day"))
+        sensors.append(
+            DaikinLimitSensor(hass, config_entry, device, coordinator, "remaining_day")
+        )
         for management_point in device.device.management_points:
             management_point_type = management_point.management_point_type
             embedded_id = management_point.embedded_id
 
-            for value, characteristic in management_point.simple_characteristics().items():
+            for (
+                value,
+                characteristic,
+            ) in management_point.simple_characteristics().items():
                 if value not in VALUE_SENSOR_MAPPING:
                     continue
                 values = characteristic.values or []
-                if characteristic.value is not None and characteristic.settable and "on" in values and "off" in values:
+                if (
+                    characteristic.value is not None
+                    and characteristic.settable
+                    and "on" in values
+                    and "off" in values
+                ):
                     continue
                 if not values and isinstance(characteristic.value, bool):
                     continue
-                if value == "operationMode" and management_point_type in supported_management_point_types:
+                if (
+                    value == "operationMode"
+                    and management_point_type in supported_management_point_types
+                ):
                     continue
                 if characteristic.value is not None:
                     sensors.append(
@@ -154,7 +168,9 @@ async def async_setup_entry(
                     if sensor in VALUE_SENSOR_MAPPING
                     and getattr(
                         sensory_data,
-                        cast(dict[str, Any], VALUE_SENSOR_MAPPING[sensor])[MODEL_ATTRIBUTE],
+                        cast(dict[str, Any], VALUE_SENSOR_MAPPING[sensor])[
+                            MODEL_ATTRIBUTE
+                        ],
                     )
                     is not None
                 )
@@ -203,7 +219,11 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id + self._management_point_type)},
             name=self._device.name + " " + mpt,
-            **({"via_device_id": self._device.ha_device_id} if self._device.ha_device_id is not None else {}),
+            **(
+                {"via_device_id": self._device.ha_device_id}
+                if self._device.ha_device_id is not None
+                else {}
+            ),
         )
         self._device.fill_device_info(self._attr_device_info, management_point_type)
         self._embedded_id = embedded_id
@@ -223,7 +243,9 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_state_class = sensor_settings[CONF_STATE_CLASS]
         self._attr_entity_category = sensor_settings[ENTITY_CATEGORY]
         self._attr_translation_key = sensor_settings[TRANSLATION_KEY]
-        self._attr_native_unit_of_measurement = sensor_settings[CONF_UNIT_OF_MEASUREMENT]
+        self._attr_native_unit_of_measurement = sensor_settings[
+            CONF_UNIT_OF_MEASUREMENT
+        ]
         self._sensor_type = sensor_type
         self._attr_unique_id = f"{self._device.id}_{self._management_point_type}_{sensor_type}_{self._operation_mode}_{self._period}"
         self.update_state()
@@ -256,7 +278,11 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
         point = self._device.management_point(self._embedded_id)
         if point is None:
             return None
-        energy = point.consumption_data if self._datatype == "consumption" else point.output_data
+        energy = (
+            point.consumption_data
+            if self._datatype == "consumption"
+            else point.output_data
+        )
         if energy is None:
             return None
         source = getattr(energy.value, self._sensor_type)
@@ -300,7 +326,9 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         value,
     ) -> None:
         """Initialize the value sensor."""
-        _LOGGER.info("DaikinValueSensor '%s' '%s' '%s'", management_point_type, sub_type, value)
+        _LOGGER.info(
+            "DaikinValueSensor '%s' '%s' '%s'", management_point_type, sub_type, value
+        )
         super().__init__(coordinator)
         self._device = device
         self._management_point_type = management_point_type
@@ -308,7 +336,11 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id + self._management_point_type)},
             name=self._device.name + " " + mpt,
-            **({"via_device_id": self._device.ha_device_id} if self._device.ha_device_id is not None else {}),
+            **(
+                {"via_device_id": self._device.ha_device_id}
+                if self._device.ha_device_id is not None
+                else {}
+            ),
         )
         self._device.fill_device_info(self._attr_device_info, management_point_type)
         self._embedded_id = embedded_id
@@ -323,7 +355,9 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_registry_enabled_default = sensor_settings[ENABLED_DEFAULT]
         self._attr_state_class = sensor_settings[CONF_STATE_CLASS]
         self._attr_entity_category = sensor_settings[ENTITY_CATEGORY]
-        self._attr_native_unit_of_measurement = sensor_settings[CONF_UNIT_OF_MEASUREMENT]
+        self._attr_native_unit_of_measurement = sensor_settings[
+            CONF_UNIT_OF_MEASUREMENT
+        ]
         self._attr_translation_key = sensor_settings[TRANSLATION_KEY]
         self._attr_unique_id = f"{self._device.id}_{self._management_point_type}_{self._sub_type}_{self._value}"
         self.update_state()
@@ -362,11 +396,17 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
                 return None
             sensor_settings = cast(dict[str, Any], VALUE_SENSOR_MAPPING[self._value])
             attribute = sensor_settings.get(MODEL_ATTRIBUTE)
-            characteristic = getattr(sensory_data.value, attribute) if attribute is not None else None
+            characteristic = (
+                getattr(sensory_data.value, attribute)
+                if attribute is not None
+                else None
+            )
         else:
             characteristic = point.characteristic(self._value)
         result = characteristic.value if characteristic is not None else None
-        _LOGGER.debug("Device '%s' sensor '%s' value '%s'", self._device.name, self._value, result)
+        _LOGGER.debug(
+            "Device '%s' sensor '%s' value '%s'", self._device.name, self._value, result
+        )
         return result
 
 
@@ -390,18 +430,26 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         self._limit_key = limit_key
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device.id}_limitsensor_{self._limit_key}"
-        sensor_settings = cast(dict[str, Any], VALUE_SENSOR_MAPPING["RatelimitRemainingDay"])
+        sensor_settings = cast(
+            dict[str, Any], VALUE_SENSOR_MAPPING["RatelimitRemainingDay"]
+        )
         self._attr_icon = sensor_settings[CONF_ICON]
         self._attr_device_class = sensor_settings[CONF_DEVICE_CLASS]
         self._attr_entity_registry_enabled_default = sensor_settings[ENABLED_DEFAULT]
         self._attr_state_class = sensor_settings[CONF_STATE_CLASS]
         self._attr_entity_category = sensor_settings[ENTITY_CATEGORY]
-        self._attr_native_unit_of_measurement = sensor_settings[CONF_UNIT_OF_MEASUREMENT]
+        self._attr_native_unit_of_measurement = sensor_settings[
+            CONF_UNIT_OF_MEASUREMENT
+        ]
         self._attr_translation_key = sensor_settings[TRANSLATION_KEY]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id + "gateway")},
             name=self._device.name + " " + "Gateway",
-            **({"via_device_id": self._device.ha_device_id} if self._device.ha_device_id is not None else {}),
+            **(
+                {"via_device_id": self._device.ha_device_id}
+                if self._device.ha_device_id is not None
+                else {}
+            ),
         )
         self._device.fill_device_info(self._attr_device_info, "gateway")
         self.update_state()

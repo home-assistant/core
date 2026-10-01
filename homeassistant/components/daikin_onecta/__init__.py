@@ -1,4 +1,5 @@
 """Platform for the Daikin AC."""
+
 import logging
 
 import aiohttp
@@ -30,7 +31,11 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Establish connection with Daikin."""
     try:
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(hass, config_entry)
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, config_entry
+            )
+        )
     except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -47,7 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from err
 
     config_entry.runtime_data = OnectaRuntimeData(daikin_api=daikin_api, devices={})
-    config_entry.runtime_data.coordinator = OnectaDataUpdateCoordinator(hass, config_entry)
+    config_entry.runtime_data.coordinator = OnectaDataUpdateCoordinator(
+        hass, config_entry
+    )
 
     # Let the coordinator raise ConfigEntryAuthFailed / ConfigEntryNotReady directly.
     # Do not wrap first_refresh in a broad Exception handler: that would convert
@@ -77,7 +84,9 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.info("Migration from version %s.%s", config_entry.version, config_entry.minor_version)
+    _LOGGER.info(
+        "Migration from version %s.%s", config_entry.version, config_entry.minor_version
+    )
 
     if config_entry.version == 1:
         match config_entry.minor_version:
@@ -87,7 +96,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         config_entry.data["token"]["access_token"],
                         options={"verify_signature": False},
                     )["sub"]
-                except (jwt.DecodeError, KeyError):
+                except jwt.DecodeError, KeyError:
                     _LOGGER.exception("Failed to decode JWT during migration")
                     return False
                 hass.config_entries.async_update_entry(
@@ -96,5 +105,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     unique_id=unique_id,
                 )
 
-    _LOGGER.info("Migration to version %s.%s successful", config_entry.version, config_entry.minor_version)
+    _LOGGER.info(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True

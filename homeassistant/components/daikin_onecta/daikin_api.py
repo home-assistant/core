@@ -1,4 +1,5 @@
 """Home Assistant adapter for the Daikin Onecta API client."""
+
 import asyncio
 from datetime import datetime
 import logging
@@ -33,8 +34,12 @@ class DaikinApi:
         """Initialize a new Daikin Onecta API."""
         self.hass = hass
         self._config_entry = entry
-        self.session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-        self._client = OnectaClient(async_get_clientsession(hass), self.async_get_access_token)
+        self.session = config_entry_oauth2_flow.OAuth2Session(
+            hass, entry, implementation
+        )
+        self._client = OnectaClient(
+            async_get_clientsession(hass), self.async_get_access_token
+        )
 
         # The Daikin cloud returns old settings if queried with a GET
         # immediately after a PATCH request. Se we use this attribute
@@ -158,7 +163,9 @@ class DaikinApi:
         """POST a management-point resource through the standalone library."""
         async with self._cloud_lock:
             try:
-                await self._client.post_management_point(gateway_id, management_point_id, resource, value)
+                await self._client.post_management_point(
+                    gateway_id, management_point_id, resource, value
+                )
             except OnectaRateLimitError:
                 self._create_rate_limit_issues()
                 return False
@@ -178,7 +185,9 @@ class DaikinApi:
         """PUT a management-point resource through the standalone library."""
         async with self._cloud_lock:
             try:
-                await self._client.put_management_point(gateway_id, management_point_id, resource, value)
+                await self._client.put_management_point(
+                    gateway_id, management_point_id, resource, value
+                )
             except OnectaRateLimitError:
                 self._create_rate_limit_issues()
                 return False

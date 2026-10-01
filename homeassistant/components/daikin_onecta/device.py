@@ -38,7 +38,9 @@ class DaikinOnectaDevice:
         # deprecated because identifiers are no longer guaranteed globally unique.
         self.ha_device_id: str | None = None
 
-        _LOGGER.info("Initialized Daikin Onecta Device '%s' (id %s)", self.name, self.id)
+        _LOGGER.info(
+            "Initialized Daikin Onecta Device '%s' (id %s)", self.name, self.id
+        )
 
     @property
     def available(self) -> bool:
@@ -49,7 +51,9 @@ class DaikinOnectaDevice:
         """Return a management point by embedded id."""
         return self.device.management_point(embedded_id)
 
-    def fill_device_info(self, device_info: DeviceInfo, management_point_type: str) -> None:
+    def fill_device_info(
+        self, device_info: DeviceInfo, management_point_type: str
+    ) -> None:
         """Fill Home Assistant device information from a typed management point."""
         device_info["manufacturer"] = "Daikin"
         point = self.device.management_point_by_type(management_point_type)
@@ -69,7 +73,9 @@ class DaikinOnectaDevice:
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         gateway = self.device.management_point_by_type("gateway")
-        mac_address = gateway.characteristic("macAddress") if gateway is not None else None
+        mac_address = (
+            gateway.characteristic("macAddress") if gateway is not None else None
+        )
         connections = set()
         if mac_address is not None and mac_address.value:
             connections.add((CONNECTION_NETWORK_MAC, mac_address.value))
@@ -87,7 +93,9 @@ class DaikinOnectaDevice:
         self.fill_device_info(info, "gateway")
         return info
 
-    def async_register_ha_device(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def async_register_ha_device(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
         """Eagerly create/update this device in the device registry.
 
         Called once from the coordinator, before any entity platform is set up
@@ -133,6 +141,8 @@ class DaikinOnectaDevice:
         """POST a management-point resource."""
         return await self.api.post_management_point(id, embeddedId, dataPoint, value)
 
-    async def put(self, id: str, embeddedId: str, dataPoint: str, value: Any = None) -> bool:
+    async def put(
+        self, id: str, embeddedId: str, dataPoint: str, value: Any = None
+    ) -> bool:
         """PUT a management-point resource."""
         return await self.api.put_management_point(id, embeddedId, dataPoint, value)

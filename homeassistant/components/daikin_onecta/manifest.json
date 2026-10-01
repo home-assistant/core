@@ -1,39 +1,31 @@
 {
   "domain": "daikin_onecta",
   "name": "Daikin Onecta",
-  "after_dependencies": [
-    "zeroconf"
-  ],
-  "codeowners": [
-    "@jwillemsen"
-  ],
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@jwillemsen"],
   "config_flow": true,
-  "dependencies": [
-    "application_credentials"
-  ],
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/daikin_onecta",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": [
-    "daikin-onecta==0.3.0"
-  ],
+  "requirements": ["daikin-onecta==0.3.0"],
   "zeroconf": [
     {
-      "type": "_https._tcp.local.",
-      "name": "altherma4-*"
+      "name": "altherma4-*",
+      "type": "_https._tcp.local."
     },
     {
-      "type": "_https._tcp.local.",
-      "name": "homehub"
+      "name": "homehub",
+      "type": "_https._tcp.local."
     },
     {
-      "type": "_daikin._tcp.local.",
-      "name": "altherma"
+      "name": "altherma",
+      "type": "_daikin._tcp.local."
     },
     {
-      "type": "_daikin._tcp.local.",
-      "name": "ndj"
+      "name": "ndj",
+      "type": "_daikin._tcp.local."
     }
   ]
 }
