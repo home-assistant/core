@@ -1392,7 +1392,9 @@ class Repository:
                 self.data.full_name, etag=etag
             )
         except GitHubNotModifiedException as exception:
-            raise NotModifiedError(exception) from exception
+            raise NotModifiedError(
+                translation_domain=DOMAIN, translation_key="not_modified"
+            ) from exception
         except GitHubRatelimitException as exception:
             if not self.marketplace.github_connected:
                 raise GitHubAnonymousRateLimitError from exception
@@ -2127,7 +2129,9 @@ class Repository:
         self.validate.errors.clear()
         if (manifest := await self.get_repository_manifest(version=version)) is None:
             raise CatalogContentUnresolvedError(
-                f"No readable {RepositoryFile.REPOSITORY_MANIFEST} in {version}"
+                translation_domain=DOMAIN,
+                translation_key="catalog_version_without_manifest",
+                translation_placeholders={"version": version},
             )
 
         self._check_minimum_version(manifest)
@@ -2152,7 +2156,7 @@ class Repository:
         """Resolve the content of a catalog version from the repository archive."""
         if self.repository_manifest.zip_release and self.repository_manifest.filename:
             raise CatalogContentUnresolvedError(
-                f"A {self.data.category} can not use a ZIP release from the catalog"
+                translation_domain=DOMAIN, translation_key="catalog_zip_release"
             )
 
         archive = await self._async_open_catalog_archive(version, commit=commit)
@@ -2160,7 +2164,11 @@ class Repository:
             self.resolve_archive_content()
         except MarketplaceError as exception:
             # Files marked export-ignore are in the tree, but not in the archive
-            raise CatalogContentUnresolvedError(str(exception)) from exception
+            raise CatalogContentUnresolvedError(
+                translation_domain=DOMAIN,
+                translation_key="catalog_content_unresolved",
+                translation_placeholders={"error": str(exception)},
+            ) from exception
 
         return partial(self._async_write_archive_content, archive)
 
@@ -2171,7 +2179,11 @@ class Repository:
         try:
             archive = await self._async_download_archive(version, commit=commit)
         except MarketplaceError as exception:
-            raise CatalogContentUnresolvedError(str(exception)) from exception
+            raise CatalogContentUnresolvedError(
+                translation_domain=DOMAIN,
+                translation_key="catalog_content_unresolved",
+                translation_placeholders={"error": str(exception)},
+            ) from exception
 
         self.tree = archive.tree
         self.tree_ref = version

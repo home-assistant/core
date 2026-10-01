@@ -90,7 +90,7 @@ async def marketplace_repositories_list(
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "marketplace/repositories/clear_new",
-        probatio.Optional("categories"): cv.ensure_list,
+        probatio.Optional("categories"): probatio.EnsureList(),
         probatio.Optional("repository"): cv.string,
     }
 )

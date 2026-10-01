@@ -245,7 +245,11 @@ class PluginRepository(Repository):
         Every asset of the release is downloaded, and only the API lists them.
         """
         if not (contents := await self.release_contents(version)):
-            raise CatalogContentUnresolvedError(f"No assets listed for {version}")
+            raise CatalogContentUnresolvedError(
+                translation_domain=DOMAIN,
+                translation_key="catalog_version_without_assets",
+                translation_placeholders={"version": version},
+            )
 
         self.data.file_name = filename
         self.content.path.remote = "release"

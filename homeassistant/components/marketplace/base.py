@@ -753,7 +753,11 @@ class MarketplaceManager:
     ) -> list[MarketplaceError] | None:
         """Register a repository."""
         if repository_full_name in self.common.skip:
-            raise ExpectedError(f"Skipping {repository_full_name}")
+            raise ExpectedError(
+                translation_domain=DOMAIN,
+                translation_key="repository_skipped",
+                translation_placeholders={"repository": repository_full_name},
+            )
 
         if repository_full_name == "home-assistant/core":
             raise CoreRepositoryError

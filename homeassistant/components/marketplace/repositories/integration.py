@@ -362,7 +362,9 @@ class IntegrationRepository(Repository):
         if self.repository_manifest.zip_release and self.repository_manifest.filename:
             # Without the tree, the catalog domain names the directory
             if self.data.domain is None:
-                raise CatalogContentUnresolvedError("The catalog names no domain")
+                raise CatalogContentUnresolvedError(
+                    translation_domain=DOMAIN, translation_key="catalog_without_domain"
+                )
             if self.repository_manifest.content_in_root:
                 self.content.path.remote = ""
             else:
@@ -378,7 +380,11 @@ class IntegrationRepository(Repository):
             version, manifest_path
         )
         if manifest is None or "domain" not in manifest:
-            raise CatalogContentUnresolvedError(f"No usable {manifest_path}")
+            raise CatalogContentUnresolvedError(
+                translation_domain=DOMAIN,
+                translation_key="catalog_manifest_unusable",
+                translation_placeholders={"path": manifest_path},
+            )
 
         self._use_integration_manifest(manifest)
         self.content.path.local = self.localpath
