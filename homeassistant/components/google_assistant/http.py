@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -29,6 +30,7 @@ from .const import (
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DATA_CONFIG,
     DOMAIN,
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
@@ -122,6 +124,23 @@ class GoogleConfig(AbstractConfig):
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
+
+    async def async_reload_yaml(self) -> None:
+        """Re-read and apply the YAML configuration."""
+        conf = await async_integration_yaml_config(self.hass, DOMAIN)
+        if conf is None:
+            return
+        # pylint: disable-next=home-assistant-use-runtime-data
+        self.hass.data[DOMAIN][DATA_CONFIG] = self._config = conf.get(DOMAIN, {})
+        self.async_update_report_state()
+
+    @callback
+    def async_update_report_state(self) -> None:
+        """Enable or disable reporting state as configured."""
+        if self.should_report_state:
+            self.async_enable_report_state()
+        else:
+            self.async_disable_report_state()
 
     @override
     def get_local_user_id(self, webhook_id):

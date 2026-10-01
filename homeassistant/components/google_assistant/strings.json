@@ -7,6 +7,10 @@
     }
   },
   "services": {
+    "reload": {
+      "description": "Reloads the Google Assistant configuration from YAML and asks Google to sync the devices.",
+      "name": "[%key:common::action::reload%]"
+    },
     "request_sync": {
       "description": "Sends a request_sync command to Google.",
       "fields": {
