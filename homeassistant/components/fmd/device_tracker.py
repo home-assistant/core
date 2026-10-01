@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from fmd_api.models import Location
+
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -60,13 +62,13 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
     @override
     def latitude(self) -> float | None:
         """Return the latitude of the device."""
-        return self.coordinator.data.get("lat")
+        return self.coordinator.data.lat
 
     @property
     @override
     def longitude(self) -> float | None:
         """Return the longitude of the device."""
-        return self.coordinator.data.get("lon")
+        return self.coordinator.data.lon
 
     @property
     @override
@@ -78,39 +80,33 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
     @override
     def location_accuracy(self) -> float:
         """Return the GPS accuracy of the fix in meters."""
-        accuracy = self.coordinator.data.get("accuracy")
-        if accuracy is None:
-            return 0.0
-        try:
-            return float(accuracy)
-        except TypeError, ValueError:
-            return 0.0
+        return self.coordinator.data.accuracy_m or 0.0
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        data = self.coordinator.data
+        data: Location = self.coordinator.data
         attributes: dict[str, Any] = {}
-        if "time" in data:
-            attributes["device_timestamp"] = data["time"]
-        if "provider" in data:
-            attributes["provider"] = data["provider"]
-        if "date" in data:
+        if data.timestamp is not None:
+            attributes["device_timestamp"] = data.timestamp.isoformat()
+        if data.provider is not None:
+            attributes["provider"] = data.provider
+        if raw_date := (data.raw or {}).get("date"):
             # Unix ms when the FMD client sent the fix (string avoids comma
             # formatting in the UI).
-            attributes["device_timestamp_ms"] = str(data["date"])
-        if "altitude" in data:
-            attributes["altitude"] = data["altitude"]
+            attributes["device_timestamp_ms"] = str(raw_date)
+        if data.altitude_m is not None:
+            attributes["altitude"] = data.altitude_m
             attributes["altitude_unit"] = "m"
-        if "speed" in data:
-            attributes["speed"] = data["speed"]
+        if data.speed_m_s is not None:
+            attributes["speed"] = data.speed_m_s
             attributes["speed_unit"] = "m/s"
-        if "heading" in data:
-            attributes["heading"] = data["heading"]
-        if "bat" in data and data["bat"] is not None:
+        if data.heading_deg is not None:
+            attributes["heading"] = data.heading_deg
+        if data.battery_pct is not None:
             # Battery is reported by the device alongside the location fix.
             # The deprecated tracker battery_level property is not used; a
             # dedicated battery sensor is planned as a follow-up platform.
-            attributes["battery"] = data["bat"]
+            attributes["battery"] = data.battery_pct
         return attributes

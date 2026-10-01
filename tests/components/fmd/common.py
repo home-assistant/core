@@ -1,10 +1,10 @@
 """Shared fixtures and helpers for FMD integration tests."""
 
-import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
 from fmd_api import FmdClient
+from fmd_api.models import Location
 import pytest
 
 from homeassistant.components.fmd.const import DOMAIN
@@ -43,11 +43,8 @@ TEST_LOCATION: dict[str, Any] = {
 
 def configure_mock_client(client: Any) -> None:
     """Configure default return values on an autospec'd FmdClient mock."""
-    client.get_locations = AsyncMock(return_value=["blob1"])
-    client.decrypt_data_blob = MagicMock(
-        side_effect=lambda blob: json.dumps(
-            blob if isinstance(blob, dict) else TEST_LOCATION
-        ).encode()
+    client.get_latest_location = AsyncMock(
+        return_value=Location.from_json(dict(TEST_LOCATION))
     )
     client.export_auth_artifacts = AsyncMock(return_value=dict(TEST_ARTIFACTS))
     client.close = AsyncMock(return_value=None)

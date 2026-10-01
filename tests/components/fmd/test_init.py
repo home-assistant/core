@@ -65,7 +65,7 @@ async def test_first_refresh_failure_retries(
     mock_fmd_client: MagicMock,
 ) -> None:
     """Test setup retries when the initial location fetch fails."""
-    mock_fmd_client.get_locations.side_effect = FmdApiException("server down")
+    mock_fmd_client.get_latest_location.side_effect = FmdApiException("server down")
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

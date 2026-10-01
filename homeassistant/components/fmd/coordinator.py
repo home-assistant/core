@@ -1,13 +1,11 @@
 """Data update coordinator for the FMD integration."""
 
 from datetime import timedelta
-import json
 import logging
-import math
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
-from cryptography.exceptions import InvalidTag
 from fmd_api import AuthenticationError, FmdApiException, FmdClient
+from fmd_api.models import Location
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
@@ -21,41 +19,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_ACCURATE_PROVIDERS = {"fused", "gps", "network"}
-_INACCURATE_PROVIDERS = {"beacondb", ""}
 
-
-def is_location_accurate(location: dict[str, Any]) -> bool:
-    """Return True if the location's provider is considered accurate.
-
-    Fused, GPS and network fixes are trusted; BeaconDB and unknown
-    providers are not.
-    """
-    provider = str(location.get("provider") or "").lower()
-    return provider in _ACCURATE_PROVIDERS
-
-
-def has_valid_coordinates(location: dict[str, Any]) -> bool:
-    """Return True if the location carries usable numeric coordinates.
-
-    latitude/longitude must be real (non-bool) finite numbers in range;
-    json.loads accepts NaN/Infinity and strings would otherwise reach the
-    zone distance calculations as-is.
-    """
-    latitude = location.get("lat")
-    longitude = location.get("lon")
-    for value, limit in ((latitude, 90), (longitude, 180)):
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not math.isfinite(value)
-            or abs(value) > limit
-        ):
-            return False
-    return True
-
-
-class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class FmdCoordinator(DataUpdateCoordinator[Location]):
     """Manage fetching FMD location data for a single account."""
 
     config_entry: FmdConfigEntry
@@ -75,10 +40,12 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch the latest location data from the FMD server."""
+    async def _async_update_data(self) -> Location:
+        """Fetch the latest validated location fix from the FMD server."""
         try:
-            blobs = await self.api.get_locations(5 if self.filter_inaccurate else 1)
+            location = await self.api.get_latest_location(
+                filter_inaccurate=self.filter_inaccurate
+            )
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -91,37 +58,9 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-
-        for blob in blobs:
-            if not blob:
-                continue
-            try:
-                decrypted = await self.hass.async_add_executor_job(
-                    self.api.decrypt_data_blob, blob
-                )
-                location = json.loads(decrypted)
-                if not isinstance(location, dict):
-                    _LOGGER.debug(
-                        "Skipping malformed location blob (not a JSON object)"
-                    )
-                    continue
-            except FmdApiException, InvalidTag, ValueError, TypeError:
-                # Skip undecryptable or malformed blobs and keep scanning for
-                # a valid location fix in the remaining ones.
-                _LOGGER.debug("Skipping malformed location blob", exc_info=True)
-                continue
-            if self.filter_inaccurate and not is_location_accurate(location):
-                _LOGGER.debug(
-                    "Skipping inaccurate location (provider=%s)",
-                    location.get("provider"),
-                )
-                continue
-            if not has_valid_coordinates(location):
-                _LOGGER.debug("Skipping location with invalid coordinates")
-                continue
-            return location
-
-        raise UpdateFailed(
-            translation_domain=DOMAIN,
-            translation_key="no_location_data",
-        )
+        if location is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_location_data",
+            )
+        return location
