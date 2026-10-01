@@ -7,7 +7,13 @@ import pytest
 from upb_lib.devices import UpbAddr, UpbDevice
 
 from homeassistant.components.upb.const import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_FILE_PATH, Platform
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_FILE_PATH,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,6 +29,9 @@ def mock_upb_device() -> UpbDevice:
     device.name = "Test light"
     device.status = 0
     device.dimmable = True
+    # Spy on the public callback API while keeping the real behavior.
+    device.add_callback = MagicMock(wraps=device.add_callback)
+    device.remove_callback = MagicMock(wraps=device.remove_callback)
     return device
 
 
@@ -66,13 +75,15 @@ async def test_element_callback_removed_with_entity(
     """Test removing the entity removes its element callback."""
     await setup_integration(hass)
     assert hass.states.get(LIGHT_ENTITY_ID)
-    assert len(mock_upb_device._observers) == 1
+    mock_upb_device.add_callback.assert_called_once()
+    mock_upb_device.remove_callback.assert_not_called()
+    element_callback = mock_upb_device.add_callback.call_args.args[0]
 
     entity_registry.async_remove(LIGHT_ENTITY_ID)
     await hass.async_block_till_done()
 
     assert hass.states.get(LIGHT_ENTITY_ID) is None
-    assert mock_upb_device._observers == []
+    mock_upb_device.remove_callback.assert_called_once_with(element_callback)
 
 
 @pytest.mark.usefixtures("mock_upb")
@@ -83,6 +94,7 @@ async def test_element_callback_not_duplicated_on_readd(
 ) -> None:
     """Test re-adding the entity does not leave a stale element callback."""
     await setup_integration(hass)
+    element_callback = mock_upb_device.add_callback.call_args.args[0]
 
     # Changing the entity_id removes and re-adds the same entity object.
     entity_registry.async_update_entity(
@@ -90,5 +102,10 @@ async def test_element_callback_not_duplicated_on_readd(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.renamed_light")
-    assert len(mock_upb_device._observers) == 1
+    assert mock_upb_device.add_callback.call_count == 2
+    mock_upb_device.remove_callback.assert_called_once_with(element_callback)
+
+    assert hass.states.get("light.renamed_light").state == STATE_OFF
+    # The element still notifies the re-added entity.
+    mock_upb_device.setattr("status", 100)
+    assert hass.states.get("light.renamed_light").state == STATE_ON
