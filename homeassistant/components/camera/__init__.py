@@ -635,9 +635,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     @override
     def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
-        """Drop the cached entity_picture, it contains the entity_id."""
+        """Drop the cached entity picture, its URL embeds the entity_id."""
         super().async_internal_entity_id_changed(old_entity_id)
-        # The WebRTC provider tracks the camera object, nothing to re-register
         self.__dict__.pop("entity_picture", None)
 
     @override
