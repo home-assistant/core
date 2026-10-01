@@ -232,7 +232,7 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             cv.remove_falsy,
             [CONFIG_SCHEMA_BASE],
         )

@@ -29,7 +29,7 @@ LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PIN, default="000000"): probatio.All(
+        probatio.Required(probatio.Secret(CONF_PIN), default="000000"): probatio.All(
             TextSelector(TextSelectorConfig(type=TextSelectorType.NUMBER)),
             probatio.Length(min=6, max=6),
         ),
