@@ -3,6 +3,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 
@@ -34,4 +35,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
+    )
+
+
+@callback
+def async_setup_reload_service(hass: HomeAssistant) -> None:
+    """Register the service to reload the YAML configuration."""
+
+    async def reload_service_handler(call: ServiceCall) -> None:
+        """Reload the YAML configuration and sync the entities to Google."""
+        entry: ConfigEntry[GoogleConfig] = service.async_get_config_entry(
+            hass, DOMAIN, None
+        )
+        await entry.runtime_data.async_reload_yaml()
+        await entry.runtime_data.async_sync_entities_all()
+
+    service.async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler
     )
