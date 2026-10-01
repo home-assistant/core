@@ -646,6 +646,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "austroflamm": {
+      "name": "Austroflamm",
+      "integration_type": "virtual",
+      "supported_by": "fumis"
+    },
     "autarco": {
       "name": "Autarco",
       "integration_type": "hub",
@@ -1318,12 +1323,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "de_dietrich": {
-      "name": "De Dietrich",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "deako": {
       "name": "Deako",
       "integration_type": "hub",
@@ -1675,6 +1674,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "ecospar": {
+      "name": "EcoSpar",
+      "integration_type": "virtual",
+      "supported_by": "fumis"
+    },
     "ecovacs": {
       "name": "Ecovacs",
       "integration_type": "hub",
@@ -1982,12 +1986,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
-    },
-    "etherscan": {
-      "name": "Etherscan",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "eufy": {
       "name": "eufy",
@@ -2845,6 +2843,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "haas_sohn": {
+      "name": "HAAS+SOHN",
+      "integration_type": "virtual",
+      "supported_by": "fumis"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
@@ -2974,6 +2977,11 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "heta": {
+      "name": "HETA",
+      "integration_type": "virtual",
+      "supported_by": "fumis"
     },
     "hexaom": {
       "name": "Hexaom Hexaconnect",
@@ -8053,6 +8061,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "vitesy": {
+      "name": "Vitesy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "vivotek": {
       "name": "VIVOTEK",

@@ -111,6 +111,34 @@ async def test_energy_only_account_streams_live_status(
     )
 
 
+@pytest.mark.parametrize(
+    ("has_battery", "expected"),
+    [
+        pytest.param(True, "0", id="battery"),
+        pytest.param(False, None, id="no_battery"),
+    ],
+)
+async def test_energy_percentage_charged_requires_battery(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+    has_battery: bool,
+    expected: str | None,
+) -> None:
+    """The battery level sensor is created for battery sites even when Tesla omits it at 0 %."""
+    live_status = deepcopy(LIVE_STATUS)
+    del live_status["response"]["percentage_charged"]
+    mock_live_status.side_effect = lambda: deepcopy(live_status)
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"]["battery"] = has_battery
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.energy_site_percentage_charged")
+    assert (state and state.state) == expected
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
@@ -433,6 +461,46 @@ async def test_sensors_streaming_tpms_none_clears_state(
 
 
 @pytest.mark.parametrize(
+    "raw_value",
+    [
+        pytest.param("FollowDistanceUnknown", id="unknown"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cruise_follow_distance_unknown(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    raw_value: str | None,
+) -> None:
+    """An unknown streamed follow distance must clear the numeric sensor."""
+    entity_id = "sensor.test_cruise_follow_distance"
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: "FollowDistance3"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "3"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: raw_value},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
     ("key", "signal", "raw_value", "state"),
     [
         ("di_state_f", Signal.DI_STATE_F, "Standby", "standby"),
@@ -677,3 +745,36 @@ async def test_energy_history_unavailable_while_stream_disconnected(
     mock_energy_totals_stream.send(is_cache=True)
     await hass.async_block_till_done()
     assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+
+@pytest.mark.parametrize(
+    ("scopes", "expected"),
+    [
+        pytest.param(METADATA["scopes"], True, id="location_scope"),
+        pytest.param(
+            [scope for scope in METADATA["scopes"] if scope != "vehicle_location"],
+            False,
+            id="no_location_scope",
+        ),
+    ],
+)
+async def test_location_sensors_require_location_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    scopes: list[str],
+    expected: bool,
+) -> None:
+    """Test location sensors are only created with the vehicle location scope."""
+
+    mock_metadata.return_value = {**METADATA, "scopes": scopes}
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    for key in ("gps_heading", "drive_state_active_route_destination"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{VEHICLE_VIN}-{key}"
+            )
+            is not None
+        ) is expected

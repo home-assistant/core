@@ -106,7 +106,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -629,6 +629,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
+            "gpt-6-luna": ["none", "low", "medium", "high", "xhigh", "max"],
             "gpt-6": ["low", "medium", "high", "xhigh", "max"],
             "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],

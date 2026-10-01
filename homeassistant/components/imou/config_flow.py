@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_APP_SECRET): TextSelector(
+        probatio.Required(probatio.Secret(CONF_APP_SECRET)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -89,7 +89,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_APP_ID): str,
-                    probatio.Required(CONF_APP_SECRET): str,
+                    probatio.Required(probatio.Secret(CONF_APP_SECRET)): str,
                     probatio.Required(CONF_API_URL, default="sg"): SelectSelector(
                         SelectSelectorConfig(
                             options=list(API_URLS),

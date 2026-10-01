@@ -74,7 +74,7 @@ BASE_EFFECT_DICT: VolDictType = {
 SEQUENCE_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
     probatio.Required("sequence"): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         probatio.Length(min=1, max=16),
         [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
@@ -115,7 +115,7 @@ RANDOM_EFFECT_DICT: VolDictType = {
         probatio.Coerce(int), probatio.Range(min=1, max=600)
     ),
     probatio.Optional("backgrounds"): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         probatio.Length(min=1, max=16),
         [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
