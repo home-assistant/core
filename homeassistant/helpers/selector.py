@@ -2395,6 +2395,14 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
     """Selector for unit of measurement."""
 
     selector_type = "unit_of_measurement"
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available units based on the device class
+            "filter_device_class": frozenset({DeviceClassSelector.selector_type}),
+            # Filters the available units based on the state class
+            "filter_state_class": frozenset({StateClassSelector.selector_type}),
+        }
+    )
 
     @staticmethod
     def _valid_state_class(option: str) -> str:
@@ -2428,10 +2436,10 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
         make_selector_config_schema(
             {
                 probatio.Optional("device_classes"): probatio.Any(
-                    None, probatio.All(cv.ensure_list, [_valid_device_class])
+                    None, probatio.All(probatio.EnsureList(), [_valid_device_class])
                 ),
                 probatio.Optional("state_classes"): probatio.Any(
-                    None, probatio.All(cv.ensure_list, [_valid_state_class])
+                    None, probatio.All(probatio.EnsureList(), [_valid_state_class])
                 ),
                 probatio.Optional("context"): {
                     probatio.Optional("filter_device_class"): str,
@@ -2445,12 +2453,6 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
     def __init__(self, config: UnitOfMeasurementSelectorConfig | None = None) -> None:
         """Instantiate a unit of measurement selector."""
         super().__init__(config)
-        self.allowed_context_keys = {
-            # Filters the available units based on the device class
-            "filter_device_class": {DeviceClassSelector.selector_type},
-            # Filters the available units based on the state class
-            "filter_state_class": {StateClassSelector.selector_type},
-        }
 
     def __call__(self, data: Any) -> str | None:
         """Validate the passed selection."""

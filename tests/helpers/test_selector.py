@@ -52,6 +52,7 @@ def test_invalid_base_schema(schema) -> None:
         pytest.param(selector.AttributeSelector, id="attribute"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
+        pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
     ],
 )
 def test_allowed_context_keys_read_only(
@@ -68,6 +69,7 @@ def test_allowed_context_keys_read_only(
         pytest.param(selector.AttributeSelector, id="attribute"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
+        pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
     ],
 )
 def test_allowed_context_keys_values_immutable(
