@@ -1455,10 +1455,10 @@ class EntityPlatform:
                 # config entry unload cancelling this background poll).
                 # Request cancellation for each one - this can't forcibly
                 # stop one stuck in a synchronous update()'s executor
-                # thread, the same constraint documented on
-                # `remove_entity_cb` - then keep draining them right here,
-                # in this same already-cancelled task, rather than handing
-                # them off to a new background task: config entry unload
+                # thread, it only lets the entity's own `finally` run
+                # early - then keep draining them right here, in this
+                # same already-cancelled task, rather than handing them
+                # off to a new background task: config entry unload
                 # (`ConfigEntry._async_process_on_unload`) only awaits the
                 # background tasks that existed at the moment it
                 # snapshotted them, so a new task created only now, after
