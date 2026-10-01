@@ -41,7 +41,7 @@ async def async_setup_entry(
     # Sleep rides in the generic frame, so both profiles always expose it.
     keys.append("sleep")
     if is_yap1f:
-        keys.extend(("ifeel", "econo"))
+        keys.extend(("ifeel", "econo", "absence"))
     async_add_entities([GreeAcOptionSwitch(entry, state, key) for key in keys])
 
 
@@ -85,6 +85,8 @@ class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEnti
         ):
             return False
         if self._key == "econo" and climate.hvac_mode is not HVACMode.COOL:
+            return False
+        if self._key == "absence" and climate.hvac_mode is not HVACMode.HEAT:
             return False
         return True
 

@@ -53,7 +53,8 @@
       "xfan": { "name": "X-Fan" },
       "sleep": { "name": "Sleep" },
       "ifeel": { "name": "I-Feel" },
-      "econo": { "name": "Econo" }
+      "econo": { "name": "Econo" },
+      "absence": { "name": "Absence" }
     },
     "select": {
       "fresh_air": {
