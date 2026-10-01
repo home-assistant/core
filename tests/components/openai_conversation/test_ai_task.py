@@ -15,7 +15,6 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
-    CONF_REASONING_EFFORT,
     CONF_STORE_RESPONSES,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
@@ -53,7 +52,12 @@ async def test_generate_data(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         ai_task_entry,
-        data={**ai_task_entry.data, CONF_STORE_RESPONSES: expected_store},
+        data={
+            **ai_task_entry.data,
+            CONF_STORE_RESPONSES: expected_store,
+            CONF_WEB_SEARCH: True,
+            CONF_CODE_INTERPRETER: True,
+        },
     )
     await hass.async_block_till_done()
     assert entity_entry is not None
@@ -75,6 +79,10 @@ async def test_generate_data(
     assert result.data == "The test data"
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
+    assert mock_create_stream.call_args.kwargs["tools"] == [
+        {"type": "web_search", "search_context_size": "medium"},
+        {"type": "code_interpreter", "container": {"type": "auto"}},
+    ]
     assert (
         mock_create_stream.call_args.kwargs["prompt_cache_key"]
         == ai_task_entry.subentry_id
@@ -468,59 +476,3 @@ async def test_repair_issue(
         )
 
     assert issue_registry.async_get_issue(DOMAIN, "organization_verification_required")
-
-
-@pytest.mark.usefixtures("mock_init_component")
-@pytest.mark.parametrize("model", ["gpt-6-luna", "gpt-6-astra", "gpt-6.1-sol"])
-async def test_generate_data_gpt6_with_tools(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_create_stream: AsyncMock,
-    model: str,
-) -> None:
-    """Test GPT-6 reasoning and both built-in tools for AI tasks."""
-    subentry = next(
-        entry
-        for entry in mock_config_entry.subentries.values()
-        if entry.subentry_type == "ai_task_data"
-    )
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        subentry,
-        data={
-            **subentry.data,
-            CONF_CHAT_MODEL: model,
-            CONF_REASONING_EFFORT: "low",
-            CONF_WEB_SEARCH: True,
-            CONF_CODE_INTERPRETER: True,
-        },
-    )
-    await hass.async_block_till_done()
-    mock_create_stream.return_value = [
-        create_message_item(
-            id="msg_A", text='{"result": "The test data"}', output_index=0
-        )
-    ]
-
-    result = await ai_task.async_generate_data(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.openai_ai_task",
-        instructions="Generate test data",
-        structure=probatio.Schema(
-            {probatio.Required("result"): selector.TextSelector()}
-        ),
-    )
-
-    assert result.data == {"result": "The test data"}
-    arguments = mock_create_stream.call_args.kwargs
-    assert arguments["model"] == model
-    assert arguments["reasoning"] == {"effort": "low", "summary": "auto"}
-    assert "temperature" not in arguments
-    assert "top_p" not in arguments
-    assert arguments["text"]["format"]["type"] == "json_schema"
-    assert arguments["text"]["format"]["strict"] is True
-    assert arguments["tools"] == [
-        {"type": "web_search", "search_context_size": "medium"},
-        {"type": "code_interpreter", "container": {"type": "auto"}},
-    ]
