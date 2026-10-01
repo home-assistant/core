@@ -1,7 +1,6 @@
-"""Global fixtures for the Daikin Onecta integration."""
+# """Global fixtures for myenergi integration."""
 import json
 import time
-from typing import Any
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -13,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-from syrupy.assertion import SnapshotAssertion
+from syrupy import SnapshotAssertion
 from syrupy.extensions.single_file import SingleFileAmberSnapshotExtension
 from syrupy.filters import props
 
@@ -34,9 +33,9 @@ FAKE_AUTH_IMPL = "conftest-imported-cred"
 
 
 def load_fixture_json(name):
-    """Load a Daikin Onecta JSON fixture."""
     with open(f"tests/components/daikin_onecta/fixtures/{name}.json") as json_file:
-        return json.load(json_file)
+        data = json.load(json_file)
+        return data
 
 
 
@@ -50,9 +49,9 @@ async def snapshot_platform_entities(
     snapshot: SnapshotAssertion,
     fixture_device_json,
 ) -> None:
-    """Snapshot entities and their states."""
     config_entry.runtime_data = OnectaRuntimeData(daikin_api=MagicMock(), devices={})
     config_entry.runtime_data.coordinator = MagicMock()
+    """Snapshot entities and their states."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ):
@@ -114,9 +113,9 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="onecta_auth")
-def onecta_auth() -> None:
-    """Provide the Onecta authentication fixture."""
-    return None
+def onecta_auth() -> AsyncMock:
+    """Restrict loaded platforms to list given."""
+    yield
 
 
 @pytest.fixture(name="access_token")
