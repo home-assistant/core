@@ -79,25 +79,6 @@ async def test_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_first_refresh_failure(hass: HomeAssistant) -> None:
-    """Test config entry setup retries when the first refresh fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="AB12CDE",
-        data={CONF_REG_NUMBER: "AB12CDE"},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
-        side_effect=DVLAError("DVLA unavailable"),
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_setup_entry_retries_on_dvla_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
