@@ -25,6 +25,7 @@ from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .core_config import _PACKAGE_DEFINITION_SCHEMA, _PACKAGES_CONFIG_SCHEMA
 from .exceptions import ConfigValidationError, HomeAssistantError
 from .helpers import config_validation as cv
+from .helpers.redact import REDACTED
 from .helpers.translation import async_get_exception_message
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
@@ -497,11 +498,14 @@ def stringify_invalid(
     output = Exception.__str__(exc)
     if error_type := exc.error_type:
         output += " for " + error_type
-    offending_item_summary = repr(_get_by_path(config, exc.path))
-    if len(offending_item_summary) > max_sub_error_length:
-        offending_item_summary = (
-            f"{offending_item_summary[: max_sub_error_length - 3]}..."
-        )
+    if exc.secret:
+        offending_item_summary = REDACTED
+    else:
+        offending_item_summary = repr(_get_by_path(config, exc.path))
+        if len(offending_item_summary) > max_sub_error_length:
+            offending_item_summary = (
+                f"{offending_item_summary[: max_sub_error_length - 3]}..."
+            )
     return (
         f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
         f"{message_suffix}"
@@ -626,10 +630,16 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     domain_schema = schema[key]
 
+    if isinstance(domain_schema, probatio.All) and any(
+        isinstance(validator, probatio.EnsureList)
+        for validator in domain_schema.validators
+    ):
+        return "list"
+
     t_schema = str(domain_schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
         return "dict"
-    if t_schema.startswith(("[", "All(<function ensure_list")):
+    if t_schema.startswith("["):
         return "list"
     return None
 
@@ -652,7 +662,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> str | Non
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
-                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)
+                probatio.EnsureList()(conf.get(key)) + probatio.EnsureList()(pack_conf)
             )
 
         else:
@@ -747,7 +757,8 @@ async def merge_packages_config(
 
             if merge_list:
                 config[comp_name] = cv.remove_falsy(
-                    cv.ensure_list(config.get(comp_name)) + cv.ensure_list(comp_conf)
+                    probatio.EnsureList()(config.get(comp_name))
+                    + probatio.EnsureList()(comp_conf)
                 )
                 continue
 
@@ -826,8 +837,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, exception.path):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
         else:
             if TYPE_CHECKING:
                 assert isinstance(exception, HomeAssistantError)
@@ -835,8 +846,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, [platform_path]):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 

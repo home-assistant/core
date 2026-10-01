@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 import dataclasses
 import logging
+import re
 from typing import Any, override
 
 import probatio
@@ -38,6 +39,9 @@ from .const import CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Example hostnames: sma3015638141, sma3015598606-2856
+HOSTNAME_SERIAL = re.compile(r"^sma-?(\d+)(?:-|$)", re.IGNORECASE)
+
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -47,7 +51,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -62,7 +66,7 @@ STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -93,8 +97,10 @@ async def validate_input(
 
     # new_session raises SmaAuthenticationException on failure
     await sma.new_session()
-    device_info = await sma.device_info()
-    await sma.close_session()
+    try:
+        device_info = await sma.device_info()
+    finally:
+        await sma.close_session()
 
     return dataclasses.asdict(device_info)
 
@@ -245,7 +251,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -289,16 +295,10 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
             )
 
-        # Finally, check if the hostname
-        # (which represents the SMA serial number) is unique
-        serial_number = discovery_info.hostname.lower()
-        # Example hostname: sma12345678-01
-        # Remove 'sma' prefix and strip everything after the dash (including the dash)
-        if serial_number.startswith("sma"):
-            serial_number = serial_number.removeprefix("sma")
-        serial_number = serial_number.split("-", 1)[0]
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
+        if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
+            return self.async_abort(reason="not_supported")
+        await self.async_set_unique_id(match.group(1))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._data[CONF_HOST]})
 
         return await self.async_step_discovery_confirm()
 

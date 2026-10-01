@@ -37,11 +37,11 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
             ),
         ),
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
-        probatio.Optional(CONF_API_KEY, default=""): str,
+        probatio.Optional(probatio.Secret(CONF_API_KEY), default=""): str,
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_API_KEY, default=""): str}
+    {probatio.Optional(probatio.Secret(CONF_API_KEY), default=""): str}
 )
 PLACEHOLDER = {"example_url": "https://uptime.example.com:3001"}
 

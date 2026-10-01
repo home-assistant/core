@@ -6,10 +6,8 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import IntFlag
 from functools import partial
 import logging
-import os
 from random import SystemRandom
 import time
 from typing import Any, Final, final, override
@@ -22,14 +20,7 @@ from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-)
 from homeassistant.components.stream import (
-    FORMAT_CONTENT_TYPE,
     OUTPUT_FORMATS,
     Orientation,
     Stream,
@@ -38,8 +29,7 @@ from homeassistant.components.stream import (
 from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
+from homeassistant.const import (  # noqa: F401
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_STARTED,
@@ -48,17 +38,18 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     EntityStateAttribute,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.network import get_url
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
+    ATTR_FILENAME,
+    ATTR_FORMAT,
+    ATTR_MEDIA_PLAYER,
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -68,12 +59,21 @@ from .const import (
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
+    SERVICE_DISABLE_MOTION,
+    SERVICE_ENABLE_MOTION,
+    SERVICE_PLAY_STREAM,
     SERVICE_RECORD,
+    SERVICE_SNAPSHOT,
+    CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
     StreamType,
 )
-from .helper import get_camera_from_entity_id
+from .helper import (
+    async_get_stream_image,
+    async_stream_endpoint_url,
+    get_camera_from_entity_id,
+)
 from .img_util import (
     TurboJPEGSingleton,  # noqa: F401
     scale_jpeg_camera_image,
@@ -83,6 +83,7 @@ from .prefs import (
     DynamicStreamSettings,  # noqa: F401
     get_dynamic_camera_stream_settings,
 )
+from .services import async_setup_services
 from .webrtc import (
     CameraWebRTCProvider,
     WebRTCAnswer,  # noqa: F401
@@ -104,22 +105,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
-SERVICE_ENABLE_MOTION: Final = "enable_motion_detection"
-SERVICE_DISABLE_MOTION: Final = "disable_motion_detection"
-SERVICE_SNAPSHOT: Final = "snapshot"
-SERVICE_PLAY_STREAM: Final = "play_stream"
-
-ATTR_FILENAME: Final = "filename"
-ATTR_MEDIA_PLAYER: Final = "media_player"
-ATTR_FORMAT: Final = "format"
-
-
-class CameraEntityFeature(IntFlag):
-    """Supported features of the camera entity."""
-
-    ON_OFF = 1
-    STREAM = 2
-
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
@@ -128,19 +113,6 @@ TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=5)
 _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
-
-CAMERA_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.template}
-
-CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
-    probatio.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(MP_DOMAIN),
-    probatio.Optional(ATTR_FORMAT, default="hls"): probatio.In(OUTPUT_FORMATS),
-}
-
-CAMERA_SERVICE_RECORD: VolDictType = {
-    probatio.Required(CONF_FILENAME): cv.template,
-    probatio.Optional(CONF_DURATION, default=30): probatio.Coerce(int),
-    probatio.Optional(CONF_LOOKBACK, default=0): probatio.Coerce(int),
-}
 
 
 class CameraEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -165,7 +137,7 @@ class CameraCapabilities:
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
     """Request a stream for a camera entity."""
     camera = get_camera_from_entity_id(hass, entity_id)
-    return await _async_stream_endpoint_url(hass, camera, fmt)
+    return await async_stream_endpoint_url(hass, camera, fmt)
 
 
 async def _async_get_image(
@@ -185,7 +157,7 @@ async def _async_get_image(
     with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
-                await _async_get_stream_image(
+                await async_get_stream_image(
                     camera, width=width, height=height, wait_for_next_keyframe=False
                 )
                 if camera.use_stream_for_stills
@@ -223,25 +195,6 @@ async def async_get_image(
     """
     camera = get_camera_from_entity_id(hass, entity_id)
     return await _async_get_image(camera, timeout, width, height)
-
-
-async def _async_get_stream_image(
-    camera: Camera,
-    width: int | None = None,
-    height: int | None = None,
-    wait_for_next_keyframe: bool = False,
-) -> bytes | None:
-    if (provider := camera.webrtc_provider) and (
-        image := await provider.async_get_image(camera, width=width, height=height)
-    ) is not None:
-        return image
-    if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
-        camera.stream = await camera.async_create_stream()
-    if camera.stream:
-        return await camera.stream.async_get_image(
-            width=width, height=height, wait_for_next_keyframe=wait_for_next_keyframe
-        )
-    return None
 
 
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
@@ -374,25 +327,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
 
-    component.async_register_entity_service(
-        SERVICE_ENABLE_MOTION, None, "async_enable_motion_detection"
-    )
-    component.async_register_entity_service(
-        SERVICE_DISABLE_MOTION, None, "async_disable_motion_detection"
-    )
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(
-        SERVICE_SNAPSHOT, CAMERA_SERVICE_SNAPSHOT, async_handle_snapshot_service
-    )
-    component.async_register_entity_service(
-        SERVICE_PLAY_STREAM,
-        CAMERA_SERVICE_PLAY_STREAM,
-        async_handle_play_stream_service,
-    )
-    component.async_register_entity_service(
-        SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
-    )
+    async_setup_services(hass)
 
     return True
 
@@ -968,7 +903,7 @@ async def ws_camera_stream(
     try:
         entity_id = msg["entity_id"]
         camera = get_camera_from_entity_id(hass, entity_id)
-        url = await _async_stream_endpoint_url(hass, camera, fmt=msg["format"])
+        url = await async_stream_endpoint_url(hass, camera, fmt=msg["format"])
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
@@ -1030,147 +965,3 @@ async def websocket_update_prefs(
                 entity_id,
             )
         connection.send_result(msg["id"], entity_prefs)
-
-
-class _TemplateCameraEntity:
-    """Class to warn when the `entity_id` template variable is accessed.
-
-    Can be removed in HA Core 2025.6.
-    """
-
-    def __init__(self, camera: Camera, service: str) -> None:
-        """Initialize."""
-        self._camera = camera
-        self._entity_id = camera.entity_id
-        self._hass = camera.hass
-        self._service = service
-
-    def _report_issue(self) -> None:
-        """Create a repair issue."""
-        ir.async_create_issue(
-            self._hass,
-            DOMAIN,
-            f"deprecated_filename_template_{self._entity_id}_{self._service}",
-            breaks_in_ha_version="2025.6.0",
-            is_fixable=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_filename_template",
-            translation_placeholders={
-                "entity_id": self._entity_id,
-                "service": f"{DOMAIN}.{self._service}",
-            },
-        )
-
-    def __getattr__(self, name: str) -> Any:
-        """Forward to the camera entity."""
-        self._report_issue()
-        return getattr(self._camera, name)
-
-    @override
-    def __str__(self) -> str:
-        """Forward to the camera entity."""
-        self._report_issue()
-        return str(self._camera)
-
-
-async def async_handle_snapshot_service(
-    camera: Camera, service_call: ServiceCall
-) -> None:
-    """Handle snapshot services calls."""
-    hass = camera.hass
-    filename: Template = service_call.data[ATTR_FILENAME]
-
-    snapshot_file = filename.async_render(
-        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}
-    )
-
-    # check if we allow to access to that file
-    if not hass.config.is_allowed_path(snapshot_file):
-        raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path;"
-            " `allowlist_external_dirs` may need to be adjusted"
-            " in `configuration.yaml`"
-        )
-
-    try:
-        async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
-            image = (
-                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
-                if camera.use_stream_for_stills
-                else await camera.async_camera_image()
-            )
-    except TimeoutError as err:
-        raise HomeAssistantError(
-            f"Unable to get snapshot: Timed out after {CAMERA_IMAGE_TIMEOUT} seconds"
-        ) from err
-
-    if image is None:
-        return
-
-    def _write_image(to_file: str, image_data: bytes) -> None:
-        """Executor helper to write image."""
-        os.makedirs(os.path.dirname(to_file), exist_ok=True)
-        with open(to_file, "wb") as img_file:
-            img_file.write(image_data)
-
-    try:
-        await hass.async_add_executor_job(_write_image, snapshot_file, image)
-    except OSError as err:
-        raise HomeAssistantError(f"Can't write image to file: {err}") from err
-
-
-async def async_handle_play_stream_service(
-    camera: Camera, service_call: ServiceCall
-) -> None:
-    """Handle play stream services calls."""
-    hass = camera.hass
-    fmt = service_call.data[ATTR_FORMAT]
-    url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
-    url = f"{get_url(hass)}{url}"
-
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: service_call.data[ATTR_MEDIA_PLAYER],
-            ATTR_MEDIA_CONTENT_ID: url,
-            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
-        },
-        blocking=True,
-        context=service_call.context,
-    )
-
-
-async def _async_stream_endpoint_url(
-    hass: HomeAssistant, camera: Camera, fmt: str
-) -> str:
-    stream = await camera.async_create_stream()
-    if not stream:
-        raise HomeAssistantError(
-            f"{camera.entity_id} does not support play stream service"
-        )
-
-    stream.add_provider(fmt)
-    await stream.start()
-    return stream.endpoint_url(fmt)
-
-
-async def async_handle_record_service(
-    camera: Camera, service_call: ServiceCall
-) -> None:
-    """Handle stream recording service calls."""
-    stream = await camera.async_create_stream()
-
-    if not stream:
-        raise HomeAssistantError(f"{camera.entity_id} does not support record service")
-
-    filename = service_call.data[CONF_FILENAME]
-    video_path = filename.async_render(
-        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_RECORD)}
-    )
-
-    await stream.async_record(
-        video_path,
-        duration=service_call.data[CONF_DURATION],
-        lookback=service_call.data[CONF_LOOKBACK],
-    )

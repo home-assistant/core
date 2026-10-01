@@ -40,6 +40,7 @@ from .const import (
 )
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
+from .llm_api import async_register_llm_api
 from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
 from .schema import (
     BinarySensorSchema,
@@ -131,6 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     hass.data[KNX_MODULE_KEY] = knx_module
+
+    entry.async_on_unload(async_register_llm_api(hass, knx_module))
 
     knx_module.ui_time_server_controller.start(
         knx_module.xknx, knx_module.config_store.get_time_server_config()

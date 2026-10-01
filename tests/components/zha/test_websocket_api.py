@@ -259,7 +259,7 @@ async def test_list_devices(zha_client) -> None:
         assert device[ATTR_ENDPOINT_NAMES] is not None
 
         for entity_reference in device["entities"]:
-            assert entity_reference[ATTR_NAME] is not None
+            assert entity_reference[ATTR_NAME] == device[ATTR_NAME]
             assert entity_reference["entity_id"] is not None
 
         await zha_client.send_json(

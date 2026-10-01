@@ -33,10 +33,12 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Optional(CONF_DEVICES, default=[]): probatio.All(
-                    cv.ensure_list, [DEVICE_SCHEMA]
+                    probatio.EnsureList(), [DEVICE_SCHEMA]
                 ),
                 probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-                probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+                probatio.Inclusive(
+                    probatio.Secret(CONF_PASSWORD), "authentication"
+                ): cv.string,
             }
         )
     },

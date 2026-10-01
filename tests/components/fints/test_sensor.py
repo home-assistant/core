@@ -96,7 +96,7 @@ async def test_setup_platform(
 async def test_account_identifiers_are_not_logged(
     hass: HomeAssistant, mock_bank: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """No IBAN or account number ends up in the log."""
+    """No IBAN or account number ends up in the log of this integration."""
     caplog.set_level(logging.DEBUG)
 
     with patch(
@@ -106,5 +106,14 @@ async def test_account_identifiers_are_not_logged(
         assert await async_setup_component(hass, "sensor", CONFIG)
         await hass.async_block_till_done()
 
+    # The identifiers are state attributes, which the event bus dumps as part of
+    # the state changed events it logs when debug logging is on. Only the log of
+    # this integration is of interest here.
+    logged = "\n".join(
+        record.getMessage()
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.fints")
+    )
+
     for identifier in ACCOUNT_TYPES:
-        assert identifier not in caplog.text
+        assert identifier not in logged

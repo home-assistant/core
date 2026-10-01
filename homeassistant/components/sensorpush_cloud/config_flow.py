@@ -51,7 +51,7 @@ class SensorPushCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
