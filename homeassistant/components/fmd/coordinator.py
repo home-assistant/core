@@ -3,7 +3,7 @@
 from datetime import timedelta
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from fmd_api import AuthenticationError, FmdApiException, FmdClient
 
@@ -36,6 +36,8 @@ def is_location_accurate(location: dict[str, Any]) -> bool:
 class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manage fetching FMD location data for a single account."""
 
+    config_entry: FmdConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, api: FmdClient, entry: FmdConfigEntry
     ) -> None:
@@ -50,6 +52,7 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest location data from the FMD server."""
         try:

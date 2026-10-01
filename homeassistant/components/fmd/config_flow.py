@@ -1,14 +1,14 @@
 """Config flow for the FMD integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from fmd_api import AuthenticationError, FmdApiException, FmdClient
 import probatio
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_URL
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -41,9 +41,10 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
 class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for FMD."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:

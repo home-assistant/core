@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,15 +37,18 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
     def __init__(self, coordinator: FmdCoordinator) -> None:
         """Initialize the device tracker."""
         super().__init__(coordinator)
-        self._attr_unique_id = coordinator.config_entry.data[CONF_ID]
+        entry_data = coordinator.config_entry.data
+        self._attr_unique_id = entry_data[CONF_ID]
+        self._device_id = entry_data[CONF_ID]
+        self._device_name = f"FMD {entry_data[CONF_ID]}"
 
     @property
     @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.data[CONF_ID])},
-            name=f"FMD {self.coordinator.config_entry.data[CONF_ID]}",
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._device_name,
             manufacturer="FMD-FOSS",
             model="Device Tracker",
         )
@@ -64,9 +67,9 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
 
     @property
     @override
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type of the device."""
-        return "gps"
+        return SourceType.GPS
 
     @property
     @override
@@ -82,15 +85,15 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
 
     @property
     @override
-    def location_accuracy(self) -> int | None:
+    def location_accuracy(self) -> float:
         """Return the GPS accuracy of the fix in meters."""
         accuracy = self.coordinator.data.get("accuracy")
         if accuracy is None:
-            return None
+            return 0.0
         try:
-            return int(accuracy)
+            return float(accuracy)
         except TypeError, ValueError:
-            return None
+            return 0.0
 
     @property
     @override

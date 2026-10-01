@@ -46,7 +46,7 @@ async def test_location_attributes(
     assert state.attributes["latitude"] == 37.7749
     assert state.attributes["longitude"] == -122.4194
     assert state.attributes["battery_level"] == 85
-    assert state.attributes["gps_accuracy"] == 10
+    assert state.attributes["gps_accuracy"] == 10.5
 
 
 async def test_refresh_updates_location(
