@@ -820,10 +820,18 @@ async def test_charge_on_solar_lower_limit_removed_without_command_scope(
     assert entity_registry.async_get("number.test_charge_on_solar_lower_limit") is None
 
 
-async def test_charge_on_solar_echoed_charge_limit_survives_reload(
+@pytest.mark.parametrize(
+    "charge_limit_echo",
+    [
+        pytest.param((90,), id="echoed"),
+        pytest.param((), id="not_echoed"),
+    ],
+)
+async def test_charge_on_solar_locally_set_charge_limit_survives_reload(
     hass: HomeAssistant,
+    charge_limit_echo: tuple[int, ...],
 ) -> None:
-    """Test a charge limit set from Home Assistant and echoed back survives a reload."""
+    """Test a charge limit set from Home Assistant survives a reload, echoed or not."""
     await _async_enable_charge_on_solar_preview_feature(hass)
 
     with patch(
@@ -846,9 +854,10 @@ async def test_charge_on_solar_echoed_charge_limit_survives_reload(
                 blocking=True,
             )
 
-        # The vehicle echoes the new limit on the stream.
-        for call in listener.call_args_list:
-            call.args[0](90)
+        # The vehicle may or may not echo the new limit on the stream before the reload.
+        for value in charge_limit_echo:
+            for call in listener.call_args_list:
+                call.args[0](value)
         await hass.async_block_till_done()
 
     with patch(

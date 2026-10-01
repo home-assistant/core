@@ -39,7 +39,11 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import (
+    TeslemetryChargeOnSolarStore,
+    TeslemetryEnergyData,
+    TeslemetryVehicleData,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -156,12 +160,14 @@ async def async_setup_entry(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
+                    entry.runtime_data.charge_on_solar_store,
                 )
                 if vehicle.polls_charge_limit
                 else TeslemetryStreamingNumberEntity(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
+                    entry.runtime_data.charge_on_solar_store,
                 )
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
@@ -199,6 +205,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
     api: Vehicle | VehicleRouter
     entity_description: TeslemetryNumberVehicleEntityDescription
     vehicle: TeslemetryVehicleData
+    _charge_on_solar_store: TeslemetryChargeOnSolarStore | None
 
     @override
     async def async_set_native_value(self, value: float) -> None:
@@ -208,6 +215,8 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
         await handle_vehicle_command(self.entity_description.func(self.api, value))
         if self.entity_description.key == CHARGE_LIMIT_SOC_KEY:
             self.vehicle.charge_limit_soc = value
+            if self._charge_on_solar_store is not None:
+                self._charge_on_solar_store.async_save(self.vehicle)
         self._attr_native_value = value
         self.async_write_ha_state()
 
@@ -222,9 +231,11 @@ class TeslemetryVehiclePollingNumberEntity(
         data: TeslemetryVehicleData,
         description: TeslemetryNumberVehicleEntityDescription,
         scopes: list[Scope],
+        charge_on_solar_store: TeslemetryChargeOnSolarStore | None,
     ) -> None:
         """Initialize the number entity."""
         self.scoped = any(scope in scopes for scope in description.scopes)
+        self._charge_on_solar_store = charge_on_solar_store
         self.entity_description = description
         super().__init__(
             data,
@@ -254,9 +265,11 @@ class TeslemetryStreamingNumberEntity(
         data: TeslemetryVehicleData,
         description: TeslemetryNumberVehicleEntityDescription,
         scopes: list[Scope],
+        charge_on_solar_store: TeslemetryChargeOnSolarStore | None,
     ) -> None:
         """Initialize the Number entity."""
         self.scoped = any(scope in scopes for scope in description.scopes)
+        self._charge_on_solar_store = charge_on_solar_store
         self.entity_description = description
         self._attr_native_max_value = self.entity_description.native_max_value
         super().__init__(data, description.key)
