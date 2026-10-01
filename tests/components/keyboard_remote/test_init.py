@@ -1415,6 +1415,39 @@ async def test_path_entry_wins_over_name_entry(
     ]
 
 
+async def test_link_to_held_node_keeps_holder_when_path_entry_busy(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a link does not take a node for a path entry that has one already.
+
+    Identical keyboards without a serial share their by-id link, and udev
+    points it at the one added last. Handing that node over would disconnect
+    the name entry and leave the node to nobody.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+    await _set_up(
+        hass,
+        fake_input,
+        _entry(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
+        ),
+    )
+    await _set_up(
+        hass,
+        fake_input,
+        _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="by-name"),
+    )
+    second = await fake_input.plug(REMOTE_PATH, FAKE_DEVICE_NAME)
+
+    await fake_input.link(FAKE_DEVICE_PATH, REMOTE_PATH)
+
+    second.grab.assert_called_once()
+    second.ungrab.assert_not_called()
+    assert not disconnected
+
+
 async def test_same_named_nodes_connect_the_first_node(
     hass: HomeAssistant,
     fake_input: FakeInput,

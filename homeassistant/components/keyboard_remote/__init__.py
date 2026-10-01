@@ -401,8 +401,8 @@ class KeyboardRemoteManager:
 
     def _get_handler_for_device(
         self, descriptor: str, handlers: list[DeviceHandler]
-    ) -> tuple[InputDevice | None, DeviceHandler | None]:
-        """Find the best matching handler for a device descriptor (path).
+    ) -> tuple[InputDevice, DeviceHandler, int] | None:
+        """Find the best matching handler for a device descriptor, and its rank.
 
         The handlers list must be a snapshot taken on the event loop thread
         to avoid race conditions with register/unregister.
@@ -413,22 +413,21 @@ class KeyboardRemoteManager:
         try:
             dev = InputDevice(descriptor)
         except OSError:
-            return (None, None)
+            return None
 
-        best_handler: DeviceHandler | None = None
-        best_rank: int | None = None
+        best: tuple[DeviceHandler, int] | None = None
         for handler in handlers:
             rank = handler.match_rank(descriptor, dev)
             if rank is None:
                 continue
-            if best_rank is None or rank < best_rank:
-                best_handler, best_rank = handler, rank
+            if best is None or rank < best[1]:
+                best = handler, rank
 
-        if best_handler is None:
+        if best is None:
             dev.close()
-            return (None, None)
+            return None
 
-        return (dev, best_handler)
+        return dev, *best
 
     def _scan_and_match_devices(
         self, handlers: list[DeviceHandler]
@@ -503,9 +502,9 @@ class KeyboardRemoteManager:
         for descriptor in sorted(list_input_devices()):
             if descriptor in skip_descriptors:
                 continue
-            dev, matched = self._get_handler_for_device(descriptor, handlers)
-            if dev is None:
+            if (found := self._get_handler_for_device(descriptor, handlers)) is None:
                 continue
+            dev, matched, _rank = found
             if matched is handler:
                 return descriptor, dev
             dev.close()
@@ -524,16 +523,23 @@ class KeyboardRemoteManager:
         handler is really reading from.
         """
         if (
-            not self._accepting_devices
-            or self._handlers.get(handler.entry.entry_id) is not handler
+            not self._can_take_device(handler)
             or descriptor in self._active_handlers_by_descriptor
-            or handler.is_monitoring
         ):
             self.hass.async_add_executor_job(dev.close)
             return False
 
         self._active_handlers_by_descriptor[descriptor] = handler
         return True
+
+    @callback
+    def _can_take_device(self, handler: DeviceHandler) -> bool:
+        """Return whether a handler is registered and free for a device."""
+        return (
+            self._accepting_devices
+            and self._handlers.get(handler.entry.entry_id) is handler
+            and not handler.is_monitoring
+        )
 
     async def _async_check_handler(self, handler: DeviceHandler) -> None:
         """Check if a newly registered handler's device is currently connected."""
@@ -600,10 +606,11 @@ class KeyboardRemoteManager:
     async def _async_attach_descriptor(self, descriptor: str) -> None:
         """Start the best matching handler on a device node, if any."""
         handlers = list(self._handlers.values())
-        dev, handler = await self.hass.async_add_executor_job(
+        found = await self.hass.async_add_executor_job(
             self._get_handler_for_device, descriptor, handlers
         )
-        if dev is not None and handler is not None:
+        if found is not None:
+            dev, handler, _rank = found
             self._claim_and_start(descriptor, dev, handler)
 
     @callback
@@ -630,13 +637,11 @@ class KeyboardRemoteManager:
         # by-id also links mouse and joystick nodes, which evdev cannot open
         if not descriptor.startswith(f"{DEVINPUT}/event"):
             return None
-        dev, handler = self._get_handler_for_device(descriptor, handlers)
-        if dev is None or handler is None:
+        if (found := self._get_handler_for_device(descriptor, handlers)) is None:
             return None
+        dev, handler, rank = found
         if (holder := holders.get(descriptor)) is not None:
             holder_rank = holder.match_rank(descriptor, dev)
-            rank = handler.match_rank(descriptor, dev)
-            assert rank is not None
             if holder is handler or (holder_rank is not None and holder_rank <= rank):
                 dev.close()
                 return None
@@ -666,8 +671,10 @@ class KeyboardRemoteManager:
             return
         descriptor, dev, handler = result
         holder = holders.get(descriptor)
-        if holder is not None and (
-            self._active_handlers_by_descriptor.get(descriptor) is holder
+        if (
+            holder is not None
+            and self._active_handlers_by_descriptor.get(descriptor) is holder
+            and self._can_take_device(handler)
         ):
             # The holder got the node from its node events, before this link
             # let the entry configured with it match. Hand the node over, then
@@ -725,6 +732,7 @@ class DeviceHandler:
         self._monitor_task: asyncio.Task[None] | None = None
         self.dev: InputDevice | None = None
         self._descriptor: str | None = None
+        self._repeat_tasks: dict[int, asyncio.Task[None]] = {}
         self._on_monitor_failure: (
             Callable[[DeviceHandler], Coroutine[Any, Any, None]] | None
         ) = None
@@ -857,6 +865,7 @@ class DeviceHandler:
         dev = self.dev
         assert dev is not None
         descriptor = self._descriptor
+        repeat_tasks = self._repeat_tasks
 
         # Claim the teardown before the first await. On unplug the DELETE event
         # and the monitor task's read failure both land here, and a second pass
@@ -876,6 +885,10 @@ class DeviceHandler:
             self.hass.async_add_executor_job(dev.close)
             if not from_monitor_task:
                 task.cancel()
+            # The monitor task only cancels these once it runs again, which
+            # would let a key_hold follow the disconnect
+            for repeat_task in repeat_tasks.values():
+                repeat_task.cancel()
             self.hass.bus.async_fire(
                 EVENT_KEYBOARD_REMOTE_DISCONNECTED,
                 {
@@ -914,6 +927,7 @@ class DeviceHandler:
         dev = self.dev
         assert dev is not None
         repeat_tasks: dict[int, asyncio.Task[None]] = {}
+        self._repeat_tasks = repeat_tasks
 
         try:
             _LOGGER.debug("Start device monitoring")
