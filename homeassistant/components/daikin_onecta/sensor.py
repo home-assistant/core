@@ -1,28 +1,26 @@
 """Support for Daikin AC sensors."""
 import logging
 
-from homeassistant.components.sensor import CONF_STATE_CLASS
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS
-from homeassistant.const import CONF_ICON
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import callback
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .const import ENABLED_DEFAULT
-from .const import ENTITY_CATEGORY
-from .const import MODEL_ATTRIBUTE
-from .const import SENSOR_PERIOD_MONTHLY
-from .const import SENSOR_PERIOD_WEEKLY
-from .const import SENSOR_PERIOD_YEARLY
-from .const import SENSOR_PERIODS
-from .const import TRANSLATION_KEY
-from .const import VALUE_SENSOR_MAPPING
+from .const import (
+    DOMAIN,
+    ENABLED_DEFAULT,
+    ENTITY_CATEGORY,
+    MODEL_ATTRIBUTE,
+    SENSOR_PERIOD_MONTHLY,
+    SENSOR_PERIOD_WEEKLY,
+    SENSOR_PERIOD_YEARLY,
+    SENSOR_PERIODS,
+    TRANSLATION_KEY,
+    VALUE_SENSOR_MAPPING,
+)
 from .coordinator import OnectaRuntimeData
 from .device import DaikinOnectaDevice
 
