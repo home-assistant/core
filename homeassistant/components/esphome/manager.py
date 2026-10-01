@@ -808,6 +808,7 @@ class ESPHomeManager:
         entry_data.device_info = EsphomeDeviceInfo.from_dict(
             {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
         )
+        entry_data.async_save_to_store()
         entry_data.async_create_zwave_js_flow(
             self.hass, entry_data.device_info, zwave_home_id
         )
