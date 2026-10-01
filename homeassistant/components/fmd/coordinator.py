@@ -64,9 +64,6 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         except FmdApiException as err:
-            if self.data:
-                # Transient API error: keep serving the last known location.
-                return self.data
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -88,9 +85,6 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 continue
             return location
 
-        if self.data:
-            # No acceptable new fix; keep serving the previous location.
-            return self.data
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="no_location_data",

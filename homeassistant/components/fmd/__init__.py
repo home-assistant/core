@@ -9,10 +9,7 @@ FMD Project Attribution:
 - FMD Android: https://gitlab.com/fmd-foss/fmd-android
 - FMD Server: https://gitlab.com/fmd-foss/fmd-server
 
-This integration:
-- MIT License - Copyright (c) 2025 Devin Slick
-- https://github.com/devinslick/home-assistant-fmd
-- A third-party client for FMD servers
+Client library: https://github.com/devinslick/fmd_api
 """
 
 import logging
@@ -52,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
             translation_placeholders={"error": str(err)},
         ) from err
 
+    entry.async_on_unload(api.close)
     coordinator = FmdCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
 
@@ -62,7 +60,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.api.close()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

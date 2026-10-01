@@ -35,6 +35,9 @@ TEST_LOCATION: dict[str, Any] = {
     "provider": "gps",
     "bat": 85,
     "accuracy": 10.5,
+    "altitude": 132,
+    "speed": 23.42,
+    "heading": 95,
 }
 
 
@@ -65,7 +68,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_ID,
+        unique_id=f"{TEST_URL}/{TEST_ID}",
         title=TEST_ID,
         data={
             CONF_URL: TEST_URL,

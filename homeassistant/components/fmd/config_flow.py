@@ -48,7 +48,11 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_ID])
+            # Account IDs are scoped per server: include the base URL so
+            # the same account ID on two different servers can coexist.
+            await self.async_set_unique_id(
+                f"{user_input[CONF_URL]}/{user_input[CONF_ID]}"
+            )
             self._abort_if_unique_id_configured()
             try:
                 artifacts = await validate_input(user_input)

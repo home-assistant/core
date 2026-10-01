@@ -3,7 +3,7 @@
 from datetime import timedelta
 import json
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from fmd_api import AuthenticationError, FmdApiException
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fmd.const import DEFAULT_POLLING_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -116,8 +117,8 @@ async def test_tracker_becomes_unavailable_on_api_error(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    # Coordinator keeps last known data, entity stays available with old fix
-    assert state.attributes["latitude"] == 37.7749
+    # UpdateFailed propagates: last update failed, entity becomes unavailable
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_auth_failure_starts_reauth(
@@ -138,3 +139,100 @@ async def test_auth_failure_starts_reauth(
     # AuthenticationError raised from the coordinator during a refresh
     # (this is where reauth will hook in once PR2 adds the flow)
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_tracker_movement_attributes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test altitude, speed and heading are exposed with units."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["altitude"] == 132
+    assert state.attributes["altitude_unit"] == "m"
+    assert state.attributes["speed"] == 23.42
+    assert state.attributes["speed_unit"] == "m/s"
+    assert state.attributes["heading"] == 95
+    assert state.attributes["device_timestamp_ms"] == "1761220800000"
+
+
+async def test_tracker_parses_bad_numeric_fields(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test battery/accuracy fall back gracefully on non-numeric values."""
+    bad = dict(TEST_LOCATION)
+    bad["bat"] = "not-a-number"
+    bad["accuracy"] = None
+    del bad["altitude"]
+    del bad["speed"]
+    del bad["heading"]
+    mock_fmd_client.decrypt_data_blob = MagicMock(
+        side_effect=lambda blob: json.dumps(bad).encode()
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("battery_level") is None
+    assert state.attributes["gps_accuracy"] == 0
+    assert "altitude" not in state.attributes
+    assert "speed" not in state.attributes
+    assert "heading" not in state.attributes
+
+
+async def test_tracker_missing_battery_and_accuracy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test battery None path and float() fallback for accuracy."""
+    partial = dict(TEST_LOCATION)
+    partial["bat"] = None
+    partial["accuracy"] = "garbage"
+    mock_fmd_client.decrypt_data_blob = MagicMock(
+        side_effect=lambda blob: json.dumps(partial).encode()
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("battery_level") is None
+    assert state.attributes["gps_accuracy"] == 0
+
+
+async def test_tracker_skips_empty_and_inaccurate_blobs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test empty blobs and inaccurate fixes are skipped for accurate data."""
+    weak = dict(TEST_LOCATION)
+    weak["provider"] = "beacondb"
+    mock_fmd_client.get_locations = AsyncMock(
+        return_value=["", "weak-blob", "good-blob"]
+    )
+    mock_fmd_client.decrypt_data_blob = MagicMock(
+        side_effect=lambda blob: json.dumps(
+            weak if blob == "weak-blob" else TEST_LOCATION
+        ).encode()
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    # Good fix wins even when preceded by an empty blob and a weak fix
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["provider"] == "gps"
+
+    # All fixes inaccurate -> UpdateFailed on first refresh -> setup retry state
+    weak2 = dict(TEST_LOCATION)
+    weak2["provider"] = "beacondb"
+    mock_fmd_client.decrypt_data_blob = MagicMock(
+        side_effect=lambda blob: json.dumps(weak2).encode()
+    )
+    freezer.tick(timedelta(minutes=DEFAULT_POLLING_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
