@@ -342,7 +342,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 reason=reason, description_placeholders=description_placeholders
             )
         try:
-            rest_data = entry.runtime_data.rest.data_without_xml() or ""
+            rest_data = entry.runtime_data.rest.data_without_xml()
         except ExpatError as ex:
             return self.async_abort(
                 reason="xml_parse_error",
@@ -356,7 +356,9 @@ class RestSubentryFlow(ConfigSubentryFlow):
             ].post_schema_validation:
                 if callable(schema_validator):
                     schema_validator = schema_validator(
-                        rest_data if len(rest_data) < 1000 else rest_data[:999]
+                        rest_data
+                        if rest_data is None or len(rest_data) < 1000
+                        else rest_data[:999]
                     )
                 if isinstance(schema_validator, probatio.Schema):
                     try:
