@@ -554,6 +554,15 @@ async def test_generate_image_not_assistant_content(
             [{"type": "image_url", "image_url": {"url": "data:image/png;base64,"}}],
             id="empty_base64_payload",
         ),
+        pytest.param(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png,unexpected;base64,aGVsbG8="},
+                }
+            ],
+            id="malformed_mime_subtype",
+        ),
     ],
 )
 async def test_generate_image_invalid_image(

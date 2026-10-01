@@ -22,7 +22,9 @@ from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-_DATA_URI_PATTERN = re.compile(r"^data:(image/[^;]+);base64,")
+_DATA_URI_PATTERN = re.compile(
+    r"^data:(image/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*);base64,"
+)
 
 
 async def async_setup_entry(
