@@ -80,7 +80,7 @@
       "battery_heater_no_power": null,
       "cabin_overheat_protection": "On",
       "cabin_overheat_protection_actively_cooling": false,
-      "climate_keeper_mode": "keep",
+      "climate_keeper_mode": "on",
       "cop_activation_temperature": "High",
       "defrost_mode": 0,
       "driver_temp_setting": 22,

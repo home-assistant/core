@@ -20,7 +20,7 @@ SETTINGS_URL = "https://app.todoist.com/app/settings/integrations/developer"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 

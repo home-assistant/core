@@ -30,7 +30,7 @@ CONF_GATEWAYS = "gateways"
 CONFIG_GATEWAY = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_SCAN_INTERVAL, default=300): cv.time_period,
     }
 )
@@ -40,7 +40,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_GATEWAYS, default={}): probatio.All(
-                    cv.ensure_list, [CONFIG_GATEWAY]
+                    probatio.EnsureList(), [CONFIG_GATEWAY]
                 )
             }
         )

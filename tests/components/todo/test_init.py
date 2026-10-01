@@ -534,7 +534,7 @@ async def test_update_todo_item_service_by_summary_not_found(
     [
         ({}, r"required key not provided at 'item'"),
         ({"status": "needs_action"}, r"required key not provided at 'item'"),
-        ({"item": "Item #1"}, "must contain at least one of"),
+        ({"item": "Item #1"}, "at least one of"),
         (
             {"item": "", "status": "needs_action"},
             "length of value must be at least 1",

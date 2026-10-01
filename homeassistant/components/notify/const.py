@@ -42,7 +42,9 @@ NOTIFY_SERVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_MESSAGE): cv.string,
         probatio.Optional(ATTR_TITLE): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_DATA): dict,
     }
 )
