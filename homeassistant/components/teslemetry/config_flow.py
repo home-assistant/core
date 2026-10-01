@@ -335,17 +335,19 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_instructions()
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
-            await self._async_disconnect()
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
             return self.async_show_form(
                 step_id="scan",
                 errors={"base": "cannot_connect"},
                 description_placeholders={"vin": self._vin or ""},
             )
+        finally:
+            # Never hold the link while waiting on the user: a closed tab never removes the flow.
+            await self._async_disconnect()
         if TYPE_CHECKING:
             assert self._address is not None
             assert self._vin is not None
-        await self._async_disconnect()
+        self._vehicle = None
         return self.async_create_entry(
             title=self._title or self._vin,
             data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
@@ -371,10 +373,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add the virtual key to the vehicle while showing pairing progress."""
         if self._pair_task is None:
-            if TYPE_CHECKING:
-                assert self._vehicle is not None
             # pair() can take minutes, so run it as a progress task rather than blocking the flow.
-            self._pair_task = self.hass.async_create_task(self._vehicle.pair())
+            self._pair_task = self.hass.async_create_task(self._async_pair())
 
         if not self._pair_task.done():
             return self.async_show_progress(
@@ -402,22 +402,26 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")
-        except Exception:
-            # async_remove() only runs if the flow is still tracked when this step raises.
-            await self._async_disconnect()
-            raise
         return self.async_show_progress_done(next_step_id="pair")
 
+    async def _async_pair(self) -> None:
+        """Add the key over a link that never outlives the attempt."""
+        if TYPE_CHECKING:
+            assert self._vehicle is not None
+        try:
+            # The library reconnects on demand, so each attempt starts from a new link.
+            await self._vehicle.pair()
+        finally:
+            await self._async_disconnect()
+
     async def _async_disconnect(self) -> None:
-        """Disconnect the BLE link, if any, and drop the reference to it."""
-        vehicle = self._vehicle
-        if vehicle is not None:
+        """Disconnect the BLE link, if any."""
+        # Keep the reference: a step may still be awaiting this vehicle when the flow is removed.
+        if self._vehicle is not None:
             try:
-                await vehicle.disconnect()
+                await self._vehicle.disconnect()
             except (BleakError, TeslaFleetError, TimeoutError) as err:
                 LOGGER.debug("Error disconnecting Bluetooth: %s", err)
-            finally:
-                self._vehicle = None
 
     @callback
     @override
