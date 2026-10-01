@@ -7,9 +7,6 @@
     }
   },
   "services": {
-    "dismiss": {
-      "service": "mdi:bell-off"
-    },
     "dismiss_message": {
       "service": "mdi:comment-remove"
     },

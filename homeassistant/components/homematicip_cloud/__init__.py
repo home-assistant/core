@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
@@ -35,7 +35,7 @@ CONFIG_SCHEMA = probatio.Schema(
                             cv.string
                         ),
                         probatio.Required(CONF_ACCESSPOINT): cv.string,
-                        probatio.Required(CONF_AUTHTOKEN): cv.string,
+                        probatio.Required(probatio.Secret(CONF_AUTHTOKEN)): cv.string,
                     }
                 )
             ],

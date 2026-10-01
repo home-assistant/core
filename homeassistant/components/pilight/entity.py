@@ -54,10 +54,10 @@ SWITCHES_SCHEMA = probatio.Schema(
         probatio.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
         probatio.Optional(CONF_NAME): cv.string,
         probatio.Optional(CONF_OFF_CODE_RECEIVE): probatio.All(
-            cv.ensure_list, [COMMAND_SCHEMA]
+            probatio.EnsureList(), [COMMAND_SCHEMA]
         ),
         probatio.Optional(CONF_ON_CODE_RECEIVE): probatio.All(
-            cv.ensure_list, [COMMAND_SCHEMA]
+            probatio.EnsureList(), [COMMAND_SCHEMA]
         ),
     }
 )

@@ -73,7 +73,7 @@ CITYBIKES_ATTRIBUTION = (
 CITYBIKES_NETWORKS = "citybikes_networks"
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
+    probatio.AtLeastOne(CONF_RADIUS, CONF_STATIONS_LIST),
     SENSOR_PLATFORM_SCHEMA.extend(
         {
             probatio.Optional(CONF_NAME, default=""): cv.string,
@@ -82,7 +82,7 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
             probatio.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
             probatio.Optional(CONF_STATIONS_LIST, "station_filter"): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
             ),
         }
     ),

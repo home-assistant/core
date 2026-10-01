@@ -29,15 +29,15 @@ DEFAULT_PIN = "111111"
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        probatio.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(probatio.Secret(CONF_PIN), default=DEFAULT_PIN): cv.string,
         probatio.Required(CONF_TYPE, default=BRIDGE): probatio.In(DEVICE_TYPE_LIST),
         probatio.Optional(CONF_VEDO_PIN): cv.string,
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PIN): cv.string,
+        probatio.Required(probatio.Secret(CONF_PIN)): cv.string,
         probatio.Optional(CONF_VEDO_PIN): cv.string,
     }
 )
@@ -238,8 +238,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): cv.string,
                 probatio.Required(
                     CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
-                ): cv.port,
-                probatio.Optional(CONF_PIN): cv.string,
+                ): probatio.Port(),
+                probatio.Optional(probatio.Secret(CONF_PIN)): cv.string,
                 probatio.Optional(CONF_VEDO_PIN): cv.string,
             }
         )
