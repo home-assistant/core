@@ -1,5 +1,6 @@
 """Reolink additional services."""
 
+import logging
 import os
 from typing import TYPE_CHECKING
 
@@ -18,6 +19,8 @@ from homeassistant.helpers.template import Template
 from .const import DOMAIN, SUPPORT_PTZ_SPEED
 from .host import ReolinkHost
 from .util import get_device_uid_and_ch, raise_translated_error
+
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .camera import ReolinkCamera
@@ -58,10 +61,11 @@ async def _async_snapshot_past(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
+        _LOGGER.error(f"Reolink snapshot_past: Can't write image to '{filename}': {str(err)}")
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="write_image_error",
-            translation_placeholders={"filename": snapshot_file, "err": str(err)},
+            translation_placeholders={"filename": snapshot_file},
         ) from err
 
 
