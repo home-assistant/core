@@ -50,7 +50,7 @@ async def test_setup_entry_unsupported_device(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test setup of a config entry when authentication fails."""
+    """Test setup of a config entry when device is not supported."""
     mock_config_entry.add_to_hass(hass)
 
     mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError()

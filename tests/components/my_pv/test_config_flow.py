@@ -345,7 +345,7 @@ async def test_step_discovery_unsupported_device(
     source: str,
     data: BaseServiceInfo,
 ) -> None:
-    """Test for discovery that is already configured."""
+    """Test discovery of an unsupported device."""
     mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError
 
     result = await hass.config_entries.flow.async_init(
