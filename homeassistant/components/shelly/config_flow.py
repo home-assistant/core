@@ -41,9 +41,12 @@ from homeassistant.components.bluetooth import (
     async_clear_address_from_match_history,
     async_discovered_service_info,
 )
+from homeassistant.components.homeassistant.const import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
     SOURCE_ZEROCONF,
+    ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -840,12 +843,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             if not manager.is_valid_credential(self._remote_record):
                 return self.async_abort(reason="remote_pairing_expired")
             if user_input is not None:
-                await manager.revoke(entry.data.get(CONF_REMOTE_CREDENTIAL, ""))
-                self._remote_committed = True
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates={CONF_REMOTE_CREDENTIAL: self._remote_record.digest},
-                )
+                return await self._async_confirm_remote_rotation(entry)
             return self.async_show_form(
                 step_id="remote_regenerate",
                 description_placeholders={"connection_url": self._remote_url},
@@ -873,6 +871,64 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={"connection_url": ""},
+            errors=errors,
+        )
+
+    async def _async_confirm_remote_rotation(
+        self, entry: ConfigEntry
+    ) -> ConfigFlowResult:
+        """Verify the replacement transport before changing persistent admission."""
+        assert self._remote_record is not None
+        record = self._remote_record
+        manager = await async_get_remote_manager(self.hass)
+        old_digest = entry.data.get(CONF_REMOTE_CREDENTIAL)
+        errors: dict[str, str] = {}
+        if (binding := manager.get_credential_connection(record)) is None:
+            errors["base"] = "cannot_connect"
+        else:
+            connection, websocket = binding
+            assert record.info is not None
+            if CONF_PASSWORD in entry.data:
+                connection.set_auth_data(
+                    record.info.get("auth_domain") or record.info["id"],
+                    "admin",
+                    entry.data[CONF_PASSWORD],
+                )
+            try:
+                await connection.calls(
+                    (("Shelly.GetConfig", None), ("Shelly.GetStatus", None))
+                )
+            except InvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except DeviceConnectionError, RpcCallError:
+                errors["base"] = "cannot_connect"
+            else:
+                if (
+                    not manager.is_valid_credential(record)
+                    or entry.data.get(CONF_REMOTE_CREDENTIAL) != old_digest
+                    or self.hass.config_entries.async_get_entry(entry.entry_id)
+                    is not entry
+                ):
+                    return self.async_abort(reason="remote_pairing_expired")
+                if not connection.connected or not connection.uses_websocket(websocket):
+                    errors["base"] = "cannot_connect"
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={**entry.data, CONF_REMOTE_CREDENTIAL: record.digest},
+                    )
+                    record.expires_at = None
+                    self._remote_committed = True
+                    await manager.revoke(old_digest or "")
+                    if entry.state is ConfigEntryState.SETUP_RETRY:
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                    return self.async_abort(
+                        reason="reconfigure_successful",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
+        return self.async_show_form(
+            step_id="remote_regenerate",
+            description_placeholders={"connection_url": self._remote_url},
             errors=errors,
         )
 

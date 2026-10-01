@@ -28,6 +28,7 @@ from homeassistant.components.shelly.diagnostics import (
 from homeassistant.components.shelly.remote_connection import RemoteConnectionManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    CONF_EXTERNAL_URL,
     CONF_MODEL,
     STATE_OFF,
     STATE_ON,
@@ -35,6 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -124,6 +126,196 @@ class RemoteShellySocket:
         """Close the connection and wake its receiver."""
         self.closed = True
         self.queue.put_nowait(WSMessage(WSMsgType.CLOSED, None, ""))
+
+
+async def test_remote_native_credential_rotation(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify rotation through real admission, RPC, persistence and native control."""
+    monkeypatch.setattr(RpcDevice, "create", REAL_CREATE)
+    manager = RemoteConnectionManager(hass)
+    old_record, old_url = manager.create_credential(URL("https://ha.example.com"))
+    old_socket = RemoteShellySocket(old_url)
+    with (
+        patch(
+            "homeassistant.components.shelly.async_get_remote_manager",
+            return_value=manager,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_get_remote_manager",
+            return_value=manager,
+        ),
+        patch(
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
+            return_value=old_socket,
+        ),
+    ):
+        old_handler = hass.async_create_background_task(
+            manager.accept(make_request(URL(old_url).query["remote_key"]), old_record),
+            "Test original device credential",
+            eager_start=True,
+        )
+        await old_record.ready.wait()
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=DEVICE_INFO["mac"],
+            minor_version=3,
+            data={
+                CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+                CONF_REMOTE_CREDENTIAL: old_record.digest,
+                CONF_GEN: 2,
+                CONF_MODEL: DEVICE_INFO["model"],
+                CONF_SLEEP_PERIOD: 0,
+            },
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        device = entry.runtime_data.rpc.device
+        entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        switch = next(
+            entity.entity_id for entity in entities if entity.domain == "switch"
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "remote_regenerate"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_EXTERNAL_URL: "https://ha.example.com"}
+        )
+        url = result["description_placeholders"]["connection_url"]
+        record = manager.lookup(URL(url).query["remote_key"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["errors"] == {"base": "cannot_connect"}
+        assert entry.data[CONF_REMOTE_CREDENTIAL] == old_record.digest
+        assert not old_socket.closed
+        candidate = RemoteShellySocket(url)
+        with patch(
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
+            return_value=candidate,
+        ):
+            handler = hass.async_create_background_task(
+                manager.accept(make_request(URL(url).query["remote_key"]), record),
+                "Test replacement device credential",
+                eager_start=True,
+            )
+            await record.ready.wait()
+            await hass.async_block_till_done()
+            assert entry.runtime_data.rpc._connect_task is not None
+            await entry.runtime_data.rpc._connect_task
+            assert manager.lookup(URL(old_url).query["remote_key"]) is old_record
+            candidate.calls.clear()
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {}
+            )
+            assert result["type"] is FlowResultType.ABORT
+            assert result["reason"] == "reconfigure_successful"
+            await hass.async_block_till_done()
+            assert entry.state is ConfigEntryState.LOADED
+            assert entry.runtime_data.rpc.device is device
+            assert entry.data[CONF_REMOTE_CREDENTIAL] == record.digest
+            assert record.expires_at is None
+            assert manager.lookup(URL(old_url).query["remote_key"]) is None
+            assert manager.lookup(URL(url).query["remote_key"]) is record
+            assert old_socket.closed
+            assert not candidate.closed
+            assert {"Shelly.GetConfig", "Shelly.GetStatus"}.issubset(
+                {call["method"] for call in candidate.calls}
+            )
+            assert (
+                er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+                == entities
+            )
+            await hass.services.async_call(
+                "switch", "turn_on", {"entity_id": switch}, blocking=True
+            )
+            assert candidate.calls[-1]["method"] == "Switch.Set"
+            assert URL(url).query["remote_key"] not in repr(entry.as_dict())
+            await hass.config_entries.async_unload(entry.entry_id)
+            await candidate.close()
+            await handler
+        await old_handler
+
+
+async def test_remote_regeneration_restores_revoked_entry(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A verified replacement resumes native setup after access was revoked."""
+    monkeypatch.setattr(RpcDevice, "create", REAL_CREATE)
+    manager = RemoteConnectionManager(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DEVICE_INFO["mac"],
+        minor_version=3,
+        data={
+            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+            CONF_REMOTE_CREDENTIAL: None,
+            CONF_GEN: 2,
+            CONF_MODEL: DEVICE_INFO["model"],
+            CONF_SLEEP_PERIOD: 0,
+        },
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.shelly.async_get_remote_manager",
+            return_value=manager,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_get_remote_manager",
+            return_value=manager,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is False
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "remote_regenerate"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_EXTERNAL_URL: "https://ha.example.com"}
+        )
+        url = result["description_placeholders"]["connection_url"]
+        record = manager.lookup(URL(url).query["remote_key"])
+        candidate = RemoteShellySocket(url)
+        with patch(
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
+            return_value=candidate,
+        ):
+            handler = hass.async_create_background_task(
+                manager.accept(make_request(URL(url).query["remote_key"]), record),
+                "Test replacement for revoked credential",
+                eager_start=True,
+            )
+            await record.ready.wait()
+            await hass.async_block_till_done()
+            assert entry.state is ConfigEntryState.SETUP_RETRY
+            loaded = asyncio.Event()
+            unsubscribe = entry.async_on_state_change(
+                lambda: notify_loaded(entry, loaded)
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {}
+            )
+            assert result["type"] is FlowResultType.ABORT
+            assert result["reason"] == "reconfigure_successful"
+            await asyncio.wait_for(loaded.wait(), 5)
+            unsubscribe()
+            await hass.async_block_till_done()
+            assert entry.state is ConfigEntryState.LOADED
+            assert entry.runtime_data.rpc.device.connected
+            assert entry.data[CONF_REMOTE_CREDENTIAL] == record.digest
+            assert record.expires_at is None
+            assert not candidate.closed
+            assert URL(url).query["remote_key"] not in repr(entry.as_dict())
+            await hass.config_entries.async_unload(entry.entry_id)
+            await handler
 
 
 async def test_remote_native_entities_and_reconnect(

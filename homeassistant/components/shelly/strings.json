@@ -133,7 +133,7 @@
         "data_description": {
           "external_url": "Public HTTPS origin of this Home Assistant instance."
         },
-        "description": "Generate a replacement URL for this device. Configure the replacement in Shelly, then submit to revoke the previous credential. Keep the complete URL private.\n\n{connection_url}",
+        "description": "Generate a replacement URL for this device. Configure it in Shelly within 10 minutes, then submit to verify the new connection and revoke the previous credential. Keep the complete URL private.\n\n`{connection_url}`",
         "title": "Regenerate remote credential"
       },
       "remote_revoke": {

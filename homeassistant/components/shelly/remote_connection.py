@@ -12,7 +12,7 @@ from typing import Any, override
 from urllib.parse import unquote
 
 from aiohttp import WSMsgType, web
-from aioshelly.rpc_device import WsServer
+from aioshelly.rpc_device import WsServer, WsServerConnection
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -200,6 +200,28 @@ class RemoteConnectionManager:
         return self.credentials.get(record.digest) is record and (
             record.expires_at is None
             or record.expires_at > asyncio.get_running_loop().time()
+        )
+
+    @callback
+    def get_credential_connection(
+        self, record: RemoteCredential
+    ) -> tuple[WsServerConnection, web.WebSocketResponse] | None:
+        """Return an identified active socket admitted with this exact credential."""
+        if (
+            not self.is_valid_credential(record)
+            or record.device_id is None
+            or record.info is None
+            or (connection := self.server.get_connection(record.device_id)) is None
+            or not connection.connected
+        ):
+            return None
+        return next(
+            (
+                (connection, websocket)
+                for websocket in record.websockets
+                if connection.uses_websocket(websocket)
+            ),
+            None,
         )
 
     @callback
