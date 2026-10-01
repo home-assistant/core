@@ -43,6 +43,7 @@ def mock_webhook_client() -> Generator[MagicMock]:
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.authenticate = AsyncMock(return_value=True)
+        client.is_claimed = True
         client.webhook_policy = {"uploadInterval": 60}
         client.device_name = "Test Device"
         client.recordNumber = "EA-TEST"

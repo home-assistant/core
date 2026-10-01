@@ -83,6 +83,7 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         try:
             if not isinstance(self.client.api_access_token, str):
                 await self.client.authenticate()
+            self._raise_if_unclaimed()
             resources = await self.client.get_directives()
         except PermissionError:
             return EnergyIDDirectivesData(resources={}, schedules={})
@@ -102,9 +103,12 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
                 translation_key="directives_update_failed",
             ) from err
 
+        # The client re-authenticates on its own, which can reveal a lost claim.
+        self._raise_if_unclaimed()
         schedules = await asyncio.gather(
             *(self._async_get_schedule(resource) for resource in resources)
         )
+        self._raise_if_unclaimed()
         now = dt_util.utcnow()
         snapshots = {
             resource.id: _snapshot(resource, schedule, now)
@@ -122,9 +126,25 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         """Return the schedule of one directive, or None when it is unavailable."""
         try:
             return await self.client.get_directive_data(resource.id)
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_credentials",
+                ) from err
+            _LOGGER.debug("EnergyID directive %s is unavailable: %s", resource.id, err)
+            return None
         except (PermissionError, ClientError, OSError, TimeoutError, ValueError) as err:
             _LOGGER.debug("EnergyID directive %s is unavailable: %s", resource.id, err)
             return None
+
+    def _raise_if_unclaimed(self) -> None:
+        """Start reauthentication when EnergyID no longer knows the device as claimed."""
+        if self.client.is_claimed is False:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_not_claimed",
+            )
 
 
 def _snapshot(

@@ -263,6 +263,111 @@ async def test_rejected_credentials_start_reauth(
     assert [flow["context"]["source"] for flow in flows] == ["reauth"]
 
 
+@pytest.mark.parametrize("status", [401, 403])
+async def test_rejected_schedule_credentials_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    status: int,
+) -> None:
+    """Test credentials rejected on a schedule start reauthentication."""
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    mock_webhook_client.get_directive_data.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=status
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
+async def test_schedule_server_error_keeps_directive_granted(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a server error on one schedule only drops that schedule."""
+    resource, _ = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(
+        side_effect=ClientResponseError(
+            request_info=MagicMock(), history=(), status=500
+        )
+    )
+
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    assert coordinator.last_update_success
+    assert set(coordinator.data.resources) == {DIRECTIVE_ID}
+    assert coordinator.data.schedules == {}
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_unclaimed_device_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a device that is no longer claimed starts reauthentication."""
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    async def lose_claim() -> bool:
+        mock_webhook_client.is_claimed = False
+        return False
+
+    mock_webhook_client.authenticate = AsyncMock(side_effect=lose_claim)
+    mock_webhook_client.get_directives.reset_mock()
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    mock_webhook_client.get_directives.assert_not_awaited()
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
+@pytest.mark.parametrize("lost_during", ["get_directives", "get_directive_data"])
+async def test_claim_lost_while_polling_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    lost_during: str,
+) -> None:
+    """Test a claim lost during the client's own re-authentication starts reauth."""
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    async def lose_claim_on_list() -> list[DirectiveResource]:
+        mock_webhook_client.is_claimed = False
+        return []
+
+    async def lose_claim_on_schedule(_directive_id: str) -> DirectiveData:
+        mock_webhook_client.is_claimed = False
+        raise PermissionError("The device is not authenticated")
+
+    if lost_during == "get_directives":
+        mock_webhook_client.get_directives.side_effect = lose_claim_on_list
+    else:
+        mock_webhook_client.get_directive_data.side_effect = lose_claim_on_schedule
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+
+
 async def test_server_error_marks_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
