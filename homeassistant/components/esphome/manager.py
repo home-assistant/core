@@ -2,7 +2,6 @@
 
 import asyncio
 import base64
-from dataclasses import replace
 from functools import partial
 import json
 import logging
@@ -806,10 +805,9 @@ class ESPHomeManager:
         entry_data = self.entry_data
         assert entry_data.device_info is not None
         # DeviceInfo is a snapshot from connect time; keep its home ID current.
-        entry_data.device_info = replace(
-            entry_data.device_info, zwave_home_id=zwave_home_id
+        entry_data.device_info = EsphomeDeviceInfo.from_dict(
+            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
         )
-        entry_data.async_save_to_store()
         entry_data.async_create_zwave_js_flow(
             self.hass, entry_data.device_info, zwave_home_id
         )
