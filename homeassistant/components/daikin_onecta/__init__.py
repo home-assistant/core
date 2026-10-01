@@ -17,7 +17,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import OnectaDataUpdateCoordinator, OnectaRuntimeData
@@ -26,11 +25,6 @@ from .daikin_api import DaikinApi
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup the Daikin Onecta component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
