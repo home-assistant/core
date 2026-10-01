@@ -1,9 +1,13 @@
 """Tests for the Gree Infrared config flow."""
 
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.config import config_entries as config_entries_api
 from homeassistant.components.gree_infrared.const import (
+    CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
@@ -17,6 +21,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.infrared import (
@@ -24,6 +29,7 @@ from tests.components.infrared import (
     RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
 )
 from tests.components.infrared.common import MockInfraredEmitterEntity
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -70,6 +76,7 @@ async def test_user_flow_selects_yap1f(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_MODEL] == MODEL_YAP1F
+
 
 @pytest.mark.usefixtures(
     "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
@@ -221,3 +228,37 @@ async def test_user_flow_title_from_entity_name(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_form_serialized_by_rest_api(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the flow form serializes when served to the frontend over REST.
+
+    Regression test: POST /api/config/config_entries/flow returned 500
+    "unable to serialize schema" because the schema mixed raw probatio
+    validators with frontend selectors.
+    """
+    await async_setup_component(hass, "http", {})
+    config_entries_api.async_setup(hass)
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/config/config_entries/flow",
+        json={"handler": DOMAIN},
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "user"
+
+    fields = {field["name"]: field for field in data["data_schema"]}
+    assert set(fields) == {
+        CONF_GENERIC_OPTIONS,
+        CONF_HVAC_MODES,
+        CONF_INFRARED_EMITTER_ENTITY_ID,
+        CONF_INFRARED_RECEIVER_ENTITY_ID,
+        CONF_MODEL,
+    }
+    assert fields[CONF_GENERIC_OPTIONS]["selector"] == {"boolean": {}}
