@@ -458,6 +458,14 @@ def _init_blocking_io_modules_in_executor() -> None:
     is_docker_env()
 
 
+async def _async_load_entity_registry_and_restore_state(
+    hass: core.HomeAssistant, recovery: bool
+) -> None:
+    """Load the entity registry, then restore state which needs it."""
+    await entity_registry.async_load(hass, load_empty=recovery)
+    await restore_state.async_load(hass, load_empty=recovery)
+
+
 async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
     """Load the registries and modules that will do blocking I/O.
 
@@ -480,13 +488,14 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
             create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
             create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
             create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(
+                _async_load_entity_registry_and_restore_state(hass, recovery)
+            ),
             create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
             create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
             create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
             hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
             create_eager_task(template.async_load_custom_templates(hass)),
-            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
             create_eager_task(hass.config_entries.async_initialize()),
             create_eager_task(async_get_system_info(hass)),
             create_eager_task(condition.async_setup(hass)),
