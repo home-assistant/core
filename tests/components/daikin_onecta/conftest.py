@@ -56,16 +56,6 @@ async def resolve_system_health_coroutines(info: dict) -> dict:
     return info
 
 
-@pytest.fixture(autouse=True)
-def mock_system_health_url_checks():
-    """Prevent unit tests from starting external system health URL checks."""
-    with patch(
-        "homeassistant.components.daikin_onecta.system_health.system_health.async_check_can_reach_url",
-        new_callable=MagicMock,
-        return_value=True,
-    ):
-        yield
-
 
 @pytest.fixture(name="auto_enable_custom_integrations", autouse=True)
 def auto_enable_custom_integrations(hass: Any, enable_custom_integrations: Any) -> None:
