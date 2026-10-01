@@ -1,13 +1,13 @@
 """Config flow for the Daikin platform."""
-import logging
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 import jwt
 import probatio
+
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
