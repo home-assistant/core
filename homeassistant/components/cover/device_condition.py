@@ -42,7 +42,7 @@ POSITION_CONDITION_SCHEMA = probatio.All(
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(

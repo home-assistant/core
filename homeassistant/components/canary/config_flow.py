@@ -84,7 +84,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = {
             probatio.Required(CONF_USERNAME, default=default_username): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
 
         return self.async_show_form(

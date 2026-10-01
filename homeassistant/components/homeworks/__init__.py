@@ -50,7 +50,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CONTROLLER_ID): str,
-        probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [str]),
+        probatio.Required(CONF_COMMAND): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 

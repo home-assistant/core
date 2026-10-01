@@ -199,6 +199,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-linkplay": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
+    "marketplace": {"aiogithubapi": {"backoff"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},
@@ -238,14 +239,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
-    "travisci": {
-        # https://github.com/menegazzo/travispy seems to be unmaintained
-        # and unused https://www.home-assistant.io/integrations/travisci
-        # travispy > pytest-rerunfailures > pytest
-        "pytest-rerunfailures": {"pytest"},
-        # travispy > pytest
-        "travispy": {"pytest"},
-    },
     "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},

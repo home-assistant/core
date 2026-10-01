@@ -26,7 +26,7 @@ CONF_BROADCAST = "broadcast"
 INTERFACE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_SERVER): cv.string,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
         probatio.Optional(CONF_BROADCAST): cv.string,
     }
 )
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = probatio.All(
         {
             DOMAIN: {
                 LIGHT_DOMAIN: probatio.Schema(
-                    probatio.All(cv.ensure_list, [INTERFACE_SCHEMA])
+                    probatio.All(probatio.EnsureList(), [INTERFACE_SCHEMA])
                 )
             }
         },

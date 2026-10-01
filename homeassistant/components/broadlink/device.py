@@ -1,7 +1,7 @@
 """Support for Broadlink devices."""
 
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from functools import partial
 import logging
 
 import broadlink as blk
@@ -10,6 +10,7 @@ from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     ConnectionClosedError,
+    EndpointClosedError,
     NetworkTimeoutError,
 )
 
@@ -88,11 +89,11 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
-    def _get_firmware_version(self) -> int | None:
+    async def _async_get_firmware_version(self) -> int | None:
         """Get firmware version."""
-        self.api.auth()
+        await self.api.auth()
         with suppress(BroadlinkException, OSError):
-            return self.api.get_fwversion()
+            return await self.api.get_fwversion()
         return None
 
     async def async_setup(self) -> bool:
@@ -108,16 +109,18 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         api.timeout = config.data[CONF_TIMEOUT]
         self.api = api
 
+        # The device is not registered yet, so a failure below must close
+        # the endpoint auth() opened; async_unload will not run for it.
         try:
-            self.fw_version = await self.hass.async_add_executor_job(
-                self._get_firmware_version
-            )
+            self.fw_version = await self._async_get_firmware_version()
 
         except AuthenticationError:
+            await api.aclose()
             await self._async_handle_auth_error()
             return False
 
         except (NetworkTimeoutError, OSError) as err:
+            await api.aclose()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connect_failed",
@@ -128,6 +131,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             ) from err
 
         except BroadlinkException as err:
+            await api.aclose()
             _LOGGER.error(
                 "Failed to authenticate to the device at %s: %s", api.host[0], err
             )
@@ -137,7 +141,11 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            await api.aclose()
+            raise
 
         self.update_manager = update_manager
         # Uses legacy hass.data[DOMAIN] pattern
@@ -160,14 +168,17 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         while self.reset_jobs:
             self.reset_jobs.pop()()
 
-        return await self.hass.config_entries.async_unload_platforms(
+        unloaded = await self.hass.config_entries.async_unload_platforms(
             self.config, get_domains(self.api.type)
         )
+        if unloaded:
+            await self.api.aclose()
+        return unloaded
 
     async def async_auth(self) -> bool:
         """Authenticate to the device."""
         try:
-            await self.hass.async_add_executor_job(self.api.auth)
+            await self.api.auth()
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug(
                 "Failed to authenticate to the device at %s: %s", self.api.host[0], err
@@ -177,15 +188,25 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return False
         return True
 
-    async def async_request(self, function, *args, **kwargs):
-        """Send a request to the device."""
-        request = partial(function, *args, **kwargs)
+    async def async_request[**_P, _R](
+        self,
+        function: Callable[_P, Awaitable[_R]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
+        """Send a request to the device.
+
+        Re-authenticate and retry once on an authorization error; a request
+        that fails because the endpoint was closed on unload is not retried.
+        """
         try:
-            return await self.hass.async_add_executor_job(request)
+            return await function(*args, **kwargs)
+        except EndpointClosedError:
+            raise
         except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
                 raise
-            return await self.hass.async_add_executor_job(request)
+            return await function(*args, **kwargs)
 
     async def _async_handle_auth_error(self) -> None:
         """Handle an authentication error."""
