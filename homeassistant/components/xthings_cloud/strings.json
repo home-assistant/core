@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "Sign in with the same Xthings Cloud account that was originally configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -31,6 +33,20 @@
         },
         "description": "Please enter your Xthings Cloud account credentials.",
         "title": "Xthings Cloud Login"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "native_mqtt": "Enable native bulb connection"
+        },
+        "data_description": {
+          "native_mqtt": "Use confirmed device readback for supported A19-C1 bulbs."
+        },
+        "description": "Enable confirmed state and native controls for A19-C1 bulbs through the Xthings cloud. Other models retain their existing connection. The Kelvin display approximates the bulb's native warm-to-cool scale.",
+        "title": "Native bulb connection"
       }
     }
   }
