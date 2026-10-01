@@ -1562,8 +1562,6 @@ def _generate_statistics_period_stmt(
             reduced.c.period_start_ts.label("start_ts"),
         )
 
-    # Aggregate values already live in the reduced subquery, so add them once
-    # regardless of whether this is aggregate-only or mixed.
     for key, aggregate_columns_for_type in aggregate_columns.items():
         if key in aggregate_types:
             columns = columns.add_columns(
