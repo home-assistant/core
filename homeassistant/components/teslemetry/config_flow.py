@@ -35,7 +35,9 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
     async_discovered_service_info,
+    async_register_advertisement_callback,
     async_request_active_scan,
     async_scanner_count,
 )
@@ -61,6 +63,7 @@ from homeassistant.helpers.selector import (
 
 from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
 from .const import (
+    BLE_ADVERTISEMENT_TIMEOUT,
     CLIENT_ID,
     CONF_SITE_ID,
     CONF_VIN,
@@ -292,21 +295,40 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 # The advertised BLE name is a hash of the VIN; match on its prefix.
                 expected = parent.get_name(self._vin)[:17]
-                device = None
-                # The name is only in scan responses, so an active scan may be needed to see it.
-                await async_request_active_scan(self.hass)
-                for info in async_discovered_service_info(self.hass, connectable=True):
-                    if info.name and info.name.startswith(expected):
-                        device = info.device
-                        self._address = info.address
-                        break
+                if (info := self._async_find_vehicle(expected)) is None:
+                    # The name is only in scan responses, so an active scan may be needed to see it.
+                    await async_request_active_scan(self.hass)
+                    if (info := self._async_find_vehicle(expected)) is not None:
+                        # Ending the active scan drops the vehicle from a local adapter until its next advertisement.
+                        heard: asyncio.Future[None] = self.hass.loop.create_future()
 
-                if device is None:
+                        @callback
+                        def _async_heard(
+                            service_info: BluetoothServiceInfoBleak,
+                        ) -> None:
+                            if service_info.connectable and not heard.done():
+                                heard.set_result(None)
+
+                        cancel = async_register_advertisement_callback(
+                            self.hass, _async_heard, info.address
+                        )
+                        try:
+                            async with asyncio.timeout(BLE_ADVERTISEMENT_TIMEOUT):
+                                await heard
+                        except TimeoutError:
+                            LOGGER.debug(
+                                "Vehicle not heard again after the active scan"
+                            )
+                        finally:
+                            cancel()
+
+                if info is None:
                     errors["base"] = "device_not_found"
                 else:
+                    self._address = info.address
                     # Uses default keepalive so the link survives the on-screen key-approval wait.
                     self._vehicle = parent.vehicles.createBluetooth(
-                        self._vin, device=device
+                        self._vin, device=info.device
                     )
                     try:
                         await self._vehicle.connect()
@@ -321,6 +343,18 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             step_id="scan",
             errors=errors,
             description_placeholders={"vin": self._vin},
+        )
+
+    @callback
+    def _async_find_vehicle(self, name_prefix: str) -> BluetoothServiceInfoBleak | None:
+        """Return the discovered vehicle whose advertised name matches, if any."""
+        return next(
+            (
+                info
+                for info in async_discovered_service_info(self.hass, connectable=True)
+                if info.name and info.name.startswith(name_prefix)
+            ),
+            None,
         )
 
     async def async_step_pair(
