@@ -52,12 +52,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
 from .const import (
@@ -261,17 +255,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_VIN): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                SelectOptionDict(value=vin, label=name)
-                                for vin, name in choices.items()
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    )
-                }
+                {probatio.Required(CONF_VIN): probatio.In(choices)}
             ),
         )
 
