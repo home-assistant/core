@@ -314,6 +314,45 @@ async def test_get_integration_with_requirements_concurrency(
     assert process_integration_calls == 1
 
 
+async def test_get_integration_with_requirements_concurrent_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
+    )
+    process_event = asyncio.Event()
+    finish_event = asyncio.Event()
+
+    async def _async_process_integration_blocked(*args: object) -> None:
+        process_event.set()
+        await finish_event.wait()
+
+    manager = _async_get_manager(hass)
+    with patch.object(
+        manager, "_async_process_integration", _async_process_integration_blocked
+    ):
+        load_task1 = asyncio.create_task(
+            async_get_integration_with_requirements(hass, "test_component_dep")
+        )
+        load_task2 = asyncio.create_task(
+            async_get_integration_with_requirements(hass, "test_component_dep")
+        )
+        await process_event.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        finish_event.set()
+        integration = await load_task1
+
+    assert integration.domain == "test_component_dep"
+    assert (
+        await async_get_integration_with_requirements(hass, "test_component_dep")
+        is integration
+    )
+
+
 async def test_get_integration_with_requirements_pip_install_fails_two_passes(
     hass: HomeAssistant,
 ) -> None:
