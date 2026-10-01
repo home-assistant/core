@@ -410,6 +410,51 @@ async def test_async_device_update_releases_permit_after_parallel_updates_reset(
     assert semaphore._value == 1
 
 
+async def test_async_device_update_resets_staged_flag_when_semaphore_wait_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling a queued async_device_update resets `_update_staged`.
+
+    Regression test: `_update_staged` is set `True` before awaiting
+    `semaphore.acquire()`, outside the method's `try`/`finally`. If that
+    await is cancelled while still queued for the permit (e.g. the
+    platform cancelling a pending polling task), `_update_staged` must
+    still be reset - otherwise a reused entity instance would silently
+    skip every future call to `async_device_update`.
+    """
+    semaphore = asyncio.Semaphore(0)
+
+    class AsyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self, entity_id: str, lock: asyncio.Semaphore) -> None:
+            """Initialize Async test entity."""
+            self.entity_id = entity_id
+            self.hass = hass
+            self.parallel_updates = lock
+
+        async def async_update(self) -> None:
+            """Test update."""
+
+    ent = AsyncEntity("light.test_1", semaphore)
+
+    task = hass.async_create_task(ent.async_device_update())
+    await asyncio.sleep(0)
+    assert ent._update_staged is True
+
+    # The permit is never released, so this task stays queued on
+    # `semaphore.acquire()` until cancelled here.
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert ent._update_staged is False
+
+    # A later call must not be silently skipped by a stuck staged flag.
+    semaphore.release()
+    await ent.async_device_update()
+
+
 async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
     """Test parallel updates with 0 (disabled)."""
     updates = []

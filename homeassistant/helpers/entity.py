@@ -1378,7 +1378,17 @@ class Entity(
 
         # Process update sequential
         if semaphore:
-            await semaphore.acquire()
+            try:
+                await semaphore.acquire()
+            except BaseException:
+                # Cancelling this await (e.g. the platform cancelling a
+                # task still queued for its permit) must not leave
+                # `_update_staged` stuck `True` forever: the `finally`
+                # below only runs once the permit has actually been
+                # acquired, so without this a reused entity instance
+                # would silently skip every future update.
+                self._update_staged = False
+                raise
 
         if warning:
             update_warn = hass.loop.call_at(
@@ -1386,7 +1396,7 @@ class Entity(
             )
 
         try:
-            if self._platform_state == EntityPlatformState.REMOVED:
+            if self._platform_state is EntityPlatformState.REMOVED:
                 # This update may have been queued behind another entity's
                 # permit; the entity can be removed while it waits, and its
                 # removal teardown may already have released what its
