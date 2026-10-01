@@ -11,7 +11,7 @@ from iseo_argo_ble import (
     IseoConnectionError,
     is_iseo_advertisement,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -33,10 +33,25 @@ from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# OUI assigned to Iseo Serrature s.p.a.; locks advertise a public address.
+_ISEO_OUI = "00:15:42"
+
 
 def _generate_identity() -> ec.EllipticCurvePrivateKey:
     """Generate a fresh SECP224R1 private key for use as an Argo BT identity."""
     return ec.generate_private_key(ec.SECP224R1())
+
+
+def _is_iseo_lock(info: BluetoothServiceInfoBleak) -> bool:
+    """Return True when the advertisement really comes from an ISEO lock.
+
+    The 0xF000-0xF03F device-type UUID the discovery matcher keys on sits in a
+    range the Bluetooth SIG leaves unassigned and other vendors reuse freely, so
+    the address has to carry ISEO's OUI as well.
+    """
+    return info.address.lower().startswith(_ISEO_OUI) and is_iseo_advertisement(
+        list(info.service_uuids or [])
+    )
 
 
 def _discover_locks(hass: HomeAssistant) -> list[BluetoothServiceInfoBleak]:
@@ -52,7 +67,7 @@ def _discover_locks(hass: HomeAssistant) -> list[BluetoothServiceInfoBleak]:
 
     found: list[BluetoothServiceInfoBleak] = []
     for info in all_devices:
-        if not is_iseo_advertisement(list(info.service_uuids or [])):
+        if not _is_iseo_lock(info):
             continue
         _LOGGER.debug(
             "  %s  name=%r  rssi=%d — ISEO lock",
@@ -119,9 +134,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): SelectSelector(
+                    probatio.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(
@@ -145,11 +160,17 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Called by HA when a matching BLE advertisement is seen."""
+        if not _is_iseo_lock(discovery_info):
+            _LOGGER.debug(
+                "Ignoring %s (%s): not an ISEO lock, service UUIDs %s",
+                discovery_info.name,
+                discovery_info.address,
+                list(discovery_info.service_uuids or []),
+            )
+            return self.async_abort(reason="not_iseo_device")
+
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
-
-        if not is_iseo_advertisement(list(discovery_info.service_uuids or [])):
-            return self.async_abort(reason="not_iseo_device")
 
         priv = await self.hass.async_add_executor_job(_generate_identity)
         priv_int = priv.private_numbers().private_value

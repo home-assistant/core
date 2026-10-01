@@ -41,24 +41,21 @@ class SwitchbotEntity(
         self._last_run_success: bool | None = None
         self._address = coordinator.ble_device.address
         self._attr_unique_id = coordinator.base_unique_id
+        connections = {(dr.CONNECTION_BLUETOOTH, self._address)}
+        # MacOS Bluetooth addresses are not mac addresses. If the bluetooth
+        # address is also a mac address, add this connection as well to prevent
+        # a new device entry from being created when upgrading from a previous
+        # version of the integration.
+        if ":" in self._address:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._address))
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_BLUETOOTH, self._address)},
+            connections=connections,
             manufacturer=MANUFACTURER,
             # Sometimes the modelName is missing from ads
             model=coordinator.model,
             name=coordinator.device_name,
         )
         self._channel: int | None = None
-        if ":" not in self._address:
-            # MacOS Bluetooth addresses are not mac addresses
-            return
-        # If the bluetooth address is also a mac address,
-        # add this connection as well to prevent a new device
-        # entry from being created when upgrading from a previous
-        # version of the integration.
-        self._attr_device_info[ATTR_CONNECTIONS].add(
-            (dr.CONNECTION_NETWORK_MAC, self._address)
-        )
 
     @property
     def parsed_data(self) -> dict[str, Any]:

@@ -11,6 +11,12 @@ core: &core
   - requirements.txt
   - setup.cfg
 
+# Performance benchmark suite (CodSpeed). Only gates the benchmark job; kept out
+# of the `any` aggregate below so it does not pull in the full test suite.
+benchmarks: &benchmarks
+  - benchmarks/**
+  - requirements_test.txt
+
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
   - homeassistant/components/ai_task/**

@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 
 from ndms2_client import ConnectionException
 from ndms2_client.client import InterfaceInfo, RouterInfo
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.keenetic_ndms2 import CONF_INTERFACES, const
@@ -239,7 +239,7 @@ async def test_options_interface_filter(hass: HomeAssistant) -> None:
         for i, s in result["data_schema"].schema.items()
         if i.schema == CONF_INTERFACES
     )
-    assert isinstance(interfaces_schema, vol.Required)
+    assert isinstance(interfaces_schema, probatio.Required)
     assert interfaces_schema.default() == []
 
 
