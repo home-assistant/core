@@ -58,12 +58,20 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             blobs = await self.api.get_locations(5 if self.filter_inaccurate else 1)
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_auth_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except FmdApiException as err:
             if self.data:
                 # Transient API error: keep serving the last known location.
                 return self.data
-            raise UpdateFailed(f"Error fetching location data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         for blob in blobs:
             if not blob:
@@ -83,4 +91,7 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.data:
             # No acceptable new fix; keep serving the previous location.
             return self.data
-        raise UpdateFailed("No location data available from the FMD server")
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="no_location_data",
+        )

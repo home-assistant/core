@@ -24,5 +24,22 @@
         "title": "FMD Configuration"
       }
     }
+  },
+  "exceptions": {
+    "no_location_data": {
+      "message": "No location data available from the FMD server"
+    },
+    "setup_auth_failed": {
+      "message": "Authentication failed while setting up FMD: {error}"
+    },
+    "setup_not_ready": {
+      "message": "FMD API error during setup: {error}"
+    },
+    "update_auth_failed": {
+      "message": "Authentication failed while fetching location data: {error}"
+    },
+    "update_failed": {
+      "message": "Error fetching location data: {error}"
+    }
   }
 }

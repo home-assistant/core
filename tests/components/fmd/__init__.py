@@ -1,6 +1,6 @@
 """Tests for the FMD integration."""
 
-from tests.components.fmd.common import (
+from .common import (
     TEST_ARTIFACTS,
     TEST_ID,
     TEST_LOCATION,

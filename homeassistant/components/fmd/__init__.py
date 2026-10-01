@@ -24,7 +24,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import DOMAIN  # noqa: F401
+from .const import DOMAIN
 from .coordinator import FmdCoordinator
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
@@ -40,9 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
     try:
         api = await FmdClient.from_auth_artifacts(entry.data["artifacts"])
     except AuthenticationError as err:
-        raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="setup_auth_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
     except FmdApiException as err:
-        raise ConfigEntryNotReady(f"FMD API error during setup: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_not_ready",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     coordinator = FmdCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
