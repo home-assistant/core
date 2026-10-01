@@ -362,7 +362,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                 self._get_reconfigure_subentry(),
                 data_updates={CONF_ADDRESS: self._address},
             )
-            # Reload manually: the subentry change listener only fires on add or
+            # Reload manually: the update listener only reloads on subentry add or
             # remove, and async_update_reload_and_abort raises while a listener is set.
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return result
