@@ -17,8 +17,8 @@ USER_SCHEMA = probatio.Schema(
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        probatio.Required(CONF_API_KEY): str,
-        probatio.Required(CONF_USER_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(probatio.Secret(CONF_USER_KEY)): str,
     }
 )
 
@@ -78,7 +78,7 @@ class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,

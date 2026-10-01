@@ -391,7 +391,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PIN)): str}
+            ),
         )
 
     @callback
@@ -679,5 +681,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm_encrypted",
             errors=errors,
             description_placeholders={"device": reauth_entry.title},
-            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PIN)): str}
+            ),
         )

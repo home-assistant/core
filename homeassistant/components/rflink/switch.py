@@ -37,13 +37,13 @@ RFLINK_PLATFORM = {
             {
                 probatio.Optional(CONF_NAME): cv.string,
                 probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_FIRE_EVENT): cv.boolean,
                 probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),

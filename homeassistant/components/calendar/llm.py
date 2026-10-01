@@ -20,8 +20,7 @@ from homeassistant.helpers.llm import (
 )
 from homeassistant.util import dt as dt_util
 
-from . import SERVICE_GET_EVENTS
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_GET_EVENTS
 
 
 class CalendarGetEventsTool(Tool):
