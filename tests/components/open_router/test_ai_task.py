@@ -458,6 +458,46 @@ async def test_generate_image_no_image(
         )
 
 
+async def test_generate_image_not_assistant_content(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task image generation raises if no assistant content was added."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(content=None, role=None),
+                        )
+                    ],
+                    created=1700000000,
+                    model="google/gemini-2.5-flash-image",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                )
+            ]
+        )
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Last content in chat log is not an AssistantContent"
+    ):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_2_5_flash_image",
+            instructions="Generate a test image",
+        )
+
+
 @pytest.mark.parametrize(
     "images",
     [
@@ -500,6 +540,19 @@ async def test_generate_image_no_image(
                 }
             ],
             id="non_image_mime_type",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,not-valid-base64!!"},
+                }
+            ],
+            id="invalid_base64",
+        ),
+        pytest.param(
+            [{"type": "image_url", "image_url": {"url": "data:image/png;base64,"}}],
+            id="empty_base64_payload",
         ),
     ],
 )
