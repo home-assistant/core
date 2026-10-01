@@ -3,6 +3,7 @@
 import datetime
 import json
 import logging
+import threading
 from typing import TYPE_CHECKING, Any, override
 
 import growattServer
@@ -42,6 +43,54 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 
+class GrowattClassicSession:
+    """Shared Classic API login state for one config entry.
+
+    The total-plant coordinator and every device coordinator of a config
+    entry share the same GrowattApi instance (and thus the same requests
+    session) through this object, so only one of them needs to call
+    login() per SCAN_INTERVAL window instead of each coordinator logging
+    in independently on every update.
+    """
+
+    def __init__(
+        self,
+        api: growattServer.GrowattApi,
+        username: str | None,
+        password: str,
+        last_login: datetime.datetime | None = None,
+    ) -> None:
+        """Initialize the shared session."""
+        self.api = api
+        self.username = username
+        self.password = password
+        self.last_login = last_login
+        # Coordinators run their sync update methods in executor threads,
+        # which may execute concurrently.
+        self._lock = threading.Lock()
+
+    def ensure_logged_in(self) -> None:
+        """Log in only if the shared session is missing or stale."""
+        with self._lock:
+            now = dt_util.utcnow()
+            if self.last_login is not None and now - self.last_login < SCAN_INTERVAL:
+                return
+            login_response = self.api.login(self.username, self.password)
+            if not login_response.get("success"):
+                msg = login_response.get("msg", "Unknown error")
+                if msg == LOGIN_INVALID_AUTH_CODE:
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_credentials",
+                    )
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="login_failed",
+                    translation_placeholders={"message": msg},
+                )
+            self.last_login = now
+
+
 class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to manage Growatt data fetching."""
 
@@ -52,8 +101,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         device_id: str,
         device_type: str,
         plant_id: str,
+        *,
+        classic_session: GrowattClassicSession | None = None,
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the coordinator.
+
+        classic_session, when provided, is shared with the other coordinators
+        of the same config entry so the Classic API login state (and
+        underlying requests session) is reused instead of each coordinator
+        logging in independently.
+        """
         self.api_version = (
             "v1" if config_entry.data.get("auth_type") == "api_token" else "classic"
         )
@@ -71,6 +128,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Flag set on the event loop (request_device_list_scan) and consumed in the
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
+        self.classic_session: GrowattClassicSession | None = None
 
         if self.api_version == "v1":
             self.username = None
@@ -83,10 +141,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.username = config_entry.data.get(CONF_USERNAME)
             self.password = config_entry.data[CONF_PASSWORD]
             self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
-            self.api = growattServer.GrowattApi(
-                add_random_user_id=True, agent_identifier=self.username
-            )
-            self.api.server_url = self.url
+            if classic_session is None:
+                api = growattServer.GrowattApi(
+                    add_random_user_id=True, agent_identifier=self.username
+                )
+                api.server_url = self.url
+                classic_session = GrowattClassicSession(
+                    api, self.username, self.password
+                )
+            self.classic_session = classic_session
+            self.api = classic_session.api
         else:
             raise ValueError(f"Unknown API version: {self.api_version}")
 
@@ -152,21 +216,13 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         fetch_device_list = self._fetch_device_list
         self._fetch_device_list = False
 
-        # login only required for classic API
+        # login only required for classic API; delegates to the shared
+        # GrowattClassicSession so concurrent coordinators of the same config
+        # entry only log in once per SCAN_INTERVAL window instead of on every
+        # single update.
         if self.api_version == "classic":
-            login_response = self.api.login(self.username, self.password)
-            if not login_response.get("success"):
-                msg = login_response.get("msg", "Unknown error")
-                if msg == LOGIN_INVALID_AUTH_CODE:
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_credentials",
-                    )
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="login_failed",
-                    translation_placeholders={"message": msg},
-                )
+            assert self.classic_session is not None
+            self.classic_session.ensure_logged_in()
 
         if self.device_type == "total":
             if self.api_version == "v1":

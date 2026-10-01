@@ -6,7 +6,9 @@ Classic API (username/password):
 - Authenticates via api.login(), which returns a dict with a "success" key.
 - Auth failure is signalled by success=False and msg="502" (LOGIN_INVALID_AUTH_CODE).
 - A failed login does NOT raise an exception — the return value must be checked.
-- The coordinator calls api.login() on every update cycle to maintain the session.
+- All coordinators of a config entry share one GrowattClassicSession (see
+  coordinator.py), which calls api.login() at most once per SCAN_INTERVAL
+  window, no matter how many coordinators refresh during that window.
 
 Open API V1 (API token):
 - Stateless — no login call, token is sent as a Bearer header on every request.
@@ -45,6 +47,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     AUTH_API_TOKEN,
@@ -62,7 +65,7 @@ from .const import (
     SUPPORTED_DEVICE_TYPES,
     V1_DEVICE_TYPES,
 )
-from .coordinator import GrowattConfigEntry, GrowattCoordinator
+from .coordinator import GrowattClassicSession, GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
 from .services import async_setup_services
 
@@ -331,6 +334,9 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
+    # Only set for Classic API: shared across all coordinators of this entry
+    # so they reuse one login/session instead of each logging in separately.
+    classic_session: GrowattClassicSession | None = None
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
@@ -362,6 +368,14 @@ async def async_setup_entry(
 
         # Get plant_id and devices using the authenticated session
         plant_id = config[CONF_PLANT_ID]
+
+        # api is already authenticated at this point (freshly logged in, or
+        # reused from migration), so record the login time to avoid an
+        # immediate redundant re-login by the first coordinator refresh.
+        classic_session = GrowattClassicSession(
+            api, username, password, last_login=dt_util.utcnow()
+        )
+
         try:
             devices = await hass.async_add_executor_job(api.device_list, plant_id)
         except (RequestException, JSONDecodeError) as ex:
@@ -378,13 +392,18 @@ async def async_setup_entry(
 
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(
-        hass, config_entry, plant_id, "total", plant_id
+        hass, config_entry, plant_id, "total", plant_id, classic_session=classic_session
     )
 
     # Create coordinators for each device
     device_coordinators = {
         device["deviceSn"]: GrowattCoordinator(
-            hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
+            hass,
+            config_entry,
+            device["deviceSn"],
+            device["deviceType"],
+            plant_id,
+            classic_session=classic_session,
         )
         for device in devices
         if device["deviceType"] in SUPPORTED_DEVICE_TYPES
@@ -470,7 +489,12 @@ async def async_setup_entry(
                 )
                 continue
             coordinator = GrowattCoordinator(
-                hass, config_entry, device_sn, device_type, current_plant_id
+                hass,
+                config_entry,
+                device_sn,
+                device_type,
+                current_plant_id,
+                classic_session=total_coordinator.classic_session,
             )
             await coordinator.async_refresh()
             if not coordinator.last_update_success:
