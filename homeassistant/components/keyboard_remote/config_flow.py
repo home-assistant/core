@@ -176,7 +176,7 @@ def _available_devices_sync(
     configured_ids: Container[str],
     configured_paths: list[str],
     name_matched: Container[str],
-) -> tuple[bool, list[selector.SelectOptionDict]]:
+) -> tuple[bool, list[_FoundDevice]]:
     """Scan for devices and drop the ones already configured.
 
     Returns whether any device was found, and the devices left to offer.
@@ -187,7 +187,7 @@ def _available_devices_sync(
     devices = _scan_input_devices_sync()
     configured = {os.path.realpath(path) for path in configured_paths}
     return bool(devices), [
-        device.option
+        device
         for device in devices
         if device.unique_id not in configured_ids
         and os.path.realpath(device.option["value"]) not in configured
@@ -236,6 +236,11 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        # The unique ID of each device offered, by its option value
+        self._offered_ids: dict[str, str] = {}
+
     @staticmethod
     @callback
     @override
@@ -264,6 +269,12 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if identity is None:
                 errors["base"] = "cannot_connect"
+            elif (
+                not by_id
+                and _unlinked_unique_id(*identity) != self._offered_ids[device_path]
+            ):
+                # Another device took the event node since it was offered
+                errors["base"] = "device_changed"
             else:
                 dev_name, uniq = identity
                 title = dev_name
@@ -310,6 +321,9 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices")
         if not available_devices:
             return self.async_abort(reason="all_devices_configured")
+        self._offered_ids = {
+            device.option["value"]: device.unique_id for device in available_devices
+        }
 
         return self.async_show_form(
             step_id="user",
@@ -317,7 +331,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_DEVICE_PATH): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=available_devices,
+                            options=[device.option for device in available_devices],
                             mode=selector.SelectSelectorMode.DROPDOWN,
                             sort=False,
                         )

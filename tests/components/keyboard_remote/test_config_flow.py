@@ -45,6 +45,8 @@ BY_PATH_LINK = "/dev/input/by-path/pci-0000:00:14.0-usb-0:1:1.0-event-kbd"
 BT_REMOTE_PATH = "/dev/input/event7"
 REMOTE_REAL_PATH = "/dev/input/event6"
 REMOTE_BY_ID_BASENAME = "usb-Test_Remote-event-kbd"
+REMOTE_1_UNIQ = "aa:bb:cc:dd:ee:01"
+REMOTE_2_UNIQ = "aa:bb:cc:dd:ee:02"
 
 DEFAULT_OPTIONS = {
     CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
@@ -126,6 +128,35 @@ async def test_user_step_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_node_taken_by_another_device(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
+    """Test a node reused by another device after it was offered is not added."""
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME, uniq=REMOTE_1_UNIQ)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    fake_input.add(BT_REMOTE_PATH, BT_REMOTE_NAME, uniq=REMOTE_2_UNIQ)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: BT_REMOTE_PATH}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "device_changed"}
+    assert _offered(result) == [
+        {"value": BT_REMOTE_PATH, "label": f"{BT_REMOTE_NAME} ({REMOTE_2_UNIQ})"}
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_PATH: BT_REMOTE_PATH}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_UNIQ] == REMOTE_2_UNIQ
 
 
 async def test_user_step_no_devices(hass: HomeAssistant, fake_input: FakeInput) -> None:
@@ -333,10 +364,6 @@ async def test_user_step_creates_name_matched_entry(
     assert result["title"] == BT_REMOTE_NAME
     assert result["result"].unique_id == BT_REMOTE_NAME
     assert result["data"] == {CONF_DEVICE_NAME: BT_REMOTE_NAME}
-
-
-REMOTE_1_UNIQ = "aa:bb:cc:dd:ee:01"
-REMOTE_2_UNIQ = "aa:bb:cc:dd:ee:02"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

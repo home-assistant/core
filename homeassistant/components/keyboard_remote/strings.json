@@ -6,7 +6,8 @@
       "no_devices": "No input devices found. Ensure input devices are connected and accessible."
     },
     "error": {
-      "cannot_connect": "Could not open the selected input device. Check permissions and that the device is connected."
+      "cannot_connect": "Could not open the selected input device. Check permissions and that the device is connected.",
+      "device_changed": "The selected input device was replaced by another device. Select it again."
     },
     "step": {
       "user": {
