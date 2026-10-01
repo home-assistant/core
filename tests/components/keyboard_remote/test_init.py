@@ -1624,6 +1624,58 @@ async def test_name_entry_beside_busy_uniq_entry_gets_a_node(
     ]
 
 
+async def test_path_entry_added_later_takes_node_from_name_entry(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test an entry added for a node a name entry holds gets that node.
+
+    The name entry moves to the keyboard's other node, which has the same name.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    fake_input.add("/dev/input/event6", FAKE_DEVICE_NAME)
+    await _set_up(
+        hass, fake_input, _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="name")
+    )
+
+    await _set_up(
+        hass,
+        fake_input,
+        _entry(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
+        ),
+    )
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    for path in (FAKE_DEVICE_REAL_PATH, "/dev/input/event6"):
+        await fake_input.press(fake_input.devices[path], 30, KEY_VALUE["key_up"])
+
+    assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in commands] == [
+        FAKE_DEVICE_PATH,
+        "/dev/input/event6",
+    ]
+
+
+async def test_uniq_entry_added_later_takes_remote_from_name_entry(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test an entry matching a remote by uniq takes it from a name entry."""
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME, uniq=REMOTE_UNIQ)
+    await _set_up(hass, fake_input, _remote_entry())
+    disconnected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
+
+    uniq_entry = _uniq_entry()
+    await _set_up(hass, fake_input, uniq_entry)
+
+    assert remote.grab.call_count == 2
+    remote.ungrab.assert_called_once()
+    assert len(disconnected) == 1
+    assert await hass.config_entries.async_unload(uniq_entry.entry_id)
+    await fake_input.settle()
+    # The name entry gets the remote back
+    assert remote.grab.call_count == 3
+
+
 async def test_waiting_entries_each_get_a_node(
     hass: HomeAssistant,
     fake_input: FakeInput,

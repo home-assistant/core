@@ -1,7 +1,7 @@
 """Receive signals from a keyboard and use it as a remote control."""
 
 import asyncio
-from collections.abc import Callable, Container, Coroutine
+from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
 import logging
 import os
@@ -433,31 +433,37 @@ class KeyboardRemoteManager:
         return dev, *best
 
     def _scan_and_match_devices(
-        self, handlers: list[DeviceHandler], skip: Container[str] = ()
+        self, handlers: list[DeviceHandler], holders: Mapping[str, DeviceHandler]
     ) -> list[tuple[str, InputDevice, DeviceHandler]]:
-        """List the devices not skipped and give each handler its strongest match.
+        """List all devices and give each handler its strongest match.
 
         Every candidate is ranked before anything is assigned. Matching device
         by device instead would let a name match on one node of a composite
         keyboard claim the handler before its exact device_path match is
-        reached, and list_devices() returns nodes in arbitrary order.
+        reached, and list_devices() returns nodes in arbitrary order. A node in
+        holders is only matched by a handler that matches it better than its
+        holder, which then has to hand it over.
         """
         from evdev import InputDevice  # noqa: PLC0415
 
         opened: dict[str, InputDevice] = {}
         candidates: list[tuple[int, str, DeviceHandler]] = []
         for descriptor in list_input_devices():
-            if descriptor in skip:
-                continue
             try:
                 dev = InputDevice(descriptor)
             except OSError:
                 continue
             opened[descriptor] = dev
+            holder_rank = (
+                holder.match_rank(descriptor, dev)
+                if (holder := holders.get(descriptor)) is not None
+                else None
+            )
             candidates.extend(
                 (rank, descriptor, handler)
                 for handler in handlers
                 if (rank := handler.match_rank(descriptor, dev)) is not None
+                and (holder_rank is None or rank < holder_rank)
             )
 
         matches: list[tuple[str, InputDevice, DeviceHandler]] = []
@@ -485,7 +491,7 @@ class KeyboardRemoteManager:
         """
         handlers = list(self._handlers.values())
         matches = await self.hass.async_add_executor_job(
-            self._scan_and_match_devices, handlers
+            self._scan_and_match_devices, handlers, {}
         )
 
         for descriptor, dev, handler in matches:
@@ -563,12 +569,20 @@ class KeyboardRemoteManager:
             while True:
                 self._assign_again = False
                 if handlers := self._free_handlers():
-                    skip = set(self._active_handlers_by_descriptor)
+                    holders = dict(self._active_handlers_by_descriptor)
                     matches = await self.hass.async_add_executor_job(
-                        self._scan_and_match_devices, handlers, skip
+                        self._scan_and_match_devices, handlers, holders
                     )
                     for descriptor, dev, handler in matches:
-                        if not self._claim_and_start(descriptor, dev, handler):
+                        holder = holders.get(descriptor)
+                        handed_over = holder is not None and (
+                            await self._async_hand_over(descriptor, holder, handler)
+                        )
+                        # A holder that handed its node over needs another one
+                        if (
+                            not self._claim_and_start(descriptor, dev, handler)
+                            or handed_over
+                        ):
                             self._assign_again = True
                 if not self._assign_again or not self._accepting_devices:
                     return
@@ -712,23 +726,30 @@ class KeyboardRemoteManager:
         if result is None:
             return
         descriptor, dev, handler = result
+        # A holder got the node from its node events, before this link let the
+        # entry configured with it match
         holder = holders.get(descriptor)
-        if (
-            holder is not None
-            and self._active_handlers_by_descriptor.get(descriptor) is holder
-            and self._can_take_device(handler)
-        ):
-            # The holder got the node from its node events, before this link
-            # let the entry configured with it match. Hand the node over, then
-            # let the holder look for another node.
-            _LOGGER.debug("Handing %s over for its by-id link", descriptor)
-            del self._active_handlers_by_descriptor[descriptor]
-            await holder.async_device_stop_monitoring()
-            self._claim_and_start(descriptor, dev, handler)
+        handed_over = holder is not None and (
+            await self._async_hand_over(descriptor, holder, handler)
+        )
+        if not self._claim_and_start(descriptor, dev, handler) or handed_over:
             self._async_request_assignment()
-            return
-        if not self._claim_and_start(descriptor, dev, handler):
-            self._async_request_assignment()
+
+    async def _async_hand_over(
+        self, descriptor: str, holder: DeviceHandler, handler: DeviceHandler
+    ) -> bool:
+        """Take a node from its holder for a handler that matches it better.
+
+        Returns whether the holder let the node go, and so needs another one.
+        The caller then claims the node for the handler.
+        """
+        still_held = self._active_handlers_by_descriptor.get(descriptor) is holder
+        if not still_held or not self._can_take_device(handler):
+            return False
+        _LOGGER.debug("Handing %s over", descriptor)
+        del self._active_handlers_by_descriptor[descriptor]
+        await holder.async_device_stop_monitoring()
+        return True
 
     async def _async_handle_by_id_created(self) -> None:
         """Start watching a by-id directory that udev just created."""
