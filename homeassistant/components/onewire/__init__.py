@@ -2,7 +2,11 @@
 
 import logging
 
-from aio_ownet.exceptions import OWServerConnectionError, OWServerReturnError
+from aio_ownet.exceptions import (
+    OWServerConnectionError,
+    OWServerProtocolError,
+    OWServerReturnError,
+)
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -30,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> b
     except (
         OWServerConnectionError,  # Failed to connect to the server
         OWServerReturnError,  # Connected to server, but failed to list the devices
+        OWServerProtocolError,  # Malformed reply from the server
     ) as exc:
         raise ConfigEntryNotReady from exc
 

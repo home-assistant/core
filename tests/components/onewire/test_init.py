@@ -3,7 +3,11 @@
 import logging
 from unittest.mock import MagicMock, patch
 
-from aio_ownet.exceptions import OWServerConnectionError, OWServerReturnError
+from aio_ownet.exceptions import (
+    OWServerConnectionError,
+    OWServerProtocolError,
+    OWServerReturnError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -35,12 +39,22 @@ async def test_connect_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(OWServerReturnError(-1), id="return_error"),
+        pytest.param(OWServerProtocolError("Malformed header"), id="protocol_error"),
+    ],
+)
 async def test_listing_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, owproxy: MagicMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    exception: Exception,
 ) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
-    owproxy.return_value.read.side_effect = OWServerReturnError(-1)
-    owproxy.return_value.dir.side_effect = OWServerReturnError(-1)
+    owproxy.return_value.read.side_effect = exception
+    owproxy.return_value.dir.side_effect = exception
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
