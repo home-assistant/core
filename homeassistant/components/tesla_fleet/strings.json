@@ -668,7 +668,7 @@
           "name": "Location"
         },
         "order": {
-          "description": "How to add this destination to the trip: 1 replaces the trip, 2 adds it as the next stop, 3 adds it as the last stop.",
+          "description": "Order for this destination if specifying multiple destinations.",
           "name": "Order"
         }
       },

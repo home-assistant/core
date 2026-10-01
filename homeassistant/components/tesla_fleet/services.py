@@ -88,7 +88,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data[ATTR_ORDER],
+                order=call.data.get(ATTR_ORDER, 0),
             )
         )
 
@@ -103,9 +103,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Required(CONF_LATITUDE): cv.latitude,
                     probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                probatio.Optional(ATTR_ORDER, default=1): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=1, max=3)
-                ),
+                probatio.Optional(ATTR_ORDER): cv.positive_int,
             }
         ),
     )
