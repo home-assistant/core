@@ -176,7 +176,6 @@ class ViCareFan(ViCareEntity, FanEntity):
                     self._api.getActiveVentilationMode()
                 )
 
-            # Not the shared _attributes dict, which another fan overwrites.
             if FanEntityFeature.TURN_OFF in self._attr_supported_features:
                 # Clear before the guarded read, a suppressed error would
                 # otherwise keep reporting the fan as off.
