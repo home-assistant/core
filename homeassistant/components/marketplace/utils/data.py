@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 from datetime import UTC, datetime
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import Event, callback
@@ -14,6 +15,7 @@ from ..const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, RESTART_ISSUE_PREFIX
 from ..enums import DisabledReason, MarketplaceSignal, RepositoryCategory
 from ..migration import async_forget_retired_repositories
 from ..repositories.base import TOPIC_FILTER, Repository, RepositoryManifest
+from .backup import backed_up_paths
 from .identity import one_stored_entry_per_name
 from .logger import LOGGER
 from .path import is_safe
@@ -299,13 +301,16 @@ class MarketplaceData:
         installed = list(self.marketplace.repositories.list_installed)
 
         # A symlink counts even when what it points at is not there right now,
-        # for example a network share that is not mounted yet
+        # for example a network share that is not mounted yet. So does a backup
+        # that could not be put back yet, the next start tries it again.
         def _deleted() -> list[Repository]:
+            backed_up = backed_up_paths(self.marketplace)
             return [
                 repository
                 for repository in installed
                 if (path := self._install_path(repository)) is not None
                 and not os.path.lexists(path)
+                and Path(os.path.abspath(path)) not in backed_up
             ]
 
         for repository in await self.marketplace.hass.async_add_executor_job(_deleted):

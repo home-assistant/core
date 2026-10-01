@@ -52,10 +52,10 @@ from ..utils.file_system import (
     async_lexists,
     async_remove,
     async_remove_directory,
+    async_run_to_completion,
 )
 from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
-from ..utils.queue_manager import QueueManager
 from ..utils.tree import tree_entry_filename, tree_entry_is_directory
 from ..utils.url import (
     github_archive,
@@ -775,7 +775,7 @@ class Repository:
                         resolve_in_directory(self.content.path.local, member)
                     zip_file.extractall(self.content.path.local)
 
-            await self.marketplace.hass.async_add_executor_job(_extract_zip_file)
+            await async_run_to_completion(self.marketplace.hass, _extract_zip_file)
             self.logger.info(
                 "%s Download of %s completed", self.string, content["name"]
             )
@@ -831,12 +831,10 @@ class Repository:
                 },
             )
 
+        # One by one, each download may only take what the ones before it left
         self._download_budget = MAX_DOWNLOAD_SIZE
-        download_queue = QueueManager()
         for content in wanted:
-            download_queue.add(self.download_repository_file(content))
-
-        await download_queue.execute()
+            await self.download_repository_file(content)
 
     def _wanted_contents(
         self, contents: list[FileInformation]
@@ -1258,12 +1256,13 @@ class Repository:
 
         def _restore_backups() -> None:
             """Put back what the backups moved away."""
+            # A first install has nothing to put back, what it wrote so far goes.
+            # Before its backup does, that marks it for the next start if this fails.
+            if backup_path is not None and not existed:
+                _remove_written_content(self.marketplace, backup_path)
             if backup is not None:
                 backup.restore()
                 backup.cleanup()
-            # A first install has no backup, what it wrote so far goes instead
-            if backup_path is not None and not existed:
-                _remove_written_content(self.marketplace, backup_path)
             if persistent_directory is not None:
                 persistent_directory.restore()
                 persistent_directory.cleanup()
@@ -1737,7 +1736,6 @@ class Repository:
             for asset in assets
         ]
 
-    @concurrent(concurrenttasks=10)
     async def download_repository_file(self, content: FileInformation) -> None:
         """Download content."""
         # The install fails with the first file it misses, the rest is not

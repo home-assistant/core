@@ -29,7 +29,7 @@ class CatalogClient:
 
     async def async_get_category(self, category: str) -> dict[str, dict[str, Any]]:
         """Fetch the repositories of a category, by id, the valid ones only."""
-        data = await self._async_get_section(category)
+        data, etag = await self._async_get_section(category)
         if not isinstance(data, dict):
             raise MarketplaceError(
                 translation_domain=DOMAIN,
@@ -56,6 +56,10 @@ class CatalogClient:
                     exception,
                 )
 
+        if data and not repositories:
+            raise _nothing_valid(category)
+
+        self._remember_etag(category, etag)
         return repositories
 
     async def async_get_removed(self) -> list[dict[str, Any]]:
@@ -74,7 +78,7 @@ class CatalogClient:
         self, section: str, validator: probatio.Schema
     ) -> list[dict[str, Any]]:
         """Fetch a section that is a list, the valid entries only."""
-        data = await self._async_get_section(section)
+        data, etag = await self._async_get_section(section)
         if not isinstance(data, list):
             raise MarketplaceError(
                 translation_domain=DOMAIN,
@@ -89,10 +93,22 @@ class CatalogClient:
             except probatio.Invalid as exception:
                 LOGGER.info("Got invalid data for %s (%s)", section, exception)
 
+        # Read as empty, what is missing from it counts as taken out
+        if data and not entries:
+            raise _nothing_valid(section)
+
+        self._remember_etag(section, etag)
         return entries
 
-    async def _async_get_section(self, section: str) -> Any:
-        """Fetch a section of the catalog, a 304 raises NotModifiedError."""
+    def _remember_etag(self, section: str, etag: str | None) -> None:
+        """Remember the ETag of a section that was usable.
+
+        Not for a broken answer, or it would stick as not modified.
+        """
+        self._etags[f"{section}/data.json"] = etag
+
+    async def _async_get_section(self, section: str) -> tuple[Any, str | None]:
+        """Fetch a section of the catalog and its ETag, a 304 raises NotModifiedError."""
         endpoint = f"{section}/data.json"
         url = f"https://data-v2.hacs.xyz/{endpoint}"
         try:
@@ -134,6 +150,13 @@ class CatalogClient:
                 },
             ) from exception
 
-        # Only for data that was usable, or a broken answer would stick as not modified
-        self._etags[endpoint] = etag
-        return data
+        return data, etag
+
+
+def _nothing_valid(section: str) -> MarketplaceError:
+    """Return the error for a section with entries, of which none are valid."""
+    return MarketplaceError(
+        translation_domain=DOMAIN,
+        translation_key="catalog_nothing_valid",
+        translation_placeholders={"section": section},
+    )

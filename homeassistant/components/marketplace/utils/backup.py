@@ -1,6 +1,7 @@
 """Backups of installed content, kept while an install replaces it."""
 
 import contextlib
+import errno
 import os
 from pathlib import Path
 import shutil
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 # middle of an install. On another file system than the content, a backup is
 # copied instead of moved.
 BACKUP_DIRECTORY = "marketplace_backups"
+# Backed up content that was put back, on its way out
+DISCARDED_NAME = "discarded"
 
 # Holds the path the backed up content belongs to, for restoring after a restart.
 TARGET_FILE = "target"
@@ -33,6 +36,44 @@ ABSENT_FILE = "absent"
 def _backup_root(marketplace: MarketplaceManager) -> Path:
     """Return the directory that holds all backups."""
     return Path(marketplace.core.config_path, STORAGE_DIR, BACKUP_DIRECTORY)
+
+
+def _remove(path: Path) -> None:
+    """Remove a file, a directory or a symlink to one."""
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+
+def _move(source: Path, destination: Path) -> bool:
+    """Move source to destination, return False when it is on another file system.
+
+    Then nothing is moved and the caller copies, it decides when the source goes.
+    """
+    try:
+        os.rename(source, destination)
+    except OSError as exception:
+        if exception.errno != errno.EXDEV:
+            raise
+        return False
+    return True
+
+
+def _copy(source: Path, destination: Path) -> None:
+    """Copy source to destination, which only shows up once the copy is complete.
+
+    A restart halfway leaves the copy under a name that is never read as content.
+    """
+    partial = destination.with_name(f".{destination.name}.partial")
+    if os.path.lexists(partial):
+        _remove(partial)
+
+    if source.is_dir() and not source.is_symlink():
+        shutil.copytree(source, partial, symlinks=True)
+    else:
+        shutil.copy2(source, partial, follow_symlinks=False)
+    os.rename(partial, destination)
 
 
 class Backup:
@@ -76,10 +117,12 @@ class Backup:
             write_utf8_file_atomic(str(self.backup_path / TARGET_FILE), self._target())
             if absent:
                 (self.backup_path / ABSENT_FILE).touch()
-            else:
-                shutil.move(self.local_path, self.content_path)
+            elif not _move(self.local_path, self.content_path):
+                self._copy_in()
         except (OSError, WriteError) as exception:
-            shutil.rmtree(self.backup_path, ignore_errors=True)
+            # A complete backup can be the only copy left, the next start restores it
+            if not self.has_content:
+                shutil.rmtree(self.backup_path, ignore_errors=True)
             raise MarketplaceError(
                 translation_domain=DOMAIN,
                 translation_key="backup_failed",
@@ -90,6 +133,16 @@ class Backup:
             ) from exception
 
         LOGGER.debug("Backup for %s created in %s", self.local_path, self.backup_path)
+
+    def _copy_in(self) -> None:
+        """Copy the content into the backup, then remove it."""
+        _copy(self.local_path, self.content_path)
+        try:
+            _remove(self.local_path)
+        except OSError:
+            # Partly removed, the complete copy puts it back as it was
+            self.restore()
+            raise
 
     def _target(self) -> str:
         """Return the content path, relative to the configuration directory.
@@ -108,12 +161,18 @@ class Backup:
         if not self.has_content:
             return
 
-        if self.local_path.is_dir() and not self.local_path.is_symlink():
-            shutil.rmtree(self.local_path)
-        elif self.local_path.exists() or self.local_path.is_symlink():
-            self.local_path.unlink()
+        if os.path.lexists(self.local_path):
+            _remove(self.local_path)
+        else:
+            self.local_path.parent.mkdir(parents=True, exist_ok=True)
 
-        shutil.move(self.content_path, self.local_path)
+        if not _move(self.content_path, self.local_path):
+            _copy(self.content_path, self.local_path)
+            # Out of the way first, a restart while it is removed must not
+            # restore what is left of it
+            discarded = self.backup_path / DISCARDED_NAME
+            os.rename(self.content_path, discarded)
+            _remove(discarded)
         LOGGER.debug("Restored %s from backup %s", self.local_path, self.backup_path)
 
     @property
@@ -126,10 +185,7 @@ class Backup:
         if not os.path.lexists(self.local_path):
             return False
 
-        if self.local_path.is_dir() and not self.local_path.is_symlink():
-            shutil.rmtree(self.local_path)
-        else:
-            self.local_path.unlink()
+        _remove(self.local_path)
         return True
 
     @property
@@ -159,6 +215,22 @@ class Backup:
             )
             return
         LOGGER.debug("Backup %s removed", self.backup_path)
+
+
+def backed_up_paths(marketplace: MarketplaceManager) -> set[Path]:
+    """Return the paths with a backup that is still waiting to be put back."""
+    root = _backup_root(marketplace)
+    if not root.is_dir():
+        return set()
+
+    paths: set[Path] = set()
+    for backup_path in root.iterdir():
+        try:
+            target = (backup_path / TARGET_FILE).read_text(encoding="utf-8")
+        except OSError:
+            continue
+        paths.add(Path(os.path.abspath(Path(marketplace.core.config_path, target))))
+    return paths
 
 
 def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:

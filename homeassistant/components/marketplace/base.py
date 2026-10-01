@@ -82,7 +82,7 @@ from .repositories.base import (
     RepositoryManifest,
 )
 from .utils.data import MarketplaceData
-from .utils.file_system import async_exists
+from .utils.file_system import async_exists, async_run_to_completion
 from .utils.identity import newest_id_per_name
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
@@ -550,8 +550,7 @@ class MarketplaceManager:
                 file_handler.write(content)
 
             if os.path.isfile(file_path) and file_path.endswith(".js"):
-                # Swapped in whole, a release can ship this same .gz file
-                # and write it while this one is being compressed
+                # Swapped in whole, a stop halfway leaves no broken .gz to serve
                 handle, compressed = tempfile.mkstemp(
                     dir=os.path.dirname(file_path), suffix=".gz.tmp"
                 )
@@ -568,7 +567,7 @@ class MarketplaceManager:
                         os.remove(compressed)
 
         try:
-            await self.hass.async_add_executor_job(_write_file)
+            await async_run_to_completion(self.hass, _write_file)
         except OSError as error:
             LOGGER.error("Could not write data to %s - %s", file_path, error)
             return False

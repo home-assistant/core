@@ -212,7 +212,7 @@ REMOVED = ("removed", "async_get_removed", ())
         pytest.param(*REMOVED, [{"repository": "test"}], id="removed"),
     ],
 )
-async def test_invalid_data_is_discarded(
+async def test_nothing_valid_is_a_catalog_error(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
     section: str,
@@ -220,11 +220,43 @@ async def test_invalid_data_is_discarded(
     args: tuple[str, ...],
     data: dict[str, Any] | list[Any],
 ) -> None:
-    """Test that invalid entries are dropped."""
-    url = f"https://data-v2.hacs.xyz/{section}/data.json"
-    response_mocker.add(url, mocked_response(url, json_content=data))
+    """Test entries that are all invalid are refused, not read as an empty section.
 
-    assert await getattr(marketplace.data_client, method)(*args) in ({}, [])
+    Read as empty, everything the section listed before would count as taken out.
+    """
+    url = f"https://data-v2.hacs.xyz/{section}/data.json"
+    response_mocker.add(
+        url, mocked_response(url, json_content=data, headers={"Etag": "broken"})
+    )
+
+    with pytest.raises(MarketplaceError) as exc_info:
+        await getattr(marketplace.data_client, method)(*args)
+
+    assert exc_info.value.translation_key == "catalog_nothing_valid"
+    assert marketplace.data_client._etags[f"{section}/data.json"] != "broken"
+
+
+@pytest.mark.parametrize(
+    ("section", "method", "args", "content"),
+    [
+        pytest.param("integration", CATEGORY, ("integration",), {}, id="integration"),
+        pytest.param(*CRITICAL, [], id="critical"),
+        pytest.param(*REMOVED, [], id="removed"),
+    ],
+)
+async def test_empty_section_is_valid(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    section: str,
+    method: str,
+    args: tuple[str, ...],
+    content: dict[str, Any] | list[Any],
+) -> None:
+    """Test a section without any entries is read as empty."""
+    url = f"https://data-v2.hacs.xyz/{section}/data.json"
+    response_mocker.add(url, mocked_response(url, json_content=content))
+
+    assert await getattr(marketplace.data_client, method)(*args) == content
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
@@ -293,14 +325,23 @@ async def test_malformed_catalog_is_a_catalog_error(
         await getattr(marketplace.data_client, method)(*args)
 
 
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param(b"{not json", id="not_json"),
+        pytest.param(b'["a list"]', id="not_an_object"),
+    ],
+)
 async def test_malformed_catalog_is_fetched_again(
-    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    content: bytes,
 ) -> None:
     """Test the etag of a broken answer is not kept, the next request gets data."""
     etag = marketplace.data_client._etags.get("integration/data.json")
     url = "https://data-v2.hacs.xyz/integration/data.json"
     response_mocker.add(
-        url, mocked_response(url, content=b"{not json", headers={"etag": "broken"})
+        url, mocked_response(url, content=content, headers={"Etag": "broken"})
     )
 
     with pytest.raises(MarketplaceError):
@@ -314,9 +355,20 @@ async def test_catalog_entry_that_is_not_an_object_is_skipped(
 ) -> None:
     """Test one broken entry does not take the rest of the category down."""
     url = "https://data-v2.hacs.xyz/integration/data.json"
-    response_mocker.add(url, mocked_response(url, json_content={"1": "broken"}))
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content={
+                "1": "broken",
+                "12345": GOOD_INTEGRATION_DATA | {"full_name": "owner/blah"},
+            },
+        ),
+    )
 
-    assert await marketplace.data_client.async_get_category("integration") == {}
+    assert list(await marketplace.data_client.async_get_category("integration")) == [
+        "12345"
+    ]
 
 
 async def test_catalog_entry_without_a_numeric_id_is_skipped(

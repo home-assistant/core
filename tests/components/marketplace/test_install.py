@@ -4,11 +4,11 @@ import asyncio
 import gzip
 import io
 import json
+import os
 from pathlib import Path
-import shutil
 from threading import Event
 from types import ModuleType
-from typing import Any, BinaryIO
+from typing import Any
 from unittest.mock import AsyncMock, patch
 import zipfile
 
@@ -224,7 +224,7 @@ async def test_failed_backup_stops_the_install(
 
     with (
         patch(
-            "homeassistant.components.marketplace.utils.backup.shutil.move",
+            "homeassistant.components.marketplace.utils.backup._move",
             side_effect=OSError("disk full"),
         ),
         pytest.raises(MarketplaceError, match="Could not back up"),
@@ -395,6 +395,8 @@ async def test_file_by_file_download_stops_at_the_limit(
     ]
 
     async def download(url: str, *, limit: int) -> bytes | None:
+        # Takes a while, like the real download, so others could start meanwhile
+        await asyncio.sleep(0)
         # Like the real download, a body over the limit gives nothing
         return b"x" * 60 if limit >= 60 else None
 
@@ -504,62 +506,33 @@ async def test_older_version_checks_the_domain_it_writes_to(
     assert original.read_bytes() == b"existing integration"
 
 
-async def test_released_gzip_and_generated_gzip_do_not_mix(
-    hass: HomeAssistant, marketplace: MarketplaceManager
+async def test_released_gzip_replaces_the_generated_one(
+    marketplace: MarketplaceManager,
 ) -> None:
-    """Test a release shipping its own gzip still ends with a valid gzip file."""
+    """Test a release shipping its own gzip ends with a valid gzip file."""
     repository = PluginRepository(marketplace, "review/card")
     repository.content.single = True
     javascript = b"console.log('a dashboard card');\n" * 100
     published_gzip = gzip.compress(javascript, compresslevel=0)
-    generated_gzip_started = asyncio.Event()
-    published_gzip_written = Event()
-    copyfileobj = shutil.copyfileobj
-    save_file = marketplace.async_save_file
-
-    def paused_copy(source: BinaryIO, target: BinaryIO, length: int = 0) -> None:
-        """Hold the generated gzip until the published one is written."""
-        hass.loop.call_soon_threadsafe(generated_gzip_started.set)
-        assert published_gzip_written.wait(timeout=5)
-        copyfileobj(source, target, length)
 
     async def download(url: str, **kwargs: Any) -> bytes:
-        if url.endswith(".gz"):
-            await generated_gzip_started.wait()
-            return published_gzip
-        return javascript
+        return published_gzip if url.endswith(".gz") else javascript
 
-    async def save(path: str, content: Any) -> bool:
-        result = await save_file(path, content)
-        if path.endswith(".gz"):
-            published_gzip_written.set()
-        return result
-
-    try:
-        with (
-            patch(
-                "homeassistant.components.marketplace.base.shutil.copyfileobj",
-                paused_copy,
-            ),
-            patch.object(marketplace, "async_download_file", download),
-            patch.object(marketplace, "async_save_file", save),
-        ):
-            await repository._async_download_files(
-                [
-                    FileInformation(
-                        name="card.js",
-                        path="card.js",
-                        url="https://example.org/card.js",
-                    ),
-                    FileInformation(
-                        name="card.js.gz",
-                        path="card.js.gz",
-                        url="https://example.org/card.js.gz",
-                    ),
-                ]
-            )
-    finally:
-        published_gzip_written.set()
+    with patch.object(marketplace, "async_download_file", download):
+        await repository._async_download_files(
+            [
+                FileInformation(
+                    name="card.js",
+                    path="card.js",
+                    url="https://example.org/card.js",
+                ),
+                FileInformation(
+                    name="card.js.gz",
+                    path="card.js.gz",
+                    url="https://example.org/card.js.gz",
+                ),
+            ]
+        )
 
     assert not repository.validate.errors
     assert (
@@ -1095,6 +1068,76 @@ async def test_cancelled_first_install_leaves_nothing(
 
     assert not local.exists()
     assert list((config_dir / ".storage" / "marketplace_backups").iterdir()) == []
+
+
+async def test_cancelled_install_waits_for_the_file_being_written(
+    hass: HomeAssistant, marketplace: MarketplaceManager
+) -> None:
+    """Test a cancelled install rolls back after the write it was waiting on.
+
+    Cancelling does not stop the thread that writes, it would write into what
+    was just put back.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    repository.content.path.remote = ""
+    local = Path(repository.localpath)
+    writing = Event()
+    finish = Event()
+    makedirs = os.makedirs
+
+    def slow_makedirs(*args: Any, **kwargs: Any) -> None:
+        writing.set()
+        finish.wait()
+        makedirs(*args, **kwargs)
+
+    async def download() -> None:
+        await marketplace.async_save_file(str(local / "card.js"), "late")
+
+    with patch("homeassistant.components.marketplace.base.os.makedirs", slow_makedirs):
+        install = asyncio.create_task(repository._async_write_content(download))
+        await hass.async_add_executor_job(writing.wait)
+        install.cancel()
+
+        # Still waiting on the write, nothing is rolled back yet
+        await asyncio.wait([install], timeout=0.1)
+        rolled_back_early = install.done()
+
+        finish.set()
+        with pytest.raises(asyncio.CancelledError):
+            await install
+
+    assert not rolled_back_early
+
+    assert not local.exists()
+
+
+async def test_failed_first_install_cleanup_is_tried_again(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test what a first install left behind goes at the next start, if not now."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    repository.content.path.remote = ""
+    local = Path(repository.localpath)
+
+    async def failing_download() -> None:
+        local.mkdir(parents=True)
+        (local / "half.js").write_text("half of it")
+        raise OSError("Connection lost")
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.repositories.base._remove_written_content",
+            side_effect=OSError("Read-only file system"),
+        ),
+        pytest.raises(OSError, match="Read-only file system"),
+    ):
+        await repository._async_write_content(failing_download)
+
+    assert local.exists()
+
+    restore_interrupted_backups(marketplace)
+
+    assert not local.exists()
 
 
 async def test_failed_persistent_directory_restore_keeps_the_old_install(

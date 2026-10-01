@@ -1,5 +1,8 @@
 """File system functions."""
 
+import asyncio
+from collections.abc import Callable
+import contextlib
 import os
 import shutil
 
@@ -43,4 +46,19 @@ async def async_remove_directory(
     except FileNotFoundError:
         if missing_ok:
             return None
+        raise
+
+
+async def async_run_to_completion[T](hass: HomeAssistant, target: Callable[[], T]) -> T:
+    """Run in the executor, when cancelled wait for it to finish first.
+
+    Cancelling does not stop the thread, it would keep writing while the
+    cancelled install puts the old content back.
+    """
+    future = hass.async_add_executor_job(target)
+    try:
+        return await asyncio.shield(future)
+    except asyncio.CancelledError:
+        with contextlib.suppress(Exception):
+            await future
         raise

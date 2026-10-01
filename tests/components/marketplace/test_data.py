@@ -11,6 +11,7 @@ from homeassistant.components.marketplace.base import MarketplaceManager, Reposi
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.enums import DisabledReason
 from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.components.marketplace.utils.backup import Backup
 from homeassistant.components.marketplace.utils.data import MarketplaceData
 from homeassistant.components.marketplace.utils.storage import async_load_from_storage
 from homeassistant.const import Platform
@@ -391,6 +392,26 @@ async def test_installs_deleted_by_hand_are_forgotten(
     # What is still on disk stays installed
     integration = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert integration.data.installed is True
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_install_waiting_on_its_backup_stays_installed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, config_dir: Path
+) -> None:
+    """Test an install whose backup could not be put back yet is not forgotten."""
+    folder = config_dir / "www" / "community" / "plugin-basic"
+    backup = config_dir / ".storage" / "marketplace_backups" / "interrupted"
+    (backup / "content").mkdir(parents=True)
+    (backup / "target").write_text("www/community/plugin-basic")
+    # An update moved it into the backup, then Home Assistant stopped
+    folder.rmdir()
+
+    with patch.object(Backup, "restore", side_effect=OSError("Read-only")):
+        await setup_integration(hass, mock_config_entry)
+
+    plugin = mock_config_entry.runtime_data.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert plugin.data.installed is True
+    assert (backup / "content").exists()
 
 
 @pytest.mark.usefixtures("stored_repositories")

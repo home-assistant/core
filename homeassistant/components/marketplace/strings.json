@@ -80,6 +80,9 @@
     "catalog_not_an_object": {
       "message": "The catalog of {section} is not an object."
     },
+    "catalog_nothing_valid": {
+      "message": "The catalog of {section} has entries, but none of them are valid."
+    },
     "catalog_timeout": {
       "message": "The catalog did not answer within 60 seconds."
     },
