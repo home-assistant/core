@@ -318,10 +318,10 @@ class FakeInput:
             await self.settle()
         return dev
 
-    async def touch(self, path: str) -> None:
+    async def touch(self, path: str, *, wait_for_executor: bool = True) -> None:
         """Report an attribute change on a node, as udev does on permissions."""
         self._emit(os.path.basename(path), Mask.ATTRIB)
-        await self.settle()
+        await self.settle(wait_for_executor=wait_for_executor)
 
     async def link(self, link: str, target: str) -> None:
         """Rename a by-id link into place."""

@@ -1178,6 +1178,41 @@ async def test_read_failure_during_unplug_teardown(
     replugged.grab.assert_called_once()
 
 
+async def test_device_found_during_teardown_stays_connected(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a node found while the entry's old node ungrabs stays connected.
+
+    The entry is free once its teardown starts, so a device check finishing
+    meanwhile can start it on another node before the teardown ends.
+    """
+    await _set_up(hass, fake_input, mock_config_entry)
+    listing, release_listing = fake_input.hold_listing()
+    remote_entry = _remote_entry()
+    remote_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(remote_entry.entry_id)
+    await _wait_in_executor(hass, listing)
+    old = fake_input.add("/dev/input/event9", REMOTE_NAME)
+    await fake_input.touch("/dev/input/event9", wait_for_executor=False)
+    await fake_input.wait_until(lambda: old.grab.called)
+    ungrabbing, release_ungrab = old.ungrab.hold()
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+
+    fake_input.remove_node("/dev/input/event9")
+    await _wait_in_executor(hass, ungrabbing)
+    release_listing.set()
+    await fake_input.wait_until(lambda: remote.grab.called)
+    release_ungrab.set()
+    await fake_input.settle()
+
+    assert await hass.config_entries.async_unload(remote_entry.entry_id)
+    await fake_input.settle()
+    remote.ungrab.assert_called_once()
+    remote.close.assert_called_once()
+
+
 async def test_entry_registered_during_startup_scan_connects(
     hass: HomeAssistant,
     fake_input: FakeInput,

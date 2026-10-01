@@ -900,7 +900,10 @@ class DeviceHandler:
                 },
             )
             _LOGGER.debug("Disconnected %s", dev.name)
-            self.dev = None
+            # A device check may have started this handler on another node
+            # while the old one ungrabbed
+            if self.dev is dev:
+                self.dev = None
         if not from_monitor_task:
             # Unlike awaiting the task, this cannot swallow a cancellation of
             # the caller, which would keep a stopping watcher running
