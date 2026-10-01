@@ -318,6 +318,9 @@ async def test_charge_on_solar_lower_limit_old_firmware_follows_polled_charge_li
     await hass.async_block_till_done()
 
     assert hass.states.get("number.test_charge_limit").state == "80"
+    state = hass.states.get("number.test_charge_on_solar_lower_limit")
+    assert state is not None
+    assert state.attributes["max"] == 80
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,

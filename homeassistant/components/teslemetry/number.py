@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -391,8 +391,7 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         await super().async_added_to_hass()
         self._attr_native_value = self.vehicle.charge_on_solar_lower_limit
 
-        if self.vehicle.polls_charge_limit and self.vehicle.poll is not False:
-            # poll may be None (unknown); only an explicit False is stream-only
+        if self.vehicle.polls_charge_limit:
             self.async_on_remove(
                 self.vehicle.coordinator.async_add_listener(
                     self._async_handle_coordinator_update
@@ -407,10 +406,12 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
             )
         )
 
+    @callback
     def _async_handle_coordinator_update(self) -> None:
         """Re-check the stored lower limit against the latest polled charge limit."""
         self._async_handle_charge_limit_soc(None)
 
+    @callback
     def _async_handle_charge_limit_soc(self, value: int | None) -> None:
         """Cap the stored lower limit if the upper (charge limit SOC) value dropped below it."""
         upper_limit = int(self.native_max_value)

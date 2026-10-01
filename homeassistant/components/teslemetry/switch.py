@@ -17,7 +17,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -475,6 +475,7 @@ class TeslemetryChargeOnSolarSwitchEntity(
             )
         )
 
+    @callback
     def _async_handle_charge_limit_soc(self, value: int | None) -> None:
         """Store the latest streamed charge limit."""
         self._charge_limit_soc = None if value is None else int(value)
