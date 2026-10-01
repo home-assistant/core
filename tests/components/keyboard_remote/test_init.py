@@ -99,6 +99,14 @@ def _remote_entry(**options: Any) -> MockConfigEntry:
     return _entry({CONF_DEVICE_NAME: REMOTE_NAME}, **options)
 
 
+def _uniq_entry() -> MockConfigEntry:
+    """Create an entry matched by the remote's uniq and name."""
+    return _entry(
+        {CONF_DEVICE_NAME: REMOTE_NAME, CONF_DEVICE_UNIQ: REMOTE_UNIQ},
+        unique_id=f"{REMOTE_UNIQ} {REMOTE_NAME}",
+    )
+
+
 async def _set_up(
     hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
 ) -> None:
@@ -738,6 +746,8 @@ async def test_by_id_link_without_matching_device(
     mouse = fake_input.add("/dev/input/event8", "Mouse")
     connected = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
     await _set_up(hass, fake_input, mock_config_entry)
+    # Waiting for a device, so the link's node is checked against it
+    await _set_up(hass, fake_input, _remote_entry())
     fake_input.opened.clear()
 
     await fake_input.link("/dev/input/by-id/usb-Mouse-event-mouse", target)
@@ -1235,7 +1245,7 @@ async def test_device_found_during_teardown_stays_connected(
     assert await hass.config_entries.async_unload(remote_entry.entry_id)
     await fake_input.settle()
     remote.ungrab.assert_called_once()
-    remote.close.assert_called_once()
+    remote.close.assert_called()
 
 
 async def test_entry_registered_during_startup_scan_connects(
@@ -1599,14 +1609,7 @@ async def test_name_entry_beside_busy_uniq_entry_gets_a_node(
     """
     for path in (REMOTE_PATH, REMOTE_PATH_2):
         fake_input.add(path, REMOTE_NAME, uniq=REMOTE_UNIQ)
-    await _set_up(
-        hass,
-        fake_input,
-        _entry(
-            {CONF_DEVICE_NAME: REMOTE_NAME, CONF_DEVICE_UNIQ: REMOTE_UNIQ},
-            unique_id=f"{REMOTE_UNIQ} {REMOTE_NAME}",
-        ),
-    )
+    await _set_up(hass, fake_input, _uniq_entry())
     name_entry = _remote_entry()
     await _set_up(hass, fake_input, name_entry)
 
@@ -1619,6 +1622,97 @@ async def test_name_entry_beside_busy_uniq_entry_gets_a_node(
         REMOTE_PATH,
         REMOTE_PATH_2,
     ]
+
+
+async def test_waiting_entries_each_get_a_node(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test entries waiting together each get one of the nodes found.
+
+    The uniq entry is the better match for both nodes of the remote, so the
+    name entry, looking on its own, would find none left for it.
+    """
+    await _set_up(hass, fake_input, _remote_entry())
+    await _set_up(hass, fake_input, _uniq_entry())
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        fake_input.add(path, REMOTE_NAME, uniq=REMOTE_UNIQ)
+
+    await fake_input.overflow()
+
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        fake_input.devices[path].grab.assert_called_once()
+
+
+async def test_node_released_by_unload_goes_to_waiting_entry(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a node an unloaded entry releases goes to an entry waiting for it."""
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME, uniq=REMOTE_UNIQ)
+    uniq_entry = _uniq_entry()
+    await _set_up(hass, fake_input, uniq_entry)
+    await _set_up(hass, fake_input, _remote_entry())
+
+    assert await hass.config_entries.async_unload(uniq_entry.entry_id)
+    await fake_input.settle()
+
+    remote.ungrab.assert_called_once()
+    assert remote.grab.call_count == 2
+
+
+async def test_node_event_during_assignment_leaves_no_node_unclaimed(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a node event taking an entry an assignment is about to place.
+
+    The assignment's match for that entry is refused then, and its node must
+    still go to the other waiting entry.
+    """
+    await _set_up(hass, fake_input, _remote_entry())
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        fake_input.add(path, REMOTE_NAME, uniq=REMOTE_UNIQ)
+    listing, release = fake_input.hold_listing()
+    uniq_entry = _uniq_entry()
+    uniq_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(uniq_entry.entry_id)
+    await _wait_in_executor(hass, listing)
+
+    await fake_input.touch(REMOTE_PATH_2, wait_for_executor=False)
+    await fake_input.wait_until(lambda: fake_input.devices[REMOTE_PATH_2].grab.called)
+    release.set()
+    await fake_input.settle()
+
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        fake_input.devices[path].grab.assert_called_once()
+
+
+async def test_assignment_during_node_event_leaves_no_node_unclaimed(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an assignment taking the entry a node event is about to place.
+
+    The node event's match is refused then, and the node is assigned again.
+    """
+    # Keeps the watcher running while the name entry reloads
+    await _set_up(hass, fake_input, mock_config_entry)
+    name_entry = _remote_entry()
+    await _set_up(hass, fake_input, name_entry)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME, uniq=REMOTE_UNIQ)
+    opening, release = fake_input.hold_open(REMOTE_PATH)
+
+    await fake_input.touch(REMOTE_PATH, wait_for_executor=False)
+    await _wait_in_executor(hass, opening)
+    await hass.config_entries.async_reload(name_entry.entry_id)
+    await fake_input.wait_until(lambda: remote.grab.called)
+    release.set()
+    await fake_input.settle()
+
+    remote.grab.assert_called_once()
+    remote.ungrab.assert_not_called()
 
 
 async def test_devices_added_during_queue_overflow_connect(

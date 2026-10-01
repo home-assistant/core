@@ -1,7 +1,7 @@
 """Receive signals from a keyboard and use it as a remote control."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Container, Coroutine
 from contextlib import suppress
 import logging
 import os
@@ -235,9 +235,11 @@ class KeyboardRemoteManager:
         self._monitor_task: asyncio.Task[None] | None = None
         self._stop_listener: CALLBACK_TYPE | None = None
         self._started = False
-        # Cleared as soon as stopping begins, unlike _started, so device checks
+        # Cleared as soon as stopping begins, unlike _started, so assignments
         # still in flight cannot claim a device after the handlers were stopped.
         self._accepting_devices = False
+        self._assign_task: asyncio.Task[None] | None = None
+        self._assign_again = False
 
     def open_watcher(self) -> None:
         """Create the inotify watches, closing everything again on failure.
@@ -289,9 +291,8 @@ class KeyboardRemoteManager:
 
             # Entries that loaded while the scan ran were not part of it, and
             # register_handler skipped them because the manager had not started.
-            for handler in self._handlers.values():
-                if handler not in scanned:
-                    self.hass.async_create_task(self._async_check_handler(handler))
+            if any(handler not in scanned for handler in self._handlers.values()):
+                self._async_request_assignment()
 
     def _watch_by_id(self) -> None:
         """Watch the by-id directory for new symlinks.
@@ -382,13 +383,15 @@ class KeyboardRemoteManager:
         self._handlers[handler.entry.entry_id] = handler
         handler.set_monitor_failure_callback(self._async_release_failed_handler)
         if self._started:
-            self.hass.async_create_task(self._async_check_handler(handler))
+            self._async_request_assignment()
 
     async def unregister_handler(self, handler: DeviceHandler) -> None:
         """Unregister a DeviceHandler and stop its monitoring."""
         del self._handlers[handler.entry.entry_id]
         self._forget_handler(handler)
         await handler.async_device_stop_monitoring()
+        if self._started:
+            self._async_request_assignment()
 
     def _forget_handler(self, handler: DeviceHandler) -> None:
         """Drop the nodes mapped to a handler."""
@@ -430,9 +433,9 @@ class KeyboardRemoteManager:
         return dev, *best
 
     def _scan_and_match_devices(
-        self, handlers: list[DeviceHandler]
+        self, handlers: list[DeviceHandler], skip: Container[str] = ()
     ) -> list[tuple[str, InputDevice, DeviceHandler]]:
-        """List all devices and give each handler its strongest match.
+        """List the devices not skipped and give each handler its strongest match.
 
         Every candidate is ranked before anything is assigned. Matching device
         by device instead would let a name match on one node of a composite
@@ -444,6 +447,8 @@ class KeyboardRemoteManager:
         opened: dict[str, InputDevice] = {}
         candidates: list[tuple[int, str, DeviceHandler]] = []
         for descriptor in list_input_devices():
+            if descriptor in skip:
+                continue
             try:
                 dev = InputDevice(descriptor)
             except OSError:
@@ -488,28 +493,6 @@ class KeyboardRemoteManager:
                 handler.async_device_start_monitoring(dev)
         return handlers
 
-    def _find_device_for_handler(
-        self,
-        handler: DeviceHandler,
-        handlers: list[DeviceHandler],
-        skip_descriptors: set[str],
-    ) -> tuple[str, InputDevice] | None:
-        """Find a connected device matching a handler (runs in executor).
-
-        Every device a handler matches gets the same rank from it, so the first
-        one that no other handler matches better will do.
-        """
-        for descriptor in sorted(list_input_devices()):
-            if descriptor in skip_descriptors:
-                continue
-            if (found := self._get_handler_for_device(descriptor, handlers)) is None:
-                continue
-            dev, matched, _rank = found
-            if matched is handler:
-                return descriptor, dev
-            dev.close()
-        return None
-
     def _claim_descriptor(
         self, descriptor: str, dev: InputDevice, handler: DeviceHandler
     ) -> bool:
@@ -553,15 +536,44 @@ class KeyboardRemoteManager:
             and not handler.is_monitoring
         )
 
-    async def _async_check_handler(self, handler: DeviceHandler) -> None:
-        """Check if a newly registered handler's device is currently connected."""
-        handlers = self._free_handlers()
-        skip = set(self._active_handlers_by_descriptor)
-        result = await self.hass.async_add_executor_job(
-            self._find_device_for_handler, handler, handlers, skip
+    @callback
+    def _async_request_assignment(self) -> None:
+        """Give the free nodes to the handlers waiting for one.
+
+        Assigning all of them at once, like the startup scan, lets each handler
+        get a node another free handler matches better but does not need. A
+        request while an assignment runs makes it run again once it is done.
+        """
+        if not self._accepting_devices:
+            return
+        if self._assign_task is not None:
+            self._assign_again = True
+            return
+        # Not eager: an assignment finishing at once would clear the task
+        # before it is stored
+        self._assign_task = self.hass.async_create_task(
+            self._async_assign_devices(),
+            "keyboard_remote device assignment",
+            eager_start=False,
         )
-        if result is not None:
-            self._claim_and_start(*result, handler)
+
+    async def _async_assign_devices(self) -> None:
+        """Assign free nodes to free handlers until no request is left."""
+        try:
+            while True:
+                self._assign_again = False
+                if handlers := self._free_handlers():
+                    skip = set(self._active_handlers_by_descriptor)
+                    matches = await self.hass.async_add_executor_job(
+                        self._scan_and_match_devices, handlers, skip
+                    )
+                    for descriptor, dev, handler in matches:
+                        if not self._claim_and_start(descriptor, dev, handler):
+                            self._assign_again = True
+                if not self._assign_again or not self._accepting_devices:
+                    return
+        finally:
+            self._assign_task = None
 
     async def _async_monitor_devices(self) -> None:
         """Monitor /dev/input/ for device add/remove events via inotify."""
@@ -624,22 +636,26 @@ class KeyboardRemoteManager:
 
     async def _async_attach_descriptor(self, descriptor: str) -> None:
         """Start the best matching handler on a device node, if any."""
-        handlers = self._free_handlers()
+        if not (handlers := self._free_handlers()):
+            return
         found = await self.hass.async_add_executor_job(
             self._get_handler_for_device, descriptor, handlers
         )
         if found is not None:
             dev, handler, _rank = found
-            self._claim_and_start(descriptor, dev, handler)
+            if not self._claim_and_start(descriptor, dev, handler):
+                self._async_request_assignment()
 
     @callback
     def _claim_and_start(
         self, descriptor: str, dev: InputDevice, handler: DeviceHandler
-    ) -> None:
+    ) -> bool:
         """Start monitoring a matched device, unless the claim is refused."""
         if self._claim_descriptor(descriptor, dev, handler):
             _LOGGER.debug("Adding %s", descriptor)
             handler.async_device_start_monitoring(dev)
+            return True
+        return False
 
     def _match_linked_device(
         self,
@@ -679,12 +695,11 @@ class KeyboardRemoteManager:
     async def _async_handle_link(self, name: str) -> None:
         """Start, or hand over, the node that a by-id link points to."""
         _LOGGER.debug("Checking by-id link %s", name)
+        if not (handlers := self._free_handlers()):
+            return
         holders = dict(self._active_handlers_by_descriptor)
         result = await self.hass.async_add_executor_job(
-            self._match_linked_device,
-            f"{DEVINPUT_BY_ID}/{name}",
-            self._free_handlers(),
-            holders,
+            self._match_linked_device, f"{DEVINPUT_BY_ID}/{name}", handlers, holders
         )
         if result is None:
             return
@@ -702,9 +717,10 @@ class KeyboardRemoteManager:
             del self._active_handlers_by_descriptor[descriptor]
             await holder.async_device_stop_monitoring()
             self._claim_and_start(descriptor, dev, handler)
-            await self._async_check_handler(holder)
+            self._async_request_assignment()
             return
-        self._claim_and_start(descriptor, dev, handler)
+        if not self._claim_and_start(descriptor, dev, handler):
+            self._async_request_assignment()
 
     async def _async_handle_by_id_created(self) -> None:
         """Start watching a by-id directory that udev just created."""
@@ -736,9 +752,7 @@ class KeyboardRemoteManager:
         """
         for name in await self.hass.async_add_executor_job(_list_by_id_links):
             await self._async_handle_link(name)
-        for handler in list(self._handlers.values()):
-            if not handler.is_monitoring:
-                await self._async_check_handler(handler)
+        self._async_request_assignment()
 
 
 class DeviceHandler:
@@ -921,7 +935,7 @@ class DeviceHandler:
                 },
             )
             _LOGGER.debug("Disconnected %s", dev.name)
-            # A device check may have started this handler on another node
+            # An assignment may have started this handler on another node
             # while the old one ungrabbed
             if self.dev is dev:
                 self.dev = None

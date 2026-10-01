@@ -262,6 +262,7 @@ class FakeInput:
         self.gates: list[tuple[threading.Event, threading.Event]] = []
         self._next_fd = 100
         self._listing_gate: tuple[threading.Event, threading.Event] | None = None
+        self._open_gates: dict[str, tuple[threading.Event, threading.Event]] = {}
 
     @property
     def by_id_links(self) -> dict[str, str]:
@@ -373,6 +374,14 @@ class FakeInput:
         self._listing_gate = self.new_gate()
         return self._listing_gate
 
+    def hold_open(self, path: str) -> tuple[threading.Event, threading.Event]:
+        """Make the next open of a node wait in the executor until released.
+
+        Returns an event set once the open is waiting, and the one releasing it.
+        """
+        self._open_gates[path] = self.new_gate()
+        return self._open_gates[path]
+
     async def press(self, dev: MagicMock, code: int, value: int) -> None:
         """Send a key event from a device."""
         await self.send(dev, SimpleNamespace(type=EV_KEY, code=code, value=value))
@@ -483,6 +492,10 @@ class FakeInput:
 
     def _open(self, path: str) -> _Handle:
         path = os.fspath(path)
+        if (gate := self._open_gates.pop(path, None)) is not None:
+            waiting, release = gate
+            waiting.set()
+            release.wait(5)
         self.opened.append(path)
         if path not in self.devices:
             raise FileNotFoundError(errno.ENOENT, "No such file or directory", path)
