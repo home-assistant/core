@@ -3,7 +3,7 @@
 import asyncio
 from copy import deepcopy
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -33,7 +33,14 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import assert_entities, mock_config_entry, reload_platform, setup_platform
-from .const import COMMAND_ERRORS, COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT, VIN
+from .const import (
+    COMMAND_ERRORS,
+    COMMAND_OK,
+    METADATA_NOSCOPE,
+    VEHICLE_DATA,
+    VEHICLE_DATA_ALT,
+    VIN,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -659,17 +666,27 @@ async def test_charge_on_solar_switch_and_lower_limit_are_serialized(
         await release_switch_call.wait()
         return COMMAND_OK
 
+    set_native_value = (
+        TeslemetryChargeOnSolarLowerLimitNumberEntity.async_set_native_value
+    )
+
+    async def tracked_set_native_value(
+        self: TeslemetryChargeOnSolarLowerLimitNumberEntity, value: float
+    ) -> None:
+        lower_limit_reached_lock.set()
+        await set_native_value(self, value)
+
     with (
         patch(
             "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
             side_effect=slow_charge_on_solar,
         ) as command,
-        # The scope check runs just before the lock, so once it fires the number
+        # The lock is taken first thing in the set, so once it is entered the number
         # either waits on the lock or runs ahead of the switch.
         patch.object(
             TeslemetryChargeOnSolarLowerLimitNumberEntity,
-            "raise_for_scope",
-            side_effect=lambda _scope: lower_limit_reached_lock.set(),
+            "async_set_native_value",
+            tracked_set_native_value,
         ),
     ):
         turn_on = hass.async_create_task(
@@ -782,3 +799,121 @@ async def test_disable_charge_on_solar_preview_removes_lower_limit(
     await reload_platform(hass, entry, [Platform.NUMBER])
 
     assert entity_registry.async_get("number.test_charge_on_solar_lower_limit") is None
+
+
+async def test_charge_on_solar_lower_limit_removed_without_command_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: MagicMock,
+) -> None:
+    """Test the lower limit is removed when the vehicle commands scope is revoked."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+    entry = await setup_platform(hass, [Platform.NUMBER])
+
+    assert (
+        entity_registry.async_get("number.test_charge_on_solar_lower_limit") is not None
+    )
+
+    mock_metadata.return_value = METADATA_NOSCOPE
+    await reload_platform(hass, entry, [Platform.NUMBER])
+
+    assert entity_registry.async_get("number.test_charge_on_solar_lower_limit") is None
+
+
+async def test_charge_on_solar_locally_set_charge_limit_survives_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Test a charge limit set from Home Assistant is the upper bound after a reload."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+        for call in listener.call_args_list:
+            call.args[0](80)
+        await hass.async_block_till_done()
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.set_charge_limit",
+            return_value=COMMAND_OK,
+        ):
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 90},
+                blocking=True,
+            )
+
+        # The vehicle echoes the new limit on the stream.
+        for call in listener.call_args_list:
+            call.args[0](90)
+        await hass.async_block_till_done()
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc",
+        return_value=lambda: None,
+    ):
+        await reload_platform(hass, entry, [Platform.SWITCH, Platform.NUMBER])
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=20,
+            upper_charge_limit=90,
+        )
+
+
+async def test_charge_on_solar_switch_uses_locally_set_charge_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test the switch sends a charge limit set from Home Assistant as the upper bound."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        for call in listener.call_args_list:
+            call.args[0](80)
+        await hass.async_block_till_done()
+
+    # The owner raises the charge limit with no stream or poll update following it.
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_charge_limit",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 95},
+            blocking=True,
+        )
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=20,
+            upper_charge_limit=95,
+        )

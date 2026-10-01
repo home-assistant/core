@@ -186,7 +186,6 @@ async def async_setup_entry(
                 vehicle,
                 CHARGE_ON_SOLAR_LOWER_LIMIT_DESCRIPTION,
                 store,
-                entry.runtime_data.scopes,
             )
             for vehicle in entry.runtime_data.vehicles
         )
@@ -376,7 +375,6 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        self.raise_for_scope(Scope.VEHICLE_CMDS)
         value = int(value)
 
         async with self.vehicle.charge_on_solar_lock:

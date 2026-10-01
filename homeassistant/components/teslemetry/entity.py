@@ -290,17 +290,17 @@ class TeslemetryChargeOnSolarEntity(TeslemetryVehicleStreamEntity):
 
     _attr_assumed_state = True
     api: Vehicle
+    # Only created when the vehicle commands scope is granted.
+    scoped = True
 
     def __init__(
         self,
         data: TeslemetryVehicleData,
         description: EntityDescription,
         store: TeslemetryChargeOnSolarStore,
-        scopes: list[Scope],
     ) -> None:
         """Initialize common aspects of a charge-on-solar entity."""
         self.entity_description = description
-        self.scoped = Scope.VEHICLE_CMDS in scopes
         self._store = store
         super().__init__(data, description.key)
 
@@ -334,6 +334,5 @@ class TeslemetryChargeOnSolarEntity(TeslemetryVehicleStreamEntity):
     @callback
     def _async_handle_charge_limit_soc(self, value: int | None) -> None:
         """Store the latest charge limit."""
-        if value is not None and value != self.vehicle.charge_limit_soc:
-            self.vehicle.charge_limit_soc = int(value)
-            self._store.async_save(self.vehicle)
+        self.vehicle.charge_limit_soc = None if value is None else int(value)
+        self._store.async_save(self.vehicle)

@@ -208,7 +208,6 @@ async def async_setup_entry(
                 vehicle,
                 CHARGE_ON_SOLAR_SWITCH_DESCRIPTION,
                 store,
-                entry.runtime_data.scopes,
             )
             for vehicle in entry.runtime_data.vehicles
         )
@@ -408,7 +407,6 @@ class TeslemetryChargeOnSolarSwitchEntity(TeslemetryChargeOnSolarEntity, SwitchE
 
     async def _async_set_charge_on_solar(self, enabled: bool) -> None:
         """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
-        self.raise_for_scope(Scope.VEHICLE_CMDS)
         async with self.vehicle.charge_on_solar_lock:
             await async_set_charge_on_solar(
                 self.api,

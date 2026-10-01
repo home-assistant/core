@@ -90,12 +90,15 @@ class TeslemetryChargeOnSolarStore:
 
     @callback
     def async_save(self, vehicle: TeslemetryVehicleData) -> None:
-        """Schedule saving a vehicle's current settings."""
-        self._data[vehicle.vin] = {
+        """Schedule saving a vehicle's current settings if they changed."""
+        settings = {
             "enabled": vehicle.charge_on_solar_enabled,
             "lower_limit": vehicle.charge_on_solar_lower_limit,
             "charge_limit_soc": vehicle.charge_limit_soc,
         }
+        if self._data.get(vehicle.vin) == settings:
+            return
+        self._data[vehicle.vin] = settings
         self._store.async_delay_save(lambda: self._data)
 
     async def async_remove(self) -> None:
