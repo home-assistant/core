@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "climate": {
+      "leavingwatertemperature": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "none": "mdi:close-circle-outline"
+            }
+          }
+        }
+      },
+      "leavingwateroffset": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "none": "mdi:close-circle-outline"
+            }
+          }
+        }
+      },
+      "roomtemperature": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "quiet": "mdi:fan-chevron-down",
+              "1": "mdi:numeric-1",
+              "2": "mdi:numeric-2",
+              "3": "mdi:numeric-3",
+              "4": "mdi:numeric-4",
+              "5": "mdi:numeric-5"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "stop": "mdi:arrow-oscillating-off",
+              "swing": "mdi:arrow-left-right"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "stop": "mdi:arrow-oscillating-off",
+              "swing": "mdi:arrow-up-down",
+              "windnice": "mdi:waves",
+              "floorheatingairflow": "mdi:arrow-right-bottom"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "none": "mdi:close-circle-outline"
+            }
+          }
+        }
+      }
+    }
+  }
+}
