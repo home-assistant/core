@@ -79,7 +79,6 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
 
-    # recover from error
     mock_opengarage.update_state.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
