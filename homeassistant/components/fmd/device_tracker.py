@@ -76,18 +76,6 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
 
     @property
     @override
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device."""
-        bat = self.coordinator.data.get("bat")
-        if bat is None:
-            return None
-        try:
-            return int(bat)
-        except TypeError, ValueError:
-            return None
-
-    @property
-    @override
     def location_accuracy(self) -> float:
         """Return the GPS accuracy of the fix in meters."""
         accuracy = self.coordinator.data.get("accuracy")
@@ -120,4 +108,9 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
             attributes["speed_unit"] = "m/s"
         if "heading" in data:
             attributes["heading"] = data["heading"]
+        if "bat" in data and data["bat"] is not None:
+            # Battery is reported by the device alongside the location fix.
+            # The deprecated tracker battery_level property is not used; a
+            # dedicated battery sensor is planned as a follow-up platform.
+            attributes["battery"] = data["bat"]
         return attributes

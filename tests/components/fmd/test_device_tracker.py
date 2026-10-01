@@ -5,6 +5,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+from cryptography.exceptions import InvalidTag
 from fmd_api import AuthenticationError, FmdApiException
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
@@ -46,7 +47,7 @@ async def test_location_attributes(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["latitude"] == 37.7749
     assert state.attributes["longitude"] == -122.4194
-    assert state.attributes["battery_level"] == 85
+    assert state.attributes["battery"] == 85
     assert state.attributes["gps_accuracy"] == 10.5
 
 
@@ -71,7 +72,7 @@ async def test_refresh_updates_location(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["latitude"] == 38.0
     assert state.attributes["longitude"] == -121.0
-    assert state.attributes["battery_level"] == 42
+    assert state.attributes["battery"] == 42
 
 
 async def test_inaccurate_locations_skipped(
@@ -121,13 +122,18 @@ async def test_tracker_becomes_unavailable_on_api_error(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_auth_failure_starts_reauth(
+async def test_auth_failure_entry_stays_loaded_no_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_fmd_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test AuthenticationError during refresh triggers ConfigEntryAuthFailed."""
+    """Test AuthenticationError handling before a reauth flow exists.
+
+    FMD has no async_step_reauth yet, so ConfigEntryAuthFailed marks the
+    update failed (entity unavailable) without starting a reauth flow; the
+    entry remains loaded. Reauth arrives with the follow-up platform PR.
+    """
     await setup_integration(hass, mock_config_entry)
 
     mock_fmd_client.get_locations.side_effect = AuthenticationError("expired")
@@ -136,9 +142,13 @@ async def test_auth_failure_starts_reauth(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # AuthenticationError raised from the coordinator during a refresh
-    # (this is where reauth will hook in once PR2 adds the flow)
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert not any(
+        mock_config_entry.async_get_active_flows(hass, {"reauth", "reconfigure"})
+    )
 
 
 async def test_tracker_movement_attributes(
@@ -176,7 +186,9 @@ async def test_tracker_parses_bad_numeric_fields(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes.get("battery_level") is None
+    # battery_level property is gone; raw fix data is exposed as "battery"
+    assert "battery_level" not in state.attributes
+    assert state.attributes["battery"] == "not-a-number"
     assert state.attributes["gps_accuracy"] == 0
     assert "altitude" not in state.attributes
     assert "speed" not in state.attributes
@@ -198,7 +210,8 @@ async def test_tracker_missing_battery_and_accuracy(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes.get("battery_level") is None
+    assert "battery_level" not in state.attributes
+    assert "battery" not in state.attributes
     assert state.attributes["gps_accuracy"] == 0
 
 
@@ -276,3 +289,60 @@ async def test_same_account_on_two_servers(
     )
     assert len(er_entries) == 1
     assert er_entries[0].unique_id == f"https://fmd-other.example.com/{TEST_ID}"
+
+
+async def test_malformed_blobs_skipped_valid_location_used(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test corrupt/undecryptable blobs don't discard later valid fixes.
+
+    Regression test: a malformed first blob used to abort the whole update
+    (unhandled InvalidTag/JSON error), throwing away valid fixes behind it.
+    """
+    mock_fmd_client.get_locations = AsyncMock(
+        return_value=["corrupt-blob", "not-json-object", "good-blob"]
+    )
+
+    def decrypt(blob: Any) -> bytes:
+        """Serve a corrupt blob, a non-object JSON blob, then a good fix."""
+        if blob == "corrupt-blob":
+            raise InvalidTag("The tag did not match")
+        if blob == "not-json-object":
+            return b'["not", "a", "dict"]'
+        return json.dumps(dict(TEST_LOCATION, lat=41.0)).encode()
+
+    mock_fmd_client.decrypt_data_blob = MagicMock(side_effect=decrypt)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["latitude"] == 41.0
+    assert state.attributes["provider"] == "gps"
+
+
+async def test_all_blobs_malformed_raises_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that all-malformed data surfaces as UpdateFailed (unavailable)."""
+    await setup_integration(hass, mock_config_entry)
+
+    def decrypt(blob: Any) -> bytes:
+        """Always raise: server returned garbage."""
+        raise FmdApiException("Blob too small for decryption")
+
+    mock_fmd_client.get_locations = AsyncMock(return_value=["corrupt"])
+    mock_fmd_client.decrypt_data_blob = MagicMock(side_effect=decrypt)
+
+    freezer.tick(timedelta(minutes=DEFAULT_POLLING_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

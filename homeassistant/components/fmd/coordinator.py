@@ -5,6 +5,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from cryptography.exceptions import InvalidTag
 from fmd_api import AuthenticationError, FmdApiException, FmdClient
 
 from homeassistant.const import CONF_ID
@@ -73,10 +74,21 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for blob in blobs:
             if not blob:
                 continue
-            decrypted = await self.hass.async_add_executor_job(
-                self.api.decrypt_data_blob, blob
-            )
-            location: dict[str, Any] = json.loads(decrypted)
+            try:
+                decrypted = await self.hass.async_add_executor_job(
+                    self.api.decrypt_data_blob, blob
+                )
+                location = json.loads(decrypted)
+                if not isinstance(location, dict):
+                    _LOGGER.debug(
+                        "Skipping malformed location blob (not a JSON object)"
+                    )
+                    continue
+            except FmdApiException, InvalidTag, ValueError, TypeError:
+                # Skip undecryptable or malformed blobs and keep scanning for
+                # a valid location fix in the remaining ones.
+                _LOGGER.debug("Skipping malformed location blob", exc_info=True)
+                continue
             if self.filter_inaccurate and not is_location_accurate(location):
                 _LOGGER.debug(
                     "Skipping inaccurate location (provider=%s)",

@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'altitude': 132,
       'altitude_unit': 'm',
-      'battery_level': 85,
+      'battery': 85,
       'device_timestamp': '2025-10-23T12:00:00Z',
       'device_timestamp_ms': '1761220800000',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FMD test_user',
