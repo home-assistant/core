@@ -42,6 +42,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
+    CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
@@ -74,6 +75,7 @@ _HA_MODE_TO_LIB: dict[HVACMode, GreeAcMode] = {
 }
 _LIB_MODE_TO_HA: dict[GreeAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
 
+
 @dataclass
 class _GreeAcExtraStoredData(ExtraStoredData):
     """Extra data restored alongside the entity's visible state."""
@@ -103,7 +105,12 @@ class _GreeAcExtraStoredData(ExtraStoredData):
             return None
         flags = tuple(
             restored.get(key, default)
-            for key, default in (("turbo", False), ("light", True), ("health", False), ("xfan", False))
+            for key, default in (
+                ("turbo", False),
+                ("light", True),
+                ("health", False),
+                ("xfan", False),
+            )
         )
         if any(not isinstance(flag, bool) for flag in flags):
             return None
@@ -121,10 +128,16 @@ async def async_setup_entry(
     state: GreeAcState = hass.data[DOMAIN][entry.entry_id]
     if receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
         async_add_entities(
-            [GreeAcClimateWithReceiver(entry, emitter_entity_id, receiver_entity_id, model, state)]
+            [
+                GreeAcClimateWithReceiver(
+                    entry, emitter_entity_id, receiver_entity_id, model, state
+                )
+            ]
         )
     else:
-        async_add_entities([GreeAcClimateEntity(entry, emitter_entity_id, model, state)])
+        async_add_entities(
+            [GreeAcClimateEntity(entry, emitter_entity_id, model, state)]
+        )
 
 
 class GreeAcClimateEntity(
@@ -153,6 +166,7 @@ class GreeAcClimateEntity(
         super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
         self._state = state
+        self._generic_options = entry.data.get(CONF_GENERIC_OPTIONS, False)
         self._model = GreeAcModel.YAP1F if model == MODEL_YAP1F else GreeAcModel.GENERIC
         configured_modes = entry.data.get(
             CONF_HVAC_MODES, [HVACMode.COOL, HVACMode.DRY]
@@ -207,10 +221,14 @@ class GreeAcClimateEntity(
             restored = _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
             if restored is not None:
                 if restored.last_active_hvac_mode in (
-                    mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
+                    mode.value
+                    for mode in self._attr_hvac_modes
+                    if mode is not HVACMode.OFF
                 ):
-                    self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
-                if self._model is GreeAcModel.YAP1F:
+                    self._last_active_hvac_mode = HVACMode(
+                        restored.last_active_hvac_mode
+                    )
+                if self._supports_options:
                     self._state.turbo = restored.turbo
                     self._state.light = restored.light
                     self._state.health = restored.health
@@ -243,9 +261,12 @@ class GreeAcClimateEntity(
             self._last_active_hvac_mode = hvac_mode
 
     async def async_set_option(self, option: str, value: bool) -> None:
-        """Set a YAP1F option and transmit the resulting full state when active."""
-        if self._model is not GreeAcModel.YAP1F or option not in (
-            "turbo", "light", "health", "xfan"
+        """Set an option flag and send the updated state when active."""
+        if not self._supports_options or option not in (
+            "turbo",
+            "light",
+            "health",
+            "xfan",
         ):
             raise ValueError(f"Unsupported Gree option: {option}")
         async with self._state.command_lock:
@@ -265,13 +286,16 @@ class GreeAcClimateEntity(
             for switch in tuple(self._state.switches):
                 switch.async_write_ha_state()
 
+    @property
+    def _supports_options(self) -> bool:
+        """Return whether this profile exposes the shared option flags."""
+        return self._model is GreeAcModel.YAP1F or self._generic_options
+
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         async with (
-            self._state.command_lock
-            if self._model is GreeAcModel.YAP1F
-            else nullcontext()
+            self._state.command_lock if self._supports_options else nullcontext()
         ):
             await self._async_send_state(
                 hvac_mode,
@@ -285,9 +309,7 @@ class GreeAcClimateEntity(
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature, switching the HVAC mode when one is given."""
         async with (
-            self._state.command_lock
-            if self._model is GreeAcModel.YAP1F
-            else nullcontext()
+            self._state.command_lock if self._supports_options else nullcontext()
         ):
             temp = round(kwargs[ATTR_TEMPERATURE])
             hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -307,9 +329,7 @@ class GreeAcClimateEntity(
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         async with (
-            self._state.command_lock
-            if self._model is GreeAcModel.YAP1F
-            else nullcontext()
+            self._state.command_lock if self._supports_options else nullcontext()
         ):
             hvac_mode = self._attr_hvac_mode
             if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
@@ -372,7 +392,7 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         self._attr_hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
         self._attr_target_temperature = float(command.temperature)
-        if self._model is GreeAcModel.YAP1F:
+        if self._supports_options:
             self._state.turbo = command.turbo
             self._state.light = command.display
             self._state.health = command.anion
