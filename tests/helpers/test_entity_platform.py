@@ -702,45 +702,6 @@ async def test_polling_supports_unhashable_entities(hass: HomeAssistant) -> None
     await unhashable.async_remove()
 
 
-async def test_polling_reraises_base_exceptions_from_update(
-    hass: HomeAssistant,
-) -> None:
-    """Test a non-`Exception` `BaseException` from an update still propagates.
-
-    Regression contract: `asyncio.gather(..., return_exceptions=True)` also
-    captures `BaseException` subclasses that are not `Exception` or
-    `CancelledError`; these must still propagate instead of being silently
-    discarded. (`SystemExit`/`KeyboardInterrupt` are excluded here since
-    asyncio's `Task` re-raises those immediately out of the event loop
-    instead of ever returning them from `gather`.)
-    """
-    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
-    await component.async_setup({})
-
-    platform = list(component._platforms.values())[-1]
-
-    class _CustomBaseException(BaseException):
-        """A BaseException that is not Exception or CancelledError."""
-
-    async def _raise_custom_base_exception() -> None:
-        await asyncio.sleep(0)
-        raise _CustomBaseException
-
-    failing = MockEntity(should_poll=True)
-    failing.async_update = _raise_custom_base_exception
-    healthy = MockEntity(should_poll=True)
-    healthy.async_update = AsyncMock()
-
-    await component.async_add_entities([failing, healthy])
-
-    with pytest.raises(_CustomBaseException):
-        await platform._async_update_entity_states()
-
-    # The tracked task for the failing entity must still be cleared even
-    # though its exception was re-raised.
-    assert id(failing) not in platform._polling_tasks
-
-
 async def test_polling_reraises_base_exceptions_without_waiting_for_hung_sibling(
     hass: HomeAssistant,
 ) -> None:
@@ -850,6 +811,60 @@ async def test_polling_handles_every_completed_task_before_reraising_fatal_error
 
     assert "Error updating entity" in caplog.text
     assert failing_entity.entity_id in caplog.text
+
+
+async def test_polling_propagates_cancellation_to_pending_entity_tasks(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling the outer poll also cancels in-flight entity tasks.
+
+    Regression contract: unlike `gather`, `asyncio.wait` does not cancel
+    its children when the enclosing await is itself cancelled (e.g. by
+    config entry unload cancelling the background polling task); those
+    per-entity tasks must still be explicitly cancelled, or they can
+    outlive the unloaded platform while holding onto its resources.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    hang_forever = asyncio.Event()
+
+    async def _hang() -> None:
+        await hang_forever.wait()
+
+    entity_a = MockEntity(should_poll=True)
+    entity_a.async_update = _hang
+    entity_b = MockEntity(should_poll=True)
+    entity_b.async_update = _hang
+
+    await component.async_add_entities([entity_a, entity_b])
+
+    task_a = hass.async_create_task(entity_a.async_update_ha_state(True))
+    task_b = hass.async_create_task(entity_b.async_update_ha_state(True))
+    cycle_id = platform._next_polling_cycle_id
+    platform._next_polling_cycle_id += 1
+    platform._polling_tasks[id(entity_a)] = (cycle_id, task_a)
+    platform._polling_tasks[id(entity_b)] = (cycle_id, task_b)
+
+    outer = hass.async_create_task(
+        platform._async_await_polling_tasks([(entity_a, task_a), (entity_b, task_b)])
+    )
+    await asyncio.sleep(0)
+
+    outer.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await outer
+
+    # The per-entity tasks must have been cancelled too, not left hanging.
+    assert task_a.cancelled()
+    assert task_b.cancelled()
+
+    # The background drain must still clear their tracked entries.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert id(entity_a) not in platform._polling_tasks
+    assert id(entity_b) not in platform._polling_tasks
 
 
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
