@@ -49,7 +49,7 @@ async def test_diagnostics(
     event: GridEvent | None,
     error: AxleConnectionError | None,
 ) -> None:
-    """Redact the key and retain cached data without another API request."""
+    """Exclude the key and retain cached data without another API request."""
     mock_client.get_event.return_value = event
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -90,7 +90,8 @@ async def test_diagnostics_multiple_entries(
 
     assert first["data"]["direction"] == "export"
     assert second["data"] is None
-    assert first["entry_data"] == second["entry_data"] == {CONF_API_KEY: "**REDACTED**"}
+    assert "entry_data" not in first
+    assert "entry_data" not in second
     mock_client.get_event.assert_not_awaited()
     assert mock_config_entry.data[CONF_API_KEY] == "test-token"
     assert other_entry.data[CONF_API_KEY] == "other-token"

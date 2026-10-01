@@ -2,9 +2,6 @@
 # name: test_diagnostics[healthy-empty]
   dict({
     'data': None,
-    'entry_data': dict({
-      'api_key': '**REDACTED**',
-    }),
     'last_update_success': True,
   })
 # ---
@@ -17,18 +14,12 @@
       'start': '2026-09-11T17:00:00+00:00',
       'updated_at': '2026-09-11T08:00:00+00:00',
     }),
-    'entry_data': dict({
-      'api_key': '**REDACTED**',
-    }),
     'last_update_success': True,
   })
 # ---
 # name: test_diagnostics[unavailable-empty]
   dict({
     'data': None,
-    'entry_data': dict({
-      'api_key': '**REDACTED**',
-    }),
     'last_update_success': False,
   })
 # ---
@@ -40,9 +31,6 @@
       'opted_out': False,
       'start': '2026-09-11T17:00:00+00:00',
       'updated_at': '2026-09-11T08:00:00+00:00',
-    }),
-    'entry_data': dict({
-      'api_key': '**REDACTED**',
     }),
     'last_update_success': False,
   })
