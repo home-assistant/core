@@ -45,6 +45,16 @@ NO_WAKE_WORD: Final[str] = "no_wake_word"
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
 
+# Built from the device info, so a cleanup path has to name them.
+ASSIST_SATELLITE_KEY: Final[str] = "assist_satellite"
+VOICE_ASSISTANT_SELECT_KEYS: Final[tuple[str, ...]] = (
+    "pipeline",
+    "pipeline_2",
+    "vad_sensitivity",
+    "wake_word",
+    "wake_word_2",
+)
+
 TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
     TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
     TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
