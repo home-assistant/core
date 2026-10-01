@@ -47,7 +47,7 @@ from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import cached_json_fragment, json_fragment
 from .helpers.typing import UNDEFINED, UndefinedType
-from .util.async_ import create_eager_task
+from .util.async_ import create_eager_task, wait_shared_future
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -347,7 +347,7 @@ async def async_get_custom_components(
         return comps
 
     if isinstance(comps_or_future, asyncio.Future):
-        return await comps_or_future
+        return await wait_shared_future(comps_or_future)
 
     return comps_or_future
 
@@ -1013,7 +1013,7 @@ class Integration:
             return cache[domain]
 
         if self._component_future:
-            return await self._component_future
+            return await wait_shared_future(self._component_future)
 
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
@@ -1226,7 +1226,7 @@ class Integration:
 
         if in_progress_imports:
             for platform_name, future in in_progress_imports.items():
-                platforms[platform_name] = await future
+                platforms[platform_name] = await wait_shared_future(future)
 
         return platforms
 
