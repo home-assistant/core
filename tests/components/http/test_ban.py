@@ -1,9 +1,12 @@
 """The tests for the Home Assistant HTTP component."""
 
+import asyncio
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+import threading
+import time
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
@@ -17,6 +20,7 @@ from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
+    RESOLVE_HOST_TIMEOUT,
     process_success_login,
     setup_bans,
 )
@@ -517,3 +521,74 @@ async def test_unix_socket_skips_ban_check(
     ):
         resp = await client.get("/")
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_hanging_reverse_dns_does_not_delay_auth(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """A stalled PTR lookup must not block the auth response.
+
+    The companion mobile app times out after 10s. A resolver that cannot answer
+    PTR makes gethostbyaddr block for ~10s, so every failed login used to hang.
+    See #182392.
+    """
+
+    stop_lookup = threading.Event()
+    started = threading.Event()
+
+    def slow_lookup(addr):
+        """Emulate a resolver that never answers, but can be told to stop."""
+        started.set()
+        # Busy-wait in small slices so teardown can interrupt promptly; a plain
+        # time.sleep() would leave the thread running past the test. The window
+        # only has to outlive the request, which returns in ~1s.
+        deadline = time.monotonic() + 4
+        while not stop_lookup.is_set() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        return ("example.com", [addr], [addr])
+
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def auth_handler(request):
+        """Return an unauthorized response."""
+        return None, 401
+
+    app.router.add_get(
+        "/auth_false",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
+    )
+
+    setup_bans(hass, app, 5)
+    mock_real_ip(app)("200.201.202.204")
+
+    @middleware
+    async def mock_auth(request, handler):
+        """Mock auth middleware."""
+        request[KEY_AUTHENTICATED] = False
+        return await handler(request)
+
+    app.middlewares.append(mock_auth)
+
+    client = await aiohttp_client(app)
+
+    try:
+        with patch(
+            "homeassistant.components.http.ban.gethostbyaddr", side_effect=slow_lookup
+        ):
+            loop = asyncio.get_running_loop()
+            start = loop.time()
+            resp = await client.get("/auth_false")
+            elapsed = loop.time() - start
+
+        assert resp.status == HTTPStatus.UNAUTHORIZED
+        # The lookup is bounded well below the 10s companion app timeout.
+        assert elapsed < RESOLVE_HOST_TIMEOUT + 2
+    finally:
+        # The request already returned, but the blocked lookup outlives it.
+        # Signal the slice loop to stop so the dedicated thread frees itself
+        # without blocking the event loop here.
+        stop_lookup.set()
+        for thread in threading.enumerate():
+            if thread.name.startswith("resolve-host"):
+                thread.join(timeout=5)
