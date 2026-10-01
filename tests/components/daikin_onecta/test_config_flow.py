@@ -4,8 +4,15 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
-from homeassistant.components.application_credentials import async_import_client_credential
-from homeassistant.components.application_credentials import ClientCredential
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.daikin_onecta.const import (
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+)
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -13,10 +20,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
+
 from .conftest import FAKE_ACCESS_TOKEN
-from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.components.daikin_onecta.const import OAUTH2_AUTHORIZE
-from homeassistant.components.daikin_onecta.const import OAUTH2_TOKEN
 
 CLIENT_ID = "emU20GdJDiiUxI_HnFGz69dD"
 CLIENT_SECRET = "TNL1ePwnOkf6o2gKiI8InS8nVwTz2G__VYkv6WznzJGUnwLHLTmKYp-7RZc6FA3yS6D0Wgj_snvqsU5H_LPHQA"
