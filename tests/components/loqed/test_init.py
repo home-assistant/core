@@ -1,6 +1,7 @@
 """Tests the init part of the Loqed integration."""
 
 from datetime import timedelta
+import json
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -9,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
 
+from homeassistant.components.lock import LockState
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -49,6 +51,36 @@ async def test_webhook_accepts_valid_message(
         headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
     )
     lock.receiveWebhook.assert_called()
+
+
+async def test_webhook_status_message_refreshes_bolt_state(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+) -> None:
+    """Test a webhook without a lock event fetches the bolt state from the bridge."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    message = await async_load_fixture(hass, "battery_update.json", DOMAIN)
+    lock.receiveWebhook = AsyncMock(return_value=json.loads(message))
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={"bolt_state": "night_lock"},
+    ) as mock_details:
+        await client.post(
+            f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+            data=message,
+            headers={"timestamp": "1653304609", "hash": "hash"},
+        )
+        await hass.async_block_till_done()
+
+    mock_details.assert_awaited_once()
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.LOCKED
 
 
 async def test_setup_webhook_in_bridge(

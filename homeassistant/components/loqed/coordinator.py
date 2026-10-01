@@ -124,6 +124,11 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return
 
+        # The bridge sends battery and signal messages after a restart; lock events
+        # during the restart are not sent, so the bolt state is fetched again.
+        if "event_type" not in event_data:
+            await self.async_request_refresh()
+
         self.async_update_listeners()
 
     async def ensure_webhooks(self) -> None:
