@@ -99,7 +99,7 @@ class TestOnectaDataUpdateCoordinator:
     async def test_rate_limit_uses_update_failed_retry_after(self, coordinator, mock_config_entry):
         """A Daikin rate limit should use the coordinator retry-after mechanism."""
         daikin_api = mock_config_entry.runtime_data.daikin_api
-        daikin_api._last_patch_call = None
+        daikin_api.last_patch_call = None
         daikin_api.get_cloud_device_details = AsyncMock(side_effect=OnectaRateLimitError(3060))
 
         # Simulate daily rate limit reached
