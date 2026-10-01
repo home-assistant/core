@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 from httpx import HTTPStatusError, RequestError
+import probatio
 from pyocat import (
     AsyncApiClient,
     AsyncAuth,
@@ -11,7 +12,6 @@ from pyocat import (
     WTCApiTemporaryError,
     WTCApiUnauthorizedError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -21,9 +21,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_STEP_USER_DATA_SCHEMA = vol.Schema(
+_STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
