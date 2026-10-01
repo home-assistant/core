@@ -30,6 +30,8 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
+    WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
@@ -951,9 +953,11 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     [
         (BluetoothTimeout, "timeout"),
         (BluetoothTransportError, "cannot_connect"),
+        (WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap, "tap_timeout"),
+        (WhitelistOperationLocalEntityAuthFailedUIDenied, "pair_denied"),
         (TeslaFleetError, "pair_failed"),
     ],
-    ids=["timeout", "transport", "rejected"],
+    ids=["timeout", "transport", "tap_timeout", "denied", "rejected"],
 )
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_authorize_failure(

@@ -24,6 +24,8 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
+    WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
@@ -398,6 +400,16 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_progress_done(next_step_id="instructions")
         except WhitelistOperationAttemptingToAddExistingKey as err:
             LOGGER.debug("Virtual key is already on the whitelist: %s", err)
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap as err:
+            LOGGER.debug(
+                "No key card was tapped before the vehicle stopped waiting: %s", err
+            )
+            self._pair_error = {"base": "tap_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationLocalEntityAuthFailedUIDenied as err:
+            LOGGER.debug("Key was declined on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "pair_denied"}
+            return self.async_show_progress_done(next_step_id="instructions")
         except TeslaFleetError as err:
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
