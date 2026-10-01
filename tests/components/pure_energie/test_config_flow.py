@@ -91,10 +91,9 @@ async def test_connection_error(
 
     mock_pure_energie_config_flow.device.side_effect = GridNetConnectionError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.com"},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.com"},
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -103,10 +102,9 @@ async def test_connection_error(
 
     mock_pure_energie_config_flow.device.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.com"},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.com"},
     )
 
     assert result.get("title") == "Pure Energie Meter"
