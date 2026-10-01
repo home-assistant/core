@@ -105,8 +105,5 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
         if data.heading_deg is not None:
             attributes["heading"] = data.heading_deg
         if data.battery_pct is not None:
-            # Battery is reported by the device alongside the location fix.
-            # The deprecated tracker battery_level property is not used; a
-            # dedicated battery sensor is planned as a follow-up platform.
             attributes["battery"] = data.battery_pct
         return attributes

@@ -107,7 +107,6 @@ async def test_tracker_becomes_unavailable_on_api_error(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    # UpdateFailed propagates: last update failed, entity becomes unavailable
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -119,9 +118,8 @@ async def test_auth_failure_entry_stays_loaded_no_reauth_flow(
 ) -> None:
     """Test AuthenticationError handling before a reauth flow exists.
 
-    FMD has no async_step_reauth yet, so ConfigEntryAuthFailed marks the
-    update failed (entity unavailable) without starting a reauth flow; the
-    entry remains loaded. Reauth arrives with the follow-up platform PR.
+    FMD has no async_step_reauth yet, so no reauth flow is started;
+    reauth arrives with the follow-up platform PR.
     """
     await setup_integration(hass, mock_config_entry)
 

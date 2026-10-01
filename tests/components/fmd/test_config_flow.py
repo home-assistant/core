@@ -72,7 +72,6 @@ async def test_form_errors_then_success(
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": error}
 
-    # Flow recovers after the error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
