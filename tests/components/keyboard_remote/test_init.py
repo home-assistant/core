@@ -1409,13 +1409,13 @@ async def test_device_connects_once_its_permissions_are_set(
 
 
 @pytest.mark.parametrize(
-    "path_entry_first",
-    [pytest.param(True, id="path_entry_first"), pytest.param(False, id="name_first")],
+    "order",
+    [pytest.param(1, id="path_entry_first"), pytest.param(-1, id="name_first")],
 )
 async def test_path_entry_wins_over_name_entry(
     hass: HomeAssistant,
     fake_input: FakeInput,
-    path_entry_first: bool,
+    order: int,
 ) -> None:
     """Test the entry configured with a node's link gets it over a name entry.
 
@@ -1429,7 +1429,7 @@ async def test_path_entry_wins_over_name_entry(
         {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
     )
     name_entry = _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="by-name")
-    entries = [path_entry, name_entry][:: 1 if path_entry_first else -1]
+    entries = [path_entry, name_entry][::order]
     for entry in entries:
         await _set_up(hass, fake_input, entry)
 

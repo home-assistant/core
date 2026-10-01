@@ -47,7 +47,6 @@ BUS_HOST = 0x19
 _mock_ecodes = SimpleNamespace(EV_KEY=EV_KEY, BUS_HOST=BUS_HOST)
 _mock_evdev = MagicMock()
 _mock_evdev.ecodes = _mock_ecodes
-_mock_evdev.categorize = MagicMock(side_effect=lambda e: f"key event {e.code}")
 
 
 @pytest.fixture(autouse=True)
@@ -520,7 +519,6 @@ def fake_input(hass: HomeAssistant) -> Generator[FakeInput]:
     fake = FakeInput(hass)
     real_realpath = os.path.realpath
     real_exists = os.path.exists
-    real_isdir = os.path.isdir
     real_scandir = os.scandir
 
     def _realpath(path: Any, *args: Any, **kwargs: Any) -> Any:
@@ -532,11 +530,6 @@ def fake_input(hass: HomeAssistant) -> Generator[FakeInput]:
         if (devinput := _devinput_path(path)) is not None:
             return devinput in fake.links or devinput in fake.devices
         return real_exists(path)
-
-    def _isdir(path: Any) -> bool:
-        if _devinput_path(path) == DEVINPUT_BY_ID:
-            return bool(fake.by_id_links)
-        return real_isdir(path)
 
     def _scandir(path: Any = ".") -> Any:
         if _devinput_path(path) == DEVINPUT_BY_ID:
@@ -563,7 +556,6 @@ def fake_input(hass: HomeAssistant) -> Generator[FakeInput]:
         patch("evdev.InputDevice", side_effect=fake._open),
         patch("os.path.realpath", _realpath),
         patch("os.path.exists", _exists),
-        patch("os.path.isdir", _isdir),
         patch("os.scandir", _scandir),
     ):
         try:
