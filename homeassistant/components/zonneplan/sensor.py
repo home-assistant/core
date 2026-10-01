@@ -415,7 +415,7 @@ def _battery_state(state: str | None) -> str | None:
 class ZonneplanBatterySensorEntityDescription(SensorEntityDescription):
     """Describes a Zonneplan home battery sensor."""
 
-    value_fn: Callable[[Battery], StateType | datetime | Decimal]
+    value_fn: Callable[[Battery], StateType | Decimal]
     last_reset_fn: Callable[[ZonneplanBatteryData], datetime | None] | None = None
 
 
@@ -500,13 +500,6 @@ ZONNEPLAN_BATTERY_SENSORS: tuple[ZonneplanBatterySensorEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda battery: battery.backup_power_usable_capacity_wh,
     ),
-    ZonneplanBatterySensorEntityDescription(
-        key="last_measured",
-        translation_key="last_measured",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda battery: battery.last_measured_at,
-    ),
 )
 
 
@@ -576,7 +569,7 @@ class ZonneplanBatterySensor(ZonneplanBatteryEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType | datetime | Decimal:
+    def native_value(self) -> StateType | Decimal:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.battery)
 

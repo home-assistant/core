@@ -153,13 +153,10 @@
       "inverter_state": {
         "name": "Inverter state",
         "state": {
-          "charging": "Charging",
-          "discharging": "Discharging",
-          "operative": "Operative"
+          "charging": "[%key:component::zonneplan::entity::sensor::battery_state::state::charging%]",
+          "discharging": "[%key:component::zonneplan::entity::sensor::battery_state::state::discharging%]",
+          "operative": "[%key:component::zonneplan::entity::sensor::battery_state::state::operative%]"
         }
-      },
-      "last_measured": {
-        "name": "Last measurement"
       },
       "lowest_electricity_price_today": {
         "name": "Lowest electricity price today"
