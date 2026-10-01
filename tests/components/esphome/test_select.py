@@ -23,7 +23,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import get_satellite_entity
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
+)
 
 
 async def test_voice_assistant_select_keys_match_the_entities(
@@ -51,6 +55,48 @@ async def test_voice_assistant_select_keys_match_the_entities(
     } == {
         f"{device.device_info.mac_address}-{key}" for key in VOICE_ASSISTANT_SELECT_KEYS
     }
+
+
+async def test_selects_added_when_a_voice_assistant_appears(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the voice assistant selects are added when a device gains one.
+
+    The device has a select of its own, so the platform is already set up when
+    the voice assistant appears and is not forwarded a second time.
+    """
+    entity_info = [
+        SelectInfo(object_id="myselect", key=1, name="my select", options=["a", "b"])
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=[SelectState(key=1, state="a")],
+        device_info={},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("select.test_my_select") is not None
+    assert hass.states.get("select.test_assistant") is None
+
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        entity_info,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+
+    for entity_id in (
+        "select.test_assistant",
+        "select.test_assistant_2",
+        "select.test_finished_speaking_detection",
+        "select.test_wake_word",
+        "select.test_wake_word_2",
+    ):
+        assert hass.states.get(entity_id) is not None, entity_id
 
 
 @pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
