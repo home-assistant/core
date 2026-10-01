@@ -177,31 +177,29 @@ class HassIOView(HomeAssistantView):
             if PATHS_LOGS.match(path) and request.headers.get(RANGE):
                 headers[RANGE] = request.headers[RANGE]
 
-        client = None
         try:
-            client = await self._websession.request(
+            async with self._websession.request(
                 method=request.method,
                 url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
                 data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
-            )
+            ) as client:
+                # Stream response
+                response = web.StreamResponse(
+                    status=client.status, headers=_response_header(client)
+                )
+                response.content_type = client.content_type
 
-            # Stream response
-            response = web.StreamResponse(
-                status=client.status, headers=_response_header(client)
-            )
-            response.content_type = client.content_type
-
-            if should_compress(response.content_type, path):
-                response.enable_compression()
-            await response.prepare(request)
-            # In testing iter_chunked, iter_any, and iter_chunks:
-            # iter_chunks was the best performing option since
-            # it does not have to do as much re-assembly
-            async for data, _ in client.content.iter_chunks():
-                await response.write(data)
+                if should_compress(response.content_type, path):
+                    response.enable_compression()
+                await response.prepare(request)
+                # In testing iter_chunked, iter_any, and iter_chunks:
+                # iter_chunks was the best performing option since
+                # it does not have to do as much re-assembly
+                async for data, _ in client.content.iter_chunks():
+                    await response.write(data)
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
@@ -209,9 +207,6 @@ class HassIOView(HomeAssistantView):
         except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
             raise HTTPBadGateway from err
-        finally:
-            if client is not None:
-                client.release()
         return response
 
     get = _handle
