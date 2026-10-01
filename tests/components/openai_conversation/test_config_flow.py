@@ -275,6 +275,7 @@ async def test_subentry_unsupported_model(
         ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
+        ("gpt-6-luna", ["none", "low", "medium", "high", "xhigh", "max"]),
         ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
     ],
 )
@@ -318,6 +319,42 @@ async def test_subentry_reasoning_effort_list(
         subentry_flow["data_schema"].schema[CONF_REASONING_EFFORT].config["options"]
         == reasoning_effort_options
     )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
+@pytest.mark.parametrize("reasoning_effort", ["none", "low"])
+async def test_subentry_luna_reasoning_effort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    reasoning_effort: str,
+) -> None:
+    """Test that Luna reasoning effort can be selected and saved."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == subentry_type
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: "gpt-6-luna"}
+    )
+    assert result["step_id"] == "model"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REASONING_EFFORT: reasoning_effort}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    saved = mock_config_entry.subentries[subentry.subentry_id].data
+    assert saved[CONF_CHAT_MODEL] == "gpt-6-luna"
+    assert saved[CONF_REASONING_EFFORT] == reasoning_effort
 
 
 @pytest.mark.parametrize(

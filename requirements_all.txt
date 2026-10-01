@@ -172,13 +172,13 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.onewire
-aio-ownet==0.0.5
+aio-ownet==0.1.0
 
 # homeassistant.components.wattwaechter
 aio-wattwaechter==1.0.0
 
 # homeassistant.components.acaia
-aioacaia==0.2.1
+aioacaia==0.2.2
 
 # homeassistant.components.airq
 aioairq==0.4.8
@@ -276,6 +276,7 @@ aioftp==0.21.3
 aioghost==0.4.16
 
 # homeassistant.components.github
+# homeassistant.components.marketplace
 aiogithubapi==26.0.0
 
 # homeassistant.components.guardian
@@ -426,7 +427,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.34.0
+aioshelly==13.34.1
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -670,7 +671,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen
-besen==0.4.8
+besen==0.4.10
 
 # homeassistant.components.bitvis
 bitvis-protobuf==2.0.4
@@ -1387,7 +1388,7 @@ ihcsdk==2.8.12
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.5.2
+imgw_pib==2.5.3
 
 # homeassistant.components.incomfort
 incomfort-client==0.7.1
@@ -1402,7 +1403,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==10.1.0
+infrared-protocols==10.2.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.7.1
@@ -1550,7 +1551,7 @@ lojack-api==0.7.2
 london-tube-status==0.7
 
 # homeassistant.components.loqed
-loqedAPI==2.1.11
+loqedAPI==2.1.16
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2415,7 +2416,7 @@ pymeteoclimatic==0.1.1
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.6.2
+pymiele==0.6.3
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2621,7 +2622,7 @@ pysillaprism==0.2.1
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==1.1.8
+pysma==1.1.9
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -2777,7 +2778,7 @@ python-open-router==0.4.0
 python-opendata-transport==0.5.0
 
 # homeassistant.components.openevse
-python-openevse-http==1.5.0
+python-openevse-http==1.8.0
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
@@ -2796,7 +2797,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.12.0
+python-qube-heatpump==1.15.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2887,7 +2888,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.1
+pywaze==1.2.3
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.6.3
@@ -2965,7 +2966,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.13
+renault-api==0.5.14
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -3072,7 +3073,7 @@ sentry-sdk==2.48.0
 serialx==1.11.0
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.1.1
+sfrbox-api==0.1.2
 
 # homeassistant.components.sharkiq
 sharkiq==1.5.0
@@ -3442,7 +3443,7 @@ webmin-xmlrpc==0.0.2
 weheat==2026.9.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==2.0.3
+whirlpool-sixth-sense==2.1.0
 
 # homeassistant.components.whois
 whoisdomain==2.20260806.3

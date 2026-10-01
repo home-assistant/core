@@ -48,7 +48,7 @@ STATES_MAP = {
 
 COVER_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Optional(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
         probatio.Optional(CONF_DEVICE): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
