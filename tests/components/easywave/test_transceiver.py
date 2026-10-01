@@ -296,7 +296,7 @@ def test_resolve_gateway_port_prefers_usb_serial() -> None:
     )
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[port_a, port_b],
     ):
         assert (
@@ -313,7 +313,7 @@ def test_resolve_gateway_port_falls_back_to_sole_rx11_when_serial_missing() -> N
     port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222")
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[port],
     ):
         assert (
@@ -330,7 +330,7 @@ def test_resolve_gateway_port_rejects_replacement_when_disabled() -> None:
     port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222")
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[port],
     ):
         assert (
@@ -354,7 +354,7 @@ def test_resolve_gateway_port_returns_none_for_ambiguous_replacement() -> None:
     )
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[port_a, port_b],
     ):
         assert (
@@ -376,7 +376,7 @@ def test_resolve_gateway_port_matches_configured_device_path() -> None:
     )
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[port_a, port_b],
     ):
         assert (
@@ -398,7 +398,7 @@ def test_resolve_gateway_port_rejects_path_owned_by_other_serial() -> None:
     )
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[other_stick, replacement],
     ):
         assert (
@@ -416,7 +416,7 @@ def test_resolve_gateway_port_path_fallback_when_serial_absent_on_port() -> None
     port = MagicMock(device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number=None)
 
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         return_value=[port],
     ):
         assert (
@@ -433,7 +433,7 @@ def test_resolve_gateway_port_path_fallback_when_serial_absent_on_port() -> None
 def test_resolve_gateway_port_returns_none_when_comports_raises() -> None:
     """Port resolution fails closed when USB enumeration raises."""
     with patch(
-        "homeassistant.components.easywave.transceiver.serial.tools.list_ports.comports",
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
         side_effect=OSError("usb unavailable"),
     ):
         assert resolve_gateway_port(SUPPORTED_USB_IDS, usb_serial="222") is None

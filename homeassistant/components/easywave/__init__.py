@@ -46,32 +46,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     country_code = hass.config.country
 
     if frequency and not is_country_allowed_for_frequency(frequency, country_code):
-        _LOGGER.warning(
-            "This hardware operates on %s, which is not permitted in "
-            "your configured region (%s). Integration disabled for regulatory compliance",
-            frequency,
-            country_code or "unknown",
-        )
-        placeholders = {
-            "frequency": frequency,
-            "country": country_code or "unknown",
-        }
+        if country_code is None:
+            _LOGGER.warning(
+                "Home Assistant country is not configured; refusing to enable "
+                "%s Easywave hardware until a country is set",
+                frequency,
+            )
+            placeholders = {"frequency": frequency}
+            issue_id = f"country_not_configured_{entry.entry_id}"
+            translation_key = "country_not_configured"
+        else:
+            _LOGGER.warning(
+                "This hardware operates on %s, which is not permitted in "
+                "your configured region (%s). Integration disabled for "
+                "regulatory compliance",
+                frequency,
+                country_code,
+            )
+            placeholders = {
+                "frequency": frequency,
+                "country": country_code,
+            }
+            issue_id = f"frequency_not_permitted_{entry.entry_id}"
+            translation_key = "frequency_not_permitted"
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"frequency_not_permitted_{entry.entry_id}",
+            issue_id,
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
-            translation_key="frequency_not_permitted",
+            translation_key=translation_key,
             translation_placeholders=placeholders,
         )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
-            translation_key="frequency_not_permitted",
+            translation_key=translation_key,
             translation_placeholders=placeholders,
         )
 
     ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
+    ir.async_delete_issue(hass, DOMAIN, f"country_not_configured_{entry.entry_id}")
 
     transceiver = RX11Transceiver(hass, entry.data)
     coordinator = EasywaveCoordinator(hass, transceiver, entry)
@@ -110,6 +124,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
     # Failed regulatory setup raises ConfigEntryError before unload hooks run, so
     # removal must clear the issue explicitly.
     ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
+    ir.async_delete_issue(hass, DOMAIN, f"country_not_configured_{entry.entry_id}")
 
 
 def _device_identifier(device: dr.AnyDeviceEntry) -> str | None:

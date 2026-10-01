@@ -78,9 +78,8 @@ def test_is_country_allowed_for_frequency_not_allowed() -> None:
 
 
 def test_is_country_allowed_for_frequency_none() -> None:
-    """Test is_country_allowed_for_frequency with None country."""
-    # No country configured — cannot enforce, so allow
-    assert is_country_allowed_for_frequency(FREQUENCY_868MHZ, None) is True
+    """Test is_country_allowed_for_frequency rejects an unset country."""
+    assert is_country_allowed_for_frequency(FREQUENCY_868MHZ, None) is False
 
 
 def test_is_country_allowed_for_frequency_unknown_frequency() -> None:

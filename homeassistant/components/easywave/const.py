@@ -115,11 +115,12 @@ def is_country_allowed_for_frequency(frequency: str, country_code: str | None) -
         country_code: ISO 3166-1 alpha-2 country code, or None if not configured
 
     Returns:
-        True if country is allowed or unknown, False if explicitly disallowed.
+        True only when a country is configured and listed for the frequency.
+        Returns False when no country is configured so the radio is not enabled
+        without a regulatory check.
     """
-    # No country configured — cannot enforce
     if country_code is None:
-        return True
+        return False
 
     allowed = FREQUENCY_ALLOWED_COUNTRIES.get(frequency)
     if allowed is None:

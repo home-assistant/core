@@ -182,8 +182,22 @@ async def test_setup_entry_deletes_stale_repair_issue(
 async def test_setup_entry_no_country(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup succeeds when no country is configured."""
-    await async_setup_easywave_entry(hass, mock_config_entry, country=None)
+    """Test setup fails when no country is configured."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config.country = None
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "country_not_configured"
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    issues = ir.async_get(hass)
+    issue = issues.async_get_issue(
+        DOMAIN, f"country_not_configured_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "country_not_configured"
 
 
 async def test_unload_entry(

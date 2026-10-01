@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "country_not_configured": "Configure your Home Assistant country under Settings → System → General before setting up Easywave. This is required to verify that {frequency} operation is permitted in your region.",
       "frequency_not_permitted": "This device operates on {frequency}, which is not permitted in your configured Home Assistant region ({country}).",
       "no_devices_found": "No supported RX11 USB Transceiver found. Make sure it is plugged in and recognized by the system."
     },
@@ -198,11 +199,18 @@
     }
   },
   "exceptions": {
+    "country_not_configured": {
+      "message": "Home Assistant country is not configured. Set it under Settings → System → General before enabling Easywave ({frequency})."
+    },
     "frequency_not_permitted": {
       "message": "This Easywave hardware operates on {frequency}, which is not permitted in your configured Home Assistant region ({country})."
     }
   },
   "issues": {
+    "country_not_configured": {
+      "description": "Easywave hardware on **{frequency}** cannot be enabled until a Home Assistant country is configured, so the integration can verify that the frequency is permitted in your region.\n\nSet your country under **Settings → System → General → Country**, then reload this integration (or restart Home Assistant).",
+      "title": "Easywave: configure Home Assistant country"
+    },
     "frequency_not_permitted": {
       "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf your country setting is wrong, correct it under **Settings → System → General → Country**, then reload this integration (or restart Home Assistant).\n\nIf the country setting is correct, disconnect the RX11 USB Transceiver and remove this integration. The 868 MHz band is permitted in CEPT member states.",
       "title": "Easywave: {frequency} not permitted in {country}"

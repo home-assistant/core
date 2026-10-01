@@ -41,6 +41,13 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
+
+@pytest.fixture(autouse=True)
+def easywave_default_country(hass: HomeAssistant) -> None:
+    """Default Home Assistant country so regulatory checks pass unless overridden."""
+    hass.config.country = "DE"
+
+
 MOCK_ENTRY_DATA = {
     CONF_DEVICE_PATH: "/dev/ttyACM0",
     CONF_USB_VID: 0x155A,

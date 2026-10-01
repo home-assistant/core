@@ -286,12 +286,10 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
         Restore BEFORE calling super() to prevent the coordinator listener
         from overwriting the restored value.
         """
-        # Restore first
         if (last_data := await self.async_get_last_sensor_data()) is not None:
             native = last_data.native_value
             if native in (self._attr_options or ()):
                 self._native_value = str(native)
-        # Then subscribe to coordinator
         await super().async_added_to_hass()
 
     @override
@@ -446,6 +444,7 @@ class EasywaveNeoSensorHumiditySensor(EasywaveNeoSensorEntity, RestoreSensor):
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
     _attr_translation_key = "neo_sensor_humidity"
 
     def __init__(self, entry: EasywaveConfigEntry, device: EasywaveDeviceEntry) -> None:

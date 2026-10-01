@@ -4,7 +4,7 @@ import contextlib
 import logging
 from typing import Any, override
 
-import serial.tools.list_ports
+from serialx import SerialPortInfo, list_serial_ports
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -41,8 +41,10 @@ from .transceiver import RX11Transceiver
 _LOGGER = logging.getLogger(__name__)
 
 
-def _device_from_port(port: Any) -> dict[str, Any]:
+def _device_from_port(port: SerialPortInfo) -> dict[str, Any]:
     """Build gateway device metadata from a discovered serial port."""
+    assert port.vid is not None
+    assert port.pid is not None
     device_entry = USB_DEVICE_NAMES[(port.vid, port.pid)]
     return {
         "device": port.device,
@@ -81,15 +83,20 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Abort when the transceiver frequency is not allowed in the user's country."""
         frequency = get_frequency_for_pid(pid)
         country = self.hass.config.country
-        if frequency and not is_country_allowed_for_frequency(frequency, country):
+        if not frequency or is_country_allowed_for_frequency(frequency, country):
+            return None
+        if country is None:
             return self.async_abort(
-                reason="frequency_not_permitted",
-                description_placeholders={
-                    "frequency": frequency,
-                    "country": country or "unknown",
-                },
+                reason="country_not_configured",
+                description_placeholders={"frequency": frequency},
             )
-        return None
+        return self.async_abort(
+            reason="frequency_not_permitted",
+            description_placeholders={
+                "frequency": frequency,
+                "country": country,
+            },
+        )
 
     async def _async_validate_device_connection(self, device_path: str) -> bool:
         """Verify that an RX11 transceiver is reachable on the given port."""
@@ -125,9 +132,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             ports = [
                 port
-                for port in await self.hass.async_add_executor_job(
-                    serial.tools.list_ports.comports
-                )
+                for port in await self.hass.async_add_executor_job(list_serial_ports)
                 if port.vid is not None
                 and port.pid is not None
                 and (port.vid, port.pid) in SUPPORTED_USB_IDS

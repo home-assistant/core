@@ -19,7 +19,7 @@ from easywave_home_control import (
     GatewayInfo,
 )
 from easywave_home_control.codec import EwbRcvEvent
-import serial.tools.list_ports
+from serialx import list_serial_ports
 
 from homeassistant.core import HomeAssistant
 
@@ -49,7 +49,7 @@ def resolve_gateway_port(
     try:
         ports = [
             port
-            for port in serial.tools.list_ports.comports()
+            for port in list_serial_ports()
             if port.vid is not None
             and port.pid is not None
             and (port.vid, port.pid) in usb_ids

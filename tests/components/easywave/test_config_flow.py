@@ -27,9 +27,7 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-COMPORTS_PATH = (
-    "homeassistant.components.easywave.config_flow.serial.tools.list_ports.comports"
-)
+COMPORTS_PATH = "homeassistant.components.easywave.config_flow.list_serial_ports"
 TRANSCEIVER_PATH = "homeassistant.components.easywave.config_flow.RX11Transceiver"
 
 
@@ -176,6 +174,39 @@ async def test_usb_discovery_aborts_when_frequency_not_permitted(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "frequency_not_permitted"
+
+
+async def test_user_flow_aborts_when_country_not_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test user flow aborts when Home Assistant country is not configured."""
+    hass.config.country = None
+    port = _make_port()
+
+    with patch(COMPORTS_PATH, return_value=[port]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "country_not_configured"
+
+
+async def test_usb_discovery_aborts_when_country_not_configured(
+    hass: HomeAssistant,
+    mock_usb_discovery_info: UsbServiceInfo,
+) -> None:
+    """Test USB discovery aborts when Home Assistant country is not configured."""
+    hass.config.country = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=mock_usb_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "country_not_configured"
 
 
 async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
