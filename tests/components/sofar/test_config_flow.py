@@ -429,8 +429,8 @@ def _serial_entry() -> MockConfigEntry:
         pytest.param(None, ConfigEntryState.LOADED, id="loaded"),
         pytest.param(
             ModbusTimeoutError("stuck"),
-            ConfigEntryState.SETUP_RETRY,
-            id="setup_retry",
+            ConfigEntryState.LOADED,
+            id="asleep",
         ),
     ],
 )
@@ -503,8 +503,7 @@ async def test_reconfigure_new_line_settings_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data == MOCK_SERIAL_ENTRY_DATA
     assert entry.unique_id == MOCK_SERIAL
-    # Set back up against the same dead device, so it lands in retry.
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("mock_get_unit")

@@ -173,7 +173,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
             data = {CONF_TYPE: connection_type, **user_input}
 
             relinking = False
-            if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
+            if entry.state is ConfigEntryState.LOADED:
                 current = create_modbus_params(entry.data)
                 new = create_modbus_params(data)
                 if new.endpoint == current.endpoint and new != current:

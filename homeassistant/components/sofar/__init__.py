@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -178,20 +178,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
         tuner,
     )
-    await readings.async_config_entry_first_refresh()
-    await settings.async_refresh()
+    try:
+        await readings.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        answered = False
+        _LOGGER.info(
+            "%s: inverter is not answering, setting up without it: %s",
+            entry.title,
+            err,
+        )
+    else:
+        answered = True
+        await settings.async_refresh()
+        # Not tied to a coordinator: identity never changes once read.
+        await _async_read_identity(entry, device)
 
-    # Not tied to a coordinator: identity never changes once read.
-    await _async_read_identity(entry, device)
-
+    registry = dr.async_get(hass)
     # Up front: a part's device must name an inverter that has an id.
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **readings.device_info
-    )
+    if answered:
+        inverter = registry.async_get_or_create(
+            config_entry_id=entry.entry_id, **readings.device_info
+        )
+    else:
+        inverter = registry.async_get_or_create(
+            config_entry_id=entry.entry_id, identifiers={(DOMAIN, serial)}
+        )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
-    _async_remove_denied_meter_energy(
-        hass, serial, entry.runtime_data.served_components
-    )
+
+    if answered:
+        _async_remove_denied_meter_energy(
+            hass, serial, entry.runtime_data.served_components
+        )
+    else:
+
+        @callback
+        def _async_reload_once_answered() -> None:
+            """Set up again in full once the inverter answers."""
+            if readings.last_update_success:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        entry.async_on_unload(readings.async_add_listener(_async_reload_once_answered))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -221,6 +247,8 @@ async def async_remove_config_entry_device(
         if config_entry.state is ConfigEntryState.LOADED
         else None
     )
+    if runtime_data is not None and not runtime_data.served_components:
+        return False
     packs: set[int] = set()
     for domain, identifier in device_entry.identifiers:
         if domain != DOMAIN:
