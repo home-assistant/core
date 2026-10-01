@@ -199,6 +199,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-linkplay": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
+    "marketplace": {"aiogithubapi": {"backoff"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},
