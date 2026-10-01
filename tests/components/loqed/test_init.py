@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
 
+from homeassistant.components.lock import LockState
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -69,6 +70,31 @@ async def test_webhook_rejects_missing_signature_headers(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     lock.receiveWebhook.assert_not_called()
+
+
+async def test_webhook_ignores_rejected_message(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+) -> None:
+    """Test a webhook loqedAPI rejects does not update the lock state."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    lock.receiveWebhook = AsyncMock(return_value={"error": "Hash incorrect"})
+    lock.bolt_state = "night_lock"
+    message = await async_load_fixture(hass, "battery_update.json", DOMAIN)
+
+    resp = await client.post(
+        f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+        data=message,
+        headers={"timestamp": "1653304609", "hash": "incorrect hash"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.UNLOCKED
 
 
 async def test_setup_webhook_in_bridge(
