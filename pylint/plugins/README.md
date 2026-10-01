@@ -1042,3 +1042,13 @@ The light provides `color_mode` but no `supported_color_modes`. At runtime
 ("does not set supported color modes") from both `state_attributes` and
 `capability_attributes` whenever `supported_color_modes` is `None`. Set
 `_attr_supported_color_modes` or override the `supported_color_modes` property.
+
+
+## `home_assistant_enforce_config_flow_no_connection_class` checker
+
+Detects config flow classes that set `CONNECTION_CLASS`.
+
+### `W7438`: `home-assistant-config-flow-connection-class`
+
+`CONNECTION_CLASS` is no longer used by Home Assistant and should not be set
+on config flows. Remove the attribute.

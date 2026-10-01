@@ -105,7 +105,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_EMAIL): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -256,7 +256,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_EMAIL, default=self._get_reauth_entry().data[CONF_EMAIL]
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

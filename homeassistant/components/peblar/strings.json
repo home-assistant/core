@@ -70,6 +70,18 @@
         "name": "Unlock socket"
       }
     },
+    "event": {
+      "session_authorization": {
+        "name": "Session authorization",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "session_authorized": "Session authorized"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "charge_current_limit": {
         "name": "Charge limit"
@@ -99,6 +111,7 @@
       "smart_charging": {
         "name": "Smart charging",
         "state": {
+          "custom_solar": "Custom solar",
           "default": "Default",
           "fast_solar": "Fast solar",
           "pure_solar": "Pure solar",

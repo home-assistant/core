@@ -344,6 +344,12 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="sleep_aid",
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name=None,
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_SOUND,
