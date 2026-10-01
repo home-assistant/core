@@ -46,6 +46,7 @@ class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEnti
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_assumed_state = True
 
     def __init__(self, entry: ConfigEntry, state: GreeAcState, key: str) -> None:
         """Initialize one option switch."""

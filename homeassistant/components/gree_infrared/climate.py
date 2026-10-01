@@ -215,24 +215,23 @@ class GreeAcClimateEntity(
                 )
 
         current_mode = self._attr_hvac_mode
+        last_extra_data = await self.async_get_last_extra_data()
+        restored = (
+            _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
+            if last_extra_data is not None
+            else None
+        )
         if current_mode is not None and current_mode is not HVACMode.OFF:
             self._last_active_hvac_mode = current_mode
-        elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
-            restored = _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
-            if restored is not None:
-                if restored.last_active_hvac_mode in (
-                    mode.value
-                    for mode in self._attr_hvac_modes
-                    if mode is not HVACMode.OFF
-                ):
-                    self._last_active_hvac_mode = HVACMode(
-                        restored.last_active_hvac_mode
-                    )
-                if self._supports_options:
-                    self._state.turbo = restored.turbo
-                    self._state.light = restored.light
-                    self._state.health = restored.health
-                    self._state.xfan = restored.xfan
+        elif restored is not None and restored.last_active_hvac_mode in (
+            mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
+        ):
+            self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+        if restored is not None and self._supports_options:
+            self._state.turbo = restored.turbo
+            self._state.light = restored.light
+            self._state.health = restored.health
+            self._state.xfan = restored.xfan
         for switch in tuple(self._state.switches):
             switch.async_write_ha_state()
 
