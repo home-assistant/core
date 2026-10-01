@@ -5,7 +5,6 @@ from aiohttp import RequestInfo
 import pytest
 from yarl import URL
 
-from homeassistant.components.daikin_onecta import async_setup_entry
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
@@ -65,7 +64,8 @@ async def test_setup_entry_reauth_on_token_request(
         ),
         pytest.raises(ConfigEntryAuthFailed),
     ):
-        await async_setup_entry(hass, config_entry)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.mark.asyncio
@@ -85,7 +85,8 @@ async def test_setup_entry_not_ready_on_transient_token_error(
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
-        await async_setup_entry(hass, config_entry)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.mark.asyncio
@@ -101,7 +102,8 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
         ),
         pytest.raises(ConfigEntryNotReady) as exc_info,
     ):
-        await async_setup_entry(hass, config_entry)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
     if exc_info.value.translation_domain != DOMAIN:
         pytest.fail(f"unexpected translation_domain: {exc_info.value.translation_domain}")
@@ -133,7 +135,8 @@ async def test_setup_entry_preserves_reauth_from_first_refresh(
         ),
         pytest.raises(ConfigEntryAuthFailed),
     ):
-        await async_setup_entry(hass, config_entry)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
     if config_entry.state is ConfigEntryState.LOADED:
         pytest.fail("config entry should not be LOADED after reauth failure")

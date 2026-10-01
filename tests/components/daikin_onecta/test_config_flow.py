@@ -40,12 +40,11 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-    setup_credentials,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Check full flow."""
     assert await async_setup_component(hass, "daikin_onecta", {})
@@ -125,12 +124,11 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-    setup_credentials,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test zeroconf flow."""
     assert await async_setup_component(hass, "daikin_onecta", {})
