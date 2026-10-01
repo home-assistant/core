@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -27,6 +27,7 @@ from .types import OPNsenseConfigEntry
 _LOGGER = logging.getLogger(__name__)
 UPGRADE_STATUS_INTERVAL = timedelta(seconds=10)
 UPGRADE_TIMEOUT = timedelta(hours=2)
+POST_UPGRADE_REFRESH_DELAY = timedelta(minutes=5)
 
 
 async def async_setup_entry(
@@ -73,6 +74,7 @@ class OPNsenseFirmwareUpdate(
         self._upgrade_in_progress = False
         self._upgrade_started: datetime | None = None
         self._unsub_upgrade_status: Callable[[], None] | None = None
+        self._unsub_post_upgrade_refresh: Callable[[], None] | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -85,6 +87,14 @@ class OPNsenseFirmwareUpdate(
         if self._unsub_upgrade_status is not None:
             self._unsub_upgrade_status()
             self._unsub_upgrade_status = None
+        if self._unsub_post_upgrade_refresh is not None:
+            self._unsub_post_upgrade_refresh()
+            self._unsub_post_upgrade_refresh = None
+
+    async def _async_refresh_after_upgrade(self, now: datetime) -> None:
+        """Refresh firmware information after OPNsense restarts."""
+        self._unsub_post_upgrade_refresh = None
+        await self.coordinator.async_request_refresh()
 
     @property
     @override
@@ -117,6 +127,11 @@ class OPNsenseFirmwareUpdate(
         self.async_write_ha_state()
         if status and status.get("status") in ("done", "reboot"):
             await self.coordinator.async_request_refresh()
+            self._unsub_post_upgrade_refresh = async_call_later(
+                self.hass,
+                POST_UPGRADE_REFRESH_DELAY,
+                self._async_refresh_after_upgrade,
+            )
         else:
             _LOGGER.error("OPNsense firmware upgrade failed or timed out: %s", status)
 

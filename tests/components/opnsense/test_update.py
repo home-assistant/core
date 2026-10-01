@@ -264,6 +264,33 @@ async def test_firmware_upgrade_finishes(
     mock_opnsense_client.upgrade_status.assert_awaited_once()
 
 
+async def test_firmware_upgrade_refreshes_after_reboot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the firmware update info refreshes after OPNsense restarts."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.return_value = {"status": "reboot"}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_opnsense_client.get_firmware_update_info.await_count == 2
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_opnsense_client.get_firmware_update_info.await_count == 3
+
+
 async def test_firmware_upgrade_times_out(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
