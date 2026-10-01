@@ -181,6 +181,156 @@
         "name": "Smart lower temperature"
       }
     },
+    "select": {
+      "cell_boost": {
+        "name": "Boost mode",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "active_redox": "Active (Redox control)",
+          "inactive": "Inactive"
+        }
+      },
+      "filt_mode": {
+        "name": "Filtration mode",
+        "state": {
+          "auto": "Automatic",
+          "backwash": "Backwash",
+          "heating": "Heating",
+          "intelligent": "Intelligent",
+          "manual": "[%key:common::state::manual%]",
+          "smart": "Smart"
+        }
+      },
+      "filtration_speed": {
+        "name": "Filtration speed",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "Medium"
+        }
+      },
+      "filtration_speed_timer": {
+        "name": "Timer {number} - filtration speed",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "Medium"
+        }
+      },
+      "filtvalve_interval": {
+        "name": "Backwash duration",
+        "state": {
+          "120s": "120 Seconds",
+          "150s": "150 Seconds",
+          "180s": "180 Seconds",
+          "240s": "240 Seconds",
+          "300s": "300 Seconds",
+          "30s": "30 Seconds",
+          "60s": "60 Seconds",
+          "90s": "90 Seconds"
+        }
+      },
+      "filtvalve_mode": {
+        "name": "Backwash valve mode",
+        "state": {
+          "auto": "[%key:component::neopool::entity::select::relay_light_mode::state::auto%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
+      "filtvalve_period_minutes": {
+        "name": "Backwash repeat interval",
+        "state": {
+          "1_day": "1 Day",
+          "1_week": "1 Week",
+          "2_days": "2 Days",
+          "2_weeks": "2 Weeks",
+          "3_days": "3 Days",
+          "3_weeks": "3 Weeks",
+          "4_days": "4 Days",
+          "4_weeks": "4 Weeks",
+          "5_days": "5 Days"
+        }
+      },
+      "intelligent_filt_min_time": {
+        "name": "Intelligent: minimum filtration time",
+        "state": {
+          "2h": "2 Hours",
+          "3h": "3 Hours",
+          "4h": "4 Hours",
+          "5h": "5 Hours",
+          "6h": "6 Hours",
+          "7h": "7 Hours",
+          "8h": "8 Hours",
+          "9h": "9 Hours",
+          "10h": "10 Hours",
+          "11h": "11 Hours",
+          "12h": "12 Hours"
+        }
+      },
+      "relay_activation_delay": {
+        "name": "pH pump activation delay",
+        "state": {
+          "10": "10 Seconds",
+          "10800": "3 Hours",
+          "120": "2 Minutes",
+          "180": "3 Minutes",
+          "1800": "30 Minutes",
+          "20": "20 Seconds",
+          "30": "30 Seconds",
+          "300": "5 Minutes",
+          "3600": "1 Hour",
+          "40": "40 Seconds",
+          "50": "50 Seconds",
+          "60": "1 Minute",
+          "900": "15 Minutes"
+        }
+      },
+      "relay_aux_mode": {
+        "name": "Relay Aux {number} mode",
+        "state": {
+          "auto": "Automatic",
+          "auto_linked": "Automatic (linked)",
+          "disabled": "[%key:common::state::disabled%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
+      "relay_aux_period": {
+        "name": "Timer Aux {number} ({subtimer}) - interval",
+        "state": {
+          "1_day": "1 Day",
+          "1_week": "1 Week",
+          "2_days": "2 Days",
+          "2_weeks": "2 Weeks",
+          "3_days": "3 Days",
+          "3_weeks": "3 Weeks",
+          "4_days": "4 Days",
+          "4_weeks": "4 Weeks",
+          "5_days": "5 Days"
+        }
+      },
+      "relay_light_mode": {
+        "name": "Light mode",
+        "state": {
+          "auto": "Automatic",
+          "disabled": "[%key:common::state::disabled%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
+      "relay_light_period": {
+        "name": "Light timer - interval",
+        "state": {
+          "1_day": "1 Day",
+          "1_week": "1 Week",
+          "2_days": "2 Days",
+          "2_weeks": "2 Weeks",
+          "3_days": "3 Days",
+          "3_weeks": "3 Weeks",
+          "4_days": "4 Days",
+          "4_weeks": "4 Weeks",
+          "5_days": "5 Days"
+        }
+      }
+    },
     "sensor": {
       "cell_runtime_part": {
         "name": "Cell runtime since reset"
@@ -351,6 +501,9 @@
     },
     "filtration_not_manual_mode": {
       "message": "Filtration can only be switched on or off when the controller is in manual filtration mode. Change the filtration mode to Manual first."
+    },
+    "filtration_speed_not_manual_mode": {
+      "message": "Filtration speed can only be changed when the controller is in manual filtration mode. Change the filtration mode to Manual first."
     },
     "filtvalve_in_auto_mode": {
       "message": "The backwash valve is currently in automatic mode. Change the mode to manual first to start or stop a backwash directly."
