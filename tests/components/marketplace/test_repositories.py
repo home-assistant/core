@@ -3256,3 +3256,34 @@ async def test_catalog_zip_release_needs_a_domain(
 
     with pytest.raises(CatalogContentUnresolvedError):
         await repository._async_resolve_catalog_content("1.0.0", commit=False)
+
+
+@pytest.mark.parametrize(
+    ("paths", "categories"),
+    [
+        pytest.param(
+            (("manifest.json", False), ("__init__.py", False)),
+            [RepositoryCategory.INTEGRATION],
+            id="with_manifest",
+        ),
+        # Any tree resolves in the root, it takes the manifest.json to tell
+        pytest.param((("README.md", False),), [], id="without_manifest"),
+    ],
+)
+async def test_detect_integration_in_the_root(
+    marketplace: MarketplaceManager,
+    paths: tuple[tuple[str, bool], ...],
+    categories: list[RepositoryCategory],
+) -> None:
+    """Test an integration in the root of its repository needs its manifest.json."""
+    tree = _tree(*paths)
+
+    async def update_data(self: IntegrationRepository) -> None:
+        self.tree = tree
+        self.treefiles = [entry.path for entry in tree]
+        self.repository_manifest = RepositoryManifest.from_dict(
+            {"content_in_root": True}
+        )
+
+    with patch.object(IntegrationRepository, "common_update_data", update_data):
+        assert await marketplace.async_detect_categories("owner/in-root") == categories

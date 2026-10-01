@@ -84,6 +84,10 @@ COMMANDS: tuple[dict[str, Any], ...] = (
         "category": "integration",
     },
     {
+        "type": "marketplace/repositories/detect",
+        "repository": REPOSITORY_INTEGRATION,
+    },
+    {
         "type": "marketplace/repositories/remove",
         "repository": REPOSITORY_INTEGRATION_ID,
     },
@@ -132,6 +136,10 @@ GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
         "repository": "hacs-test-org/integration-basic-custom",
         "category": "integration",
     },
+    {
+        "type": "marketplace/repositories/detect",
+        "repository": "hacs-test-org/integration-basic-custom",
+    },
 )
 
 # The commands that reach GitHub anonymously without a connection. Installing
@@ -178,6 +186,10 @@ WARNING_COMMANDS: tuple[dict[str, Any], ...] = (
         "type": "marketplace/repositories/add",
         "repository": "hacs-test-org/integration-basic-custom",
         "category": "integration",
+    },
+    {
+        "type": "marketplace/repositories/detect",
+        "repository": "hacs-test-org/integration-basic-custom",
     },
 )
 
@@ -698,6 +710,122 @@ async def test_repositories_clear_new_for_one_repository(
     assert (await client.receive_json())["success"]
 
     assert repository.data.new is False
+
+
+@pytest.mark.parametrize(
+    ("repository", "categories"),
+    [
+        pytest.param(
+            "hacs-test-org/integration-basic", ["integration"], id="integration"
+        ),
+        pytest.param("hacs-test-org/plugin-basic", ["plugin"], id="plugin"),
+        pytest.param("hacs-test-org/plugin-custom-dist", ["plugin"], id="plugin_dist"),
+        pytest.param("hacs-test-org/theme-basic", ["theme"], id="theme"),
+        pytest.param("hacs-test-org/template-basic", ["template"], id="template"),
+        pytest.param("hacs-test-org/integration-invalid", [], id="nothing"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_detect(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    repository: str,
+    categories: list[str],
+) -> None:
+    """Test what a repository holds is told by the rules its install follows."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/detect",
+            "repository": f"https://github.com/{repository}",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"categories": categories}
+
+
+@pytest.mark.parametrize(
+    ("repository", "error"),
+    [
+        pytest.param(
+            "not a link",
+            translated_error(
+                "invalid_format",
+                "invalid_repository",
+                "Could not read a GitHub repository from not a link",
+                repository="not a link",
+            ),
+            id="not_a_link",
+        ),
+        pytest.param(
+            "https://github.com/home-assistant/core",
+            translated_error(
+                "core_repository",
+                "core_repository",
+                "The integrations of Home Assistant itself come with Home"
+                " Assistant, there is nothing to add",
+            ),
+            id="core",
+        ),
+        pytest.param(
+            "https://github.com/hacs-test-org/addon-basic",
+            translated_error(
+                "app_repository",
+                "app_repository",
+                "hacs-test-org/addon-basic holds apps, the Marketplace does not"
+                " install apps",
+                repository="hacs-test-org/addon-basic",
+            ),
+            id="apps",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_detect_refused(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    repository: str,
+    error: dict[str, Any],
+) -> None:
+    """Test what can not be added is told before anything is guessed."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repositories/detect", "repository": repository}
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == error
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_detect_what_github_does_not_know(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a repository GitHub does not know is answered, not guessed at."""
+    url = "https://api.github.com/repos/owner/does-not-exist"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, status=HTTPStatus.NOT_FOUND, json_content={"message": "Not Found"}
+        ),
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/detect",
+            "repository": "https://github.com/owner/does-not-exist",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "add_failed"
+    assert response["error"]["translation_key"] == "github_failed"
 
 
 @pytest.mark.usefixtures("init_integration")

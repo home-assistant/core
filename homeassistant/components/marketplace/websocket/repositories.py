@@ -149,6 +149,65 @@ async def marketplace_repositories_removed(
 
 @websocket_api.websocket_command(
     {
+        probatio.Required("type"): "marketplace/repositories/detect",
+        probatio.Required("repository"): cv.string,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@marketplace_command(requires_accepted_warning=True, requires_github=True)
+async def marketplace_repositories_detect(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+    marketplace: MarketplaceManager,
+) -> None:
+    """Tell the categories a repository holds content of, before it is added."""
+    repository = regex.extract_repository_from_url(msg["repository"])
+    if repository is None:
+        send_translated_error(
+            connection,
+            msg["id"],
+            websocket_api.ERR_INVALID_FORMAT,
+            "invalid_repository",
+            {"repository": msg["repository"]},
+        )
+        return
+
+    try:
+        categories = await marketplace.async_detect_categories(repository)
+    except CoreRepositoryError:
+        send_translated_error(
+            connection, msg["id"], "core_repository", "core_repository"
+        )
+        return
+    except AppRepositoryError:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "app_repository",
+            "app_repository",
+            {"repository": repository},
+        )
+        return
+    except MarketplaceError as exception:
+        send_marketplace_error(
+            connection,
+            msg["id"],
+            "add_failed",
+            exception,
+            "add_failed",
+            {"repository": repository},
+        )
+        return
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"categories": categories})
+    )
+
+
+@websocket_api.websocket_command(
+    {
         probatio.Required("type"): "marketplace/repositories/add",
         probatio.Required("repository"): cv.string,
         probatio.Required("category"): probatio.Lower,

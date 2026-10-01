@@ -60,6 +60,7 @@ from .enums import (
     MarketplaceSignal,
     MarketplaceStage,
     RepositoryCategory,
+    RepositoryFile,
 )
 from .exceptions import (
     AppRepositoryError,
@@ -77,6 +78,8 @@ from .repositories import REPOSITORY_CLASSES
 from .repositories.base import (
     REPOSITORY_KEYS_TO_EXPORT,
     REPOSITORY_MANIFEST_KEYS_TO_EXPORT,
+    RepositoryData,
+    RepositoryManifest,
 )
 from .utils.data import MarketplaceData
 from .utils.file_system import async_exists
@@ -743,6 +746,59 @@ class MarketplaceManager:
                 device.id, new_identifiers={(DOMAIN, repo_id)}
             )
 
+    @staticmethod
+    def _refuse_what_is_not_managed(repository_full_name: str) -> None:
+        """Refuse Home Assistant itself and the repositories of apps."""
+        if repository_full_name == "home-assistant/core":
+            raise CoreRepositoryError
+
+        if (
+            repository_full_name == "home-assistant/addons"
+            or repository_full_name.startswith("hassio-addons/")
+        ):
+            raise AppRepositoryError(repository_full_name)
+
+    async def async_detect_categories(
+        self, repository_full_name: str
+    ) -> list[RepositoryCategory]:
+        """Return the categories whose content the repository holds.
+
+        Every category looks at the tree the way its install does, so what is
+        found here is what installs.
+        """
+        self._refuse_what_is_not_managed(repository_full_name)
+
+        probe = REPOSITORY_CLASSES[RepositoryCategory.INTEGRATION](
+            self, repository_full_name
+        )
+        await probe.common_update_data()
+        if RepositoryFile.REPOSITORY_MANIFEST in probe.treefiles and (
+            manifest := await probe.async_get_repository_manifest()
+        ):
+            probe.repository_manifest = RepositoryManifest.from_dict(manifest)
+
+        categories: list[RepositoryCategory] = []
+        for category, repository_class in REPOSITORY_CLASSES.items():
+            if category not in self.common.categories:
+                continue
+
+            candidate = repository_class(self, probe.data.full_name)
+            # A copy each, resolving the content writes to what it is given
+            candidate.data = RepositoryData.create_from_dict(probe.data.to_json())
+            # What the name of a repository is depends on its category
+            candidate.data.category = category
+            candidate.repository_manifest = RepositoryManifest.from_dict(
+                probe.repository_manifest.to_dict()
+            )
+            candidate.releases = probe.releases
+            candidate.ref = probe.ref
+            candidate.tree = probe.tree
+            candidate.treefiles = probe.treefiles
+            if candidate.holds_content():
+                categories.append(category)
+
+        return categories
+
     async def async_register_repository(
         self,
         repository_full_name: str,
@@ -759,14 +815,7 @@ class MarketplaceManager:
                 translation_placeholders={"repository": repository_full_name},
             )
 
-        if repository_full_name == "home-assistant/core":
-            raise CoreRepositoryError
-
-        if (
-            repository_full_name == "home-assistant/addons"
-            or repository_full_name.startswith("hassio-addons/")
-        ):
-            raise AppRepositoryError(repository_full_name)
+        self._refuse_what_is_not_managed(repository_full_name)
 
         if category not in REPOSITORY_CLASSES:
             LOGGER.warning(

@@ -32,6 +32,7 @@ from homeassistant.util.json import json_loads_object
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
 from ..enums import DisabledReason, MarketplaceSignal, RepositoryFile
 from ..exceptions import (
+    AppRepositoryError,
     CatalogContentUnresolvedError,
     GitHubAnonymousRateLimitError,
     GitHubRateLimitError,
@@ -2195,6 +2196,16 @@ class Repository:
 
         Raises MarketplaceError when the tree holds nothing to install.
         """
+
+    def holds_content(self) -> bool:
+        """Return if the tree holds content of this category, as an install finds it."""
+        try:
+            self.resolve_content()
+        except AppRepositoryError:
+            raise
+        except MarketplaceError:
+            return False
+        return True
 
     def resolve_archive_content(self) -> None:
         """Point the content at what the archive of a catalog version holds."""

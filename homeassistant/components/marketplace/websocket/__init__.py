@@ -17,6 +17,7 @@ from .decorators import marketplace_command
 from .repositories import (
     marketplace_repositories_add,
     marketplace_repositories_clear_new,
+    marketplace_repositories_detect,
     marketplace_repositories_list,
     marketplace_repositories_remove,
     marketplace_repositories_removed,
@@ -56,6 +57,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 
     websocket_api.async_register_command(hass, marketplace_repositories_list)
     websocket_api.async_register_command(hass, marketplace_repositories_add)
+    websocket_api.async_register_command(hass, marketplace_repositories_detect)
     websocket_api.async_register_command(hass, marketplace_repositories_clear_new)
     websocket_api.async_register_command(hass, marketplace_repositories_removed)
     websocket_api.async_register_command(hass, marketplace_repositories_remove)
