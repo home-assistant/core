@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from types import MethodType
-from typing import Any, override
+from typing import Any, cast, override
 from xml.parsers.expat import ExpatError
 
 import probatio
@@ -113,7 +113,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                     placeholders["endpoint_error_message"] = str(rest.last_exception)
                 else:
                     try:
-                        if rest.data_without_xml() is None:
+                        if not rest.data_without_xml():
                             errors["base"] = "no_json"
                     except ExpatError as ex:
                         errors["base"] = "xml_parse_error"
@@ -331,16 +331,11 @@ class RestSubentryFlow(ConfigSubentryFlow):
             await entry.runtime_data.async_refresh()
         rest_data = None
         if not entry.runtime_data.last_update_success:
-            ex = entry.runtime_data.last_exception
-            if isinstance(ex, HomeAssistantError):
-                return self.async_abort(
-                    reason=ex.translation_key or "endpoint_error",
-                    description_placeholders=ex.translation_placeholders
-                    or {"endpoint_error_message": str(ex)},
-                )
+            ex = cast(HomeAssistantError, entry.runtime_data.last_exception)
             return self.async_abort(
-                reason="endpoint_error",
-                description_placeholders={"endpoint_error_message": str(ex)},
+                reason=ex.translation_key or "endpoint_error",
+                description_placeholders=ex.translation_placeholders
+                or {"endpoint_error_message": str(ex)},
             )
         try:
             rest_data = entry.runtime_data.rest.data_without_xml()

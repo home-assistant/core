@@ -191,7 +191,7 @@ class _EncodingSelector(selector.TextSelector):
         try:
             codec_lookup(encoding)
         except LookupError:
-            raise probatio.Invalid("Codec not found") from None
+            raise probatio.Invalid("codec not found") from None
         return encoding
 
 

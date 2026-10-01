@@ -162,18 +162,32 @@ async def test_sensor_subentry_flow(
     assert result["reason"] == "timeout_error"
 
 
-async def test_sensor_subentry_flow_no_data(
+async def test_config_flow_no_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
-    """Test a subentry flow with no data."""
+    """Test a entry and subentry flow with no data."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
         text="",
     )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+
+    assert (
+        result["errors"]
+        and "base" in result["errors"]
+        and result["errors"]["base"] == "no_json"
+    )
+
     entry = await async_setup_entry(hass, get_config_entry_data)
 
     result = await hass.config_entries.subentries.async_init(
@@ -221,6 +235,33 @@ async def test_sensor_subentry_flow_endpoint_failure(
         and result["description_placeholders"]["endpoint_error_message"]
         == "the server is down"
     )
+
+
+async def test_sensor_subentry_flow_payload_template_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test a subentry flow for a resource in error."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        json={"key": "some_data"},
+    )
+    hass.states.async_set("sensor.dynamic", "1")
+    entry = await async_setup_entry(
+        hass,
+        get_config_entry_data
+        | {CONF_PAYLOAD: "{'a_value': {{ 1/(states('sensor.dynamic') | int) }}}"},
+    )
+    assert entry.state == config_entries.ConfigEntryState.LOADED
+    hass.states.async_set("sensor.dynamic", "0")
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, Platform.SENSOR),
+        context={"source": config_entries.SOURCE_USER, "entry_id": entry.entry_id},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "template_error"
 
 
 async def test_sensor_subentry_flow_invalid_json_attrs_path(
@@ -388,7 +429,7 @@ async def test_config_invalid_input(
     with pytest.raises(InvalidData) as ex:
         await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
 
-    assert ex.value.schema_errors[CONF_ENCODING] == "Codec not found"
+    assert ex.value.schema_errors[CONF_ENCODING] == "codec not found"
     assert ex.value.schema_errors[CONF_AUTHENTICATION] == "credentials_missing"
 
 
