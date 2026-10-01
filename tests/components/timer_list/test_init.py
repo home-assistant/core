@@ -324,12 +324,22 @@ async def test_websocket_subscribe_survives_config_entry_reload(
     assert (await client.receive_json())["success"]
     assert (await client.receive_json())["event"]["type"] == "timers"
 
+    await _create_timer(hass, name="Before reload")
+
+    # Bounded: a subscription left on the old object never sends anything.
+    async with asyncio.timeout(5):
+        assert (await client.receive_json())["event"]["event_type"] == "created"
+
     assert await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # The replacement holds no timers, so a stale snapshot would still show one.
+    async with asyncio.timeout(5):
+        msg = await client.receive_json()
+    assert msg["event"] == {"type": "timers", "timers": []}
+
     timer_id = await _create_timer(hass, name="Pasta")
 
-    # Bounded: a subscription left on the old object never sends anything.
     async with asyncio.timeout(5):
         msg = await client.receive_json()
     assert msg["event"]["event_type"] == "created"
