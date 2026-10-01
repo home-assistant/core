@@ -36,18 +36,19 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import GreeInfraredConfigEntry
 from .const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     CONF_MODEL,
-    DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
@@ -119,13 +120,13 @@ class _GreeAcExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GreeInfraredConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gree AC climate entity from config entry."""
     emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     model = entry.data.get(CONF_MODEL, MODEL_GENERIC)
-    state: GreeAcState = hass.data[DOMAIN][entry.entry_id]
+    state = entry.runtime_data
     if receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
         async_add_entities(
             [
@@ -186,13 +187,24 @@ class GreeAcClimateEntity(
         await super().async_will_remove_from_hass()
         if self._state.climate is self:
             self._state.climate = None
-            for switch in tuple(self._state.switches):
-                switch.async_write_ha_state()
+            self._state.async_notify_switches()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Restore the assumed state, as infrared cannot read it back from the AC."""
         await super().async_added_to_hass()
+
+        @callback
+        def _handle_climate_state_change(
+            event: Event[EventStateChangedData],
+        ) -> None:
+            self._state.async_notify_switches()
+
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self.entity_id], _handle_climate_state_change
+            )
+        )
 
         last_state = await self.async_get_last_state()
         if last_state is not None and last_state.state not in (
@@ -232,8 +244,7 @@ class GreeAcClimateEntity(
             self._state.light = restored.light
             self._state.health = restored.health
             self._state.xfan = restored.xfan
-        for switch in tuple(self._state.switches):
-            switch.async_write_ha_state()
+        self._state.async_notify_switches()
 
     @property
     @override
@@ -282,8 +293,7 @@ class GreeAcClimateEntity(
             except Exception:
                 setattr(self._state, option, previous)
                 raise
-            for switch in tuple(self._state.switches):
-                switch.async_write_ha_state()
+            self._state.async_notify_switches()
 
     @property
     def _supports_options(self) -> bool:
@@ -397,5 +407,4 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
             self._state.health = command.anion
             self._state.xfan = command.blow
         self.async_write_ha_state()
-        for switch in tuple(self._state.switches):
-            switch.async_write_ha_state()
+        self._state.async_notify_switches()
