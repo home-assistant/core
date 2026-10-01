@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError, DVLAInvalidRegistrationError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -13,9 +13,9 @@ from .const import API_KEY, CONF_REG_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_REG_NUMBER): str,
+        probatio.Required(CONF_REG_NUMBER): str,
     }
 )
 
