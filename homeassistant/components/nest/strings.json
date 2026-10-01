@@ -5,11 +5,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "pubsub_api_error": "[%key:component::nest::config::error::pubsub_api_error%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]"
     },
     "create_entry": {
@@ -130,12 +128,6 @@
     }
   },
   "exceptions": {
-    "auth_client_error": {
-      "message": "Client error during authentication, please check your network connection."
-    },
-    "auth_server_error": {
-      "message": "Error response from authentication server, please see logs for details."
-    },
     "device_api_error": {
       "message": "Error communicating with the Device Access API, please see logs for details."
     },

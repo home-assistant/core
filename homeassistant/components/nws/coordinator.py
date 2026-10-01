@@ -115,12 +115,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
                 self._location_entity_id,
             )
             return
-        _LOGGER.info(
-            "NWS API updated: station %s at (%.4f, %.4f)",
-            new_nws.station,
-            coordinates.latitude,
-            coordinates.longitude,
-        )
+        _LOGGER.info("NWS API updated: station %s", new_nws.station)
         self.nws = new_nws
         self.name = f"NWS observation station {new_nws.station}"
         runtime_data = self.config_entry.runtime_data

@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import camera, conversation, image, media_source
 from homeassistant.components.http.auth import async_sign_path
@@ -116,7 +116,7 @@ async def async_generate_data(
     task_name: str,
     entity_id: str | None = None,
     instructions: str,
-    structure: vol.Schema | None = None,
+    structure: probatio.Schema | None = None,
     attachments: list[dict] | None = None,
     llm_api: llm.API | None = None,
     context: Context | None = None,
@@ -254,7 +254,7 @@ class GenDataTask:
     instructions: str
     """Instructions on what needs to be done."""
 
-    structure: vol.Schema | None = None
+    structure: probatio.Schema | None = None
     """Optional structure for the data to be generated."""
 
     attachments: list[conversation.Attachment] | None = None

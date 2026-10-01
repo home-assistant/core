@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import jwt
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -43,7 +43,7 @@ def mock_hass(hass: HomeAssistant) -> HomeAssistant:
 
 async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
     """Test get auth providers."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -84,7 +84,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
 
 async def test_auth_manager_from_config_auth_modules(mock_hass) -> None:
     """Test get auth modules."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -576,6 +576,17 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
 
     with pytest.raises(ValueError):
         await manager.async_deactivate_user(owner)
+
+
+async def test_cannot_remove_owner(mock_hass: HomeAssistant) -> None:
+    """Test that we cannot remove the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    owner = MockUser(is_owner=True).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_remove_user(owner)
+
+    assert await manager.async_get_user(owner.id) is owner
 
 
 async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:

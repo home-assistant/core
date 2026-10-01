@@ -10,3 +10,5 @@ SCAN_INTERVAL = 5
 SETTINGS_SCAN_INTERVAL = 60
 
 CONF_UNIT_ID = "unit_id"
+
+METER_ENERGY = "meter_energy"
