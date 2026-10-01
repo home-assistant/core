@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class OnectaRuntimeData:
     """Runtime Data for Onecta integration."""
 
-    coordinator: "OnectaDataUpdateCoordinator" = field(init=False)
+    coordinator: OnectaDataUpdateCoordinator = field(init=False)
     devices: dict[str, DaikinOnectaDevice]
     daikin_api: DaikinApi
 
@@ -63,7 +63,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator):
         daikin_api = onecta_data.daikin_api
         scan_ignore_value = self.scan_ignore()
 
-        if daikin_api.last_patch_call is not None and (dt_util.now() - daikin_api.last_patch_call).total_seconds() < scan_ignore_value:
+        if daikin_api._last_patch_call is not None and (dt_util.now() - daikin_api._last_patch_call).total_seconds() < scan_ignore_value:
             self.update_interval = timedelta(seconds=scan_ignore_value)
             _LOGGER.debug(
                 "API UPDATE skipped (just updated from UI)",
