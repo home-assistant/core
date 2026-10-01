@@ -1,11 +1,32 @@
 {
   "entity": {
     "binary_sensor": {
+      "backup_power_active": {
+        "default": "mdi:battery-alert-variant-outline",
+        "state": {
+          "on": "mdi:battery-alert-variant"
+        }
+      },
+      "dynamic_load_balancing_overload_active": {
+        "default": "mdi:scale-balance"
+      },
       "electricity_price_low": {
         "default": "mdi:cash-minus",
         "state": {
           "off": "mdi:cash-plus",
           "on": "mdi:cash-minus"
+        }
+      },
+      "grid_congestion_active": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "on": "mdi:transmission-tower-off"
+        }
+      },
+      "home_optimization_active": {
+        "default": "mdi:home-lightning-bolt-outline",
+        "state": {
+          "on": "mdi:home-lightning-bolt"
         }
       }
     },
