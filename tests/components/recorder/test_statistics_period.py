@@ -355,7 +355,8 @@ async def test_mixed_cached_parameters(statistics_session: Session) -> None:
         pytest.param(399, 1, id="below-limit"),
         pytest.param(400, 1, id="at-limit"),
         pytest.param(401, 2, id="two-batches"),
-        pytest.param(801, 3, id="three-batches"),
+        pytest.param(800, 2, id="two-full-batches"),
+        pytest.param(801, 4, id="range-lookup-and-three-batches"),
     ],
 )
 async def test_period_query_batches(
@@ -399,6 +400,42 @@ async def test_period_query_batches(
     ]
 
 
+async def test_period_query_bounded_clips_to_available_range(
+    statistics_session: Session,
+) -> None:
+    """Clip a long bounded request to the selected statistics range."""
+    start = datetime(2020, 1, 1, tzinfo=dt_util.UTC)
+    data_start = start + timedelta(days=1200)
+
+    statistics_session.add(
+        Statistics(
+            metadata_id=3,
+            start_ts=(data_start + timedelta(hours=12)).timestamp(),
+            sum=20.0,
+        )
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "execute_stmt_lambda_element",
+        wraps=execute_stmt_lambda_element,
+    ) as execute:
+        rows = statistics._get_statistics_period_rows(
+            statistics_session,
+            start,
+            start + timedelta(days=1600),
+            [3],
+            statistics.reduce_day_ts_factory()[1],
+            {"sum"},
+            4000,
+        )
+
+    # One range lookup and one clipped period query.
+    assert execute.call_count == 2
+    assert [(row.metadata_id, row.sum) for row in rows] == [(3, 20.0)]
+
+
 async def test_period_parameter_budget(statistics_session: Session) -> None:
     """Split both sensors and periods without dropping or duplicating rows."""
     start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
@@ -424,7 +461,7 @@ async def test_period_parameter_budget(statistics_session: Session) -> None:
             {"sum"},
             10,
         )
-    assert execute.call_count == 10
+    assert execute.call_count == 12
     assert [(row.metadata_id, row.sum) for row in rows] == [
         (metadata_id, float(day)) for metadata_id in range(1, 14) for day in range(5)
     ]
@@ -573,7 +610,12 @@ async def test_period_query_unbounded_clips_to_period_start(
 
 
 @pytest.mark.parametrize(
-    ("days", "budget", "queries"), [(401, 4000, 2), (5, 4, 5), (5, 3, 10)]
+    ("days", "budget", "queries"),
+    [
+        (401, 4000, 2),
+        (5, 4, 6),
+        (5, 3, 11),
+    ],
 )
 async def test_arithmetic_mean_query_limits(
     statistics_session: Session, days: int, budget: int, queries: int
@@ -657,7 +699,7 @@ async def test_circular_mean_query_limits(statistics_session: Session) -> None:
             StatisticMeanType.CIRCULAR,
         )
 
-    assert execute.call_count == 6
+    assert execute.call_count == 7
     assert [(row.metadata_id, row.start_ts, row.mean) for row in rows] == [
         (
             metadata_id,
