@@ -21,6 +21,7 @@ from homeassistant.helpers import (
 from .const import DOMAIN
 from .coordinator import PortainerConfigEntry
 
+ATTR_ALL = "all"
 ATTR_DATE_UNTIL = "until"
 ATTR_DANGLING = "dangling"
 ATTR_TIMEOUT = "timeout"
@@ -35,6 +36,17 @@ SERVICE_PRUNE_IMAGES_SCHEMA = probatio.Schema(
             cv.time_period, probatio.Range(min=timedelta(minutes=1))
         ),
         probatio.Optional(ATTR_DANGLING): cv.boolean,
+    },
+)
+
+SERVICE_PRUNE_BUILD_CACHE = "prune_build_cache"
+SERVICE_PRUNE_BUILD_CACHE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(ATTR_ALL, default=True): cv.boolean,
+        probatio.Optional(ATTR_DATE_UNTIL): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(minutes=1))
+        ),
     },
 )
 
@@ -134,6 +146,35 @@ async def prune_images(call: ServiceCall) -> None:
         ) from err
 
 
+async def prune_build_cache(call: ServiceCall) -> None:
+    """Prune the build cache in Portainer, with more controls."""
+    device, config_entry = _async_get_device_and_entry(call, call.data[ATTR_DEVICE_ID])
+    coordinator = config_entry.runtime_data
+    endpoint_id = _async_get_endpoint_id(device, config_entry)
+
+    try:
+        await coordinator.portainer.prune_build_cache(
+            endpoint_id,
+            all_cache=call.data[ATTR_ALL],
+            until=call.data.get(ATTR_DATE_UNTIL),
+        )
+    except PortainerAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
+    except PortainerConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+    except PortainerTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+        ) from err
+
+
 async def recreate_container(call: ServiceCall) -> None:
     """Recreate a container in Portainer, with more controls."""
     device, config_entry = _async_get_device_and_entry(
@@ -180,6 +221,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PRUNE_IMAGES,
         prune_images,
         SERVICE_PRUNE_IMAGES_SCHEMA,
+    )
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_PRUNE_BUILD_CACHE,
+        prune_build_cache,
+        SERVICE_PRUNE_BUILD_CACHE_SCHEMA,
     )
 
     service.async_register_admin_service(
