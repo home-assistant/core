@@ -1,0 +1,530 @@
+[
+{
+      "_id": "b84e8af3-310a-4e6e-8e52-295573423485",
+      "deviceModel": "Altherma",
+      "embeddedId": "c50ad019-9f1e-4334-9043-c4b5bfd020a5",
+      "id": "b84e8af3-310a-4e6e-8e52-295573423485",
+      "isCloudConnectionUp": {
+        "settable": false,
+        "value": true
+      },
+      "managementPoints": [
+        {
+          "embeddedId": "gateway",
+          "managementPointType": "gateway",
+          "managementPointCategory": "secondary",
+          "ipAddress": {
+            "settable": false,
+            "value": "192.168.2.13",
+            "maxLength": 15
+          },
+          "isFirmwareUpdateSupported": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "modelInfo": {
+            "settable": false,
+            "value": "BRP069A78",
+            "maxLength": 9
+          },
+          "name": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "Gateway",
+            "maxLength": 63
+          }
+        },
+        {
+          "embeddedId": "climateControlMainZone",
+          "managementPointType": "climateControl",
+          "managementPointCategory": "primary",
+          "managementPointSubType": "mainZone",
+          "consumptionData": {
+            "settable": false,
+            "requiresReboot": false,
+            "ref": "#consumptionData",
+            "value": {
+              "electrical": {
+                "heating": {
+                  "d": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    null,
+                    null,
+                    null
+                  ],
+                  "w": [
+                    5,
+                    2,
+                    4,
+                    3,
+                    4,
+                    7,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  ],
+                  "m": [
+                    504,
+                    355,
+                    343,
+                    181,
+                    16,
+                    0,
+                    0,
+                    0,
+                    0,
+                    56,
+                    285,
+                    421,
+                    755,
+                    198,
+                    143,
+                    112,
+                    0,
+                    0,
+                    0,
+                    0,
+                    15,
+                    20,
+                    null,
+                    null
+                  ]
+                },
+                "cooling": {
+                  "d": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    null,
+                    null,
+                    null
+                  ],
+                  "w": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  ],
+                  "m": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    20,
+                    163,
+                    90,
+                    99,
+                    103,
+                    23,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    8,
+                    53,
+                    75,
+                    120,
+                    146,
+                    45,
+                    0,
+                    null,
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "controlMode": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "roomTemperature",
+            "values": [
+              "leavingWaterTemperature",
+              "externalRoomTemperature",
+              "roomTemperature"
+            ]
+          },
+          "isHolidayModeActive": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "isInEmergencyState": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "isInErrorState": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "isInInstallerState": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "name": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "",
+            "maxLength": 63
+          },
+          "operationMode": {
+            "settable": true,
+            "requiresReboot": false,
+            "value": "auto",
+            "values": [
+              "heating",
+              "cooling",
+              "auto"
+            ]
+          },
+          "sensoryData": {
+            "settable": false,
+            "ref": "#sensoryData",
+            "value": {
+              "leavingWaterTemperature": {
+                "settable": false,
+                "requiresReboot": false,
+                "value": 26,
+                "maxValue": 127,
+                "minValue": -127,
+                "stepValue": 1
+              },
+              "outdoorTemperature": {
+                "settable": false,
+                "requiresReboot": false,
+                "value": 9,
+                "maxValue": 127,
+                "minValue": -127,
+                "stepValue": 1
+              },
+              "roomTemperature": {
+                "settable": false,
+                "requiresReboot": false,
+                "value": 21.2,
+                "maxValue": 127,
+                "minValue": -127,
+                "stepValue": 0.1
+              }
+            }
+          },
+          "setpointMode": {
+            "settable": false,
+            "requiresReboot": true,
+            "value": "fixed",
+            "values": [
+              "fixed",
+              "weatherDependentHeatingFixedCooling",
+              "weatherDependent"
+            ]
+          },
+          "temperatureControl": {
+            "settable": true,
+            "ref": "#temperatureControl",
+            "value": {
+              "operationModes": {
+                "auto": {
+                  "setpoints": {
+                    "roomTemperature": {
+                      "settable": true,
+                      "requiresReboot": false,
+                      "value": 22,
+                      "maxValue": 30,
+                      "minValue": 12,
+                      "stepValue": 0.5
+                    }
+                  }
+                },
+                "cooling": {
+                  "setpoints": {
+                    "leavingWaterTemperature": {
+                      "settable": true,
+                      "requiresReboot": false,
+                      "value": 18,
+                      "maxValue": 22,
+                      "minValue": 18,
+                      "stepValue": 1
+                    },
+                    "roomTemperature": {
+                      "settable": true,
+                      "requiresReboot": false,
+                      "value": 22,
+                      "maxValue": 35,
+                      "minValue": 15,
+                      "stepValue": 0.5
+                    }
+                  }
+                },
+                "heating": {
+                  "setpoints": {
+                    "leavingWaterTemperature": {
+                      "settable": true,
+                      "requiresReboot": false,
+                      "value": 35,
+                      "maxValue": 55,
+                      "minValue": 25,
+                      "stepValue": 1
+                    },
+                    "roomTemperature": {
+                      "settable": true,
+                      "requiresReboot": false,
+                      "value": 22,
+                      "maxValue": 30,
+                      "minValue": 12,
+                      "stepValue": 0.5
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "embeddedId": "domesticHotWaterTank",
+          "managementPointType": "domesticHotWaterTank",
+          "managementPointCategory": "primary",
+          "consumptionData": {
+            "settable": false,
+            "requiresReboot": false,
+            "ref": "#consumptionData",
+            "value": {
+              "electrical": {
+                "heating": {
+                  "d": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    2,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    3,
+                    0,
+                    null,
+                    null,
+                    null
+                  ],
+                  "w": [
+                    6,
+                    8,
+                    4,
+                    8,
+                    4,
+                    7,
+                    5,
+                    2,
+                    3,
+                    3,
+                    3,
+                    5,
+                    2,
+                    4
+                  ],
+                  "m": [
+                    151,
+                    126,
+                    147,
+                    124,
+                    131,
+                    97,
+                    116,
+                    116,
+                    126,
+                    150,
+                    152,
+                    155,
+                    143,
+                    143,
+                    132,
+                    107,
+                    146,
+                    137,
+                    113,
+                    104,
+                    149,
+                    58,
+                    null,
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "heatupMode": {
+            "settable": false,
+            "requiresReboot": true,
+            "value": "reheatOnly",
+            "values": [
+              "reheatOnly",
+              "reheatSchedule",
+              "scheduleOnly"
+            ]
+          },
+          "isHolidayModeActive": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "isInErrorState": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "isInInstallerState": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": false
+          },
+          "name": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "",
+            "maxLength": 63
+          },
+          "onOffMode": {
+            "settable": true,
+            "requiresReboot": false,
+            "value": "on",
+            "values": [
+              "off",
+              "on"
+            ]
+          },
+          "sensoryData": {
+            "settable": false,
+            "ref": "#sensoryData",
+            "value": {
+              "tankTemperature": {
+                "settable": false,
+                "requiresReboot": false,
+                "value": 53,
+                "maxValue": 127,
+                "minValue": -127,
+                "stepValue": 1
+              }
+            }
+          },
+          "setpointMode": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "fixed",
+            "values": [
+              "fixed",
+              "weatherDependent"
+            ]
+          }
+        },
+        {
+          "embeddedId": "indoorUnitHydro",
+          "managementPointType": "indoorUnitHydro",
+          "managementPointCategory": "secondary",
+          "modelInfo": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "EHVX08S18EJ6V",
+            "maxLength": 16
+          },
+          "name": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "Indoor Hydro Unit",
+            "maxLength": 63
+          }
+        },
+        {
+          "embeddedId": "userInterface",
+          "managementPointType": "userInterface",
+          "managementPointCategory": "secondary",
+          "modelInfo": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "EHVX08S18EJ6V",
+            "maxLength": 16
+          },
+          "name": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "User Interface",
+            "maxLength": 63
+          },
+          "softwareVersion": {
+            "settable": false,
+            "requiresReboot": false,
+            "value": "7.5.0",
+            "maxLength": 16
+          }
+        }
+      ],
+      "timestamp": "2024-10-13T17:25:54.132Z",
+      "type": "heating-wlan"
+    }
+]
