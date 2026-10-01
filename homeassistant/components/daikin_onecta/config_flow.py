@@ -1,14 +1,13 @@
 """Config flow for the Daikin platform."""
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import jwt
 import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -30,12 +29,14 @@ class FlowHandler(
     DOMAIN = DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    @override
     @property
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": "openid onecta:basic.integration offline_access"}
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    @override
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         try:
             unique_id = jwt.decode(data["token"]["access_token"], options={"verify_signature": False})["sub"]
@@ -64,11 +65,13 @@ class FlowHandler(
             )
         return await self.async_step_user()
 
+    @override
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
         """Handle a discovered Daikin device via mDNS."""
         _LOGGER.info(

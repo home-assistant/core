@@ -51,20 +51,20 @@ class DaikinOnectaDevice:
 
     def fill_device_info(self, device_info: DeviceInfo, management_point_type: str) -> None:
         """Fill Home Assistant device information from a typed management point."""
-        device_info.update(manufacturer="Daikin")
+        device_info["manufacturer"] = "Daikin"
         point = self.device.management_point_by_type(management_point_type)
         if point is None:
             return
         if point.eeprom_version is not None:
-            device_info.update(sw_version=point.eeprom_version.value)
+            device_info["sw_version"] = point.eeprom_version.value
         if point.model_info is not None:
-            device_info.update(model=point.model_info.value)
+            device_info["model"] = point.model_info.value
         if point.firmware_version is not None:
-            device_info.update(sw_version=point.firmware_version.value)
+            device_info["sw_version"] = point.firmware_version.value
         if point.serial_number is not None:
-            device_info.update(serial_number=point.serial_number.value)
+            device_info["serial_number"] = point.serial_number.value
         if point.software_version is not None:
-            device_info.update(sw_version=point.software_version.value)
+            device_info["sw_version"] = point.software_version.value
 
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""

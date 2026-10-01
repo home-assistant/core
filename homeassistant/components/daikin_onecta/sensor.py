@@ -1,10 +1,12 @@
 """Support for Daikin AC sensors."""
 import logging
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -93,7 +95,7 @@ async def async_setup_entry(
     """Set up Daikin sensors based on config_entry."""
     onecta_data: OnectaRuntimeData = config_entry.runtime_data
     coordinator = onecta_data.coordinator
-    sensors = []
+    sensors: list[SensorEntity] = []
     supported_management_point_types = {
         "domesticHotWaterTank",
         "domesticHotWaterFlowThrough",
@@ -198,11 +200,11 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
         self._device = device
         self._management_point_type = management_point_type
         mpt = management_point_type[0].upper() + management_point_type[1:]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device.id + self._management_point_type)},
-            "name": self._device.name + " " + mpt,
-            "via_device_id": self._device.ha_device_id,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.id + self._management_point_type)},
+            name=self._device.name + " " + mpt,
+            via_device_id=self._device.ha_device_id,
+        )
         self._device.fill_device_info(self._attr_device_info, management_point_type)
         self._embedded_id = embedded_id
         self._operation_mode = operation_mode
@@ -214,7 +216,7 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
             f"{operation_mode.capitalize()}{period_name}"
             f"{sensor_type.capitalize()}{datatype.capitalize()}"
         )
-        sensor_settings = VALUE_SENSOR_MAPPING.get(buildname)
+        sensor_settings = cast(dict[str, Any], VALUE_SENSOR_MAPPING[buildname])
         self._attr_icon = sensor_settings[CONF_ICON]
         self._attr_device_class = sensor_settings[CONF_DEVICE_CLASS]
         self._attr_entity_registry_enabled_default = sensor_settings[ENABLED_DEFAULT]
@@ -237,11 +239,13 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_native_value = self.sensor_value()
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the device is available."""
         return self._device.available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_state()
@@ -301,11 +305,11 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         self._device = device
         self._management_point_type = management_point_type
         mpt = management_point_type[0].upper() + management_point_type[1:]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device.id + self._management_point_type)},
-            "name": self._device.name + " " + mpt,
-            "via_device_id": self._device.ha_device_id,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.id + self._management_point_type)},
+            name=self._device.name + " " + mpt,
+            via_device_id=self._device.ha_device_id,
+        )
         self._device.fill_device_info(self._attr_device_info, management_point_type)
         self._embedded_id = embedded_id
         self._sub_type = sub_type
@@ -313,7 +317,7 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = None
         self._attr_state_class = None
         self._attr_has_entity_name = True
-        sensor_settings = VALUE_SENSOR_MAPPING.get(value)
+        sensor_settings = cast(dict[str, Any], VALUE_SENSOR_MAPPING[value])
         self._attr_icon = sensor_settings[CONF_ICON]
         self._attr_device_class = sensor_settings[CONF_DEVICE_CLASS]
         self._attr_entity_registry_enabled_default = sensor_settings[ENABLED_DEFAULT]
@@ -335,11 +339,13 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_value = self.sensor_value()
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the device is available."""
         return self._device.available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_state()
@@ -354,8 +360,8 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
             sensory_data = point.sensory_data
             if sensory_data is None:
                 return None
-            sensor_settings = VALUE_SENSOR_MAPPING.get(self._value)
-            attribute = sensor_settings.get(MODEL_ATTRIBUTE) if sensor_settings is not None else None
+            sensor_settings = cast(dict[str, Any], VALUE_SENSOR_MAPPING[self._value])
+            attribute = sensor_settings.get(MODEL_ATTRIBUTE)
             characteristic = getattr(sensory_data.value, attribute) if attribute is not None else None
         else:
             characteristic = point.characteristic(self._value)
@@ -384,7 +390,7 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         self._limit_key = limit_key
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device.id}_limitsensor_{self._limit_key}"
-        sensor_settings = VALUE_SENSOR_MAPPING.get("RatelimitRemainingDay")
+        sensor_settings = cast(dict[str, Any], VALUE_SENSOR_MAPPING["RatelimitRemainingDay"])
         self._attr_icon = sensor_settings[CONF_ICON]
         self._attr_device_class = sensor_settings[CONF_DEVICE_CLASS]
         self._attr_entity_registry_enabled_default = sensor_settings[ENABLED_DEFAULT]
@@ -392,11 +398,11 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_category = sensor_settings[ENTITY_CATEGORY]
         self._attr_native_unit_of_measurement = sensor_settings[CONF_UNIT_OF_MEASUREMENT]
         self._attr_translation_key = sensor_settings[TRANSLATION_KEY]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device.id + "gateway")},
-            "name": self._device.name + " " + "Gateway",
-            "via_device_id": self._device.ha_device_id,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.id + "gateway")},
+            name=self._device.name + " " + "Gateway",
+            via_device_id=self._device.ha_device_id,
+        )
         self._device.fill_device_info(self._attr_device_info, "gateway")
         self.update_state()
         _LOGGER.info(
@@ -410,6 +416,7 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_value = self.sensor_value()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_state()

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import time, timedelta
 import logging
 import random
+from typing import override
 
 from daikin_onecta import OnectaRateLimitError
 
@@ -27,7 +28,7 @@ class OnectaRuntimeData:
     daikin_api: DaikinApi
 
 
-class OnectaDataUpdateCoordinator(DataUpdateCoordinator):
+class OnectaDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching data from the API."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -44,7 +45,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         _LOGGER.info(
-            "Daikin coordinator initialized with %s interval.",
+            "Daikin coordinator initialized with %s interval",
             self.update_interval,
         )
 
@@ -52,9 +53,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the delay after a write before polling resumes."""
         return self.options.get("scan_ignore", 30)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch the latest device state from Daikin."""
-        _LOGGER.debug("Daikin coordinator start _async_update_data.")
+        _LOGGER.debug("Daikin coordinator start _async_update_data")
 
         onecta_data: OnectaRuntimeData = self._config_entry.runtime_data
         devices = onecta_data.devices
@@ -95,13 +97,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator):
 
     def update_settings(self, config_entry: ConfigEntry) -> None:
         """Apply updated config entry options."""
-        _LOGGER.debug("Daikin coordinator updating settings.")
+        _LOGGER.debug("Daikin coordinator updating settings")
         self.options = config_entry.options
         self.update_interval = self.determine_update_interval(self.hass)
         _LOGGER.info("Daikin coordinator changed interval to '%s'", self.update_interval)
 
     def determine_update_interval(self, hass: HomeAssistant) -> timedelta:
-        """Determine the next polling interval."""
+        """Determine the next polling interval"""
         # Default of low scan minutes interval
         scan_interval = self.options.get("low_scan_interval", 30) * 60
         high_scan_interval = self.options.get("high_scan_interval", 10) * 60
