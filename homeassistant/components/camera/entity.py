@@ -37,6 +37,7 @@ from .prefs import get_dynamic_camera_stream_settings
 from .webrtc import (
     CameraWebRTCProvider,
     WebRTCClientConfiguration,
+    WebRTCRecordingConfiguration,
     WebRTCSendMessage,
     async_call_webrtc_provider,
     async_get_supported_provider,
@@ -272,7 +273,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     async def async_handle_async_webrtc_offer(
-        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        self,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+        *,
+        aiortc_compatible: bool = False,
     ) -> None:
         """Handle the async WebRTC offer.
 
@@ -285,10 +291,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
+
+        aiortc_compatible=True indicates the WebRTC connection is being used for recording with
+        aiortc, in case any integration-specific changes are needed for compatibility.
         """
         if self._webrtc_provider:
             await self._webrtc_provider.async_handle_async_webrtc_offer(
-                self, offer_sdp, session_id, send_message
+                self,
+                offer_sdp,
+                session_id,
+                send_message,
+                aiortc_compatible=aiortc_compatible,
             )
             return
 
@@ -478,6 +491,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration()
+
+    def get_webrtc_recording_configuration(self) -> WebRTCRecordingConfiguration:
+        """Return the WebRTC recording configuration adjustable per integration."""
+        return WebRTCRecordingConfiguration()
 
     @final
     @callback
