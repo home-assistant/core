@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 import probatio
+from probatio import to_field_list
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
@@ -154,6 +155,6 @@ def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = probatio.to_field_list(schema)
+        data["data_schema"] = to_field_list(schema)
 
     return data

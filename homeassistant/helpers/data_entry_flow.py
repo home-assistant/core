@@ -5,6 +5,7 @@ from typing import Any, Generic, TypeVar
 
 from aiohttp import web
 import probatio
+from probatio import to_field_list
 
 from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantView
@@ -50,7 +51,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT, _FlowResult
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            data["data_schema"] = probatio.to_field_list(
+            data["data_schema"] = to_field_list(
                 schema, custom_serializer=cv.custom_serializer
             )
         return data

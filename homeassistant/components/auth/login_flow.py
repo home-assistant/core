@@ -75,6 +75,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
 import probatio
+from probatio import to_field_list
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
@@ -260,7 +261,7 @@ def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = probatio.to_field_list(schema)
+        data["data_schema"] = to_field_list(schema)
 
     return data
 

@@ -6,19 +6,20 @@ import sys
 IMPORT_TIMEOUT = 60
 
 
-def test_codec_reexports_resolve_before_the_event_loop() -> None:
-    """Importing Home Assistant must leave no lazy codec import for the loop.
+def test_to_field_list_resolves_at_import() -> None:
+    """Config flow forms render from the event loop, so the import cannot happen there.
 
     Probatio resolves to_field_list through a lazy import on first attribute
-    access, and config flow forms render with it from inside the event loop,
-    where that import is a blocking call. A clean interpreter is the only way to
-    see this: anything the test suite imported first would hide it.
+    access. Importing the name binds it instead, while the helper itself is
+    imported. A clean interpreter is the only way to see this: anything the test
+    suite imported first would hide it.
     """
     result = subprocess.run(
         [
             sys.executable,
             "-c",
-            "import homeassistant, probatio; print('to_field_list' in vars(probatio))",
+            "import homeassistant.helpers.data_entry_flow, probatio;"
+            " print('to_field_list' in vars(probatio))",
         ],
         capture_output=True,
         check=True,

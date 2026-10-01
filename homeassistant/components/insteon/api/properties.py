@@ -3,6 +3,7 @@
 from typing import Any
 
 import probatio
+from probatio import to_field_list
 from pyinsteon import devices
 from pyinsteon.config import (
     LOAD_BUTTON,
@@ -42,28 +43,26 @@ RELAY_MODES = [str(RelayMode(v)).lower() for v in list(RelayMode)]
 
 
 def _bool_schema(name):
-    return probatio.to_field_list(probatio.Schema({probatio.Required(name): bool}))[0]
+    return to_field_list(probatio.Schema({probatio.Required(name): bool}))[0]
 
 
 def _byte_schema(name):
-    return probatio.to_field_list(probatio.Schema({probatio.Required(name): cv.byte}))[
-        0
-    ]
+    return to_field_list(probatio.Schema({probatio.Required(name): cv.byte}))[0]
 
 
 def _float_schema(name):
-    return probatio.to_field_list(probatio.Schema({probatio.Required(name): float}))[0]
+    return to_field_list(probatio.Schema({probatio.Required(name): float}))[0]
 
 
 def _list_schema(name, values):
-    return probatio.to_field_list(
+    return to_field_list(
         probatio.Schema({probatio.Required(name): probatio.In(values)}),
         custom_serializer=cv.custom_serializer,
     )[0]
 
 
 def _multi_select_schema(name, values):
-    return probatio.to_field_list(
+    return to_field_list(
         probatio.Schema({probatio.Optional(name): cv.multi_select(values)}),
         custom_serializer=cv.custom_serializer,
     )[0]
@@ -71,7 +70,7 @@ def _multi_select_schema(name, values):
 
 def _read_only_schema(name, value):
     """Return a constant value schema."""
-    return probatio.to_field_list(probatio.Schema({probatio.Required(name): value}))[0]
+    return to_field_list(probatio.Schema({probatio.Required(name): value}))[0]
 
 
 def get_schema(prop, name, groups):

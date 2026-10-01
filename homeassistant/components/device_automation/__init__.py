@@ -10,6 +10,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 import probatio
+from probatio import to_field_list
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -323,7 +324,7 @@ async def _async_get_device_automation_capabilities(
     if (extra_fields := capabilities.get("extra_fields")) is None:
         capabilities["extra_fields"] = []
     else:
-        capabilities["extra_fields"] = probatio.to_field_list(
+        capabilities["extra_fields"] = to_field_list(
             extra_fields, custom_serializer=cv.custom_serializer
         )
 
