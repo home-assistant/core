@@ -22,8 +22,17 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    callback,
+    valid_entity_id,
+)
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    selector,
+)
 
 from .const import (
     CONF_AZIMUTH,
@@ -161,6 +170,10 @@ def _sensor_errors(
     for sensor_key in SENSOR_KEYS:
         if (entity_id := plane_data.get(sensor_key)) is None:
             continue
+        if not valid_entity_id(entity_id):
+            # A registry UUID that matches no entity.
+            errors[sensor_key] = "sensor_unusable"
+            continue
         # A sensor that is merely unavailable is accepted; it is read on every update.
         state = hass.states.get(entity_id)
         if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -180,9 +193,9 @@ def _sources(data: Mapping[str, Any]) -> dict[str, str]:
     }
 
 
-def _plane_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
+def _plane_data(hass: HomeAssistant, user_input: Mapping[str, Any]) -> dict[str, Any]:
     """Extract a plane's stored fields from a submitted plane form."""
-    return {
+    data = {
         key: user_input[key]
         for key in (
             CONF_DECLINATION,
@@ -193,6 +206,13 @@ def _plane_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
         )
         if key in user_input
     }
+    registry = er.async_get(hass)
+    for key in SENSOR_KEYS:
+        if key in data:
+            # The selector also accepts a registry UUID, but planes read entity IDs.
+            # An unknown UUID is kept as is, so the form can refuse it.
+            data[key] = er.async_resolve_entity_id(registry, data[key]) or data[key]
+    return data
 
 
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -239,7 +259,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            plane_data = _plane_data(user_input)
+            plane_data = _plane_data(self.hass, user_input)
             if not (errors := _sensor_errors(self.hass, plane_data)):
                 return self.async_create_entry(
                     title="",
@@ -456,7 +476,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            plane_data = _plane_data(user_input)
+            plane_data = _plane_data(self.hass, user_input)
             if not (errors := _sensor_errors(self.hass, plane_data)):
                 return self.async_create_entry(
                     title=plane_title(plane_data), data=plane_data
@@ -493,7 +513,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            plane_data = _plane_data(user_input)
+            plane_data = _plane_data(self.hass, user_input)
             # A sensor the plane already reads isn't checked again, so its current
             # state can't block an unrelated edit.
             changed = {

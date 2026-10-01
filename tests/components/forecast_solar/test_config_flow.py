@@ -29,6 +29,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -790,6 +791,54 @@ async def test_subentry_flow_rejects_unusable_sensor(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_resolves_registry_uuid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a sensor selected by registry UUID is stored by its entity ID."""
+    registry_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
+    hass.states.async_set("sensor.roof_azimuth", "200", DEGREES)
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"declination_source": "fixed", "azimuth_source": "sensor"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: "0123456789abcdef0123456789abcdef",
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    # A UUID that matches no entity is refused.
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: registry_entry.id,
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
+    assert result["title"] == "30° / sensor.roof_azimuth / 5100W"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
