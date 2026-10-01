@@ -28,6 +28,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -42,6 +43,7 @@ from .const import (
     TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM,
     TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM,
     TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM,
+    TRAVEL_PREFS_TO_GOOGLE_SDK_ENUM,
     UNITS_TO_GOOGLE_SDK_ENUM,
 )
 
@@ -174,6 +176,7 @@ async def async_compute_routes(
     departure_time: str | None = None,
     arrival_time: str | None = None,
     field_mask: str = "routes.duration,routes.distanceMeters,routes.localized_values",
+    travel_routing_preference: str | None = None,
 ) -> ComputeRoutesResponse | None:
     """Compute routes using Google Routes API."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -184,8 +187,26 @@ async def async_compute_routes(
 
     route_modifiers = None
     routing_preference = None
+    routing_traffic_model = (
+        TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM[traffic_model] if traffic_model else None
+    )
+
     if travel_mode == RouteTravelMode.DRIVE:
         routing_preference = RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+        if travel_routing_preference is not None:
+            routing_preference = TRAVEL_PREFS_TO_GOOGLE_SDK_ENUM[
+                travel_routing_preference
+            ]
+
+        if (
+            routing_preference != RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+            and routing_traffic_model is not None
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="traffic_model_not_allowed",
+            )
+
         route_modifiers = RouteModifiers(
             avoid_tolls=avoid == "tolls",
             avoid_ferries=avoid == "ferries",
@@ -223,9 +244,7 @@ async def async_compute_routes(
         route_modifiers=route_modifiers,
         language_code=language,
         units=UNITS_TO_GOOGLE_SDK_ENUM[units],
-        traffic_model=TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM[traffic_model]
-        if traffic_model
-        else None,
+        traffic_model=routing_traffic_model,
         transit_preferences=transit_preferences,
     )
 

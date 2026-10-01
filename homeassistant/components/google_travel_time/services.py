@@ -32,6 +32,7 @@ from .const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
     TRAVEL_MODES_TO_GOOGLE_SDK_ENUM,
@@ -110,6 +111,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 avoid=service.data.get(CONF_AVOID),
                 traffic_model=service.data.get(CONF_TRAFFIC_MODEL),
                 departure_time=service.data.get(CONF_DEPARTURE_TIME),
+                travel_routing_preference=service.data.get(
+                    CONF_TRAVEL_ROUTING_PREFERENCE
+                ),
             )
         except Exception as ex:  # noqa: BLE001
             _raise_service_error(hass, entry, ex)
