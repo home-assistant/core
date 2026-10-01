@@ -664,11 +664,14 @@ async def test_abort_on_shutdown(
             await req.content.read()
 
 
-@pytest.mark.parametrize("bitrate", [None, 48])
+@pytest.mark.parametrize(
+    ("bitrate", "expected_args"), [(None, []), (48, ["-b:a", "48k"])]
+)
 async def test_proxy_view_bitrate(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     bitrate: int | None,
+    expected_args: list[str],
 ) -> None:
     """Test that a declared bitrate is passed to ffmpeg, and nothing is without one."""
     device_id = "1234"
@@ -699,8 +702,7 @@ async def test_proxy_view_bitrate(
         assert req.status == HTTPStatus.OK
         await req.content.read()
 
-    command_args = mock_exec.call_args.args
-    if bitrate is None:
-        assert "-b:a" not in command_args
-    else:
-        assert command_args[command_args.index("-b:a") + 1] == "48k"
+    command_args = list(mock_exec.call_args.args)
+    # the sentinel indexes past the end when the flag is absent, so the slice is empty
+    index = [*command_args, "-b:a"].index("-b:a")
+    assert command_args[index : index + 2] == expected_args
