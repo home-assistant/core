@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
+import probatio
 from pyskyqhub.skyq_hub import SkyQHub
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST): cv.string}
+    {probatio.Optional(CONF_HOST): cv.string}
 )
 
 

@@ -1,6 +1,6 @@
 """Support for Rflink devices."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import config_validation as cv
 
@@ -30,11 +30,11 @@ SIGNAL_HANDLE_EVENT = "rflink_handle_event_{}"
 
 TMP_ENTITY = "tmp.{}"
 
-DEVICE_DEFAULTS_SCHEMA = vol.Schema(
+DEVICE_DEFAULTS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(
+        probatio.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+        probatio.Optional(
             CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
-        ): vol.Coerce(int),
+        ): probatio.Coerce(int),
     }
 )

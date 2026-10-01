@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
-from modbus_connection import ModbusSerialParams, ModbusTcpParams
+from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTlsParams
 from modbus_connection.tmodbus import ModbusConnection
 import pytest
 
@@ -100,6 +100,63 @@ async def test_the_same_device_reached_by_a_different_name_still_shares(
     assert len(hass.data[DATA_MODBUS_CONNECTIONS]) == 1
 
 
+@pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param("socket://1.2.3.4:502", id="ipv4"),
+        pytest.param("socket://[fe80::1]:502", id="ipv6"),
+    ],
+)
+async def test_a_serial_framing_over_a_socket_shares_the_serial_link(
+    hass: HomeAssistant, consumer: ConsumerFactory, device: str
+) -> None:
+    """A serial framing on a TCP link is the serial link the socket device names.
+
+    Both spellings build one link at one line speed, so splitting them would put
+    a second connection on a gateway that can only answer one.
+    """
+    entry = consumer()
+    await hass.config_entries.async_setup(entry.entry_id)
+    host = device.removeprefix("socket://").rpartition(":")[0].strip("[]")
+
+    async_get_unit(
+        hass, entry, ModbusSerialParams(device=device, framer="rtu", baudrate=115200), 1
+    )
+    with pytest.deprecated_call():
+        async_get_unit(
+            hass, entry, ModbusTcpParams(host=host, port=502, framer="rtu"), 2
+        )
+
+    assert len(hass.data[DATA_MODBUS_CONNECTIONS]) == 1
+
+
+async def test_a_serial_framing_over_a_socket_keeps_the_line_speed_asked_for(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """The framing alone says nothing about the line speed, so it cannot assume one.
+
+    A slower line needs a longer gap between frames, which the connection built
+    for the faster one does not leave.
+    """
+    entry = consumer()
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    async_get_unit(
+        hass,
+        entry,
+        ModbusSerialParams(device="socket://1.2.3.4:502", framer="rtu", baudrate=9600),
+        1,
+    )
+
+    with (
+        pytest.deprecated_call(),
+        pytest.raises(HomeAssistantError, match="different link settings"),
+    ):
+        async_get_unit(
+            hass, entry, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
+        )
+
+
 async def test_one_device_cannot_be_used_with_two_link_settings(
     hass: HomeAssistant, consumer: ConsumerFactory
 ) -> None:
@@ -114,9 +171,7 @@ async def test_one_device_cannot_be_used_with_two_link_settings(
     async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
 
     with pytest.raises(HomeAssistantError, match="different link settings"):
-        async_get_unit(
-            hass, entry, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
-        )
+        async_get_unit(hass, entry, ModbusTlsParams(host="1.2.3.4", port=502), 2)
 
 
 async def test_the_last_consumer_closes_the_connection(
@@ -251,7 +306,7 @@ async def test_a_temporary_unit_cannot_clash_with_held_link_settings(
 
     with pytest.raises(HomeAssistantError, match="different link settings"):
         async with async_get_temporary_unit(
-            hass, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
+            hass, ModbusTlsParams(host="1.2.3.4", port=502), 2
         ):
             pass
 

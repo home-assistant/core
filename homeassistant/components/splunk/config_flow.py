@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 from hass_splunk import hass_splunk
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -51,38 +51,17 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): str,
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-                    vol.Optional(CONF_NAME): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
+                    probatio.Optional(CONF_NAME): str,
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        # Single instance integration - manifest prevents duplicates
-        # Validate the imported configuration
-        errors = await self._async_validate_input(import_config)
-
-        if errors:
-            # Map error keys to abort reasons for issue creation
-            error_key = errors.get("base", "unknown")
-            _LOGGER.error("Failed to import Splunk configuration from YAML: %s", errors)
-            return self.async_abort(reason=error_key)
-
-        host = import_config.get(CONF_HOST, DEFAULT_HOST)
-        port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        return self.async_create_entry(
-            title=f"{host}:{port}",
-            data=import_config,
         )
 
     async def async_step_reconfigure(
@@ -104,14 +83,14 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_TOKEN): str,
-                        vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-                        vol.Optional(CONF_NAME): str,
+                        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
+                        probatio.Optional(CONF_NAME): str,
                     }
                 ),
                 self._get_reconfigure_entry().data,
@@ -146,7 +125,9 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+            ),
             errors=errors,
         )
 

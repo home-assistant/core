@@ -8,9 +8,9 @@ import types
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
@@ -1512,19 +1512,15 @@ async def test_device_info_called(
         ("hue", "1234"), config_entry.entry_id
     )
     assert device == snapshot
-    assert device.config_entries == {config_entry.entry_id}
-    assert device.config_entries_subentries == {config_entry.entry_id: {None}}
-    assert device.primary_config_entry == config_entry.entry_id
+    assert device.config_entry_id == config_entry.entry_id
+    assert device.config_subentry_id is None
     assert device.via_device_id == via.id
     device = device_registry.async_get_device_by_identifier(
         ("hue", "efgh"), config_entry.entry_id
     )
     assert device == snapshot
-    assert device.config_entries == {config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        config_entry.entry_id: {"mock-subentry-id-1"}
-    }
-    assert device.primary_config_entry == config_entry.entry_id
+    assert device.config_entry_id == config_entry.entry_id
+    assert device.config_subentry_id == "mock-subentry-id-1"
     assert device.via_device_id == via.id
 
 
@@ -2196,9 +2192,9 @@ async def test_register_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         expected_message = (
@@ -2213,8 +2209,8 @@ async def test_register_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         entity_platform.async_register_entity_service(

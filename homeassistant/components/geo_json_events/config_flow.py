@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -19,10 +19,10 @@ from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import DEFAULT_RADIUS_IN_M, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_LOCATION): selector.LocationSelector(
+        probatio.Required(CONF_URL): cv.string,
+        probatio.Required(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=True, icon="")
         ),
     }

@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Final, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
@@ -85,21 +85,23 @@ DEVICE_CLASS_MAP = {
 
 DEFAULT_ROUND = 3
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.removed(CONF_UNIT_OF_MEASUREMENT),
     SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Any(
-                None, vol.Coerce(int)
+            probatio.Optional(CONF_NAME): cv.string,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            probatio.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): probatio.Any(
+                None, probatio.Coerce(int)
             ),
-            vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
-            vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
-            vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
-            vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
+            probatio.Optional(CONF_UNIT_PREFIX): probatio.In(UNIT_PREFIXES),
+            probatio.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): probatio.In(
+                UNIT_TIME
+            ),
+            probatio.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            probatio.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
+            probatio.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): probatio.In(
                 INTEGRATION_METHODS
             ),
         }
