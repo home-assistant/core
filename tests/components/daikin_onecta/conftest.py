@@ -6,17 +6,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from _pytest.assertion import truncate
 import pytest
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.single_file import SingleFileAmberSnapshotExtension
 from syrupy.filters import props
 
 from homeassistant.components.daikin_onecta.const import DAIKIN_API_URL, DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import OnectaRuntimeData
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
+
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 truncate.DEFAULT_MAX_LINES = 9999
 truncate.DEFAULT_MAX_CHARS = 9999
