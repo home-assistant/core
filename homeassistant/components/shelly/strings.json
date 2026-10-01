@@ -32,7 +32,7 @@
     "flow_title": "{name}",
     "progress": {
       "provisioning": "Provisioning Wi-Fi credentials and waiting for device to connect",
-      "remote_connect": "Waiting for the remote Shelly to connect"
+      "remote_connect": "Copy this sensitive URL into the device’s Outbound WebSocket settings and enable certificate verification. Keep the complete URL private and configure your reverse proxy to redact it from logs. The initial pairing window expires after 10 minutes.\n\n`{connection_url}`\n\nWaiting for the remote Shelly to connect"
     },
     "step": {
       "bluetooth_confirm": {
@@ -105,7 +105,6 @@
         "title": "Confirm remote Shelly"
       },
       "remote_connect": {
-        "description": "Copy this sensitive URL into the device’s Outbound WebSocket settings and enable certificate verification. Keep the complete URL private and configure your reverse proxy to redact it from logs. The initial pairing window expires after 10 minutes.\n\n{connection_url}",
         "title": "Connect your remote Shelly"
       },
       "remote_credentials": {

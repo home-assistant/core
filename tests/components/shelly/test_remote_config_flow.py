@@ -17,6 +17,7 @@ from homeassistant.components.shelly.remote_connection import RemoteConnectionMa
 from homeassistant.const import CONF_EXTERNAL_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.translation import async_get_translations
 
 from .test_remote import DEVICE_INFO
 
@@ -38,6 +39,26 @@ async def start_remote_flow(
         return await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_EXTERNAL_URL: "https://ha.example.com"}
         )
+
+
+async def test_remote_progress_shows_connection_url(hass: HomeAssistant) -> None:
+    """Render the pairing URL using the translation key the frontend reads."""
+    manager = RemoteConnectionManager(hass)
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_get_remote_manager",
+        return_value=manager,
+    ):
+        result = await start_remote_flow(hass, manager)
+        translations = await async_get_translations(hass, "en", "config", {DOMAIN})
+        description = translations[
+            f"component.{DOMAIN}.config.progress.{result['progress_action']}"
+        ]
+        assert "{connection_url}" in description
+        url = result["description_placeholders"]["connection_url"]
+        assert f"`{url}`" in description.format(**result["description_placeholders"])
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+    assert not manager.credentials
 
 
 @pytest.mark.usefixtures("mock_setup", "mock_setup_entry")
