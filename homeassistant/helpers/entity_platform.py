@@ -1442,9 +1442,24 @@ class EntityPlatform:
         task_entities = {task: entity for entity, task in tasks}
         pending = set(task_entities)
         while pending:
-            done, pending = await asyncio.wait(
-                pending, return_when=asyncio.FIRST_COMPLETED
-            )
+            try:
+                done, pending = await asyncio.wait(
+                    pending, return_when=asyncio.FIRST_COMPLETED
+                )
+            except asyncio.CancelledError:
+                # Unlike `gather`, `asyncio.wait` does not cancel its
+                # children when this await is itself cancelled (e.g. by
+                # config entry unload cancelling this background poll).
+                # Request cancellation for each one - this can't forcibly
+                # stop one stuck in a synchronous update()'s executor
+                # thread, the same constraint documented on
+                # `remove_entity_cb` - and keep draining them in the
+                # background so their tracked entries are still cleared,
+                # instead of leaking, once they do finish.
+                for task in pending:
+                    task.cancel()
+                self._async_schedule_polling_drain(task_entities, pending)
+                raise
             fatal: BaseException | None = None
             for task in done:
                 entity = task_entities[task]
@@ -1463,17 +1478,21 @@ class EntityPlatform:
                 ) is not None and fatal is None:
                     fatal = task_fatal
             if fatal is not None:
-                if pending:
-                    self.hass.async_create_background_task(
-                        self._async_await_polling_tasks(
-                            [(task_entities[t], t) for t in pending]
-                        ),
-                        name=(
-                            f"EntityPlatform poll drain "
-                            f"{self.domain}.{self.platform_name}"
-                        ),
-                    )
+                self._async_schedule_polling_drain(task_entities, pending)
                 raise fatal
+
+    def _async_schedule_polling_drain(
+        self,
+        task_entities: dict[asyncio.Task[None], Entity],
+        pending: set[asyncio.Task[None]],
+    ) -> None:
+        """Keep draining still-pending polling tasks in the background."""
+        if not pending:
+            return
+        self.hass.async_create_background_task(
+            self._async_await_polling_tasks([(task_entities[t], t) for t in pending]),
+            name=f"EntityPlatform poll drain {self.domain}.{self.platform_name}",
+        )
 
     def _async_handle_entity_update_result(
         self,
