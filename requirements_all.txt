@@ -1061,7 +1061,7 @@ fluss-api==0.2.5
 flux-led==1.2.0
 
 # homeassistant.components.fmd
-fmd-api==2.0.10
+fmd-api==3.0.1
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
