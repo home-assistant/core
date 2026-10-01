@@ -338,6 +338,16 @@ async def marketplace_repository_uninstall(
         _send_repository_busy(connection, msg["id"], repository)
         return
 
+    if not repository.data.installed:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "repository_not_installed",
+            "repository_not_installed",
+            {"repository": repository.data.full_name},
+        )
+        return
+
     # Its config entries run the installed code, ignored ones too, they go first
     if (
         repository.data.category == RepositoryCategory.INTEGRATION

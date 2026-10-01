@@ -203,27 +203,35 @@ def restore_interrupted_backups(marketplace: MarketplaceManager) -> bool:
 
     # Moved into the new content already, the old content coming back would
     # remove the only copy of it
+    left_for_next_start: list[Backup] = []
     for persistent in backups:
         if persistent.has_content or not persistent.local_path.exists():
             continue
-        if any(
-            content is not persistent
+        containing = [
+            content
+            for content in backups
+            if content is not persistent
             and content.has_content
             and persistent.local_path.is_relative_to(content.local_path)
-            for content in backups
-        ):
-            try:
-                shutil.move(persistent.local_path, persistent.content_path)
-            except OSError as exception:
-                LOGGER.warning(
-                    "Could not move %s back into backup %s: %s",
-                    persistent.local_path,
-                    persistent.backup_path,
-                    exception,
-                )
+        ]
+        if not containing:
+            continue
+        try:
+            shutil.move(persistent.local_path, persistent.content_path)
+        except OSError as exception:
+            LOGGER.warning(
+                "Could not move %s back into backup %s, both stay for the next"
+                " start: %s",
+                persistent.local_path,
+                persistent.backup_path,
+                exception,
+            )
+            left_for_next_start.extend([persistent, *containing])
 
     restored = False
     for backup in backups:
+        if backup in left_for_next_start:
+            continue
         try:
             if backup.has_content:
                 backup.restore()

@@ -257,6 +257,9 @@
     "repository_not_found": {
       "message": "The Marketplace does not know the repository with ID {repository}."
     },
+    "repository_not_installed": {
+      "message": "{repository} is not installed."
+    },
     "repository_removed": {
       "message": "{repository} was removed from the Marketplace."
     },

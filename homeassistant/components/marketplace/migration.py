@@ -475,13 +475,15 @@ def _is_legacy_integration(directory: Path) -> bool:
     return manifest.get("domain") == LEGACY_HACS_DOMAIN
 
 
-def _remove_legacy_integration(integration_path: Path) -> bool:
+def _remove_legacy_integration(config_path: str, integration_path: Path) -> bool:
     """Remove the custom integration this replaces, return if it was removed."""
     if not _is_legacy_integration(integration_path):
         return False
 
-    # A checkout, or a link to one, can hold work of a developer
-    if integration_path.is_symlink() or (integration_path / ".git").exists():
+    # A checkout, or a link to one or to a folder holding one, can hold work
+    # of a developer. Followed links that end up elsewhere tell it is one.
+    in_place = Path(config_path).resolve() / "custom_components" / LEGACY_HACS_DOMAIN
+    if integration_path.resolve() != in_place or (integration_path / ".git").exists():
         LOGGER.info(
             "Leaving %s in place, it is a development checkout of the custom"
             " integration the Marketplace replaces, remove it yourself",
@@ -510,7 +512,7 @@ def _remove_legacy_files(config_path: str) -> list[str]:
     removed: list[str] = []
 
     integration_path = Path(config_path, "custom_components", LEGACY_HACS_DOMAIN)
-    if _remove_legacy_integration(integration_path):
+    if _remove_legacy_integration(config_path, integration_path):
         removed.append(str(integration_path))
 
     # Nothing reads these, the repositories file holds all of it

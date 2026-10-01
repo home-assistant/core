@@ -985,7 +985,14 @@ class Repository:
         if self.installing:
             raise RepositoryBusyError(self.data.full_name)
 
-        async with self._install_lock:
+        async with self._install_lock, self.marketplace.filesystem_lock:
+            # Its folder can be the one another repository installed to
+            if not self.data.installed:
+                raise MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="repository_not_installed",
+                    translation_placeholders={"repository": self.data.full_name},
+                )
             await self._async_uninstall()
 
     async def _async_uninstall(self) -> None:
@@ -1734,11 +1741,19 @@ class Repository:
     @concurrent(concurrenttasks=10)
     async def download_repository_file(self, content: FileInformation) -> None:
         """Download content."""
+        # The install fails with the first file it misses, the rest is not
+        # worth fetching
+        if self._download_budget <= 0:
+            return
+
         self.logger.debug("%s Downloading %s", self.string, content.name)
 
-        filecontent = await self.marketplace.async_download_file(content.download_url)
+        filecontent = await self.marketplace.async_download_file(
+            content.download_url, limit=self._download_budget
+        )
 
         if filecontent is None:
+            self._download_budget = 0
             self.validate.errors.append(
                 MarketplaceError(
                     translation_domain=DOMAIN,
@@ -2018,7 +2033,7 @@ class Repository:
         if self.installing:
             raise RepositoryBusyError(self.data.full_name)
 
-        async with self._install_lock:
+        async with self._install_lock, self.marketplace.filesystem_lock:
             self._replace_built_in_confirmed = confirm_replace_built_in
             try:
                 await self._async_install_repository(ref)

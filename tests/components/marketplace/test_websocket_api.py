@@ -52,6 +52,7 @@ from .const import (
     FROZEN_TIME,
     REPOSITORY_INTEGRATION,
     REPOSITORY_INTEGRATION_ID,
+    REPOSITORY_PLUGIN_ID,
     TOKEN,
     WARNING_ACCEPTANCE,
 )
@@ -1257,6 +1258,33 @@ async def test_repository_uninstall(
     assert repository.data.installed is False
 
 
+async def test_repository_uninstall_of_what_is_not_installed(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test nothing is removed for a repository that is not installed.
+
+    Its folder can be the one another repository installed to.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert not repository.data.installed
+    client = await hass_ws_client(hass)
+
+    with patch.object(type(repository), "remove_local_directory") as remove:
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": REPOSITORY_PLUGIN_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["code"] == "repository_not_installed"
+    assert response["error"]["translation_key"] == "repository_not_installed"
+    remove.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "source",
     [
@@ -1933,6 +1961,10 @@ async def test_commands_without_accepted_warning(
     message: dict[str, Any],
 ) -> None:
     """Test browsing and managing the Marketplace work before the warning is accepted."""
+    # Uninstalling takes a repository that is installed
+    get_marketplace(hass).repositories.get_by_id(
+        REPOSITORY_INTEGRATION_ID
+    ).data.installed = True
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(message)

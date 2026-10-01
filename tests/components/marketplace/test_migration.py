@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 import json
 from pathlib import Path
+import shutil
 from typing import Any
 from unittest.mock import patch
 
@@ -791,11 +792,29 @@ def _seed_linked_checkout(config_dir: Path) -> Path:
     return link
 
 
+def _seed_linked_custom_components(config_dir: Path) -> Path:
+    """Link custom_components to the one of a HACS checkout, its .git at the root."""
+    checkout = config_dir / "development" / "hacs"
+    (checkout / ".git").mkdir(parents=True)
+    linked = checkout / "custom_components"
+    custom_components = config_dir / "custom_components"
+    if custom_components.is_dir():
+        shutil.move(custom_components, linked)
+    integration = linked / "hacs"
+    integration.mkdir(parents=True)
+    (integration / "manifest.json").write_text(
+        json.dumps({"domain": LEGACY_HACS_DOMAIN}), encoding="utf-8"
+    )
+    custom_components.symlink_to(linked, target_is_directory=True)
+    return custom_components / "hacs"
+
+
 @pytest.mark.parametrize(
     "seed",
     [
         pytest.param(_seed_git_checkout, id="git_checkout"),
         pytest.param(_seed_linked_checkout, id="symlink"),
+        pytest.param(_seed_linked_custom_components, id="linked_custom_components"),
     ],
 )
 @pytest.mark.usefixtures("adopted_storage", "stored_repositories")

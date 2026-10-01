@@ -404,6 +404,8 @@ class MarketplaceManager:
         self.common = MarketplaceCommon()
         self.critical_repositories: list[dict[str, Any]] = []
         self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
+        # Repositories can claim the same folder, one changes the disk at a time
+        self.filesystem_lock = asyncio.Lock()
         # The catalogs the last request could not reach
         self.unreachable_categories: set[RepositoryCategory] = set()
         self.recurring_tasks: list[Callable[[], None]] = []
@@ -933,6 +935,7 @@ class MarketplaceManager:
         *,
         nolog: bool = False,
         handle_rate_limit: bool = False,
+        limit: int | None = None,
     ) -> bytes | None:
         """Download a file, retrying on timeouts and rate limits."""
         if url is None:
@@ -947,7 +950,7 @@ class MarketplaceManager:
                     url=url, timeout=DOWNLOAD_TIMEOUT
                 ) as response:
                     if response.status == 200:
-                        return await async_read_limited(response, url)
+                        return await async_read_limited(response, url, limit)
 
                     status = response.status
                     retry_after_header = response.headers.get("retry-after")

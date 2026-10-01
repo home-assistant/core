@@ -2408,12 +2408,30 @@ def test_manifest_key_ignored(key: str, value: Any, updated: Any) -> None:
 async def test_uninstall_without_a_domain(marketplace: MarketplaceManager) -> None:
     """Test that an integration without a domain can not be removed."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
     repository.data.domain = None
 
     with pytest.raises(MarketplaceError) as exc_info:
         await repository.uninstall()
 
     assert exc_info.value.translation_key == "uninstall_failed"
+
+
+async def test_uninstall_of_what_is_not_installed(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a repository that is not installed removes nothing, whoever asks."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.installed = False
+
+    with (
+        patch.object(type(repository), "remove_local_directory") as remove,
+        pytest.raises(MarketplaceError) as exc_info,
+    ):
+        await repository.uninstall()
+
+    assert exc_info.value.translation_key == "repository_not_installed"
+    remove.assert_not_called()
 
 
 async def test_repository_manifest_of_a_removed_version(

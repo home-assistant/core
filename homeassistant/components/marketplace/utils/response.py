@@ -14,27 +14,33 @@ def _declared_size(headers: Mapping[str, str]) -> int:
     return int(length) if length.isdigit() else 0
 
 
-async def async_read_limited(response: ClientResponse, url: str) -> bytes:
-    """Read a response body, giving up as soon as it passes the download limit.
+async def async_read_limited(
+    response: ClientResponse, url: str, limit: int | None = None
+) -> bytes:
+    """Read a response body, giving up as soon as it passes the limit.
 
     Without a Content-Length only the bytes that arrive tell the size, so the
-    body is read in chunks instead of all at once.
+    body is read in chunks instead of all at once. Without a limit, the
+    download limit applies.
     """
-    if _declared_size(response.headers) > MAX_DOWNLOAD_SIZE:
+    if limit is None:
+        limit = MAX_DOWNLOAD_SIZE
+
+    if _declared_size(response.headers) > limit:
         raise MarketplaceError(
             translation_domain=DOMAIN,
             translation_key="download_too_large",
-            translation_placeholders={"url": url, "limit": str(MAX_DOWNLOAD_SIZE)},
+            translation_placeholders={"url": url, "limit": str(limit)},
         )
 
     content = bytearray()
     async for chunk in response.content.iter_chunked(DOWNLOAD_CHUNK_SIZE):
         content.extend(chunk)
-        if len(content) > MAX_DOWNLOAD_SIZE:
+        if len(content) > limit:
             raise MarketplaceError(
                 translation_domain=DOMAIN,
                 translation_key="download_too_large",
-                translation_placeholders={"url": url, "limit": str(MAX_DOWNLOAD_SIZE)},
+                translation_placeholders={"url": url, "limit": str(limit)},
             )
 
     return bytes(content)

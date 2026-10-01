@@ -145,6 +145,44 @@ def _custom_components(hass: HomeAssistant) -> ModuleType:
     return root
 
 
+async def test_two_repositories_do_not_install_into_one_folder_at_once(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the second of two installs for the same folder sees the first one."""
+    first = IntegrationRepository(marketplace, "alice/example")
+    second = IntegrationRepository(marketplace, "bob/example")
+    for number, repository in enumerate((first, second)):
+        repository.data.id = f"900{number}"
+        repository.data.domain = "example"
+        marketplace.repositories.register(repository)
+    writing = asyncio.Event()
+    written = asyncio.Event()
+
+    async def install(self: IntegrationRepository, ref: str | None) -> None:
+        await self.async_pre_install()
+        writing.set()
+        await written.wait()
+        self.data.installed = True
+
+    with (
+        patch.object(IntegrationRepository, "_async_install_repository", install),
+        patch.object(marketplace.data, "async_write"),
+    ):
+        first_install = asyncio.create_task(first.async_install_repository())
+        await writing.wait()
+        second_install = asyncio.create_task(second.async_install_repository())
+        await asyncio.sleep(0)
+        written.set()
+        await first_install
+
+        with pytest.raises(MarketplaceError) as exc_info:
+            await second_install
+
+    assert exc_info.value.translation_key == "integration_owned"
+    assert first.data.installed
+    assert not second.data.installed
+
+
 async def test_failed_card_update_restores_previous_files(
     marketplace: MarketplaceManager,
 ) -> None:
@@ -343,6 +381,40 @@ async def test_file_by_file_download_has_the_archive_limits(
     assert {error.translation_key for error in repository.validate.errors} == {
         "content_over_limit"
     }
+
+
+async def test_file_by_file_download_stops_at_the_limit(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the files after the limit are not downloaded at all, not only not written."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    repository.content.path.remote = ""
+    contents = [
+        FileInformation(f"https://example.com/{name}", name, name)
+        for name in ("a.js", "b.js", "c.js", "d.js")
+    ]
+
+    async def download(url: str, *, limit: int) -> bytes | None:
+        # Like the real download, a body over the limit gives nothing
+        return b"x" * 60 if limit >= 60 else None
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.repositories.base.MAX_DOWNLOAD_SIZE",
+            100,
+        ),
+        patch.object(
+            marketplace, "async_download_file", AsyncMock(side_effect=download)
+        ) as downloaded,
+        patch.object(repository, "_async_write_file"),
+    ):
+        await repository._async_download_files(contents)
+
+    # What is left of the limit is the most each download may take
+    assert [call.kwargs["limit"] for call in downloaded.call_args_list] == [100, 40]
+    assert [error.translation_key for error in repository.validate.errors] == [
+        "file_not_downloaded"
+    ]
 
 
 def test_archive_with_too_many_members_is_refused() -> None:

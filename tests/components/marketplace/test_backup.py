@@ -187,6 +187,35 @@ def test_restore_after_the_persistent_directory_moved_in(
     assert (target / "config" / "settings.yaml").read_text() == "mine"
 
 
+def test_restore_keeps_the_kept_data_when_it_can_not_go_back(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test the kept data is never removed with the new content it is in."""
+    target = _integration(config_dir)
+    (target / "config").mkdir()
+    (target / "config" / "settings.yaml").write_text("mine")
+    persistent = Backup(marketplace, target / "config")
+    persistent.create()
+    Backup(marketplace, target).create()
+    target.mkdir()
+    (target / "__init__.py").write_text("new version")
+    persistent.restore()
+
+    with patch(
+        "homeassistant.components.marketplace.utils.backup.shutil.move",
+        side_effect=OSError("device busy"),
+    ):
+        restore_interrupted_backups(marketplace)
+
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+    # Both backups wait for the next start, which can put it all back
+    restore_interrupted_backups(marketplace)
+
+    assert (target / "__init__.py").read_text() == "installed"
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+
 def test_restore_removes_an_unfinished_first_install(
     marketplace: MarketplaceManager, config_dir: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
