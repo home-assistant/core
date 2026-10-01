@@ -119,3 +119,23 @@ async def test_trailing_slash_url_canonicalized_in_entry_data(
     entry = hass.config_entries.async_entries()[0]
     assert entry.unique_id == f"{TEST_URL}/{TEST_ID}"
     assert entry.data[CONF_URL] == TEST_URL
+
+
+async def test_equivalent_url_variants_share_identity(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test scheme/host case and default-port variants are one entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        dict(USER_INPUT, **{CONF_URL: "HTTPS://FMD.Example.Com:443/"}),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

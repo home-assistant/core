@@ -5,6 +5,7 @@ from typing import Any, override
 
 from fmd_api import AuthenticationError, FmdApiException, FmdClient
 import probatio
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -24,8 +25,20 @@ STEP_DATA_SCHEMA = probatio.Schema(
 
 
 def _canonical_url(url: str) -> str:
-    """Normalize a server URL for identity purposes."""
-    return url.rstrip("/")
+    """Normalize a server URL for identity purposes.
+
+    yarl lowercases the scheme/host and drops default ports, so spelling
+    variants (https://FMD.EXAMPLE.COM:443 == https://fmd.example.com)
+    produce one identity. Unparseable or non-absolute input is returned
+    as-is; entry creation still requires successful validation.
+    """
+    try:
+        parsed = URL(url)
+    except ValueError:
+        return url.rstrip("/")
+    if not parsed.is_absolute():
+        return url.rstrip("/")
+    return str(parsed).rstrip("/")
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
