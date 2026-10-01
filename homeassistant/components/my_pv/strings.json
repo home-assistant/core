@@ -7,7 +7,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unique_id_mismatch": "The device serial number does not match the original device."
+      "unique_id_mismatch": "The device serial number does not match the original device.",
+      "unsupported_device": "This my-PV device is not supported."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -182,6 +183,9 @@
     },
     "unknown_error": {
       "message": "The device could not complete the requested action."
+    },
+    "unsupported_device": {
+      "message": "This my-PV device is not supported."
     }
   }
 }

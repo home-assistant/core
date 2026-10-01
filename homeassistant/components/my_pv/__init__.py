@@ -1,11 +1,15 @@
 """The my-PV integration for Home Assistant."""
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
@@ -35,6 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_error",
+        ) from exc
+    except MyPVDeviceNotSupportedError as exc:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_device",
         ) from exc
 
     coordinator = MyPVCoordinator(hass, entry, device)

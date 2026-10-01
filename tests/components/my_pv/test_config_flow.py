@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import pytest
 
 from homeassistant import config_entries
@@ -88,6 +88,32 @@ async def test_step_user_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_step_user_unsupported_device(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test if we get the local setup form with error if the device is not supported."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
 
 
 async def test_step_user_cannot_connect(
@@ -297,6 +323,41 @@ async def test_step_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("source", "data"),
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            DHCP_DISCOVERY,
+        ),
+        (
+            config_entries.SOURCE_ZEROCONF,
+            ZEROCONF_DISCOVERY,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_my_pv_client")
+async def test_step_discovery_unsupported_device(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    source: str,
+    data: BaseServiceInfo,
+) -> None:
+    """Test for discovery that is already configured."""
+    mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": source,
+        },
+        data=data,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
 
 
 @pytest.mark.parametrize(
