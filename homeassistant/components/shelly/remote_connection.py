@@ -8,7 +8,7 @@ from ipaddress import ip_address
 import logging
 import re
 import secrets
-from typing import Any
+from typing import Any, override
 
 from aiohttp import WSMsgType, web
 from aioshelly.rpc_device import WsServer
@@ -62,6 +62,7 @@ def redact_remote_url(value: str) -> str:
 class RemoteURLLogFilter(logging.Filter):
     """Redact pairing URLs at the audited HA and aiohttp logging sources."""
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         """Redact formatted arguments and exception text without retaining tokens."""
         record.msg = redact_remote_url(record.getMessage())

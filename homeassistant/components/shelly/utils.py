@@ -588,7 +588,7 @@ def async_create_issue_unsupported_firmware(
         translation_key="unsupported_firmware",
         translation_placeholders={
             "device_name": entry.title,
-            "ip_address": entry.data[CONF_HOST],
+            "ip_address": entry.data.get(CONF_HOST, entry.title),
         },
     )
 
@@ -788,7 +788,7 @@ def get_rpc_device_info(
     config_entry_id: str,
     device: RpcDevice,
     mac: str,
-    configuration_url: str,
+    configuration_url: str | None,
     model: str,
     model_name: str | None = None,
     key: str | None = None,
@@ -878,7 +878,7 @@ def get_block_device_info(
     config_entry_id: str,
     device: BlockDevice,
     mac: str,
-    configuration_url: str,
+    configuration_url: str | None,
     model: str,
     model_name: str | None = None,
     block: Block | None = None,
@@ -1024,8 +1024,11 @@ def async_migrate_rpc_virtual_components_unique_ids(
 
 def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
     """Return true if BLE scanner is supported."""
+    from .remote_connection import is_remote_entry  # noqa: PLC0415
+
     return (
-        entry.runtime_data.rpc_supports_scripts
+        not is_remote_entry(entry)
+        and entry.runtime_data.rpc_supports_scripts
         and not entry.runtime_data.rpc_zigbee_firmware
     )
 

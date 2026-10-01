@@ -700,6 +700,9 @@
     }
   },
   "exceptions": {
+    "remote_access_revoked": {
+      "message": "Remote access for {device} is revoked or incomplete. Reconfigure the device to generate a new connection URL."
+    },
     "auth_error": {
       "message": "Authentication failed for {device}, please update your credentials"
     },

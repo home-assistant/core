@@ -50,6 +50,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_DEVICE,
+    CONF_EXTERNAL_URL,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -79,7 +80,6 @@ from .ble_provisioning import (
 from .const import (
     CONF_BLE_SCANNER_MODE,
     CONF_CONNECTION_TYPE,
-    CONF_EXTERNAL_URL,
     CONF_GEN,
     CONF_REMOTE_CREDENTIAL,
     CONF_SLEEP_PERIOD,
@@ -92,7 +92,7 @@ from .const import (
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry, async_reconnect_soon
-from .remote import (
+from .remote_connection import (
     PAIRING_TIMEOUT,
     RemoteCredential,
     async_get_remote_manager,
@@ -705,6 +705,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             manager = await async_get_remote_manager(self.hass)
+            assert self.unique_id is not None
             connection = manager.server.get_connection(self.unique_id)
             if connection is None or not connection.connected:
                 errors["base"] = "cannot_connect"

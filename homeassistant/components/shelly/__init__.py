@@ -42,6 +42,7 @@ from .const import (
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
+    CONF_REMOTE_CREDENTIAL,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -58,6 +59,7 @@ from .coordinator import (
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
 )
+from .remote_connection import async_get_remote_manager, is_remote_entry
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
@@ -159,6 +161,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bo
     # config entry, core integration will try to configure that config entry with an
     # error. The config entry data for this custom component doesn't contain host
     # value, so if host isn't present, config entry will not be configured.
+    if is_remote_entry(entry):
+        if (
+            get_device_entry_gen(entry) not in (2, 3, 4)
+            or not entry.unique_id
+            or not entry.data.get(CONF_REMOTE_CREDENTIAL)
+        ):
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="remote_access_revoked",
+                translation_placeholders={"device": entry.title},
+            )
+        return await _async_setup_rpc_entry(hass, entry)
+
     if not entry.data.get(CONF_HOST):
         LOGGER.warning(
             (
@@ -224,7 +239,11 @@ async def _async_setup_block_entry(
     if sleep_period == 0:
         # Not a sleeping device, finish setup
         LOGGER.debug("Setting up online block device %s", entry.title)
-        runtime_data.platforms = PLATFORMS
+        runtime_data.platforms = (
+            [platform for platform in PLATFORMS if platform != Platform.CAMERA]
+            if is_remote_entry(entry)
+            else PLATFORMS
+        )
         try:
             await device.initialize()
             if not device.firmware_supported:
@@ -288,19 +307,28 @@ async def _async_setup_block_entry(
 
 async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
-    options = ConnectionOptions(
-        entry.data[CONF_HOST],
-        entry.data.get(CONF_USERNAME),
-        entry.data.get(CONF_PASSWORD),
-        device_mac=entry.unique_id,
-        port=get_http_port(entry.data),
-        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
-    )
-
-    ws_context = await get_ws_context(hass)
+    if is_remote_entry(entry):
+        manager = await async_get_remote_manager(hass)
+        manager.register_entry(entry)
+        ws_context = manager.server
+        options = ConnectionOptions(
+            remote_device_id=entry.unique_id,
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+        )
+    else:
+        ws_context = await get_ws_context(hass)
+        options = ConnectionOptions(
+            entry.data[CONF_HOST],
+            entry.data.get(CONF_USERNAME),
+            entry.data.get(CONF_PASSWORD),
+            device_mac=entry.unique_id,
+            port=get_http_port(entry.data),
+            verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
+        )
 
     device = await RpcDevice.create(
-        async_get_clientsession(hass),
+        None if is_remote_entry(entry) else async_get_clientsession(hass),
         ws_context,
         options,
     )
@@ -381,6 +409,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                     "%s: Timed out waiting for BLE scanner to register", entry.title
                 )
 
+        if is_remote_entry(entry):
+            runtime_data.platforms = [p for p in PLATFORMS if p is not Platform.CAMERA]
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
@@ -456,6 +486,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
 
 async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Remove a config entry."""
+    if is_remote_entry(entry):
+        manager = await async_get_remote_manager(hass)
+        await manager.revoke(entry.data.get(CONF_REMOTE_CREDENTIAL, ""))
+        return
     if get_device_entry_gen(entry) in RPC_GENERATIONS and (
         mac_address := entry.unique_id
     ):

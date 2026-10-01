@@ -16,7 +16,7 @@ from homeassistant.components.shelly.const import (
     CONNECTION_REMOTE_WS,
     DOMAIN,
 )
-from homeassistant.components.shelly.remote import (
+from homeassistant.components.shelly.remote_connection import (
     REMOTE_LOGGERS,
     RemoteConnectionManager,
     ShellyRemoteReceiver,
@@ -158,7 +158,7 @@ async def test_verified_identity_binds_credential(hass: HomeAssistant) -> None:
     websocket = make_socket(DEVICE_INFO)
     with (
         patch(
-            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
             return_value=websocket,
         ),
         patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
@@ -183,7 +183,7 @@ async def test_mismatched_device_is_rejected(hass: HomeAssistant) -> None:
     websocket = make_socket(DEVICE_INFO)
     with (
         patch(
-            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
             return_value=websocket,
         ),
         patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
@@ -227,7 +227,7 @@ async def test_duplicate_registered_device(hass: HomeAssistant) -> None:
     websocket = make_socket(DEVICE_INFO)
     with (
         patch(
-            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
             return_value=websocket,
         ),
         patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
@@ -260,7 +260,7 @@ async def test_invalid_identification(hass: HomeAssistant, frame: object) -> Non
     websocket.receive.return_value = WSMessage(WSMsgType.TEXT, json_dumps(frame), "")
     with (
         patch(
-            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
             return_value=websocket,
         ),
         patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
@@ -284,7 +284,7 @@ async def test_revocation_during_identification(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            "homeassistant.components.shelly.remote_connection.web.WebSocketResponse",
             return_value=websocket,
         ),
         patch.object(manager, "_identify", side_effect=identify),

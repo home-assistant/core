@@ -13,10 +13,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_REMOTE_CREDENTIAL
 from .coordinator import ShellyConfigEntry
+from .remote_connection import (
+    async_get_remote_manager,
+    is_remote_entry,
+    redact_remote_url,
+)
 from .utils import get_rpc_ws_url
 
-TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
+TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_REMOTE_CREDENTIAL}
 
 
 async def async_get_config_entry_diagnostics(
@@ -83,7 +89,9 @@ async def async_get_config_entry_diagnostics(
                 device_settings["ws_outbound_enabled"] = ws_outbound_enabled
                 if ws_outbound_enabled:
                     device_settings["ws_outbound_server_valid"] = bool(
-                        ws_config["server"] == get_rpc_ws_url(hass)
+                        rpc_coordinator.device.connected
+                        if is_remote_entry(entry)
+                        else ws_config["server"] == get_rpc_ws_url(hass)
                     )
             device_status = {
                 k: v
@@ -102,7 +110,7 @@ async def async_get_config_entry_diagnostics(
     if isinstance(device_status, dict):
         device_status = async_redact_data(device_status, ["ssid"])
 
-    return {
+    diagnostics = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": device_info,
         "device_settings": device_settings,
@@ -110,3 +118,19 @@ async def async_get_config_entry_diagnostics(
         "last_error": last_error,
         "bluetooth": bluetooth,
     }
+
+    if is_remote_entry(entry):
+        manager = await async_get_remote_manager(hass)
+        record = manager.credentials.get(entry.data.get(CONF_REMOTE_CREDENTIAL, ""))
+        diagnostics["transport"] = {
+            "type": "remote_ws",
+            "connected": bool(
+                shelly_entry_data.rpc and shelly_entry_data.rpc.device.connected
+            ),
+            "device_id": entry.unique_id,
+            "reconnect_count": record.reconnect_count if record else 0,
+            "last_connected": record.last_connected if record else None,
+            "last_disconnected": record.last_disconnected if record else None,
+        }
+        diagnostics["last_error"] = redact_remote_url(last_error)
+    return diagnostics

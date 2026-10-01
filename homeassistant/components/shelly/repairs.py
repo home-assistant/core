@@ -30,6 +30,7 @@ from .const import (
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
+from .remote_connection import is_remote_entry
 from .utils import (
     get_coiot_address,
     get_coiot_port,
@@ -69,7 +70,9 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
                 translation_key="ble_scanner_firmware_unsupported",
                 translation_placeholders={
                     "device_name": device.name,
-                    "ip_address": device.ip_address,
+                    "ip_address": device.hostname
+                    if is_remote_entry(entry)
+                    else device.ip_address,
                     "firmware": firmware,
                 },
                 data={"entry_id": entry.entry_id},
@@ -109,7 +112,9 @@ def async_manage_deprecated_firmware_issue(
                 translation_key="deprecated_firmware",
                 translation_placeholders={
                     "device_name": device.name,
-                    "ip_address": device.ip_address,
+                    "ip_address": device.hostname
+                    if is_remote_entry(entry)
+                    else device.ip_address,
                     "firmware": firmware,
                     "ha_version": ha_version,
                 },
@@ -129,6 +134,9 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
     issue_id = OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID.format(
         unique=entry.unique_id
     )
+    if is_remote_entry(entry):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
 
     if TYPE_CHECKING:
         assert entry.runtime_data.rpc is not None
@@ -153,7 +161,9 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
             translation_key="outbound_websocket_incorrectly_enabled",
             translation_placeholders={
                 "device_name": device.name,
-                "ip_address": device.ip_address,
+                "ip_address": device.hostname
+                if is_remote_entry(entry)
+                else device.ip_address,
             },
             data={"entry_id": entry.entry_id},
         )
@@ -195,7 +205,9 @@ def async_manage_open_wifi_ap_issue(
             translation_key="open_wifi_ap",
             translation_placeholders={
                 "device_name": device.name,
-                "ip_address": device.ip_address,
+                "ip_address": device.hostname
+                if is_remote_entry(entry)
+                else device.ip_address,
             },
             data={"entry_id": entry.entry_id},
         )
@@ -242,7 +254,9 @@ def async_manage_rtsp_disabled_issue(
             translation_key="rtsp_disabled",
             translation_placeholders={
                 "device_name": device.name,
-                "ip_address": device.ip_address,
+                "ip_address": device.hostname
+                if is_remote_entry(entry)
+                else device.ip_address,
             },
             data={"entry_id": entry.entry_id},
         )

@@ -71,6 +71,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
+from .remote_connection import is_remote_entry
 from .utils import (
     async_create_issue_unsupported_firmware,
     async_manage_coiot_issues_task,
@@ -150,8 +151,10 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         )
 
     @cached_property
-    def configuration_url(self) -> str:
+    def configuration_url(self) -> str | None:
         """Return the configuration URL for the device."""
+        if is_remote_entry(self.config_entry):
+            return None
         port = get_http_port(self.config_entry.data)
         scheme = "https" if port == DEFAULT_HTTPS_PORT else "http"
         return f"{scheme}://{get_host(self.config_entry.data[CONF_HOST])}:{port}"
@@ -803,7 +806,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     @callback
     def _async_handle_rpc_device_online(self) -> None:
         """Handle device going online."""
-        if self.device.connected or (
+        if (self.device.connected and not is_remote_entry(self.config_entry)) or (
             self._connect_task and not self._connect_task.done()
         ):
             LOGGER.debug("Device %s already connected/connecting", self.name)
@@ -839,7 +842,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 eager_start=True,
             )
             # Make sure entities are marked as unavailable
-            self.async_set_updated_data(None)
+            if is_remote_entry(self.config_entry):
+                self.async_set_update_error(
+                    UpdateFailed("Remote WebSocket disconnected")
+                )
+            else:
+                self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:

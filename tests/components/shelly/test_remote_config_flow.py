@@ -8,12 +8,12 @@ from yarl import URL
 
 from homeassistant.components.shelly.const import (
     CONF_CONNECTION_TYPE,
-    CONF_EXTERNAL_URL,
     CONF_REMOTE_CREDENTIAL,
     CONNECTION_REMOTE_WS,
     DOMAIN,
 )
-from homeassistant.components.shelly.remote import RemoteConnectionManager
+from homeassistant.components.shelly.remote_connection import RemoteConnectionManager
+from homeassistant.const import CONF_EXTERNAL_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
