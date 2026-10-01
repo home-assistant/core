@@ -8,6 +8,7 @@ from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
+    indexed_select_key,
 )
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -16,7 +17,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, NO_WAKE_WORD
+from .const import (
+    DOMAIN,
+    NO_WAKE_WORD,
+    VOICE_ASSISTANT_SELECT_COUNT,
+    WAKE_WORD_SELECT_KEY,
+)
 from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
@@ -71,11 +77,15 @@ def _voice_assistant_selects(
 ) -> list[SelectEntity]:
     """Build the selects that exist only while the device offers a voice assistant."""
     return [
-        EsphomeAssistPipelineSelect(hass, entry_data, index=0),
-        EsphomeAssistPipelineSelect(hass, entry_data, index=1),
+        *(
+            EsphomeAssistPipelineSelect(hass, entry_data, index=index)
+            for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+        ),
         EsphomeVadSensitivitySelect(hass, entry_data),
-        EsphomeAssistSatelliteWakeWordSelect(entry_data, index=0),
-        EsphomeAssistSatelliteWakeWordSelect(entry_data, index=1),
+        *(
+            EsphomeAssistSatelliteWakeWordSelect(entry_data, index=index)
+            for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+        ),
     ]
 
 
@@ -134,7 +144,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
     """Wake word selector for esphome devices."""
 
     entity_description = SelectEntityDescription(
-        key="wake_word",
+        key=WAKE_WORD_SELECT_KEY,
         translation_key="wake_word",
         entity_category=EntityCategory.CONFIG,
     )
@@ -147,7 +157,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
         if index >= 1:
             self.entity_description = replace(
                 self.entity_description,
-                key=f"wake_word_{index + 1}",
+                key=indexed_select_key(WAKE_WORD_SELECT_KEY, index),
                 translation_key="wake_word_n",
                 translation_placeholders={"index": str(index + 1)},
             )
