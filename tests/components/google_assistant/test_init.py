@@ -13,6 +13,7 @@ from homeassistant.components.google_assistant import (
 )
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
@@ -141,42 +142,6 @@ async def test_reload_service_report_state(hass: HomeAssistant) -> None:
         assert not google_config.is_reporting_state
 
 
-@pytest.mark.parametrize(
-    "yaml_config",
-    [
-        pytest.param(
-            _yaml_config(
-                service_account={
-                    "private_key": "other",
-                    "client_email": "other@dummy.iam.gserviceaccount.com",
-                }
-            ),
-            id="changed",
-        ),
-        pytest.param({}, id="removed_from_yaml"),
-    ],
-)
-async def test_reload_service_keeps_service_account(
-    hass: HomeAssistant, yaml_config: dict
-) -> None:
-    """Test reloading keeps the service account set up at startup."""
-    google_config = await _async_setup(hass)
-
-    with (
-        patch(
-            "homeassistant.components.google_assistant.http.async_integration_yaml_config",
-            return_value=yaml_config,
-        ),
-        patch.object(GoogleConfig, "async_sync_entities_all"),
-    ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
-
-    assert (
-        google_config._config[ga.const.CONF_SERVICE_ACCOUNT]
-        == DUMMY_CONFIG[ga.const.CONF_SERVICE_ACCOUNT]
-    )
-
-
 async def test_reload_service_invalid_config(hass: HomeAssistant) -> None:
     """Test an invalid YAML configuration keeps the current one."""
     google_config = await _async_setup(hass)
@@ -193,20 +158,40 @@ async def test_reload_service_invalid_config(hass: HomeAssistant) -> None:
     assert google_config.entity_config == {}
 
 
-async def test_reload_service_removed_from_yaml(hass: HomeAssistant) -> None:
-    """Test removing Google Assistant from YAML stops exposing entities."""
+@pytest.mark.parametrize(
+    ("yaml_config", "option"),
+    [
+        pytest.param(_yaml_config(project_id="5678"), "project_id", id="project_id"),
+        pytest.param(
+            _yaml_config(
+                service_account={
+                    "private_key": "other",
+                    "client_email": "other@dummy.iam.gserviceaccount.com",
+                }
+            ),
+            "service_account",
+            id="service_account",
+        ),
+        pytest.param({}, "project_id", id="removed_from_yaml"),
+    ],
+)
+async def test_reload_service_restart_required(
+    hass: HomeAssistant, yaml_config: dict, option: str
+) -> None:
+    """Test reloading refuses changes that need a restart."""
     google_config = await _async_setup(hass)
-    assert google_config.should_expose("light.kitchen")
 
     with (
         patch(
             "homeassistant.components.google_assistant.http.async_integration_yaml_config",
-            return_value={},
+            return_value=yaml_config,
         ),
         patch.object(GoogleConfig, "async_sync_entities_all") as mock_sync,
+        pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    assert not google_config.should_expose("light.kitchen")
-    assert not google_config.should_report_state
-    mock_sync.assert_called_once_with()
+    assert exc_info.value.translation_key == "restart_required"
+    assert exc_info.value.translation_placeholders == {"option": option}
+    assert google_config._config[ga.const.CONF_PROJECT_ID] == "1234"
+    mock_sync.assert_not_called()

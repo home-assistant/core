@@ -6,6 +6,11 @@
       }
     }
   },
+  "exceptions": {
+    "restart_required": {
+      "message": "Changing `{option}` requires a restart of Home Assistant."
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads the Google Assistant configuration from YAML and asks Google to sync the devices.",

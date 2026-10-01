@@ -13,7 +13,7 @@ import jwt
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.reload import async_integration_yaml_config
@@ -27,6 +27,7 @@ from .const import (
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
     CONF_PRIVATE_KEY,
+    CONF_PROJECT_ID,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
@@ -131,13 +132,15 @@ class GoogleConfig(AbstractConfig):
         if conf is None:
             return
         config = conf.get(DOMAIN, {})
-        if CONF_SERVICE_ACCOUNT in self._config:
-            # The request_sync service, sync button and Home Graph token are set up
-            # for the service account at startup, so it only changes on restart
-            config = {
-                **config,
-                CONF_SERVICE_ACCOUNT: self._config[CONF_SERVICE_ACCOUNT],
-            }
+        # The config entry, request_sync service, sync button and Home Graph token
+        # are set up for these at startup
+        for key in (CONF_PROJECT_ID, CONF_SERVICE_ACCOUNT):
+            if config.get(key) != self._config.get(key):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="restart_required",
+                    translation_placeholders={"option": key},
+                )
         # pylint: disable-next=home-assistant-use-runtime-data
         self.hass.data[DOMAIN][DATA_CONFIG] = self._config = config
         self.async_update_report_state()
