@@ -83,6 +83,7 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    ASSIST_SATELLITE_KEY,
     CLIENT_INFO,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
@@ -95,6 +96,7 @@ from .const import (
     PROJECT_URLS,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
+    VOICE_ASSISTANT_SELECT_KEYS,
 )
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
@@ -231,6 +233,22 @@ def _async_check_using_api_password(
             "name": device_info.name,
         },
     )
+
+
+@callback
+def _async_remove_voice_assistant_entities(
+    hass: HomeAssistant, mac_address: str
+) -> None:
+    """Remove the entities a device that no longer offers a voice assistant left."""
+    ent_reg = er.async_get(hass)
+    for platform, key in (
+        (Platform.ASSIST_SATELLITE, ASSIST_SATELLITE_KEY),
+        *((Platform.SELECT, key) for key in VOICE_ASSISTANT_SELECT_KEYS),
+    ):
+        if entity_id := ent_reg.async_get_entity_id(
+            platform, DOMAIN, f"{mac_address}-{key}"
+        ):
+            ent_reg.async_remove(entity_id)
 
 
 class ESPHomeManager:
@@ -763,14 +781,16 @@ class ESPHomeManager:
 
         entry_data.first_connect_done.set()
 
-        if device_info.voice_assistant_feature_flags_compat(api_version) and (
-            Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
-        ):
-            # Create assist satellite entity
-            await self.hass.config_entries.async_forward_entry_setups(
-                self.entry, [Platform.ASSIST_SATELLITE]
-            )
-            entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+        if device_info.voice_assistant_feature_flags_compat(api_version):
+            if Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms:
+                # Create assist satellite entity
+                await self.hass.config_entries.async_forward_entry_setups(
+                    self.entry, [Platform.ASSIST_SATELLITE]
+                )
+                entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+        else:
+            # Neither platform is reliably loaded here, so removal cannot live in them.
+            _async_remove_voice_assistant_entities(hass, device_info.mac_address)
 
         if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(

@@ -10,6 +10,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 from homeassistant.components.esphome.const import (
+    DOMAIN,
     NO_WAKE_WORD,
     VOICE_ASSISTANT_SELECT_KEYS,
 )
@@ -97,6 +98,118 @@ async def test_selects_added_when_a_voice_assistant_appears(
         "select.test_wake_word_2",
     ):
         assert hass.states.get(entity_id) is not None, entity_id
+
+
+async def test_selects_removed_when_the_platform_was_never_forwarded(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test selects left by an earlier run go on a device that offers nothing.
+
+    The select platform is only forwarded for a device that offers a voice
+    assistant or has selects of its own, so a device with neither has nothing of
+    this module running to remove what it left behind.
+    """
+    mac_address = "11:22:33:44:55:AA"
+    for key in VOICE_ASSISTANT_SELECT_KEYS:
+        entity_registry.async_get_or_create(
+            Platform.SELECT, DOMAIN, f"{mac_address}-{key}"
+        )
+
+    device = await mock_esphome_device(mock_client=mock_client, device_info={})
+    await hass.async_block_till_done()
+
+    # The device has no selects of its own either, so the platform really is
+    # never forwarded and nothing in select.py runs for this entry
+    assert Platform.SELECT not in device.entry.runtime_data.loaded_platforms
+
+    for key in VOICE_ASSISTANT_SELECT_KEYS:
+        assert not entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mac_address}-{key}"
+        ), key
+
+
+async def test_selects_restored_when_a_voice_assistant_returns(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the selects come back when a device offers a voice assistant again."""
+    entity_info = [
+        SelectInfo(object_id="myselect", key=1, name="my select", options=["a", "b"])
+    ]
+    flags = VoiceAssistantFeature.VOICE_ASSISTANT
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=[SelectState(key=1, state="a")],
+        device_info={"voice_assistant_feature_flags": flags},
+    )
+    await hass.async_block_till_done()
+    mac_address = device.device_info.mac_address
+
+    await reconnect_with_updated_entity_info(
+        hass, device, entity_info, device_info={"voice_assistant_feature_flags": 0}
+    )
+    for key in VOICE_ASSISTANT_SELECT_KEYS:
+        assert not entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mac_address}-{key}"
+        ), key
+
+    await reconnect_with_updated_entity_info(
+        hass, device, entity_info, device_info={"voice_assistant_feature_flags": flags}
+    )
+    for key in VOICE_ASSISTANT_SELECT_KEYS:
+        assert entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mac_address}-{key}"
+        ), key
+
+    # A registry row is not an entity: the re-added select has to be live
+    assert hass.states.get("select.test_wake_word") is not None
+
+
+async def test_selects_removed_when_a_voice_assistant_goes_away(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the voice assistant selects go when a device stops offering one."""
+    entity_info = [
+        SelectInfo(object_id="myselect", key=1, name="my select", options=["a", "b"])
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=[SelectState(key=1, state="a")],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    mac_address = device.device_info.mac_address
+    for key in VOICE_ASSISTANT_SELECT_KEYS:
+        assert entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mac_address}-{key}"
+        ), key
+
+    await reconnect_with_updated_entity_info(
+        hass, device, entity_info, device_info={"voice_assistant_feature_flags": 0}
+    )
+
+    for key in VOICE_ASSISTANT_SELECT_KEYS:
+        assert not entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mac_address}-{key}"
+        ), key
+
+    # The device's own select is untouched: nothing is unloaded or reloaded
+    state = hass.states.get("select.test_my_select")
+    assert state is not None
+    assert state.state == "a"
 
 
 @pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
