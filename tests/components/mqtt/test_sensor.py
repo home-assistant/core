@@ -2060,10 +2060,7 @@ async def test_unsupported_entity_category(
 ) -> None:
     """Test `config` entity category is rejected for this read-only platform."""
     assert await mqtt_mock_entry()
-    assert (
-        "Entity category 'config' is not supported by the sensor platform"
-        in caplog.text
-    )
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
     assert hass.states.get("sensor.test") is None
 
 
@@ -2082,10 +2079,7 @@ async def test_unsupported_entity_category_discovery(
         ' "unique_id": "veryunique", "entity_category": "config"}',
     )
     await hass.async_block_till_done()
-    assert (
-        "Entity category 'config' is not supported by the sensor platform"
-        in caplog.text
-    )
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
     assert (
         entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique") is None
     )
@@ -2115,8 +2109,5 @@ async def test_unsupported_entity_category_discovery_update(
         ' "unique_id": "veryunique", "entity_category": "config"}',
     )
     await hass.async_block_till_done()
-    assert (
-        "Entity category 'config' is not supported by the sensor platform"
-        in caplog.text
-    )
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
     assert entity_registry.async_get(entity_id).entity_category is None

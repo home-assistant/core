@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
     CONF_FORCE_UPDATE,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
@@ -22,7 +23,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, event as evt
@@ -37,7 +37,8 @@ from .config import MQTT_RO_SCHEMA
 from .const import CONF_OFF_DELAY, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
-from .schemas import mqtt_entity_common_schema
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import entity_category_without_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
 
-PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(MQTT_ENTITY_COMMON_SCHEMA.schema).extend(
     {
         probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
         probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
@@ -58,8 +59,10 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         probatio.Optional(CONF_OFF_DELAY): cv.positive_int,
         probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        # a binary sensor can not be added as a config entity
+        probatio.Optional(CONF_ENTITY_CATEGORY): entity_category_without_config,
     }
-).extend(mqtt_entity_common_schema(Platform.BINARY_SENSOR).schema)
+)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 

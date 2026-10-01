@@ -42,7 +42,6 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
-    PLATFORMS_WITHOUT_CONFIG_CATEGORY,
 )
 from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
@@ -333,30 +332,19 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
-def valid_entity_categories(platform: str) -> tuple[EntityCategory, ...]:
-    """Return the entity categories a platform supports."""
-    valid_categories = set(EntityCategory)
-    if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
-        valid_categories -= {EntityCategory.CONFIG}
-    return tuple(sorted(valid_categories))
+def entity_category_without_config(value: Any) -> EntityCategory:
+    """Validate the entity category of a platform not supporting `CONFIG`.
 
-
-def entity_category_validator(platform: str) -> Callable[[Any], EntityCategory]:
-    """Return a validator for the entity category of a platform."""
-    valid_categories = valid_entity_categories(platform)
-
-    def validate(value: Any) -> EntityCategory:
-        """Validate the entity category is supported by the platform."""
-        entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
-        if entity_category not in valid_categories:
-            _options = ", ".join(sorted(valid_categories))
-            raise probatio.Invalid(
-                f"Entity category '{entity_category}' is not supported by the"
-                f" {platform} platform. Valid options are: {_options}"
-            )
-        return entity_category
-
-    return validate
+    Entities of these platforms raise when they are added as config entities.
+    """
+    entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
+    if entity_category is EntityCategory.CONFIG:
+        _options = ", ".join(sorted(set(EntityCategory) - {EntityCategory.CONFIG}))
+        raise probatio.Invalid(
+            f"Entity category '{entity_category}' is not supported by this platform."
+            f" Valid options are: {_options}"
+        )
+    return entity_category
 
 
 def valid_qos_schema(qos: Any) -> int:
