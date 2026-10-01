@@ -1614,6 +1614,16 @@ class Entity(
             self.__group.async_will_remove_from_hass()
 
     @callback
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move bookkeeping from old_entity_id to the new self.entity_id.
+
+        Called after the entity was removed under old_entity_id, before it is
+        added again under the new entity_id.
+
+        Not to be extended by integrations.
+        """
+
+    @callback
     def _async_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
@@ -1668,9 +1678,11 @@ class Entity(
             self.async_write_ha_state()
             return
 
+        old_entity_id = self.entity_id
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
+        self.async_internal_entity_id_changed(old_entity_id)
 
         # Clear the remove future to handle entity added again after entity id change
         self.__remove_future = None
