@@ -22,12 +22,14 @@ ENTRY_DATA = {
 @pytest.mark.parametrize(
     ("unique_id", "mac", "expected_unique_id"),
     [
-        # Stored without a CID: adopts the MAC address.
-        ("", "AA:BB:CC:DD:EE:FF", "aa:bb:cc:dd:ee:ff"),
-        # Stored with a CID: left alone.
-        ("very_unique_string", "AA:BB:CC:DD:EE:FF", "very_unique_string"),
-        # Stored without a CID and a MAC address: nothing to adopt.
-        ("", "", ""),
+        pytest.param("", "AA:BB:CC:DD:EE:FF", "aa:bb:cc:dd:ee:ff", id="empty_cid"),
+        pytest.param(
+            "very_unique_string",
+            "AA:BB:CC:DD:EE:FF",
+            "very_unique_string",
+            id="existing_cid",
+        ),
+        pytest.param("", "", "", id="empty_cid_and_mac"),
     ],
 )
 async def test_migrate_unique_id(
@@ -46,7 +48,7 @@ async def test_migrate_unique_id(
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         "media_player", DOMAIN, unique_id, config_entry=config_entry
     )
 
@@ -63,6 +65,10 @@ async def test_migrate_unique_id(
     assert config_entry.unique_id == expected_unique_id
     assert config_entry.minor_version == 2
 
+    migrated_entity = entity_registry.async_get(entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == expected_unique_id
+
 
 async def test_migration_keeps_entities_and_device(
     hass: HomeAssistant,
@@ -78,8 +84,6 @@ async def test_migration_keeps_entities_and_device(
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "")}
     )
-    # The platforms use the unique ID of the entry as it is, buttons add a
-    # suffix, so an entry without a CID leaves these behind.
     media_player = entity_registry.async_get_or_create(
         "media_player", DOMAIN, "", config_entry=config_entry, device_id=device.id
     )

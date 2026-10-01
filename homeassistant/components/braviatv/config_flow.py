@@ -87,20 +87,19 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         system_info = await self.client.get_system_info()
         mac = system_info[ATTR_MAC]
+        formatted_mac = format_mac(mac)
 
-        # Some televisions report an empty CID. Without a fallback every one of
-        # them would claim the same unique ID, so only the first could be added.
-        unique_id = system_info[ATTR_CID].lower() or format_mac(mac)
+        # Some TVs return an empty CID
+        unique_id = system_info[ATTR_CID].lower() or formatted_mac
 
         self.device_config[CONF_MAC] = mac
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        # A disabled entry stored without a CID is only migrated once it is
-        # enabled, so until then it is this television under an empty unique ID.
+        # Disabled entries are not migrated, so they still have an empty unique ID
         if any(
-            not entry.unique_id and format_mac(entry.data[CONF_MAC]) == format_mac(mac)
+            not entry.unique_id and format_mac(entry.data[CONF_MAC]) == formatted_mac
             for entry in self._async_current_entries(include_ignore=False)
         ):
             return self.async_abort(reason="already_configured")

@@ -466,31 +466,29 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         "expected_unique_ids",
     ),
     [
-        # Another television that was stored without a CID before the fallback,
-        # which is migrated to its MAC address when the integration loads.
-        (
+        pytest.param(
             "",
             "11:22:33:44:55:66",
             None,
             FlowResultType.CREATE_ENTRY,
             ["11:22:33:44:55:66", "aa:bb:cc:dd:ee:ff"],
+            id="other_tv_without_cid",
         ),
-        # The same television, already stored under its MAC address.
-        (
+        pytest.param(
             "aa:bb:cc:dd:ee:ff",
             "AA:BB:CC:DD:EE:FF",
             None,
             FlowResultType.ABORT,
             ["aa:bb:cc:dd:ee:ff"],
+            id="same_tv_migrated",
         ),
-        # The same television, stored without a CID and disabled, so it has
-        # not been migrated yet.
-        (
+        pytest.param(
             "",
             "AA:BB:CC:DD:EE:FF",
             ConfigEntryDisabler.USER,
             FlowResultType.ABORT,
             [""],
+            id="same_tv_disabled",
         ),
     ],
 )

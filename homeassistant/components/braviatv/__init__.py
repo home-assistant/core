@@ -76,17 +76,12 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate an old config entry."""
     if config_entry.version == 1 and config_entry.minor_version == 1:
-        # A television that reports an empty CID was stored with an empty
-        # unique ID. Adopt the MAC address, like the config flow now does.
+        # Old entries from a TV without CID have an empty unique ID
         new_unique_id = config_entry.unique_id or format_mac(
             config_entry.data[CONF_MAC]
         )
 
-        # Without a MAC address as well there is nothing to adopt, and moving the
-        # entities to their own unique ID would fail.
         if new_unique_id != config_entry.unique_id:
-            # The device and the entities are identified by the unique ID too,
-            # so they move along or they are left behind as orphans.
             device_registry = dr.async_get(hass)
             if device_entry := device_registry.async_get_device_by_identifier(
                 (DOMAIN, ""), config_entry.entry_id
