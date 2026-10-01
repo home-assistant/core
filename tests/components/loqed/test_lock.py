@@ -10,6 +10,7 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -61,6 +62,18 @@ async def test_lock_applies_polled_bolt_state(
     state = hass.states.get("lock.home")
     assert state
     assert state.state == LockState.LOCKED
+
+
+async def test_lock_unknown_bolt_state_is_unknown(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test an unknown bolt state from the bridge is shown as unknown, not unlocked."""
+    lock.bolt_state = "unknown"
+    integration.runtime_data.async_update_listeners()
+
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_lock_transition_to_unlocked(
