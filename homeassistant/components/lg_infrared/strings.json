@@ -47,11 +47,23 @@
   },
   "entity": {
     "button": {
+      "ai_convertible": {
+        "name": "AI mode"
+      },
+      "audio": {
+        "name": "Toggle beep"
+      },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
       },
+      "diagnose": {
+        "name": "Diagnose"
+      },
       "down": {
         "name": "[%key:common::entity::button::down::name%]"
+      },
+      "eco": {
+        "name": "Eco mode"
       },
       "exit": {
         "name": "[%key:common::entity::button::exit::name%]"
@@ -80,8 +92,14 @@
       "input": {
         "name": "[%key:common::entity::button::input::name%]"
       },
+      "jet": {
+        "name": "Jet mode"
+      },
       "left": {
         "name": "[%key:common::entity::button::left::name%]"
+      },
+      "light": {
+        "name": "Toggle light"
       },
       "menu": {
         "name": "[%key:common::entity::button::menu::name%]"
@@ -131,8 +149,17 @@
       "right": {
         "name": "[%key:common::entity::button::right::name%]"
       },
+      "swing_v_toggle": {
+        "name": "Toggle vertical swing"
+      },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"
+      },
+      "viraat": {
+        "name": "Viraat mode"
+      },
+      "wifi": {
+        "name": "Start Wi-Fi pairing"
       }
     },
     "climate": {
@@ -143,6 +170,31 @@
               "medium_high": "Medium high",
               "medium_low": "Medium low",
               "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "left": "Left",
+              "left_half": "Left half",
+              "middle": "Middle",
+              "middle_left": "Middle left",
+              "middle_right": "Middle right",
+              "off": "Off",
+              "right": "Right",
+              "right_half": "Right half",
+              "swing": "Swing"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "high": "High",
+              "highest": "Highest",
+              "low": "Low",
+              "lowest": "Lowest",
+              "middle_high": "Middle high",
+              "middle_low": "Middle low",
+              "off": "Off",
+              "swing": "Swing"
             }
           }
         }
@@ -209,6 +261,25 @@
             }
           }
         }
+      }
+    },
+    "select": {
+      "energy_limit": {
+        "name": "Energy limit",
+        "state": {
+          "40": "40%",
+          "60": "60%",
+          "80": "80%",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "switch": {
+      "auto_clean": {
+        "name": "Auto clean"
+      },
+      "ion_generator": {
+        "name": "Ion generator"
       }
     }
   },

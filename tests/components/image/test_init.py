@@ -472,8 +472,8 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with (
-        patch("homeassistant.components.image.open", mopen, create=True),
-        patch("homeassistant.components.image.os.makedirs"),
+        patch("homeassistant.components.image.services.open", mopen, create=True),
+        patch("homeassistant.components.image.services.os.makedirs"),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
         await hass.services.async_call(
@@ -503,9 +503,9 @@ async def test_snapshot_service_no_image(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with (
-        patch("homeassistant.components.image.open", mopen, create=True),
+        patch("homeassistant.components.image.services.open", mopen, create=True),
         patch(
-            "homeassistant.components.image.os.makedirs",
+            "homeassistant.components.image.services.os.makedirs",
         ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):

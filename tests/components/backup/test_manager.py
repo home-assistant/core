@@ -948,6 +948,7 @@ async def test_initiate_backup_with_agent_error(
 )
 async def test_create_backup_success_clears_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
     create_backup_command: dict[str, Any],
     issues_after_create_backup: set[tuple[str, str]],
@@ -983,7 +984,6 @@ async def test_create_backup_success_clears_issue(
 
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert set(issue_registry.issues) == issues_after_create_backup
 
 
@@ -1310,6 +1310,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
 )
 async def test_create_backup_failure_raises_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
     create_backup: AsyncMock,
     automatic_agents: list[str],
@@ -1345,7 +1346,6 @@ async def test_create_backup_failure_raises_issue(
     assert result["success"] == create_backup_result
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert set(issue_registry.issues) == set(issues_after_create_backup)
     for issue_id, issue_data in issues_after_create_backup.items():
         issue = issue_registry.issues[issue_id]

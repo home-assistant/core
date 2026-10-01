@@ -352,19 +352,6 @@ async def test_async_update_call_deflections_empty_paths(
     assert await fritz_tools.async_update_call_deflections() == {}
 
 
-async def test_async_scan_devices_stopping_returns(
-    hass: HomeAssistant,
-    fritz_tools,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test scan devices exits when Home Assistant is stopping."""
-
-    with patch.object(hass, "is_stopping", True):
-        await fritz_tools.async_scan_devices()
-
-    assert "Cannot execute scan devices: HomeAssistant is shutting down" in caplog.text
-
-
 async def test_async_scan_devices_old_discovery_branch(
     fritz_tools,
 ) -> None:
@@ -525,6 +512,17 @@ async def test_trigger_methods(
     fritz_tools.fritz_call.dial.assert_called_once_with("012345")
     sleep_mock.assert_awaited_once_with(1)
     fritz_tools.fritz_call.hangup.assert_called_once()
+
+
+async def test_trigger_reconnect_reraises_unexpected_error(
+    fritz_tools,
+) -> None:
+    """Test async_trigger_reconnect re-raises errors other than DisconnectInProgress."""
+    fritz_tools.connection.call_action = MagicMock(
+        side_effect=FritzConnectionException("some other error")
+    )
+    with pytest.raises(FritzConnectionException):
+        await fritz_tools.async_trigger_reconnect()
 
 
 async def test_avmwrapper_service_call_branches(

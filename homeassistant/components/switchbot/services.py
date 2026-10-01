@@ -1,6 +1,6 @@
 """Services for the SwitchBot integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -14,14 +14,14 @@ SERVICE_ADD_PASSWORD = "add_password"
 
 ATTR_PASSWORD = "password"
 
-_PASSWORD_VALIDATOR = vol.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
+_PASSWORD_VALIDATOR = probatio.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
 
-SCHEMA_ADD_PASSWORD_SERVICE = vol.Schema(
+SCHEMA_ADD_PASSWORD_SERVICE = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

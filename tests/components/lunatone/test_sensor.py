@@ -1,10 +1,11 @@
 """Tests for the lights provided by the Lunatone integration."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from lunatone_rest_api_client.models import SensorData
+from lunatone_rest_api_client.models import LineStatus, SensorData
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -71,3 +72,40 @@ async def test_sensor_value_update(
     assert entities[0].state == "22"
     assert entities[1].state == "55"
     assert entities[2].state == "20"
+
+
+async def test_dali_line_status_value_update(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Lunatone sensor value update."""
+    line_id = 0
+    entity_id = f"sensor.dali_line_{line_id}_status"
+
+    line_statuses = iter((LineStatus.NO_POWER, LineStatus.OK))
+
+    async def fake_update() -> None:
+        info_data = deepcopy(mock_lunatone_info.data)
+        info_data.lines[str(line_id)].line_status = next(line_statuses)
+        mock_lunatone_info.data = info_data
+
+    mock_lunatone_info.async_update.side_effect = fake_update
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "no_power"
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "ok"

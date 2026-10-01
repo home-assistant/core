@@ -74,6 +74,7 @@ async def test_area_id(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
     assert_result_info(info, None)
@@ -179,6 +180,7 @@ async def test_area_name(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     info = render_to_info(hass, f"{{{{ area_name('{device_entry.id}') }}}}")
     assert_result_info(info, None)

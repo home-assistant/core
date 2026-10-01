@@ -1,0 +1,8 @@
+{
+  "operation": {
+    "airPurifierOperationMode": "POWER_ON"
+  },
+  "sleepTimer": {
+    "relativeHourToStop": 4
+  }
+}

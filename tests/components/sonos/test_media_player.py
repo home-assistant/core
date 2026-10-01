@@ -537,6 +537,28 @@ async def test_play_media_share_link_add(
     )
 
 
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos")
+async def test_play_media_spotify_media_browser_url(
+    hass: HomeAssistant, soco_sharelink: MagicMock
+) -> None:
+    """Tests playing a Spotify media browser URL when Spotify is set up."""
+    hass.config.components.add("spotify")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "spotify://playlist",
+            ATTR_MEDIA_CONTENT_ID: f"spotify://01J5TX5A0FF6G5V0QJX6HBC94T/{_share_link}",
+        },
+        blocking=True,
+    )
+    assert soco_sharelink.add_share_link_to_queue.call_count == 1
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].args[0] == _share_link
+    )
+
+
 async def test_play_media_share_link_next(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
