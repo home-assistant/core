@@ -74,10 +74,12 @@ from tests.common import (
     assert_setup_component,
     async_capture_events,
     async_fire_time_changed,
+    async_mock_restore_state_shutdown_restart,
     async_mock_service,
     mock_integration,
     mock_platform,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.components.repairs import get_repairs
@@ -1773,6 +1775,38 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             ". Got {'alias': 'bad_automation',",
             "validation_failed_actions",
         ),
+        (
+            {
+                "stored_variables": {"this": 1},
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            "could not be validated",
+            "Stored variables must not use the reserved names: this",
+            "validation_failed_schema",
+        ),
+        (
+            {
+                "stored_variables": {"count": 0},
+                "variables": {"count": 1},
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            "could not be validated",
+            "Stored variables must not also be defined in variables: count",
+            "validation_failed_schema",
+        ),
+        (
+            {
+                "stored_variables": {"count": 0},
+                "trigger_variables": {"count": 1},
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            "could not be validated",
+            "Stored variables must not also be defined in trigger_variables: count",
+            "validation_failed_schema",
+        ),
     ],
 )
 async def test_automation_bad_config_validation(
@@ -3012,6 +3046,185 @@ async def test_automation_variables(
     hass.bus.async_fire("test_event_3", {"break": 0})
     await hass.async_block_till_done()
     assert len(calls) == 3
+
+
+async def test_automation_stored_variables(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test stored variables persist across automation runs."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "stored_variables": {
+                    "count": 0,
+                    "seen": [],
+                    "first_event": "{{ trigger.event.event_type }}",
+                },
+                "triggers": [
+                    {"trigger": "event", "event_type": "test_event"},
+                    {"trigger": "event", "event_type": "test_event_2"},
+                ],
+                "conditions": {
+                    "condition": "template",
+                    "value_template": "{{ count < 2 }}",
+                },
+                "actions": [
+                    {
+                        "variables": {
+                            "count": "{{ count + 1 }}",
+                            "seen": (
+                                "{{ seen + [trigger.event.event_type "
+                                "if trigger.event is defined else 'manual'] }}"
+                            ),
+                        }
+                    },
+                    {
+                        "action": "test.automation",
+                        "data": {
+                            "count": "{{ count }}",
+                            "seen": "{{ seen }}",
+                            "first_event": "{{ first_event }}",
+                        },
+                    },
+                ],
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "count": 1,
+        "seen": ["test_event"],
+        "first_event": "test_event",
+    }
+
+    # Stored variables are not exposed as state attributes
+    state = hass.states.get("automation.hello")
+    assert state
+    assert set(state.attributes) == {
+        "current",
+        "friendly_name",
+        "last_triggered",
+        "mode",
+    }
+
+    hass.bus.async_fire("test_event_2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data == {
+        "count": 2,
+        "seen": ["test_event", "test_event_2"],
+        "first_event": "test_event",
+    }
+
+    # The condition reads the stored value
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # Variables passed to the trigger action cannot override stored variables
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TRIGGER,
+        {ATTR_ENTITY_ID: "automation.hello", "variables": {"count": -10}},
+        blocking=True,
+    )
+    assert len(calls) == 3
+    assert calls[2].data == {
+        "count": 3,
+        "seen": ["test_event", "test_event_2", "manual"],
+        "first_event": "test_event",
+    }
+
+
+async def test_automation_stored_variables_restore(
+    hass: HomeAssistant, calls: list[ServiceCall], hass_storage: dict[str, Any]
+) -> None:
+    """Test stored variables are restored and saved."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("automation.hello", STATE_ON),
+                {"stored_variables": {"count": 5, "removed": "old"}},
+            ),
+        ),
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "stored_variables": {"count": 0, "name": "default"},
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": [
+                    {"variables": {"count": "{{ count + 1 }}"}},
+                    {
+                        "action": "test.automation",
+                        "data": {"count": "{{ count }}", "name": "{{ name }}"},
+                    },
+                ],
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data == {"count": 6, "name": "default"}
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    stored_states = hass_storage["core.restore_state"]["data"]
+    assert len(stored_states) == 1
+    assert stored_states[0]["state"]["entity_id"] == "automation.hello"
+    assert stored_states[0]["extra_data"] == {
+        "stored_variables": {"count": 6, "name": "default"}
+    }
+
+
+async def test_automation_stored_variables_reload(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test stored variables survive a reload with a changed config."""
+    config = {
+        "id": "hello_id",
+        "alias": "hello",
+        "stored_variables": {"count": 0},
+        "triggers": {"trigger": "event", "event_type": "test_event"},
+        "actions": [
+            {"variables": {"count": "{{ count + 1 }}"}},
+            {"action": "test.automation", "data": {"count": "{{ count }}"}},
+        ],
+    }
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: config}
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["count"] == 1
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: {**config, "description": "changed"}},
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["count"] == 2
 
 
 async def test_automation_trigger_variables(

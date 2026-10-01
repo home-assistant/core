@@ -39,6 +39,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     script,
+    script_variables,
     template,
     trace,
 )
@@ -7534,3 +7535,119 @@ async def test_async_unload_blocks_new_runs_during_stop(
 
     assert not script_obj.is_running
     assert script_id not in hass.data[script.DATA_SCRIPTS]
+
+
+async def test_stored_variables(hass: HomeAssistant) -> None:
+    """Test stored variables persist across runs of a script."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "variables": {
+                    "count": "{{ count + 1 }}",
+                    "seen": "{{ seen + [run_var] }}",
+                }
+            },
+            {
+                "action": "test.script",
+                "data": {
+                    "count": "{{ count }}",
+                    "seen": "{{ seen }}",
+                    "first_run_var": "{{ first_run_var }}",
+                },
+            },
+        ]
+    )
+    stored_variables = script_variables.StoredVariables(
+        cv.STORED_VARIABLES_SCHEMA(
+            {"count": 0, "seen": [], "first_run_var": "{{ run_var }}"}
+        )
+    )
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "test script",
+        "test_domain",
+        stored_variables=stored_variables,
+    )
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    # A run variable with the name of a stored variable is ignored
+    await script_obj.async_run({"run_var": "a", "count": 100}, context=Context())
+    await hass.async_block_till_done()
+
+    assert len(mock_calls) == 1
+    assert mock_calls[0].data == {"count": 1, "seen": ["a"], "first_run_var": "a"}
+    assert stored_variables.values == {"count": 1, "seen": ["a"], "first_run_var": "a"}
+
+    await script_obj.async_run({"run_var": "b"}, context=Context())
+    await hass.async_block_till_done()
+
+    assert len(mock_calls) == 2
+    assert mock_calls[1].data == {
+        "count": 2,
+        "seen": ["a", "b"],
+        "first_run_var": "a",
+    }
+    assert stored_variables.values == {
+        "count": 2,
+        "seen": ["a", "b"],
+        "first_run_var": "a",
+    }
+
+
+async def test_stored_variables_live_across_runs(hass: HomeAssistant) -> None:
+    """Test a run sees stored variables changed by another run."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "if": "{{ run_var == 'waiter' }}",
+                "then": [
+                    {
+                        "repeat": {
+                            "until": "{{ flag }}",
+                            "sequence": [{"delay": {"seconds": 1}}],
+                        }
+                    },
+                    {"action": "test.script", "data": {"value": "done"}},
+                ],
+                "else": [{"variables": {"flag": True}}],
+            },
+        ]
+    )
+    stored_variables = script_variables.StoredVariables(
+        script_variables.ScriptVariables({"flag": False})
+    )
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "test script",
+        "test_domain",
+        script_mode="parallel",
+        max_runs=2,
+        stored_variables=stored_variables,
+    )
+    mock_calls = async_mock_service(hass, "test", "script")
+    delay_started_flag = async_watch_for_action(script_obj, "delay")
+
+    try:
+        hass.async_create_task(
+            script_obj.async_run({"run_var": "waiter"}, context=Context())
+        )
+        await asyncio.wait_for(delay_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert stored_variables.values == {"flag": False}
+
+        # The second run sets the flag while the first run is waiting
+        await script_obj.async_run({"run_var": "setter"}, context=Context())
+        assert stored_variables.values == {"flag": True}
+        assert script_obj.runs == 1
+    except AssertionError, TimeoutError:
+        await script_obj.async_stop()
+        raise
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+
+    assert not script_obj.is_running
+    assert len(mock_calls) == 1
+    assert mock_calls[0].data["value"] == "done"

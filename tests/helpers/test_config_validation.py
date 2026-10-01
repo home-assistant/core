@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
@@ -2205,3 +2206,18 @@ def test_choose_option_rejects_invalid_note(invalid_note: Any) -> None:
         cv.script_action(
             {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": invalid_note}]}
         )
+
+
+@pytest.mark.usefixtures("hass")
+async def test_stored_variables_schema() -> None:
+    """Test the stored variables schema."""
+    variables = cv.STORED_VARIABLES_SCHEMA({"count": 0, "name": "{{ 1 + 1 }}"})
+    assert isinstance(variables, ScriptVariables)
+    assert variables.as_dict().keys() == {"count", "name"}
+
+
+@pytest.mark.parametrize("name", sorted(cv.RESERVED_STORED_VARIABLE_NAMES))
+def test_stored_variables_schema_reserved_names(name: str) -> None:
+    """Test the stored variables schema rejects reserved names."""
+    with pytest.raises(probatio.Invalid, match=f"reserved names: {name}"):
+        cv.STORED_VARIABLES_SCHEMA({name: 1, "ok": 2})

@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SELECTOR,
     CONF_SEQUENCE,
+    CONF_STORED_VARIABLES,
     CONF_VARIABLES,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -79,27 +80,52 @@ _SCRIPT_OBJECT_ID_SCHEMA = probatio.All(
     ),
 )
 
-SCRIPT_ENTITY_SCHEMA = make_script_schema(
-    {
-        probatio.Optional(CONF_ALIAS): cv.string,
-        probatio.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
-        probatio.Optional(CONF_ICON): cv.icon,
-        probatio.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
-        probatio.Optional(CONF_DESCRIPTION, default=""): cv.string,
-        probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        probatio.Optional(CONF_FIELDS, default={}): {
-            cv.string: {
-                probatio.Optional(CONF_ADVANCED, default=False): cv.boolean,
-                probatio.Optional(CONF_DEFAULT): cv.match_all,
-                probatio.Optional(CONF_DESCRIPTION): cv.string,
-                probatio.Optional(CONF_EXAMPLE): cv.string,
-                probatio.Optional(CONF_NAME): cv.string,
-                probatio.Optional(CONF_REQUIRED, default=False): cv.boolean,
-                probatio.Optional(CONF_SELECTOR): validate_selector,
-            }
+
+def _validate_stored_variables(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that stored variables are not also defined as variables or fields."""
+    if CONF_STORED_VARIABLES not in config:
+        return config
+    stored_names = config[CONF_STORED_VARIABLES].variables.keys()
+    if CONF_VARIABLES in config and (
+        overlap := stored_names & config[CONF_VARIABLES].variables.keys()
+    ):
+        raise probatio.Invalid(
+            f"Stored variables must not also be defined in {CONF_VARIABLES}: "
+            f"{', '.join(sorted(overlap))}"
+        )
+    if overlap := stored_names & config[CONF_FIELDS].keys():
+        raise probatio.Invalid(
+            f"Stored variables must not also be defined in {CONF_FIELDS}: "
+            f"{', '.join(sorted(overlap))}"
+        )
+    return config
+
+
+SCRIPT_ENTITY_SCHEMA = probatio.All(
+    make_script_schema(
+        {
+            probatio.Optional(CONF_ALIAS): cv.string,
+            probatio.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
+            probatio.Optional(CONF_ICON): cv.icon,
+            probatio.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+            probatio.Optional(CONF_DESCRIPTION, default=""): cv.string,
+            probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            probatio.Optional(CONF_STORED_VARIABLES): cv.STORED_VARIABLES_SCHEMA,
+            probatio.Optional(CONF_FIELDS, default={}): {
+                cv.string: {
+                    probatio.Optional(CONF_ADVANCED, default=False): cv.boolean,
+                    probatio.Optional(CONF_DEFAULT): cv.match_all,
+                    probatio.Optional(CONF_DESCRIPTION): cv.string,
+                    probatio.Optional(CONF_EXAMPLE): cv.string,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_REQUIRED, default=False): cv.boolean,
+                    probatio.Optional(CONF_SELECTOR): validate_selector,
+                }
+            },
         },
-    },
-    SCRIPT_MODE_SINGLE,
+        SCRIPT_MODE_SINGLE,
+    ),
+    _validate_stored_variables,
 )
 
 

@@ -50,6 +50,7 @@ from tests.common import (
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.components.repairs import get_repairs
@@ -302,6 +303,38 @@ async def test_bad_config_validation_critical(
             "failed to setup sequence",
             "Invalid trigger 'not_a_platform' specified. Got {'alias': 'bad_script',",
             "validation_failed_sequence",
+        ),
+        (
+            "bad_script",
+            {
+                "stored_variables": {"wait": 1},
+                "sequence": [],
+            },
+            "could not be validated",
+            "Stored variables must not use the reserved names: wait",
+            "validation_failed_schema",
+        ),
+        (
+            "bad_script",
+            {
+                "stored_variables": {"count": 0},
+                "variables": {"count": 1},
+                "sequence": [],
+            },
+            "could not be validated",
+            "Stored variables must not also be defined in variables: count",
+            "validation_failed_schema",
+        ),
+        (
+            "bad_script",
+            {
+                "stored_variables": {"count": 0},
+                "fields": {"count": {"description": "A field"}},
+                "sequence": [],
+            },
+            "could not be validated",
+            "Stored variables must not also be defined in fields: count",
+            "validation_failed_schema",
         ),
     ],
 )
@@ -1300,6 +1333,62 @@ async def test_script_this_var_always(
     # Verify this available to all templates
     assert mock_calls[0].data.get("this_template") == "script.script1"
     assert "Error rendering variables" not in caplog.text
+
+
+async def test_script_stored_variables(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test stored variables are restored and persist across script runs."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(ENTITY_ID, STATE_OFF),
+                {"stored_variables": {"count": 5, "removed": "old"}},
+            ),
+        ),
+    )
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test": {
+                    "stored_variables": {"count": 0, "seen": []},
+                    "sequence": [
+                        {
+                            "variables": {
+                                "count": "{{ count + 1 }}",
+                                "seen": "{{ seen + [name] }}",
+                            }
+                        },
+                        {
+                            "action": "test.script",
+                            "data": {"count": "{{ count }}", "seen": "{{ seen }}"},
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    # Service data with the name of a stored variable is ignored
+    await hass.services.async_call(
+        DOMAIN, "test", {"name": "a", "count": 100}, blocking=True
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {"count": 6, "seen": ["a"]}
+
+    await hass.services.async_call(DOMAIN, "test", {"name": "b"}, blocking=True)
+    assert len(calls) == 2
+    assert calls[1].data == {"count": 7, "seen": ["a", "b"]}
+
+    # Stored variables are not exposed as state attributes
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert "count" not in state.attributes
+    assert "seen" not in state.attributes
 
 
 async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:

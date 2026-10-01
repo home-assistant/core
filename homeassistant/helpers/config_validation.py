@@ -19,7 +19,7 @@ from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
 import threading
-from typing import Any, cast
+from typing import Any, Final, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -1398,6 +1398,28 @@ SCRIPT_CONVERSATION_RESPONSE_SCHEMA = probatio.Any(template, None)
 
 SCRIPT_VARIABLES_SCHEMA = probatio.All(
     probatio.Schema({str: template_complex}),
+    # pylint: disable-next=unnecessary-lambda
+    lambda val: script_variables_helper.ScriptVariables(val),
+)
+
+RESERVED_STORED_VARIABLE_NAMES: Final = frozenset(
+    {"this", "trigger", "context", "wait", "repeat"}
+)
+
+
+def _no_reserved_stored_variable_names(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate that no stored variable uses a reserved name."""
+    if reserved := RESERVED_STORED_VARIABLE_NAMES.intersection(value):
+        raise probatio.Invalid(
+            "Stored variables must not use the reserved names: "
+            f"{', '.join(sorted(reserved))}"
+        )
+    return value
+
+
+STORED_VARIABLES_SCHEMA = probatio.All(
+    probatio.Schema({str: template_complex}),
+    _no_reserved_stored_variable_names,
     # pylint: disable-next=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )

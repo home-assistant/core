@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PATH,
     CONF_SEQUENCE,
+    CONF_STORED_VARIABLES,
     CONF_VARIABLES,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -54,8 +55,10 @@ from homeassistant.helpers.script import (
     CONF_MAX_EXCEEDED,
     Script,
     ScriptRunResult,
+    StoredVariablesExtraStoredData,
     script_stack_cv,
 )
+from homeassistant.helpers.script_variables import StoredVariables
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
@@ -568,6 +571,9 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._attr_unique_id = key
 
         self.entity_id = ENTITY_ID_FORMAT.format(key)
+        self._stored_variables: StoredVariables | None = None
+        if CONF_STORED_VARIABLES in cfg:
+            self._stored_variables = StoredVariables(cfg[CONF_STORED_VARIABLES])
         self.script = Script(
             hass,
             cfg[CONF_SEQUENCE],
@@ -580,6 +586,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             max_exceeded=cfg[CONF_MAX_EXCEEDED],
             logger=logging.getLogger(f"{__name__}.{key}"),
             variables=cfg.get(CONF_VARIABLES),
+            stored_variables=self._stored_variables,
         )
         self._changed = asyncio.Event()
         self.raw_config = raw_config
@@ -602,6 +609,14 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         if script.last_action:
             attrs[ATTR_LAST_ACTION] = script.last_action
         return attrs
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> StoredVariablesExtraStoredData | None:
+        """Return the stored variables to be restored."""
+        if self._stored_variables is None:
+            return None
+        return StoredVariablesExtraStoredData(dict(self._stored_variables.values))
 
     @property
     @override
@@ -768,6 +783,18 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             last_triggered := state.attributes.get("last_triggered")
         ):
             self.script.last_triggered = parse_datetime(last_triggered)
+
+        if (
+            self._stored_variables is not None
+            and (extra_data := await self.async_get_last_extra_data()) is not None
+            and (
+                stored_data := StoredVariablesExtraStoredData.from_dict(
+                    extra_data.as_dict()
+                )
+            )
+            is not None
+        ):
+            self._stored_variables.restore(stored_data.values)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
