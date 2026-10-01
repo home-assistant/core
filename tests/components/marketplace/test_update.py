@@ -900,6 +900,47 @@ async def test_release_notes_rate_limited_without_github(
     assert not marketplace.system.disabled
 
 
+async def test_release_notes_stop_at_the_version_on_offer(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    integration_update_entity: str,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a newer release on GitHub changes neither the notes nor the update."""
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.installed_version = "1.0.0"
+    repository.data.last_version = "2.0.0"
+    repository.data.published_tags = []
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content=[
+                {
+                    "tag_name": version,
+                    "name": version,
+                    "body": f"What {version} brings",
+                    "prerelease": False,
+                    "draft": False,
+                    "assets": [],
+                }
+                for version in ("3.0.0", "2.0.0", "1.0.0")
+            ],
+        ),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": integration_update_entity}
+    )
+    response = await client.receive_json()
+
+    assert "What 2.0.0 brings" in response["result"]
+    assert "3.0.0" not in response["result"]
+    assert repository.data.last_version == "2.0.0"
+
+
 def test_release_url_points_at_the_release(marketplace: MarketplaceManager) -> None:
     """Test the link goes to the page of the release, not the release list."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)

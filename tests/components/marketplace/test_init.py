@@ -284,6 +284,20 @@ async def test_custom_repository_updates_without_custom_repositories(
 
 
 @pytest.mark.usefixtures("stored_repositories")
+async def test_custom_repositories_are_looked_at_after_a_start(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a start queues the custom repositories, a restart resets the interval."""
+    with patch.object(
+        MarketplaceManager, "async_update_installed_custom_repositories"
+    ) as update:
+        await setup_integration(hass, mock_config_entry)
+
+    update.assert_called_once()
+
+
+@pytest.mark.usefixtures("stored_repositories")
 async def test_custom_repository_update_failure_still_updates_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

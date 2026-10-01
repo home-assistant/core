@@ -8,7 +8,7 @@ from aiogithubapi.common.const import BASE_API_URL
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .base import async_get_marketplace
+from .base import MarketplaceManager, async_get_marketplace
 from .const import CATALOG_REPOSITORY, DOMAIN
 
 GITHUB_STATUS = "https://www.githubstatus.com/"
@@ -27,43 +27,49 @@ def async_register(
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     if not hass.config_entries.async_loaded_entries(DOMAIN):
-        return {"Disabled": "The Marketplace is not loaded"}
+        return {"disabled": "The Marketplace is not loaded"}
 
     marketplace = async_get_marketplace(hass)
 
     data: dict[str, Any] = {
-        "GitHub API": system_health.async_check_can_reach_url(
+        "github_api": system_health.async_check_can_reach_url(
             hass, BASE_API_URL, GITHUB_STATUS
         ),
-        "GitHub Content": system_health.async_check_can_reach_url(
+        "github_content": system_health.async_check_can_reach_url(
             hass,
             f"https://raw.githubusercontent.com/{CATALOG_REPOSITORY}/main/integration",
         ),
-        "GitHub Web": system_health.async_check_can_reach_url(
+        "github_web": system_health.async_check_can_reach_url(
             hass, "https://github.com/", GITHUB_STATUS
         ),
-        "Catalog Data": system_health.async_check_can_reach_url(
+        "catalog_data": system_health.async_check_can_reach_url(
             hass, "https://data-v2.hacs.xyz/data.json", CLOUDFLARE_STATUS
         ),
-        "GitHub Connected": marketplace.github_connected,
-        "Installed Version": marketplace.version,
-        "Stage": marketplace.stage,
-        "Available Repositories": len(marketplace.repositories.list_all),
-        "Installed Repositories": len(marketplace.repositories.list_installed),
+        "github_connected": marketplace.github_connected,
+        "installed_version": marketplace.version,
+        "stage": marketplace.stage,
+        "available_repositories": len(marketplace.repositories.list_all),
+        "installed_repositories": len(marketplace.repositories.list_installed),
     }
 
     # The anonymous rate limit is shared by every client on the address, it
-    # says nothing about the Marketplace.
+    # says nothing about the Marketplace. Waited for like the checks above, a
+    # slow answer can not hold up the rest.
     if marketplace.github_connected:
-        try:
-            response = await marketplace.githubapi.rate_limit()
-        except GitHubException:
-            # GitHub being out of reach is what the checks above show already
-            data["GitHub API Calls Remaining"] = "unknown"
-        else:
-            data["GitHub API Calls Remaining"] = response.data.resources.core.remaining
+        data["github_api_calls_remaining"] = _async_calls_remaining(marketplace)
 
     if marketplace.system.disabled:
-        data["Disabled"] = marketplace.system.disabled_reason
+        data["disabled"] = marketplace.system.disabled_reason
 
     return data
+
+
+async def _async_calls_remaining(marketplace: MarketplaceManager) -> int | str:
+    """Return how many GitHub API calls the connected account has left."""
+    try:
+        response = await marketplace.githubapi.rate_limit()
+    except GitHubException:
+        # GitHub being out of reach is what the checks show already
+        return "unknown"
+    remaining: int = response.data.resources.core.remaining
+    return remaining

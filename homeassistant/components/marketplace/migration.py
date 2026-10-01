@@ -302,7 +302,8 @@ def _async_forget_category(
         DOMAIN,
         retired.issue_id,
         is_fixable=False,
-        is_persistent=False,
+        # The repositories it lists are forgotten, nothing makes it again
+        is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key=retired.issue_id,
         translation_placeholders={retired.placeholder: ", ".join(installed)},

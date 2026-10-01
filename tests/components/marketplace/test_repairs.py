@@ -120,6 +120,56 @@ async def test_restart_required_fix_flow_while_unloaded(
     assert data["description_placeholders"] == {"name": "Basic integration"}
 
 
+async def test_removal_the_catalog_takes_back(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repository back in the catalog is no longer held as removed."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.installed = True
+    removal = {
+        "repository": REPOSITORY_INTEGRATION,
+        "removal_type": "remove",
+        "reason": "Not maintained",
+    }
+
+    with (
+        patch.object(
+            marketplace.data_client,
+            "async_get_removed",
+            side_effect=[[removal], []],
+        ),
+        patch.object(marketplace.data, "async_write"),
+    ):
+        await marketplace.async_handle_removed_repositories()
+        assert marketplace.repositories.is_removed(REPOSITORY_INTEGRATION)
+        assert issue_registry.async_get_issue(
+            DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+        )
+
+        await marketplace.async_handle_removed_repositories()
+
+    assert not marketplace.repositories.is_removed(REPOSITORY_INTEGRATION)
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+    )
+
+
+async def test_critical_removal_stays_when_the_removals_change(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a critical removal is not forgotten, it comes from its own feed."""
+    marketplace.repositories.removed_repository(
+        REPOSITORY_INTEGRATION
+    ).removal_type = "critical"
+
+    with patch.object(marketplace.data_client, "async_get_removed", return_value=[]):
+        await marketplace.async_handle_removed_repositories()
+
+    assert marketplace.repositories.is_removed(REPOSITORY_INTEGRATION)
+
+
 async def test_no_fix_flow_for_other_issues(hass: HomeAssistant) -> None:
     """Test that only the restart issue is fixable."""
     assert await async_create_fix_flow(hass, "removed_1296269", None) is None

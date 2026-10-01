@@ -1084,7 +1084,8 @@ async def test_appdaemon_repositories_forgotten(
     issue = issue_registry.async_get_issue(DOMAIN, "appdaemon_not_supported")
     assert issue is not None
     assert issue.is_fixable is False
-    assert issue.is_persistent is False
+    # The repositories it lists are forgotten, it can not be made again
+    assert issue.is_persistent is True
     assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"apps": "Basic app, Motion Lights App"}
     assert app_file.read_text(encoding="utf-8") == "import appdaemon"

@@ -379,5 +379,20 @@
       "title": "Restart required"
     }
   },
+  "system_health": {
+    "info": {
+      "available_repositories": "Available repositories",
+      "catalog_data": "Catalog reachable",
+      "disabled": "Disabled",
+      "github_api": "GitHub API reachable",
+      "github_api_calls_remaining": "GitHub API calls remaining",
+      "github_connected": "GitHub connected",
+      "github_content": "GitHub content reachable",
+      "github_web": "GitHub website reachable",
+      "installed_repositories": "Installed repositories",
+      "installed_version": "Version",
+      "stage": "Stage"
+    }
+  },
   "title": "Marketplace"
 }

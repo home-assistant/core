@@ -197,8 +197,9 @@ async def test_beta_release_notes_keep_the_stable_version(
     assert await entity.async_release_notes()
     repository.data.show_beta = False
 
-    # The recorded releases hold 2.0.0 as a draft, 1.0.0 is the newest stable one
-    assert repository.display_available_version == "1.0.0"
+    # Reading the notes leaves the stable version alone, pre-release or not
+    assert repository.data.last_version == "2.0.0"
+    assert repository.display_available_version == "2.0.0"
 
 
 async def test_integer_catalog_timestamp_can_be_stored(

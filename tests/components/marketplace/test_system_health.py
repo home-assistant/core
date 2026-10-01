@@ -17,13 +17,17 @@ from tests.common import MockConfigEntry, get_system_health_info
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def _resolved_info(hass: HomeAssistant) -> dict[str, Any]:
-    """Return the system health info with the reachability checks resolved."""
-    info = await get_system_health_info(hass, DOMAIN)
+async def _resolve(info: dict[str, Any]) -> dict[str, Any]:
+    """Resolve the values system health waits for, in place."""
     for key, value in info.items():
         if asyncio.iscoroutine(value):
             info[key] = await value
     return info
+
+
+async def _resolved_info(hass: HomeAssistant) -> dict[str, Any]:
+    """Return the system health info with the reachability checks resolved."""
+    return await _resolve(await get_system_health_info(hass, DOMAIN))
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -34,17 +38,34 @@ async def test_system_health(hass: HomeAssistant) -> None:
     info = await _resolved_info(hass)
 
     assert info == {
-        "GitHub API": "ok",
-        "GitHub API Calls Remaining": 4999,
-        "GitHub Connected": True,
-        "GitHub Content": "ok",
-        "GitHub Web": "ok",
-        "Catalog Data": "ok",
-        "Available Repositories": 4,
-        "Installed Repositories": 0,
-        "Installed Version": info["Installed Version"],
-        "Stage": "running",
+        "github_api": "ok",
+        "github_api_calls_remaining": 4999,
+        "github_connected": True,
+        "github_content": "ok",
+        "github_web": "ok",
+        "catalog_data": "ok",
+        "available_repositories": 4,
+        "installed_repositories": 0,
+        "installed_version": info["installed_version"],
+        "stage": "running",
     }
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_system_health_does_not_wait_for_the_rate_limit(
+    hass: HomeAssistant,
+) -> None:
+    """Test a slow answer about the rate limit can not hold up the rest."""
+    assert await async_setup_component(hass, "system_health", {})
+
+    info = await get_system_health_info(hass, DOMAIN)
+
+    calls_remaining = info.pop("github_api_calls_remaining")
+    await _resolve(info)
+
+    # Waited for like the reachability checks, each with its own timeout
+    assert asyncio.iscoroutine(calls_remaining)
+    assert await calls_remaining == 4999
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -61,7 +82,7 @@ async def test_system_health_when_github_fails(
     ):
         info = await _resolved_info(hass)
 
-    assert info["GitHub API Calls Remaining"] == "unknown"
+    assert info["github_api_calls_remaining"] == "unknown"
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -74,8 +95,8 @@ async def test_system_health_without_github(
 
     info = await _resolved_info(hass)
 
-    assert info["GitHub Connected"] is False
-    assert "GitHub API Calls Remaining" not in info
+    assert info["github_connected"] is False
+    assert "github_api_calls_remaining" not in info
     assert not [
         url for _, url, _, _ in aioclient_mock.mock_calls if url.path == "/rate_limit"
     ]
@@ -90,7 +111,7 @@ async def test_system_health_when_disabled(
 
     info = await _resolved_info(hass)
 
-    assert info["Disabled"] is DisabledReason.RATE_LIMIT
+    assert info["disabled"] is DisabledReason.RATE_LIMIT
 
 
 async def test_system_health_after_unload(
@@ -105,4 +126,4 @@ async def test_system_health_after_unload(
 
     info = await _resolved_info(hass)
 
-    assert info == {"Disabled": "The Marketplace is not loaded"}
+    assert info == {"disabled": "The Marketplace is not loaded"}

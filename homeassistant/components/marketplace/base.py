@@ -363,6 +363,10 @@ class Repositories:
         """Check if a repository is removed."""
         return repository_full_name in self._removed_repositories_by_full_name
 
+    def forget_removed(self, repository_full_name: str) -> None:
+        """Forget the removal of a repository, the catalog took it back."""
+        self._removed_repositories_by_full_name.pop(repository_full_name, None)
+
     def removed_repository(self, repository_full_name: str) -> RemovedRepository:
         """Return the removed entry of a repository, created when there is none."""
         if removed := self._removed_repositories_by_full_name.get(repository_full_name):
@@ -919,6 +923,9 @@ class MarketplaceManager:
 
         await self.async_handle_removed_repositories()
         await self.async_get_all_category_repositories()
+        # Queued only, the queue runs them. Waiting for the interval would
+        # start over with every restart.
+        await self.async_update_installed_custom_repositories()
 
         self.set_stage(MarketplaceStage.RUNNING)
 
@@ -1225,6 +1232,21 @@ class MarketplaceManager:
         for item in removed_repositories:
             removed = self.repositories.removed_repository(item["repository"])
             removed.update_data(item)
+
+        # Taken back by the catalog, a critical removal comes from its own feed
+        listed = {item["repository"] for item in removed_repositories}
+        for removed in self.repositories.list_removed:
+            if (
+                (full_name := removed.repository) is None
+                or full_name in listed
+                or removed.removal_type == "critical"
+            ):
+                continue
+            self.repositories.forget_removed(full_name)
+            if repository := self.repositories.get_by_full_name(full_name):
+                ir.async_delete_issue(
+                    self.hass, DOMAIN, f"removed_{repository.data.id}"
+                )
 
         for removed in self.repositories.list_removed:
             repository = self.repositories.get_by_full_name(removed.repository)

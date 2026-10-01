@@ -169,38 +169,32 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         if self.repository.pending_restart:
             return None
 
+        releases = self.repository.releases.objects
         if self.latest_version not in self.repository.data.published_tags:
-            # The notes are best effort, the releases known already still help
+            # The notes are best effort, the releases known already still help.
+            # They only tell, what the update installs stays as it is.
             try:
-                releases = await self.repository.get_releases(
+                if fetched := await self.repository.get_releases(
                     prerelease=self.repository.data.show_beta,
                     returnlimit=RELEASE_LIMIT,
-                )
+                ):
+                    releases = fetched
             except MarketplaceError as exception:
                 LOGGER.debug(
                     "Could not get the releases of %s: %s",
                     self.repository.data.full_name,
                     exception,
                 )
-                releases = []
-            if releases:
-                self.repository.data.releases = True
-                self.repository.releases.objects = releases
-                self.repository.data.published_tags = [x.tag_name for x in releases]
-                # Fetched with pre-releases when those are shown, they are not stable
-                self.repository.data.last_version = next(
-                    (
-                        release.tag_name
-                        for release in releases
-                        if not release.prerelease
-                    ),
-                    self.repository.data.last_version,
-                )
+
+        # A newer release than the one on offer is not what the update installs
+        tags = [release.tag_name for release in releases]
+        if self.latest_version in tags:
+            releases = releases[tags.index(self.latest_version) :]
 
         release_notes = ""
         # Compile release notes from installed version up to the latest
-        if self.installed_version in self.repository.data.published_tags:
-            for release in self.repository.releases.objects:
+        if self.installed_version in (release.tag_name for release in releases):
+            for release in releases:
                 if release.tag_name == self.installed_version:
                     break
                 release_notes += f"# {release.tag_name}"
@@ -208,8 +202,8 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
                     release_notes += f"  - {release.name}"
                 release_notes += f"\n\n{release.body}"
                 release_notes += "\n\n---\n\n"
-        elif any(self.repository.releases.objects):
-            release_notes += self.repository.releases.objects[0].body
+        elif releases:
+            release_notes += releases[0].body
 
         return release_notes.replace("\n#", "\n\n#")
 
