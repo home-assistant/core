@@ -879,6 +879,12 @@ async def test_flex_tier_retry(
             CONF_REASONING_SUMMARY: "off",
             CONF_VERBOSITY: "high",
         },
+        {
+            CONF_CHAT_MODEL: "gpt-6-astra",
+            CONF_REASONING_EFFORT: "none",
+            CONF_TEMPERATURE: 0.5,
+            CONF_TOP_P: 0.9,
+        },
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")

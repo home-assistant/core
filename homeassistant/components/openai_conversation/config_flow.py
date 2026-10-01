@@ -425,11 +425,19 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.pop(CONF_CODE_INTERPRETER)
 
         if reasoning_options := self._get_reasoning_options(model):
+            default_effort = (
+                RECOMMENDED_REASONING_EFFORT
+                if RECOMMENDED_REASONING_EFFORT in reasoning_options
+                else reasoning_options[0]
+            )
+            stored_effort = options.get(CONF_REASONING_EFFORT, default_effort)
+            if stored_effort not in reasoning_options:
+                options[CONF_REASONING_EFFORT] = default_effort
             step_schema.update(
                 {
                     probatio.Optional(
                         CONF_REASONING_EFFORT,
-                        default=RECOMMENDED_REASONING_EFFORT,
+                        default=default_effort,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=reasoning_options,
