@@ -1,5 +1,7 @@
 """Base entity for Zonneplan."""
 
+from pyzonneplan import Battery
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,17 +39,24 @@ class ZonneplanBatteryEntity(CoordinatorEntity[ZonneplanBatteryCoordinator]):
     def __init__(
         self,
         coordinator: ZonneplanBatteryCoordinator,
+        contract_uuid: str,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        contract = coordinator.data.battery.contract
-        self._attr_unique_id = f"{contract.uuid}_{entity_description.key}"
+        self._contract_uuid = contract_uuid
+        contract = self.battery.contract
+        self._attr_unique_id = f"{contract_uuid}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, contract.uuid)},
+            identifiers={(DOMAIN, contract_uuid)},
             name=contract.label,
             manufacturer="Zonneplan",
             model=contract.model_name,
             serial_number=contract.serial_number,
         )
+
+    @property
+    def battery(self) -> Battery:
+        """Return the battery of this entity."""
+        return self.coordinator.data[self._contract_uuid]

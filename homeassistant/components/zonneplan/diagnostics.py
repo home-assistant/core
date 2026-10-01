@@ -54,8 +54,8 @@ async def async_get_config_entry_diagnostics(
             ),
             "gas_usage": data.gas_usage.to_dict() if data.gas_usage else None,
             "batteries": [
-                battery.data.battery.contract.to_dict()
-                for battery in entry.runtime_data.batteries
+                battery.contract.to_dict()
+                for battery in entry.runtime_data.battery_coordinator.data.values()
             ],
         },
         TO_REDACT,

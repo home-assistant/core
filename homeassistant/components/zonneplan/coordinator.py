@@ -12,7 +12,6 @@ from pyzonneplan import (
     Battery,
     Connection,
     ConsumerPrices,
-    Contract,
     ElectricityChart,
     GasChart,
     Zonneplan,
@@ -46,7 +45,7 @@ class ZonneplanRuntimeData:
     """Runtime data of a Zonneplan config entry."""
 
     coordinator: ZonneplanCoordinator
-    batteries: list[ZonneplanBatteryCoordinator]
+    battery_coordinator: ZonneplanBatteryCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,13 +57,6 @@ class ZonneplanData:
     gas_prices: ConsumerPrices | None = None
     electricity_usage: ElectricityChart | None = None
     gas_usage: GasChart | None = None
-
-
-@dataclass(frozen=True, kw_only=True)
-class ZonneplanBatteryData:
-    """Data fetched by a Zonneplan home battery coordinator."""
-
-    battery: Battery
 
 
 def _connection(account: Account, market_segment: str) -> Connection | None:
@@ -208,31 +200,37 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
         )
 
 
-class ZonneplanBatteryCoordinator(ZonneplanBaseCoordinator[ZonneplanBatteryData]):
-    """Coordinator to manage fetching a Zonneplan home battery."""
+class ZonneplanBatteryCoordinator(ZonneplanBaseCoordinator[dict[str, Battery]]):
+    """Coordinator to manage fetching the Zonneplan home batteries."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ZonneplanConfigEntry,
         zonneplan: Zonneplan,
-        connection_uuid: str,
-        contract: Contract,
+        connection_uuids: dict[str, str],
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the coordinator with the connection UUID of each battery."""
         super().__init__(hass, entry, zonneplan, BATTERY_UPDATE_INTERVAL)
-        self.connection_uuid = connection_uuid
-        self.contract = contract
+        self.connection_uuids = connection_uuids
 
     @override
-    async def _async_fetch(self) -> ZonneplanBatteryData:
-        """Fetch the battery state."""
-        installation = await self.zonneplan.async_get_battery(
-            self.connection_uuid, self.contract.uuid
-        )
-        if (battery := installation.battery) is None:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="battery_not_found",
+    async def _async_fetch(self) -> dict[str, Battery]:
+        """Fetch the state of every battery, keyed by contract UUID."""
+        installations = await asyncio.gather(
+            *(
+                self.zonneplan.async_get_battery(connection_uuid, contract_uuid)
+                for contract_uuid, connection_uuid in self.connection_uuids.items()
             )
-        return ZonneplanBatteryData(battery=battery)
+        )
+        batteries: dict[str, Battery] = {}
+        for contract_uuid, installation in zip(
+            self.connection_uuids, installations, strict=True
+        ):
+            if (battery := installation.battery) is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="battery_not_found",
+                )
+            batteries[contract_uuid] = battery
+        return batteries

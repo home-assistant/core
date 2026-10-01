@@ -88,6 +88,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Zonneplan binary sensor platform."""
     coordinator = entry.runtime_data.coordinator
+    battery_coordinator = entry.runtime_data.battery_coordinator
 
     async_add_entities(
         [
@@ -96,8 +97,10 @@ async def async_setup_entry(
                 for description in BINARY_SENSORS
             ),
             *(
-                ZonneplanBatteryBinarySensor(battery, description)
-                for battery in entry.runtime_data.batteries
+                ZonneplanBatteryBinarySensor(
+                    battery_coordinator, contract_uuid, description
+                )
+                for contract_uuid in battery_coordinator.data
                 for description in BATTERY_BINARY_SENSORS
             ),
         ]
@@ -140,4 +143,4 @@ class ZonneplanBatteryBinarySensor(ZonneplanBatteryEntity, BinarySensorEntity):
     @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        return self.entity_description.is_on_fn(self.coordinator.data.battery)
+        return self.entity_description.is_on_fn(self.battery)

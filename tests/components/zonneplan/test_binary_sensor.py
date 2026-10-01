@@ -72,7 +72,7 @@ async def test_battery_binary_sensor_unavailable_on_update_error(
     )
     freezer.tick(BATTERY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(GRID_CONGESTION_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE

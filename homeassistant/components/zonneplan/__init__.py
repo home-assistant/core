@@ -1,7 +1,5 @@
 """The Zonneplan integration."""
 
-import asyncio
-
 from pyzonneplan import Token, Zonneplan
 from pyzonneplan.const import ContractType
 
@@ -29,17 +27,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
     coordinator = ZonneplanCoordinator(hass, entry, zonneplan)
     await coordinator.async_config_entry_first_refresh()
 
-    batteries = [
-        ZonneplanBatteryCoordinator(hass, entry, zonneplan, connection.uuid, contract)
-        for connection in coordinator.data.account.connections
-        for contract in connection.contracts_of_type(ContractType.HOME_BATTERY)
-    ]
-    await asyncio.gather(
-        *(battery.async_config_entry_first_refresh() for battery in batteries)
+    battery_coordinator = ZonneplanBatteryCoordinator(
+        hass,
+        entry,
+        zonneplan,
+        {
+            contract.uuid: connection.uuid
+            for connection in coordinator.data.account.connections
+            for contract in connection.contracts_of_type(ContractType.HOME_BATTERY)
+        },
     )
+    await battery_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = ZonneplanRuntimeData(
-        coordinator=coordinator, batteries=batteries
+        coordinator=coordinator, battery_coordinator=battery_coordinator
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
