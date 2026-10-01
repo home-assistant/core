@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 import datetime
 import http
+import re
 import time
 from typing import Any
 from unittest.mock import Mock, patch
@@ -290,7 +291,7 @@ async def test_multiple_config_entries(
         (
             {},
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -304,7 +305,7 @@ async def test_multiple_config_entries(
                 "end_date": "2022-04-02",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -318,7 +319,7 @@ async def test_multiple_config_entries(
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -327,7 +328,7 @@ async def test_multiple_config_entries(
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -373,7 +374,7 @@ async def test_multiple_config_entries(
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -384,7 +385,7 @@ async def test_multiple_config_entries(
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
     ],
     ids=[
@@ -419,7 +420,7 @@ async def test_add_event_invalid_params(
     mock_events_list({})
     assert await component_setup()
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await add_event_call_service(date_fields)
 
 

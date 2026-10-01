@@ -275,6 +275,7 @@ async def test_subentry_unsupported_model(
         ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
+        ("gpt-6-luna", ["none", "low", "medium", "high", "xhigh", "max"]),
         ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
     ],
 )
@@ -318,6 +319,42 @@ async def test_subentry_reasoning_effort_list(
         subentry_flow["data_schema"].schema[CONF_REASONING_EFFORT].config["options"]
         == reasoning_effort_options
     )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
+@pytest.mark.parametrize("reasoning_effort", ["none", "low"])
+async def test_subentry_luna_reasoning_effort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    reasoning_effort: str,
+) -> None:
+    """Test that Luna reasoning effort can be selected and saved."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == subentry_type
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: "gpt-6-luna"}
+    )
+    assert result["step_id"] == "model"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REASONING_EFFORT: reasoning_effort}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    saved = mock_config_entry.subentries[subentry.subentry_id].data
+    assert saved[CONF_CHAT_MODEL] == "gpt-6-luna"
+    assert saved[CONF_REASONING_EFFORT] == reasoning_effort
 
 
 @pytest.mark.parametrize(
@@ -1644,6 +1681,61 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the API key can be reconfigured."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as mock_async_reload,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert mock_async_reload.call_count == 1
+
+
+async def test_reconfigure_invalid_auth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an invalid API key is rejected during reconfiguration."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        side_effect=AuthenticationError(
+            response=httpx.Response(status_code=None, request=""),
+            body=None,
+            message=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "invalid_api_key"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert mock_config_entry.data[CONF_API_KEY] == "bla"
 
 
 @pytest.mark.parametrize(

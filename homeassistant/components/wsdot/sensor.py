@@ -33,7 +33,7 @@ SCAN_INTERVAL = timedelta(minutes=3)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_TRAVEL_TIMES): [
             {
                 probatio.Required(CONF_ID): cv.string,

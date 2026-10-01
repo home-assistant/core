@@ -45,4 +45,7 @@ class SmartyCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from Smarty."""
         if not await self.hass.async_add_executor_job(self.client.update):
-            raise UpdateFailed("Failed to update Smarty data")
+            raise UpdateFailed(
+                "Failed to update Smarty data",
+                retry_after=2 if self.last_update_success else None,
+            )

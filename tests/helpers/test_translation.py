@@ -807,3 +807,67 @@ async def test_get_translations_still_has_title_without_translations_files(
     assert translations == {
         "component.component1.title": "Component 1",
     }
+
+
+async def test_english_cache_populated_for_partial_batch_overlap(
+    hass: HomeAssistant,
+) -> None:
+    """Test English caching when a non-English batch partially overlaps it."""
+    integration_a = Mock(file_path=pathlib.Path(__file__))
+    integration_a.name = "Component A"
+    integration_b = Mock(file_path=pathlib.Path(__file__))
+    integration_b.name = "Component B"
+
+    component_strings = {
+        "comp_a": {
+            "en": {"issues": {"broken": {"title": "A is broken"}}},
+            "de": {"issues": {"broken": {"title": "A kaputt"}}},
+        },
+        "comp_b": {
+            "en": {"issues": {"detached": {"title": "B detached"}}},
+            "de": {"issues": {"detached": {"title": "B abgetrennt"}}},
+        },
+    }
+
+    def mock_load_translation_files(
+        files: dict[str, dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
+        """Return language-keyed strings for the requested components."""
+        return {
+            language: {
+                component: component_strings[component][language]
+                for component in components
+            }
+            for language, components in files.items()
+        }
+
+    cache = translation._async_get_translations_cache(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            mock_load_translation_files,
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"comp_a": integration_a, "comp_b": integration_b},
+        ),
+    ):
+        # Bootstrap: comp_a is set up (and cached in English) first.
+        await cache.async_load("en", {"comp_a"})
+        # Preload the full set in the real language; the batch overlaps comp_a.
+        await cache.async_load("de", {"comp_a", "comp_b"})
+
+    # comp_b's English strings were fetched during the "de" load and must be in
+    # the English cache even though comp_a was already cached in English.
+    assert translation.async_get_cached_translations(
+        hass, "en", "issues", "comp_b"
+    ) == {"component.comp_b.issues.detached.title": "B detached"}
+    # The already-cached component is unaffected.
+    assert translation.async_get_cached_translations(
+        hass, "en", "issues", "comp_a"
+    ) == {"component.comp_a.issues.broken.title": "A is broken"}
+    # The requested language keeps the localized strings on top of English.
+    assert translation.async_get_cached_translations(
+        hass, "de", "issues", "comp_b"
+    ) == {"component.comp_b.issues.detached.title": "B abgetrennt"}

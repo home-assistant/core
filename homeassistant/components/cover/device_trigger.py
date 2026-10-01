@@ -24,7 +24,8 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from . import CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from .const import DOMAIN
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
@@ -42,7 +43,7 @@ POSITION_TRIGGER_SCHEMA = probatio.All(
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
