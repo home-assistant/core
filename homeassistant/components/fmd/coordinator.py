@@ -3,6 +3,7 @@
 from datetime import timedelta
 import json
 import logging
+import math
 from typing import TYPE_CHECKING, Any, override
 
 from cryptography.exceptions import InvalidTag
@@ -32,6 +33,26 @@ def is_location_accurate(location: dict[str, Any]) -> bool:
     """
     provider = str(location.get("provider") or "").lower()
     return provider in _ACCURATE_PROVIDERS
+
+
+def has_valid_coordinates(location: dict[str, Any]) -> bool:
+    """Return True if the location carries usable numeric coordinates.
+
+    latitude/longitude must be real (non-bool) finite numbers in range;
+    json.loads accepts NaN/Infinity and strings would otherwise reach the
+    zone distance calculations as-is.
+    """
+    latitude = location.get("lat")
+    longitude = location.get("lon")
+    for value, limit in ((latitude, 90), (longitude, 180)):
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or abs(value) > limit
+        ):
+            return False
+    return True
 
 
 class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -94,6 +115,9 @@ class FmdCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Skipping inaccurate location (provider=%s)",
                     location.get("provider"),
                 )
+                continue
+            if not has_valid_coordinates(location):
+                _LOGGER.debug("Skipping location with invalid coordinates")
                 continue
             return location
 

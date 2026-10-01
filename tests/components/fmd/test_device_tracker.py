@@ -346,3 +346,66 @@ async def test_all_blobs_malformed_raises_update_failed(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_invalid_coordinates_skipped_valid_location_used(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test non-numeric/out-of-range/missing coordinates don't reach the entity.
+
+    Regression test: string lat/lon would previously flow into the zone
+    distance calculations and raise TypeError; NaN values pass json.loads;
+    missing coordinates silently counted as a successful update.
+    """
+    good = dict(TEST_LOCATION, lat=42.0)
+    bad_fixes = [
+        {"provider": "gps", "lat": "bad", "lon": "bad"},  # non-numeric
+        {"provider": "gps", "lat": 91, "lon": 0},  # out of range
+        {"provider": "gps", "lat": float("NaN"), "lon": 0},  # non-finite
+        {"provider": "gps"},  # missing coordinates
+    ]
+    blobs = [json.dumps(fix).encode() for fix in bad_fixes]
+
+    def decrypt(blob: Any) -> bytes:
+        """Serve each malformed fix, then a valid one."""
+        if blob == "good-blob":
+            return json.dumps(good).encode()
+        return blobs[int(blob)]
+
+    mock_fmd_client.get_locations = AsyncMock(
+        return_value=["0", "1", "2", "3", "good-blob"]
+    )
+    mock_fmd_client.decrypt_data_blob = MagicMock(side_effect=decrypt)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["latitude"] == 42.0
+    assert state.attributes["provider"] == "gps"
+
+
+async def test_all_fixes_invalid_coordinates_raises_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that only-invalid-coordinate data surfaces as UpdateFailed."""
+    await setup_integration(hass, mock_config_entry)
+
+    bad = {"provider": "gps", "lat": "bad", "lon": "bad"}
+    mock_fmd_client.get_locations = AsyncMock(return_value=["bad-blob"])
+    mock_fmd_client.decrypt_data_blob = MagicMock(
+        side_effect=lambda blob: json.dumps(bad).encode()
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_POLLING_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
