@@ -1,0 +1,25 @@
+ [
+  {
+    "_id": "6a84eb95-60ea-4c21-8376-a10b3886437f",
+    "id": "6a84eb95-60ea-4c21-8376-a10b3886437f",
+    "type": "homehub",
+    "deviceModel": "homehub",
+    "isCloudConnectionUp": {
+      "settable": false,
+      "value": true
+    },
+    "managementPoints": [
+      {
+        "embeddedId": "gateway",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "softwareVersion": {
+          "settable": false,
+          "value": "2.3.0"
+        }
+      }
+    ],
+    "embeddedId": "cb4d0c17-4913-4a60-96a7-b7024c88a124",
+    "timestamp": "2024-07-14T05:02:10.478Z"
+  }
+]
