@@ -40,6 +40,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=self.determine_update_interval(hass),
         )
