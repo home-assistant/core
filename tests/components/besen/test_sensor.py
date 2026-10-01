@@ -1,6 +1,5 @@
 """Tests for the Besen sensor platform."""
 
-from datetime import UTC, datetime
 from unittest.mock import Mock
 
 from besen.const import (
@@ -84,11 +83,6 @@ async def test_sensor_updates_from_client(
                 power=7200,
                 total_energy=123.45,
                 session_energy=4.56,
-                session_start=datetime(2026, 9, 30, 22, 0, tzinfo=UTC),
-                session_duration=3661,
-                session_current_limit=10,
-                scheduled_start=datetime(2026, 9, 30, 21, 30, tzinfo=UTC),
-                charging_time_limit=180,
                 inner_temp_c=26.5,
             )
         ),
@@ -101,16 +95,6 @@ async def test_sensor_updates_from_client(
     assert state.state == "123.45"
     assert (state := hass.states.get("sensor.garage_session_energy")) is not None
     assert state.state == "4.56"
-    assert (state := hass.states.get("sensor.garage_session_start")) is not None
-    assert state.state == "2026-09-30T22:00:00+00:00"
-    assert (state := hass.states.get("sensor.garage_session_duration")) is not None
-    assert state.state == "3661"
-    assert (state := hass.states.get("sensor.garage_session_current_limit")) is not None
-    assert state.state == "10"
-    assert (state := hass.states.get("sensor.garage_scheduled_start")) is not None
-    assert state.state == "2026-09-30T21:30:00+00:00"
-    assert (state := hass.states.get("sensor.garage_charging_time_limit")) is not None
-    assert state.state == "180"
     assert (state := hass.states.get("sensor.garage_internal_temperature")) is not None
     assert state.state == "26.5"
     assert (state := hass.states.get(CHARGING_STATUS_ENTITY_ID)) is not None
