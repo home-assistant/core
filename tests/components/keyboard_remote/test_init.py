@@ -1715,6 +1715,51 @@ async def test_assignment_during_node_event_leaves_no_node_unclaimed(
     remote.ungrab.assert_not_called()
 
 
+async def test_overflow_rewatches_by_id_directory(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a by-id device connects after an overflow dropped the by-id removal.
+
+    Without its IGNORED event the watch stays on the removed directory, and a
+    new one is only added when the directory is created while unwatched.
+    """
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _set_up(hass, fake_input, mock_config_entry)
+    assert fake_input.inotify is not None
+    # Dropping the watch here keeps unplug from emitting its IGNORED event
+    fake_input.inotify.watches.pop(DEVINPUT_BY_ID)
+    await fake_input.unplug(FAKE_DEVICE_REAL_PATH)
+    await fake_input.overflow()
+
+    replugged = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
+    )
+
+    replugged.grab.assert_called_once()
+
+
+async def test_by_id_watch_failing_after_overflow_is_retried(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a by-id watch that cannot be added after an overflow is retried."""
+    await _set_up(hass, fake_input, mock_config_entry)
+    fake_input.watch_errors[DEVINPUT_BY_ID] = OSError(errno.ENOSPC, "No space")
+
+    await fake_input.overflow()
+    fake_input.watch_errors.clear()
+    kbd = await fake_input.plug(
+        FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH
+    )
+
+    assert "Unable to watch /dev/input/by-id" in caplog.text
+    kbd.grab.assert_called_once()
+
+
 async def test_devices_added_during_queue_overflow_connect(
     hass: HomeAssistant,
     fake_input: FakeInput,

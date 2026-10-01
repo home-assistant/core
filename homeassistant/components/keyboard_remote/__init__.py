@@ -601,6 +601,14 @@ class KeyboardRemoteManager:
             # Removed devices fail their reads and release themselves, but
             # added ones would go unnoticed
             _LOGGER.warning("Missed input device events, checking all devices")
+            # The dropped events may include the by-id directory's removal,
+            # which would leave the watch on a directory that is gone. Adding
+            # it again returns the same watch if the directory is unchanged.
+            self._by_id_watcher = None
+            try:
+                self._watch_by_id()
+            except OSError as err:
+                _LOGGER.warning("Unable to watch %s: %s", DEVINPUT_BY_ID, err)
             await self._async_handle_unseen_links()
             return
 
