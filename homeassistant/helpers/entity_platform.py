@@ -922,9 +922,9 @@ class EntityPlatform:
             # same instance, so a new poll could then run concurrently
             # with it. Leaving it tracked keeps the entity correctly
             # treated as still-updating until `_async_handle_entity_update_result`
-            # clears the entry once its owning cycle's `gather` resolves
-            # (which, for a parallel cycle, only happens once every
-            # sibling entity in that same cycle has also finished).
+            # clears the entry once its own task completes (handled
+            # incrementally as each polling task finishes, not gated on
+            # every sibling in the same cycle finishing too).
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -1391,6 +1391,12 @@ class EntityPlatform:
             # own task so a hung entity can be identified and skipped by a
             # later cycle without waiting for it here.
             for entity in pollable_entities:
+                # The entity may have been removed from hass while this
+                # loop awaited an earlier entity's update; recheck here
+                # (not just once, up-front) or a removed entity's stale
+                # `hass=None` would reach `async_update_ha_state()` below.
+                if not (entity.hass and entity.should_poll):
+                    continue
                 # A newer, independent call may already have claimed this
                 # entity (started its own task for it) while this (now
                 # stale) cycle was stuck awaiting an earlier one. Compare
@@ -1406,7 +1412,10 @@ class EntityPlatform:
                 )
                 self._polling_tasks[id(entity)] = (cycle_id, task)
                 (result,) = await asyncio.gather(task, return_exceptions=True)
-                self._async_handle_entity_update_result(entity, task, result)
+                if fatal := self._async_handle_entity_update_result(
+                    entity, task, result
+                ):
+                    raise fatal
             return
 
         new_tasks = [
@@ -1431,10 +1440,11 @@ class EntityPlatform:
         Results are handled incrementally, rather than via a single
         `gather`, so a task that raises a fatal `BaseException` is not
         held hostage by a sibling that never finishes (e.g. one stuck in
-        a hung synchronous `update()`): it propagates as soon as it
-        occurs. The remaining, still-pending siblings are then drained in
-        a background task so their tracked entries are still cleared and
-        their own results still logged once they eventually finish.
+        a hung synchronous `update()`): it propagates as soon as its
+        whole completed batch has been handled. The remaining,
+        still-pending siblings are then drained in a background task so
+        their tracked entries are still cleared and their own results
+        still logged once they eventually finish.
         """
         task_entities = {task: entity for entity, task in tasks}
         pending = set(task_entities)
@@ -1442,17 +1452,25 @@ class EntityPlatform:
             done, pending = await asyncio.wait(
                 pending, return_when=asyncio.FIRST_COMPLETED
             )
+            fatal: BaseException | None = None
             for task in done:
                 entity = task_entities[task]
                 try:
                     result = task.exception()
                 except asyncio.CancelledError as err:
                     result = err
+                # Handle every task in this completed batch - not just the
+                # first fatal one encountered - so all of their tracked
+                # entries are cleared and their own results are still
+                # logged before we re-raise below.
                 if (
-                    pending
-                    and result is not None
-                    and not isinstance(result, (asyncio.CancelledError, Exception))
-                ):
+                    task_fatal := self._async_handle_entity_update_result(
+                        entity, task, result
+                    )
+                ) is not None and fatal is None:
+                    fatal = task_fatal
+            if fatal is not None:
+                if pending:
                     self.hass.async_create_background_task(
                         self._async_await_polling_tasks(
                             [(task_entities[t], t) for t in pending]
@@ -1462,17 +1480,15 @@ class EntityPlatform:
                             f"{self.domain}.{self.platform_name}"
                         ),
                     )
-                # May raise for a fatal BaseException, propagating it
-                # immediately instead of waiting on `pending` above.
-                self._async_handle_entity_update_result(entity, task, result)
+                raise fatal
 
     def _async_handle_entity_update_result(
         self,
         entity: Entity,
         task: asyncio.Task[None],
         result: BaseException | None,
-    ) -> None:
-        """Clear a finished polling task and log its outcome, if any."""
+    ) -> BaseException | None:
+        """Clear a finished polling task, log its outcome, and return any fatal exception to re-raise."""
         # Only clear the tracked task if it is still the one we started;
         # a fast-finishing entity could already have been re-scheduled by a
         # later cycle by the time we get here.
@@ -1482,10 +1498,11 @@ class EntityPlatform:
             del self._polling_tasks[id(entity)]
         if isinstance(result, asyncio.CancelledError):
             # Deliberately not re-raised: this task was cancelled on its
-            # own (e.g. by hass shutdown), independently of the outer
-            # gather here. Other entities in the same polling cycle must
-            # still be handled normally rather than having their own
-            # results discarded because a sibling's task was cancelled.
+            # own (e.g. by hass shutdown), independently of whichever
+            # `gather`/`wait` call is awaiting it here. Other entities in
+            # the same polling cycle must still be handled normally
+            # rather than having their own results discarded because a
+            # sibling's task was cancelled.
             self.logger.warning(
                 "Polling for entity %s was cancelled",
                 entity.entity_id,
@@ -1501,8 +1518,11 @@ class EntityPlatform:
             # gather(..., return_exceptions=True) can return other
             # BaseException subclasses too; the tracked task is already
             # cleared above, but these must still propagate instead of
-            # being silently suppressed.
-            raise result
+            # being silently suppressed. Return (rather than raise) it so
+            # the caller can finish handling any other results in the
+            # same completed batch first.
+            return result
+        return None
 
     @property
     def domain(self) -> str:

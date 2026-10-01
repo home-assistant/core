@@ -540,6 +540,59 @@ async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
     await hass.async_block_till_done()
 
 
+async def test_stale_poll_revalidates_entity_before_sequential_update(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a removed entity is rechecked before its sequential poll runs.
+
+    Regression contract: the sequential loop's `pollable_entities` is
+    snapshotted once, before any awaits; each entity must still be
+    rechecked (`hass`/`should_poll`) immediately before it is used, or an
+    entity removed (e.g. via `add_to_platform_abort`) while an earlier
+    sibling's update is still in flight gets polled anyway, raising a
+    spurious `RuntimeError` from `async_update_ha_state()`.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+
+    release_first = asyncio.Event()
+
+    first = MockEntity(should_poll=True)
+
+    async def _first_update() -> None:
+        await release_first.wait()
+
+    first.async_update = _first_update
+
+    second = MockEntity(should_poll=True)
+    second.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([first, second])
+
+    task = hass.async_create_task(platform_handle._async_update_entity_states())
+    await asyncio.sleep(0)
+
+    # Simulate the second entity being removed while the first entity's
+    # update is still in flight.
+    second.add_to_platform_abort()
+
+    release_first.set()
+    await task
+
+    second.async_update.assert_not_called()
+    assert "Attribute hass is None" not in caplog.text
+
+
 async def test_stale_poll_does_not_repoll_entity_claimed_by_finished_newer_cycle(
     hass: HomeAssistant,
 ) -> None:
@@ -734,6 +787,69 @@ async def test_polling_reraises_base_exceptions_without_waiting_for_hung_sibling
 
     assert id(failing) not in platform._polling_tasks
     assert id(hung) not in platform._polling_tasks
+
+
+async def test_polling_handles_every_completed_task_before_reraising_fatal_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test all tasks completed in the same batch are handled before raising.
+
+    Regression contract: `asyncio.wait(..., FIRST_COMPLETED)` can return
+    multiple completed tasks in the same batch; if a fatal
+    `BaseException` happens to be iterated first, every other task in
+    that same batch must still have its tracked entry cleared and its own
+    result logged before the fatal one is re-raised, rather than being
+    left to a background drain that only ever receives the still-pending
+    tasks.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    class _CustomBaseException(BaseException):
+        """A BaseException that is not Exception or CancelledError."""
+
+    async def _raise_custom_base_exception() -> None:
+        raise _CustomBaseException
+
+    async def _raise_normal_exception() -> None:
+        raise ValueError("boom")
+
+    fatal_entity = MockEntity(should_poll=True)
+    fatal_entity.entity_id = "test_domain.fatal"
+    failing_entity = MockEntity(should_poll=True)
+    failing_entity.entity_id = "test_domain.failing"
+
+    fatal_task = hass.async_create_task(_raise_custom_base_exception())
+    failing_task = hass.async_create_task(_raise_normal_exception())
+    await asyncio.sleep(0)  # let both tasks run to completion
+
+    real_wait = asyncio.wait
+
+    async def _ordered_wait(
+        tasks: Iterable[asyncio.Task[None]], **kwargs: Any
+    ) -> tuple[list[asyncio.Task[None]], set[asyncio.Task[None]]]:
+        # Force the fatal task to be iterated first within the `done`
+        # batch, as a real `asyncio.wait` call might happen to order it,
+        # since `done` is a set whose iteration order is not guaranteed.
+        _, pending = await real_wait(tasks, **kwargs)
+        return [fatal_task, failing_task], pending
+
+    with (
+        patch(
+            "homeassistant.helpers.entity_platform.asyncio.wait",
+            side_effect=_ordered_wait,
+        ),
+        pytest.raises(_CustomBaseException),
+    ):
+        await platform._async_await_polling_tasks(
+            [(fatal_entity, fatal_task), (failing_entity, failing_task)]
+        )
+
+    assert "Error updating entity" in caplog.text
+    assert failing_entity.entity_id in caplog.text
 
 
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
