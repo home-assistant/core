@@ -1,73 +1,41 @@
-"""Config flow for FMD integration."""
+"""Config flow for the FMD integration."""
 
 import logging
 from typing import Any
 
-from fmd_api import FmdClient
+from fmd_api import AuthenticationError, FmdApiException, FmdClient
 import probatio
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_USE_IMPERIAL, DEFAULT_POLLING_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def authenticate_and_get_artifacts(
-    url: str, fmd_id: str, password: str
-) -> dict[str, Any]:
-    """Create FMD API instance, validate connection, and export auth artifacts.
-
-    Returns auth artifacts dictionary that can be used for password-free resume.
-    """
-    api = await FmdClient.create(url, fmd_id, password, drop_password=True)
-
-    # Validate connection by fetching one location
-    locations = await api.get_locations(1)
-    locations = [loc for loc in locations if loc]
-
-    # Export authentication artifacts (password-free)
-    artifacts = await api.export_auth_artifacts()
-
-    # Close the temporary client (caller will recreate from artifacts)
-    await api.close()
-
-    return artifacts
+STEP_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_ID): str,
+        probatio.Required(CONF_PASSWORD): str,
+    }
+)
 
 
-def _normalize_artifacts(artifacts: Any) -> dict[str, Any]:
-    """Ensure artifacts are stored as a plain serializable dict.
-
-    Some tests or callers may pass in MagicMock/dict-like objects that implement
-    only `.get`. Home Assistant persists config entry data to JSON; ensure we
-    convert any mapping-like object into a real dict with expected keys to avoid
-    serialization errors (e.g., TypeError on MagicMock).
-    """
-    if isinstance(artifacts, dict):
-        return artifacts
-
-    # Best-effort extraction using .get for known keys returned by FMD API
-    required_keys = (
-        "base_url",
-        "fmd_id",
-        "access_token",
-        "private_key",
-        "password_hash",
+async def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate credentials and return auth artifacts for the config entry."""
+    api = await FmdClient.create(
+        user_input[CONF_URL], user_input[CONF_ID], user_input[CONF_PASSWORD]
     )
     try:
-        get = getattr(artifacts, "get", None)
-        if callable(get):
-            return {k: get(k, None) for k in required_keys}
-    except Exception:  # noqa: BLE001  # pragma: no cover - defensive
-        pass
-
-    # Fallback: try to coerce via dict() for mapping types
-    try:
-        return dict(artifacts)  # type: ignore[arg-type]
-    except Exception:  # noqa: BLE001  # pragma: no cover - defensive
-        _LOGGER.debug("Unable to normalize artifacts of type %s", type(artifacts))
-        return {}
+        locations = await api.get_locations(1)
+        if not [loc for loc in locations if loc]:
+            _LOGGER.debug("No locations returned during validation")
+        artifacts = await api.export_auth_artifacts()
+    finally:
+        await api.close()
+    return dict(artifacts)
 
 
 class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -79,54 +47,29 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_ID])
+            self._abort_if_unique_id_configured()
             try:
-                await self.async_set_unique_id(user_input["id"])
-                self._abort_if_unique_id_configured()
-
-                # Authenticate and get artifacts (password-free storage)
-                artifacts = await authenticate_and_get_artifacts(
-                    user_input["url"],
-                    user_input["id"],
-                    user_input["password"],
-                )
-
-                artifacts = _normalize_artifacts(artifacts)
-
-                # Build entry data with artifacts (no raw password stored)
-                entry_data = {
-                    "url": user_input["url"],
-                    "id": user_input["id"],
-                    "artifacts": artifacts,
-                    "polling_interval": user_input.get(
-                        "polling_interval", DEFAULT_POLLING_INTERVAL
-                    ),
-                    "allow_inaccurate_locations": user_input.get(
-                        "allow_inaccurate_locations", False
-                    ),
-                    CONF_USE_IMPERIAL: user_input.get(CONF_USE_IMPERIAL, False),
-                }
-
-                return self.async_create_entry(title=user_input["id"], data=entry_data)
-            except Exception:
-                _LOGGER.exception("Failed to connect to FMD server")
+                artifacts = await validate_input(user_input)
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except FmdApiException:
                 errors["base"] = "cannot_connect"
-
-        data_schema = probatio.Schema(
-            {
-                probatio.Required("url"): str,
-                probatio.Required("id"): str,
-                probatio.Required("password"): str,
-                probatio.Optional(
-                    "polling_interval", default=DEFAULT_POLLING_INTERVAL
-                ): int,
-                probatio.Optional("allow_inaccurate_locations", default=False): bool,
-                probatio.Optional(CONF_USE_IMPERIAL, default=False): bool,
-            }
-        )
+            except Exception:
+                _LOGGER.exception("Unexpected error connecting to FMD server")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_ID],
+                    data={
+                        CONF_URL: user_input[CONF_URL],
+                        CONF_ID: user_input[CONF_ID],
+                        "artifacts": artifacts,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=STEP_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={},
         )
