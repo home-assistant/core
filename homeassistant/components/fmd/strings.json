@@ -1,28 +1,28 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "FMD Configuration",
-        "description": "Set up your FMD (Find My Device) server connection",
-        "data": {
-          "url": "Server URL",
-          "id": "Account ID",
-          "password": "Password"
-        },
-        "data_description": {
-          "url": "The full URL to your FMD server including protocol",
-          "id": "Your FMD account ID",
-          "password": "Your FMD account password"
-        }
-      }
+    "abort": {
+      "already_configured": "This account is already configured"
     },
     "error": {
       "cannot_connect": "Failed to connect",
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "This account is already configured"
+    "step": {
+      "user": {
+        "data": {
+          "id": "Account ID",
+          "password": "Password",
+          "url": "Server URL"
+        },
+        "data_description": {
+          "id": "Your FMD account ID",
+          "password": "Your FMD account password",
+          "url": "The full URL to your FMD server including protocol"
+        },
+        "description": "Set up your FMD (Find My Device) server connection",
+        "title": "FMD Configuration"
+      }
     }
   }
 }
