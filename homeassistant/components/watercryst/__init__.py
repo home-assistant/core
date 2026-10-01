@@ -104,6 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     )
     await measurements.async_refresh()
 
+    if initial_state.online:
+        await measurements.async_config_entry_first_refresh()
+
     entry.runtime_data = RuntimeData(
         biocat_serial_number=info.biocat_serial,
         has_flow_rate_sensor=info.has_flow_rate_sensor,
