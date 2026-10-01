@@ -45,11 +45,23 @@ async def async_setup_entry(
     )
 
     entry_data = entry.runtime_data
-    assert entry_data.device_info is not None
-    if entry_data.device_info.voice_assistant_feature_flags_compat(
-        entry_data.api_version
-    ):
+    added = False
+
+    @callback
+    def _async_add_voice_assistant_selects() -> None:
+        """Add the voice assistant selects once the device offers one."""
+        nonlocal added
+        if added or (device_info := entry_data.device_info) is None:
+            return
+        if not device_info.voice_assistant_feature_flags_compat(entry_data.api_version):
+            return
+        added = True
         async_add_entities(_voice_assistant_selects(hass, entry_data))
+
+    _async_add_voice_assistant_selects()
+    entry.async_on_unload(
+        entry_data.async_subscribe_device_updated(_async_add_voice_assistant_selects)
+    )
 
 
 def _voice_assistant_selects(
