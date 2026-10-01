@@ -699,17 +699,34 @@ class _FailingRenameRestoreEntity(_RenameRestoreEntity):
         raise RuntimeError("Unexpected error")
 
 
+class _BlockingRenameRestoreEntity(_RenameRestoreEntity):
+    """Restore entity which blocks during removal until released."""
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        super().__init__()
+        self.removing = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Block until released."""
+        self.removing.set()
+        await self.release.wait()
+        await super().async_will_remove_from_hass()
+
+
 async def _async_add_rename_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     entity: _RenameRestoreEntity,
-) -> None:
+) -> MockEntityPlatform:
     """Register the entity as test.test and add it."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
     )
     platform = MockEntityPlatform(hass, domain="test")
     await platform.async_add_entities([entity])
+    return platform
 
 
 async def test_restore_after_entity_id_change(
@@ -882,3 +899,170 @@ async def test_restore_entity_id_changed_no_stored_state(hass: HomeAssistant) ->
     data.async_restore_entity_id_changed("test.test", "test.test2")
 
     assert list(data.last_states) == ["test.other"]
+
+
+@pytest.mark.usefixtures("hass_storage")
+async def test_dump_during_entity_id_change(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a dump while the entity is being renamed keeps its stored state."""
+    entity = _BlockingRenameRestoreEntity()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    data = async_get(hass)
+    entity.set_state("live", 3)
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await entity.removing.wait()
+    assert hass.states.get("test.test").state == "live"
+    # The entity moves its own stored state, even if the registry listener
+    # runs after the entity's removal has started
+    hass.bus.async_fire_internal(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": "test.test2",
+            "changes": {"entity_id": "test.test"},
+            "old_entity_id": "test.test",
+        },
+    )
+    await data.async_dump_states()
+    assert list(data.last_states) == ["test.test"]
+    entity.release.set()
+    await hass.async_block_till_done()
+
+    assert entity.restored == [
+        ("test.test", None, None),
+        ("test.test2", "live", {"count": 3}),
+    ]
+    assert list(data.last_states) == ["test.test2"]
+
+
+async def test_dump_during_entity_removal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a dump while the entity is being removed keeps its stored state."""
+    entity = _BlockingRenameRestoreEntity()
+    platform = await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+    data = async_get(hass)
+
+    remove_task = hass.async_create_task(entity.async_remove(force_remove=True))
+    await entity.removing.wait()
+    await data.async_dump_states()
+    stored = hass_storage[STORAGE_KEY]["data"]
+    assert [item["state"]["entity_id"] for item in stored] == ["test.test"]
+    assert stored[0]["state"]["state"] == "live"
+    entity.release.set()
+    await remove_task
+    assert hass.states.get("test.test") is None
+
+    # Once removed, the stored state is kept by later dumps
+    await data.async_dump_states()
+    assert list(data.last_states) == ["test.test"]
+
+    new_entity = _RenameRestoreEntity()
+    await platform.async_add_entities([new_entity])
+    assert new_entity.restored == [("test.test", "live", {"count": 3})]
+
+
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="not_loaded"),
+        pytest.param(er.RegistryEntryDisabler.USER, id="disabled"),
+    ],
+)
+async def test_entity_id_change_not_loaded(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test changing the entity_id of an entity which is not loaded."""
+    data = async_get(hass)
+    entity_registry.async_get_or_create(
+        "test",
+        "test_platform",
+        "5678",
+        suggested_object_id="test",
+        disabled_by=disabled_by,
+    )
+    data.last_states["test.test"] = StoredState(
+        State("test.test", "stored"), _CounterExtraData(3), dt_util.utcnow()
+    )
+    data.last_states["test.test2"] = StoredState(
+        State("test.test2", "foreign"), _CounterExtraData(99), dt_util.utcnow()
+    )
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+
+    assert list(data.last_states) == ["test.test2"]
+    stored_state = data.last_states["test.test2"]
+    assert stored_state.state.entity_id == "test.test2"
+    assert stored_state.state.state == "stored"
+    assert stored_state.extra_data.as_dict() == {"count": 3}
+
+
+async def test_entity_id_change_after_unload(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test changing the entity_id of an entity removed without a dump since."""
+    entity = _RenameRestoreEntity()
+    platform = await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+    await entity.async_remove()
+    assert hass.states.get("test.test").state == "unavailable"
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+
+    new_entity = _RenameRestoreEntity()
+    await platform.async_add_entities([new_entity])
+    assert new_entity.restored == [("test.test2", "live", {"count": 3})]
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "expected_restored"),
+    [
+        pytest.param(
+            _RenameRestoreEntity,
+            ("test.test2", "live", {"count": 3}),
+            id="own_state",
+        ),
+        pytest.param(
+            _FailingRenameRestoreEntity,
+            ("test.test2", None, None),
+            id="failing_extra_data",
+        ),
+    ],
+)
+async def test_entity_id_change_and_disable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_class: type[_RenameRestoreEntity],
+    expected_restored: tuple[str, str | None, dict[str, Any] | None],
+) -> None:
+    """Test changing the entity_id and disabling a loaded entity at once."""
+    data = async_get(hass)
+    data.last_states["test.test2"] = StoredState(
+        State("test.test2", "foreign"), _CounterExtraData(99), dt_util.utcnow()
+    )
+    entity = entity_class()
+    platform = await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+
+    entity_registry.async_update_entity(
+        "test.test",
+        new_entity_id="test.test2",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("test.test") is None
+    assert "test.test" not in data.last_states
+
+    entity_registry.async_update_entity("test.test2", disabled_by=None)
+    new_entity = _RenameRestoreEntity()
+    await platform.async_add_entities([new_entity])
+    assert new_entity.restored == [expected_restored]
