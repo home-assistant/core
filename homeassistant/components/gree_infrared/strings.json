@@ -50,7 +50,57 @@
       "turbo": { "name": "Turbo" },
       "light": { "name": "Display light" },
       "health": { "name": "Health ionizer" },
-      "xfan": { "name": "X-Fan" }
+      "xfan": { "name": "X-Fan" },
+      "sleep": { "name": "Sleep" },
+      "ifeel": { "name": "I-Feel" },
+      "econo": { "name": "Econo" }
+    },
+    "select": {
+      "fresh_air": {
+        "name": "Fresh air",
+        "state": {
+          "off": "Off",
+          "level_1": "Level 1",
+          "level_2": "Level 2"
+        }
+      },
+      "swing_v_position": {
+        "name": "Vertical vane position",
+        "state": {
+          "auto": "Auto"
+        }
+      },
+      "swing_h_position": {
+        "name": "Horizontal vane position",
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "max_left": "Maximum left",
+          "left": "Left",
+          "middle": "Middle",
+          "right": "Right",
+          "max_right": "Maximum right"
+        }
+      },
+      "display_temp": {
+        "name": "Display temperature",
+        "state": {
+          "off": "Off",
+          "setpoint": "Setpoint",
+          "indoor": "Indoor",
+          "outdoor": "Outdoor"
+        }
+      },
+      "fahrenheit": {
+        "name": "Unit display scale",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      }
+    },
+    "number": {
+      "timer_hours": { "name": "Timer" }
     }
   }
 }
