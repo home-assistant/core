@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_DESCRIPTION,
     CONF_ID,
+    CONF_STORED_VARIABLES,
     CONF_TRIGGER,
     CONF_TRIGGERS,
     CONF_VARIABLES,
@@ -61,6 +62,20 @@ def _backward_compat_schema(value: Any | None) -> Any:
     return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
 
 
+def _validate_stored_variables(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that stored variables are not also defined as run variables."""
+    if CONF_STORED_VARIABLES not in config:
+        return config
+    stored_names = config[CONF_STORED_VARIABLES].variables.keys()
+    for key in (CONF_VARIABLES, CONF_TRIGGER_VARIABLES):
+        if key in config and (overlap := stored_names & config[key].variables.keys()):
+            raise probatio.Invalid(
+                f"Stored variables must not also be defined in {key}: "
+                f"{', '.join(sorted(overlap))}"
+            )
+    return config
+
+
 PLATFORM_SCHEMA = probatio.All(
     _backward_compat_schema,
     cv.deprecated(CONF_HIDE_ENTITY),
@@ -77,10 +92,12 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             probatio.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            probatio.Optional(CONF_STORED_VARIABLES): cv.STORED_VARIABLES_SCHEMA,
             probatio.Required(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
         },
         script.SCRIPT_MODE_SINGLE,
     ),
+    _validate_stored_variables,
 )
 
 AUTOMATION_BLUEPRINT_SCHEMA = probatio.All(

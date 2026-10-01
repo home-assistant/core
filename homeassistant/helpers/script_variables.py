@@ -1,13 +1,16 @@
 """Script variables."""
 
 from collections import ChainMap, UserDict
-from collections.abc import Mapping
+from collections.abc import KeysView, Mapping
 from dataclasses import dataclass, field
 from typing import Any, cast, override
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.json import json_loads
 
 from . import template
+from .json import json_dumps
 
 
 class ScriptVariables:
@@ -87,6 +90,60 @@ class ScriptVariables:
         return self.variables
 
 
+class StoredVariables:
+    """Class to hold variables which are stored across script runs.
+
+    A single instance is shared by all runs of a script. The stored values
+    are read live by every run, so `values` must only be mutated in place.
+    """
+
+    def __init__(self, defaults: ScriptVariables) -> None:
+        """Initialize stored variables with their default values."""
+        self.defaults = defaults
+        self.values: dict[str, Any] = {}
+
+    @property
+    def names(self) -> KeysView[str]:
+        """Return the names of the stored variables."""
+        return self.defaults.variables.keys()
+
+    @callback
+    def async_render(
+        self, hass: HomeAssistant, run_variables: Mapping[str, Any] | None
+    ) -> dict[str, Any]:
+        """Return the run variables with the stored values on top.
+
+        Run variables with the name of a stored variable are discarded.
+        Defaults of stored variables without a value are rendered and stored.
+        """
+        variables = {
+            key: value
+            for key, value in (run_variables or {}).items()
+            if key not in self.names
+        }
+        if missing := [name for name in self.names if name not in self.values]:
+            rendered = self.defaults.async_render(hass, {**variables, **self.values})
+            for name in missing:
+                self.assign(name, rendered[name])
+        return {**variables, **self.values}
+
+    def assign(self, key: str, value: Any) -> None:
+        """Store a value, normalized to JSON compatible types."""
+        try:
+            self.values[key] = json_loads(json_dumps(value))
+        except (TypeError, ValueError) as err:
+            raise HomeAssistantError(
+                f"Stored variable '{key}' must be JSON serializable: {err}"
+            ) from err
+
+    def restore(self, values: Mapping[str, Any]) -> None:
+        """Restore previously stored values, dropping unknown variables."""
+        self.values.clear()
+        self.values.update(
+            {key: value for key, value in values.items() if key in self.names}
+        )
+
+
 @dataclass
 class _ParallelData:
     """Data used in each parallel sequence."""
@@ -130,6 +187,9 @@ class ScriptRunVariables(UserDict[str, Any]):
     _local_data: dict[str, Any] | None = None
     # _parallel_data is used for each parallel sequence
     _parallel_data: _ParallelData | None = None
+    # _stored_variables is only set on the top-level instance; the stored
+    # values form the bottom layer of the scope chain and are read live
+    _stored_variables: StoredVariables | None = None
 
     # _non_parallel_scope includes all scopes all the way to
     # the most recent parallel split
@@ -141,17 +201,37 @@ class ScriptRunVariables(UserDict[str, Any]):
     def create_top_level(
         cls,
         initial_data: Mapping[str, Any] | None = None,
+        *,
+        stored_variables: StoredVariables | None = None,
     ) -> ScriptRunVariables:
-        """Create a new top-level ScriptRunVariables."""
+        """Create a new top-level ScriptRunVariables.
+
+        :param stored_variables: Variables stored across runs. Their values
+            are read live and assignments to them are stored immediately.
+            Initial data with the name of a stored variable is ignored.
+        """
         local_data: dict[str, Any] = {}
-        non_parallel_scope = full_scope = ChainMap(local_data)
+        if stored_variables is None:
+            non_parallel_scope = full_scope = ChainMap(local_data)
+        else:
+            non_parallel_scope = full_scope = ChainMap(
+                local_data, stored_variables.values
+            )
         self = cls(
             _local_data=local_data,
             _non_parallel_scope=non_parallel_scope,
             _full_scope=full_scope,
+            _stored_variables=stored_variables,
         )
         if initial_data is not None:
-            self.update(initial_data)
+            stored_names = stored_variables.names if stored_variables else ()
+            self.update(
+                {
+                    key: value
+                    for key, value in initial_data.items()
+                    if key not in stored_names
+                }
+            )
         return self
 
     def enter_scope(self, *, parallel: bool = False) -> ScriptRunVariables:
@@ -215,6 +295,7 @@ class ScriptRunVariables(UserDict[str, Any]):
         Value is always assigned to the variable in the nearest
         scope, in which it is defined. If the variable is not
         defined at all, it is created in the top-level scope.
+        Assignments to stored variables are stored immediately.
 
         :param parallel_protected: Whether variable is to be
             protected in parallel sequences.
@@ -224,6 +305,12 @@ class ScriptRunVariables(UserDict[str, Any]):
             return
 
         if self._parent is None:
+            if (
+                self._stored_variables is not None
+                and key in self._stored_variables.names
+            ):
+                self._stored_variables.assign(key, value)
+                return
             assert self._local_data is not None  # top level always has local data
             self._local_data[key] = value
             return

@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_ID,
     CONF_MODE,
+    CONF_STORED_VARIABLES,
     CONF_TRIGGERS,
     CONF_VARIABLES,
 )
@@ -18,7 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition as condition_helper, issue_registry as ir
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import CONF_MAX, CONF_MAX_EXCEEDED, Script
-from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.script_variables import ScriptVariables, StoredVariables
 from homeassistant.helpers.typing import ConfigType
 
 from .config import AutomationConfig, ValidationStatus
@@ -116,6 +117,10 @@ async def _create_automation_entities(
 
         initial_state: bool | None = config_block.get(CONF_INITIAL_STATE)
 
+        stored_variables: StoredVariables | None = None
+        if CONF_STORED_VARIABLES in config_block:
+            stored_variables = StoredVariables(config_block[CONF_STORED_VARIABLES])
+
         action_script = Script(
             hass,
             config_block[CONF_ACTIONS],
@@ -129,6 +134,7 @@ async def _create_automation_entities(
             # We don't pass variables here
             # Automation will already render them to use them in the condition
             # and so will pass them on to the script.
+            stored_variables=stored_variables,
         )
 
         if CONF_CONDITIONS in config_block:
@@ -160,6 +166,7 @@ async def _create_automation_entities(
             initial_state,
             variables,
             config_block.get(CONF_TRIGGER_VARIABLES),
+            stored_variables,
             automation_config.raw_config,
             automation_config.raw_blueprint_inputs,
             config_block[CONF_TRACE],

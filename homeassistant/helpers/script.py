@@ -56,6 +56,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
     CONF_STOP,
+    CONF_STORED_VARIABLES,
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
@@ -95,7 +96,8 @@ from . import (
 from .condition import ConditionChecker, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
-from .script_variables import ScriptRunVariables, ScriptVariables
+from .restore_state import ExtraStoredData
+from .script_variables import ScriptRunVariables, ScriptVariables, StoredVariables
 from .template import Template
 from .trace import (
     TraceElement,
@@ -1548,6 +1550,28 @@ class ScriptRunResult:
     variables: Mapping[str, Any]
 
 
+@dataclass
+class StoredVariablesExtraStoredData(ExtraStoredData):
+    """Object to hold the stored variables of a script entity."""
+
+    values: dict[str, Any]
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored variables."""
+        return {CONF_STORED_VARIABLES: self.values}
+
+    @classmethod
+    def from_dict(
+        cls, restored: dict[str, Any]
+    ) -> StoredVariablesExtraStoredData | None:
+        """Initialize stored variables from a dict."""
+        values = restored.get(CONF_STORED_VARIABLES)
+        if not isinstance(values, dict):
+            return None
+        return cls(values)
+
+
 class Script:
     """Representation of a script."""
 
@@ -1568,6 +1592,7 @@ class Script:
         script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
+        stored_variables: StoredVariables | None = None,
         enabled: bool = True,
     ) -> None:
         """Initialize the script.
@@ -1620,6 +1645,7 @@ class Script:
         self._sequence_scripts: dict[int, Script] = {}
         self._unloaded = False
         self.variables = variables
+        self._stored_variables = stored_variables
 
     def __del__(self) -> None:
         """Clean up when the script is deleted."""
@@ -1981,17 +2007,23 @@ class Script:
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
         if self.top_level:
-            if self.variables:
-                try:
+            try:
+                if self._stored_variables:
+                    run_variables = self._stored_variables.async_render(
+                        self._hass, run_variables
+                    )
+                if self.variables:
                     run_variables = self.variables.async_render(
                         self._hass,
                         run_variables,
                     )
-                except exceptions.TemplateError as err:
-                    self._log("Error rendering variables: %s", err, level=logging.ERROR)
-                    raise
+            except exceptions.HomeAssistantError as err:
+                self._log("Error rendering variables: %s", err, level=logging.ERROR)
+                raise
 
-            variables = ScriptRunVariables.create_top_level(run_variables)
+            variables = ScriptRunVariables.create_top_level(
+                run_variables, stored_variables=self._stored_variables
+            )
             variables["context"] = context
         else:
             # This is not the top level script, run_variables

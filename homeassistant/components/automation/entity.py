@@ -41,8 +41,13 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import Script, ScriptRunResult, script_stack_cv
-from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.script import (
+    Script,
+    ScriptRunResult,
+    StoredVariablesExtraStoredData,
+    script_stack_cv,
+)
+from homeassistant.helpers.script_variables import ScriptVariables, StoredVariables
 from homeassistant.helpers.trace import (
     TraceElement,
     script_execution_set,
@@ -281,6 +286,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         initial_state: bool | None,
         variables: ScriptVariables | None,
         trigger_variables: ScriptVariables | None,
+        stored_variables: StoredVariables | None,
         raw_config: ConfigType | None,
         blueprint_inputs: ConfigType | None,
         trace_config: ConfigType,
@@ -297,6 +303,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._logger = LOGGER
         self._variables = variables
         self._trigger_variables = trigger_variables
+        self._stored_variables = stored_variables
         self.raw_config = raw_config
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
@@ -316,6 +323,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self.action_script.supports_max:
             attrs[AutomationEntityStateAttribute.MAX] = self.action_script.max_runs
         return attrs
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> StoredVariablesExtraStoredData | None:
+        """Return the stored variables to be restored."""
+        if self._stored_variables is None:
+            return None
+        return StoredVariablesExtraStoredData(dict(self._stored_variables.values))
 
     @property
     @override
@@ -415,6 +430,18 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         self._async_update_logger()
 
+        if (
+            self._stored_variables is not None
+            and (extra_data := await self.async_get_last_extra_data()) is not None
+            and (
+                stored_data := StoredVariablesExtraStoredData.from_dict(
+                    extra_data.as_dict()
+                )
+            )
+            is not None
+        ):
+            self._stored_variables.restore(stored_data.values)
+
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get(
@@ -498,13 +525,17 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if state := self.hass.states.get(self.entity_id):
                 this = state.as_dict()
             variables: dict[str, Any] = {"this": this, **(run_variables or {})}
-            if self._variables:
-                try:
+            try:
+                if self._stored_variables:
+                    variables = self._stored_variables.async_render(
+                        self.hass, variables
+                    )
+                if self._variables:
                     variables = self._variables.async_render(self.hass, variables)
-                except TemplateError as err:
-                    self._logger.error("Error rendering variables: %s", err)
-                    automation_trace.set_error(err)
-                    return None
+            except HomeAssistantError as err:
+                self._logger.error("Error rendering variables: %s", err)
+                automation_trace.set_error(err)
+                return None
 
             # Prepare tracing the automation
             automation_trace.set_trace(trace_get())
