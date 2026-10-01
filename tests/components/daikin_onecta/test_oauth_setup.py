@@ -1,17 +1,19 @@
 """Tests for OAuth2 setup error handling (HA 2026.3+)."""
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from aiohttp import RequestInfo
+import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.exceptions import OAuth2TokenRequestError
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
-from homeassistant.helpers.config_entry_oauth2_flow import ImplementationUnavailableError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from tests.common import MockConfigEntry
 from yarl import URL
 
