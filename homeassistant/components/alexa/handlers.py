@@ -1619,9 +1619,9 @@ async def async_api_adjust_range(
     if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (
+        if (
             current := entity.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
-        ):
+        ) is None:
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
@@ -1637,7 +1637,7 @@ async def async_api_adjust_range(
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
-        if not current:
+        if current is None:
             msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
@@ -1737,7 +1737,7 @@ async def async_api_adjust_range(
     elif instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = valve.SERVICE_SET_VALVE_POSITION
-        if not (current := entity.attributes.get(valve.ATTR_POSITION)):
+        if (current := entity.attributes.get(valve.ATTR_POSITION)) is None:
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))

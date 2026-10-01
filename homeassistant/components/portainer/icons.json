@@ -38,6 +38,12 @@
       "container_health_state": {
         "default": "mdi:heart-pulse"
       },
+      "container_restart_count": {
+        "default": "mdi:restart"
+      },
+      "container_started_at": {
+        "default": "mdi:clock-start"
+      },
       "container_state": {
         "default": "mdi:state-machine"
       },
