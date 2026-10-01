@@ -1398,11 +1398,11 @@ class Entity(
 
         try:
             if self._platform_state is EntityPlatformState.REMOVED:
-                # This update may have been queued behind another entity's
-                # permit; the entity can be removed while it waits, and its
-                # removal teardown may already have released what its
-                # update() depends on, so it must not run now that a
-                # permit is finally available.
+                # The task for this update may have been queued behind
+                # another entity's permit; if this entity was removed while
+                # it waited, its removal teardown may already have released
+                # resources its update() depends on, so skip running it now
+                # that a permit is finally available.
                 return
             if hasattr(self, "async_update"):
                 await self.async_update()
