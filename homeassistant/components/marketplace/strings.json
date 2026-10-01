@@ -69,7 +69,7 @@
       "message": "The archive of the catalog version can not be installed as is: {error}"
     },
     "catalog_invalid_json": {
-      "message": "The catalog sent {endpoint} that is not valid JSON: {error}"
+      "message": "The catalog returned invalid JSON for {endpoint}: {error}"
     },
     "catalog_manifest_unusable": {
       "message": "There is no usable {path} in the catalog version."
@@ -156,7 +156,7 @@
       "message": "GitHub limits how often the Marketplace can reach it without a GitHub connection. Try again later, or connect GitHub in the Marketplace for a higher limit."
     },
     "install_checks_failed": {
-      "message": "Could not install {repository}, see the log for details."
+      "message": "Could not install {repository}. Check the Home Assistant logs for details."
     },
     "install_failed": {
       "message": "Installing {repository} failed: {error}"
@@ -261,7 +261,7 @@
       "message": "{repository} is not installed."
     },
     "repository_removed": {
-      "message": "{repository} was removed from the Marketplace."
+      "message": "{repository} was removed from the catalog."
     },
     "repository_skipped": {
       "message": "{repository} is skipped."
@@ -303,7 +303,7 @@
       "message": "The {directory} theme folder belongs to {owner}."
     },
     "uninstall_failed": {
-      "message": "Could not uninstall {repository}, see the log for details."
+      "message": "Could not uninstall {repository}. Check the Home Assistant logs for details."
     },
     "validation_failed": {
       "message": "Checking {repository} failed: {error}"
@@ -318,7 +318,7 @@
       "message": "Version {version} has no files."
     },
     "version_without_repository_manifest": {
-      "message": "Version {version} of {repository} has no hacs.json, which installing needs."
+      "message": "Version {version} of {repository} is missing the hacs.json file required for installation."
     },
     "warning_not_accepted": {
       "message": "Open the Marketplace and read the warning first, installing and updating work once it is accepted."
@@ -349,12 +349,12 @@
       "title": "Python scripts are no longer managed by the Marketplace"
     },
     "removed": {
-      "description": "`{name}` is removed from the Marketplace and no longer gets updates.\n\nThe reason given: {reason}\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
-      "title": "Repository removed from the Marketplace"
+      "description": "`{name}` was removed from the catalog. It stays installed, but no longer gets updates.\n\nThe reason given: {reason}\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
+      "title": "Repository removed from the catalog"
     },
     "removed_without_reason": {
-      "description": "`{name}` is removed from the Marketplace and no longer gets updates.\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
-      "title": "Repository removed from the Marketplace"
+      "description": "`{name}` was removed from the catalog. It stays installed, but no longer gets updates.\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
+      "title": "Repository removed from the catalog"
     },
     "restart_required": {
       "fix_flow": {

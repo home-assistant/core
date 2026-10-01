@@ -1268,7 +1268,10 @@ async def test_uninstall_repository_failure_is_answered(
     assert not response["success"]
     assert response["error"] == {
         "code": "uninstall_failed",
-        "message": f"Could not uninstall {REPOSITORY_INTEGRATION}, see the log for details",
+        "message": (
+            f"Could not uninstall {REPOSITORY_INTEGRATION}. "
+            "Check the Home Assistant logs for details"
+        ),
         "translation_key": "uninstall_failed",
         "translation_domain": DOMAIN,
         "translation_placeholders": {"repository": REPOSITORY_INTEGRATION},
