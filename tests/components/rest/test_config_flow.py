@@ -242,7 +242,7 @@ async def test_sensor_subentry_flow_payload_template_error(
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test a subentry flow for a resource in error."""
+    """Test a subentry flow for an resource error not handled by the coordinator or RestData."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
@@ -261,7 +261,12 @@ async def test_sensor_subentry_flow_payload_template_error(
         context={"source": config_entries.SOURCE_USER, "entry_id": entry.entry_id},
     )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "template_error"
+    assert result["reason"] == "endpoint_error"
+    assert (
+        "endpoint_error_message" in result["description_placeholders"]
+        and "ZeroDivisionError"
+        in result["description_placeholders"]["endpoint_error_message"]
+    )
 
 
 async def test_sensor_subentry_flow_invalid_json_attrs_path(

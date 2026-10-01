@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from types import MethodType
-from typing import Any, cast, override
+from typing import Any, override
 from xml.parsers.expat import ExpatError
 
 import probatio
@@ -331,10 +331,13 @@ class RestSubentryFlow(ConfigSubentryFlow):
             await entry.runtime_data.async_refresh()
         rest_data = None
         if not entry.runtime_data.last_update_success:
-            ex = cast(HomeAssistantError, entry.runtime_data.last_exception)
+            ex = entry.runtime_data.last_exception
+            if isinstance(ex, HomeAssistantError):
+                reason = ex.translation_key
+                description_placeholders = ex.translation_placeholders
             return self.async_abort(
-                reason=ex.translation_key or "endpoint_error",
-                description_placeholders=ex.translation_placeholders
+                reason=reason or "endpoint_error",
+                description_placeholders=description_placeholders
                 or {"endpoint_error_message": str(ex)},
             )
         try:

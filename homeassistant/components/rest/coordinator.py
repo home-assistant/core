@@ -7,7 +7,6 @@ from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -63,13 +62,7 @@ class RestCoordinator(DataUpdateCoordinator[None]):
 
     @override
     async def _async_update_data(self) -> None:
-        try:
-            await super()._async_update_data()
-        except TemplateError as ex:
-            ex.translation_domain = DOMAIN
-            ex.translation_key = "template_error"
-            ex.translation_placeholders = {"template_error_message": str(ex)}
-            raise
+        await super()._async_update_data()
         if (
             self.config_entry is not None
             and self.rest.data is None

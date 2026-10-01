@@ -3,7 +3,7 @@
     "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
     "availability_section": "Availability Options",
     "config_entry_not_loaded": "The configuration entry for this resource is not loaded, unable to create an entity until the entry is loaded.",
-    "endpoint_error": "Error communicating with resource: {endpoint_error_message}",
+    "endpoint_error": "Error communicating with resource: {endpoint_error_message}.  Check the resource configuration and if the resource is available.",
     "force_update": "Force Update",
     "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value. See RESTful Sensor [Force update]({docs_url_restful_sensor_force_update}).",
     "icon": "Icon",
