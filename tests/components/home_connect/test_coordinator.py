@@ -29,6 +29,7 @@ from aiohomeconnect.model.error import (
     UnauthorizedError,
 )
 from aiohomeconnect.model.program import (
+    EnumerateProgram,
     Option,
     OptionKey,
     Program,
@@ -1002,6 +1003,127 @@ async def test_fetch_base_program_options_when_favorite_program_event(
 
     client.get_available_program.assert_awaited_once_with(
         appliance.ha_id, program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_fetch_options_for_selected_program_when_active_program_finishes(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test selected program options are fetched when the active program finishes.
+
+    This should update the options to the selected program options; otherwise,
+    we would keep the options from the last active program, which is no longer active.
+    """
+    appliance_ha_id = appliance.ha_id
+
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(
+                    ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                    ProgramKey.DISHCARE_DISHWASHER_AUTO_1.value,
+                )
+            ],
+            Program(
+                key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                options=[
+                    Option(
+                        value=True,
+                        key=OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+                    )
+                ],
+            ),
+            Program(
+                key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            ),
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    selected_program_option_entity_id = "switch.dishwasher_half_load"
+    active_program_option_entity_id = "switch.dishwasher_silence_on_demand"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.states.is_state(active_program_option_entity_id, STATE_UNAVAILABLE)
+    assert not hass.states.get(selected_program_option_entity_id)
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=None,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_awaited_once_with(
+        appliance_ha_id, program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    )
+    assert hass.states.is_state(active_program_option_entity_id, STATE_UNAVAILABLE)
+    assert not hass.states.is_state(
+        selected_program_option_entity_id, STATE_UNAVAILABLE
     )
 
 
