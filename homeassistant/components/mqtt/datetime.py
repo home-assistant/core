@@ -13,12 +13,7 @@ import probatio
 from homeassistant.components import datetime
 from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_VALUE_TEMPLATE,
-    Platform,
-)
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,7 +37,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import mqtt_entity_common_schema
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +55,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         probatio.Optional(CONF_TIMEZONE): str,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-).extend(mqtt_entity_common_schema(Platform.DATETIME).schema)
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)

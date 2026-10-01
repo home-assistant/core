@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
     MAX_LENGTH_STATE_STATE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -41,7 +40,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import mqtt_entity_common_schema
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +81,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         probatio.Optional(CONF_PATTERN): cv.is_regex,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-).extend(mqtt_entity_common_schema(Platform.TEXT).schema)
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 DISCOVERY_SCHEMA = probatio.All(

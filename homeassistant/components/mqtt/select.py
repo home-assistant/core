@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_OPTIONS,
     CONF_VALUE_TEMPLATE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -36,7 +35,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import mqtt_entity_common_schema
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         probatio.Required(CONF_OPTIONS): cv.ensure_list,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-).extend(mqtt_entity_common_schema(Platform.SELECT).schema)
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 DISCOVERY_SCHEMA = probatio.All(
     PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)

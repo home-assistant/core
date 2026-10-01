@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -59,7 +58,7 @@ from .const import (
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .schemas import mqtt_entity_common_schema
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +125,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
-).extend(mqtt_entity_common_schema(Platform.VALVE).schema)
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = probatio.All(_PLATFORM_SCHEMA_BASE, _validate_and_add_defaults)
 

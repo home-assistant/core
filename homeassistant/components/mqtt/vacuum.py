@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_IDLE,
     STATE_PAUSED,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -35,7 +34,7 @@ from .config import MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, ReceiveMessage
-from .schemas import mqtt_entity_common_schema
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
 PARALLEL_UPDATES = 0
@@ -187,7 +186,7 @@ _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
-).extend(mqtt_entity_common_schema(Platform.VACUUM).schema)
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = probatio.All(_BASE_SCHEMA, validate_clean_area_config)
 DISCOVERY_SCHEMA = probatio.All(
