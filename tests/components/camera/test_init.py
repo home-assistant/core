@@ -32,11 +32,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_jpeg
 
-from tests.common import (
-    MockEntityPlatform,
-    async_fire_time_changed,
-    setup_test_component_platform,
-)
+from tests.common import async_fire_time_changed, setup_test_component_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -821,38 +817,77 @@ async def test_entity_picture_url_changes_on_token_update(hass: HomeAssistant) -
     assert "token=" in new_entity_picture
 
 
+class _RenameCamera(Camera):
+    """Camera running no add or remove code of its own, renamed in place."""
+
+    _attr_name = "Rename me"
+    _attr_supported_features = camera.CameraEntityFeature.STREAM
+    _attr_unique_id = "rename_me"
+
+    async def stream_source(self) -> str | None:
+        """Return the stream source."""
+        return STREAM_SOURCE
+
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes:
+        """Return an image."""
+        return b"Test"
+
+
+class _ReAddedRenameCamera(_RenameCamera):
+    """Camera extending async_added_to_hass, removed and re-added on rename."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+@pytest.mark.parametrize(
+    ("camera_class", "re_added"),
+    [
+        pytest.param(_RenameCamera, False, id="in_place"),
+        pytest.param(_ReAddedRenameCamera, True, id="remove_and_add"),
+    ],
+)
 async def test_entity_picture_url_changes_on_entity_id_change(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
+    camera_class: type[_RenameCamera],
+    re_added: bool,
 ) -> None:
-    """Test the entity picture follows an entity_id change."""
-
-    class RenameCamera(Camera):
-        _attr_name = "Rename me"
-        _attr_unique_id = "rename_me"
-
-        async def async_camera_image(
-            self, width: int | None = None, height: int | None = None
-        ) -> bytes:
-            return b"Test"
-
-    setup_test_component_platform(hass, DOMAIN, [RenameCamera()])
+    """Test the entity picture, proxy and WebRTC provider follow an entity_id change."""
+    camera_obj = camera_class()
+    setup_test_component_platform(hass, DOMAIN, [camera_obj])
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
     await hass.async_block_till_done()
+    provider = SomeTestProvider()
+    async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
+    assert camera_obj.webrtc_provider is provider
 
     old_picture = hass.states.get("camera.rename_me").attributes["entity_picture"]
     assert old_picture.startswith("/api/camera_proxy/camera.rename_me?token=")
 
-    entity_registry.async_update_entity(
-        "camera.rename_me", new_entity_id="camera.renamed"
-    )
-    await hass.async_block_till_done()
+    with (
+        patch.object(provider, "async_register_camera", AsyncMock()) as mock_register,
+        patch.object(
+            provider, "async_unregister_camera", AsyncMock()
+        ) as mock_unregister,
+    ):
+        entity_registry.async_update_entity(
+            "camera.rename_me", new_entity_id="camera.renamed"
+        )
+        await hass.async_block_till_done()
 
     assert hass.states.get("camera.rename_me") is None
     new_picture = hass.states.get("camera.renamed").attributes["entity_picture"]
     # The token is unchanged, only the entity_id in the URL follows the rename
     assert new_picture == old_picture.replace("camera.rename_me", "camera.renamed")
+    # The WebRTC provider is only registered again when re-added
+    assert camera_obj.webrtc_provider is provider
+    assert mock_register.call_count == int(re_added)
+    assert mock_unregister.call_count == int(re_added)
 
     client = await hass_client()
     resp = await client.get(new_picture)
@@ -1232,84 +1267,3 @@ async def test_camera_prefs_update_provider_callback_error(
     assert msg["success"]
     assert msg["result"][PREF_PRELOAD_STREAM] is True
     mock_prefs_update.assert_called_once_with(camera_obj)
-
-
-class _RenameCamera(Camera):
-    """Camera with a unique id, which runs no add or remove code of its own."""
-
-    _attr_name = "Rename"
-    _attr_supported_features = camera.CameraEntityFeature.STREAM
-    _attr_unique_id = "rename_camera"
-
-    async def stream_source(self) -> str | None:
-        """Return the stream source."""
-        return STREAM_SOURCE
-
-    async def async_camera_image(
-        self, width: int | None = None, height: int | None = None
-    ) -> bytes | None:
-        """Return an image."""
-        return b"image"
-
-
-class _AddedRenameCamera(_RenameCamera):
-    """Camera extending async_added_to_hass, which is removed and re-added."""
-
-    async def async_added_to_hass(self) -> None:
-        """Run when the entity has been added to hass."""
-
-
-@pytest.mark.parametrize(
-    ("camera_class", "re_added"),
-    [
-        pytest.param(_RenameCamera, False, id="in_place"),
-        pytest.param(_AddedRenameCamera, True, id="remove_and_add"),
-    ],
-)
-async def test_entity_id_changed(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    entity_registry: er.EntityRegistry,
-    camera_class: type[_RenameCamera],
-    re_added: bool,
-) -> None:
-    """Test entity_picture and the proxy follow an entity_id change."""
-    await async_setup_component(hass, DOMAIN, {})
-    provider = SomeTestProvider()
-    async_register_webrtc_provider(hass, provider)
-    await hass.async_block_till_done()
-    entity_registry.async_get_or_create(
-        DOMAIN, "test", "rename_camera", suggested_object_id="old"
-    )
-    platform = MockEntityPlatform(hass, domain=DOMAIN, platform_name="test")
-    camera_obj = camera_class()
-    await platform.async_add_entities([camera_obj])
-    assert camera_obj.webrtc_provider is provider
-    token = camera_obj.access_tokens[-1]
-    assert hass.states.get("camera.old").attributes["entity_picture"] == (
-        f"/api/camera_proxy/camera.old?token={token}"
-    )
-
-    with (
-        patch.object(provider, "async_register_camera", AsyncMock()) as mock_register,
-        patch.object(
-            provider, "async_unregister_camera", AsyncMock()
-        ) as mock_unregister,
-    ):
-        entity_registry.async_update_entity("camera.old", new_entity_id="camera.new")
-        await hass.async_block_till_done()
-
-    assert hass.states.get("camera.new").attributes["entity_picture"] == (
-        f"/api/camera_proxy/camera.new?token={token}"
-    )
-    # The WebRTC provider is only registered again when re-added
-    assert camera_obj.webrtc_provider is provider
-    assert mock_register.call_count == int(re_added)
-    assert mock_unregister.call_count == int(re_added)
-
-    client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.new")
-    assert resp.status == HTTPStatus.OK
-    assert await resp.read() == b"image"
-    resp = await client.get("/api/camera_proxy/camera.old")
-    assert resp.status == HTTPStatus.NOT_FOUND
