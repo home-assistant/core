@@ -42,14 +42,14 @@ _LOGGER = logging.getLogger(__name__)
 LOGIN_FORM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ELMAX_USERNAME): str,
-        probatio.Required(CONF_ELMAX_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_ELMAX_PASSWORD)): str,
     }
 )
 
 REAUTH_FORM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ELMAX_USERNAME): str,
-        probatio.Required(CONF_ELMAX_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_ELMAX_PASSWORD)): str,
         probatio.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
