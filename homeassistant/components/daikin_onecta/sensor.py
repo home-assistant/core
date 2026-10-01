@@ -321,10 +321,12 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         )
 
     def update_state(self) -> None:
+        """Update the native sensor value."""
         self._attr_native_value = self.sensor_value()
 
     @property
     def available(self) -> bool:
+        """Return whether the device is available."""
         return self._device.available
 
     @callback
@@ -393,6 +395,7 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         )
 
     def update_state(self) -> None:
+        """Update the native sensor value."""
         self._attr_native_value = self.sensor_value()
 
     @callback
