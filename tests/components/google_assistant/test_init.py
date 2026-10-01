@@ -151,11 +151,12 @@ async def test_reload_service_invalid_config(hass: HomeAssistant) -> None:
             "homeassistant.components.google_assistant.http.async_integration_yaml_config",
             return_value=None,
         ),
-        patch.object(GoogleConfig, "async_sync_entities_all"),
+        patch.object(GoogleConfig, "async_sync_entities_all") as mock_sync,
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
     assert google_config.entity_config == {}
+    mock_sync.assert_not_called()
 
 
 @pytest.mark.parametrize(

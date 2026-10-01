@@ -126,11 +126,11 @@ class GoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
 
-    async def async_reload_yaml(self) -> None:
+    async def async_reload_yaml(self) -> bool:
         """Re-read and apply the YAML configuration."""
         conf = await async_integration_yaml_config(self.hass, DOMAIN)
         if conf is None:
-            return
+            return False
         config = conf.get(DOMAIN, {})
         # The config entry, request_sync service, sync button and Home Graph token
         # are set up for these at startup
@@ -144,6 +144,7 @@ class GoogleConfig(AbstractConfig):
         # pylint: disable-next=home-assistant-use-runtime-data
         self.hass.data[DOMAIN][DATA_CONFIG] = self._config = config
         self.async_update_report_state()
+        return True
 
     @callback
     def async_update_report_state(self) -> None:
