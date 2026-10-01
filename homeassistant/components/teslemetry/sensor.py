@@ -204,16 +204,17 @@ def _listen_charger_power(
 ) -> Callable[[], None]:
     """Listen for charger power, which arrives as AC or DC power."""
     power: dict[str, float | None] = {"ac": None, "dc": None}
-    charging = True
+    charging: bool | None = None
     seen: set[str] = set()
 
     def _update(key: str, value: float | None) -> None:
         # Power is not reliably reset when a charging session ends
-        power[key] = value if charging or value is None else 0
+        power[key] = value if charging is not False or value is None else 0
         seen.add(key)
         ac, dc = power["ac"], power["dc"]
-        # No power from one source says nothing about a restored power from the other
-        if len(seen) < 2 and not (ac or dc):
+        # A restored power may come from the other source while charging, but an
+        # unused source never reports, so only wait for it then
+        if charging and len(seen) < 2 and not (ac or dc):
             return
         seen.update(power)
         callback(dc or (ac if ac is not None else dc))
@@ -227,7 +228,7 @@ def _listen_charger_power(
         elif state in {"Disconnected", "NoPower", "Complete", "Stopped"}:
             charging = False
         # The entity may hold a restored power that was never streamed here
-        if was_charging and not charging:
+        if was_charging is not False and charging is False:
             power["ac"] = power["dc"] = 0
             callback(0)
 
