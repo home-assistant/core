@@ -29,6 +29,12 @@ from homeassistant.const import UnitOfVolumeFlowRate
 
 DOMAIN: Final = "shelly"
 
+CONF_CONNECTION_TYPE: Final = "connection_type"
+CONNECTION_LOCAL: Final = "local"
+CONNECTION_REMOTE_WS: Final = "remote_ws"
+CONF_REMOTE_CREDENTIAL: Final = "remote_credential"
+CONF_EXTERNAL_URL: Final = "external_url"
+
 LOGGER: Logger = getLogger(__package__)
 
 # BLE provisioning
