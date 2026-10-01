@@ -208,7 +208,7 @@ async def marketplace_repository_version(
         return
 
     await marketplace.data.async_write()
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command(
@@ -248,7 +248,7 @@ async def marketplace_repository_beta(
         return
 
     await marketplace.data.async_write()
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command(
@@ -286,7 +286,7 @@ async def marketplace_repository_install(
             if not was_installed and repository.data.installed:
                 async_dispatcher_send(hass, SIGNAL_REPOSITORY_INSTALLED, repository)
 
-        connection.send_message(websocket_api.result_message(msg["id"], {}))
+        connection.send_message(websocket_api.result_message(msg["id"]))
     except GitHubAnonymousRateLimitError:
         _send_rate_limited(connection, msg["id"])
     except ReplacesBuiltInNotConfirmedError as exception:
@@ -391,7 +391,7 @@ async def marketplace_repository_uninstall(
         return
 
     await marketplace.data.async_write()
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command(
@@ -427,7 +427,7 @@ async def marketplace_repository_refresh(
     await marketplace.data.async_write()
     marketplace.coordinators[repository.data.category].async_update_listeners()
 
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command(

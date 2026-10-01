@@ -557,6 +557,28 @@ async def test_repositories_list(
     }
 
 
+async def test_repositories_list_without_a_description(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a repository the catalog has no description for lists an empty one."""
+    marketplace.repositories.get_by_id(
+        REPOSITORY_INTEGRATION_ID
+    ).data.description = None
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/repositories/list"})
+    response = await client.receive_json()
+
+    listed = next(
+        repository
+        for repository in response["result"]
+        if repository["id"] == REPOSITORY_INTEGRATION_ID
+    )
+    assert listed["description"] == ""
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_repositories_list_by_category(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -912,7 +934,9 @@ async def test_repositories_remove(
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
-    assert (await client.receive_json())["success"]
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
 
     assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is None
 
@@ -976,7 +1000,9 @@ async def test_repository_version(
                 "version": "1.5.0",
             }
         )
-        assert (await client.receive_json())["success"]
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] is None
 
     assert repository.data.selected_tag == "1.5.0"
 
@@ -1019,7 +1045,9 @@ async def test_repository_beta(
             "show_beta": True,
         }
     )
-    assert (await client.receive_json())["success"]
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
 
     assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.show_beta
 
@@ -1042,7 +1070,9 @@ async def test_repository_refresh(
                 "repository": REPOSITORY_INTEGRATION_ID,
             }
         )
-        assert (await client.receive_json())["success"]
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] is None
 
     assert update.call_args.kwargs == {"ignore_issues": True, "force": True}
 
@@ -1061,7 +1091,9 @@ async def test_repository_install(
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
-    assert (await client.receive_json())["success"]
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
 
     assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed
 
@@ -1239,7 +1271,9 @@ async def test_repository_uninstall(
             "repository": REPOSITORY_INTEGRATION_ID,
         }
     )
-    assert (await client.receive_json())["success"]
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
 
     await client.send_json_auto_id(
         {

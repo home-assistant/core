@@ -36,7 +36,8 @@ def repository_summary(
         "category": repository.data.category,
         "config_flow": repository.data.config_flow,
         "custom": not marketplace.repositories.is_default(repository.data.id),
-        "description": repository.data.description,
+        # The catalog can have no description, the panel always shows text
+        "description": repository.data.description or "",
         "domain": repository.data.domain,
         "downloads": repository.data.downloads,
         "file_name": repository.data.file_name,
@@ -304,7 +305,7 @@ async def marketplace_repositories_add(
         )
         return
 
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command(
@@ -343,4 +344,4 @@ async def marketplace_repositories_remove(
     marketplace.common.custom_repositories.discard(repository.data.id)
     await marketplace.data.async_write()
 
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_message(websocket_api.result_message(msg["id"]))
