@@ -1515,10 +1515,7 @@ class EntityPlatform:
             # the same polling cycle must still be handled normally
             # rather than having their own results discarded because a
             # sibling's task was cancelled.
-            self.logger.warning(
-                "Polling for entity %s was cancelled",
-                entity.entity_id,
-            )
+            return None
         elif isinstance(result, Exception):
             # Preserve original traceback in logs
             self.logger.exception(
