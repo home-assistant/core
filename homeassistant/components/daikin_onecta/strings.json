@@ -38,82 +38,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "daylightsavingtimeenabled": {
-        "name": "Daylight saving time enabled"
-      },
-      "iscoolheatmaster": {
-        "name": "Is cool\/heat master"
-      },
-      "isfirmwareupdatesupported": {
-        "name": "Is firmware update supported"
-      },
-      "isholidaymodeactive": {
-        "name": "Is holiday mode active"
-      },
-      "isincautionstate": {
-        "name": "Is in caution state"
-      },
-      "isinemergencystate": {
-        "name": "Is in emergency state"
-      },
-      "isinerrorstate": {
-        "name": "Is in error state"
-      },
-      "isininstallerstate": {
-        "name": "Is in installer state"
-      },
-      "isinmodeconflict": {
-        "name": "Is in mode conflict"
-      },
-      "isinwarningstate": {
-        "name": "Is in warning state"
-      },
-      "islockfunctionenabled": {
-        "name": "Is lock function enabled"
-      },
-      "ispowerfulmodeactive": {
-        "name": "Is powerful mode active"
-      },
-      "ledenabled": {
-        "name": "LED enabled"
-      }
-    },
-    "climate": {
-      "roomtemperature": {
-        "state_attributes": {
-          "fan_mode": {
-            "state": {
-              "1": "1",
-              "2": "2",
-              "3": "3",
-              "4": "4",
-              "5": "5",
-              "quiet": "Quiet"
-            }
-          },
-          "swing_horizontal_mode": {
-            "state": {
-              "stop": "Stop",
-              "swing": "Swing"
-            }
-          },
-          "swing_mode": {
-            "state": {
-              "floorheatingairflow": "FloorHeating Airflow",
-              "stop": "Stop",
-              "swing": "Swing",
-              "windnice": "Comfort Airflow"
-            }
-          }
-        }
-      }
-    },
-    "select": {
-      "schedule": {
-        "name": "Schedule"
-      }
-    },
     "sensor": {
       "airpurificationmode": {
         "name": "Air purification mode"
@@ -161,7 +85,7 @@
         "name": "Current thermal output"
       },
       "datetime": {
-        "name": "Date\/time"
+        "name": "Date/time"
       },
       "deltad": {
         "name": "DeltaD"
@@ -221,7 +145,7 @@
         "name": "Leaving water temperature"
       },
       "onoffmode": {
-        "name": "On\/Off mode"
+        "name": "On/Off mode"
       },
       "operationmode": {
         "name": "Operation mode"
@@ -277,19 +201,6 @@
       "wificonnectionstrength": {
         "name": "WiFi connection strength"
       }
-    },
-    "switch": {
-      "economode": {
-        "name": "Econo mode"
-      },
-      "streamermode": {
-        "name": "Streamer mode"
-      }
-    },
-    "update": {
-      "firmwareupdate": {
-        "name": "Firmware update"
-      }
     }
   },
   "exceptions": {
@@ -321,19 +232,6 @@
         "description": "Configure Daikin Onecta Cloud polling",
         "title": "Daikin Onecta"
       }
-    }
-  },
-  "system_health": {
-    "info": {
-      "api_status": "API server",
-      "max_day": "Maximum day",
-      "max_minute": "Maximum minute",
-      "oauth2_status": "OAuth2 server",
-      "oauth2_token_valid": "OAuth2 token valid",
-      "ratelimit_reset": "Rate limit reset",
-      "remaining_day": "Remaining day",
-      "remaining_minute": "Remaining minute",
-      "retry_after": "Retry after"
     }
   }
 }
