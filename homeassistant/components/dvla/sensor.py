@@ -35,11 +35,6 @@ MOT_STATUS_OPTIONS = {
     "Valid": "valid",
 }
 
-ENUM_OPTIONS = {
-    "taxStatus": TAX_STATUS_OPTIONS,
-    "motStatus": MOT_STATUS_OPTIONS,
-}
-
 
 def raw_value(value: Any) -> StateType:
     """Return a raw DVLA value."""
