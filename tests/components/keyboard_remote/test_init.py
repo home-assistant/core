@@ -51,6 +51,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    EV_KEY,
     EV_REL,
     FAKE_DEVICE_NAME,
     FAKE_DEVICE_PATH,
@@ -1186,7 +1187,9 @@ async def test_device_found_during_teardown_stays_connected(
     """Test a node found while the entry's old node ungrabs stays connected.
 
     The entry is free once its teardown starts, so a device check finishing
-    meanwhile can start it on another node before the teardown ends.
+    meanwhile can start it on another node before the teardown ends. The old
+    node's last key events keep their own descriptor, and its read failure
+    leaves the new node alone.
     """
     await _set_up(hass, fake_input, mock_config_entry)
     listing, release_listing = fake_input.hold_listing()
@@ -1204,9 +1207,24 @@ async def test_device_found_during_teardown_stays_connected(
     await _wait_in_executor(hass, ungrabbing)
     release_listing.set()
     await fake_input.wait_until(lambda: remote.grab.called)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    await fake_input.send(
+        old,
+        SimpleNamespace(type=EV_KEY, code=30, value=KEY_VALUE["key_up"]),
+        wait_for_executor=False,
+    )
+    await fake_input.send(
+        old, OSError(errno.ENODEV, "No such device"), wait_for_executor=False
+    )
     release_ungrab.set()
     await fake_input.settle()
+    await fake_input.press(remote, 30, KEY_VALUE["key_up"])
 
+    assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in commands] == [
+        "/dev/input/event9",
+        REMOTE_PATH,
+    ]
+    remote.close.assert_not_called()
     assert await hass.config_entries.async_unload(remote_entry.entry_id)
     await fake_input.settle()
     remote.ungrab.assert_called_once()

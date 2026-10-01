@@ -845,9 +845,11 @@ class DeviceHandler:
         self._repeat_tasks = {}
         # Not eager: a device that fails immediately would otherwise run the
         # whole monitor body, including the teardown that clears this
-        # attribute, before the assignment below overwrites it again.
+        # attribute, before the assignment below overwrites it again. The
+        # task gets its own device and descriptor, as the handler can be
+        # started on another node while this one is torn down.
         self._monitor_task = self.hass.async_create_background_task(
-            self._async_monitor_input(self._repeat_tasks),
+            self._async_monitor_input(dev, self._descriptor, self._repeat_tasks),
             f"keyboard_remote monitor {dev.path}",
             eager_start=False,
         )
@@ -917,7 +919,12 @@ class DeviceHandler:
             await asyncio.wait({task})
 
     async def _async_keyrepeat(
-        self, dev: InputDevice, code: int, delay: float, repeat: float
+        self,
+        dev: InputDevice,
+        descriptor: str | None,
+        code: int,
+        delay: float,
+        repeat: float,
     ) -> None:
         """Emulate keyboard delay/repeat by firing key hold events on a timer."""
         await asyncio.sleep(delay)
@@ -927,20 +934,20 @@ class DeviceHandler:
                 {
                     KEY_CODE: code,
                     "type": "key_hold",
-                    CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                    CONF_DEVICE_DESCRIPTOR: descriptor,
                     CONF_DEVICE_NAME: dev.name,
                 },
             )
             await asyncio.sleep(repeat)
 
     async def _async_monitor_input(
-        self, repeat_tasks: dict[int, asyncio.Task[None]]
+        self,
+        dev: InputDevice,
+        descriptor: str | None,
+        repeat_tasks: dict[int, asyncio.Task[None]],
     ) -> None:
         """Monitor one device for key events using evdev with asyncio."""
         from evdev import ecodes  # noqa: PLC0415
-
-        dev = self.dev
-        assert dev is not None
 
         try:
             _LOGGER.debug("Start device monitoring")
@@ -970,7 +977,7 @@ class DeviceHandler:
                             {
                                 KEY_CODE: event.code,
                                 "type": KEY_VALUE_NAME[event.value],
-                                CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                                CONF_DEVICE_DESCRIPTOR: descriptor,
                                 CONF_DEVICE_NAME: dev.name,
                             },
                         )
@@ -984,6 +991,7 @@ class DeviceHandler:
                             self.hass.async_create_background_task(
                                 self._async_keyrepeat(
                                     dev,
+                                    descriptor,
                                     event.code,
                                     self._emulate_key_hold_delay,
                                     self._emulate_key_hold_repeat,
@@ -1013,6 +1021,10 @@ class DeviceHandler:
     ) -> None:
         """Release this handler's device after its monitor stopped reading."""
         await self._async_cancel_repeats(repeat_tasks)
+        # Another teardown already releases this device, and the handler may
+        # have been started on another node since
+        if self._monitor_task is not asyncio.current_task():
+            return
         if self._on_monitor_failure is not None:
             await self._on_monitor_failure(self)
 
