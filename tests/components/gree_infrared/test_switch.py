@@ -397,6 +397,66 @@ async def test_restore_switches_without_transmission(
     )
 
 
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+async def test_restore_switches_when_previously_active(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Restored options survive a restart when the climate was left on."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE, HVACMode.COOL, {ATTR_TEMPERATURE: 24}),
+                {
+                    "last_active_hvac_mode": HVACMode.COOL.value,
+                    "turbo": True,
+                    "light": False,
+                    "health": True,
+                    "xfan": True,
+                },
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_infrared_emitter_entity.send_command_calls == []
+    state = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert (state.turbo, state.light, state.health, state.xfan) == (
+        True,
+        False,
+        True,
+        True,
+    )
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
+        blocking=True,
+    )
+    command = _last_command(mock_infrared_emitter_entity)
+    assert (command.turbo, command.display, command.anion, command.blow) == (
+        True,
+        False,
+        True,
+        True,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_option_switches_are_assumed_state(hass: HomeAssistant) -> None:
+    """Option switches report assumed state since IR gives no readback."""
+    for key in ("turbo", "light", "health", "xfan"):
+        assert (
+            hass.states.get(_option_entity_id(hass, key)).attributes["assumed_state"]
+            is True
+        )
+
+
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("extra_entry_data", "expected_model"),
