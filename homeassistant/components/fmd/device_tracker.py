@@ -92,10 +92,10 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
             attributes["device_timestamp"] = data.timestamp.isoformat()
         if data.provider is not None:
             attributes["provider"] = data.provider
-        if raw_date := (data.raw or {}).get("date"):
+        if data.timestamp_ms is not None:
             # Unix ms when the FMD client sent the fix (string avoids comma
             # formatting in the UI).
-            attributes["device_timestamp_ms"] = str(raw_date)
+            attributes["device_timestamp_ms"] = str(data.timestamp_ms)
         if data.altitude_m is not None:
             attributes["altitude"] = data.altitude_m
             attributes["altitude_unit"] = "m"
