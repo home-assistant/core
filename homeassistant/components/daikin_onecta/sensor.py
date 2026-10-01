@@ -154,7 +154,7 @@ async def async_setup_entry(
                     if sensor in VALUE_SENSOR_MAPPING
                     and getattr(
                         sensory_data,
-                        VALUE_SENSOR_MAPPING[sensor][MODEL_ATTRIBUTE],
+                        cast(dict[str, Any], VALUE_SENSOR_MAPPING[sensor])[MODEL_ATTRIBUTE],
                     )
                     is not None
                 )
@@ -203,7 +203,7 @@ class DaikinEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id + self._management_point_type)},
             name=self._device.name + " " + mpt,
-            via_device_id=self._device.ha_device_id,
+            **({"via_device_id": self._device.ha_device_id} if self._device.ha_device_id is not None else {}),
         )
         self._device.fill_device_info(self._attr_device_info, management_point_type)
         self._embedded_id = embedded_id
@@ -308,7 +308,7 @@ class DaikinValueSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id + self._management_point_type)},
             name=self._device.name + " " + mpt,
-            via_device_id=self._device.ha_device_id,
+            **({"via_device_id": self._device.ha_device_id} if self._device.ha_device_id is not None else {}),
         )
         self._device.fill_device_info(self._attr_device_info, management_point_type)
         self._embedded_id = embedded_id
@@ -401,7 +401,7 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id + "gateway")},
             name=self._device.name + " " + "Gateway",
-            via_device_id=self._device.ha_device_id,
+            **({"via_device_id": self._device.ha_device_id} if self._device.ha_device_id is not None else {}),
         )
         self._device.fill_device_info(self._attr_device_info, "gateway")
         self.update_state()

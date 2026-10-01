@@ -23,6 +23,8 @@ from homeassistant.setup import async_setup_component
 from .conftest import FAKE_ACCESS_TOKEN
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "emU20GdJDiiUxI_HnFGz69dD"
 CLIENT_SECRET = "TNL1ePwnOkf6o2gKiI8InS8nVwTz2G__VYkv6WznzJGUnwLHLTmKYp-7RZc6FA3yS6D0Wgj_snvqsU5H_LPHQA"

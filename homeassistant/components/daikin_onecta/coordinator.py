@@ -103,7 +103,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.info("Daikin coordinator changed interval to '%s'", self.update_interval)
 
     def determine_update_interval(self, hass: HomeAssistant) -> timedelta:
-        """Determine the next polling interval"""
+        """Determine the next polling interval."""
         # Default of low scan minutes interval
         scan_interval = self.options.get("low_scan_interval", 30) * 60
         high_scan_interval = self.options.get("high_scan_interval", 10) * 60

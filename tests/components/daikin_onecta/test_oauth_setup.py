@@ -53,6 +53,7 @@ async def test_setup_entry_reauth_on_token_request(
     config_entry: MockConfigEntry,
 ) -> None:
     """Token reauth errors during ensure must raise ConfigEntryAuthFailed."""
+    config_entry.add_to_hass(hass)
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -64,7 +65,6 @@ async def test_setup_entry_reauth_on_token_request(
         ),
         pytest.raises(ConfigEntryAuthFailed),
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -74,6 +74,7 @@ async def test_setup_entry_not_ready_on_transient_token_error(
     config_entry: MockConfigEntry,
 ) -> None:
     """Recoverable OAuth token errors must raise ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -85,7 +86,6 @@ async def test_setup_entry_not_ready_on_transient_token_error(
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -95,6 +95,7 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
     config_entry: MockConfigEntry,
 ) -> None:
     """Missing OAuth implementation must raise ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -102,7 +103,6 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
         ),
         pytest.raises(ConfigEntryNotReady) as exc_info,
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     if exc_info.value.translation_domain != DOMAIN:
@@ -119,6 +119,7 @@ async def test_setup_entry_preserves_reauth_from_first_refresh(
     """First refresh reauth must not be converted into ConfigEntryNotReady."""
     # A broad Exception handler around async_config_entry_first_refresh would
     # swallow ConfigEntryAuthFailed and prevent the reauth UI from starting.
+    config_entry.add_to_hass(hass)
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -135,7 +136,6 @@ async def test_setup_entry_preserves_reauth_from_first_refresh(
         ),
         pytest.raises(ConfigEntryAuthFailed),
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     if config_entry.state is ConfigEntryState.LOADED:

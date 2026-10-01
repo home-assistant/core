@@ -17,8 +17,8 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    EntityCategory,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "daikin_onecta"
 
