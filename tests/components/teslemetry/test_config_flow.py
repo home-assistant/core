@@ -39,6 +39,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -56,7 +57,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -695,6 +696,7 @@ async def test_migrate_error_from_future(
 
 VIN = "LRW3F7EK4NC700000"
 ADDRESS = "AA:BB:CC:DD:EE:FF"
+NEW_ADDRESS = "11:22:33:44:55:66"
 
 
 def _entry_with_ble() -> MockConfigEntry:
@@ -1462,6 +1464,147 @@ async def test_subentry_add_flow_entry_not_loaded(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_reconfigure_updates_address(hass: HomeAssistant) -> None:
+    """Reconfigure re-scans and re-pairs an already added vehicle, updating its address."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+    parent = _mock_ble_parent(vehicle)
+    info = _discovered_info()
+    info.address = NEW_ADDRESS
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=parent,
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    updated = entry.subentries[subentry.subentry_id]
+    assert updated.unique_id == VIN
+    assert updated.data == {CONF_VIN: VIN, CONF_ADDRESS: NEW_ADDRESS}
+    # The scan looks for the subentry's own vehicle, not whichever one is nearest.
+    parent.get_name.assert_called_once_with(VIN)
+    vehicle.connect.assert_awaited_once()
+    vehicle.disconnect.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_reconfigure_reloads_onto_new_address(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfigure reloads the entry so the live router uses the new address."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+    info = _discovered_info()
+    info.address = NEW_ADDRESS
+
+    # async_schedule_reload is left unpatched so the real reload runs here with the
+    # committed BLE address; it reuses the parent cached by the initial setup, so no
+    # key file is written and no real connection is opened.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ) as mock_ble_device,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # The reconfigure schedules the reload, which runs to completion here.
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.state is ConfigEntryState.LOADED
+
+        mock_ble_device.reset_mock()
+        # Commanding a vehicle entity routes through the reloaded router, which
+        # first checks whether the vehicle is in Bluetooth range.
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_flash_lights"},
+            blocking=True,
+        )
+
+    # The reloaded router looks for the new address, not the one it was set up with.
+    assert mock_ble_device.call_args.args[1] == NEW_ADDRESS
+
+
+async def test_subentry_reconfigure_no_bluetooth(hass: HomeAssistant) -> None:
+    """Reconfigure aborts immediately when no Bluetooth integration is set up."""
+    # No enable_bluetooth fixture here, so the scanner count is zero.
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_available"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> None:
+    """Reconfigure re-shows the scan form when the vehicle cannot be found."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=MagicMock(),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert result["errors"] == {"base": "device_not_found"}
+    # The stored address is untouched by a failed re-scan.
+    assert entry.subentries[subentry.subentry_id].data == {
+        CONF_VIN: VIN,
+        CONF_ADDRESS: ADDRESS,
+    }
 
 
 SITE_ID = 123456
