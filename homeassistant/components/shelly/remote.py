@@ -111,9 +111,9 @@ def validate_external_url(value: str) -> URL:
 
 @callback
 def get_external_url(hass: HomeAssistant) -> str:
-    """Get the configured external HTTPS URL, excluding local and cloud URLs."""
+    """Get the configured external HTTPS URL, excluding local URLs."""
     try:
-        value = get_url(hass, require_ssl=True, allow_internal=False, allow_cloud=False)
+        value = get_url(hass, require_ssl=True, allow_internal=False, allow_cloud=True)
         return str(validate_external_url(value))
     except NoURLAvailableError, ValueError:
         return ""
@@ -270,7 +270,9 @@ class RemoteConnectionManager:
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
                 )
                 or any(
-                    other is not record and other.device_id == mac
+                    other is not record
+                    and other.device_id == mac
+                    and (record.entry_id is None or other.entry_id != record.entry_id)
                     for other in self.credentials.values()
                 )
             ):

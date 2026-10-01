@@ -204,6 +204,7 @@ async def test_pairing_urls_are_redacted_in_logs(
     logger = logging.getLogger(logger_name)
     logger.warning("Request: %s", URL(url))
     logger.warning("Relative request: %s", URL(url).raw_path_qs)
+
     def fail() -> None:
         raise ValueError(url)
 
@@ -214,3 +215,106 @@ async def test_pairing_urls_are_redacted_in_logs(
     assert URL(url).query["remote_key"] not in caplog.text
     assert url not in caplog.text
     assert "[REDACTED REMOTE URL]" in caplog.text
+
+
+async def test_duplicate_registered_device(hass: HomeAssistant) -> None:
+    """A new pairing cannot attach a device already represented by a local entry."""
+    MockConfigEntry(
+        domain=DOMAIN, unique_id="AABBCCDDEEFF", data={"host": "192.0.2.10"}
+    ).add_to_hass(hass)
+    manager = RemoteConnectionManager(hass)
+    record, url = manager.create_credential(URL("https://ha.example.com"))
+    websocket = make_socket(DEVICE_INFO)
+    with (
+        patch(
+            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            return_value=websocket,
+        ),
+        patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
+    ):
+        await manager.accept(make_request(URL(url).query["remote_key"]), record)
+    handle.assert_not_awaited()
+    assert not record.ready.is_set()
+    websocket.close.assert_awaited_once_with(code=1008)
+
+
+@pytest.mark.parametrize(
+    "frame",
+    [
+        [],
+        {"id": 0, "result": []},
+        {"id": 0, "src": "spoof", "result": DEVICE_INFO},
+        {
+            "id": 0,
+            "src": DEVICE_INFO["id"],
+            "result": {**DEVICE_INFO, "mac": "112233445566"},
+        },
+        {"id": 0, "src": DEVICE_INFO["id"], "result": {**DEVICE_INFO, "gen": 1}},
+    ],
+)
+async def test_invalid_identification(hass: HomeAssistant, frame: object) -> None:
+    """Reject malformed identity data and mismatched frame sources."""
+    manager = RemoteConnectionManager(hass)
+    record, url = manager.create_credential(URL("https://ha.example.com"))
+    websocket = make_socket(DEVICE_INFO)
+    websocket.receive.return_value = WSMessage(WSMsgType.TEXT, json_dumps(frame), "")
+    with (
+        patch(
+            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            return_value=websocket,
+        ),
+        patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
+    ):
+        await manager.accept(make_request(URL(url).query["remote_key"]), record)
+    handle.assert_not_awaited()
+    assert manager._identifying == 0
+    assert not record.identifying
+    websocket.close.assert_awaited_once_with(code=1008)
+
+
+async def test_revocation_during_identification(hass: HomeAssistant) -> None:
+    """Revocation wins even if a candidate finishes GetDeviceInfo afterward."""
+    manager = RemoteConnectionManager(hass)
+    record, url = manager.create_credential(URL("https://ha.example.com"))
+    websocket = make_socket(DEVICE_INFO)
+
+    async def identify(_websocket: web.WebSocketResponse) -> dict:
+        await manager.revoke(record.digest)
+        return DEVICE_INFO
+
+    with (
+        patch(
+            "homeassistant.components.shelly.remote.web.WebSocketResponse",
+            return_value=websocket,
+        ),
+        patch.object(manager, "_identify", side_effect=identify),
+        patch.object(manager.server, "handle_connection", new=AsyncMock()) as handle,
+    ):
+        await manager.accept(make_request(URL(url).query["remote_key"]), record)
+    handle.assert_not_awaited()
+    assert not record.ready.is_set()
+    assert manager.lookup(URL(url).query["remote_key"]) is None
+
+
+async def test_concurrent_identifications_are_limited(hass: HomeAssistant) -> None:
+    """Allow only one identification per credential and cap global work."""
+    manager = RemoteConnectionManager(hass)
+    record, url = manager.create_credential(URL("https://ha.example.com"))
+    record.identifying = True
+    response = await manager.accept(make_request(URL(url).query["remote_key"]), record)
+    assert response.status == 429
+    record.identifying = False
+    manager._identifying = 16
+    response = await manager.accept(make_request(URL(url).query["remote_key"]), record)
+    assert response.status == 429
+    assert not record.websockets
+
+
+async def test_browser_origin_is_rejected(hass: HomeAssistant) -> None:
+    """The device endpoint cannot be opened by a cross-origin browser session."""
+    manager = RemoteConnectionManager(hass)
+    _, url = manager.create_credential(URL("https://ha.example.com"))
+    request = make_request(URL(url).query["remote_key"])
+    request.headers = {"Origin": "https://other.example.com"}
+    response = await ShellyRemoteReceiver(manager).get(request)
+    assert response.status == 403
