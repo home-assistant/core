@@ -142,12 +142,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     def _get_user_data_schema(self) -> probatio.Schema:
         """Get the data schema to display user form."""
         if self.source == SOURCE_REAUTH:
-            return probatio.Schema({probatio.Required(CONF_API_KEY): str})
+            return probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            )
 
         return probatio.Schema(
             {
                 probatio.Required(CONF_URL): str,
-                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Required(CONF_MORE_OPTIONS): section(
                     probatio.Schema(
                         {

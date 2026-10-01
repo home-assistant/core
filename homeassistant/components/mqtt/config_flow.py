@@ -1219,7 +1219,9 @@ ENTITY_CONFIG_VALIDATOR: dict[
 class PlatformField:
     """Stores a platform config field schema, required flag and validator."""
 
-    selector: Selector[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    selector: (
+        Selector[Any] | probatio.All[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    )
     required: bool
     validator: Callable[[Any], Any] | None = None
     error: str | None = None
@@ -4014,7 +4016,7 @@ def update_password_from_user_input(
 REAUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): TEXT_SELECTOR,
-        probatio.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
     }
 )
 
@@ -4025,7 +4027,7 @@ OTHER_SETTINGS_SCHEMA = probatio.Schema(
         probatio.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
         probatio.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
         probatio.Optional(CONF_CLIENT_KEY): CERT_KEY_UPLOAD_SELECTOR,
-        probatio.Optional(CONF_CLIENT_KEY_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_KEY_PASSWORD)): PASSWORD_SELECTOR,
         probatio.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
         probatio.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
         probatio.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
@@ -4042,7 +4044,7 @@ CONFIG_DATAFLOW_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
         probatio.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
         probatio.Optional(CONF_USERNAME): TEXT_SELECTOR,
-        probatio.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
         probatio.Required(OTHER_SETTINGS): section(
             OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
         ),

@@ -1583,6 +1583,9 @@
           }
         }
       },
+      "alarm_level": {
+        "name": "Alarm level"
+      },
       "alarm_state": {
         "name": "Alarm state"
       },
@@ -1852,6 +1855,9 @@
       "self_test_result": {
         "name": "Self-test result"
       },
+      "sensor_expiration": {
+        "name": "Sensor expiration"
+      },
       "setpoint_change_source": {
         "name": "Setpoint change source"
       },
@@ -2096,6 +2102,9 @@
       },
       "external_window_sensor": {
         "name": "External window sensor"
+      },
+      "extra_button_commands": {
+        "name": "Extra button commands"
       },
       "factory_reset": {
         "name": "Factory reset"

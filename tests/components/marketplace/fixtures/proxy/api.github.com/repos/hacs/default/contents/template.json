@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "template",
+  "path": "template",
+  "content": "WyJoYWNzLXRlc3Qtb3JnL3RlbXBsYXRlLWJhc2ljIl0=",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs/default/contents/template",
+  "git_url": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs/default/blob/main/template",
+  "download_url": "https://raw.githubusercontent.com/hacs/default/main/template",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs/default/contents/template",
+    "html": "https://github.com/hacs/default/blob/main/template"
+  }
+}

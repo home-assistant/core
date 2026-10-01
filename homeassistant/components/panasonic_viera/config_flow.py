@@ -156,7 +156,9 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pairing",
-            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PIN)): str}
+            ),
             errors=errors,
         )
 

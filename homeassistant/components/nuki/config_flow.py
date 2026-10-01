@@ -23,13 +23,13 @@ USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
         probatio.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
     }
 )
@@ -91,7 +91,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_HOST, default=discovery_info.ip): str,
                 probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                probatio.Required(CONF_TOKEN): str,
+                probatio.Required(probatio.Secret(CONF_TOKEN)): str,
             }
         )
 

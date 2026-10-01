@@ -42,6 +42,8 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+            ),
             errors=errors,
         )

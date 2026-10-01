@@ -16,7 +16,7 @@ from .const import DOMAIN
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_EMAIL): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -103,7 +103,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 reauth_entry.data,

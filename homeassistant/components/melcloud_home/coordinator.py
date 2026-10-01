@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UserContext
 from aiomelcloudhome.exceptions import (
@@ -180,35 +180,51 @@ class MelCloudHomeTelemetryCoordinator(
             update_interval=TELEMETRY_UPDATE_INTERVAL,
         )
         self.client = client
+        self._unavailable_telemetry: set[tuple[str, str]] = set()
+
+    async def _async_fetch_telemetry[_T](
+        self, name: str, unit_id: str, coroutine: Coroutine[Any, Any, _T]
+    ) -> _T | None:
+        """Fetch telemetry for a unit, logging once when it becomes unavailable."""
+        key = (name, unit_id)
+        try:
+            result = await coroutine
+        except (
+            MelCloudHomeAuthenticationError,
+            MelCloudHomeConnectionError,
+            MelCloudHomeTimeoutError,
+        ):
+            if key not in self._unavailable_telemetry:
+                self._unavailable_telemetry.add(key)
+                _LOGGER.info("%s for %s is unavailable", name, unit_id)
+            return None
+        if key in self._unavailable_telemetry:
+            self._unavailable_telemetry.remove(key)
+            _LOGGER.info("%s for %s is available again", name, unit_id)
+        return result
 
     async def _async_get_energy(
         self, unit_id: str, start_of_month: datetime, now: datetime
     ) -> float | None:
         """Fetch energy telemetry for a unit without failing the whole update."""
-        try:
-            energy = await self.client.get_energy_telemetry(
+        energy = await self._async_fetch_telemetry(
+            "Energy telemetry",
+            unit_id,
+            self.client.get_energy_telemetry(
                 unit_id, from_dt=start_of_month, to_dt=now, interval="Day"
-            )
-        except (
-            MelCloudHomeAuthenticationError,
-            MelCloudHomeConnectionError,
-            MelCloudHomeTimeoutError,
-        ):
-            _LOGGER.warning("Failed to fetch energy telemetry for %s:", unit_id)
+            ),
+        )
+        if energy is None:
             return None
         return sum(float(e.value) for e in energy)
 
     async def _async_get_outdoor_temperature(self, unit_id: str) -> float | None:
         """Fetch outdoor temperature for a unit without failing the whole update."""
-        try:
-            return await self.client.get_outdoor_temperature(unit_id)
-        except (
-            MelCloudHomeAuthenticationError,
-            MelCloudHomeConnectionError,
-            MelCloudHomeTimeoutError,
-        ):
-            _LOGGER.warning("Failed to fetch outdoor temperature for %s", unit_id)
-            return None
+        return await self._async_fetch_telemetry(
+            "Outdoor temperature",
+            unit_id,
+            self.client.get_outdoor_temperature(unit_id),
+        )
 
     @override
     async def _async_update_data(self) -> MelCloudHomeTelemetryData:
