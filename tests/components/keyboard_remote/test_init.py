@@ -1475,6 +1475,34 @@ async def test_path_entry_wins_over_name_entry(
     ]
 
 
+async def test_link_leaves_node_with_the_entry_matching_it_better(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+) -> None:
+    """Test a link event does not move a node to a free, weaker entry.
+
+    udev renames a node's link into place again, for example on a change event.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    await _set_up(
+        hass,
+        fake_input,
+        _entry(
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME}
+        ),
+    )
+    await _set_up(
+        hass,
+        fake_input,
+        _entry({CONF_DEVICE_NAME: FAKE_DEVICE_NAME}, unique_id="by-name"),
+    )
+
+    await fake_input.link(FAKE_DEVICE_PATH, FAKE_DEVICE_REAL_PATH)
+
+    kbd.grab.assert_called_once()
+    kbd.ungrab.assert_not_called()
+
+
 async def test_link_to_held_node_keeps_holder_when_path_entry_busy(
     hass: HomeAssistant,
     fake_input: FakeInput,
