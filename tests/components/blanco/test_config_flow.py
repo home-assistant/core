@@ -26,18 +26,15 @@ TEST_TOKEN = "test-bearer-token"
 TEST_APP_ID = "test-app-id"
 TEST_DEV_TYPE = 1
 
-# Expected dev_id derived from serial + service code
 TEST_DEV_ID = BlancoApiClient.compute_dev_id(TEST_SERIAL, TEST_SERVICE_CODE)
 
 
-# Response for POST /apps/registrations
 APP_REG_RESPONSE = {
     "results": [{"app_id": TEST_APP_ID}],
     "errors": None,
     "info": None,
 }
 
-# Successful auth response for POST /auth/token
 AUTH_RESPONSE = {
     "results": [
         {
@@ -140,7 +137,6 @@ async def test_form_auth_request_uses_correct_payload(
         )
         await hass.async_block_till_done()
 
-    # Second POST call is the auth request
     auth_call = session.post.call_args_list[1]
     assert auth_call.kwargs["json"]["dev_id"] == TEST_DEV_ID
     assert auth_call.kwargs["json"]["service"] == 1
@@ -179,7 +175,6 @@ async def test_access_not_granted_recovery(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # First attempt: auth returns 401
     with patch(
         "homeassistant.components.blanco.config_flow.async_get_clientsession"
     ) as mock_session_factory:
@@ -194,7 +189,6 @@ async def test_access_not_granted_recovery(
 
     assert result["errors"] == {"base": "access_not_granted"}
 
-    # Second attempt: succeeds
     with patch(
         "homeassistant.components.blanco.config_flow.async_get_clientsession"
     ) as mock_session_factory:
@@ -275,7 +269,6 @@ async def test_cannot_connect_client_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # First attempt: network error
     with patch(
         "homeassistant.components.blanco.config_flow.async_get_clientsession"
     ) as mock_session_factory:
@@ -294,7 +287,6 @@ async def test_cannot_connect_client_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Second attempt: succeeds
     with patch(
         "homeassistant.components.blanco.config_flow.async_get_clientsession"
     ) as mock_session_factory:
@@ -366,7 +358,6 @@ async def test_duplicate_entry_aborted(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that configuring the same serial number twice aborts the second flow."""
-    # First successful setup
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -385,7 +376,6 @@ async def test_duplicate_entry_aborted(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    # Second attempt with same serial: should abort
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

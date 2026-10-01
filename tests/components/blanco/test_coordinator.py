@@ -290,16 +290,13 @@ class TestAsyncUpdateData:
             make_get_response(500, {}),  # /errors fails
         )
         coord = make_coordinator(mock_hass, session=session)
-        # Seed previous data so the fallback has something to return.
         coord.data = {
             "system": {"params": {}, "info": {}},
             "errors": {"errors": [{"err_code": 1}], "info": {}},
         }
         data = await coord._async_update_data()
 
-        # The previous errors data is used as fallback.
         assert data["errors"]["errors"] == [{"err_code": 1}]
-        # The other endpoint still returns fresh data.
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
 
     async def test_401_with_successful_renewal_retries_and_succeeds(
