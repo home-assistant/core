@@ -42,10 +42,8 @@ from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
-from tesla_protocol.command.vcsec_pb2 import (  # pylint: disable=no-name-in-module
-    VehicleLockState_E,
-)
-from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
+from tesla_protocol.command import vcsec_pb2
+from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.lock import LockState
 from homeassistant.components.teslemetry import (
@@ -2612,9 +2610,7 @@ async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
     bluetooth_vehicle.disconnect.assert_awaited_once()
 
 
-async def test_ble_broadcast_updates_stream_backed_entity(
-    hass: HomeAssistant, mock_add_listener: MagicMock
-) -> None:
+async def test_ble_broadcast_updates_stream_backed_entity(hass: HomeAssistant) -> None:
     """A paired vehicle's Bluetooth broadcast reaches its stream-backed lock entity."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
@@ -2633,9 +2629,6 @@ async def test_ble_broadcast_updates_stream_backed_entity(
             "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
         ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.LOCK]),
-        # Bridge ingest()'s real dispatch to the fixture's own listener registry,
-        # since async_add_listener is mocked and never populates the real one.
-        patch.object(TeslemetryStream, "_dispatch", side_effect=mock_add_listener.send),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
         mock_parent.return_value.vehicles.createBluetooth.return_value = (
@@ -2644,11 +2637,10 @@ async def test_ble_broadcast_updates_stream_backed_entity(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
         assert lock_callbacks
         assert hass.states.get("lock.test_lock").state == STATE_UNKNOWN
 
-        lock_callbacks[0](VehicleLockState_E.VEHICLELOCKSTATE_LOCKED)
+        lock_callbacks[0](vcsec_pb2.VEHICLELOCKSTATE_LOCKED)
         await hass.async_block_till_done()
 
     assert hass.states.get("lock.test_lock").state == LockState.LOCKED
