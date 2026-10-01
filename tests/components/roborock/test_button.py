@@ -509,6 +509,45 @@ async def test_resolve_dock_error_button_support(
     ) is expected_supported
 
 
+async def test_resolve_dock_error_button_removed_when_unsupported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Test a registered resolve error button is removed once the dock is gone."""
+    features = fake_vacuum.v1_properties.device_features
+    features.dock_features = RoborockDockFeatures.from_dock_type(
+        RoborockDockTypeCode.o0_dock
+    )
+    features.is_field_supported.side_effect = partial(
+        DeviceFeaturesTrait.is_field_supported, features
+    )
+    entity_registry.async_get_or_create(
+        domain=Platform.BUTTON,
+        platform=DOMAIN,
+        unique_id="resolve_dock_error_abc123",
+        config_entry=mock_roborock_entry,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "resolve_dock_error_abc123"
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, "resolve_dock_error_abc123"
+        )
+        is None
+    )
+    assert hass.states.get(RESOLVE_DOCK_ERROR_ENTITY_ID) is None
+
+
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
 @pytest.mark.usefixtures("bypass_api_client_fixture", "setup_entry")
 @pytest.mark.parametrize(

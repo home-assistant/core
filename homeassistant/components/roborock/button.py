@@ -181,6 +181,12 @@ async def async_setup_entry(
                         coordinator, RESOLVE_DOCK_ERROR_BUTTON_DESCRIPTION
                     )
                 )
+            elif entity_id := entity_registry.async_get_entity_id(
+                Platform.BUTTON,
+                DOMAIN,
+                f"{RESOLVE_DOCK_ERROR_BUTTON_DESCRIPTION.key}_{coordinator.duid_slug}",
+            ):
+                entity_registry.async_remove(entity_id)
 
             async def async_add_routine_buttons() -> None:
                 try:
