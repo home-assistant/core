@@ -61,7 +61,7 @@
         "data_description": {
           "encoding": "The character encoding to use if none provided in the header of the response.",
           "name": "The title of the resource entity.",
-          "payload": "The request body payload to send with the request, typically json, supports templates.",
+          "payload": "The request body payload to send with the request, typically JSON, supports templates.",
           "resource": "A resource or endpoint that contains the value, supports templates."
         },
         "description": "Configure a RESTful resource to be used in Home Assistant.",

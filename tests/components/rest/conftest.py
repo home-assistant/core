@@ -17,6 +17,7 @@ from homeassistant.components.rest.const import (
     DEFAULT_METHOD,
     DEFAULT_SSL_CIPHER_LIST,
 )
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_METHOD,
     CONF_RESOURCE,
+    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -60,6 +62,7 @@ def get_config_entry_data() -> dict[str, Any]:
             CONF_SSL_CIPHER_LIST: DEFAULT_SSL_CIPHER_LIST,
         },
         CONF_ENCODING: DEFAULT_ENCODING,
+        CONF_TIMEOUT: DEFAULT_TIMEOUT,
     }
 
 
@@ -111,15 +114,3 @@ async def async_setup_entry(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     return config_entry
-
-
-@pytest.fixture
-async def async_setup_complete_entry(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    get_config_entry_data: dict[str, Any],
-    get_subentry_data: list[ConfigSubentryData],
-) -> MockConfigEntry:
-    """Get the default entry WITH default subentry data."""
-    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"key": "on"})
-    return await async_setup_entry(hass, get_config_entry_data, get_subentry_data)

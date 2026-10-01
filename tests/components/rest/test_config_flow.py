@@ -115,6 +115,7 @@ async def test_sensor_subentry_flow(
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test sensor subentry config flow."""
+
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
@@ -162,13 +163,44 @@ async def test_sensor_subentry_flow(
     assert result["reason"] == "timeout_error"
 
 
+async def test_config_entry_flow_only(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test the config entry flow without next_flow."""
+
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        json={"key": "on"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "subentries_menu"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "none"}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert "next_flow" not in result
+
+    assert (entries := hass.config_entries.async_entries(DOMAIN))
+    assert entries[0].data == get_config_entry_data
+
+
 async def test_config_flow_no_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
     get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
-    """Test a entry and subentry flow with no data."""
+    """Test an entry and subentry flow with no data."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
@@ -209,7 +241,6 @@ async def test_sensor_subentry_flow_endpoint_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test a subentry flow for a resource in error."""
     aioclient_mock.get(
@@ -242,7 +273,7 @@ async def test_sensor_subentry_flow_payload_template_error(
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test a subentry flow for an resource error not handled by the coordinator or RestData."""
+    """Test a subentry flow for a resource error not handled by the coordinator or RestData."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
