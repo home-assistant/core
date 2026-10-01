@@ -14,7 +14,10 @@
       "no_wifi_networks": "No Wi-Fi networks found during scan.",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wifi_provisioned": "Wi-Fi credentials for {ssid} have been provisioned to {name}. The device is connecting to Wi-Fi and will complete setup automatically."
+      "wifi_provisioned": "Wi-Fi credentials for {ssid} have been provisioned to {name}. The device is connecting to Wi-Fi and will complete setup automatically.",
+      "remote_pairing_expired": "The pairing window expired. Start a new pairing to generate a new credential.",
+      "remote_sleeping_device": "This remote connection mode currently supports mains-powered devices only.",
+      "firmware_unsupported": "Update the device firmware before using remote pairing."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -22,11 +25,14 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_external_url": "Enter a public HTTPS origin without credentials, a path, query parameters or a fragment.",
+      "required": "Enter a host for a local connection."
     },
     "flow_title": "{name}",
     "progress": {
-      "provisioning": "Provisioning Wi-Fi credentials and waiting for device to connect"
+      "provisioning": "Provisioning Wi-Fi credentials and waiting for device to connect",
+      "remote_connect": "Waiting for the remote Shelly to connect"
     },
     "step": {
       "bluetooth_confirm": {
@@ -78,7 +84,11 @@
           "port": "[%key:component::shelly::config::step::user_manual::data_description::port%]",
           "verify_ssl": "[%key:component::shelly::config::step::user_manual::data_description::verify_ssl%]"
         },
-        "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+        "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
+        "menu_options": {
+          "remote_regenerate": "Regenerate remote connection credential",
+          "remote_revoke": "Revoke remote access"
+        }
       },
       "user": {
         "data": {
@@ -93,12 +103,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "connection_type": "Connection type"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Shelly device to connect to.",
+          "host": "Required for a local device. Leave empty when adding a remote device.",
           "port": "The TCP port of the Shelly device to connect to (Gen2+).",
-          "verify_ssl": "Verify SSL/TLS certificate when connecting on HTTPS (port 443, Gen2+)."
+          "verify_ssl": "Verify SSL/TLS certificate when connecting on HTTPS (port 443, Gen2+).",
+          "connection_type": "Choose local network access or an Internet connection initiated by Shelly."
         },
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
       },
@@ -115,6 +127,57 @@
       },
       "wifi_scan_failed": {
         "description": "Failed to scan for Wi-Fi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
+      },
+      "remote": {
+        "title": "Add remote Shelly",
+        "description": "Provide the public HTTPS address of this Home Assistant instance. It must allow inbound WebSocket connections. The Shelly does not need a public IP address.",
+        "data": {
+          "external_url": "Home Assistant external HTTPS URL"
+        },
+        "data_description": {
+          "external_url": "Public HTTPS origin of this Home Assistant instance. Configure WebSocket forwarding and credential redaction on your reverse proxy before pairing."
+        }
+      },
+      "remote_connect": {
+        "title": "Connect your remote Shelly",
+        "description": "Copy this sensitive URL into the device’s Outbound WebSocket settings and enable certificate verification. Keep the complete URL private and configure your reverse proxy to redact it from logs. The initial pairing window expires after 10 minutes.\n\n{connection_url}"
+      },
+      "remote_confirm": {
+        "title": "Confirm remote Shelly",
+        "description": "Confirm the device identified over the connection: {device} (MAC {mac})."
+      },
+      "remote_credentials": {
+        "title": "Remote Shelly authentication",
+        "description": "The connected device requested Digest authentication. Enter its device password.",
+        "data": {
+          "password": "Device password"
+        },
+        "data_description": {
+          "password": "Password for the connected Shelly device."
+        }
+      },
+      "remote_reauth": {
+        "title": "Remote Shelly authentication",
+        "data": {
+          "password": "Device password"
+        },
+        "data_description": {
+          "password": "Password for the connected Shelly device."
+        }
+      },
+      "remote_revoke": {
+        "title": "Revoke remote access",
+        "description": "Revoke the current remote credential? The device will become unavailable until you generate and configure a replacement."
+      },
+      "remote_regenerate": {
+        "title": "Regenerate remote credential",
+        "description": "Generate a replacement URL for this device. Configure the replacement in Shelly, then submit to revoke the previous credential. Keep the complete URL private.\n\n{connection_url}",
+        "data": {
+          "external_url": "Home Assistant external HTTPS URL"
+        },
+        "data_description": {
+          "external_url": "Public HTTPS origin of this Home Assistant instance."
+        }
       }
     }
   },
@@ -846,7 +909,14 @@
     },
     "device": {
       "options": {
-        "manual": "Enter address manually"
+        "manual": "Enter address manually",
+        "remote_ws": "Remote device (Outbound WebSocket)"
+      }
+    },
+    "connection_type": {
+      "options": {
+        "local": "Local device",
+        "remote_ws": "Remote device (Outbound WebSocket)"
       }
     }
   },

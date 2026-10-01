@@ -1338,8 +1338,8 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
     # Should also have manual entry
     assert "manual" in options
 
-    # Verify only 2 options (device + manual), not 3 (no duplicate)
-    assert len(options) == 2
+    # Device, manual and remote options, without a duplicate discovery.
+    assert len(options) == 3
 
     # Select the device and verify it uses Zeroconf connection info
     with patch(

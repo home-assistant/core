@@ -12,7 +12,7 @@ from aioshelly.ble.manufacturer_data import (
     parse_shelly_manufacturer_data,
 )
 from aioshelly.block_device import BlockDevice
-from aioshelly.common import ConnectionOptions, get_info
+from aioshelly.common import ConnectionOptions, get_info, is_firmware_supported
 from aioshelly.const import (
     BLOCK_GENERATIONS,
     DEFAULT_HTTP_PORT,
@@ -78,15 +78,28 @@ from .ble_provisioning import (
 )
 from .const import (
     CONF_BLE_SCANNER_MODE,
+    CONF_CONNECTION_TYPE,
+    CONF_EXTERNAL_URL,
     CONF_GEN,
+    CONF_REMOTE_CREDENTIAL,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
+    CONNECTION_LOCAL,
+    CONNECTION_REMOTE_WS,
     DOMAIN,
     LOGGER,
     PROVISIONING_TIMEOUT,
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry, async_reconnect_soon
+from .remote import (
+    PAIRING_TIMEOUT,
+    RemoteCredential,
+    async_get_remote_manager,
+    get_external_url,
+    is_remote_entry,
+    validate_external_url,
+)
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
@@ -102,7 +115,15 @@ from .utils import (
 
 CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_HOST): str,
+        probatio.Optional(
+            CONF_CONNECTION_TYPE, default=CONNECTION_LOCAL
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=[CONNECTION_LOCAL, CONNECTION_REMOTE_WS],
+                translation_key=CONF_CONNECTION_TYPE,
+            )
+        ),
         probatio.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): probatio.Coerce(int),
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -233,6 +254,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     disable_ble_rpc_after_provision: bool = True
     _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
     _ble_rpc_device: RpcDevice | None = None
+    _remote_record: RemoteCredential | None = None
+    _remote_url: str = ""
+    _remote_task: asyncio.Task | None = None
+    _remote_credentials: dict[str, str] = {}
+    _remote_committed: bool = False
 
     @staticmethod
     def _get_ssl_entry_data(port: int, verify_ssl: bool) -> dict[str, bool]:
@@ -473,6 +499,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step - show discovered devices or manual entry."""
         if user_input is not None:
             selected = user_input[CONF_DEVICE]
+            if selected == CONNECTION_REMOTE_WS:
+                return await self.async_step_remote()
             if selected == MANUAL_ENTRY_STRING:
                 return await self.async_step_user_manual()
 
@@ -548,6 +576,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             SelectOptionDict(label="manual", value=MANUAL_ENTRY_STRING)
         )
 
+        device_options.append(
+            SelectOptionDict(label="remote_ws", value=CONNECTION_REMOTE_WS)
+        )
+
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
@@ -567,6 +599,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle manual entry step."""
+        if (
+            user_input is not None
+            and user_input.get(CONF_CONNECTION_TYPE) == CONNECTION_REMOTE_WS
+        ):
+            return await self.async_step_remote()
+        if user_input is not None and not user_input.get(CONF_HOST):
+            return self.async_show_form(
+                step_id="user_manual",
+                data_schema=CONFIG_SCHEMA,
+                errors={CONF_HOST: "required"},
+            )
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
@@ -596,6 +639,233 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user_manual", data_schema=CONFIG_SCHEMA, errors=errors
+        )
+
+    async def async_step_remote(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Generate a credential using a configured or manually supplied HTTPS URL."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                origin = validate_external_url(user_input[CONF_EXTERNAL_URL])
+            except ValueError:
+                errors["base"] = "invalid_external_url"
+            else:
+                manager = await async_get_remote_manager(self.hass)
+                self._remote_record, self._remote_url = manager.create_credential(
+                    origin
+                )
+                return await self.async_step_remote_connect()
+        return self.async_show_form(
+            step_id="remote",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_EXTERNAL_URL, default=get_external_url(self.hass)
+                    ): str
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _async_wait_remote(self) -> None:
+        """Wait for a verified connection within the pairing window."""
+        assert self._remote_record is not None
+        async with asyncio.timeout(PAIRING_TIMEOUT):
+            await self._remote_record.ready.wait()
+
+    async def async_step_remote_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the sensitive URL only while waiting for the remote device."""
+        if self._remote_task is None:
+            self._remote_task = self.hass.async_create_task(self._async_wait_remote())
+        if not self._remote_task.done():
+            return self.async_show_progress(
+                step_id="remote_connect",
+                progress_action="remote_connect",
+                progress_task=self._remote_task,
+                description_placeholders={"connection_url": self._remote_url},
+            )
+        try:
+            self._remote_task.result()
+        except TimeoutError:
+            return self.async_abort(reason="remote_pairing_expired")
+        return self.async_show_progress_done(next_step_id="remote_confirm")
+
+    async def async_step_remote_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the queried identity before creating a remote config entry."""
+        assert self._remote_record is not None and self._remote_record.info is not None
+        info = self._remote_record.info
+        await self.async_set_unique_id(info[CONF_MAC].upper())
+        self._abort_if_unique_id_configured()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            manager = await async_get_remote_manager(self.hass)
+            connection = manager.server.get_connection(self.unique_id)
+            if connection is None or not connection.connected:
+                errors["base"] = "cannot_connect"
+            else:
+                if self._remote_credentials:
+                    connection.set_auth_data(
+                        info.get("auth_domain") or info["id"],
+                        "admin",
+                        self._remote_credentials[CONF_PASSWORD],
+                    )
+                try:
+                    config, status = await connection.calls(
+                        (("Shelly.GetConfig", None), ("Shelly.GetStatus", None))
+                    )
+                except InvalidAuthError:
+                    return await self.async_step_remote_credentials()
+                except DeviceConnectionError, RpcCallError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    if get_rpc_device_wakeup_period(status) != 0:
+                        return self.async_abort(reason="remote_sleeping_device")
+                    if not is_firmware_supported(
+                        info["gen"], info["model"], info["fw_id"]
+                    ):
+                        return self.async_abort(reason="firmware_unsupported")
+                    self._remote_committed = True
+                    return self.async_create_entry(
+                        title=config["sys"]["device"].get("name") or info["id"],
+                        data={
+                            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+                            CONF_REMOTE_CREDENTIAL: self._remote_record.digest,
+                            CONF_GEN: info["gen"],
+                            CONF_MODEL: info["model"],
+                            CONF_SLEEP_PERIOD: 0,
+                            **self._remote_credentials,
+                        },
+                    )
+        return self.async_show_form(
+            step_id="remote_confirm",
+            description_placeholders={"device": info["id"], "mac": info["mac"]},
+            errors=errors,
+        )
+
+    async def async_step_remote_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Supply Digest credentials only if the device challenges an RPC call."""
+        if user_input is not None:
+            self._remote_credentials = {
+                CONF_USERNAME: "admin",
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            return await self.async_step_remote_confirm({})
+        return self.async_show_form(
+            step_id="remote_credentials",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+        )
+
+    async def _async_cleanup_remote(self) -> None:
+        """Revoke an unfinished pairing after the flow is removed."""
+        assert self._remote_record is not None
+        manager = await async_get_remote_manager(self.hass)
+        await manager.revoke(self._remote_record.digest)
+
+    async def async_step_remote_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reauthenticate through the existing remote transport."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            manager = await async_get_remote_manager(self.hass)
+            assert entry.unique_id is not None
+            connection = manager.server.get_connection(entry.unique_id)
+            if connection is None or not connection.connected:
+                errors["base"] = "cannot_connect"
+            else:
+                assert connection.peer_src is not None
+                connection.set_auth_data(
+                    connection.peer_src, "admin", user_input[CONF_PASSWORD]
+                )
+                try:
+                    await connection.call("Shelly.GetConfig")
+                except InvalidAuthError:
+                    errors["base"] = "invalid_auth"
+                except DeviceConnectionError, RpcCallError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_USERNAME: "admin",
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
+                    )
+        return self.async_show_form(
+            step_id="remote_reauth",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_remote_revoke(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Revoke remote admission while retaining the config entry."""
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            manager = await async_get_remote_manager(self.hass)
+            await manager.revoke(entry.data.get(CONF_REMOTE_CREDENTIAL, ""))
+            return self.async_update_reload_and_abort(
+                entry, data_updates={CONF_REMOTE_CREDENTIAL: None}
+            )
+        return self.async_show_form(step_id="remote_revoke")
+
+    async def async_step_remote_regenerate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Rotate a bound credential and display its replacement URL once."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if self._remote_record is not None:
+            if user_input is not None:
+                manager = await async_get_remote_manager(self.hass)
+                await manager.revoke(entry.data.get(CONF_REMOTE_CREDENTIAL, ""))
+                self._remote_committed = True
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_REMOTE_CREDENTIAL: self._remote_record.digest},
+                )
+            return self.async_show_form(
+                step_id="remote_regenerate",
+                description_placeholders={"connection_url": self._remote_url},
+            )
+        if user_input is not None:
+            try:
+                origin = validate_external_url(user_input[CONF_EXTERNAL_URL])
+            except ValueError:
+                errors["base"] = "invalid_external_url"
+            else:
+                manager = await async_get_remote_manager(self.hass)
+                self._remote_record, self._remote_url = manager.create_credential(
+                    origin
+                )
+                self._remote_record.device_id = entry.unique_id
+                self._remote_record.entry_id = entry.entry_id
+                return await self.async_step_remote_regenerate()
+        return self.async_show_form(
+            step_id="remote_regenerate",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_EXTERNAL_URL, default=get_external_url(self.hass)
+                    ): str
+                }
+            ),
+            description_placeholders={"connection_url": ""},
+            errors=errors,
         )
 
     async def async_step_credentials(
@@ -720,6 +990,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
         current_entry = await self.async_set_unique_id(mac)
+        if current_entry and is_remote_entry(current_entry):
+            self._abort_if_unique_id_configured()
         current_host = current_entry.data.get(CONF_HOST) if current_entry else None
         # A user-configured hostname must not be replaced by the resolved IP
         keep_hostname = current_host is not None and not is_ip_address(current_host)
@@ -1258,6 +1530,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
+        if is_remote_entry(reauth_entry):
+            return await self.async_step_remote_reauth(user_input)
         host = reauth_entry.data[CONF_HOST]
         port = get_http_port(reauth_entry.data)
         verify_ssl = reauth_entry.data.get(CONF_VERIFY_SSL, False)
@@ -1307,6 +1581,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         errors = {}
         reconfigure_entry = self._get_reconfigure_entry()
+        if is_remote_entry(reconfigure_entry):
+            return self.async_show_menu(
+                step_id="reconfigure",
+                menu_options=["remote_regenerate", "remote_revoke"],
+            )
         self.host = reconfigure_entry.data[CONF_HOST]
         self.port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
         self.verify_ssl = reconfigure_entry.data.get(CONF_VERIFY_SSL, False)
@@ -1368,6 +1647,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_remove(self) -> None:
         """Handle flow removal - cleanup BLE connection."""
         super().async_remove()
+        self._remote_url = ""
+        if self._remote_record is not None and not self._remote_committed:
+            self.hass.async_create_background_task(
+                self._async_cleanup_remote(), "Shelly remote pairing cleanup"
+            )
         if self._ble_rpc_device is not None:
             # Schedule cleanup as background task since async_remove is sync
             self.hass.async_create_background_task(
