@@ -1,4 +1,4 @@
-navigation_request:
+navigate_to_destination:
   fields:
     device_id:
       required: true
@@ -12,7 +12,7 @@ navigation_request:
       selector:
         text:
 
-navigation_gps_request:
+navigate_to_coordinates:
   fields:
     device_id:
       required: true
@@ -26,7 +26,3 @@ navigation_gps_request:
       selector:
         location:
           radius: false
-    order:
-      required: false
-      selector:
-        number:

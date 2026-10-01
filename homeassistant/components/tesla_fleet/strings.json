@@ -656,7 +656,7 @@
     }
   },
   "services": {
-    "navigation_gps_request": {
+    "navigate_to_coordinates": {
       "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
       "fields": {
         "device_id": {
@@ -666,15 +666,11 @@
         "gps": {
           "description": "Location to navigate to.",
           "name": "Location"
-        },
-        "order": {
-          "description": "Order for this destination if specifying multiple destinations.",
-          "name": "Order"
         }
       },
       "name": "Navigate to coordinates"
     },
-    "navigation_request": {
+    "navigate_to_destination": {
       "description": "Sets vehicle navigation to the provided destination, which can be an address, a place name or a map link.",
       "fields": {
         "destination": {

@@ -24,11 +24,10 @@ if TYPE_CHECKING:
 # Attributes
 ATTR_DESTINATION = "destination"
 ATTR_GPS = "gps"
-ATTR_ORDER = "order"
 
 # Services
-SERVICE_NAVIGATION_REQUEST = "navigation_request"
-SERVICE_NAVIGATION_GPS_REQUEST = "navigation_gps_request"
+SERVICE_NAVIGATE_TO_DESTINATION = "navigate_to_destination"
+SERVICE_NAVIGATE_TO_COORDINATES = "navigate_to_coordinates"
 
 
 def async_get_vehicle_for_service_call(
@@ -60,7 +59,7 @@ def async_get_vehicle_for_service_call(
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Tesla Fleet services."""
 
-    async def navigation_request(call: ServiceCall) -> None:
+    async def navigate_to_destination(call: ServiceCall) -> None:
         """Send an address, place name or map link to a vehicle."""
         vehicle = async_get_vehicle_for_service_call(hass, call)
         await wake_up_vehicle(vehicle)
@@ -70,8 +69,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAVIGATION_REQUEST,
-        navigation_request,
+        SERVICE_NAVIGATE_TO_DESTINATION,
+        navigate_to_destination,
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
@@ -80,7 +79,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ),
     )
 
-    async def navigation_gps_request(call: ServiceCall) -> None:
+    async def navigate_to_coordinates(call: ServiceCall) -> None:
         """Send coordinates to a vehicle."""
         vehicle = async_get_vehicle_for_service_call(hass, call)
         await wake_up_vehicle(vehicle)
@@ -88,14 +87,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data.get(ATTR_ORDER, 0),
             )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAVIGATION_GPS_REQUEST,
-        navigation_gps_request,
+        SERVICE_NAVIGATE_TO_COORDINATES,
+        navigate_to_coordinates,
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
@@ -103,7 +101,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Required(CONF_LATITUDE): cv.latitude,
                     probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                probatio.Optional(ATTR_ORDER): cv.positive_int,
             }
         ),
     )

@@ -334,10 +334,10 @@
     }
   },
   "services": {
-    "navigation_gps_request": {
+    "navigate_to_coordinates": {
       "service": "mdi:crosshairs-gps"
     },
-    "navigation_request": {
+    "navigate_to_destination": {
       "service": "mdi:map-marker"
     }
   }

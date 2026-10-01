@@ -8,9 +8,8 @@ from homeassistant.components.tesla_fleet.const import DOMAIN
 from homeassistant.components.tesla_fleet.services import (
     ATTR_DESTINATION,
     ATTR_GPS,
-    ATTR_ORDER,
-    SERVICE_NAVIGATION_GPS_REQUEST,
-    SERVICE_NAVIGATION_REQUEST,
+    SERVICE_NAVIGATE_TO_COORDINATES,
+    SERVICE_NAVIGATE_TO_DESTINATION,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -37,7 +36,7 @@ def get_vehicle_device_id(
     return device.id
 
 
-async def test_navigation_request(
+async def test_navigate_to_destination(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
@@ -51,7 +50,7 @@ async def test_navigation_request(
     ) as navigation_request:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATION_REQUEST,
+            SERVICE_NAVIGATE_TO_DESTINATION,
             {
                 CONF_DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
@@ -65,16 +64,10 @@ async def test_navigation_request(
     )
 
 
-@pytest.mark.parametrize(
-    ("service_data", "expected_order"),
-    [({}, 0), ({ATTR_ORDER: 3}, 3)],
-)
-async def test_navigation_gps_request(
+async def test_navigate_to_coordinates(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    service_data: dict[str, int],
-    expected_order: int,
 ) -> None:
     """Test sending coordinates to the vehicle."""
     await setup_platform(hass, normal_config_entry)
@@ -85,22 +78,19 @@ async def test_navigation_gps_request(
     ) as navigation_gps_request:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATION_GPS_REQUEST,
+            SERVICE_NAVIGATE_TO_COORDINATES,
             {
                 CONF_DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
                 ATTR_GPS: {CONF_LATITUDE: LAT, CONF_LONGITUDE: LON},
-                **service_data,
             },
             blocking=True,
         )
-    navigation_gps_request.assert_called_once_with(
-        lat=LAT, lon=LON, order=expected_order
-    )
+    navigation_gps_request.assert_called_once_with(lat=LAT, lon=LON)
 
 
-async def test_navigation_request_command_error(
+async def test_navigate_to_destination_command_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
@@ -117,7 +107,7 @@ async def test_navigation_request_command_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATION_REQUEST,
+            SERVICE_NAVIGATE_TO_DESTINATION,
             {
                 CONF_DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
@@ -140,7 +130,7 @@ async def test_missing_vehicle_cmds_scope(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATION_REQUEST,
+            SERVICE_NAVIGATE_TO_DESTINATION,
             {
                 CONF_DEVICE_ID: get_vehicle_device_id(
                     device_registry, readonly_config_entry
@@ -169,7 +159,7 @@ async def test_energy_site_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATION_REQUEST,
+            SERVICE_NAVIGATE_TO_DESTINATION,
             {CONF_DEVICE_ID: device.id, ATTR_DESTINATION: "Home"},
             blocking=True,
         )
@@ -185,7 +175,7 @@ async def test_unknown_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATION_GPS_REQUEST,
+            SERVICE_NAVIGATE_TO_COORDINATES,
             {
                 CONF_DEVICE_ID: "nope",
                 ATTR_GPS: {CONF_LATITUDE: LAT, CONF_LONGITUDE: LON},
