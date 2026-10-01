@@ -8,7 +8,7 @@ from .state import GreeAcState
 
 type GreeInfraredConfigEntry = ConfigEntry[GreeAcState]
 
-PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH, Platform.SELECT, Platform.NUMBER]
 
 
 async def async_setup_entry(

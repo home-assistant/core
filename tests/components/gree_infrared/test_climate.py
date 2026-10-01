@@ -797,7 +797,10 @@ async def test_supported_features_always_include_target_temperature(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["supported_features"] == (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.SWING_HORIZONTAL_MODE
     )
 
 

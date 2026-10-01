@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GreeInfraredConfigEntry
+from .climate import SLEEP_BLOCKED_HVAC_MODES
 from .const import (
     CONF_GENERIC_OPTIONS,
     CONF_INFRARED_EMITTER_ENTITY_ID,
@@ -21,7 +23,7 @@ from .const import (
 from .entity import GreeIrEntity
 from .state import GreeAcState
 
-_OPTIONS = ("turbo", "light", "health", "xfan")
+_BASE_OPTIONS = ("turbo", "light", "health", "xfan")
 
 
 async def async_setup_entry(
@@ -30,14 +32,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up option switches for supported profiles."""
-    if entry.data.get(CONF_MODEL, MODEL_GENERIC) != MODEL_YAP1F and not (
-        entry.data.get(CONF_MODEL, MODEL_GENERIC) == MODEL_GENERIC
-        and entry.data.get(CONF_GENERIC_OPTIONS, False)
-    ):
-        return
+    model = entry.data.get(CONF_MODEL, MODEL_GENERIC)
+    is_yap1f = model == MODEL_YAP1F
     state = entry.runtime_data
-    entities = [GreeAcOptionSwitch(entry, state, key) for key in _OPTIONS]
-    async_add_entities(entities)
+    keys: list[str] = []
+    if is_yap1f or entry.data.get(CONF_GENERIC_OPTIONS, False):
+        keys.extend(_BASE_OPTIONS)
+    # Sleep rides in the generic frame, so both profiles always expose it.
+    keys.append("sleep")
+    if is_yap1f:
+        keys.extend(("ifeel", "econo"))
+    async_add_entities([GreeAcOptionSwitch(entry, state, key) for key in keys])
 
 
 class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEntity):
@@ -66,13 +71,22 @@ class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEnti
     def available(self) -> bool:
         """Require the configured emitter and the owning climate entity."""
         climate = self._state.climate
-        return (
+        if not (
             self._attr_available
             and climate is not None
             and climate.entity_id is not None
             and (climate_state := self.hass.states.get(climate.entity_id)) is not None
             and climate_state.state != STATE_UNAVAILABLE
-        )
+        ):
+            return False
+        if self._key == "sleep" and climate.hvac_mode in (
+            *SLEEP_BLOCKED_HVAC_MODES,
+            HVACMode.OFF,
+        ):
+            return False
+        if self._key == "econo" and climate.hvac_mode is not HVACMode.COOL:
+            return False
+        return True
 
     @property
     @override
