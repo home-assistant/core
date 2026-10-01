@@ -142,6 +142,7 @@ Every check has a code following the
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
+| `W7438` | [`home-assistant-test-flow-start-helper`](#w7438-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
 
 
 ## `home_assistant_logger` checker
@@ -1042,3 +1043,29 @@ The light provides `color_mode` but no `supported_color_modes`. At runtime
 ("does not set supported color modes") from both `state_attributes` and
 `capability_attributes` whenever `supported_color_modes` is `None`. Set
 `_attr_supported_color_modes` or override the `supported_color_modes` property.
+
+
+## `home_assistant_flow_start_helpers` checker
+
+Enforces the use of `MockConfigEntry` helpers to start reauth and
+reconfigure flows in integration tests.
+
+### `W7438`: `home-assistant-test-flow-start-helper`
+
+Tests must not start a reauth or reconfigure flow by calling
+`hass.config_entries.flow.async_init` with a hand-built `context`
+(`"source": SOURCE_REAUTH` / `SOURCE_RECONFIGURE`). Use
+`entry.start_reauth_flow(hass)` or `entry.start_reconfigure_flow(hass)`
+instead; they build the same context Home Assistant uses at runtime.
+
+```python
+# Bad
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+    data=entry.data,
+)
+
+# Good
+result = await entry.start_reauth_flow(hass)
+```
