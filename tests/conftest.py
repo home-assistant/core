@@ -472,7 +472,7 @@ def verify_cleanup(
     for thread in threads:
         assert (
             isinstance(thread, threading._DummyThread)
-            or thread.name.startswith("waitpid-")
+            or thread.name.startswith(("waitpid-", "asyncio-waitpid-"))
             or "_run_safe_shutdown_loop" in thread.name
         )
 
