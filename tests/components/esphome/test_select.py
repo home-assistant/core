@@ -9,17 +9,48 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteWakeWord,
 )
-from homeassistant.components.esphome.const import NO_WAKE_WORD
+from homeassistant.components.esphome.const import (
+    NO_WAKE_WORD,
+    VOICE_ASSISTANT_SELECT_KEYS,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import get_satellite_entity
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+
+
+async def test_voice_assistant_select_keys_match_the_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test VOICE_ASSISTANT_SELECT_KEYS names every select the platform builds."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The device offers no selects of its own, so these are the voice assistant's
+    assert {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, device.entry.entry_id
+        )
+        if entry.domain == Platform.SELECT
+    } == {
+        f"{device.device_info.mac_address}-{key}" for key in VOICE_ASSISTANT_SELECT_KEYS
+    }
 
 
 @pytest.mark.usefixtures("mock_voice_assistant_v1_entry")

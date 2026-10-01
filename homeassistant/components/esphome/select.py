@@ -49,15 +49,20 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities(
-            [
-                EsphomeAssistPipelineSelect(hass, entry_data, index=0),
-                EsphomeAssistPipelineSelect(hass, entry_data, index=1),
-                EsphomeVadSensitivitySelect(hass, entry_data),
-                EsphomeAssistSatelliteWakeWordSelect(entry_data, index=0),
-                EsphomeAssistSatelliteWakeWordSelect(entry_data, index=1),
-            ]
-        )
+        async_add_entities(_voice_assistant_selects(hass, entry_data))
+
+
+def _voice_assistant_selects(
+    hass: HomeAssistant, entry_data: RuntimeEntryData
+) -> list[SelectEntity]:
+    """Build the selects that exist only while the device offers a voice assistant."""
+    return [
+        EsphomeAssistPipelineSelect(hass, entry_data, index=0),
+        EsphomeAssistPipelineSelect(hass, entry_data, index=1),
+        EsphomeVadSensitivitySelect(hass, entry_data),
+        EsphomeAssistSatelliteWakeWordSelect(entry_data, index=0),
+        EsphomeAssistSatelliteWakeWordSelect(entry_data, index=1),
+    ]
 
 
 class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
