@@ -1,6 +1,7 @@
 """Tests the init part of the Loqed integration."""
 
 from datetime import timedelta
+import json
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -9,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
 
+from homeassistant.components.lock import LockState
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -49,6 +51,33 @@ async def test_webhook_accepts_valid_message(
         headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
     )
     lock.receiveWebhook.assert_called()
+
+
+async def test_webhook_motor_stall_reports_jammed(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+) -> None:
+    """Test a MOTOR_STALL webhook sets the lock to jammed."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    message = await async_load_fixture(hass, "motor_stall.json", DOMAIN)
+    lock.receiveWebhook = AsyncMock(return_value=json.loads(message))
+    lock.updateState.reset_mock()
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+
+    await client.post(
+        f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+        data=message,
+        headers={"timestamp": "1653304609", "hash": "hash"},
+    )
+    await hass.async_block_till_done()
+
+    lock.updateState.assert_awaited_once_with("motor_stall")
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.JAMMED
 
 
 async def test_setup_webhook_in_bridge(

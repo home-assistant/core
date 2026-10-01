@@ -111,6 +111,10 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return
 
+        # loqedAPI does not map this event to a bolt state.
+        if event_data.get("event_type") == "MOTOR_STALL":
+            await self.lock.updateState("motor_stall")
+
         self.async_update_listeners()
 
     async def ensure_webhooks(self) -> None:
