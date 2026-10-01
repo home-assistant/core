@@ -389,6 +389,13 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         command = GreeAcCommand.from_raw_timings(signal.timings, model=self._model)
         if command is None:
             return
+        if self._model is GreeAcModel.GENERIC and (
+            GreeAcCommand.from_raw_timings(signal.timings, model=GreeAcModel.YAP1F)
+            is not None
+        ):
+            # A YAP1F remote's first frame is generic-shaped; only the selected
+            # profile may claim the two-frame signal.
+            return
 
         # Off frames carry a mode field too, so the mode is recorded either way.
         embedded_hvac_mode = _LIB_MODE_TO_HA[command.mode]
