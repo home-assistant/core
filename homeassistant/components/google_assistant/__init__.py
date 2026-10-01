@@ -51,7 +51,7 @@ ENTITY_SCHEMA = probatio.Schema(
 
 GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     {
-        probatio.Required(CONF_PRIVATE_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_PRIVATE_KEY)): cv.string,
         probatio.Required(CONF_CLIENT_EMAIL): cv.string,
     },
     extra=probatio.ALLOW_EXTRA,
