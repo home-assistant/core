@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.daikin_onecta.const import DAIKIN_API_URL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -9,7 +10,6 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.daikin_onecta.const import DAIKIN_API_URL
 
 from .conftest import FAKE_ACCESS_TOKEN, load_fixture_json
 
