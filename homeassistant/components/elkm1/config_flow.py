@@ -52,7 +52,7 @@ VALIDATE_TIMEOUT = 35
 
 BASE_SCHEMA: VolDictType = {
     probatio.Optional(CONF_USERNAME, default=""): str,
-    probatio.Optional(CONF_PASSWORD, default=""): str,
+    probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str,
 }
 
 SECURE_PROTOCOLS = ["secure", "TLS 1.2"]

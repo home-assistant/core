@@ -22,14 +22,14 @@ from .const import DOMAIN, LOGGER
 
 BLUETOOTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ADDRESS): str,
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 

@@ -39,7 +39,7 @@ DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=22): int,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
