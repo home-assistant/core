@@ -1,5 +1,6 @@
 """Test the native Shelly remote setup and credential management flows."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -94,6 +95,51 @@ async def test_remote_pairing_flow_without_host(hass: HomeAssistant) -> None:
     assert "host" not in result["data"]
     assert URL(url).query["remote_key"] not in repr(result["data"])
     assert connection.connected
+
+
+@pytest.mark.usefixtures("mock_setup", "mock_setup_entry")
+@pytest.mark.parametrize(
+    ("expires_in", "rpc_calls"),
+    [
+        pytest.param(0, 0, id="expired-before-confirmation"),
+        pytest.param(600, 1, id="expired-during-rpc"),
+    ],
+)
+async def test_expired_remote_pairing_confirmation(
+    hass: HomeAssistant, expires_in: int, rpc_calls: int
+) -> None:
+    """An expired pairing cannot become a permanent credential on confirmation."""
+    manager = RemoteConnectionManager(hass)
+    result = await start_remote_flow(hass, manager)
+    record = next(iter(manager.credentials.values()))
+    record.device_id = "AABBCCDDEEFF"
+    record.info = DEVICE_INFO
+    connection = manager.server.get_or_create_connection(record.device_id)
+    connection.attach(DEVICE_INFO["id"], MagicMock(closed=False))
+
+    async def expire_during_rpc(*_args: object) -> list[dict]:
+        record.expires_at = 0
+        return [
+            {"sys": {"device": {"name": "Remote test"}}},
+            {"sys": {"wakeup_period": 0}},
+        ]
+
+    connection.calls = AsyncMock(side_effect=expire_during_rpc)
+    record.ready.set()
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_get_remote_manager",
+        return_value=manager,
+    ):
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        record.expires_at = asyncio.get_running_loop().time() + expires_in
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "remote_pairing_expired"
+    assert connection.calls.await_count == rpc_calls
+    assert not manager.credentials
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 async def test_remote_invalid_external_url(hass: HomeAssistant) -> None:
@@ -208,6 +254,51 @@ async def confirm_rotation(hass: HomeAssistant, flow_id: str) -> None:
 async def cancel_rotation(hass: HomeAssistant, flow_id: str) -> None:
     """Cancel a replacement credential."""
     hass.config_entries.flow.async_abort(flow_id)
+
+
+async def test_expired_remote_regeneration(hass: HomeAssistant) -> None:
+    """An old rotation form cannot revive its expired URL or revoke active access."""
+    manager = RemoteConnectionManager(hass)
+    old_record, old_url = manager.create_credential(URL("https://ha.example.com"))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_CONNECTION_TYPE: CONNECTION_REMOTE_WS,
+            CONF_REMOTE_CREDENTIAL: old_record.digest,
+        },
+    )
+    entry.add_to_hass(hass)
+    manager.register_entry(entry)
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_get_remote_manager",
+            return_value=manager,
+        ),
+        patch.object(hass.config_entries, "async_reload", return_value=True) as reload,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "remote_regenerate"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_EXTERNAL_URL: "https://ha.example.com"}
+        )
+        token = URL(result["description_placeholders"]["connection_url"]).query[
+            "remote_key"
+        ]
+        new_record = manager.lookup(token)
+        new_record.expires_at = 0
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "remote_pairing_expired"
+    assert entry.data[CONF_REMOTE_CREDENTIAL] == old_record.digest
+    assert manager.lookup(URL(old_url).query["remote_key"]) is old_record
+    assert manager.lookup(token) is None
+    reload.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

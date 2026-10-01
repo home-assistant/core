@@ -195,6 +195,14 @@ class RemoteConnectionManager:
         return record
 
     @callback
+    def is_valid_credential(self, record: RemoteCredential) -> bool:
+        """Return whether a credential is still registered and unexpired."""
+        return self.credentials.get(record.digest) is record and (
+            record.expires_at is None
+            or record.expires_at > asyncio.get_running_loop().time()
+        )
+
+    @callback
     def lookup(self, token: str) -> RemoteCredential | None:
         """Look up an unexpired credential without retaining the secret."""
         if not TOKEN_PATTERN.fullmatch(token):
@@ -203,9 +211,7 @@ class RemoteConnectionManager:
         record = self.credentials.get(digest)
         if record is None or not secrets.compare_digest(record.digest, digest):
             return None
-        if record.expires_at is not None and (
-            record.expires_at <= asyncio.get_running_loop().time()
-        ):
+        if not self.is_valid_credential(record):
             return None
         return record
 
@@ -277,11 +283,7 @@ class RemoteConnectionManager:
                 self._identifying -= 1
             mac = info["mac"].upper()
             if (
-                self.credentials.get(record.digest) is not record
-                or (
-                    record.expires_at is not None
-                    and record.expires_at <= asyncio.get_running_loop().time()
-                )
+                not self.is_valid_credential(record)
                 or (record.device_id is not None and record.device_id != mac)
                 or any(
                     entry.unique_id == mac and entry.entry_id != record.entry_id

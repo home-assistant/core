@@ -699,12 +699,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the queried identity before creating a remote config entry."""
         assert self._remote_record is not None and self._remote_record.info is not None
+        manager = await async_get_remote_manager(self.hass)
+        if not manager.is_valid_credential(self._remote_record):
+            return self.async_abort(reason="remote_pairing_expired")
         info = self._remote_record.info
         await self.async_set_unique_id(info[CONF_MAC].upper())
         self._abort_if_unique_id_configured()
         errors: dict[str, str] = {}
         if user_input is not None:
-            manager = await async_get_remote_manager(self.hass)
             assert self.unique_id is not None
             connection = manager.server.get_connection(self.unique_id)
             if connection is None or not connection.connected:
@@ -725,6 +727,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 except DeviceConnectionError, RpcCallError:
                     errors["base"] = "cannot_connect"
                 else:
+                    if not manager.is_valid_credential(self._remote_record):
+                        return self.async_abort(reason="remote_pairing_expired")
                     if get_rpc_device_wakeup_period(status) != 0:
                         return self.async_abort(reason="remote_sleeping_device")
                     if not is_firmware_supported(
@@ -832,8 +836,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if self._remote_record is not None:
+            manager = await async_get_remote_manager(self.hass)
+            if not manager.is_valid_credential(self._remote_record):
+                return self.async_abort(reason="remote_pairing_expired")
             if user_input is not None:
-                manager = await async_get_remote_manager(self.hass)
                 await manager.revoke(entry.data.get(CONF_REMOTE_CREDENTIAL, ""))
                 self._remote_committed = True
                 return self.async_update_reload_and_abort(
