@@ -194,7 +194,7 @@ async def test_config_entry_flow_only(
     assert entries[0].data == get_config_entry_data
 
 
-async def test_config_flow_no_data(
+async def test_config_flow_subentry_flow_no_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
@@ -206,25 +206,13 @@ async def test_config_flow_no_data(
         text="",
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], get_config_entry_data
-    )
-
-    assert (
-        result["errors"]
-        and "base" in result["errors"]
-        and result["errors"]["base"] == "no_json"
-    )
-
     entry = await async_setup_entry(hass, get_config_entry_data)
 
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, Platform.SENSOR),
         context={"source": config_entries.SOURCE_USER},
     )
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_config_entry_flow_payload_template_error(

@@ -105,7 +105,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             rest = create_rest_data_from_config_entry(self.hass, user_input)
             try:
                 await rest.async_update()
-                if rest.last_exception:
+                if rest.last_exception or rest.data is None:
                     errors["base"] = (
                         "endpoint_error"
                         if not isinstance(rest.last_exception, TimeoutError)
@@ -114,8 +114,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                     placeholders["endpoint_error_message"] = str(rest.last_exception)
                 else:
                     try:
-                        if not rest.data_without_xml():
-                            errors["base"] = "no_json"
+                        rest.data_without_xml()
                     except ExpatError as ex:
                         errors["base"] = "xml_parse_error"
                         placeholders["xml_parse_error_message"] = str(ex)
@@ -343,7 +342,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 reason=reason, description_placeholders=description_placeholders
             )
         try:
-            rest_data = entry.runtime_data.rest.data_without_xml()
+            rest_data = entry.runtime_data.rest.data_without_xml() or ""
         except ExpatError as ex:
             return self.async_abort(
                 reason="xml_parse_error",
@@ -356,7 +355,9 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 Platform(self._subentry_type)
             ].post_schema_validation:
                 if callable(schema_validator):
-                    schema_validator = schema_validator(rest_data)
+                    schema_validator = schema_validator(
+                        rest_data if len(rest_data) < 1000 else rest_data[:999]
+                    )
                 if isinstance(schema_validator, probatio.Schema):
                     try:
                         schema_validator(user_input)
