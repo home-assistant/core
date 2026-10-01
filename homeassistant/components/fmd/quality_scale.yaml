@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not provide service actions.
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-high-level-description:
+    status: in_progress
+    comment: Documentation PR pending.
+  docs-installation-instructions:
+    status: in_progress
+    comment: Documentation PR pending.
+  docs-removal-instructions:
+    status: in_progress
+    comment: Documentation PR pending.
   entity-event-setup:
     status: exempt
     comment: This integration does not subscribe to external events.
