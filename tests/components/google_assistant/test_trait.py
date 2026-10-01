@@ -1367,14 +1367,17 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
 
 
 @pytest.mark.parametrize(
-    "hvac_modes",
+    ("hvac_modes", "expected_modes"),
     [
-        [],
-        [climate.HVACMode.HEAT],
+        # No made-up "heat" fallback: it only exists to allow setting a temperature.
+        pytest.param([], [], id="no_modes"),
+        pytest.param([climate.HVACMode.HEAT], ["heat"], id="single_mode"),
     ],
 )
 async def test_temperature_setting_climate_query_only(
-    hass: HomeAssistant, hvac_modes: list[climate.HVACMode]
+    hass: HomeAssistant,
+    hvac_modes: list[climate.HVACMode],
+    expected_modes: list[str],
 ) -> None:
     """Test a climate entity that can neither set a target nor switch modes.
 
@@ -1398,8 +1401,7 @@ async def test_temperature_setting_climate_query_only(
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        # No made-up "heat" fallback: it only exists to allow setting a temperature.
-        "availableThermostatModes": ["heat"] if hvac_modes else [],
+        "availableThermostatModes": expected_modes,
         "thermostatTemperatureRange": {
             "minThresholdCelsius": climate.DEFAULT_MIN_TEMP,
             "maxThresholdCelsius": climate.DEFAULT_MAX_TEMP,
@@ -1417,9 +1419,11 @@ async def test_temperature_setting_climate_query_only(
 @pytest.mark.parametrize(
     ("features", "hvac_modes"),
     [
-        (ClimateEntityFeature.TARGET_TEMPERATURE, []),
-        (ClimateEntityFeature.TARGET_TEMPERATURE_RANGE, []),
-        (0, [climate.HVACMode.OFF, climate.HVACMode.HEAT]),
+        pytest.param(ClimateEntityFeature.TARGET_TEMPERATURE, [], id="target"),
+        pytest.param(ClimateEntityFeature.TARGET_TEMPERATURE_RANGE, [], id="range"),
+        pytest.param(
+            0, [climate.HVACMode.OFF, climate.HVACMode.HEAT], id="multiple_modes"
+        ),
     ],
 )
 async def test_temperature_setting_climate_not_query_only(
