@@ -2067,6 +2067,38 @@ async def test_setup_not_ready_exponential_backoff(
         assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("retry_after", "expected_wait"),
+    [
+        pytest.param(3600, 3600, id="honored"),
+        pytest.param(1, 5, id="backoff_is_floor"),
+        pytest.param(-60, 5, id="already_passed"),
+        pytest.param(10**9, 86400, id="capped_at_one_day"),
+    ],
+)
+async def test_setup_not_ready_retry_after(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    retry_after: float,
+    expected_wait: int,
+) -> None:
+    """Test setup retry honors retry_after between the backoff and one day."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryNotReady(retry_after=retry_after)
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+        await manager.async_setup(entry.entry_id)
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert int(mock_call.call_args.args[1]) == expected_wait
+
+
 async def test_setup_raise_not_ready_from_exception(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,

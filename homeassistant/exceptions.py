@@ -248,6 +248,18 @@ class ConfigEntryError(IntegrationError):
 class ConfigEntryNotReady(IntegrationError):
     """Error to indicate that config entry is not ready."""
 
+    retry_after: float | None = None
+
+    def __init__(
+        self,
+        *args: object,
+        retry_after: float | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(*args, **kwargs)
+        self.retry_after = retry_after
+
 
 class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
