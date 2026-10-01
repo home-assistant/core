@@ -4,15 +4,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import OnectaRateLimitError
 import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from tests.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
     OnectaRuntimeData,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
