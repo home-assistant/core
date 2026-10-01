@@ -573,7 +573,14 @@ class KeyboardRemoteManager:
             await self._async_handle_by_id_event(event)
             return
 
-        # Events on /dev/input itself, like a queue overflow, name no node
+        if Mask.Q_OVERFLOW in event.mask:
+            # Removed devices fail their reads and release themselves, but
+            # added ones would go unnoticed
+            _LOGGER.warning("Missed input device events, checking all devices")
+            await self._async_handle_unseen_links()
+            return
+
+        # Events on /dev/input itself name no node
         if event.name is None:
             return
 
@@ -710,10 +717,10 @@ class KeyboardRemoteManager:
             await self._async_handle_unseen_links()
 
     async def _async_handle_unseen_links(self) -> None:
-        """Handle the by-id links added while the directory was unwatched.
+        """Handle the by-id links whose events were missed.
 
-        They produced no event, so handle each as a new link, then check the
-        handlers still waiting for a device.
+        Handle each as a new link, then check the handlers still waiting for a
+        device, which also finds nodes without a link.
         """
         for name in await self.hass.async_add_executor_job(_list_by_id_links):
             await self._async_handle_link(name)

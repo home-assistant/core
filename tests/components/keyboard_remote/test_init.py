@@ -1504,6 +1504,25 @@ async def test_same_named_nodes_connect_the_first_node(
     assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in connected] == [REMOTE_PATH]
 
 
+async def test_devices_added_during_queue_overflow_connect(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test devices whose events the kernel dropped still connect."""
+    await _set_up(hass, fake_input, mock_config_entry)
+    await _set_up(hass, fake_input, _remote_entry())
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
+
+    await fake_input.overflow()
+
+    assert "Missed input device events, checking all devices" in caplog.text
+    kbd.grab.assert_called_once()
+    remote.grab.assert_called_once()
+
+
 async def test_link_added_while_unwatched_connects_on_next_event(
     hass: HomeAssistant,
     fake_input: FakeInput,
@@ -1576,14 +1595,14 @@ async def test_event_without_a_node_is_ignored(
     fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an event on /dev/input itself, like a queue overflow, opens nothing."""
+    """Test an event on /dev/input itself, like a change of its mode, opens nothing."""
     await _set_up(hass, fake_input, mock_config_entry)
     fake_input.opened.clear()
     assert fake_input.inotify is not None
 
     fake_input.inotify.queue.put_nowait(
         SimpleNamespace(
-            name=None, mask=Mask.Q_OVERFLOW, watch=fake_input.inotify.watches[DEVINPUT]
+            name=None, mask=Mask.ATTRIB, watch=fake_input.inotify.watches[DEVINPUT]
         )
     )
     await fake_input.settle()

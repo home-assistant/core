@@ -345,6 +345,14 @@ class FakeInput:
             self._emit(None, Mask.IGNORED, watch=watch)
         await self.settle()
 
+    async def overflow(self) -> None:
+        """Report that the kernel dropped events, which names no watch."""
+        assert self.inotify is not None
+        self.inotify.queue.put_nowait(
+            SimpleNamespace(name=None, mask=Mask.Q_OVERFLOW, watch=None)
+        )
+        await self.settle()
+
     def remove_node(self, path: str) -> None:
         """Report a node's removal without failing its reads yet."""
         self.devices.pop(path)
