@@ -30,6 +30,7 @@ from homeassistant.components.keyboard_remote.const import (
     DEVINPUT,
     DEVINPUT_BY_ID,
     DOMAIN,
+    EMULATE_KEY_HOLD_DELAY_MIN,
     EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
     EVENT_KEYBOARD_REMOTE_CONNECTED,
     EVENT_KEYBOARD_REMOTE_DISCONNECTED,
@@ -45,7 +46,6 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -160,91 +160,94 @@ async def test_yaml_import_creates_entry_and_deprecation_issue(
     }
 
 
-async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
-    """Test setup without YAML configuration starts no import."""
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+async def test_async_setup_no_yaml_config(
+    hass: HomeAssistant, fake_input: FakeInput, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test setup without YAML configuration imports nothing."""
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    mock_init.assert_not_called()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await fake_input.settle()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not issue_registry.issues
 
 
-async def test_async_setup_imports_each_normalized_block(hass: HomeAssistant) -> None:
+async def test_async_setup_imports_each_normalized_block(
+    hass: HomeAssistant, fake_input: FakeInput
+) -> None:
     """Test each YAML block is imported with coerced values and defaults."""
-    with patch.object(
-        hass.config_entries.flow,
-        "async_init",
-        return_value={"type": FlowResultType.ABORT, "reason": "already_configured"},
-    ) as mock_init:
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: [
-                    {"device_descriptor": FAKE_DEVICE_REAL_PATH},
-                    {
-                        "device_name": "Keyboard",
-                        "type": "key_down",
-                        "emulate_key_hold_delay": 1,
-                    },
-                ]
-            },
-        )
-        await hass.async_block_till_done()
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    defaults = {
-        "type": ["key_up"],
-        "emulate_key_hold": False,
-        "emulate_key_hold_delay": 0.25,
-        "emulate_key_hold_repeat": 0.033,
-    }
-    assert [init.kwargs["data"] for init in mock_init.call_args_list] == [
-        {"device_descriptor": FAKE_DEVICE_REAL_PATH, **defaults},
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
         {
-            **defaults,
-            "device_name": "Keyboard",
-            "type": ["key_down"],
-            "emulate_key_hold_delay": 1.0,
+            DOMAIN: [
+                {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+                {
+                    "device_name": "Keyboard",
+                    "type": "key_down",
+                    "emulate_key_hold_delay": 1,
+                },
+            ]
         },
-    ]
+    )
+    await fake_input.settle()
+
+    assert {
+        entry.title: (entry.data, entry.options)
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    } == {
+        FAKE_DEVICE_NAME: (
+            {
+                CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+                CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+                CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+            },
+            OPTIONS,
+        ),
+        "Keyboard": (
+            {CONF_DEVICE_NAME: "Keyboard"},
+            {
+                **OPTIONS,
+                CONF_KEY_TYPES: ["key_down"],
+                CONF_EMULATE_KEY_HOLD_DELAY: 1.0,
+            },
+        ),
+    }
 
 
 async def test_async_setup_accepts_values_the_import_fits(
-    hass: HomeAssistant,
+    hass: HomeAssistant, fake_input: FakeInput
 ) -> None:
     """Test YAML with unknown keys or odd numbers still imports.
 
     An invalid config would keep every entry of the integration from loading,
-    so values the import can fit into the options are accepted.
+    so the import fits values like these into the options instead.
     """
-    with patch.object(
-        hass.config_entries.flow,
-        "async_init",
-        return_value={"type": FlowResultType.ABORT, "reason": "already_configured"},
-    ) as mock_init:
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    "device_descriptor": FAKE_DEVICE_REAL_PATH,
-                    "emulate_key_hold_dealy": 1,
-                    "type": [],
-                    "emulate_key_hold_delay": -1,
-                    "emulate_key_hold_repeat": "0.5",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    [init] = mock_init.call_args_list
-    assert init.kwargs["data"] == {
-        "device_descriptor": FAKE_DEVICE_REAL_PATH,
-        "emulate_key_hold_dealy": 1,
-        "type": [],
-        "emulate_key_hold": False,
-        "emulate_key_hold_delay": -1.0,
-        "emulate_key_hold_repeat": 0.5,
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "device_descriptor": FAKE_DEVICE_REAL_PATH,
+                "emulate_key_hold_dealy": 1,
+                "type": [],
+                "emulate_key_hold_delay": -1,
+                "emulate_key_hold_repeat": "0.5",
+            }
+        },
+    )
+    await fake_input.settle()
+
+    [entry] = hass.config_entries.async_entries(DOMAIN)
+    assert entry.options == {
+        **OPTIONS,
+        CONF_EMULATE_KEY_HOLD_DELAY: EMULATE_KEY_HOLD_DELAY_MIN,
+        CONF_EMULATE_KEY_HOLD_REPEAT: 0.5,
     }
 
 
@@ -252,15 +255,15 @@ async def test_async_setup_accepts_values_the_import_fits(
     "device_block",
     [
         pytest.param(
-            {"device_descriptor": "/dev/input/event5", "type": "bogus"},
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH, "type": "bogus"},
             id="unknown_key_type",
         ),
         pytest.param(
-            {"device_descriptor": "/dev/input/event5", "device_name": "Keyboard"},
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH, "device_name": "Keyboard"},
             id="descriptor_and_name",
         ),
         pytest.param(
-            {"device_descriptor": "/dev/input/event5", "emulate_key_hold_delay": "a"},
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH, "emulate_key_hold_delay": "a"},
             id="delay_not_a_number",
         ),
         pytest.param({"type": "key_up"}, id="no_device"),
@@ -269,17 +272,19 @@ async def test_async_setup_accepts_values_the_import_fits(
 )
 async def test_async_setup_rejects_invalid_yaml(
     hass: HomeAssistant,
+    fake_input: FakeInput,
     device_block: dict[str, str],
 ) -> None:
     """Test a YAML block that cannot be used fails setup instead of importing.
 
     An unknown key type would crash the monitor on the first key press.
     """
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: device_block})
-        await hass.async_block_till_done()
+    fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
-    mock_init.assert_not_called()
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: device_block})
+    await fake_input.settle()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 @pytest.mark.parametrize(
