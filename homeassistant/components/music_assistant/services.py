@@ -168,8 +168,8 @@ def register_actions(hass: HomeAssistant) -> None:
                     probatio.Optional(ATTR_ANNOUNCE_VOLUME): probatio.Coerce(int),
                 }
             ),
-            cv.has_at_least_one_key(ATTR_URL, ATTR_MESSAGE),
-            cv.has_at_most_one_key(ATTR_URL, ATTR_MESSAGE),
+            probatio.AtLeastOne(ATTR_URL, ATTR_MESSAGE),
+            probatio.AtMostOne(ATTR_URL, ATTR_MESSAGE),
         ),
         func="_async_handle_play_announcement",
     )

@@ -7,6 +7,7 @@ from aiomelcloudhome import ATAUnit, ATWUnit
 from yarl import URL
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN, WEB_BASE_URL
@@ -24,11 +25,17 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
 
     _unit_type_path: str
 
-    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: _UnitT) -> None:
+    def __init__(
+        self,
+        coordinator: MelCloudHomeCoordinator,
+        entity_description: EntityDescription,
+        unit: _UnitT,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._unit_id = unit.id
-        self._attr_unique_id = unit.id
+        self._attr_unique_id = f"{unit.id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unit.id)},
             name=unit.name,
@@ -82,11 +89,12 @@ class MelCloudHomeATWZoneEntity(MelCloudHomeATWUnitEntity):
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
+        entity_description: EntityDescription,
         unit: ATWUnit,
         zone_number: int,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
+        super().__init__(coordinator, entity_description, unit)
         self._zone_number = zone_number
         self._attr_unique_id = f"{unit.id}_zone_{zone_number}"
         self._attr_translation_placeholders = {"zone_number": str(zone_number)}

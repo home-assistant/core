@@ -42,7 +42,7 @@ MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_API_SECRET): cv.string,
         probatio.Required(CONF_SENSOR_ID): cv.string,
     }
