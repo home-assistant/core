@@ -63,7 +63,9 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 REMOTE_PATH = "/dev/input/event7"
+REMOTE_PATH_2 = "/dev/input/event8"
 REMOTE_NAME = "BT Remote"
+REMOTE_UNIQ = "aa:bb:cc:dd:ee:ff"
 OTHER_LINK = "/dev/input/by-id/usb-Other-event-kbd"
 
 OPTIONS = {
@@ -1520,6 +1522,70 @@ async def test_same_named_nodes_connect_the_first_node(
 
     first.grab.assert_called_once()
     assert [e.data[CONF_DEVICE_DESCRIPTOR] for e in connected] == [REMOTE_PATH]
+
+
+async def _keep_running(
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
+) -> None:
+    pass
+
+
+async def _reconnect_remote(
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
+) -> None:
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        await fake_input.unplug(path)
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        await fake_input.plug(path, REMOTE_NAME, uniq=REMOTE_UNIQ)
+
+
+async def _reload(
+    hass: HomeAssistant, fake_input: FakeInput, entry: MockConfigEntry
+) -> None:
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await fake_input.settle()
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        pytest.param(_keep_running, id="added_while_running"),
+        pytest.param(_reconnect_remote, id="reconnect"),
+        pytest.param(_reload, id="reload"),
+    ],
+)
+async def test_name_entry_beside_busy_uniq_entry_gets_a_node(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    action: Callable[[HomeAssistant, FakeInput, MockConfigEntry], Awaitable[None]],
+) -> None:
+    """Test a name entry gets the node an entry matching it better leaves free.
+
+    Both nodes of the remote share a name and uniq, so the uniq entry is the
+    better match for each, but it reads only one of them.
+    """
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        fake_input.add(path, REMOTE_NAME, uniq=REMOTE_UNIQ)
+    await _set_up(
+        hass,
+        fake_input,
+        _entry(
+            {CONF_DEVICE_NAME: REMOTE_NAME, CONF_DEVICE_UNIQ: REMOTE_UNIQ},
+            unique_id=f"{REMOTE_UNIQ} {REMOTE_NAME}",
+        ),
+    )
+    name_entry = _remote_entry()
+    await _set_up(hass, fake_input, name_entry)
+
+    await action(hass, fake_input, name_entry)
+    commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
+    for path in (REMOTE_PATH, REMOTE_PATH_2):
+        await fake_input.press(fake_input.devices[path], 30, KEY_VALUE["key_up"])
+
+    assert sorted(e.data[CONF_DEVICE_DESCRIPTOR] for e in commands) == [
+        REMOTE_PATH,
+        REMOTE_PATH_2,
+    ]
 
 
 async def test_devices_added_during_queue_overflow_connect(

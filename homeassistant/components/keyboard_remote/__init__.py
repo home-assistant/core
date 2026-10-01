@@ -533,6 +533,18 @@ class KeyboardRemoteManager:
         return True
 
     @callback
+    def _free_handlers(self) -> list[DeviceHandler]:
+        """Return the handlers without a device, the only ones a node can go to.
+
+        A handler matches every node it matches equally well, so one reading a
+        node has no reason to move, and ranking it would keep a node from a
+        free handler that also matches it.
+        """
+        return [
+            handler for handler in self._handlers.values() if not handler.is_monitoring
+        ]
+
+    @callback
     def _can_take_device(self, handler: DeviceHandler) -> bool:
         """Return whether a handler is registered and free for a device."""
         return (
@@ -543,7 +555,7 @@ class KeyboardRemoteManager:
 
     async def _async_check_handler(self, handler: DeviceHandler) -> None:
         """Check if a newly registered handler's device is currently connected."""
-        handlers = list(self._handlers.values())
+        handlers = self._free_handlers()
         skip = set(self._active_handlers_by_descriptor)
         result = await self.hass.async_add_executor_job(
             self._find_device_for_handler, handler, handlers, skip
@@ -612,7 +624,7 @@ class KeyboardRemoteManager:
 
     async def _async_attach_descriptor(self, descriptor: str) -> None:
         """Start the best matching handler on a device node, if any."""
-        handlers = list(self._handlers.values())
+        handlers = self._free_handlers()
         found = await self.hass.async_add_executor_job(
             self._get_handler_for_device, descriptor, handlers
         )
@@ -638,7 +650,7 @@ class KeyboardRemoteManager:
         """Find the handler for the node a by-id link points to (executor).
 
         A node that already has a handler is only returned when the link makes
-        a stronger match for another one.
+        a stronger match for one of the free handlers passed in.
         """
         descriptor = os.path.realpath(link)
         # by-id also links mouse and joystick nodes, which evdev cannot open
@@ -649,7 +661,7 @@ class KeyboardRemoteManager:
         dev, handler, rank = found
         if (holder := holders.get(descriptor)) is not None:
             holder_rank = holder.match_rank(descriptor, dev)
-            if holder is handler or (holder_rank is not None and holder_rank <= rank):
+            if holder_rank is not None and holder_rank <= rank:
                 dev.close()
                 return None
         return descriptor, dev, handler
@@ -671,7 +683,7 @@ class KeyboardRemoteManager:
         result = await self.hass.async_add_executor_job(
             self._match_linked_device,
             f"{DEVINPUT_BY_ID}/{name}",
-            list(self._handlers.values()),
+            self._free_handlers(),
             holders,
         )
         if result is None:
