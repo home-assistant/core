@@ -7,8 +7,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
-    HomeAssistantError,
 )
 
 from .const import DOMAIN
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
             translation_key="auth_error",
         ) from exc
     except MyPVDeviceNotSupportedError as exc:
-        raise HomeAssistantError(
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="unsupported_device",
         ) from exc
