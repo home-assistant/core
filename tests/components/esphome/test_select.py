@@ -58,6 +58,44 @@ async def test_voice_assistant_select_keys_match_the_entities(
     }
 
 
+async def test_selects_keep_their_choice_when_a_voice_assistant_returns(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a re-added select restores the option that was chosen before."""
+    flags = VoiceAssistantFeature.VOICE_ASSISTANT
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"voice_assistant_feature_flags": flags},
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-vad_sensitivity"
+    entity_id = entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id)
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "aggressive"},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == "aggressive"
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+    assert (
+        entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id) is None
+    )
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": flags}
+    )
+    # The registry entry went, but RestoreEntity keeps the choice by entity id
+    assert hass.states.get(entity_id).state == "aggressive"
+
+
 async def test_selects_added_when_a_voice_assistant_appears(
     hass: HomeAssistant,
     mock_client: APIClient,
