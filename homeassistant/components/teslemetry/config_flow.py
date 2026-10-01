@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
+from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
 import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -36,6 +37,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.bluetooth import (
     async_discovered_service_info,
+    async_last_service_info,
     async_request_active_scan,
     async_scanner_count,
 )
@@ -77,6 +79,9 @@ from .helpers import (
     cloud_energy_site,
 )
 from .models import TeslemetryEnergyData
+
+# habluetooth treats an advertisement this strong as a close device (STRONG_OWNER_STALE_RSSI).
+STRONG_RSSI = -70
 
 
 class PowerwallSetupError(Exception):
@@ -313,7 +318,26 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                     except (BleakError, TeslaFleetError, TimeoutError) as err:
                         LOGGER.error("Failed to connect over Bluetooth: %s", err)
                         await self._async_disconnect()
-                        errors["base"] = "cannot_connect"
+                        cause = err.__cause__
+                        last_info = async_last_service_info(
+                            self.hass, device.address, connectable=True
+                        )
+                        if not isinstance(
+                            cause, BleakNotFoundError | BleakOutOfConnectionSlotsError
+                        ):
+                            errors["base"] = "cannot_connect"
+                        # bleak-retry-connector also raises BleakNotFoundError from a final connect timeout.
+                        elif last_info is None or (
+                            isinstance(cause, BleakNotFoundError)
+                            and not isinstance(cause.__cause__, TimeoutError)
+                        ):
+                            errors["base"] = "device_not_found"
+                        elif isinstance(cause, BleakOutOfConnectionSlotsError):
+                            errors["base"] = "no_connection_slot"
+                        elif last_info.rssi >= STRONG_RSSI:
+                            errors["base"] = "vehicle_busy"
+                        else:
+                            errors["base"] = "weak_signal"
                     else:
                         return await self.async_step_pair()
 

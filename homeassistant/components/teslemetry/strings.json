@@ -100,8 +100,11 @@
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "no_connection_slot": "Every Bluetooth adapter or proxy that can reach the vehicle has no free connection slot. Free a connection slot on a Bluetooth proxy, or add another proxy near the vehicle, then try again.",
         "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
-        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
+        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen.",
+        "vehicle_busy": "The vehicle is busy and may already have its maximum number of Bluetooth connections. Disconnect other phones or devices from the vehicle, then try again.",
+        "weak_signal": "The vehicle's Bluetooth signal is too weak to connect. Move the vehicle closer to a Bluetooth adapter, or add a Bluetooth proxy near it, then try again."
       },
       "initiate_flow": {
         "user": "Add local vehicle"

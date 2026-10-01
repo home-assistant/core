@@ -14,7 +14,12 @@ from aiopowerwall import (
     PowerwallConnectionError,
     PowerwallFaultError,
 )
-from bleak.exc import BleakError
+from bleak.exc import BleakDeviceNotFoundError, BleakError
+from bleak_retry_connector import (
+    BleakConnectionError,
+    BleakNotFoundError,
+    BleakOutOfConnectionSlotsError,
+)
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import probatio
@@ -70,6 +75,11 @@ from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -722,7 +732,7 @@ def _discovered_info() -> MagicMock:
     info = MagicMock()
     info.name = TeslaBluetooth().get_name(VIN)
     info.address = ADDRESS
-    info.device = MagicMock()
+    info.device = generate_ble_device(ADDRESS, info.name)
     return info
 
 
@@ -916,12 +926,23 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     vehicle.pair.assert_awaited_once()
 
 
-@pytest.mark.usefixtures("enable_bluetooth")
-async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
-    """The scan step re-shows the form with an error when BLE connect fails."""
+def _connect_failure(*chain: BaseException) -> BluetoothTransportError:
+    """Return the connect error tesla_fleet_api raises, caused by the given chain."""
+    error = BluetoothTransportError()
+    outer: BaseException = error
+    for cause in chain:
+        outer.__cause__ = cause
+        outer = cause
+    return error
+
+
+async def _connect_fails_then_pairs(
+    hass: HomeAssistant, error: BaseException, expected: str
+) -> None:
+    """Fail the first Bluetooth connect, check the error, then pair on retry."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle()
-    vehicle.connect = AsyncMock(side_effect=BleakError("nope"))
+    vehicle.connect = AsyncMock(side_effect=[error, None])
 
     with (
         patch(
@@ -932,18 +953,113 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
             "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
     ):
         result = await _start_pairing_at_scan(hass, entry)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+        assert result["errors"] == {"base": expected}
+        # A failed pairing never creates a subentry.
+        assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+        vehicle.disconnect.assert_awaited_once()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scan"
-    assert result["errors"] == {"base": "cannot_connect"}
-    # A failed pairing never creates a subentry.
-    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
-    vehicle.disconnect.assert_awaited_once()
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+
+@pytest.mark.parametrize(
+    ("error", "rssi", "expected"),
+    [
+        pytest.param(
+            _connect_failure(
+                BleakOutOfConnectionSlotsError("no slot"), BleakError("no slot")
+            ),
+            -60,
+            "no_connection_slot",
+            id="out_of_slots",
+        ),
+        pytest.param(
+            _connect_failure(BleakNotFoundError("timeout"), TimeoutError()),
+            -62,
+            "vehicle_busy",
+            id="timeout_strong_signal",
+        ),
+        pytest.param(
+            _connect_failure(BleakNotFoundError("timeout"), TimeoutError()),
+            -70,
+            "vehicle_busy",
+            id="timeout_at_strong_threshold",
+        ),
+        pytest.param(
+            _connect_failure(BleakNotFoundError("timeout"), TimeoutError()),
+            -71,
+            "weak_signal",
+            id="timeout_weak_signal",
+        ),
+        pytest.param(
+            _connect_failure(
+                BleakNotFoundError("missing"), BleakDeviceNotFoundError(ADDRESS)
+            ),
+            -60,
+            "device_not_found",
+            id="device_vanished",
+        ),
+        pytest.param(
+            _connect_failure(BleakConnectionError("failed")),
+            -60,
+            "cannot_connect",
+            id="other_connection_error",
+        ),
+        pytest.param(BleakError("nope"), -60, "cannot_connect", id="unwrapped_error"),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_scan_connect_fails(
+    hass: HomeAssistant,
+    error: BleakError | BluetoothTransportError,
+    rssi: int,
+    expected: str,
+) -> None:
+    """The scan step explains why the Bluetooth connect failed, then pairs on retry."""
+    inject_advertisement(
+        hass,
+        generate_ble_device(ADDRESS, TeslaBluetooth().get_name(VIN)),
+        generate_advertisement_data(rssi=rssi),
+    )
+    await _connect_fails_then_pairs(hass, error, expected)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            _connect_failure(
+                BleakOutOfConnectionSlotsError("no slot"), BleakError("no slot")
+            ),
+            id="out_of_slots",
+        ),
+        pytest.param(
+            _connect_failure(BleakNotFoundError("timeout"), TimeoutError()),
+            id="timeout",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_scan_connect_fails_vehicle_gone(
+    hass: HomeAssistant, error: BluetoothTransportError
+) -> None:
+    """A vehicle no longer advertising when the connect fails is reported not found."""
+    await _connect_fails_then_pairs(hass, error, "device_not_found")
 
 
 @pytest.mark.parametrize(
