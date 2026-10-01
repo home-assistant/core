@@ -155,6 +155,7 @@
       "attention": "Attention",
       "create_binary_sensor": "Create binary sensor",
       "create_sensor": "Create sensor",
+      "description": "Description",
       "dpt": "DPT",
       "exposes_count": "Exposes: {count}",
       "filter": {
@@ -184,15 +185,16 @@
         "options": {
           "badge": "Badge",
           "count": "Count",
-          "description": "Description",
+          "description": "[%key:component::knx::config_panel::common::description%]",
           "filtered_count": "Filtered count",
           "total_count": "Total count",
-          "value": "Value"
+          "value": "[%key:component::knx::config_panel::common::value%]"
         },
         "sort_by": "Sort by:",
         "title": "Sort"
       },
-      "title": "KNX"
+      "title": "KNX",
+      "value": "Value"
     },
     "dashboard": {
       "connection_flow": {
@@ -261,7 +263,7 @@
         "source": "[%key:component::knx::config_panel::group_monitor::columns::source%]",
         "title": "KNX telegram",
         "type": "[%key:component::knx::config_panel::group_monitor::columns::type%]",
-        "value": "[%key:component::knx::config_panel::group_monitor::columns::value%]"
+        "value": "[%key:component::knx::config_panel::common::value%]"
       },
       "time_server": {
         "date": {
@@ -1294,7 +1296,6 @@
       "title": "Expose"
     },
     "group_monitor": {
-      "clear": "Clear",
       "clear_cache": "Clear cache",
       "columns": {
         "destination": "Destination",
@@ -1306,7 +1307,7 @@
         "time": "Time",
         "time_delta": "Time Δ",
         "type": "Type",
-        "value": "Value"
+        "value": "[%key:component::knx::config_panel::common::value%]"
       },
       "connection_error": {
         "retry": "Retry",
@@ -1324,7 +1325,7 @@
           "sort": {
             "options": {
               "address": "Destination address",
-              "name": "Destination name"
+              "name": "[%key:component::knx::config_panel::group_monitor::columns::destination_name%]"
             }
           }
         },
@@ -1332,7 +1333,7 @@
           "sort": {
             "options": {
               "address": "Source address",
-              "name": "Source name"
+              "name": "[%key:component::knx::config_panel::group_monitor::columns::source_name%]"
             }
           }
         }
@@ -1349,7 +1350,6 @@
       "reload": "Sync",
       "resume": "Resume",
       "search_label": "Search {count} telegrams",
-      "search_label_narrow": "Search",
       "search_label_singular": "Search {count} telegram",
       "time_delta": {
         "after": {
@@ -1450,7 +1450,7 @@
         "add_switch": "Add switch",
         "columns": {
           "address": "Address",
-          "description": "Description",
+          "description": "[%key:component::knx::config_panel::common::description%]",
           "dpt": "[%key:component::knx::config_panel::common::dpt%]",
           "last_value": "Last value",
           "updated": "Updated"
