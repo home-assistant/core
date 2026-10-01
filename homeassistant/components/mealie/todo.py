@@ -162,7 +162,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         # pylint: disable-next=home-assistant-action-swallowed-exception
         except MealieError as exception:
             LOGGER.warning(
-                "Unable to parse to-do item %s: %s; creating it as a note item",
+                "Unable to parse to-do item %s: %s",
                 item_summary,
                 exception,
             )
