@@ -27,13 +27,6 @@ OAUTH2_SCOPES = [
 UPDATE_INTERVAL = timedelta(seconds=60)
 FAST_POLLING_INTERVAL = timedelta(seconds=5)
 DISCOVERY_INTERVAL = timedelta(minutes=15)
-# The firmware only reports its temperature when asked through "user connected"
-USER_CONNECTED_INTERVAL = timedelta(minutes=10)
-# The devices report their state about a second after being woken up
-USER_CONNECTED_REFRESH_DELAY = timedelta(seconds=5)
-# Devices are not judged offline before the first wake up had time to be answered
-FIRST_REPORT_TIMEOUT = timedelta(minutes=2)
-OFFLINE_AFTER = 3 * USER_CONNECTED_INTERVAL
 
 PRESET_DEFROST = "defrost"
 

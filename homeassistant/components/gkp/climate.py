@@ -3,7 +3,13 @@
 import logging
 from typing import Any, override
 
-from gkphomepython import SETPOINT_MAX, SETPOINT_MIN, GkpError, GkpMode
+from gkphomepython import (
+    SETPOINT_MAX,
+    SETPOINT_MIN,
+    GkpError,
+    GkpMode,
+    GkpRateLimitError,
+)
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -141,6 +147,12 @@ class GkpClimate(GkpEntity, ClimateEntity):
         """Send a new mode to the device."""
         try:
             await self.coordinator.client.set_mode(self.device_id, mode)
+        except GkpRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                translation_placeholders={"retry_after": str(err.retry_after)},
+            ) from err
         except GkpError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -170,6 +182,12 @@ class GkpClimate(GkpEntity, ClimateEntity):
             await self.coordinator.client.set_temperature(
                 self.device_id, mode, temperature
             )
+        except GkpRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                translation_placeholders={"retry_after": str(err.retry_after)},
+            ) from err
         except GkpError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -6,6 +6,7 @@ from gkphomepython import Thermostat
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import GkpDeviceCoordinator
@@ -39,6 +40,6 @@ class GkpEntity(CoordinatorEntity[GkpDeviceCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if the device reported recently."""
-        return super().available and self.coordinator.hub_coordinator.is_device_online(
-            self.thermostat
+        return super().available and self.thermostat.is_online(
+            dt_util.utcnow(), self.coordinator.hub_coordinator.first_user_connected
         )

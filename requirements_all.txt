@@ -1153,7 +1153,7 @@ getmac==0.9.5
 gios==7.1.1
 
 # homeassistant.components.gkp
-gkphomepython==0.1.0
+gkphomepython==0.2.0
 
 # homeassistant.components.glances
 glances-api==0.10.0

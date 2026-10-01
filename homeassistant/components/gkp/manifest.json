@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["gkphomepython"],
   "quality_scale": "bronze",
-  "requirements": ["gkphomepython==0.1.0"]
+  "requirements": ["gkphomepython==0.2.0"]
 }

@@ -1,11 +1,11 @@
 """Fixtures for the GKP integration tests."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from gkphomepython import Installation, Thermostat
+from gkphomepython import GkpError, Installation, Thermostat
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -104,6 +104,22 @@ def mock_gkp_client(
 
         client.get_installations.side_effect = get_installations
         client.get_thermostat.side_effect = get_thermostat
+
+        async def get_thermostats(
+            installations: Iterable[Installation],
+        ) -> dict[str, Thermostat | GkpError]:
+            results: dict[str, Thermostat | GkpError] = {}
+            for installation in installations:
+                for device_id in installation.device_ids:
+                    try:
+                        results[device_id] = await client.get_thermostat(
+                            device_id, installation
+                        )
+                    except GkpError as err:
+                        results[device_id] = err
+            return results
+
+        client.get_thermostats.side_effect = get_thermostats
 
         yield client
 

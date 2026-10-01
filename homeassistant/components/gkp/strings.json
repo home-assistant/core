@@ -36,9 +36,6 @@
     "authentication_failed": {
       "message": "Authentication failed"
     },
-    "device_not_found": {
-      "message": "Device {device_id} not found"
-    },
     "failed_to_discover_devices": {
       "message": "Failed to discover devices"
     },
@@ -53,6 +50,9 @@
     },
     "oauth_session_not_valid": {
       "message": "OAuth session not valid"
+    },
+    "rate_limited": {
+      "message": "Too many requests to the GKP cloud, try again in {retry_after} seconds"
     },
     "set_hvac_mode_error": {
       "message": "An error occurred while setting the HVAC mode"

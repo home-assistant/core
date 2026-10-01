@@ -1,12 +1,21 @@
 """Data coordinators for GKP integration."""
 
-import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import time
 from typing import TYPE_CHECKING, override
 
-from gkphomepython import GkpAuthError, GkpClient, GkpError, Installation, Thermostat
+from gkphomepython import (
+    USER_CONNECTED_INTERVAL,
+    USER_CONNECTED_REPORT_DELAY,
+    GkpAuthError,
+    GkpClient,
+    GkpError,
+    GkpRateLimitError,
+    Installation,
+    Thermostat,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,16 +24,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DISCOVERY_INTERVAL,
-    DOMAIN,
-    FAST_POLLING_INTERVAL,
-    FIRST_REPORT_TIMEOUT,
-    OFFLINE_AFTER,
-    UPDATE_INTERVAL,
-    USER_CONNECTED_INTERVAL,
-    USER_CONNECTED_REFRESH_DELAY,
-)
+from .const import DISCOVERY_INTERVAL, DOMAIN, FAST_POLLING_INTERVAL, UPDATE_INTERVAL
 
 if TYPE_CHECKING:
     from . import GkpRuntimeData
@@ -61,7 +61,7 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         self.client = client
         self.installations: dict[str, Installation] = {}
         self.last_discovery: float | None = None
-        self.first_user_connected: float | None = None
+        self.first_user_connected: datetime | None = None
         self.last_user_connected: float | None = None
 
     @override
@@ -81,23 +81,13 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         ):
             await self._async_notify_user_connected()
             if self.first_user_connected is None:
-                self.first_user_connected = now
+                self.first_user_connected = dt_util.utcnow()
             self.last_user_connected = now
-            self.update_interval = USER_CONNECTED_REFRESH_DELAY
+            self.update_interval = USER_CONNECTED_REPORT_DELAY
         else:
             self.update_interval = UPDATE_INTERVAL
 
         return await self._async_fetch_thermostats()
-
-    def is_device_online(self, thermostat: Thermostat) -> bool:
-        """Return True if the device reported recently or may not have answered yet."""
-        if thermostat.is_online(dt_util.utcnow(), OFFLINE_AFTER):
-            return True
-        return (
-            self.first_user_connected is not None
-            and time.time() - self.first_user_connected
-            < FIRST_REPORT_TIMEOUT.total_seconds()
-        )
 
     async def _async_discover(self, now: float) -> None:
         """Refresh the installations of the user."""
@@ -146,22 +136,15 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
 
     async def _async_fetch_thermostats(self) -> dict[str, Thermostat]:
         """Fetch all thermostats, keeping the last state of failing ones."""
-        device_installations = self.device_installations
-        if not device_installations:
+        results = await self.client.get_thermostats(self.installations.values())
+        if not results:
             return {}
-
-        results = await asyncio.gather(
-            *(
-                self.client.get_thermostat(device_id, installation)
-                for device_id, installation in device_installations.items()
-            ),
-            return_exceptions=True,
-        )
 
         previous = self.data or {}
         thermostats: dict[str, Thermostat] = {}
         failures = 0
-        for device_id, result in zip(device_installations, results, strict=True):
+        rate_limit_error: GkpRateLimitError | None = None
+        for device_id, result in results.items():
             if isinstance(result, Thermostat):
                 thermostats[device_id] = result
                 continue
@@ -170,14 +153,23 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
                 ) from result
-            if not isinstance(result, GkpError):
-                raise result
+            if isinstance(result, GkpRateLimitError):
+                rate_limit_error = result
             failures += 1
             _LOGGER.debug("Failed to update device %s: %s", device_id, result)
             if device_id in previous:
                 thermostats[device_id] = previous[device_id]
 
-        if failures == len(device_installations):
+        if failures == len(results):
+            if rate_limit_error is not None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limited",
+                    translation_placeholders={
+                        "retry_after": str(rate_limit_error.retry_after)
+                    },
+                    retry_after=rate_limit_error.retry_after,
+                )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_update_devices",
@@ -231,6 +223,7 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
         )
         self.client = client
         self.device_id = device_id
+        self.installation = hub_coordinator.device_installations[device_id]
         self.hub_coordinator = hub_coordinator
         self.fast_polling_until: float | None = None
 
@@ -266,16 +259,10 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
                 self.device_id,
             )
 
-        installation = self.hub_coordinator.device_installations.get(self.device_id)
-        if installation is None:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_not_found",
-                translation_placeholders={"device_id": self.device_id},
-            )
-
         try:
-            thermostat = await self.client.get_thermostat(self.device_id, installation)
+            thermostat = await self.client.get_thermostat(
+                self.device_id, self.installation
+            )
         except GkpError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

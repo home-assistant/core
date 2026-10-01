@@ -7,12 +7,16 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from gkphomepython import (
+    USER_CONNECTED_INTERVAL,
+    USER_CONNECTED_REPORT_DELAY,
     GkpAuthError,
     GkpConnectionError,
     GkpDeviceError,
     GkpError,
     GkpMode,
+    GkpRateLimitError,
 )
+from gkphomepython.const import FIRST_REPORT_TIMEOUT, OFFLINE_AFTER
 import pytest
 
 from homeassistant.components.climate import (
@@ -24,12 +28,8 @@ from homeassistant.components.gkp.const import (
     DISCOVERY_INTERVAL,
     DOMAIN,
     FAST_POLLING_INTERVAL,
-    FIRST_REPORT_TIMEOUT,
     OAUTH2_TOKEN,
-    OFFLINE_AFTER,
     UPDATE_INTERVAL,
-    USER_CONNECTED_INTERVAL,
-    USER_CONNECTED_REFRESH_DELAY,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
@@ -215,11 +215,11 @@ async def test_refresh_after_user_connected(
     await setup_integration(hass, mock_config_entry)
     assert mock_gkp_client.get_thermostat.call_count == 2
 
-    await _tick(hass, freezer, USER_CONNECTED_REFRESH_DELAY)
+    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
     assert mock_gkp_client.get_thermostat.call_count == 4
 
     # Back to the regular interval once the answer was read
-    await _tick(hass, freezer, USER_CONNECTED_REFRESH_DELAY)
+    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
     assert mock_gkp_client.get_thermostat.call_count == 4
 
 
@@ -250,7 +250,7 @@ async def test_available_until_first_report_timeout(
     assert state.state == STATE_UNAVAILABLE
 
     device_contents[LIVING_ROOM_ID]["Dd"]["value"] = "30/9/2026 14:18:00"
-    await _tick(hass, freezer, USER_CONNECTED_REFRESH_DELAY)
+    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
@@ -391,8 +391,11 @@ async def test_hub_coordinator_update_errors(
 
     await _tick(hass, freezer, UPDATE_INTERVAL)
 
-    hub_coordinator = mock_config_entry.runtime_data.hub_coordinator
-    assert not hub_coordinator.last_update_success
+    # The entities keep their last known state when the hub update fails
+    state = hass.states.get(LIVING_ROOM_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes["current_temperature"] == 21.1
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         == has_reauth_flow
@@ -488,21 +491,26 @@ async def test_device_coordinator_refresh_error(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_device_coordinator_device_gone(
+async def test_rate_limited(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test fast polling a device no longer in the installations."""
+    """Test the next update waits for the delay requested by the API."""
     await setup_integration(hass, mock_config_entry)
-    await _set_temperature(hass)
+    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
+    mock_gkp_client.get_thermostat.side_effect = GkpRateLimitError("limited", 120)
 
-    mock_config_entry.runtime_data.hub_coordinator.installations = {}
-    mock_gkp_client.get_thermostat.reset_mock()
-    await _tick(hass, freezer, FAST_POLLING_INTERVAL)
+    await _tick(hass, freezer, UPDATE_INTERVAL)
 
-    mock_gkp_client.get_thermostat.assert_not_called()
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state != STATE_UNAVAILABLE
+    mock_gkp_client.get_thermostat.reset_mock()
+
+    await _tick(hass, freezer, timedelta(seconds=119))
+    mock_gkp_client.get_thermostat.assert_not_called()
+
+    await _tick(hass, freezer, timedelta(seconds=1))
+    assert mock_gkp_client.get_thermostat.called

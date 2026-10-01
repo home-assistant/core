@@ -5,7 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from gkphomepython import GkpConnectionError, GkpMode
+from gkphomepython import (
+    USER_CONNECTED_REPORT_DELAY,
+    GkpConnectionError,
+    GkpMode,
+    GkpRateLimitError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -27,11 +32,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.gkp.const import (
-    FAST_POLLING_INTERVAL,
-    PRESET_DEFROST,
-    USER_CONNECTED_REFRESH_DELAY,
-)
+from homeassistant.components.gkp.const import FAST_POLLING_INTERVAL, PRESET_DEFROST
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -377,7 +378,7 @@ async def test_fast_polling(
     """Test a command triggers fast polling that stops after a minute."""
     await setup_integration(hass, mock_config_entry)
     # Let the hub read the answer to the initial wake up first
-    freezer.tick(USER_CONNECTED_REFRESH_DELAY)
+    freezer.tick(USER_CONNECTED_REPORT_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -411,3 +412,46 @@ async def test_fast_polling(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_gkp_client.get_thermostat.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "client_method"),
+    [
+        pytest.param(
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 23.5},
+            "set_temperature",
+            id="set_temperature",
+        ),
+        pytest.param(
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: PRESET_ECO},
+            "set_mode",
+            id="set_mode",
+        ),
+    ],
+)
+async def test_command_rate_limited(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    data: dict[str, Any],
+    client_method: str,
+) -> None:
+    """Test commands tell the user when to try again when rate limited."""
+    await setup_integration(hass, mock_config_entry)
+    getattr(mock_gkp_client, client_method).side_effect = GkpRateLimitError(
+        "limited", 30
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, **data},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "rate_limited"
+    assert err.value.translation_placeholders == {"retry_after": "30"}
