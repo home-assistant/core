@@ -93,10 +93,11 @@
     },
     "vehicle": {
       "abort": {
+        "all_vehicles_added": "Every vehicle in your Teslemetry account has already been added as a local vehicle.",
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-        "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to add a vehicle over Bluetooth.",
+        "bluetooth_not_available": "Adding a vehicle over Bluetooth needs a Bluetooth adapter on the Home Assistant host or an ESPHome Bluetooth proxy with active connections enabled. Shelly devices only listen for Bluetooth devices and cannot connect to a vehicle.",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
-        "no_vehicles": "Every eligible vehicle in your Teslemetry account has already been added over Bluetooth."
+        "no_vehicles": "Home Assistant cannot access any vehicles in your Teslemetry account. Check that the vehicle is in your account and that Teslemetry has access to it."
       },
       "entry_type": "Local vehicle",
       "error": {
@@ -104,6 +105,7 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "confirm_timeout": "The key was not confirmed on the vehicle's touchscreen in time. Select Submit, tap a key card, then confirm the prompt on the vehicle's touchscreen.",
         "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "key_load_failed": "The Bluetooth key file {key_file} could not be loaded. Make sure it is a valid private key and that Home Assistant has permission to read it, then try again.",
         "key_unverified": "The key was added, but the vehicle's reply could not be verified. Select Submit to try again.",
         "pair_denied": "The key was declined on the vehicle's touchscreen. Select Submit and tap a key card to try again.",
         "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
