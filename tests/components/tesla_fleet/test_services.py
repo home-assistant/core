@@ -113,7 +113,7 @@ async def test_navigation_request_command_error(
             "tesla_fleet_api.tesla.VehicleFleet.navigation_request",
             return_value=COMMAND_ERROR,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -126,6 +126,7 @@ async def test_navigation_request_command_error(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "command_error"
 
 
 async def test_missing_vehicle_cmds_scope(
@@ -181,7 +182,7 @@ async def test_unknown_device(
     """Test services reject an unknown device."""
     await setup_platform(hass, normal_config_entry)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_NAVIGATION_GPS_REQUEST,
@@ -191,3 +192,4 @@ async def test_unknown_device(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "service_device_not_found"
