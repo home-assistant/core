@@ -31,7 +31,7 @@ class BatteryMessage(TypedDict):
 
 
 class StateReachedMessage(TypedDict):
-    """Properties in a battery update message."""
+    """Properties in a state changed message."""
 
     requested_state: str
     requested_state_numeric: int
@@ -42,7 +42,7 @@ class StateReachedMessage(TypedDict):
 
 
 class TransitionMessage(TypedDict):
-    """Properties in a battery update message."""
+    """Properties in a state transition message."""
 
     go_to_state: str
     go_to_state_numeric: int
