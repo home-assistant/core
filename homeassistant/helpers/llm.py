@@ -6,6 +6,7 @@ from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
 import probatio
+from probatio import UNSUPPORTED, to_openapi
 import slugify as unicode_slug
 
 from homeassistant.const import (
@@ -532,7 +533,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "boolean"}
 
     if not isinstance(schema, selector.Selector):
-        return probatio.UNSUPPORTED
+        return UNSUPPORTED
 
     if isinstance(schema, selector.BackupLocationSelector):
         return {"type": "string", "pattern": "^(?:\\/backup|\\w+)$"}
@@ -550,10 +551,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         }
 
     if isinstance(schema, selector.ConditionSelector):
-        return probatio.to_openapi(cv.CONDITIONS_SCHEMA)
+        return to_openapi(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return probatio.to_openapi(probatio.Schema(schema.config["value"]))
+        return to_openapi(probatio.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -580,7 +581,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "date-time"}
 
     if isinstance(schema, selector.DurationSelector):
-        return probatio.to_openapi(cv.time_period_dict)
+        return to_openapi(cv.time_period_dict)
 
     if isinstance(schema, selector.EntitySelector):
         if schema.config.get("multiple"):
@@ -594,10 +595,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "RFC 5646"}
 
     if isinstance(schema, selector.LocationSelector):
-        return probatio.to_openapi(schema.DATA_SCHEMA)
+        return to_openapi(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.MediaSelector):
-        item_schema = probatio.to_openapi(
+        item_schema = to_openapi(
             schema.DATA_SCHEMA, custom_serializer=selector_serializer
         )
         # Media selector allows multiple when configured
@@ -622,7 +623,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             properties = {}
             required = []
             for field, field_schema in fields.items():
-                properties[field] = probatio.to_openapi(
+                properties[field] = to_openapi(
                     selector.selector(field_schema["selector"]),
                     custom_serializer=selector_serializer,
                 )
@@ -654,9 +655,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return probatio.to_openapi(
-            cv.TARGET_FIELDS, custom_serializer=selector_serializer
-        )
+        return to_openapi(cv.TARGET_FIELDS, custom_serializer=selector_serializer)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}

@@ -33,6 +33,7 @@ from google.genai.types import (
     ToolListUnion,
 )
 import probatio
+from probatio import to_openapi
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -226,7 +227,7 @@ def _format_tool(
 
     if tool.parameters.schema:
         parameters = _format_schema(
-            probatio.to_openapi(tool.parameters, custom_serializer=custom_serializer)
+            to_openapi(tool.parameters, custom_serializer=custom_serializer)
         )
     else:
         parameters = None
@@ -669,7 +670,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         if structure:
             generate_content_config.response_mime_type = "application/json"
             generate_content_config.response_schema = _format_schema(
-                probatio.to_openapi(
+                to_openapi(
                     structure,
                     custom_serializer=(
                         chat_log.llm_api.custom_serializer

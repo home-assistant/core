@@ -101,6 +101,7 @@ from anthropic.types.web_fetch_tool_result_block_param import (
     Content as WebFetchToolResultBlockParamContentParam,
 )
 import probatio
+from probatio import to_openapi
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -146,7 +147,7 @@ def _format_tool(
 ) -> ToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = probatio.to_openapi(
+    schema = to_openapi(
         tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
     )
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
@@ -1101,7 +1102,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 JSONOutputFormatParam(
                     type="json_schema",
                     schema=anthropic.transform_schema(
-                        probatio.to_openapi(
+                        to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api

@@ -7,6 +7,7 @@ from typing import Any, cast, override
 
 import openai
 import probatio
+from probatio import to_openapi
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
@@ -702,9 +703,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "name": "approximate_location",
                         "description": "Approximate location data of the user "
                         "for refined web search results",
-                        "schema": probatio.to_openapi(
-                            location_schema, openapi_version="3.1.0"
-                        ),
+                        "schema": to_openapi(location_schema, openapi_version="3.1.0"),
                         "strict": False,
                     }
                 },

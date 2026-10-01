@@ -7,6 +7,7 @@ from typing import Any
 
 import ollama
 import probatio
+from probatio import to_openapi
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -42,7 +43,7 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = {
         "name": tool.name,
-        "parameters": probatio.to_openapi(
+        "parameters": to_openapi(
             tool.parameters,
             custom_serializer=custom_serializer,
             openapi_version="3.1.0",
@@ -233,7 +234,7 @@ class OllamaBaseLLMEntity(Entity):
 
         output_format: dict[str, Any] | None = None
         if structure:
-            output_format = probatio.to_openapi(
+            output_format = to_openapi(
                 structure,
                 custom_serializer=(
                     chat_log.llm_api.custom_serializer

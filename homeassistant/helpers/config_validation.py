@@ -24,7 +24,7 @@ from urllib.parse import urlparse
 from uuid import UUID
 
 import probatio
-from probatio import to_field_list
+from probatio import UNSUPPORTED, to_field_list
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -1162,7 +1162,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     if isinstance(schema, selector.Selector):
         return schema.serialize()
 
-    return probatio.UNSUPPORTED
+    return UNSUPPORTED
 
 
 # Schemas

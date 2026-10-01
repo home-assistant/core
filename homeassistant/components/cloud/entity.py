@@ -43,6 +43,7 @@ from openai.types.responses.response_input_param import (
 )
 from openai.types.responses.response_output_item import ImageGenerationCall
 import probatio
+from probatio import to_openapi
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
@@ -172,7 +173,7 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ToolParam:
     """Format a Home Assistant tool for the OpenAI Responses API."""
-    parameters = probatio.to_openapi(
+    parameters = to_openapi(
         tool.parameters,
         custom_serializer=custom_serializer,
         openapi_version="3.1.0",
@@ -218,7 +219,7 @@ def _format_structured_output(
     schema: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = probatio.to_openapi(
+    result: dict[str, Any] = to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer

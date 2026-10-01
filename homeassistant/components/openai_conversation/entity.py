@@ -61,6 +61,7 @@ from openai.types.responses.tool_param import (
 )
 from openai.types.responses.web_search_tool_param import UserLocation
 import probatio
+from probatio import to_openapi
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -124,7 +125,7 @@ def _format_structured_output(
     schema: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = probatio.to_openapi(
+    result: dict[str, Any] = to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
@@ -142,7 +143,7 @@ def _format_tool(
 ) -> FunctionToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
-    schema = probatio.to_openapi(
+    schema = to_openapi(
         tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
     )
     if unsupported_keys.intersection(schema):
