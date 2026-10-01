@@ -130,8 +130,16 @@ class GoogleConfig(AbstractConfig):
         conf = await async_integration_yaml_config(self.hass, DOMAIN)
         if conf is None:
             return
+        config = conf.get(DOMAIN, {})
+        if CONF_SERVICE_ACCOUNT in self._config:
+            # The request_sync service, sync button and Home Graph token are set up
+            # for the service account at startup, so it only changes on restart
+            config = {
+                **config,
+                CONF_SERVICE_ACCOUNT: self._config[CONF_SERVICE_ACCOUNT],
+            }
         # pylint: disable-next=home-assistant-use-runtime-data
-        self.hass.data[DOMAIN][DATA_CONFIG] = self._config = conf.get(DOMAIN, {})
+        self.hass.data[DOMAIN][DATA_CONFIG] = self._config = config
         self.async_update_report_state()
 
     @callback

@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import google_assistant as ga
 from homeassistant.components.google_assistant import (
     DOMAIN,
@@ -137,6 +139,42 @@ async def test_reload_service_report_state(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         assert not google_config.is_reporting_state
+
+
+@pytest.mark.parametrize(
+    "yaml_config",
+    [
+        pytest.param(
+            _yaml_config(
+                service_account={
+                    "private_key": "other",
+                    "client_email": "other@dummy.iam.gserviceaccount.com",
+                }
+            ),
+            id="changed",
+        ),
+        pytest.param({}, id="removed_from_yaml"),
+    ],
+)
+async def test_reload_service_keeps_service_account(
+    hass: HomeAssistant, yaml_config: dict
+) -> None:
+    """Test reloading keeps the service account set up at startup."""
+    google_config = await _async_setup(hass)
+
+    with (
+        patch(
+            "homeassistant.components.google_assistant.http.async_integration_yaml_config",
+            return_value=yaml_config,
+        ),
+        patch.object(GoogleConfig, "async_sync_entities_all"),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert (
+        google_config._config[ga.const.CONF_SERVICE_ACCOUNT]
+        == DUMMY_CONFIG[ga.const.CONF_SERVICE_ACCOUNT]
+    )
 
 
 async def test_reload_service_invalid_config(hass: HomeAssistant) -> None:
