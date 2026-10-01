@@ -33,6 +33,7 @@ from lifx import (
     TileInfo,
     WifiInfo,
 )
+from lifx.products import get_mirror_layout
 
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
 
@@ -224,6 +225,7 @@ def _create_mock_tile(
     tile_index: int = 0,
     product: int = 55,
     width: int = 8,
+    height: int = 8,
     user_x: float = 0.0,
 ) -> TileInfo:
     """Create deterministic public tile metadata."""
@@ -235,7 +237,7 @@ def _create_mock_tile(
         user_x=user_x,
         user_y=0.0,
         width=width,
-        height=8,
+        height=height,
         supported_frame_buffers=0,
         device_version_vendor=1,
         device_version_product=product,
@@ -483,26 +485,34 @@ def create_reference_ceiling_128_light() -> CeilingLight:
 
 
 MIRROR_ZONES = 25
+MIRROR_PRODUCT = 267
 
 
 def create_mock_mirror_light() -> MirrorLight:
-    """Create a deterministic Mirror light double."""
+    """Create a deterministic Mirror light double, laid out like the hardware."""
+    # The 50 zones are spread across a 4x13 buffer, so the tile has 52 colors
+    layout = get_mirror_layout(MIRROR_PRODUCT)
+    assert layout is not None
     color = HSBK(0.0, 0.0, 1.0, 3500)
     front_colors = [color] * MIRROR_ZONES
     back_colors = [color] * MIRROR_ZONES
     state = _create_mock_state(
         MirrorLightState,
-        chain=[_create_mock_tile(product=267, width=4)],
+        chain=[
+            _create_mock_tile(
+                product=MIRROR_PRODUCT, width=layout.width, height=layout.height
+            )
+        ],
         tile_orientations={0: "Right Side Up"},
-        tile_colors=[*front_colors, *back_colors],
+        tile_colors=[color] * layout.buffer_size,
         tile_count=1,
         effect=FirmwareEffect.OFF,
         front_colors=front_colors,
         back_colors=back_colors,
         front_is_on=False,
         back_is_on=False,
-        front_positions=tuple(range(MIRROR_ZONES)),
-        back_positions=tuple(range(MIRROR_ZONES, 2 * MIRROR_ZONES)),
+        front_positions=layout.front_positions,
+        back_positions=layout.back_positions,
     )
     state.model = "LIFX Mirror"
     state.capabilities.has_matrix = True
@@ -517,7 +527,7 @@ def create_reference_mirror_light() -> MirrorLight:
     color = HSBK(0.0, 0.0, 0.5, 3500)
     device.state.front_colors = [color] * MIRROR_ZONES
     device.state.back_colors = [color] * MIRROR_ZONES
-    device.state.tile_colors = [color] * (2 * MIRROR_ZONES)
+    device.state.tile_colors = [color] * len(device.state.tile_colors)
     device.state.front_is_on = True
     device.state.back_is_on = True
     _apply_reference_common(

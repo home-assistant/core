@@ -738,13 +738,15 @@ async def test_lifx_actions_refused_by_components(
     assert err.value.translation_key == translation_key
 
 
+@pytest.mark.parametrize(("factory", "keys"), COMPONENTS)
 async def test_main_entity_writes_every_zone(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    factory: Callable[[], Device],
+    keys: tuple[str, ...],
 ) -> None:
     """Test a main entity command covers the zones of both components."""
-    device = await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
-    )
+    device = await _setup_components(hass, entity_registry, factory, keys)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -753,7 +755,9 @@ async def test_main_entity_writes_every_zone(
         blocking=True,
     )
 
+    device.set_matrix_colors.assert_awaited_once()
     _, colors = device.set_matrix_colors.await_args.args
+    assert len(colors) == len(device.state.tile_colors)
     assert {color.brightness for color in colors} == {1.0}
 
 
