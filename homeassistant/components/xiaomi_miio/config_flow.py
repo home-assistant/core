@@ -42,7 +42,9 @@ from .typing import XiaomiMiioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SETTINGS = {
-    probatio.Required(CONF_TOKEN): probatio.All(str, probatio.Length(min=32, max=32)),
+    probatio.Required(probatio.Secret(CONF_TOKEN)): probatio.All(
+        str, probatio.Length(min=32, max=32)
+    ),
 }
 DEVICE_CONFIG = probatio.Schema({probatio.Required(CONF_HOST): str}).extend(
     DEVICE_SETTINGS

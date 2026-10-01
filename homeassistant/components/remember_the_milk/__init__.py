@@ -38,7 +38,7 @@ PLATFORMS = [Platform.TODO]
 RTM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(probatio.Secret(CONF_SHARED_SECRET)): cv.string,
     }
 )

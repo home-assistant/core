@@ -46,7 +46,7 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Required(CONF_HOST): cv.string,
                 probatio.Required(CONF_PORT): probatio.Port(),
-                probatio.Required(probatio.Secret(CONF_ACCESS_KEY)): cv.string,
+                probatio.Required(CONF_ACCESS_KEY): cv.string,
                 probatio.Required(probatio.Secret(CONF_SECRET_KEY)): cv.string,
                 probatio.Required(CONF_SECURE): cv.boolean,
                 probatio.Optional(CONF_LISTEN, default=[]): probatio.All(

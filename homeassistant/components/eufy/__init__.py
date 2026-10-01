@@ -36,7 +36,9 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.EnsureList(), [DEVICE_SCHEMA]
                 ),
                 probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-                probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+                probatio.Inclusive(
+                    probatio.Secret(CONF_PASSWORD), "authentication"
+                ): cv.string,
             }
         )
     },

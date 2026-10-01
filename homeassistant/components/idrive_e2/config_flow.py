@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(probatio.Secret(CONF_ACCESS_KEY_ID)): cv.string,
+        probatio.Required(CONF_ACCESS_KEY_ID): cv.string,
         probatio.Required(probatio.Secret(CONF_SECRET_ACCESS_KEY)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),

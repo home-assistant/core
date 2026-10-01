@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_CLIENT_ID): cv.string,
         probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_SUBREDDITS): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),

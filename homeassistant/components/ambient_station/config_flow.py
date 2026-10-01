@@ -22,7 +22,7 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 probatio.Required(probatio.Secret(CONF_APP_KEY)): str,
             }
         )

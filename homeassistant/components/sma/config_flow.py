@@ -51,7 +51,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -66,7 +66,7 @@ STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -251,7 +251,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",

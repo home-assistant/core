@@ -158,7 +158,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # Don't ask for a host if it was discovered
         schema = {
-            probatio.Required(CONF_API_KEY): TextSelector(
+            probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }

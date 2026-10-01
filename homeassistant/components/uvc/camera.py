@@ -36,7 +36,9 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_NVR): cv.string,
         probatio.Required(probatio.Secret(CONF_KEY)): cv.string,
-        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
+        ): cv.string,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     }

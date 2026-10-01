@@ -71,7 +71,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
             CONF_FLASH_BRIEFINGS: {
-                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 cv.string: probatio.All(
                     probatio.EnsureList(),
                     [

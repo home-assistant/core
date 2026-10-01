@@ -4016,7 +4016,7 @@ def update_password_from_user_input(
 REAUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): TEXT_SELECTOR,
-        probatio.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
     }
 )
 
@@ -4044,7 +4044,7 @@ CONFIG_DATAFLOW_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
         probatio.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
         probatio.Optional(CONF_USERNAME): TEXT_SELECTOR,
-        probatio.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
         probatio.Required(OTHER_SETTINGS): section(
             OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
         ),

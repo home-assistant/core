@@ -51,9 +51,7 @@ class AWSData:
 AWS_CREDENTIAL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Inclusive(
-            probatio.Secret(CONF_ACCESS_KEY_ID), ATTR_CREDENTIALS
-        ): cv.string,
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
         probatio.Inclusive(
             probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
         ): cv.string,
@@ -75,9 +73,7 @@ NOTIFY_PLATFORM_SCHEMA = probatio.Schema(
             cv.string, probatio.Lower, probatio.In(SUPPORTED_SERVICES)
         ),
         probatio.Required(CONF_REGION): probatio.All(cv.string, probatio.Lower),
-        probatio.Inclusive(
-            probatio.Secret(CONF_ACCESS_KEY_ID), ATTR_CREDENTIALS
-        ): cv.string,
+        probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
         probatio.Inclusive(
             probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
         ): cv.string,
