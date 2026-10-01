@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LoqedConfigEntry, LoqedDataCoordinator
@@ -80,12 +80,3 @@ class LoqedLock(LoqedEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         await self._lock.open()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        _LOGGER.debug(self.coordinator.data)
-        if "bolt_state" in self.coordinator.data:
-            self._lock.updateState(self.coordinator.data["bolt_state"]).close()
-            self.async_write_ha_state()

@@ -1,8 +1,12 @@
 """Tests the lock platform of the Loqed integration."""
 
+from unittest.mock import patch
+
+from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 
 from homeassistant.components.lock import LockState
+from homeassistant.components.loqed.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -11,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_lock_entity(
@@ -39,6 +43,46 @@ async def test_lock_responds_to_bolt_state_updates(
 
     state = hass.states.get(entity_id)
 
+    assert state
+    assert state.state == LockState.LOCKED
+
+
+async def test_lock_applies_polled_bolt_state(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test a coordinator refresh applies the polled bolt state to the lock."""
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+    coordinator = integration.runtime_data
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={"bolt_state": "night_lock"},
+    ):
+        await coordinator.async_refresh()
+
+    lock.updateState.assert_awaited_with("night_lock")
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.LOCKED
+
+
+async def test_lock_polls_bridge_status(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the bridge status is polled to catch missed webhooks."""
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={"bolt_state": "night_lock"},
+    ) as mock_details:
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_details.assert_awaited_once()
+    state = hass.states.get("lock.home")
     assert state
     assert state.state == LockState.LOCKED
 

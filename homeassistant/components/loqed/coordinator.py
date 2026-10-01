@@ -1,6 +1,7 @@
 """Provides the coordinator for a LOQED lock."""
 
 import asyncio
+from datetime import timedelta
 import logging
 from typing import TypedDict, override
 
@@ -17,6 +18,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import CONF_CLOUDHOOK_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Fallback for webhooks the bridge fails to deliver or HA rejects.
+SCAN_INTERVAL = timedelta(minutes=5)
 
 type LoqedConfigEntry = ConfigEntry[LoqedDataCoordinator]
 
@@ -84,7 +88,13 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         lock: loqed.Lock,
     ) -> None:
         """Initialize the Loqed Data Update coordinator."""
-        super().__init__(hass, _LOGGER, config_entry=config_entry, name="Loqed sensors")
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Loqed sensors",
+            update_interval=SCAN_INTERVAL,
+        )
         self._api = api
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
@@ -93,7 +103,10 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):
-            return await self._api.async_get_lock_details()
+            data = await self._api.async_get_lock_details()
+        # Webhooks also call the listeners, so the bolt state is applied here only.
+        await self.lock.updateState(data["bolt_state"])
+        return data
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
