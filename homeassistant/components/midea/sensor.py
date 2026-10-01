@@ -268,6 +268,13 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        models=[DeviceType.B1],
+        device_class=SensorDeviceClass.ENUM,
+        options=["standby", "idle", "working", "finished", "delay", "paused"],
+    ),
+    MideaSensorEntityDescription(
         key="mode",
         translation_key="mode",
         models=[DeviceType.DB],
@@ -545,7 +552,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        models=[DeviceType.E8],
+        models=[DeviceType.B1, DeviceType.E8],
     ),
     MideaSensorEntityDescription(
         key="bottom_temperature",

@@ -13,8 +13,8 @@ from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_PLATFORM): DOMAIN,
-        probatio.Required(TAG_ID): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional(DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(TAG_ID): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Optional(DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     }
 )
 

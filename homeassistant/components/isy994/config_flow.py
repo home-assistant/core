@@ -68,7 +68,7 @@ def _data_schema(schema_input: dict[str, str]) -> probatio.Schema:
         {
             probatio.Required(CONF_HOST, default=schema_input.get(CONF_HOST, "")): str,
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         },
         extra=probatio.ALLOW_EXTRA,
@@ -332,7 +332,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=existing_data[CONF_USERNAME]
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

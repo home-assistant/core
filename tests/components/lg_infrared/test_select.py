@@ -118,4 +118,6 @@ async def test_state_restored_on_restart(
 @pytest.mark.usefixtures("init_integration")
 async def test_availability_follows_emitter(hass: HomeAssistant) -> None:
     """Test select availability follows the infrared emitter."""
-    await assert_availability_follows_source_entity(hass, _ENTITY_ID, EMITTER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, _ENTITY_ID, [EMITTER_ENTITY_ID]
+    )
