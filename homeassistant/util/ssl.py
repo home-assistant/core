@@ -21,7 +21,7 @@ SSL_ALPN_HTTP11_HTTP2: SSLALPNProtocols = ("http/1.1", "h2")
 
 
 class SSLCipherList(StrEnum):
-    """SSL cipher lists."""
+    """Cipher list options for client connections."""
 
     PYTHON_DEFAULT = "python_default"
     INTERMEDIATE = "intermediate"
@@ -29,8 +29,28 @@ class SSLCipherList(StrEnum):
     INSECURE = "insecure"
 
 
+class SSLProfile(StrEnum):
+    """Mozilla server side TLS profiles, named after the guideline version.
+
+    https://docs.tlsref.org/server-side-tls.html (formerly
+    https://wiki.mozilla.org/Security/Server_Side_TLS)
+
+    A profile never changes once released: clients connect with it, so a
+    newer guideline is a new profile and the user opts in to the upgrade.
+    """
+
+    MODERN_V4 = "modern_v4"
+    INTERMEDIATE_V4 = "intermediate_v4"
+    MODERN_V6 = "modern_v6"
+    INTERMEDIATE_V6 = "intermediate_v6"
+
+
+# Cipher suites below TLS 1.3 of each profile. TLS 1.3 suites cannot be
+# configured through Python's ssl module; OpenSSL's defaults are the three
+# suites the profiles require (the system OpenSSL config may add other AEAD
+# TLS 1.3 suites). The v6.0 modern profile is TLS 1.3 only and has no entry.
 SSL_CIPHER_LISTS = {
-    SSLCipherList.INTERMEDIATE: (
+    SSLProfile.INTERMEDIATE_V4: (
         "ECDHE-ECDSA-CHACHA20-POLY1305:"
         "ECDHE-RSA-CHACHA20-POLY1305:"
         "ECDHE-ECDSA-AES128-GCM-SHA256:"
@@ -63,13 +83,33 @@ SSL_CIPHER_LISTS = {
         "DES-CBC3-SHA:"
         "!DSS"
     ),
-    SSLCipherList.MODERN: (
-        "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
-        "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
-        "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
-        "ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
-        "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+    SSLProfile.MODERN_V4: (
+        "ECDHE-ECDSA-AES256-GCM-SHA384:"
+        "ECDHE-RSA-AES256-GCM-SHA384:"
+        "ECDHE-ECDSA-CHACHA20-POLY1305:"
+        "ECDHE-RSA-CHACHA20-POLY1305:"
+        "ECDHE-ECDSA-AES128-GCM-SHA256:"
+        "ECDHE-RSA-AES128-GCM-SHA256:"
+        "ECDHE-ECDSA-AES256-SHA384:"
+        "ECDHE-RSA-AES256-SHA384:"
+        "ECDHE-ECDSA-AES128-SHA256:"
+        "ECDHE-RSA-AES128-SHA256"
     ),
+    SSLProfile.INTERMEDIATE_V6: (
+        "ECDHE-ECDSA-AES128-GCM-SHA256:"
+        "ECDHE-RSA-AES128-GCM-SHA256:"
+        "ECDHE-ECDSA-AES256-GCM-SHA384:"
+        "ECDHE-RSA-AES256-GCM-SHA384:"
+        "ECDHE-ECDSA-CHACHA20-POLY1305:"
+        "ECDHE-RSA-CHACHA20-POLY1305"
+    ),
+}
+
+# The client cipher list options predate the versioned profiles and name the
+# v4 ones. Changing them changes outgoing connections (e.g. rest, scrape, imap).
+_CLIENT_CIPHER_LISTS = {
+    SSLCipherList.INTERMEDIATE: SSL_CIPHER_LISTS[SSLProfile.INTERMEDIATE_V4],
+    SSLCipherList.MODERN: SSL_CIPHER_LISTS[SSLProfile.MODERN_V4],
     SSLCipherList.INSECURE: "DEFAULT:@SECLEVEL=0",
 }
 
@@ -91,7 +131,7 @@ def _client_context_no_verify(
         sslcontext.options |= ssl.OP_NO_COMPRESSION
     sslcontext.set_default_verify_paths()
     if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
-        sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
+        sslcontext.set_ciphers(_CLIENT_CIPHER_LISTS[ssl_cipher_list])
     # Set ALPN protocols to prevent downstream libraries (e.g., httpx/httpcore)
     # from mutating the shared SSL context with different protocol settings.
     # If alpn_protocols is None, don't set ALPN (for libraries like aioimap).
@@ -115,7 +155,7 @@ def _create_client_context(
         purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
     )
     if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
-        sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
+        sslcontext.set_ciphers(_CLIENT_CIPHER_LISTS[ssl_cipher_list])
     # Set ALPN protocols to prevent downstream libraries (e.g., httpx/httpcore)
     # from mutating the shared SSL context with different protocol settings.
     # If alpn_protocols is None, don't set ALPN (for libraries like aioimap).
@@ -187,40 +227,30 @@ def create_no_verify_ssl_context(
     return _client_context_no_verify(ssl_cipher_list, alpn_protocols)
 
 
-def server_context_modern() -> ssl.SSLContext:
-    """Return an SSL context following the Mozilla recommendations.
-
-    TLS configuration follows the best-practice guidelines specified here:
-    https://wiki.mozilla.org/Security/Server_Side_TLS
-    Modern guidelines are followed.
-    """
+def server_context(profile: SSLProfile) -> ssl.SSLContext:
+    """Return a server SSL context following the given Mozilla profile."""
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.minimum_version = ssl.TLSVersion.TLSv1_2
-
-    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.MODERN])
+    match profile:
+        case SSLProfile.MODERN_V6:
+            # TLS 1.3 only. The v6.0 profiles let the client choose the cipher,
+            # which Python's server contexts do not by default.
+            context.minimum_version = ssl.TLSVersion.TLSv1_3
+            context.options &= ~ssl.OP_CIPHER_SERVER_PREFERENCE
+        case SSLProfile.INTERMEDIATE_V6:
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            context.options &= ~ssl.OP_CIPHER_SERVER_PREFERENCE
+        case SSLProfile.MODERN_V4:
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
+        case SSLProfile.INTERMEDIATE_V4:
+            context.options |= (
+                ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
+            )
 
-    return context
-
-
-def server_context_intermediate() -> ssl.SSLContext:
-    """Return an SSL context following the Mozilla recommendations.
-
-    TLS configuration follows the best-practice guidelines specified here:
-    https://wiki.mozilla.org/Security/Server_Side_TLS
-    Intermediate guidelines are followed.
-    """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-
-    context.options |= (
-        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
-    )
-    if hasattr(ssl, "OP_NO_COMPRESSION"):
-        context.options |= ssl.OP_NO_COMPRESSION
-
-    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE])
+    if (ciphers := SSL_CIPHER_LISTS.get(profile)) is not None:
+        context.set_ciphers(ciphers)
 
     return context

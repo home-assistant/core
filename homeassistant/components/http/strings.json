@@ -12,6 +12,34 @@
       "description": "Home Assistant detected that SSL has been set up on your instance, however, no custom external internet URL has been set.\n\nThis may result in unexpected behavior. Text-to-speech may fail, and integrations may not be able to connect back to your instance correctly.\n\nTo address this issue, go to Settings > System > Network; under the \"Home Assistant URL\" section, configure your new \"Internet\" and \"Local network\" addresses that match your new SSL configuration.",
       "title": "SSL is configured without an external URL or internal URL"
     },
+    "ssl_profile_outdated_intermediate_v6": {
+      "fix_flow": {
+        "abort": {
+          "pending_config": "A new HTTP configuration is already waiting to be applied or confirmed. Confirm or revert it first."
+        },
+        "step": {
+          "confirm": {
+            "description": "The HTTP server uses the SSL profile `{profile}`, which follows outdated Mozilla TLS guidelines. The `{upgrade}` profile follows the current guidelines and only accepts TLS 1.2 or newer connections with authenticated encryption ciphers (AES-GCM or ChaCha20).\n\nBrowsers and operating systems gained support for these around 2013 to 2015, for example Chrome 30, Firefox 27, Safari 9 (iOS 9), Android 5 and Windows 8.1. Windows 7 clients using Internet Explorer or other system TLS, and devices that stopped receiving updates before then, can no longer connect.\n\nThe upgrade is applied as a trial: Home Assistant restarts with the `{upgrade}` profile and asks you to confirm the new configuration. Unless you confirm within 5 minutes, it restores the `{profile}` profile automatically.",
+            "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::title%]"
+          }
+        }
+      },
+      "title": "The SSL profile {profile} is outdated"
+    },
+    "ssl_profile_outdated_modern_v6": {
+      "fix_flow": {
+        "abort": {
+          "pending_config": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::fix_flow::abort::pending_config%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "The HTTP server uses the SSL profile `{profile}`, which follows outdated Mozilla TLS guidelines. The `{upgrade}` profile follows the current guidelines and only accepts TLS 1.3 connections.\n\nBrowsers and operating systems gained TLS 1.3 support around 2018 to 2019, for example Chrome 70, Firefox 63, Safari 12.1 (iOS 12.2), Android 10 and Windows 11 (current browsers on Windows 10 support it as well). Devices that stopped receiving updates before then, such as older smart TVs, cameras or hubs that connect to Home Assistant directly, can no longer connect.\n\nThe upgrade is applied as a trial: Home Assistant restarts with the `{upgrade}` profile and asks you to confirm the new configuration. Unless you confirm within 5 minutes, it restores the `{profile}` profile automatically.",
+            "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::title%]"
+    },
     "yaml_still_present_after_migration": {
       "description": "The HTTP configuration in `configuration.yaml` has already been migrated and is now being ignored. Please remove the `http:` block from your `configuration.yaml`. Manage the HTTP configuration from the UI under **Settings** > **System** > **Network**.",
       "title": "HTTP YAML configuration is ignored after migration"

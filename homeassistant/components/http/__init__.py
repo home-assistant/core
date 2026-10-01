@@ -28,8 +28,9 @@ from homeassistant.setup import (
     async_when_setup_or_start,
 )
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.ssl import SSLProfile
 
-from .config import async_get_and_load_store, async_load_config
+from .config import ConfData, async_get_and_load_store, async_load_config
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -47,11 +48,14 @@ from .const import (  # noqa: F401
     DATA_SUPERVISOR_USER,
     DEFAULT_CORS,
     DOMAIN,
+    ISSUE_SSL_PROFILE_OUTDATED,
+    ISSUE_SSL_PROFILE_OUTDATED_TRANSLATION_KEYS,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
+    SSL_PROFILE_UPGRADES,
 )
 from .decorators import require_admin  # noqa: F401
 from .server import (
@@ -123,6 +127,29 @@ class ApiConfig:
         self.use_ssl = use_ssl
 
 
+@callback
+def _async_update_ssl_profile_issue(hass: HomeAssistant, conf: ConfData) -> None:
+    """Offer upgrading a superseded SSL profile the server is running with."""
+    upgrade = None
+    if CONF_SSL_CERTIFICATE in conf:
+        upgrade = SSL_PROFILE_UPGRADES.get(SSLProfile(conf[CONF_SSL_PROFILE]))
+    if upgrade is None:
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_SSL_PROFILE_OUTDATED)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_SSL_PROFILE_OUTDATED,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_SSL_PROFILE_OUTDATED_TRANSLATION_KEYS[upgrade],
+        translation_placeholders={
+            "profile": conf[CONF_SSL_PROFILE],
+            "upgrade": upgrade,
+        },
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     # Late import to ensure isal is updated before
@@ -171,6 +198,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 conf[CONF_SERVER_PORT],
             )
         break
+
+    _async_update_ssl_profile_issue(hass, conf)
 
     # Created only after the fallback chain succeeded: if setup fails above,
     # an already running task would be left behind unawaited.
