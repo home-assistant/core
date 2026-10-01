@@ -42,7 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN, default=""): cv.string})
+INPUT_PIN_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PIN), default=""): cv.string}
+)
 
 DEFAULT_START_OFF = False
 

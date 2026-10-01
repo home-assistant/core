@@ -14,7 +14,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.axle_energy.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -142,7 +146,7 @@ async def test_authentication_failure(
     mock_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Stop polling after the service rejects the credentials."""
+    """Stop polling on rejected credentials and resume after reauthentication."""
     await setup(hass, mock_config_entry)
     mock_client.get_event.side_effect = AxleAuthenticationError()
     freezer.tick(timedelta(minutes=10))
@@ -154,3 +158,22 @@ async def test_authentication_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_client.get_event.assert_not_called()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+    mock_client.get_event.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], {CONF_API_KEY: "replacement-token"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert hass.states.get("sensor.axle_energy_event_type").state == "export"
+
+    mock_client.get_event.reset_mock()
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_client.get_event.assert_awaited_once()

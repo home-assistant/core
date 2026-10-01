@@ -1217,3 +1217,47 @@ async def test_require_admin_allows_admin(
         headers={"accept": CONTENT_TYPE_JSON},
     )
     assert response.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param("server/discover", id="server_discover"),
+        pytest.param("no/such-method", id="unknown_method"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_unsupported_method_returns_method_not_found(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+) -> None:
+    """Test that unsupported methods return JSON-RPC METHOD_NOT_FOUND without log warnings."""
+    client = await hass_client()
+
+    response = await client.post(
+        STREAMABLE_API,
+        json={
+            "jsonrpc": "2.0",
+            "id": "request-123",
+            "method": method,
+            "params": {
+                "_meta": {
+                    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                }
+            },
+        },
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.OK
+    data = await response.json()
+    assert data == {
+        "jsonrpc": "2.0",
+        "id": "request-123",
+        "error": {
+            "code": -32601,
+            "message": "Method not found",
+            "data": method,
+        },
+    }
+    assert "Failed to validate request" not in caplog.text

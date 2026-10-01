@@ -18,10 +18,10 @@ license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.3.1
 prek==0.5.4
-pydantic==2.13.4
+pydantic==2.13.5
 PyGithub==2.10.0
-pylint==4.0.8
-pylint-per-file-ignores==3.2.1
+pylint==4.0.9
+pylint-per-file-ignores==4.0.0
 pipdeptree==4.2.5
 pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1

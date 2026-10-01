@@ -56,7 +56,7 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {
                         probatio.Required(CONF_EMAIL): str,
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 user_input,
