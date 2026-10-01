@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import json
+import math
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -363,7 +364,7 @@ async def test_invalid_coordinates_skipped_valid_location_used(
     bad_fixes = [
         {"provider": "gps", "lat": "bad", "lon": "bad"},  # non-numeric
         {"provider": "gps", "lat": 91, "lon": 0},  # out of range
-        {"provider": "gps", "lat": float("NaN"), "lon": 0},  # non-finite
+        {"provider": "gps", "lat": math.nan, "lon": 0},  # non-finite
         {"provider": "gps"},  # missing coordinates
     ]
     blobs = [json.dumps(fix).encode() for fix in bad_fixes]

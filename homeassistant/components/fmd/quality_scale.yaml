@@ -32,7 +32,9 @@ rules:
     comment: Integration does not implement triggers
 
   # Silver tier rules
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide service actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
