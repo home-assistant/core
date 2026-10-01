@@ -10,7 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_USE_SSL, DOMAIN
@@ -77,7 +76,7 @@ async def async_migrate_entry(
     """Migrate an old config entry."""
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Old entries from a TV without CID have an empty unique ID
-        new_unique_id = config_entry.unique_id or format_mac(
+        new_unique_id = config_entry.unique_id or dr.format_mac(
             config_entry.data[CONF_MAC]
         )
 
