@@ -764,6 +764,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
             ),
+            errors={"base": "invalid_auth"} if self._remote_credentials else {},
         )
 
     async def _async_cleanup_remote(self) -> None:

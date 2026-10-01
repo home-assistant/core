@@ -125,7 +125,7 @@ async def test_cancelled_pairing_is_revoked(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_setup", "mock_setup_entry")
 async def test_remote_device_digest_credentials(hass: HomeAssistant) -> None:
-    """A challenge prompts for device credentials and reuses the same socket."""
+    """A challenge prompts for credentials and a rejected password shows an error."""
     manager = RemoteConnectionManager(hass)
     result = await start_remote_flow(hass, manager)
     record = next(iter(manager.credentials.values()))
@@ -136,6 +136,7 @@ async def test_remote_device_digest_credentials(hass: HomeAssistant) -> None:
     connection.calls = AsyncMock(
         side_effect=[
             InvalidAuthError("challenge"),
+            InvalidAuthError("invalid credentials"),
             [
                 {"sys": {"device": {"name": "Remote auth"}}},
                 {"sys": {"wakeup_period": 0}},
@@ -151,6 +152,12 @@ async def test_remote_device_digest_credentials(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["step_id"] == "remote_credentials"
+        assert not result["errors"]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "wrong-password"}
+        )
+        assert result["step_id"] == "remote_credentials"
+        assert result["errors"] == {"base": "invalid_auth"}
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"password": "device-password"}
         )
