@@ -35,7 +35,9 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_current_scanners,
     async_discovered_service_info,
     async_register_advertisement_callback,
     async_request_active_scan,
@@ -306,7 +308,17 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                         def _async_heard(
                             service_info: BluetoothServiceInfoBleak,
                         ) -> None:
-                            if service_info.connectable and not heard.done():
+                            # An Auto scanner still in the scan's active window has yet to restart discovery.
+                            if (
+                                service_info.connectable
+                                and not heard.done()
+                                and not any(
+                                    scanner.requested_mode is BluetoothScanningMode.AUTO
+                                    and scanner.current_mode
+                                    is BluetoothScanningMode.ACTIVE
+                                    for scanner in async_current_scanners(self.hass)
+                                )
+                            ):
                                 heard.set_result(None)
 
                         cancel = async_register_advertisement_callback(

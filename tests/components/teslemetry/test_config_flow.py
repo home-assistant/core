@@ -39,6 +39,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    async_register_scanner,
+)
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -71,6 +75,7 @@ from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import (
+    FakeScanner,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement,
@@ -1301,28 +1306,45 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle()
     events: list[str] = []
+    auto_scanner = FakeScanner(
+        "AA:BB:CC:00:00:02",
+        "hci1",
+        connectable=True,
+        requested_mode=BluetoothScanningMode.AUTO,
+        current_mode=BluetoothScanningMode.ACTIVE,
+    )
+    unregister_scanner = async_register_scanner(hass, auto_scanner)
 
-    def _advertise_non_connectable_after_scan() -> None:
-        events.append("non-connectable advertisement")
+    def _advertise(source: str, connectable: bool) -> None:
         inject_advertisement_with_time_and_source_connectable(
             hass,
             generate_ble_device(ADDRESS),
             generate_advertisement_data(),
             time.monotonic(),
-            "AA:BB:CC:00:00:01",
-            False,
+            source,
+            connectable,
         )
-        hass.loop.call_soon(_advertise_after_scan)
 
-    def _advertise_after_scan() -> None:
-        events.append("advertisement")
-        _inject_vehicle_advertisement(hass)
+    def _advertise_before_window_ends() -> None:
+        events.append("proxy advertisement before the active window ends")
+        _advertise("AA:BB:CC:00:00:03", True)
+        hass.loop.call_soon(_advertise_non_connectable_after_window_ends)
+
+    def _advertise_non_connectable_after_window_ends() -> None:
+        events.append("non-connectable advertisement after the active window ends")
+        auto_scanner.set_current_mode(BluetoothScanningMode.PASSIVE)
+        _advertise("AA:BB:CC:00:00:01", False)
+        hass.loop.call_soon(_advertise_after_window_ends)
+
+    def _advertise_after_window_ends() -> None:
+        events.append("advertisement after the active window ends")
+        _advertise(auto_scanner.source, True)
 
     async def _active_scan(hass: HomeAssistant) -> None:
         events.append("active scan")
         # The name is only in the scan response, so the vehicle first appears during the active scan.
         _inject_vehicle_advertisement(hass)
-        hass.loop.call_soon(_advertise_non_connectable_after_scan)
+        hass.loop.call_soon(_advertise_before_window_ends)
 
     async def _connect() -> None:
         events.append("connect")
@@ -1346,11 +1368,13 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
         )
         await hass.async_block_till_done()
 
-    # Connecting as the active scan ends races a local adapter dropping the vehicle.
+    unregister_scanner()
+    # Connecting before the active window ends races a local adapter dropping the vehicle.
     assert events == [
         "active scan",
-        "non-connectable advertisement",
-        "advertisement",
+        "proxy advertisement before the active window ends",
+        "non-connectable advertisement after the active window ends",
+        "advertisement after the active window ends",
         "connect",
     ]
     assert result["type"] is FlowResultType.CREATE_ENTRY
