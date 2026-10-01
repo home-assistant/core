@@ -155,17 +155,16 @@
       "attention": "Attention",
       "create_binary_sensor": "Create binary sensor",
       "create_sensor": "Create sensor",
+      "dpt": "DPT",
       "exposes_count": "Exposes: {count}",
       "filter": {
-        "clear": "Clear filter",
         "dpt": {
           "sort": {
             "options": {
-              "name": "Name",
               "number": "Number"
             }
           },
-          "title": "DPT"
+          "title": "[%key:component::knx::config_panel::common::dpt%]"
         },
         "no_results": "No results found",
         "pin_selected": "Pin selected items",
@@ -1452,9 +1451,8 @@
         "columns": {
           "address": "Address",
           "description": "Description",
-          "dpt": "DPT",
+          "dpt": "[%key:component::knx::config_panel::common::dpt%]",
           "last_value": "Last value",
-          "name": "Name",
           "updated": "Updated"
         },
         "title": "[%key:component::knx::config_panel::common::group_addresses%]",
