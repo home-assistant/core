@@ -12,7 +12,8 @@ from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.components.opnsense.device_tracker import OPNsenseDeviceTrackerEntity
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -21,6 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_device_tracker_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device tracker platform setup."""
@@ -51,6 +53,19 @@ async def test_device_tracker_setup(
     entity_ids = {entity.entity_id for entity in device_tracker_entities}
     assert "device_tracker.opnsense_ff_ff_ff_ff_ff_ff" in entity_ids
     assert "device_tracker.desktop" in entity_ids
+
+    for mac_address in ("ff:ff:ff:ff:ff:ff", "ff:ff:ff:ff:ff:fe"):
+        tracker_entity = next(
+            entity
+            for entity in device_tracker_entities
+            if entity.unique_id == mac_address
+        )
+        device = device_registry.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, mac_address), mock_config_entry.entry_id
+        )
+        assert device is not None
+        assert tracker_entity.device_id == device.id
+        assert tracker_entity.disabled_by is None
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")

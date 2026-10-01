@@ -160,7 +160,12 @@ async def async_setup_entry(
         coordinator=coordinator,
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.SENSOR]
+    )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.DEVICE_TRACKER]
+    )
     return True
 
 
