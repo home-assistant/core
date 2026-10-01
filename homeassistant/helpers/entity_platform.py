@@ -1402,11 +1402,12 @@ class EntityPlatform:
                     loop=self.hass.loop,
                 )
                 self._polling_tasks[id(entity)] = (cycle_id, task)
-                (result,) = await asyncio.gather(task, return_exceptions=True)
-                if fatal := self._async_handle_entity_update_result(
-                    entity, task, result
-                ):
-                    raise fatal
+                # Routed through `_async_await_polling_tasks` (even for
+                # this single task) rather than a bare `gather`, so a
+                # cancellation of this await (e.g. config entry unload)
+                # still cancels `task` and clears/drains its tracked entry
+                # instead of leaking it as "still running" forever.
+                await self._async_await_polling_tasks([(entity, task)])
             return
 
         new_tasks = [
@@ -1455,12 +1456,27 @@ class EntityPlatform:
                 # Request cancellation for each one - this can't forcibly
                 # stop one stuck in a synchronous update()'s executor
                 # thread, the same constraint documented on
-                # `remove_entity_cb` - and keep draining them in the
-                # background so their tracked entries are still cleared,
-                # instead of leaking, once they do finish.
+                # `remove_entity_cb` - then keep draining them right here,
+                # in this same already-cancelled task, rather than handing
+                # them off to a new background task: config entry unload
+                # (`ConfigEntry._async_process_on_unload`) only awaits the
+                # background tasks that existed at the moment it
+                # snapshotted them, so a new task created only now, after
+                # that snapshot, would be invisible to it and no longer
+                # governed by its own timeout.
                 for task in pending:
                     task.cancel()
-                self._async_schedule_polling_drain(task_entities, pending)
+                if pending:
+                    await asyncio.wait(pending)
+                    for task in pending:
+                        entity = task_entities[task]
+                        try:
+                            drained_result = task.exception()
+                        except asyncio.CancelledError as err:
+                            drained_result = err
+                        self._async_handle_entity_update_result(
+                            entity, task, drained_result
+                        )
                 raise
             fatal: BaseException | None = None
             for task in done:
@@ -1490,11 +1506,14 @@ class EntityPlatform:
     ) -> None:
         """Keep draining still-pending polling tasks in the background.
 
-        Tied to `self.config_entry`'s background tasks (when there is one)
-        rather than `hass`'s global ones, so config entry unload's own
-        timeout still governs cancelled children finishing their cleanup,
-        instead of unload returning while they are detached and still
-        running in the background.
+        Used when a sibling task raised a fatal exception: the remaining
+        tasks are still legitimately running (not cancelled), so this
+        propagates the fatal exception immediately instead of blocking on
+        them, while still clearing their tracked entries and logging their
+        results once they eventually finish on their own. Tied to
+        `self.config_entry`'s background tasks (when there is one) rather
+        than `hass`'s global ones, matching how the entity platform tracks
+        its other background work.
         """
         if not pending:
             return

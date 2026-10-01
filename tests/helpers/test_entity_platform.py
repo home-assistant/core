@@ -964,6 +964,45 @@ async def test_polling_handles_every_completed_task_before_reraising_fatal_error
     assert failing_entity.entity_id in caplog.text
 
 
+async def test_sequential_polling_cancellation_clears_tracked_task(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling the sequential polling loop clears its tracked task.
+
+    Regression contract: the sequential polling branch (one entity polled
+    at a time, e.g. a platform using synchronous `update()`) must route
+    through the same cancellation-safe handling as the concurrent branch.
+    A bare `asyncio.gather(..., return_exceptions=True)` never lets the
+    caller's own cleanup code run once the caller itself is cancelled, so
+    without this the tracked task would leak forever instead of being
+    cancelled and cleared.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+    platform._update_in_sequence = True
+
+    hang_forever = asyncio.Event()
+
+    async def _hang() -> None:
+        await hang_forever.wait()
+
+    entity = MockEntity(should_poll=True)
+    entity.async_update = _hang
+
+    await component.async_add_entities([entity])
+
+    outer = hass.async_create_task(platform._async_update_entity_states())
+    await asyncio.sleep(0)
+
+    outer.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await outer
+
+    assert id(entity) not in platform._polling_tasks
+
+
 async def test_polling_propagates_cancellation_to_pending_entity_tasks(
     hass: HomeAssistant,
 ) -> None:
@@ -1012,23 +1051,24 @@ async def test_polling_propagates_cancellation_to_pending_entity_tasks(
     assert task_a.cancelled()
     assert task_b.cancelled()
 
-    # The background drain must still clear their tracked entries.
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # The cancelled task's own inline drain must still clear their tracked
+    # entries, even before any further `hass` bookkeeping runs.
     assert id(entity_a) not in platform._polling_tasks
     assert id(entity_b) not in platform._polling_tasks
 
 
-async def test_polling_drain_is_tracked_by_config_entry_background_tasks(
+async def test_polling_cancellation_drain_runs_in_the_cancelled_task_itself(
     hass: HomeAssistant,
 ) -> None:
-    """Test a cancelled poll's background drain is tied to its config entry.
+    """Test a cancelled poll drains its pending children before finishing.
 
-    Regression contract: when a config entry governs the platform, the
-    background task that drains cancelled children after the outer poll is
-    itself cancelled must be tracked by that config entry's own background
-    tasks, not just `hass`'s global ones. Otherwise the config entry's own
-    unload timeout no longer governs it, and unload can finish while the
-    drain is still mid-cleanup, racing platform teardown.
+    Regression contract: the cancelled task must await its cancelled
+    children to completion (clearing their tracked entries) itself,
+    before it reports done, rather than handing that off to a brand new
+    background task. `ConfigEntry._async_process_on_unload` only awaits
+    the background tasks that existed at the moment it snapshotted them;
+    a new task spawned only after a poll is cancelled would be invisible
+    to that wait and would no longer be governed by its own timeout.
     """
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
     await component.async_setup({})
@@ -1061,12 +1101,11 @@ async def test_polling_drain_is_tracked_by_config_entry_background_tasks(
     with pytest.raises(asyncio.CancelledError):
         await outer
 
-    # The drain background task must be tracked by the config entry, not
-    # just by hass's global background tasks.
-    assert len(config_entry._background_tasks) == 1
-
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # The tracked entry must already be cleared by the time the cancelled
+    # task itself finishes, and no separate background task should have
+    # been created for the config entry to lose track of.
     assert id(entity) not in platform._polling_tasks
+    assert len(config_entry._background_tasks) == 0
 
 
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
