@@ -532,6 +532,63 @@ async def test_arithmetic_mean_query_limits(
         assert len(compiled.positiontup or compiled.params) <= budget
 
 
+async def test_circular_mean_query_limits(statistics_session: Session) -> None:
+    """Account for circular mean expressions in the bind parameter budget."""
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        Statistics(
+            metadata_id=metadata_id,
+            start_ts=(start + timedelta(days=day, hours=hour)).timestamp(),
+            mean=value,
+            mean_weight=weight,
+        )
+        for metadata_id in (1, 2, 3)
+        for day in range(3)
+        for hour, value, weight in (
+            (0, 350.0, 1.0),
+            (1, 10.0, 1.0),
+        )
+    )
+    statistics_session.commit()
+
+    max_bind_vars = 10
+
+    with patch.object(
+        statistics,
+        "execute_stmt_lambda_element",
+        wraps=execute_stmt_lambda_element,
+    ) as execute:
+        rows = statistics._get_statistics_period_rows(
+            statistics_session,
+            start,
+            start + timedelta(days=3),
+            [1, 2, 3],
+            statistics.reduce_day_ts_factory()[1],
+            {"mean"},
+            max_bind_vars,
+            StatisticMeanType.CIRCULAR,
+        )
+
+    assert execute.call_count == 6
+    assert [(row.metadata_id, row.start_ts, row.mean) for row in rows] == [
+        (
+            metadata_id,
+            (start + timedelta(days=day)).timestamp(),
+            pytest.approx(0.0, abs=1e-12),
+        )
+        for metadata_id in (1, 2, 3)
+        for day in range(3)
+    ]
+
+    for call in execute.call_args_list:
+        compiled = call.args[1].compile(
+            dialect=statistics_session.get_bind().dialect,
+            compile_kwargs={"render_postcompile": True},
+        )
+        assert len(compiled.positiontup or compiled.params) <= max_bind_vars
+
+
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.freeze_time("2024-10-01 00:00:00+00:00")
 @pytest.mark.parametrize(

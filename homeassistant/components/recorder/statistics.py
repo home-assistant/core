@@ -1618,13 +1618,23 @@ def _get_statistics_period_rows(
 ) -> list[Row]:
     """Fetch reduced rows for each statistic and calendar period."""
     rows: list[Row] = []
+    circular_bind_vars = (
+        6 if "mean" in types and mean_type is StatisticMeanType.CIRCULAR else 0
+    )
+    fixed_binds_per_period = 2 + circular_bind_vars
+
     id_chunks = (
         chunked_or_all(
-            metadata_ids, min(MAX_IDS_FOR_INDEXED_GROUP_BY, max_bind_vars - 2)
+            metadata_ids,
+            min(
+                MAX_IDS_FOR_INDEXED_GROUP_BY,
+                max_bind_vars - fixed_binds_per_period,
+            ),
         )
         if metadata_ids
         else (None,)
     )
+
     for ids in id_chunks:
         start_ts = start_time.timestamp()
         if end_time is None:
@@ -1647,9 +1657,10 @@ def _get_statistics_period_rows(
             bounds.append((start_ts, next_ts))
             start_ts = next_ts
 
+        binds_per_period = fixed_binds_per_period + len(ids or ())
         periods_per_query = min(
             MAX_STATISTICS_PERIODS_PER_QUERY,
-            max_bind_vars // (2 + len(ids or ())),
+            max_bind_vars // binds_per_period,
         )
         for period_bounds in batched(bounds, periods_per_query, strict=False):
             stmt = _generate_statistics_period_stmt(
