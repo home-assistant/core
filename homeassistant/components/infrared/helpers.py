@@ -8,7 +8,7 @@ from typing import override
 from infrared_protocols.commands import Command as InfraredCommand
 import probatio
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
@@ -20,7 +20,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
 
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
@@ -109,12 +112,20 @@ class InfraredConsumerEntity(Entity):
     """Base class for entities that track the availability of an infrared entity."""
 
     @callback
-    def _async_track_availability(self, infrared_entity_id: str) -> CALLBACK_TYPE:
-        """Track the availability of an infrared entity.
+    def _async_track_availability(
+        self, infrared_entity_id_or_uuid: str
+    ) -> CALLBACK_TYPE:
+        """Track the availability of an infrared entity, following renames.
 
-        Sets initial availability and subscribes to state changes.
-        Returns an unsubscribe callback.
+        Sets initial availability and subscribes to state changes and entity
+        registry renames. Returns an unsubscribe callback.
         """
+        unsubscribes: list[CALLBACK_TYPE] = []
+
+        @callback
+        def unsubscribe() -> None:
+            while unsubscribes:
+                unsubscribes.pop()()
 
         @callback
         def state_changed(event: Event[EventStateChangedData]) -> None:
@@ -125,26 +136,55 @@ class InfraredConsumerEntity(Entity):
             if ir_available != self.available:
                 _LOGGER.info(
                     "Infrared entity %s used by %s is %s",
-                    infrared_entity_id,
+                    event.data["entity_id"],
                     self.entity_id,
                     "available" if ir_available else "unavailable",
                 )
                 self._async_infrared_availability_changed(ir_available)
 
-        ir_state = self.hass.states.get(infrared_entity_id)
-        self._attr_available = (
-            ir_state is not None and ir_state.state != STATE_UNAVAILABLE
-        )
+        @callback
+        def registry_updated(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+            data = event.data
+            if data["action"] != "update" or ATTR_ENTITY_ID not in data["changes"]:
+                return
+            self._async_infrared_entity_id_changed(data[ATTR_ENTITY_ID])
+            track(data[ATTR_ENTITY_ID])
+            self.async_write_ha_state()
 
-        return async_track_state_change_event(
-            self.hass, [infrared_entity_id], state_changed
+        @callback
+        def track(infrared_entity_id: str) -> None:
+            unsubscribe()
+            unsubscribes.append(
+                async_track_state_change_event(
+                    self.hass, [infrared_entity_id], state_changed
+                )
+            )
+            unsubscribes.append(
+                async_track_entity_registry_updated_event(
+                    self.hass, infrared_entity_id, registry_updated
+                )
+            )
+            ir_state = self.hass.states.get(infrared_entity_id)
+            self._attr_available = (
+                ir_state is not None and ir_state.state != STATE_UNAVAILABLE
+            )
+
+        track(
+            er.async_validate_entity_id(
+                er.async_get(self.hass), infrared_entity_id_or_uuid
+            )
         )
+        return unsubscribe
 
     @callback
     def _async_infrared_availability_changed(self, available: bool) -> None:
         """Update availability. Override to react to changes."""
         self._attr_available = available
         self.async_write_ha_state()
+
+    @callback
+    def _async_infrared_entity_id_changed(self, entity_id: str) -> None:
+        """Handle a rename of the tracked infrared entity."""
 
 
 class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
@@ -163,6 +203,12 @@ class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
         self.async_on_remove(
             self._async_track_availability(self._infrared_emitter_entity_id)
         )
+
+    @override
+    @callback
+    def _async_infrared_entity_id_changed(self, entity_id: str) -> None:
+        """Send commands to the renamed infrared emitter entity."""
+        self._infrared_emitter_entity_id = entity_id
 
     async def _send_command(self, command: InfraredCommand) -> None:
         """Send an IR command through the infrared emitter entity."""
@@ -199,6 +245,12 @@ class InfraredReceiverConsumerEntity(InfraredConsumerEntity):
         """Update availability and manage receiver subscription."""
         super()._async_infrared_availability_changed(available)
         self._async_update_receiver_subscription()
+
+    @override
+    @callback
+    def _async_infrared_entity_id_changed(self, entity_id: str) -> None:
+        """Resubscribe to the renamed infrared receiver entity."""
+        self._infrared_receiver_entity_id = entity_id
 
     @callback
     @abstractmethod

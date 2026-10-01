@@ -158,3 +158,30 @@ async def test_ac_buttons_disabled_by_default(
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_button_follows_emitter_rename(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test availability tracking and sending survive an emitter entity rename."""
+    entity_id = "button.lg_tv_power_on"
+    new_emitter_entity_id = "infrared.renamed_emitter"
+    entity_registry.async_update_entity(
+        EMITTER_ENTITY_ID, new_entity_id=new_emitter_entity_id
+    )
+    await hass.async_block_till_done()
+
+    await assert_availability_follows_source_entity(
+        hass, entity_id, new_emitter_entity_id
+    )
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert mock_infrared_emitter_entity.send_command_calls == [LGTVCode.POWER_ON]
