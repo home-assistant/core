@@ -269,9 +269,8 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if identity is None:
                 errors["base"] = "cannot_connect"
-            elif (
-                not by_id
-                and _unlinked_unique_id(*identity) != self._offered_ids[device_path]
+            elif not by_id and (
+                _unlinked_unique_id(*identity) != self._offered_ids.get(device_path)
             ):
                 # Another device took the event node since it was offered
                 errors["base"] = "device_changed"

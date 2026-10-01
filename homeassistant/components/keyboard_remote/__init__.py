@@ -833,11 +833,14 @@ class DeviceHandler:
         else:
             self._descriptor = self._device_path or dev.path
 
+        # Created here, not by the task: a teardown before its first step
+        # must still cancel the repeats it starts
+        self._repeat_tasks = {}
         # Not eager: a device that fails immediately would otherwise run the
         # whole monitor body, including the teardown that clears this
         # attribute, before the assignment below overwrites it again.
         self._monitor_task = self.hass.async_create_background_task(
-            self._async_monitor_input(),
+            self._async_monitor_input(self._repeat_tasks),
             f"keyboard_remote monitor {dev.path}",
             eager_start=False,
         )
@@ -920,14 +923,14 @@ class DeviceHandler:
             )
             await asyncio.sleep(repeat)
 
-    async def _async_monitor_input(self) -> None:
+    async def _async_monitor_input(
+        self, repeat_tasks: dict[int, asyncio.Task[None]]
+    ) -> None:
         """Monitor one device for key events using evdev with asyncio."""
         from evdev import ecodes  # noqa: PLC0415
 
         dev = self.dev
         assert dev is not None
-        repeat_tasks: dict[int, asyncio.Task[None]] = {}
-        self._repeat_tasks = repeat_tasks
 
         try:
             _LOGGER.debug("Start device monitoring")
