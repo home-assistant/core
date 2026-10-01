@@ -45,7 +45,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {
-                        probatio.Required(CONF_API_KEY): str,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                         # Name field is no longer allowed in config flow schemas
                         # pylint: disable-next=home-assistant-config-flow-name-field
                         probatio.Required(CONF_NAME): str,

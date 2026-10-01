@@ -19,6 +19,8 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
     Platform.EVENT,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VALVE,

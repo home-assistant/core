@@ -1102,6 +1102,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def __init__(
         self,
         *,
+        created_at=None,
         data=None,
         disabled_by=None,
         discovery_keys=None,
@@ -1122,6 +1123,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         """Initialize a mock config entry."""
         discovery_keys = discovery_keys or {}
         kwargs = {
+            "created_at": created_at,
             "data": data or {},
             "disabled_by": disabled_by,
             "discovery_keys": discovery_keys,

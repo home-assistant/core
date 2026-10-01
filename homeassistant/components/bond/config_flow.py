@@ -24,9 +24,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 USER_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_HOST): str, probatio.Required(CONF_ACCESS_TOKEN): str}
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str,
+    }
 )
-DISCOVERY_SCHEMA = probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str})
+DISCOVERY_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str}
+)
 TOKEN_SCHEMA = probatio.Schema({})
 
 

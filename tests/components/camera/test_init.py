@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_jpeg
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, setup_test_component_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -815,6 +815,47 @@ async def test_entity_picture_url_changes_on_token_update(hass: HomeAssistant) -
     new_entity_picture = camera_state.attributes["entity_picture"]
     assert new_entity_picture != original_picture
     assert "token=" in new_entity_picture
+
+
+async def test_entity_picture_url_changes_on_entity_id_change(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entity picture follows an entity_id change."""
+
+    class RenameCamera(Camera):
+        _attr_name = "Rename me"
+        _attr_unique_id = "rename_me"
+
+        async def async_camera_image(
+            self, width: int | None = None, height: int | None = None
+        ) -> bytes:
+            return b"Test"
+
+    setup_test_component_platform(hass, DOMAIN, [RenameCamera()])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    old_picture = hass.states.get("camera.rename_me").attributes["entity_picture"]
+    assert old_picture.startswith("/api/camera_proxy/camera.rename_me?token=")
+
+    entity_registry.async_update_entity(
+        "camera.rename_me", new_entity_id="camera.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("camera.rename_me") is None
+    new_picture = hass.states.get("camera.renamed").attributes["entity_picture"]
+    # The token is unchanged, only the entity_id in the URL follows the rename
+    assert new_picture == old_picture.replace("camera.rename_me", "camera.renamed")
+
+    client = await hass_client()
+    resp = await client.get(new_picture)
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"Test"
+    resp = await client.get(old_picture)
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def _register_test_webrtc_provider(hass: HomeAssistant) -> Callable[[], None]:

@@ -63,14 +63,14 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             {
                 probatio.Required(CONF_STATION): cv.string,
                 probatio.Optional(CONF_DESTINATIONS, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_DIRECTION): cv.string,
                 probatio.Optional(CONF_LINES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.positive_int, cv.string]
+                    probatio.EnsureList(), [cv.positive_int, cv.string]
                 ),
                 probatio.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS): probatio.All(
-                    cv.ensure_list, [probatio.In(VALID_PRODUCTS)]
+                    probatio.EnsureList(), [probatio.In(VALID_PRODUCTS)]
                 ),
                 probatio.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
                 probatio.Optional(CONF_MAX_JOURNEYS, default=5): cv.positive_int,

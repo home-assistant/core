@@ -66,7 +66,9 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_SENDER_NR): cv.string,
         probatio.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
-        probatio.Required(CONF_RECP_NR): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_RECP_NR): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
     }
 )
 
