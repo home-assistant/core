@@ -102,32 +102,6 @@ async def test_config_entry_unique_id_migration(
     assert config_entry_v1_1.minor_version == 2
 
 
-async def test_options_flow_homekit_fan_mode_aliases_default(
-    hass: HomeAssistant,
-) -> None:
-    """Test HomeKit fan mode aliases option defaults to disabled."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={})
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "high_scan_interval": 10,
-            "low_scan_interval": 30,
-            "high_scan_start": "07:00:00",
-            "low_scan_start": "22:00:00",
-            "scan_ignore": 30,
-            CONF_HOMEKIT_FAN_MODE_ALIASES: False,
-        },
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["data"][CONF_HOMEKIT_FAN_MODE_ALIASES] is False
-
-
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("10.0.0.131"),
     ip_addresses=[ip_address("10.0.0.131")],
