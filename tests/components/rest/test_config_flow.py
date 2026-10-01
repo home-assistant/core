@@ -198,7 +198,6 @@ async def test_config_flow_no_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test an entry and subentry flow with no data."""
     aioclient_mock.get(
@@ -227,14 +226,24 @@ async def test_config_flow_no_data(
         context={"source": config_entries.SOURCE_USER},
     )
 
+
+async def test_config_entry_flow_payload_template_error(
+    hass: HomeAssistant,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test a template render error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     with pytest.raises(InvalidData) as ex:
-        await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            get_subentry_data[SENSOR_DATA]["data"],
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], get_config_entry_data | {CONF_PAYLOAD: "{{ 1 / 0}}"}
         )
 
-    assert ex.value and ex.value.path == ["value_template"]
-    assert "'value_json' is undefined" in ex.value.error_message
+    assert "ZeroDivisionError" in ex.value.error_message
+    assert ex.value.path == [CONF_PAYLOAD]
 
 
 async def test_sensor_subentry_flow_endpoint_failure(

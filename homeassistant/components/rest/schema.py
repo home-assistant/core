@@ -49,7 +49,6 @@ from homeassistant.helpers.trigger_template_entity import (
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ValueTemplate,
 )
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.ssl import SSLCipherList
 
@@ -147,22 +146,10 @@ class _RenderingTemplateSelector(selector.TemplateSelector):
     """
 
     @override
-    def __init__(self, rest_data: str | None = None) -> None:
-        super().__init__()
-        self.rest_data = rest_data
-
-    @override
     def __call__(self, data: Any) -> str:
         template = cv.template(data)
-        template_vars: TemplateVarsType | None = None
-        if self.rest_data is not None:
-            template_vars = {"value": self.rest_data}
-            try:  # noqa: SIM105 - suppress is much slower
-                template_vars["value_json"] = json_loads(self.rest_data)
-            except JSON_DECODE_EXCEPTIONS:
-                pass  # silently swallow exception (and not set value_json)
         try:
-            template.async_render(variables=template_vars)
+            template.async_render()
         except TemplateError as ex:
             raise probatio.Invalid(str(ex)) from ex
         return template.template
@@ -357,9 +344,9 @@ def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
             pretty_json = rest_data
     return probatio.Schema(
         {
-            probatio.Optional(CONF_NAME): _RenderingTemplateSelector(),
-            probatio.Optional(CONF_ICON): _RenderingTemplateSelector(rest_data),
-            probatio.Optional(CONF_PICTURE): _RenderingTemplateSelector(rest_data),
+            probatio.Optional(CONF_NAME): selector.TemplateSelector(),
+            probatio.Optional(CONF_ICON): selector.TemplateSelector(),
+            probatio.Optional(CONF_PICTURE): selector.TemplateSelector(),
             probatio.Required(CONF_REST_DATA): section(
                 probatio.Schema(
                     {
@@ -372,9 +359,7 @@ def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
                 ),
                 {"collapsed": True},
             ),
-            probatio.Optional(CONF_VALUE_TEMPLATE): _RenderingTemplateSelector(
-                rest_data
-            ),
+            probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             probatio.Required(
                 CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
             ): selector.BooleanSelector(),
@@ -384,7 +369,7 @@ def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
 
 def _AVAILABILITY_SCHEMA(rest_data: str | None) -> probatio.Schema:
     return probatio.Schema(
-        {probatio.Optional(CONF_AVAILABILITY): _RenderingTemplateSelector(rest_data)}
+        {probatio.Optional(CONF_AVAILABILITY): selector.TemplateSelector()}
     )
 
 

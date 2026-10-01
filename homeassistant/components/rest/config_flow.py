@@ -68,8 +68,6 @@ from .schema import (
 from .util import parse_json_attributes_raise_error
 
 NO_PLATFORM = "none"
-
-
 MATCH_ON = {
     CONF_RESOURCE,
     CONF_METHOD,
@@ -81,7 +79,10 @@ MATCH_ON = {
 
 
 class RestConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Config flow for the RESTful integration."""
+    """Config flow for the RESTful integration.
+
+    Configures a resource.
+    """
 
     VERSION = 1
     MINOR_VERSION = 1
@@ -329,7 +330,6 @@ class RestSubentryFlow(ConfigSubentryFlow):
             return self.async_abort(reason="config_entry_not_loaded")
         if len(entry.subentries) == 0:
             await entry.runtime_data.async_refresh()
-        rest_data = None
         if not entry.runtime_data.last_update_success:
             ex = entry.runtime_data.last_exception
             reason = "endpoint_error"
