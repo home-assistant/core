@@ -27,10 +27,14 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     NotOnWhitelistFault,
     PrivateKeyError,
+    SessionInfoAuthenticationFault,
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
+    WhitelistOperationCouldNotStartLocalEntityAuth,
+    WhitelistOperationLocalEntityAuthFailedCancelled,
     WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
     WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import VehicleRouter
@@ -919,6 +923,61 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_handshake_fails_after_pairing(hass: HomeAssistant) -> None:
+    """A handshake failure after the key was added says so; retrying finishes without re-pairing."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+    vehicle.handshakeVehicleSecurity = AsyncMock(
+        side_effect=[NotOnWhitelistFault(), SessionInfoAuthenticationFault(), None]
+    )
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+        assert result["errors"] == {"base": "key_unverified"}
+        assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)) == 1
+    vehicle.pair.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     """The scan step re-shows the form with an error when BLE connect fails."""
     entry = await _setup_account_entry(hass)
@@ -954,10 +1013,22 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
         (BluetoothTimeout, "timeout"),
         (BluetoothTransportError, "cannot_connect"),
         (WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap, "tap_timeout"),
+        (WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck, "tap_timeout"),
         (WhitelistOperationLocalEntityAuthFailedUIDenied, "pair_denied"),
+        (WhitelistOperationLocalEntityAuthFailedCancelled, "pair_denied"),
+        (WhitelistOperationCouldNotStartLocalEntityAuth, "auth_not_started"),
         (TeslaFleetError, "pair_failed"),
     ],
-    ids=["timeout", "transport", "tap_timeout", "denied", "rejected"],
+    ids=[
+        "timeout",
+        "transport",
+        "tap_timeout",
+        "ui_ack_timeout",
+        "denied",
+        "cancelled",
+        "auth_not_started",
+        "rejected",
+    ],
 )
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_authorize_failure(
