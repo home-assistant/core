@@ -882,3 +882,50 @@ async def test_restore_entity_id_changed_no_stored_state(hass: HomeAssistant) ->
     data.async_restore_entity_id_changed("test.test", "test.test2")
 
     assert list(data.last_states) == ["test.other"]
+
+
+async def test_entity_id_changed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test restore state data follows the entity when its entity_id is changed."""
+
+    class MockRestoreEntity(RestoreEntity):
+        """Mock restore entity."""
+
+        _attr_unique_id = "1234"
+
+        @property
+        def state(self) -> str:
+            """Return the state."""
+            return "on"
+
+    entity_registry.async_get_or_create(
+        "input_boolean", "test_platform", "1234", suggested_object_id="old"
+    )
+    data = async_get(hass)
+    stored_state = StoredState(
+        State("input_boolean.old", "stored"), None, dt_util.utcnow()
+    )
+    data.last_states = {"input_boolean.old": stored_state}
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+    entity = MockRestoreEntity()
+    await platform.async_add_entities([entity])
+    assert data.entities == {"input_boolean.old": entity}
+
+    entity_registry.async_update_entity(
+        "input_boolean.old", new_entity_id="input_boolean.new"
+    )
+    await hass.async_block_till_done()
+
+    assert data.entities == {"input_boolean.new": entity}
+    assert data.last_states == {"input_boolean.new": stored_state}
+    assert await entity.async_get_last_state() is stored_state.state
+    assert [stored.state.entity_id for stored in data.async_get_stored_states()] == [
+        "input_boolean.new"
+    ]
+
+    await entity.async_remove()
+
+    assert data.entities == {}
+    assert list(data.last_states) == ["input_boolean.new"]
+    assert data.last_states["input_boolean.new"].state.state == "on"

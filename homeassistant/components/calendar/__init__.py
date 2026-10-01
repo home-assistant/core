@@ -422,6 +422,15 @@ class CalendarEntity(Entity):
             self._event_listener_debouncer.async_cancel()
             self._event_listener_debouncer = None
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.

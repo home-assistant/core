@@ -299,6 +299,9 @@ class RestoreStateData:
         self, old_entity_id: str, new_entity_id: str
     ) -> None:
         """Move the stored state of an entity whose entity_id has changed."""
+        # Only registered when the entity_id is changed in place
+        if (entity := self.entities.pop(old_entity_id, None)) is not None:
+            self.entities[new_entity_id] = entity
         if (stored_state := self.last_states.pop(old_entity_id, None)) is None:
             # Never restore another entity's leftover state under the new id
             self.last_states.pop(new_entity_id, None)
