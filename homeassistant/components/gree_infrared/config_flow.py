@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
@@ -66,7 +67,7 @@ def _user_schema(hass: HomeAssistant) -> probatio.Schema:
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            probatio.Optional(CONF_GENERIC_OPTIONS, default=False): probatio.Boolean(),
+            probatio.Optional(CONF_GENERIC_OPTIONS, default=False): BooleanSelector(),
             probatio.Required(
                 CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
             ): probatio.All(
