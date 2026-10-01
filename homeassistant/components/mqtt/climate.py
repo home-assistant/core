@@ -263,7 +263,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(
             CONF_FAN_MODE_LIST,
             default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
         probatio.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
@@ -288,7 +288,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 HVACMode.DRY,
                 HVACMode.FAN_ONLY,
             ],
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         probatio.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
@@ -311,7 +311,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): valid_publish_topic,
         probatio.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
         probatio.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
@@ -321,7 +321,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): valid_publish_topic,
         probatio.Optional(
             CONF_SWING_HORIZONTAL_MODE_LIST, default=[SWING_ON, SWING_OFF]
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Optional(CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE): cv.template,
         probatio.Optional(
             CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC
@@ -330,7 +330,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_SWING_MODE_COMMAND_TOPIC): valid_publish_topic,
         probatio.Optional(
             CONF_SWING_MODE_LIST, default=[SWING_ON, SWING_OFF]
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
         probatio.Optional(CONF_SWING_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_TEMP_INITIAL): probatio.All(probatio.Coerce(float)),

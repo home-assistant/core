@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REAUTH_SCHEMA = {
     probatio.Optional(CONF_USERNAME): str,
-    probatio.Optional(CONF_PASSWORD): str,
+    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
 }
 
 PASSWORD_NOT_CHANGED = "__**password_not_changed**__"

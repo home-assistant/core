@@ -40,8 +40,8 @@ habluetooth==7.1.2
 hass-nabucasa==2.7.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260826.7
-home-assistant-intents==2026.9.17
+home-assistant-frontend==20260930.0
+home-assistant-intents==2026.9.30
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -141,7 +141,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.4
+pydantic==2.13.5
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

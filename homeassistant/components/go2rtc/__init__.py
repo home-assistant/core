@@ -105,9 +105,9 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
                         cv.string, probatio.Length(min=1)
                     ),
-                    probatio.Inclusive(CONF_PASSWORD, _AUTH): probatio.All(
-                        cv.string, probatio.Length(min=1)
-                    ),
+                    probatio.Inclusive(
+                        probatio.Secret(CONF_PASSWORD), _AUTH
+                    ): probatio.All(cv.string, probatio.Length(min=1)),
                 }
             ),
             _validate_auth,

@@ -121,7 +121,9 @@ ALEXA_ENTITY_SCHEMA = probatio.Schema(
 GOOGLE_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_ALIASES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_ALIASES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
     }
 )
