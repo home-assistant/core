@@ -1,6 +1,7 @@
 """Tests the init part of the Loqed integration."""
 
 from datetime import timedelta
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -49,6 +50,25 @@ async def test_webhook_accepts_valid_message(
         headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
     )
     lock.receiveWebhook.assert_called()
+
+
+async def test_webhook_rejects_missing_signature_headers(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+) -> None:
+    """Test a webhook without TIMESTAMP and HASH headers is rejected."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    message = await async_load_fixture(hass, "battery_update.json", DOMAIN)
+
+    resp = await client.post(
+        f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}", data=message
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    lock.receiveWebhook.assert_not_called()
 
 
 async def test_setup_webhook_in_bridge(
