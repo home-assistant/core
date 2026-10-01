@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from aio_ownet.exceptions import OWServerConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,6 +15,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_owproxy_mock_devices
@@ -95,3 +97,32 @@ async def test_selection_option_service(
         blocking=True,
     )
     assert hass.states.get(entity_id).state == "9"
+
+
+@pytest.mark.parametrize("device_id", ["28.111111111111"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_selection_option_write_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+) -> None:
+    """Test 1-Wire select option action raises on write failure."""
+    setup_owproxy_mock_devices(owproxy, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    owproxy.return_value.write.side_effect = OWServerConnectionError("Unreachable")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.28_111111111111_temperature_resolution",
+                ATTR_OPTION: "9",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "write_failed"
+    assert (
+        str(exc_info.value) == "Error writing to /28.111111111111/tempres: Unreachable"
+    )
