@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -38,8 +38,11 @@ class FmdDeviceTracker(CoordinatorEntity[FmdCoordinator], TrackerEntity):
         """Initialize the device tracker."""
         super().__init__(coordinator)
         entry_data = coordinator.config_entry.data
-        self._attr_unique_id = entry_data[CONF_ID]
-        self._device_id = entry_data[CONF_ID]
+        # Server-scoped identity (same as the config-entry unique_id) so the
+        # same account ID on two different servers does not collide.
+        scope = f"{entry_data[CONF_URL]}/{entry_data[CONF_ID]}"
+        self._attr_unique_id = scope
+        self._device_id = scope
         self._device_name = f"FMD {entry_data[CONF_ID]}"
 
     @property

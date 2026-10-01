@@ -23,6 +23,11 @@ STEP_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _canonical_url(url: str) -> str:
+    """Normalize a server URL for identity purposes."""
+    return url.rstrip("/")
+
+
 async def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
     """Validate credentials and return auth artifacts for the config entry."""
     api = await FmdClient.create(
@@ -48,10 +53,11 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Account IDs are scoped per server: include the base URL so
-            # the same account ID on two different servers can coexist.
+            # Account IDs are scoped per server: include the canonical base
+            # URL so the same account ID on two different servers can
+            # coexist, and trailing-slash variants do not create duplicates.
             await self.async_set_unique_id(
-                f"{user_input[CONF_URL]}/{user_input[CONF_ID]}"
+                f"{_canonical_url(user_input[CONF_URL])}/{user_input[CONF_ID]}"
             )
             self._abort_if_unique_id_configured()
             try:

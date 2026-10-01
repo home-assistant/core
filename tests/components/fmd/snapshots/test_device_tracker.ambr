@@ -34,7 +34,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'test_user',
+    'unique_id': 'https://fmd.example.com/test_user',
     'unit_of_measurement': None,
   })
 # ---

@@ -68,7 +68,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{TEST_URL}/{TEST_ID}",
+        unique_id=f"{TEST_URL.rstrip('/')}/{TEST_ID}",
         title=TEST_ID,
         data={
             CONF_URL: TEST_URL,

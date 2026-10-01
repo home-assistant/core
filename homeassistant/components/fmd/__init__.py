@@ -1,16 +1,4 @@
-"""The FMD integration for Home Assistant.
-
-Home Assistant integration for FMD (Find My Device).
-Built to work with the FMD-FOSS project: https://fmd-foss.org
-
-FMD Project Attribution:
-- Created by Nulide (http://nulide.de)
-- Maintained by Thore (https://thore.io) and the FMD-FOSS team
-- FMD Android: https://gitlab.com/fmd-foss/fmd-android
-- FMD Server: https://gitlab.com/fmd-foss/fmd-server
-
-Client library: https://github.com/devinslick/fmd_api
-"""
+"""The FMD (Find My Device) integration for Home Assistant."""
 
 import logging
 

@@ -9,13 +9,13 @@ from fmd_api import AuthenticationError, FmdApiException
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fmd.const import DEFAULT_POLLING_INTERVAL
+from homeassistant.components.fmd.const import DEFAULT_POLLING_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_ID, CONF_URL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import TEST_LOCATION, setup_integration
+from . import TEST_ARTIFACTS, TEST_ID, TEST_LOCATION, TEST_URL, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -225,7 +225,7 @@ async def test_tracker_skips_empty_and_inaccurate_blobs(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["provider"] == "gps"
 
-    # All fixes inaccurate -> UpdateFailed on first refresh -> setup retry state
+    # All fixes inaccurate -> UpdateFailed on the scheduled refresh
     weak2 = dict(TEST_LOCATION)
     weak2["provider"] = "beacondb"
     mock_fmd_client.decrypt_data_blob = MagicMock(
@@ -236,3 +236,43 @@ async def test_tracker_skips_empty_and_inaccurate_blobs(
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_same_account_on_two_servers(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test identical account IDs on different servers get separate devices."""
+    entry_a = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{TEST_URL}/{TEST_ID}",
+        title=TEST_ID,
+        data={
+            CONF_URL: TEST_URL,
+            CONF_ID: TEST_ID,
+            "artifacts": dict(TEST_ARTIFACTS),
+        },
+    )
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"https://fmd-other.example.com/{TEST_ID}",
+        title=TEST_ID,
+        data={
+            CONF_URL: "https://fmd-other.example.com",
+            CONF_ID: TEST_ID,
+            "artifacts": dict(TEST_ARTIFACTS),
+        },
+    )
+    for entry in (entry_a, entry_b):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.fmd_test_user") is not None
+    assert hass.states.get("device_tracker.fmd_test_user_2") is not None
+
+    er_entries = er.async_entries_for_config_entry(
+        hass.data[er.DATA_REGISTRY], entry_b.entry_id
+    )
+    assert len(er_entries) == 1
+    assert er_entries[0].unique_id == f"https://fmd-other.example.com/{TEST_ID}"
