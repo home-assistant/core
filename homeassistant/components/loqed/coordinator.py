@@ -133,11 +133,12 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         # so the status is read once when it reconnects.
         if "event_type" in event_data:
             self._lock_offline = False
-        elif (connected := _lock_connected(event_data)) is not None:
-            was_offline = self._lock_offline
-            self._lock_offline = not connected
-            if connected and was_offline:
-                await self.async_request_refresh()
+        elif (connected := _lock_connected(event_data)) is False:
+            self._lock_offline = True
+        elif connected and self._lock_offline:
+            # A successful read clears the flag; a failed one is retried on the next
+            # message.
+            await self.async_request_refresh()
 
         self.async_update_listeners()
 
