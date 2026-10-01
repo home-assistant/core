@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from homeassistant.components.marketplace.enums import RepositoryCategory
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.core import HomeAssistant
 
@@ -63,6 +64,31 @@ async def test_diagnostics(
     diagnostics["repositories"].sort(key=lambda repo: repo["data"]["full_name"])
 
     assert diagnostics == snapshot(exclude=EXCLUDED)
+
+
+@pytest.mark.usefixtures("stored_repositories", "init_integration")
+async def test_diagnostics_tell_what_can_not_be_reached(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the diagnostics tell why updates are unavailable or stale."""
+    marketplace = mock_config_entry.runtime_data
+    marketplace.unreachable_categories.add(RepositoryCategory.PLUGIN)
+    marketplace.unreachable_feeds.add("critical")
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert diagnostics["marketplace"]["unreachable_categories"] == ["plugin"]
+    assert diagnostics["marketplace"]["unreachable_feeds"] == ["critical"]
+    unreachable = {
+        repository["data"]["category"]: repository["unreachable"]
+        for repository in diagnostics["repositories"]
+    }
+    assert unreachable["plugin"] is True
+    assert unreachable["integration"] is False
 
 
 @pytest.mark.usefixtures("init_integration")

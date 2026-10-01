@@ -33,10 +33,18 @@
       ]),
       'lovelace_mode': 'storage',
       'new': False,
+      'queue': dict({
+        'pending': 0,
+        'running': False,
+      }),
       'renamed_repositories': dict({
       }),
       'stage': 'running',
       'startup': False,
+      'unreachable_categories': list([
+      ]),
+      'unreachable_feeds': list([
+      ]),
       'warning_accepted_users': 1,
       'warning_last_accepted_at': '2026-09-01T12:00:00+00:00',
     }),
@@ -139,6 +147,7 @@
         }),
         'integration_manifest': dict({
         }),
+        'last_fetched': '2019-02-12T19:33:20+00:00',
         'paths': dict({
           'local': '/config/custom_components/example',
           'localpath': '/config/custom_components/example',
@@ -158,6 +167,7 @@
           'persistent_directory': None,
           'zip_release': False,
         }),
+        'unreachable': False,
       }),
       dict({
         'data': dict({
@@ -199,6 +209,7 @@
         }),
         'integration_manifest': dict({
         }),
+        'last_fetched': '2019-02-12T19:33:20+00:00',
         'paths': dict({
           'local': '/config/www/community/plugin-basic',
           'localpath': '/config/www/community/plugin-basic',
@@ -219,6 +230,7 @@
           'persistent_directory': None,
           'zip_release': False,
         }),
+        'unreachable': False,
       }),
     ]),
   })

@@ -410,6 +410,8 @@ class MarketplaceManager:
         self.filesystem_lock = asyncio.Lock()
         # The catalogs the last request could not reach
         self.unreachable_categories: set[RepositoryCategory] = set()
+        # The removed and critical feeds the last request could not reach
+        self.unreachable_feeds: set[str] = set()
         self.recurring_tasks: list[Callable[[], None]] = []
         self.recurring_runs: set[asyncio.Task[None]] = set()
         self.startup_task: asyncio.Task[None] | None = None
@@ -1069,6 +1071,25 @@ class MarketplaceManager:
         self.unreachable_categories.discard(category)
         self.coordinators[category].async_update_listeners()
 
+    @callback
+    def _async_feed_not_reached(self, feed: str, exception: MarketplaceError) -> None:
+        """Mark a feed unreachable, telling so once."""
+        if feed in self.unreachable_feeds:
+            LOGGER.debug("The %s feed still can not be reached", feed)
+            return
+
+        LOGGER.info("The %s feed can not be reached: %s", feed, exception)
+        self.unreachable_feeds.add(feed)
+
+    @callback
+    def _async_feed_reached(self, feed: str) -> None:
+        """Mark a feed reachable, telling so when it was not."""
+        if feed not in self.unreachable_feeds:
+            return
+
+        LOGGER.info("The %s feed can be reached again", feed)
+        self.unreachable_feeds.discard(feed)
+
     async def async_get_category_repositories_from_catalog(
         self, category: RepositoryCategory
     ) -> None:
@@ -1223,8 +1244,10 @@ class MarketplaceManager:
 
         try:
             removed_repositories = await self.data_client.async_get_removed()
-        except MarketplaceError:
+        except MarketplaceError as exception:
+            self._async_feed_not_reached("removed", exception)
             return
+        self._async_feed_reached("removed")
 
         for item in removed_repositories:
             removed = self.repositories.removed_repository(item["repository"])
@@ -1351,10 +1374,12 @@ class MarketplaceManager:
         except GitHubNotModifiedException, NotModifiedError:
             # Unchanged, still checked: a removal that failed before is tried again
             critical = self.critical_repositories
-        except MarketplaceError:
-            pass
+        except MarketplaceError as exception:
+            self._async_feed_not_reached("critical", exception)
+            return
         else:
             self.critical_repositories = critical
+        self._async_feed_reached("critical")
 
         if not critical:
             LOGGER.debug("No critical repositories")

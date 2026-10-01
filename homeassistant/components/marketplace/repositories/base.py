@@ -1185,6 +1185,8 @@ class Repository:
         try:
             await self.async_post_installation()
         except Exception as exception:
+            # Only its message reaches the user, the log gets where it came from
+            self.logger.exception("%s Post installation steps failed", self.string)
             # The files are in place, so is what the Marketplace knows of them
             raise MarketplaceError(
                 translation_domain=DOMAIN,

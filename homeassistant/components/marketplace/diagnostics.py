@@ -39,6 +39,12 @@ async def async_get_config_entry_diagnostics(
             "archived_repositories": marketplace.common.archived_repositories,
             "ignored_repositories": marketplace.common.ignored_repositories,
             "lovelace_mode": marketplace.core.lovelace_mode,
+            "unreachable_categories": sorted(marketplace.unreachable_categories),
+            "unreachable_feeds": sorted(marketplace.unreachable_feeds),
+            "queue": {
+                "running": marketplace.queue.running,
+                "pending": marketplace.queue.pending_tasks,
+            },
         },
         "custom_repositories": [
             repo.data.full_name
@@ -55,6 +61,12 @@ async def async_get_config_entry_diagnostics(
                 "integration_manifest": repository.integration_manifest,
                 "repository_manifest": repository.repository_manifest.to_dict(),
                 "ref": repository.ref,
+                "unreachable": marketplace.is_unreachable(repository),
+                "last_fetched": (
+                    repository.data.last_fetched.isoformat()
+                    if repository.data.last_fetched
+                    else None
+                ),
                 "paths": {
                     "localpath": repository.localpath.replace(
                         marketplace.core.config_path, "/config"

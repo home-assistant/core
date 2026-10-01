@@ -170,6 +170,63 @@ async def test_critical_removal_stays_when_the_removals_change(
     assert marketplace.repositories.is_removed(REPOSITORY_INTEGRATION)
 
 
+@pytest.mark.parametrize(
+    ("feed", "method", "handler"),
+    [
+        pytest.param(
+            "removed",
+            "async_get_removed",
+            "async_handle_removed_repositories",
+            id="removed",
+        ),
+        pytest.param(
+            "critical",
+            "async_get_critical",
+            "async_handle_critical_repositories",
+            id="critical",
+        ),
+    ],
+)
+async def test_feed_that_can_not_be_reached_is_told_once(
+    marketplace: MarketplaceManager,
+    caplog: pytest.LogCaptureFixture,
+    feed: str,
+    method: str,
+    handler: str,
+) -> None:
+    """Test a feed that fails is logged once and once back, never as empty."""
+    with (
+        patch.object(
+            marketplace.data_client,
+            method,
+            side_effect=MarketplaceError("no route to host"),
+        ),
+        patch.object(marketplace.data, "async_write"),
+    ):
+        # Once to go away, once more that is not news anymore
+        for _ in range(2):
+            await getattr(marketplace, handler)()
+
+    assert marketplace.unreachable_feeds == {feed}
+    assert "No critical repositories" not in caplog.text
+
+    with (
+        patch.object(marketplace.data_client, method, return_value=[]),
+        patch.object(marketplace.data, "async_write"),
+    ):
+        await getattr(marketplace, handler)()
+
+    assert not marketplace.unreachable_feeds
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if record.levelname == "INFO" and f"{feed} feed" in record.getMessage()
+    ] == [
+        f"The {feed} feed can not be reached: no route to host",
+        f"The {feed} feed can be reached again",
+    ]
+
+
 async def test_no_fix_flow_for_other_issues(hass: HomeAssistant) -> None:
     """Test that only the restart issue is fixable."""
     assert await async_create_fix_flow(hass, "removed_1296269", None) is None

@@ -1070,6 +1070,30 @@ async def test_cancelled_first_install_leaves_nothing(
     assert list((config_dir / ".storage" / "marketplace_backups").iterdir()) == []
 
 
+async def test_unexpected_post_install_failure_is_logged_with_its_traceback(
+    marketplace: MarketplaceManager, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the log tells where a failed post install step came from."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+
+    with (
+        patch.object(
+            repository, "async_post_installation", side_effect=KeyError("url")
+        ),
+        pytest.raises(MarketplaceError) as exc_info,
+    ):
+        await repository._async_post_install()
+
+    assert exc_info.value.translation_key == "post_install_failed"
+    failure = next(
+        record
+        for record in caplog.records
+        if record.getMessage().endswith("Post installation steps failed")
+    )
+    assert failure.exc_info is not None
+    assert failure.exc_info[0] is KeyError
+
+
 async def test_cancelled_install_waits_for_the_file_being_written(
     hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> None:
