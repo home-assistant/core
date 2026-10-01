@@ -6,7 +6,11 @@ import logging
 import os
 
 from aio_ownet.definitions import OWServerCommonPath
-from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
+from aio_ownet.exceptions import (
+    OWServerError,
+    OWServerProtocolError,
+    OWServerReturnError,
+)
 from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.config_entries import ConfigEntry
@@ -60,6 +64,7 @@ class OneWireHub:
     owproxy: OWServerStatelessProxy
     devices: list[OWDeviceDescription]
     _version: str | None = None
+    _last_scan_success = True
 
     def __init__(self, hass: HomeAssistant, config_entry: OneWireConfigEntry) -> None:
         """Initialize."""
@@ -118,7 +123,16 @@ class OneWireHub:
 
     async def _scan_for_new_devices(self, _: datetime) -> None:
         """Scan the bus for new devices."""
-        devices = await _discover_devices(self.owproxy)
+        try:
+            devices = await _discover_devices(self.owproxy)
+        except OWServerError as exc:
+            if self._last_scan_success:
+                _LOGGER.warning("Error scanning for new devices: %s", exc)
+                self._last_scan_success = False
+            return
+        if not self._last_scan_success:
+            self._last_scan_success = True
+            _LOGGER.debug("Scanning for new devices recovered")
         existing_device_ids = [device.id for device in self.devices]
         new_devices = [
             device for device in devices if device.id not in existing_device_ids
