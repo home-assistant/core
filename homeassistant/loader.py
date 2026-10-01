@@ -347,7 +347,8 @@ async def async_get_custom_components(
         return comps
 
     if isinstance(comps_or_future, asyncio.Future):
-        return await comps_or_future
+        # Shield so cancelling a waiter does not cancel the shared future
+        return await asyncio.shield(comps_or_future)
 
     return comps_or_future
 
@@ -1227,7 +1228,8 @@ class Integration:
 
         if in_progress_imports:
             for platform_name, future in in_progress_imports.items():
-                platforms[platform_name] = await future
+                # Shield so cancelling a waiter does not cancel the shared future
+                platforms[platform_name] = await asyncio.shield(future)
 
         return platforms
 

@@ -840,6 +840,33 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_custom_components_concurrent_load_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    custom_components = {"test_1": _get_test_integration(hass, "test_1", False)}
+    start_event = threading.Event()
+    load_event = asyncio.Event()
+
+    def get_custom_components(hass: HomeAssistant) -> dict[str, loader.Integration]:
+        hass.loop.call_soon_threadsafe(load_event.set)
+        start_event.wait()
+        return custom_components
+
+    with patch("homeassistant.loader._get_custom_components", get_custom_components):
+        load_task1 = asyncio.create_task(loader.async_get_custom_components(hass))
+        load_task2 = asyncio.create_task(loader.async_get_custom_components(hass))
+        await load_event.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        start_event.set()
+        assert await load_task1 == custom_components
+
+    assert await loader.async_get_custom_components(hass) == custom_components
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_component_overwriting_core(hass: HomeAssistant) -> None:
     """Test loading a custom component that overwrites a core component."""
     # First load the core 'light' component
@@ -2019,6 +2046,54 @@ async def test_async_get_platforms_concurrent_loads(hass: HomeAssistant) -> None
     assert load_result2 == {"button": button_module_mock}
 
     assert imports == [button_module_name]
+    assert integration.get_platform_cached("button") is button_module_mock
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_async_get_platforms_concurrent_load_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+    await integration.async_get_component()
+
+    button_module_name = f"{integration.pkg_path}.button"
+    button_module_mock = MagicMock()
+    start_event = threading.Event()
+    import_event = asyncio.Event()
+
+    def import_module(name: str) -> Any:
+        hass.loop.call_soon_threadsafe(import_event.set)
+        start_event.wait()
+        if name == button_module_name:
+            return button_module_mock
+        raise ImportError
+
+    modules_without_button = {
+        k: v
+        for k, v in sys.modules.items()
+        if k not in (button_module_name, integration.pkg_path)
+    }
+    with (
+        patch.dict(
+            "sys.modules",
+            modules_without_button,
+            clear=True,
+        ),
+        patch("homeassistant.loader.importlib.import_module", import_module),
+    ):
+        load_task1 = asyncio.create_task(integration.async_get_platforms(["button"]))
+        load_task2 = asyncio.create_task(integration.async_get_platforms(["button"]))
+        await import_event.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        start_event.set()
+        load_result1 = await load_task1
+
+    assert load_result1 == {"button": button_module_mock}
     assert integration.get_platform_cached("button") is button_module_mock
 
 
