@@ -8,21 +8,26 @@ from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
+from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CHARGE_LIMIT_SOC_KEY, DOMAIN
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import (
+    TeslemetryChargeOnSolarStore,
+    TeslemetryEnergyData,
+    TeslemetryVehicleData,
+)
 
 
 class TeslemetryRootEntity(Entity):
@@ -278,3 +283,57 @@ class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
         self._attr_translation_key = key
         self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
+
+
+class TeslemetryChargeOnSolarEntity(TeslemetryVehicleStreamEntity):
+    """Parent class for the charge-on-solar entities, bounded by the charge limit."""
+
+    _attr_assumed_state = True
+    api: Vehicle
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: EntityDescription,
+        store: TeslemetryChargeOnSolarStore,
+        scopes: list[Scope],
+    ) -> None:
+        """Initialize common aspects of a charge-on-solar entity."""
+        self.entity_description = description
+        self.scoped = Scope.VEHICLE_CMDS in scopes
+        self._store = store
+        super().__init__(data, description.key)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if self.vehicle.polls_charge_limit:
+            self.async_on_remove(
+                self.vehicle.coordinator.async_add_listener(
+                    self._async_handle_coordinator_update
+                )
+            )
+            self._async_handle_coordinator_update()
+            return
+
+        self.async_on_remove(
+            self.vehicle.stream_vehicle.listen_ChargeLimitSoc(
+                self._async_handle_charge_limit_soc
+            )
+        )
+
+    @callback
+    def _async_handle_coordinator_update(self) -> None:
+        """Take the charge limit from the latest poll."""
+        value = self.vehicle.coordinator.data.get(CHARGE_LIMIT_SOC_KEY)
+        self._async_handle_charge_limit_soc(
+            int(value) if isinstance(value, int | float) else None
+        )
+
+    @callback
+    def _async_handle_charge_limit_soc(self, value: int | None) -> None:
+        """Store the latest charge limit."""
+        if value is not None and value != self.vehicle.charge_limit_soc:
+            self.vehicle.charge_limit_soc = int(value)
+            self._store.async_save(self.vehicle)

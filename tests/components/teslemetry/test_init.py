@@ -2934,7 +2934,7 @@ async def test_charge_on_solar_settings_removed_with_entry(
     await hass.async_block_till_done()
 
     assert hass_storage[storage_key]["data"] == {
-        VIN: {"enabled": None, "lower_limit": 35}
+        VIN: {"enabled": None, "lower_limit": 35, "charge_limit_soc": None}
     }
 
     await hass.config_entries.async_remove(entry.entry_id)

@@ -38,6 +38,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.labs import (
     EventLabsUpdatedData,
+    async_is_preview_feature_enabled,
     async_subscribe_preview_feature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
@@ -58,6 +59,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -71,6 +73,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     BLE_DISCONNECT_TIMEOUT,
+    CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
+    CHARGE_ON_SOLAR_SWITCH_KEY,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
@@ -591,6 +595,33 @@ async def _async_rediscover_gateway(
     return stale_client
 
 
+async def _async_setup_charge_on_solar(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    scopes: list[Scope],
+    vehicles: list[TeslemetryVehicleData],
+) -> TeslemetryChargeOnSolarStore | None:
+    """Load the charge-on-solar store, or remove its entities when unavailable."""
+    if (
+        async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE)
+        and Scope.VEHICLE_CMDS in scopes
+    ):
+        store = TeslemetryChargeOnSolarStore(hass, entry.entry_id)
+        await store.async_load(vehicles)
+        return store
+
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (entity_entry.domain, entity_entry.translation_key) in (
+            (Platform.SWITCH, CHARGE_ON_SOLAR_SWITCH_KEY),
+            (Platform.NUMBER, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY),
+        ):
+            entity_registry.async_remove(entity_entry.entity_id)
+    return None
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -846,8 +877,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     _prune_energy_subentries(hass, entry, scopes, products)
 
-    charge_on_solar_store = TeslemetryChargeOnSolarStore(hass, entry.entry_id)
-    await charge_on_solar_store.async_load(vehicles)
+    charge_on_solar_store = await _async_setup_charge_on_solar(
+        hass, entry, scopes, vehicles
+    )
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,

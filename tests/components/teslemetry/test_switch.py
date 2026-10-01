@@ -549,7 +549,7 @@ async def test_charge_on_solar_switch_uses_stored_limit_when_number_disabled(
     # No restore state exists for the disabled number, as once it has expired.
     hass_storage[f"{DOMAIN}.charge_on_solar.{entry.entry_id}"] = {
         "version": 1,
-        "data": {VIN: {"enabled": False, "lower_limit": 35}},
+        "data": {VIN: {"enabled": False, "lower_limit": 35, "charge_limit_soc": None}},
     }
     entity_registry.async_get_or_create(
         NUMBER_DOMAIN,

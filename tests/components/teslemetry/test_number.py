@@ -508,7 +508,7 @@ async def test_charge_on_solar_lower_limit_uses_stored_state_when_switch_disable
     # No restore state exists for the disabled switch, as once it has expired.
     hass_storage[f"{DOMAIN}.charge_on_solar.{entry.entry_id}"] = {
         "version": 1,
-        "data": {VIN: {"enabled": True, "lower_limit": 35}},
+        "data": {VIN: {"enabled": True, "lower_limit": 35, "charge_limit_soc": None}},
     }
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,

@@ -37,7 +37,7 @@ class TeslemetryData:
     scopes: list[Scope]
     stream: TeslemetryStream | None
     metadata_coordinator: TeslemetryMetadataCoordinator
-    charge_on_solar_store: TeslemetryChargeOnSolarStore
+    charge_on_solar_store: TeslemetryChargeOnSolarStore | None
 
 
 @dataclass
@@ -54,6 +54,7 @@ class TeslemetryVehicleData:
     firmware: str
     device: DeviceInfo
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    charge_limit_soc: int | None = None
     charge_on_solar_lower_limit: int = CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT
     charge_on_solar_enabled: bool | None = None
     charge_on_solar_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
@@ -85,6 +86,7 @@ class TeslemetryChargeOnSolarStore:
             if stored := self._data.get(vehicle.vin):
                 vehicle.charge_on_solar_enabled = stored["enabled"]
                 vehicle.charge_on_solar_lower_limit = stored["lower_limit"]
+                vehicle.charge_limit_soc = stored["charge_limit_soc"]
 
     @callback
     def async_save(self, vehicle: TeslemetryVehicleData) -> None:
@@ -92,6 +94,7 @@ class TeslemetryChargeOnSolarStore:
         self._data[vehicle.vin] = {
             "enabled": vehicle.charge_on_solar_enabled,
             "lower_limit": vehicle.charge_on_solar_lower_limit,
+            "charge_limit_soc": vehicle.charge_limit_soc,
         }
         self._store.async_delay_save(lambda: self._data)
 
