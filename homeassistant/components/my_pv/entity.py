@@ -1,6 +1,6 @@
 """Base entity for the my-PV integration."""
 
-from typing import override
+from typing import Any, override
 
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -12,6 +12,8 @@ class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
     """The my-PV base entity."""
 
     _attr_has_entity_name = True
+
+    _configuration: dict[str, Any]
 
     def __init__(
         self,
@@ -26,6 +28,10 @@ class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
         self._attr_unique_id = f"{serial_number}-{entity_description.key}"
 
         self.entity_description = entity_description
+        self._configuration = (
+            coordinator.device.get_setup_configuration(self.entity_description.key)
+            or {}
+        )
 
     @property
     @override
