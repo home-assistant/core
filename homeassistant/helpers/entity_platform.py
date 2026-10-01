@@ -299,7 +299,12 @@ class EntityPlatform:
         # overtaken cycle can tell a sibling claimed the entity even after
         # that sibling's task has already finished. An entity with an
         # unfinished task here is skipped by the next polling cycle
-        # instead of blocking siblings.
+        # instead of blocking siblings. Entities removed while their task
+        # is still running (e.g. a hung synchronous `update()`) are not
+        # cancelled here: their executor thread keeps running regardless,
+        # and an entity-id rename could then race a new poll against it.
+        # The entry is left tracked until the task itself completes and
+        # `_async_handle_entity_update_result` clears it.
         self._polling_tasks: dict[int, tuple[int, asyncio.Task[None]]] = {}
         # Monotonically increasing id identifying each call to
         # `_async_update_entity_states`, used to detect when a newer
@@ -913,11 +918,6 @@ class EntityPlatform:
             del self.entities[entity_id]
             del self.domain_entities[entity_id]
             del self.domain_platform_entities[entity_id]
-            # Not cancelled: a hung synchronous update()'s executor thread
-            # keeps running regardless, and an entity-id rename could
-            # then race a new poll against it. Left tracked until its own
-            # task completes and `_async_handle_entity_update_result`
-            # clears the entry.
 
         entity.async_on_remove(remove_entity_cb)
 
