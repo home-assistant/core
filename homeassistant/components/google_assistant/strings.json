@@ -9,6 +9,9 @@
   "exceptions": {
     "project_id_changed": {
       "message": "The project ID in configuration.yaml has changed, the entry will be replaced"
+    },
+    "restart_required": {
+      "message": "Changing `{option}` requires a restart of Home Assistant."
     }
   },
   "services": {
