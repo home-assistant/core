@@ -61,8 +61,8 @@ type _NodeOrEndpointType = ZwaveNode | Endpoint
 UNIT16_SCHEMA = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65535))
 
 TARGET_VALIDATORS: VolDictType = {
-    probatio.Optional(ATTR_AREA_ID): probatio.All(cv.ensure_list, [cv.string]),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_AREA_ID): probatio.All(probatio.EnsureList(), [cv.string]),
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 }
 
@@ -429,10 +429,8 @@ class ZWaveServices:
                             const.ATTR_VALUE_FORMAT, "raw"
                         ): probatio.Coerce(ConfigurationValueFormat),
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    cv.has_at_most_one_key(
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                    probatio.AtMostOne(
                         const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
                     ),
                     parameter_name_does_not_need_bitmask,
@@ -467,9 +465,7 @@ class ZWaveServices:
                             },
                         ),
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -517,9 +513,7 @@ class ZWaveServices:
                             cv.string: VALUE_SCHEMA
                         },
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -553,7 +547,7 @@ class ZWaveServices:
                         },
                     },
                     probatio.Any(
-                        cv.has_at_least_one_key(
+                        probatio.AtLeastOne(
                             ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                         ),
                         broadcast_command,
@@ -571,9 +565,7 @@ class ZWaveServices:
             schema=probatio.Schema(
                 probatio.All(
                     TARGET_VALIDATORS,
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -595,9 +587,7 @@ class ZWaveServices:
                         probatio.Required(const.ATTR_METHOD_NAME): cv.string,
                         probatio.Required(const.ATTR_PARAMETERS): list,
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -622,9 +612,7 @@ class ZWaveServices:
                             const.ATTR_NOTIFICATION_EVENT
                         ): probatio.Coerce(int),
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),

@@ -97,7 +97,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                     probatio.Optional(
                         CONF_LATITUDE, default=self.hass.config.latitude
                     ): cv.latitude,

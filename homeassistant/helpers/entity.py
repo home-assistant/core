@@ -1164,11 +1164,8 @@ class Entity(
             if entry is None:
                 name = original_name
             else:
-                name = er.async_get_full_entity_name(
-                    self.hass,
-                    entry,
-                    original_name=original_name,
-                    use_next_name_part=False,
+                name = er.async_get_legacy_friendly_name(
+                    self.hass, entry, original_name=original_name
                 )
             self._cached_friendly_name = (original_name, name)
 
@@ -1512,14 +1509,42 @@ class Entity(
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)
 
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
+
+        Called on every add attempt, before the platform processes the entity
+        registry and before its state is written, including for adds which
+        will be aborted, e.g. because the entity is disabled. Adding may not
+        complete; register cleanup with async_on_remove.
+
+        To be extended by integrations.
+        """
+
     async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass.
+        """Run when the entity has been added to hass.
+
+        Called as the last step of a successful add: after the entity has its
+        entity_id (and its registry entry, if it has a unique_id) and immediately
+        before its state is written for the first time. Use it to subscribe to
+        events, register update listeners and fetch initial data.
+
+        Not called when adding the entity is aborted, e.g. because the entity is
+        disabled or its entity_id or unique_id collides with an existing entity.
 
         To be extended by integrations.
         """
 
     async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass.
+        """Run when the entity is about to be removed from hass.
+
+        The counterpart to async_added_to_hass: called when the entity is removed
+        for an entity that was successfully added. Use it to undo work done in
+        async_added_to_hass, e.g. unsubscribe from events or release resources.
+
+        Not called when adding the entity is aborted before it finished being
+        added; on that path only the callbacks registered with async_on_remove
+        run. Register cleanup for anything set up before the add completed with
+        async_on_remove so it runs on both an aborted add and a normal removal.
 
         To be extended by integrations.
         """
@@ -1589,6 +1614,16 @@ class Entity(
             self.__group.async_will_remove_from_hass()
 
     @callback
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move bookkeeping from old_entity_id to the new self.entity_id.
+
+        Called after the entity was removed under old_entity_id, before it is
+        added again under the new entity_id.
+
+        Not to be extended by integrations.
+        """
+
+    @callback
     def _async_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
@@ -1614,9 +1649,6 @@ class Entity(
         if data["action"] != "update":
             return
 
-        if "device_id" in data["changes"]:
-            self._async_subscribe_device_updates()
-
         # Invalidate friendly name cache if relevant fields changed
         changes = data["changes"]
         if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
@@ -1627,6 +1659,9 @@ class Entity(
         registry_entry = ent_reg.async_get(data["entity_id"])
         assert registry_entry is not None
         self.registry_entry = registry_entry
+
+        if "device_id" in changes:
+            self._async_subscribe_device_updates()
 
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
@@ -1643,9 +1678,11 @@ class Entity(
             self.async_write_ha_state()
             return
 
+        old_entity_id = self.entity_id
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
+        self.async_internal_entity_id_changed(old_entity_id)
 
         # Clear the remove future to handle entity added again after entity id change
         self.__remove_future = None

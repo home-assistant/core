@@ -68,12 +68,12 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_PORT): probatio.Port(),
                 probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
                 probatio.Optional(CONF_ZONES, default=[]): probatio.All(
-                    cv.ensure_list, [ZONE_SCHEMA]
+                    probatio.EnsureList(), [ZONE_SCHEMA]
                 ),
                 probatio.Optional(CONF_INFER_ARMING_STATE, default=False): cv.boolean,
             }
