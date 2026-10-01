@@ -26,6 +26,7 @@ TO_REDACT = {
     "serial_number",
     "uuid",
     "external_contract_id",
+    "identifier",
 }
 
 
@@ -33,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ZonneplanConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = entry.runtime_data.data
+    data = entry.runtime_data.coordinator.data
 
     return async_redact_data(
         {
@@ -52,6 +53,10 @@ async def async_get_config_entry_diagnostics(
                 data.electricity_usage.to_dict() if data.electricity_usage else None
             ),
             "gas_usage": data.gas_usage.to_dict() if data.gas_usage else None,
+            "batteries": [
+                battery.data.battery.contract.to_dict()
+                for battery in entry.runtime_data.batteries
+            ],
         },
         TO_REDACT,
     )
