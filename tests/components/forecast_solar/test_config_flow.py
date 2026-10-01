@@ -1,7 +1,8 @@
 """Test the Forecast.Solar config flow."""
 
+import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -21,6 +22,7 @@ from homeassistant.components.forecast_solar.const import (
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryData,
 )
@@ -143,7 +145,7 @@ async def test_user_flow_home_location(hass: HomeAssistant) -> None:
                 CONF_AZIMUTH: 142,
                 CONF_MODULES_POWER: 4242,
             },
-            "roof declination (sensor) / 142° / 4242W",
+            "sensor.roof_declination / 142° / 4242W",
             id="declination_sensor",
         ),
         pytest.param(
@@ -153,7 +155,7 @@ async def test_user_flow_home_location(hass: HomeAssistant) -> None:
                 CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
                 CONF_MODULES_POWER: 4242,
             },
-            "42° / roof azimuth (sensor) / 4242W",
+            "42° / sensor.roof_azimuth / 4242W",
             id="azimuth_sensor",
         ),
         pytest.param(
@@ -163,7 +165,7 @@ async def test_user_flow_home_location(hass: HomeAssistant) -> None:
                 CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
                 CONF_MODULES_POWER: 4242,
             },
-            "roof declination (sensor) / roof azimuth (sensor) / 4242W",
+            "sensor.roof_declination / sensor.roof_azimuth / 4242W",
             id="both_sensors",
         ),
     ],
@@ -210,11 +212,12 @@ async def test_reconfigure_flow_switch_to_fixed_location(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    assert result["type"] is FlowResultType.MENU
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert _suggested(result, "location") == "home"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_fixed_location"}
+        result["flow_id"], {"location": "fixed"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -239,14 +242,17 @@ async def test_reconfigure_flow_suggests_stored_coordinates(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the reconfigure form offers the entry's current coordinates."""
+    """Test the reconfigure forms offer the entry's current location."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert _suggested(result, "location") == "fixed"
+
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_fixed_location"}
+        result["flow_id"], {"location": "fixed"}
     )
 
     assert _suggested(result, CONF_LATITUDE) == 52.42
@@ -257,8 +263,17 @@ async def test_reconfigure_flow_suggests_stored_coordinates(
 async def test_reconfigure_flow_reloads_entry_once(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the entry's update listener performs the reload, without doubling it."""
+    estimate = mock_forecast_solar.estimate.return_value
+
+    async def _estimate() -> MagicMock:
+        # A real API call suspends, letting the reload run past the entry update.
+        await asyncio.sleep(0)
+        return estimate
+
+    mock_forecast_solar.estimate.side_effect = _estimate
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -271,7 +286,7 @@ async def test_reconfigure_flow_reloads_entry_once(
 
         result = await mock_config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "reconfigure_home_location"}
+            result["flow_id"], {"location": "home"}
         )
         await hass.async_block_till_done()
 
@@ -280,6 +295,7 @@ async def test_reconfigure_flow_reloads_entry_once(
         assert mock_config_entry.data == {}
         # The update listener reloads; the flow must not schedule a second reload.
         assert len(mock_async_setup_entry.mock_calls) == 2
+        assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -488,13 +504,24 @@ async def test_options_flow_required_api_key(
     }
 
 
+@pytest.mark.parametrize(
+    "states",
+    [
+        pytest.param({"sensor.roof_azimuth": "270"}, id="usable"),
+        # A sensor that is merely offline is accepted; it is read on every update.
+        pytest.param({}, id="no_state"),
+        pytest.param({"sensor.roof_azimuth": "unavailable"}, id="unavailable"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_flow_add_plane(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    states: dict[str, str],
 ) -> None:
     """Test adding a plane via subentry flow."""
-    hass.states.async_set("sensor.roof_azimuth", "270", DEGREES)
+    for entity_id, state in states.items():
+        hass.states.async_set(entity_id, state, DEGREES)
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -525,7 +552,7 @@ async def test_subentry_flow_add_plane(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "45° / roof azimuth (sensor) / 3000W"
+    assert result["title"] == "45° / sensor.roof_azimuth / 3000W"
     assert result["data"] == {
         CONF_DECLINATION: 45,
         CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
@@ -591,7 +618,7 @@ async def test_subentry_flow_reconfigure_plane(
         CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
         CONF_MODULES_POWER: 6000,
     }
-    assert subentry.title == "50° / roof azimuth (sensor) / 6000W"
+    assert subentry.title == "50° / sensor.roof_azimuth / 6000W"
 
 
 @pytest.mark.parametrize("api_key_present", [False])
@@ -656,9 +683,19 @@ async def test_subentry_flow_max_planes(
     assert result["reason"] == "max_planes"
 
 
+@pytest.mark.parametrize(
+    ("title", "reconfigured_title"),
+    [
+        pytest.param("30° / 190° / 5100W", "50° / 200° / 6000W", id="generated_title"),
+        pytest.param("South roof", "South roof", id="user_title"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_flow_reconfigure_plane_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    title: str,
+    reconfigured_title: str,
 ) -> None:
     """Test reconfiguring a plane via subentry flow when entry is not loaded."""
     mock_config_entry.add_to_hass(hass)
@@ -667,6 +704,9 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
     subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
         0
     ].subentry_id
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, mock_config_entry.subentries[subentry_id], title=title
+    )
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
@@ -696,7 +736,7 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
         CONF_AZIMUTH: 200,
         CONF_MODULES_POWER: 6000,
     }
-    assert subentry.title == "50° / 200° / 6000W"
+    assert subentry.title == reconfigured_title
 
 
 @pytest.mark.parametrize(
@@ -753,11 +793,54 @@ async def test_subentry_flow_rejects_unusable_sensor(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_subentry_flow_reconfigure_keeps_sensor_without_state(
+async def test_subentry_flow_reconfigure_rejects_new_unusable_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a configured sensor survives reconfigure while it has no state."""
+    """Test reconfigure refuses a newly picked sensor that can't be read as an angle."""
+    hass.states.async_set("sensor.roof_azimuth", "north", DEGREES)
+    mock_config_entry.add_to_hass(hass)
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
+        0
+    ].subentry_id
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"declination_source": "fixed", "azimuth_source": "sensor"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
+
+
+@pytest.mark.parametrize(
+    "states",
+    [
+        pytest.param({}, id="no_state"),
+        pytest.param({"sensor.roof_azimuth": "calibrating"}, id="unusable_state"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_reconfigure_keeps_unreadable_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    states: dict[str, str],
+) -> None:
+    """Test a plane can be edited while the sensor it already reads is unreadable."""
+    for entity_id, state in states.items():
+        hass.states.async_set(entity_id, state, DEGREES)
     mock_config_entry.add_to_hass(hass)
     subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
         0
@@ -770,9 +853,9 @@ async def test_subentry_flow_reconfigure_keeps_sensor_without_state(
             CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
             CONF_MODULES_POWER: 5100,
         },
+        title="30° / sensor.roof_azimuth / 5100W",
     )
 
-    # The sensor is never added to the state machine.
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
         context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
@@ -792,12 +875,12 @@ async def test_subentry_flow_reconfigure_keeps_sensor_without_state(
         user_input={
             CONF_DECLINATION: 30,
             CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
-            CONF_MODULES_POWER: 5100,
+            CONF_MODULES_POWER: 6000,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
-    # Without a state there is no friendly name, so the title uses the entity ID.
-    assert subentry.title == "30° / sensor.roof_azimuth (sensor) / 5100W"
+    assert subentry.data[CONF_MODULES_POWER] == 6000
+    assert subentry.title == "30° / sensor.roof_azimuth / 6000W"

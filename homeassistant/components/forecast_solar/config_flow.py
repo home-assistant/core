@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
@@ -42,7 +42,7 @@ from .const import (
     MAX_PLANES,
     SUBENTRY_TYPE_PLANE,
 )
-from .plane import SensorUpdateFailed, plane_title, sensor_angle
+from .plane import SENSOR_KEYS, SensorUpdateFailed, plane_title, sensor_angle
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 
@@ -77,9 +77,11 @@ _SOURCES_SCHEMA = probatio.Schema(
     }
 )
 
-_SETUP_CHOICES_SCHEMA = probatio.Schema(
+_LOCATION_SCHEMA = probatio.Schema(
     {probatio.Required(_LOCATION, default=_FIXED): _choice("location", [_FIXED, _HOME])}
-).extend(_SOURCES_SCHEMA.schema)
+)
+
+_SETUP_CHOICES_SCHEMA = _LOCATION_SCHEMA.extend(_SOURCES_SCHEMA.schema)
 
 _COORDINATES_SCHEMA = probatio.Schema(
     {
@@ -156,7 +158,7 @@ def _sensor_errors(
 ) -> dict[str, str]:
     """Return a form error per selected sensor that can't be read as an angle."""
     errors: dict[str, str] = {}
-    for sensor_key in (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR):
+    for sensor_key in SENSOR_KEYS:
         if (entity_id := plane_data.get(sensor_key)) is None:
             continue
         # A sensor that is merely unavailable is accepted; it is read on every update.
@@ -251,7 +253,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                         {
                             "subentry_type": SUBENTRY_TYPE_PLANE,
                             "data": plane_data,
-                            "title": plane_title(self.hass, plane_data),
+                            "title": plane_title(plane_data),
                             "unique_id": None,
                         },
                     ],
@@ -276,17 +278,20 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry's location."""
-        return self.async_show_menu(
-            step_id="reconfigure",
-            menu_options=["reconfigure_fixed_location", "reconfigure_home_location"],
-        )
+        """Choose how an existing entry's location is determined."""
+        if user_input is not None:
+            if user_input[_LOCATION] == _HOME:
+                return self._async_update_location({})
+            return await self.async_step_reconfigure_fixed_location()
 
-    async def async_step_reconfigure_home_location(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Reconfigure an entry to track Home Assistant's location."""
-        return self._async_update_location({})
+        entry = self._get_reconfigure_entry()
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _LOCATION_SCHEMA,
+                {_LOCATION: _FIXED if CONF_LATITUDE in entry.data else _HOME},
+            ),
+        )
 
     async def async_step_reconfigure_fixed_location(
         self, user_input: dict[str, Any] | None = None
@@ -324,7 +329,9 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             and not entry.update_listeners
         ):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        return self.async_abort(reason="reconfigure_successful")
+        return self.async_abort(
+            reason="reconfigure_successful", translation_domain=HOMEASSISTANT_DOMAIN
+        )
 
 
 class ForecastSolarOptionFlowHandler(OptionsFlow):
@@ -452,7 +459,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
             plane_data = _plane_data(user_input)
             if not (errors := _sensor_errors(self.hass, plane_data)):
                 return self.async_create_entry(
-                    title=plane_title(self.hass, plane_data), data=plane_data
+                    title=plane_title(plane_data), data=plane_data
                 )
 
         return self.async_show_form(
@@ -487,15 +494,30 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             plane_data = _plane_data(user_input)
-            if not (errors := _sensor_errors(self.hass, plane_data)):
+            # A sensor the plane already reads isn't checked again, so its current
+            # state can't block an unrelated edit.
+            changed = {
+                key: value
+                for key, value in plane_data.items()
+                if subentry.data.get(key) != value
+            }
+            if not (errors := _sensor_errors(self.hass, changed)):
                 entry = self._get_entry()
-                title = plane_title(self.hass, plane_data)
+                # A title the user set is kept; only a generated one is rebuilt.
+                title = (
+                    plane_title(plane_data)
+                    if subentry.title == plane_title(subentry.data)
+                    else subentry.title
+                )
                 if (
                     self._async_update(entry, subentry, data=plane_data, title=title)
                     and not entry.update_listeners
                 ):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_abort(
+                    reason="reconfigure_successful",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
         return self.async_show_form(
             step_id="reconfigure_plane",

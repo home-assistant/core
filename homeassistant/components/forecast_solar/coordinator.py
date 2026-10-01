@@ -6,7 +6,7 @@ from typing import Any, cast, override
 
 from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -26,7 +26,7 @@ from .const import (
     LOGGER,
     SUBENTRY_TYPE_PLANE,
 )
-from .plane import sensor_angle
+from .plane import SensorUpdateFailed, sensor_angle
 
 type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
 
@@ -47,13 +47,15 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     config_entry: ForecastSolarConfigEntry
     forecast: ForecastSolar
-    planes: list[Plane]
 
     def __init__(self, hass: HomeAssistant, entry: ForecastSolarConfigEntry) -> None:
         """Initialize the Forecast.Solar coordinator."""
         # Our option flow may cause it to be an empty string,
         # this if statement is here to catch that.
         self._api_key = entry.options.get(CONF_API_KEY) or None
+        # Keyed by plane subentry ID and sensor key.
+        self._last_angles: dict[tuple[str, str], float] = {}
+        self._unreadable: set[tuple[str, str]] = set()
 
         # Free account have a resolution of 1 hour, using that as the default
         # update interval. Using a higher value for accounts with an API key.
@@ -69,52 +71,59 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     @override
     async def _async_setup(self) -> None:
-        """Build the client; an unreadable sensor raises and retries the setup."""
+        """Build the client; a sensor without a reading raises and retries the setup."""
         entry = self.config_entry
         if (
             inverter_size := entry.options.get(CONF_INVERTER_SIZE)
         ) is not None and inverter_size > 0:
             inverter_size = inverter_size / 1000
 
-        main_plane, *extra_planes = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
-
-        declination, azimuth = self._plane_angles(main_plane.data)
+        main_plane, *extra_planes = self._planes()
         latitude, longitude = _resolve_location(self.hass, entry.data)
-
-        self.planes = []
-        for subentry in extra_planes:
-            plane_declination, plane_azimuth = self._plane_angles(subentry.data)
-            self.planes.append(
-                Plane(
-                    declination=plane_declination,
-                    azimuth=plane_azimuth,
-                    kwp=(subentry.data[CONF_MODULES_POWER] / 1000),
-                )
-            )
 
         self.forecast = ForecastSolar(
             api_key=self._api_key,
             session=async_get_clientsession(self.hass),
             latitude=latitude,
             longitude=longitude,
-            declination=declination,
-            azimuth=azimuth,
-            kwp=(main_plane.data[CONF_MODULES_POWER] / 1000),
+            declination=main_plane.declination,
+            azimuth=main_plane.azimuth,
+            kwp=main_plane.kwp,
             damping_morning=entry.options.get(CONF_DAMPING_MORNING, DEFAULT_DAMPING),
             damping_evening=entry.options.get(CONF_DAMPING_EVENING, DEFAULT_DAMPING),
             inverter=inverter_size,
-            planes=self.planes,
+            planes=extra_planes,
         )
 
     def _resolve_angle(
-        self, data: Mapping[str, Any], value_key: str, sensor_key: str
+        self, subentry: ConfigSubentry, value_key: str, sensor_key: str
     ) -> float:
         """Resolve a plane angle from its sensor if it has one, else its fixed value."""
-        if (entity_id := data.get(sensor_key)) is not None:
-            return sensor_angle(self.hass, entity_id, sensor_key)
-        return cast(float, data[value_key])
+        if (entity_id := subentry.data.get(sensor_key)) is None:
+            return cast(float, subentry.data[value_key])
+        key = (subentry.subentry_id, sensor_key)
+        try:
+            angle = sensor_angle(self.hass, entity_id, sensor_key)
+        except SensorUpdateFailed:
+            # Setup fails without a reading. After that, a sensor that goes offline
+            # is most likely on a parked vehicle, whose heading hasn't changed.
+            if (last_angle := self._last_angles.get(key)) is None:
+                raise
+            if key not in self._unreadable:
+                self._unreadable.add(key)
+                LOGGER.warning(
+                    "Sensor %s can't be read; using its last reading of %s",
+                    entity_id,
+                    last_angle,
+                )
+            return last_angle
+        if key in self._unreadable:
+            self._unreadable.discard(key)
+            LOGGER.info("Sensor %s can be read again", entity_id)
+        self._last_angles[key] = angle
+        return angle
 
-    def _plane_angles(self, data: Mapping[str, Any]) -> tuple[float, float]:
+    def _plane_angles(self, subentry: ConfigSubentry) -> tuple[float, float]:
         """Resolve a plane's declination and azimuth.
 
         UI stores azimuth 0-360 (0=North); the API expects -180..180 (0=South).
@@ -122,22 +131,24 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         is normalised rather than rejected.
         """
         declination = self._resolve_angle(
-            data, CONF_DECLINATION, CONF_DECLINATION_SENSOR
+            subentry, CONF_DECLINATION, CONF_DECLINATION_SENSOR
         )
-        azimuth = self._resolve_angle(data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR)
+        azimuth = self._resolve_angle(subentry, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR)
         return declination, azimuth % 360 - 180
 
-    def _refresh_plane_angles(self) -> None:
-        """Re-resolve every plane's declination/azimuth from its sensors."""
-        main_plane, *extra_planes = self.config_entry.get_subentries_of_type(
-            SUBENTRY_TYPE_PLANE
-        )
-
-        self.forecast.declination, self.forecast.azimuth = self._plane_angles(
-            main_plane.data
-        )
-        for plane, subentry in zip(self.planes, extra_planes, strict=True):
-            plane.declination, plane.azimuth = self._plane_angles(subentry.data)
+    def _planes(self) -> list[Plane]:
+        """Build every plane from the entry's subentries, reading their sensors."""
+        planes = []
+        for subentry in self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
+            declination, azimuth = self._plane_angles(subentry)
+            planes.append(
+                Plane(
+                    declination=declination,
+                    azimuth=azimuth,
+                    kwp=subentry.data[CONF_MODULES_POWER] / 1000,
+                )
+            )
+        return planes
 
     @override
     async def _async_update_data(self) -> Estimate:
@@ -145,7 +156,13 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         self.forecast.latitude, self.forecast.longitude = _resolve_location(
             self.hass, self.config_entry.data
         )
-        self._refresh_plane_angles()
+        # Rebuilt from the entry each time, so a plane added or removed just
+        # before the reload it triggers can't leave a stale list behind.
+        main_plane, *extra_planes = self._planes()
+        self.forecast.declination = main_plane.declination
+        self.forecast.azimuth = main_plane.azimuth
+        self.forecast.kwp = main_plane.kwp
+        self.forecast.planes = extra_planes
         try:
             return await self.forecast.estimate()
         except ForecastSolarConnectionError as error:

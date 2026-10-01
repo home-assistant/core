@@ -299,6 +299,13 @@ async def test_coordinator_multi_plane_initialization(
     assert planes[0].azimuth == 90  # 270 - 180
     assert planes[0].kwp == 3.0  # 3000 / 1000
 
+    # Each update rebuilds the planes, so check what the estimate was made with.
+    forecast = mock_config_entry.runtime_data.forecast
+    assert forecast.kwp == 5.1
+    assert [
+        (plane.declination, plane.azimuth, plane.kwp) for plane in forecast.planes
+    ] == [(45, 90, 3.0)]
+
 
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_forecast_changes_reload_once_title_changes_do_not(
@@ -331,7 +338,7 @@ async def test_forecast_changes_reload_once_title_changes_do_not(
                 data=dict(plane_data),
                 subentry_id=f"plane_{index}",
                 subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / Roof angle (sensor) / 5100W",
+                title="30° / sensor.roof_azimuth / 5100W",
                 unique_id=None,
             )
             for index in range(2)
@@ -350,11 +357,11 @@ async def test_forecast_changes_reload_once_title_changes_do_not(
     with patch.object(
         hass.config_entries, "async_reload", side_effect=_reload
     ) as mock_reload:
-        # A friendly name is only a label; the forecast inputs are unchanged.
-        hass.states.async_set(
-            "sensor.roof_azimuth",
-            "100",
-            {"unit_of_measurement": "°", "friendly_name": "Camper angle"},
+        # A title is only a label; the forecast inputs are unchanged.
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            mock_config_entry.subentries["plane_0"],
+            title="South roof",
         )
         await hass.async_block_till_done()
 
@@ -369,56 +376,15 @@ async def test_forecast_changes_reload_once_title_changes_do_not(
     mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_forecast_solar")
-async def test_plane_follows_sensor_friendly_name(
-    hass: HomeAssistant,
-) -> None:
-    """Test a plane's title follows the friendly name of the sensor it reads."""
-    hass.states.async_set(
-        "sensor.roof_azimuth",
-        "100",
-        {"unit_of_measurement": "°", "friendly_name": "Roof angle"},
-    )
-    mock_config_entry = MockConfigEntry(
-        title="Green House",
-        unique_id="unique",
-        version=3,
-        domain=DOMAIN,
-        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_DECLINATION: 30,
-                    CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
-                    CONF_MODULES_POWER: 5100,
-                },
-                subentry_id="plane_1",
-                subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / Roof angle (sensor) / 5100W",
-                unique_id=None,
-            ),
-        ],
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    hass.states.async_set(
-        "sensor.roof_azimuth",
-        "100",
-        {"unit_of_measurement": "°", "friendly_name": "Camper angle"},
-    )
-    await hass.async_block_till_done()
-
-    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
-    assert subentry.title == "30° / Camper angle (sensor) / 5100W"
-
-
 @pytest.mark.parametrize(
-    "title",
+    ("title", "renamed_title"),
     [
-        pytest.param("30° / sensor.roof_azimuth (sensor) / 5100W", id="entity_id"),
-        pytest.param("30° / roof azimuth (sensor) / 5100W", id="sensor_name"),
+        pytest.param(
+            "30° / sensor.roof_azimuth / 5100W",
+            "30° / sensor.camper_azimuth / 5100W",
+            id="generated_title",
+        ),
+        pytest.param("South roof", "South roof", id="user_title"),
     ],
 )
 @pytest.mark.usefixtures("mock_forecast_solar")
@@ -426,8 +392,9 @@ async def test_plane_follows_renamed_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     title: str,
+    renamed_title: str,
 ) -> None:
-    """Test a plane's sensor reference follows the sensor when it is renamed."""
+    """Test a plane follows its renamed sensor, keeping a title the user set."""
     entity_registry.async_get_or_create(
         "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
     )
@@ -457,14 +424,24 @@ async def test_plane_follows_renamed_sensor(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Changes that are not a rename leave the reference alone.
+    # Changes that are not a rename of its sensor leave the plane alone.
+    entity_registry.async_get_or_create(
+        "sensor", "test", "other", suggested_object_id="other"
+    )
+    entity_registry.async_update_entity("sensor.other", new_entity_id="sensor.another")
     entity_registry.async_update_entity("sensor.roof_azimuth", name="Roof angle")
+    hass.states.async_set(
+        "sensor.roof_azimuth",
+        "100",
+        {"unit_of_measurement": "°", "friendly_name": "Roof angle"},
+    )
     entity_registry.async_remove("sensor.roof_azimuth")
     hass.states.async_remove("sensor.roof_azimuth")
     await hass.async_block_till_done()
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
+    assert subentry.title == title
 
     entity_registry.async_get_or_create(
         "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
@@ -476,21 +453,17 @@ async def test_plane_follows_renamed_sensor(
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
-    # A rename leaves no state behind, so the title falls back to the new entity ID.
-    assert subentry.title == "30° / sensor.camper_azimuth (sensor) / 5100W"
+    assert subentry.title == renamed_title
 
-    hass.states.async_set(
-        "sensor.camper_azimuth",
-        "100",
-        {"unit_of_measurement": "°", "friendly_name": "Camper angle"},
-    )
+    hass.states.async_set("sensor.camper_azimuth", "100", {"unit_of_measurement": "°"})
     # The reload the rename triggered failed while the new ID had no state; in
     # production the entry's setup retry runs this once the sensor is readable.
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
-    assert subentry.title == "30° / Camper angle (sensor) / 5100W"
+    assert subentry.title == renamed_title
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
@@ -518,7 +491,7 @@ async def test_plane_follows_renamed_sensor_during_setup_retry(
                 },
                 subentry_id="plane_1",
                 subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / sensor.roof_azimuth (sensor) / 5100W",
+                title="30° / sensor.roof_azimuth / 5100W",
                 unique_id=None,
             ),
         ],
@@ -530,10 +503,13 @@ async def test_plane_follows_renamed_sensor_during_setup_retry(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    entity_registry.async_update_entity(
-        "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
-    )
-    await hass.async_block_till_done()
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        entity_registry.async_update_entity(
+            "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
+        )
+        await hass.async_block_till_done()
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
+    # The retry runs now rather than after its backoff.
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)

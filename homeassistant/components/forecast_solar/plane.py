@@ -1,4 +1,4 @@
-"""Plane titles for the Forecast.Solar integration."""
+"""Plane angle and title helpers for the Forecast.Solar integration."""
 
 from collections.abc import Mapping
 from typing import Any
@@ -14,6 +14,8 @@ from .const import (
     CONF_MODULES_POWER,
     DOMAIN,
 )
+
+SENSOR_KEYS = (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR)
 
 # The UI stores an azimuth of 0-360, while a compass may report -180..180.
 ANGLE_RANGES: dict[str, tuple[float, float]] = {
@@ -44,28 +46,17 @@ def sensor_angle(hass: HomeAssistant, entity_id: str, sensor_key: str) -> float:
         raise SensorUpdateFailed(
             translation_domain=DOMAIN,
             translation_key="sensor_invalid",
-            translation_placeholders={
-                "entity_id": entity_id,
-                "state": sensor.state,
-                "min": str(min_value),
-                "max": str(max_value),
-            },
+            translation_placeholders={"entity_id": entity_id, "state": sensor.state},
         )
     return value
 
 
-def _angle_label(
-    hass: HomeAssistant, data: Mapping[str, Any], value_key: str, sensor_key: str
-) -> str:
-    """Label a plane angle by its sensor's name, or by its fixed value."""
-    if (entity_id := data.get(sensor_key)) is None:
-        return f"{data[value_key]}°"
-    state = hass.states.get(entity_id)
-    return f"{state.name if state else entity_id} (sensor)"
+def plane_title(data: Mapping[str, Any]) -> str:
+    """Build a plane subentry title from its declination/azimuth/power.
 
-
-def plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
-    """Build a plane subentry title from its declination/azimuth/power."""
-    declination = _angle_label(hass, data, CONF_DECLINATION, CONF_DECLINATION_SENSOR)
-    azimuth = _angle_label(hass, data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR)
+    A sensor-backed angle is labelled by its entity ID, not its friendly name:
+    the title then only changes on a rename, which the integration follows.
+    """
+    declination = data.get(CONF_DECLINATION_SENSOR) or f"{data[CONF_DECLINATION]}°"
+    azimuth = data.get(CONF_AZIMUTH_SENSOR) or f"{data[CONF_AZIMUTH]}°"
     return f"{declination} / {azimuth} / {data[CONF_MODULES_POWER]}W"

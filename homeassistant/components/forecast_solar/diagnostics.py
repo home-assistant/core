@@ -22,19 +22,15 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     return {
-        "resolved": async_redact_data(
-            {
-                CONF_LATITUDE: coordinator.forecast.latitude,
-                CONF_LONGITUDE: coordinator.forecast.longitude,
-                "declination": coordinator.forecast.declination,
-                "azimuth": coordinator.forecast.azimuth,
-                "planes": [
-                    {"declination": plane.declination, "azimuth": plane.azimuth}
-                    for plane in coordinator.planes
-                ],
-            },
-            TO_REDACT,
-        ),
+        "resolved": {
+            "location_source": "fixed" if CONF_LATITUDE in entry.data else "home",
+            "declination": coordinator.forecast.declination,
+            "azimuth": coordinator.forecast.azimuth,
+            "planes": [
+                {"declination": plane.declination, "azimuth": plane.azimuth}
+                for plane in coordinator.forecast.planes or []
+            ],
+        },
         "entry": {
             "title": entry.title,
             "data": async_redact_data(entry.data, TO_REDACT),
