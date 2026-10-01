@@ -39,6 +39,7 @@ class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
         """Return whether the device is available."""
         return (
             super().available
+            and self.coordinator.data is not None
             and self._state.last_update_success
             and self._state.data is not None
             and self._state.data.online
