@@ -2621,7 +2621,7 @@ pysillaprism==0.2.1
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==1.1.8
+pysma==1.1.9
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
