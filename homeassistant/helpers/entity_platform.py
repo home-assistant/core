@@ -1353,15 +1353,9 @@ class EntityPlatform:
         ]
 
         if stale_entity_ids:
-            # One or more entities are still running an update from a
-            # previous cycle; they are skipped until they finish. If the
-            # platform limits concurrency via PARALLEL_UPDATES and every
-            # permit happens to be held by entities in this state, other
-            # entities sharing that semaphore will keep waiting their turn,
-            # exactly as PARALLEL_UPDATES is meant to guarantee - a hung
-            # entity's permit is never forcibly reclaimed, since doing so
-            # would let a new update run concurrently with it and break
-            # that guarantee.
+            # A hung entity's PARALLEL_UPDATES permit is never forcibly
+            # reclaimed - doing so would let a new update run concurrently
+            # with it, breaking the guarantee PARALLEL_UPDATES exists for.
             self.logger.warning(
                 "Updating %s %s did not complete within the scheduled update "
                 "interval %s for %s; these entities are still finishing a "
