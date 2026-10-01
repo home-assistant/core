@@ -553,6 +553,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self._panel_direct_http_port = plain_http_port
         self._panel_direct_follow_mdns = True
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="zeroconf_setup", data_schema=ZEROCONF_SETUP_SCHEMA
         )

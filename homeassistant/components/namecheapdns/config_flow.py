@@ -134,6 +134,7 @@ class NamecheapDnsConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=STEP_RECONFIGURE_DATA_SCHEMA,

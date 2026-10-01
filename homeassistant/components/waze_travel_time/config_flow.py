@@ -219,6 +219,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
         data = self._get_reconfigure_entry().data.copy()
         data[CONF_REGION] = data[CONF_REGION].lower()
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, data),

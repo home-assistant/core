@@ -220,6 +220,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id = "reconfigure"
             description_placeholders["site_id"] = entry.data[CONF_SITE_ID]
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
             data_schema=data_schema,
