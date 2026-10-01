@@ -1367,12 +1367,9 @@
         "description": "Selecting a range may load additional data from the recorder.",
         "now": "now",
         "options": {
-          "1_day": "1 d",
-          "1_hour": "1 h",
-          "1_week": "1 week",
-          "5_minutes": "5 min",
-          "6_hours": "6 h",
-          "30_minutes": "30 min"
+          "5_minutes": "Last 5 minutes",
+          "6_hours": "Last 6 hours",
+          "30_minutes": "Last 30 minutes"
         },
         "partial": "The range is large; only part of it could be loaded.",
         "retention_clamped": "Adjusted to the oldest available data.",
