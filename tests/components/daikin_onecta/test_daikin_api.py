@@ -4,11 +4,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
 from daikin_onecta.rate_limit import RateLimit
 import pytest
-from homeassistant.core import HomeAssistant
-from tests.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.daikin_api import DaikinApi
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_get_device_details_propagates_connection_error(
