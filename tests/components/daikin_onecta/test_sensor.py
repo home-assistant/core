@@ -7,11 +7,10 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import FAKE_ACCESS_TOKEN, load_fixture_json
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-from .conftest import FAKE_ACCESS_TOKEN, load_fixture_json
 
 
 async def test_sensor_setup(
