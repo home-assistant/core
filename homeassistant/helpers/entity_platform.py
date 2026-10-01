@@ -913,18 +913,11 @@ class EntityPlatform:
             del self.entities[entity_id]
             del self.domain_entities[entity_id]
             del self.domain_platform_entities[entity_id]
-            # Deliberately leave any in-flight polling task tracked rather
-            # than cancelling it: cancelling a task awaiting a synchronous
-            # update() in the executor doesn't stop that thread, it only
-            # forces the entity's `finally` to run early (clearing
-            # `_update_staged`, releasing its permit) while the real
-            # update keeps running - and an entity-id rename re-adds this
-            # same instance, so a new poll could then run concurrently
-            # with it. Leaving it tracked keeps the entity correctly
-            # treated as still-updating until `_async_handle_entity_update_result`
-            # clears the entry once its own task completes (handled
-            # incrementally as each polling task finishes, not gated on
-            # every sibling in the same cycle finishing too).
+            # Not cancelled: a hung synchronous update()'s executor thread
+            # keeps running regardless, and an entity-id rename could
+            # then race a new poll against it. Left tracked until its own
+            # task completes and `_async_handle_entity_update_result`
+            # clears the entry.
 
         entity.async_on_remove(remove_entity_cb)
 
