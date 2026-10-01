@@ -150,7 +150,6 @@ async def async_setup_entry(
                 entity = ISYBinarySensorHeartbeat(
                     node, parent_entity, device_info=device_info
                 )
-                parent_entity.add_heartbeat_device(entity)
                 entities.append(entity)
             continue
         if (
@@ -427,10 +426,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
     def __init__(
         self,
         node: Node,
-        parent_device: ISYInsteonBinarySensorEntity
-        | ISYBinarySensorEntity
-        | ISYBinarySensorHeartbeat
-        | ISYBinarySensorProgramEntity,
+        parent_device: ISYInsteonBinarySensorEntity,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the ISY binary sensor device.
@@ -459,9 +455,12 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
                 self._heartbeat_node_control_handler
             ).unsubscribe
         )
+        self._parent_device.add_heartbeat_device(self)
+        self.async_on_remove(lambda: self._parent_device.add_heartbeat_device(None))
 
         # Start the timer on boot-up, so we can change from UNKNOWN to OFF
         self._restart_timer()
+        self.async_on_remove(self._cancel_timer)
 
         if (last_state := await self.async_get_last_state()) is not None:
             # Only restore the state if it was previously ON (Low Battery)
@@ -489,11 +488,15 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         self._restart_timer()
         self.async_write_ha_state()
 
-    def _restart_timer(self) -> None:
-        """Restart the 25 hour timer."""
+    def _cancel_timer(self) -> None:
+        """Cancel the 25 hour timer."""
         if self._heartbeat_timer is not None:
             self._heartbeat_timer()
             self._heartbeat_timer = None
+
+    def _restart_timer(self) -> None:
+        """Restart the 25 hour timer."""
+        self._cancel_timer()
 
         @callback
         def timer_elapsed(now: datetime) -> None:
