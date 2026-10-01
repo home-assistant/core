@@ -818,6 +818,74 @@ async def test_stale_poll_skips_update_for_entity_readded_while_queued_on_permit
     entity_b.async_update.assert_called_once()
 
 
+async def test_polling_skips_update_while_readded_entity_still_attaching(
+    hass: HomeAssistant,
+) -> None:
+    """Test a poll for a re-added entity waits for it to finish attaching.
+
+    Regression contract: generation equality only confirms a polling task
+    belongs to the *current* attachment, not that the current attachment
+    has actually finished. If a re-add's own `async_added_to_hass` is
+    slow, a new polling cycle (from the platform's already-running timer)
+    can capture the new (matching) generation and acquire a permit while
+    the entity is still `ADDING`, before its own initialization has
+    restored whatever `update()` depends on. Such a task must be skipped,
+    not run, until the entity reaches `ADDED`.
+    """
+    scan_interval = timedelta(seconds=1)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    attach_release = asyncio.Event()
+    attach_slow = False
+
+    class _ReaddableEntity(MockEntity):
+        """A mock entity whose re-attachment can be held open."""
+
+        async def async_added_to_hass(self) -> None:
+            if attach_slow:
+                await attach_release.wait()
+
+    entity = _ReaddableEntity(should_poll=True)
+    entity.async_update = AsyncMock()
+
+    # First add completes normally and starts the platform's recurring
+    # polling timer.
+    await component.async_add_entities([entity])
+    assert entity._platform_state is EntityPlatformState.ADDED
+
+    # entity_id rename: the entity is removed and re-added as the same
+    # instance, this time with a slow `async_added_to_hass`.
+    await entity.async_remove()
+    entity._platform_state = EntityPlatformState.NOT_ADDED
+    attach_slow = True
+    add_task = hass.async_create_task(component.async_add_entities([entity]))
+    await asyncio.sleep(0)
+    assert entity._platform_state is EntityPlatformState.ADDING
+
+    # The platform's pre-existing polling timer fires while this
+    # re-attachment is still in progress. Avoid
+    # `hass.async_block_till_done(wait_background_tasks=True)` here: it
+    # would also wait on `add_task`'s own still-pending background work,
+    # which never completes until `attach_release` is set below.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    entity.async_update.assert_not_called()
+
+    attach_release.set()
+    await add_task
+    assert entity._platform_state is EntityPlatformState.ADDED
+    assert id(entity) not in platform._polling_tasks
+
+    # A subsequent poll cycle must now update the entity normally.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entity.async_update.assert_called_once()
+
+
 async def test_polling_supports_unhashable_entities(hass: HomeAssistant) -> None:
     """Test polling and removal work for entities whose class is unhashable.
 
