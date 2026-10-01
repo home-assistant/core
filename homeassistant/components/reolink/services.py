@@ -61,7 +61,11 @@ async def _async_snapshot_past(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
-        _LOGGER.error(f"Reolink snapshot_past: Can't write image to '{filename}': {str(err)}")
+        _LOGGER.error(
+            "Reolink snapshot_past: Can't write image to '%s': %s",
+            snapshot_file,
+            err,
+        )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="write_image_error",
