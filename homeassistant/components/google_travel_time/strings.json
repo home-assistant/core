@@ -54,6 +54,7 @@
           "traffic_model": "Traffic model",
           "transit_mode": "Transit mode",
           "transit_routing_preference": "Transit routing preference",
+          "travel_routing_preference": "Travel routing preference",
           "units": "Units"
         },
         "description": "You can optionally specify either a departure time or arrival time in the form of a 24 hour time string like `08:00:00`"
@@ -104,6 +105,13 @@
       "options": {
         "fewer_transfers": "Fewer transfers",
         "less_walking": "Less walking"
+      }
+    },
+    "travel_routing_preference": {
+      "options": {
+        "traffic_aware": "Traffic aware",
+        "traffic_aware_optimal": "Traffic aware optimal",
+        "traffic_unaware": "Traffic unaware"
       }
     },
     "units": {
@@ -190,6 +198,10 @@
         "traffic_model": {
           "description": "The traffic model to use when calculating driving routes.",
           "name": "[%key:component::google_travel_time::options::step::init::data::traffic_model%]"
+        },
+        "travel_routing_preference": {
+          "description": "The travel routing preference.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::travel_routing_preference%]"
         },
         "units": {
           "description": "Which unit system to use.",

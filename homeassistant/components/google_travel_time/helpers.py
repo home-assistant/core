@@ -42,6 +42,7 @@ from .const import (
     TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM,
     TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM,
     TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM,
+    TRAVEL_PREFS_TO_GOOGLE_SDK_ENUM,
     UNITS_TO_GOOGLE_SDK_ENUM,
 )
 
@@ -174,6 +175,7 @@ async def async_compute_routes(
     departure_time: str | None = None,
     arrival_time: str | None = None,
     field_mask: str = "routes.duration,routes.distanceMeters,routes.localized_values",
+    travel_routing_preference: str | None = None,
 ) -> ComputeRoutesResponse | None:
     """Compute routes using Google Routes API."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -186,6 +188,10 @@ async def async_compute_routes(
     routing_preference = None
     if travel_mode == RouteTravelMode.DRIVE:
         routing_preference = RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+        if travel_routing_preference is not None:
+            routing_preference = TRAVEL_PREFS_TO_GOOGLE_SDK_ENUM[
+                travel_routing_preference
+            ]
         route_modifiers = RouteModifiers(
             avoid_tolls=avoid == "tolls",
             avoid_ferries=avoid == "ferries",
