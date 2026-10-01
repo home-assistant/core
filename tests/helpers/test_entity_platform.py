@@ -658,13 +658,84 @@ async def test_stale_poll_does_not_repoll_entity_claimed_by_finished_newer_cycle
     # in cycle 1. By now entity_b's task from cycle 2 has already finished,
     # so a liveness-only check would wrongly let this stale cycle poll
     # entity_b a second time in a row.
+    # Assert only after the stale cycle 1 call has fully drained: it must
+    # be given every chance to resume and run its own, buggy re-poll
+    # before this assertion can rule it out.
     a_release.set()
-    for _ in range(5):
-        await asyncio.sleep(0)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_b.async_update.call_count == 1
 
+
+async def test_stale_poll_skips_update_for_entity_removed_while_queued_on_permit(
+    hass: HomeAssistant,
+) -> None:
+    """Test a removed entity's queued update is skipped once it acquires its permit.
+
+    Regression contract: an overtaking cycle's task for an entity can be
+    created and then sit queued behind another entity's `PARALLEL_UPDATES`
+    permit. If that entity is removed while still queued, its own removal
+    teardown may already have released what its `update()` depends on, so
+    the queued task must not actually run `update()` once it does finally
+    acquire the permit.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
     await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+
+    a_started = asyncio.Event()
+    a_release = asyncio.Event()
+
+    async def _hung_update() -> None:
+        a_started.set()
+        await a_release.wait()
+
+    entity_a = MockEntity(should_poll=True)
+    entity_a.async_update = _hung_update
+
+    entity_b = MockEntity(should_poll=True)
+    entity_b.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([entity_a, entity_b])
+
+    semaphore = entity_a.parallel_updates
+    assert semaphore is not None
+
+    # Cycle 1: stuck awaiting entity_a's hung update, holding the platform's
+    # only permit.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await a_started.wait()
+    await asyncio.sleep(0)
+    assert semaphore._value == 0
+
+    # Cycle 2: detects entity_a as stale and starts its own task for
+    # entity_b. Its task is created and tracked, but queues behind
+    # entity_a's still-held permit before it can ever call update().
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+    assert entity_b.async_update.call_count == 0
+    assert id(entity_b) in platform_handle._polling_tasks
+
+    # entity_b is removed (e.g. an entity_id rename, or the config entry
+    # unloading) while its queued task is still waiting for the permit.
+    await entity_b.async_remove()
+
+    # entity_a's hung update finally completes and releases the permit,
+    # which entity_b's queued task then acquires.
+    a_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The queued task must not have actually called update() on the
+    # now-removed entity.
+    entity_b.async_update.assert_not_called()
 
 
 async def test_polling_supports_unhashable_entities(hass: HomeAssistant) -> None:
