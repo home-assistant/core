@@ -5,7 +5,7 @@ from typing import Any, override
 
 from flexit_modbus import Flexit
 from modbus_connection import ModbusError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
@@ -33,32 +33,32 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-UNIT_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(min=1, max=247, mode=NumberSelectorMode.BOX)),
-    vol.Coerce(int),
+UNIT_SELECTOR = probatio.All(
+    NumberSelector(NumberSelectorConfig(min=1, max=31, mode=NumberSelectorMode.BOX)),
+    probatio.Coerce(int),
 )
 
-STEP_TCP_DATA_SCHEMA = vol.Schema(
+STEP_TCP_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_UNIT): UNIT_SELECTOR,
+        probatio.Required(CONF_UNIT): UNIT_SELECTOR,
     }
 )
 
-STEP_SERIAL_DATA_SCHEMA = vol.Schema(
+STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.All(
             NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_UNIT): UNIT_SELECTOR,
+        probatio.Required(CONF_UNIT): UNIT_SELECTOR,
     }
 )
 
@@ -110,7 +110,7 @@ class FlexitConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_connection(
         self,
         connection_type: str,
-        schema: vol.Schema,
+        schema: probatio.Schema,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle a connection-type-specific step."""

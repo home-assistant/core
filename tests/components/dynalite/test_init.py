@@ -2,8 +2,8 @@
 
 from unittest.mock import call, patch
 
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.dynalite import const as dynalite
 from homeassistant.const import CONF_HOST

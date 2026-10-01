@@ -120,7 +120,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_translation_key = "ventilation"
-    _attributes: dict[str, Any] = {}
     _standby: bool = False
 
     def __init__(
@@ -150,6 +149,7 @@ class ViCareFan(ViCareEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
         # evaluate quickmodes
+        self._attributes: dict[str, Any] = {}
         self._attributes["vicare_quickmodes"] = quickmodes = list[str](
             device.getVentilationQuickmodes()
             if is_supported(

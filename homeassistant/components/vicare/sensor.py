@@ -1022,6 +1022,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             "sensordriven",
             "silent",
             "forcedlevelfour",
+            "sensoroverride",
         ],
     ),
     ViCareSensorEntityDescription(

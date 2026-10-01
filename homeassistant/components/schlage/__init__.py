@@ -1,8 +1,8 @@
 """The Schlage integration."""
 
+import probatio
 from pycognito.exceptions import WarrantException
 import pyschlage
-import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -33,9 +33,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_ADD_CODE,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required("name"): cv.string,
-            vol.Required("code"): vol.All(cv.string, cv.matches_regex(r"^\d{4,8}$")),
-            vol.Optional("notify_on_use", default=True): cv.boolean,
+            probatio.Required("name"): cv.string,
+            probatio.Required("code"): probatio.All(
+                cv.string, cv.matches_regex(r"^\d{4,8}$")
+            ),
+            probatio.Optional("notify_on_use", default=True): cv.boolean,
         },
         func=SERVICE_ADD_CODE,
     )
@@ -46,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_DELETE_CODE,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required("name"): cv.string,
+            probatio.Required("name"): cv.string,
         },
         func=SERVICE_DELETE_CODE,
     )

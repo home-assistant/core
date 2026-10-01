@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
 
-IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
+IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage", "Study"]
 NON_IR_DEVICE = "Bedroom"
 
 

@@ -658,7 +658,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
         started_flag.set()
 
     hass.bus.async_listen(event, event_started)
-    hass.bus.async_listen(EVENT_SCRIPT_STARTED, run_mock)
+    hass.bus.async_listen(EVENT_SCRIPT_STARTED, callback(run_mock))
 
     assert await async_setup_component(
         hass,
@@ -1609,6 +1609,39 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+async def test_websocket_config_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config command requires admin."""
+    config = {
+        "alias": "hello",
+        "sequence": [{"action": "light.turn_on"}],
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "script": {
+                "hello": config,
+            },
+        },
+    )
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "script/config",
+            "entity_id": "script.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
 
 
 async def test_script_service_changed_entity_id(

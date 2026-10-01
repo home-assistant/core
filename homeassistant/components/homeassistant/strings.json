@@ -12,6 +12,8 @@
       "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
@@ -172,6 +174,10 @@
     "deprecated_yaml": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
       "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "entity_own_area_without_own_name": {
+      "description": "The entity `{entity_id}` has no name of its own, so it represents its device and is where the device is. An area set on the entity itself contradicts this and is not supported.\n\nTo resolve this, open the [entity settings]({entity_settings_url}) and either remove the entity's area or give the entity a name.",
+      "title": "Entity {entity_id} has an area but no name of its own"
     },
     "historic_currency": {
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration.",
