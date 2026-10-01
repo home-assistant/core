@@ -31,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import (
@@ -185,18 +186,47 @@ async def test_climate(
     assert state.attributes[ATTR_TEMPERATURE] == 40
     assert state.state == HVACMode.COOL
 
-    # pytest raises ServiceValidationError
-    with pytest.raises(
-        ServiceValidationError,
-        match="Cabin overheat protection does not support that temperature",
-    ):
-        # Invalid Temp
+    # Set Temp between levels snaps to the nearest level
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 34},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == 35
+
+
+@pytest.mark.parametrize(
+    ("temperature", "cop_temp"),
+    [
+        pytest.param(86, CabinOverheatProtectionTemp.LOW, id="low"),
+        pytest.param(91, CabinOverheatProtectionTemp.MEDIUM, id="medium"),
+        pytest.param(104, CabinOverheatProtectionTemp.HIGH, id="high"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_legacy")
+async def test_cop_set_temperature_fahrenheit(
+    hass: HomeAssistant,
+    temperature: int,
+    cop_temp: CabinOverheatProtectionTemp,
+) -> None:
+    """Tests a Fahrenheit temperature is snapped to the nearest COP level."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await setup_platform(hass, [Platform.CLIMATE])
+    entity_id = "climate.test_cabin_overheat_protection"
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_cop_temp",
+        return_value=COMMAND_OK,
+    ) as mock_set_cop_temp:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 34},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: temperature},
             blocking=True,
         )
+    mock_set_cop_temp.assert_called_once_with(cop_temp)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -524,3 +554,36 @@ async def test_climate_streaming_drive_side(
 
     state = hass.states.get("climate.test_climate")
     assert state.attributes[ATTR_TEMPERATURE] == target_temperature
+
+
+@pytest.mark.parametrize(
+    ("hvac_power", "expected"),
+    [
+        pytest.param("HvacPowerStateOn", HVACMode.HEAT_COOL, id="on"),
+        pytest.param(
+            "HvacPowerStatePrecondition", HVACMode.HEAT_COOL, id="precondition"
+        ),
+        pytest.param("HvacPowerStateOverheatProtect", HVACMode.OFF, id="overheat"),
+        pytest.param("HvacPowerStateOff", HVACMode.OFF, id="off"),
+    ],
+)
+async def test_climate_streaming_hvac_power(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    hvac_power: str,
+    expected: HVACMode,
+) -> None:
+    """Tests the HvacPower to HVAC mode mapping for streaming vehicles."""
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.HVAC_POWER: hvac_power},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.test_climate").state == expected

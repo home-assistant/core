@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
             probatio.All(probatio.EnsureList(), [CAMERAS_SCHEMA])
         ),
         probatio.Optional(CONF_NEW_VERSION, default=True): cv.boolean,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_USERNAME): cv.string,
     }
 )
