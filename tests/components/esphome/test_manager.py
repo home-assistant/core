@@ -4077,6 +4077,8 @@ async def test_zwave_proxy_request_home_id_change(
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
 
+    assert entry.runtime_data.device_info.zwave_home_id == zwave_home_id
+
 
 async def test_no_zwave_proxy_subscribe_without_feature_flags(
     hass: HomeAssistant,
