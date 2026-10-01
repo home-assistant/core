@@ -178,7 +178,7 @@ aio-ownet==0.0.5
 aio-wattwaechter==1.0.0
 
 # homeassistant.components.acaia
-aioacaia==0.2.1
+aioacaia==0.2.2
 
 # homeassistant.components.airq
 aioairq==0.4.8
