@@ -1563,7 +1563,7 @@ loqedAPI==2.1.16
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.10.2
+lunatone-rest-api-client==0.11.0
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
