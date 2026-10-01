@@ -292,11 +292,17 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         """Subscribe to the node and subnode event emitters."""
         await super().async_added_to_hass()
 
-        self._node.control_events.subscribe(self._async_positive_node_control_handler)
+        self.async_on_remove(
+            self._node.control_events.subscribe(
+                self._async_positive_node_control_handler
+            ).unsubscribe
+        )
 
         if self._negative_node is not None:
-            self._negative_node.control_events.subscribe(
-                self._async_negative_node_control_handler
+            self.async_on_remove(
+                self._negative_node.control_events.subscribe(
+                    self._async_negative_node_control_handler
+                ).unsubscribe
             )
 
     def add_heartbeat_device(self, entity: ISYBinarySensorHeartbeat | None) -> None:
@@ -448,7 +454,11 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         """Subscribe to the node and subnode event emitters."""
         await super().async_added_to_hass()
 
-        self._node.control_events.subscribe(self._heartbeat_node_control_handler)
+        self.async_on_remove(
+            self._node.control_events.subscribe(
+                self._heartbeat_node_control_handler
+            ).unsubscribe
+        )
 
         # Start the timer on boot-up, so we can change from UNKNOWN to OFF
         self._restart_timer()

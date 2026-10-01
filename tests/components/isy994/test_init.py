@@ -4,15 +4,23 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pyisy.constants import CMD_ON
+from pyisy.helpers import EventEmitter, NodeProperty
 import pytest
 
-from homeassistant.components.isy994.const import DOMAIN
+from homeassistant.components.isy994.const import DOMAIN, EVENT_ISY994_CONTROL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
 
 MOCK_UUID = "ce:fb:72:31:b7:b9"
 
@@ -101,3 +109,52 @@ async def test_node_device_linked_to_isy_device(
     assert isy_device is not None
     assert node_device is not None
     assert node_device.via_device_id == isy_device.id
+
+
+@pytest.mark.parametrize(
+    ("platform", "node_def_id"),
+    [
+        pytest.param(Platform.SWITCH, "RelayLampSwitch_ADV", id="switch"),
+        pytest.param(Platform.SENSOR, "GenericSensor", id="sensor"),
+    ],
+)
+async def test_node_listeners_removed_with_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+    platform: Platform,
+    node_def_id: str,
+) -> None:
+    """Test removing an entity unsubscribes it from its node's event emitters."""
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(mock_isy, "22 22 22 1", "Test Node", node_def_id)
+    node.status_events = EventEmitter()
+    node.control_events = EventEmitter()
+    mock_isy.nodes.__iter__.return_value = [("Test Node", node)]
+    events = async_capture_events(hass, EVENT_ISY994_CONTROL)
+
+    with patch("homeassistant.components.isy994.PLATFORMS", [platform]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = f"{platform}.test_node"
+    assert hass.states.get(entity_id) is not None
+    assert node.status_events._subscribers
+    assert node.control_events._subscribers
+
+    node.control_events.notify(NodeProperty(node.address, CMD_ON))
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+    assert not node.status_events._subscribers
+    assert not node.control_events._subscribers
+
+    node.control_events.notify(NodeProperty(node.address, CMD_ON))
+    await hass.async_block_till_done()
+    assert len(events) == 1
