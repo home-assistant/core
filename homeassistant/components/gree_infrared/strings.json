@@ -12,12 +12,14 @@
         "data": {
           "hvac_modes": "Supported modes",
           "infrared_emitter_entity_id": "Infrared emitter",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]",
+          "model": "Remote model"
         },
         "data_description": {
           "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
           "infrared_emitter_entity_id": "The infrared emitter entity to use for sending commands.",
-          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
+          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used.",
+          "model": "Choose YAP1F for the Cooper&Hunter YAP1F remote; existing Gree configurations use Generic."
         },
         "description": "Select an infrared emitter and the modes your Gree AC supports.",
         "title": "Set up Gree AC"
@@ -33,6 +35,20 @@
         "fan_only": "Fan only",
         "heat": "Heat"
       }
+    },
+    "model": {
+      "options": {
+        "generic": "Generic Gree",
+        "yap1f": "YAP1F"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "turbo": { "name": "Turbo" },
+      "light": { "name": "Display light" },
+      "health": { "name": "Health ionizer" },
+      "xfan": { "name": "X-Fan" }
     }
   }
 }
