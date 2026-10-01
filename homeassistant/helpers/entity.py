@@ -1639,9 +1639,6 @@ class Entity(
         if data["action"] != "update":
             return
 
-        if "device_id" in data["changes"]:
-            self._async_subscribe_device_updates()
-
         # Invalidate friendly name cache if relevant fields changed
         changes = data["changes"]
         if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
@@ -1652,6 +1649,9 @@ class Entity(
         registry_entry = ent_reg.async_get(data["entity_id"])
         assert registry_entry is not None
         self.registry_entry = registry_entry
+
+        if "device_id" in changes:
+            self._async_subscribe_device_updates()
 
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
