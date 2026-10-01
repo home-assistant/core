@@ -53,19 +53,30 @@ async def test_webhook_accepts_valid_message(
     lock.receiveWebhook.assert_called()
 
 
+@pytest.mark.parametrize(
+    "headers",
+    [
+        pytest.param({"hash": "hash"}, id="missing_timestamp"),
+        pytest.param({"timestamp": "1653304609"}, id="missing_hash"),
+        pytest.param({}, id="missing_both"),
+    ],
+)
 async def test_webhook_rejects_missing_signature_headers(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     integration: MockConfigEntry,
     lock: loqed.Lock,
+    headers: dict[str, str],
 ) -> None:
-    """Test a webhook without TIMESTAMP and HASH headers is rejected."""
+    """Test a webhook without the TIMESTAMP or HASH header is rejected."""
     await async_setup_component(hass, "http", {"http": {}})
     client = await hass_client_no_auth()
     message = await async_load_fixture(hass, "battery_update.json", DOMAIN)
 
     resp = await client.post(
-        f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}", data=message
+        f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+        data=message,
+        headers=headers,
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
