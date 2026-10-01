@@ -464,6 +464,22 @@ async def websocket_handle_subscribe(
             message[ATTR_DELTA] = event.delta.total_seconds()
         connection.send_message(websocket_api.event_message(msg["id"], message))
 
+    @callback
+    def send_snapshot(current: TimerListEntity) -> None:
+        """Send the full current set of timers."""
+        now = dt_util.utcnow()
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                {
+                    "type": "timers",
+                    ATTR_TIMERS: [
+                        timer_to_dict(timer, now) for timer in current.timers
+                    ],
+                },
+            )
+        )
+
     unsub_entity: CALLBACK_TYPE | None = entity.async_subscribe_updates(forward_event)
 
     @callback
@@ -477,6 +493,10 @@ async def websocket_handle_subscribe(
             unsub_entity = None
         if (new_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is not None:
             unsub_entity = new_entity.async_subscribe_updates(forward_event)
+            # The replacement may hold a different set of timers, and anything
+            # that changed while the entry was unloaded went unreported, so the
+            # client's pre-reload snapshot is no longer trustworthy.
+            send_snapshot(new_entity)
 
     unsub_state = async_track_state_change_event(hass, [entity_id], resubscribe)
 
@@ -490,16 +510,7 @@ async def websocket_handle_subscribe(
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])
 
-    now = dt_util.utcnow()
-    connection.send_message(
-        websocket_api.event_message(
-            msg["id"],
-            {
-                "type": "timers",
-                ATTR_TIMERS: [timer_to_dict(timer, now) for timer in entity.timers],
-            },
-        )
-    )
+    send_snapshot(entity)
 
 
 @websocket_api.websocket_command(
