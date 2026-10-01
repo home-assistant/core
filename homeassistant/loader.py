@@ -1013,7 +1013,8 @@ class Integration:
             return cache[domain]
 
         if self._component_future:
-            return await self._component_future
+            # Shield so cancelling a waiter does not cancel the shared future
+            return await asyncio.shield(self._component_future)
 
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()

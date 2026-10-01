@@ -1496,6 +1496,55 @@ async def test_async_get_component_concurrent_loads(hass: HomeAssistant) -> None
     assert config_flow_module_name in imports
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_async_get_component_concurrent_load_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+    config_flow_module_name = f"{integration.pkg_path}.config_flow"
+    module_mock = MagicMock(__file__="__init__.py")
+    config_flow_module_mock = MagicMock(__file__="config_flow.py")
+    start_event = threading.Event()
+    import_event = asyncio.Event()
+
+    def import_module(name: str) -> Any:
+        hass.loop.call_soon_threadsafe(import_event.set)
+        start_event.wait()
+        if name == integration.pkg_path:
+            return module_mock
+        if name == config_flow_module_name:
+            return config_flow_module_mock
+        raise ImportError
+
+    modules_without_integration = {
+        k: v
+        for k, v in sys.modules.items()
+        if k not in (config_flow_module_name, integration.pkg_path)
+    }
+    with (
+        patch.dict(
+            "sys.modules",
+            {**modules_without_integration},
+            clear=True,
+        ),
+        patch("homeassistant.loader.importlib.import_module", import_module),
+    ):
+        load_task1 = asyncio.create_task(integration.async_get_component())
+        load_task2 = asyncio.create_task(integration.async_get_component())
+        await import_event.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        start_event.set()
+        comp1 = await load_task1
+        assert integration._component_future is None
+
+    assert comp1 is module_mock
+
+
 async def test_async_get_component_deadlock_fallback(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
