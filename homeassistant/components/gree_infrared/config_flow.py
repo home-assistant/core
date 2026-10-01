@@ -25,7 +25,10 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    CONF_MODEL,
     DOMAIN,
+    MODEL_GENERIC,
+    MODEL_YAP1F,
 )
 
 _HVAC_MODE_OPTIONS = [
@@ -53,6 +56,13 @@ def _user_schema(hass: HomeAssistant) -> probatio.Schema:
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=async_get_receivers(hass),
+                )
+            ),
+            probatio.Required(CONF_MODEL, default=MODEL_GENERIC): SelectSelector(
+                SelectSelectorConfig(
+                    options=[MODEL_GENERIC, MODEL_YAP1F],
+                    translation_key=CONF_MODEL,
+                    mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
             probatio.Required(
