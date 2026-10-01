@@ -1488,12 +1488,24 @@ class EntityPlatform:
         task_entities: dict[asyncio.Task[None], Entity],
         pending: set[asyncio.Task[None]],
     ) -> None:
-        """Keep draining still-pending polling tasks in the background."""
+        """Keep draining still-pending polling tasks in the background.
+
+        Tied to `self.config_entry`'s background tasks (when there is one)
+        rather than `hass`'s global ones, so config entry unload's own
+        timeout still governs cancelled children finishing their cleanup,
+        instead of unload returning while they are detached and still
+        running in the background.
+        """
         if not pending:
             return
+        coro = self._async_await_polling_tasks([(task_entities[t], t) for t in pending])
+        name = f"EntityPlatform poll drain {self.domain}.{self.platform_name}"
+        if self.config_entry:
+            self.config_entry.async_create_background_task(self.hass, coro, name=name)
+            return
         self.hass.async_create_background_task(
-            self._async_await_polling_tasks([(task_entities[t], t) for t in pending]),
-            name=f"EntityPlatform poll drain {self.domain}.{self.platform_name}",
+            coro,
+            name=name,
         )
 
     def _async_handle_entity_update_result(

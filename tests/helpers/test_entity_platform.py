@@ -1018,6 +1018,57 @@ async def test_polling_propagates_cancellation_to_pending_entity_tasks(
     assert id(entity_b) not in platform._polling_tasks
 
 
+async def test_polling_drain_is_tracked_by_config_entry_background_tasks(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled poll's background drain is tied to its config entry.
+
+    Regression contract: when a config entry governs the platform, the
+    background task that drains cancelled children after the outer poll is
+    itself cancelled must be tracked by that config entry's own background
+    tasks, not just `hass`'s global ones. Otherwise the config entry's own
+    unload timeout no longer governs it, and unload can finish while the
+    drain is still mid-cleanup, racing platform teardown.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+    config_entry = MockConfigEntry()
+    platform.config_entry = config_entry
+
+    hang_forever = asyncio.Event()
+
+    async def _hang() -> None:
+        await hang_forever.wait()
+
+    entity = MockEntity(should_poll=True)
+    entity.async_update = _hang
+
+    await component.async_add_entities([entity])
+
+    task = hass.async_create_task(entity.async_update_ha_state(True))
+    cycle_id = platform._next_polling_cycle_id
+    platform._next_polling_cycle_id += 1
+    platform._polling_tasks[id(entity)] = (cycle_id, task)
+
+    outer = hass.async_create_task(
+        platform._async_await_polling_tasks([(entity, task)])
+    )
+    await asyncio.sleep(0)
+
+    outer.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await outer
+
+    # The drain background task must be tracked by the config entry, not
+    # just by hass's global background tasks.
+    assert len(config_entry._background_tasks) == 1
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert id(entity) not in platform._polling_tasks
+
+
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
