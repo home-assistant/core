@@ -13,7 +13,7 @@ from _pytest.assertion import truncate
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker
 from syrupy import SnapshotAssertion
 from syrupy.extensions.single_file import SingleFileAmberSnapshotExtension
 from syrupy.filters import props
