@@ -105,7 +105,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
             ENCRYPTION_OPTIONS
         ),
         probatio.Optional(CONF_USERNAME): cv.string,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_SENDER_NAME): cv.string,
         probatio.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,

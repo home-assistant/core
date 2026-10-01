@@ -164,7 +164,7 @@ async def test_event_follows_receiver_rename(
     await hass.async_block_till_done()
 
     await assert_availability_follows_source_entity(
-        hass, EVENT_ENTITY_ID, new_receiver_entity_id
+        hass, EVENT_ENTITY_ID, [new_receiver_entity_id]
     )
 
     now = dt_util.parse_datetime("2026-05-12 12:00:00+00:00")

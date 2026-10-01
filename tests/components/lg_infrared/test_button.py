@@ -106,7 +106,9 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.lg_tv_power_on"
-    await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, entity_id, [EMITTER_ENTITY_ID]
+    )
 
 
 @pytest.mark.parametrize("device_type", [LGDeviceType.AC])
@@ -175,7 +177,7 @@ async def test_button_follows_emitter_rename(
     await hass.async_block_till_done()
 
     await assert_availability_follows_source_entity(
-        hass, entity_id, new_emitter_entity_id
+        hass, entity_id, [new_emitter_entity_id]
     )
 
     await hass.services.async_call(

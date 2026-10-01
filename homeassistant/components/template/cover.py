@@ -107,12 +107,12 @@ COVER_YAML_SCHEMA = probatio.All(
             COVER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
         ).schema
     ),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+    probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
 )
 
 COVER_CONFIG_ENTRY_SCHEMA = probatio.All(
     COVER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+    probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
 )
 
 

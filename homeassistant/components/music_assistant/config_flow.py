@@ -38,7 +38,9 @@ DEFAULT_URL = "http://mass.local:8095"
 
 
 STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
-STEP_AUTH_TOKEN_SCHEMA = probatio.Schema({probatio.Required(CONF_TOKEN): str})
+STEP_AUTH_TOKEN_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+)
 
 
 def _parse_zeroconf_server_info(properties: dict[str, str]) -> ServerInfoMessage:
@@ -384,7 +386,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_manual",
-            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+            ),
             description_placeholders={"url": self.url},
             errors=errors,
         )

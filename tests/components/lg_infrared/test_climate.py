@@ -48,7 +48,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -86,15 +86,92 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("has_receiver", "source_entity_ids"),
+    [
+        pytest.param(False, [EMITTER_ENTITY_ID], id="emitter"),
+        pytest.param(
+            True, [EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID], id="emitter_and_receiver"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_availability_follows_emitter(
+async def test_availability_follows_sources(
     hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    source_entity_ids: list[str],
 ) -> None:
-    """Test climate entity availability follows the infrared emitter."""
+    """Test climate entity availability follows all configured infrared entities."""
     await assert_availability_follows_source_entity(
-        hass, _CLIMATE_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, _CLIMATE_ENTITY_ID, source_entity_ids
     )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    "unavailable_entity_id",
+    [
+        pytest.param(EMITTER_ENTITY_ID, id="emitter"),
+        pytest.param(RECEIVER_ENTITY_ID, id="receiver"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_initial_availability_requires_emitter_and_receiver(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    unavailable_entity_id: str,
+) -> None:
+    """Test the entity starts unavailable if either emitter or receiver is."""
+    hass.states.async_set(unavailable_entity_id, STATE_UNAVAILABLE)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    ("renamed_entity_id", "new_entity_id", "source_entity_ids"),
+    [
+        pytest.param(
+            EMITTER_ENTITY_ID,
+            "infrared.renamed_emitter",
+            ["infrared.renamed_emitter", RECEIVER_ENTITY_ID],
+            id="emitter",
+        ),
+        pytest.param(
+            RECEIVER_ENTITY_ID,
+            "infrared.renamed_receiver",
+            [EMITTER_ENTITY_ID, "infrared.renamed_receiver"],
+            id="receiver",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_follows_emitter_or_receiver_rename(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    renamed_entity_id: str,
+    new_entity_id: str,
+    source_entity_ids: list[str],
+) -> None:
+    """Test renaming the emitter or receiver only re-targets that entity."""
+    entity_registry.async_update_entity(renamed_entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    await assert_availability_follows_source_entity(
+        hass, _CLIMATE_ENTITY_ID, source_entity_ids
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
 
 
 @pytest.mark.usefixtures("init_integration")

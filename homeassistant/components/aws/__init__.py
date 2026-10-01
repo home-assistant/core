@@ -52,7 +52,9 @@ AWS_CREDENTIAL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
         probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
         probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Optional(CONF_VALIDATE, default=True): cv.boolean,
     }
@@ -72,7 +74,9 @@ NOTIFY_PLATFORM_SCHEMA = probatio.Schema(
         ),
         probatio.Required(CONF_REGION): probatio.All(cv.string, probatio.Lower),
         probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
         probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Optional(CONF_CONTEXT): probatio.Coerce(dict),
