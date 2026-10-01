@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -70,6 +71,131 @@ async def test_firmware_update_status(
     assert state.state == "on"
     assert state.attributes["installed_version"] == "25.7.8"
     assert state.attributes["latest_version"] == expected_latest
+
+
+async def test_firmware_release_notes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Show the pending package changes in firmware release notes."""
+    mock_opnsense_client.get_firmware_update_info.return_value.update(
+        {
+            "status": "update",
+            "status_msg": "There are 15 updates available, total download size is 36.0MiB.",
+            "upgrade_packages": [
+                {
+                    "name": "opnsense",
+                    "current_version": "25.7.8",
+                    "new_version": "25.7.9",
+                },
+                {
+                    "name": "suricata",
+                    "current_version": "8.0.7",
+                    "new_version": "8.0.7_1",
+                },
+            ],
+            "downgrade_packages": [
+                {"name": "example", "current_version": "2.0", "new_version": "1.9"}
+            ],
+            "new_packages": [{"name": "new-tool", "version": "1.0"}],
+            "remove_packages": [{"name": "old-tool", "version": "0.9"}],
+            "reinstall_packages": [{"name": "net-snmp", "version": "5.9.5.2,1"}],
+        }
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.mock_title_firmware",
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == (
+        "There are 15 updates available, total download size is 36.0MiB.\n\n"
+        "### Upgrades\n"
+        "- opnsense: 25.7.8 -> 25.7.9\n"
+        "- suricata: 8.0.7 -> 8.0.7_1\n\n"
+        "### Downgrades\n"
+        "- example: 2.0 -> 1.9\n\n"
+        "### New packages\n"
+        "- new-tool: 1.0\n\n"
+        "### Removed packages\n"
+        "- old-tool: 0.9\n\n"
+        "### Reinstalls\n"
+        "- net-snmp: 5.9.5.2,1"
+    )
+
+
+async def test_firmware_release_notes_without_packages(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Return no release notes when there are no pending package changes."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.mock_title_firmware",
+        }
+    )
+    assert (await ws_client.receive_json())["result"] is None
+
+
+@pytest.mark.parametrize(
+    ("status_reboot", "expected_summary"),
+    [
+        pytest.param("0", "There are 15 updates available.", id="no-reboot"),
+        pytest.param(
+            "1", "Reboot required. There are 15 updates available.", id="reboot"
+        ),
+    ],
+)
+async def test_firmware_update_details(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    status_reboot: str,
+    expected_summary: str,
+) -> None:
+    """Show OPNsense update status, reboot requirement, and changelog link."""
+    mock_opnsense_client.get_firmware_update_info.return_value.update(
+        {
+            "status_msg": "There are 15 updates available.",
+            "status_reboot": status_reboot,
+        }
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.attributes["release_summary"] == expected_summary
+    assert state.attributes["release_url"] == (
+        "http://router.lan/ui/core/firmware#changelog"
+    )
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.mock_title_firmware",
+        }
+    )
+    assert (await ws_client.receive_json())["result"] == expected_summary
 
 
 @pytest.mark.parametrize("status", ["update", "upgrade"])

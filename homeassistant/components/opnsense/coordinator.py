@@ -103,8 +103,9 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch firmware status."""
         try:
-            return dict(await self.client.get_firmware_update_info())
+            firmware_info = dict(await self.client.get_firmware_update_info())
         except (OPNsenseConnectionError, OPNsenseTimeoutError) as err:
             raise UpdateFailed(
                 f"Error communicating with OPNsense router: {err}"
             ) from err
+        return firmware_info

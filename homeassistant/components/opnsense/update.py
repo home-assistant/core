@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
+from urllib.parse import urljoin
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -47,7 +48,9 @@ class OPNsenseFirmwareUpdate(
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_has_entity_name = True
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_translation_key = "firmware"
 
@@ -63,6 +66,9 @@ class OPNsenseFirmwareUpdate(
             name=entry.title or "OPNsense",
             manufacturer="OPNsense",
             configuration_url=entry.data[CONF_URL],
+        )
+        self._attr_release_url = urljoin(
+            entry.data[CONF_URL], "/ui/core/firmware#changelog"
         )
         self._upgrade_in_progress = False
         self._upgrade_started: datetime | None = None
@@ -150,6 +156,49 @@ class OPNsenseFirmwareUpdate(
         ):
             return f"{latest_version} (package updates available)"
         return cast(str | None, latest_version)
+
+    @property
+    @override
+    def release_summary(self) -> str | None:
+        """Return the update status and reboot requirement."""
+        status_msg = self.coordinator.data.get("status_msg")
+        if self.coordinator.data.get("status_reboot") == "1":
+            return (
+                f"Reboot required. {status_msg}" if status_msg else "Reboot required."
+            )
+        return cast(str | None, status_msg)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return the firmware status and pending package changes."""
+        summary = self.release_summary
+        sections = [summary] if summary else []
+        for heading, key in (
+            ("Upgrades", "upgrade_packages"),
+            ("Downgrades", "downgrade_packages"),
+            ("New packages", "new_packages"),
+            ("Removed packages", "remove_packages"),
+            ("Reinstalls", "reinstall_packages"),
+        ):
+            packages = self.coordinator.data.get(key, [])
+            if not packages:
+                continue
+            lines = [f"### {heading}"]
+            for package in packages:
+                name = package["name"]
+                if key in ("upgrade_packages", "downgrade_packages"):
+                    lines.append(
+                        f"- {name}: {package['current_version']} -> {package['new_version']}"
+                    )
+                else:
+                    version = (
+                        package.get("version")
+                        or package.get("new_version")
+                        or package.get("old_version")
+                    )
+                    lines.append(f"- {name}: {version}" if version else f"- {name}")
+            sections.append("\n".join(lines))
+        return "\n\n".join(sections) or None
 
     @override
     async def async_install(
