@@ -2,62 +2,29 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_RGB_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
+from tests.common import snapshot_platform
+
 DEVICE_ID = "light.living_room_lamp"
 
 
-async def test_entity_registry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, LIGHT_DOMAIN)
+    """Test all entities."""
+    config_entry = await setup_platform(hass, LIGHT_DOMAIN)
 
-    entry = entity_registry.async_get(DEVICE_ID)
-    assert entry.unique_id == "741385f4388b2637df4c6b398fe50581"
-
-
-async def test_attributes(hass: HomeAssistant) -> None:
-    """Test the light attributes are correct."""
-    await setup_platform(hass, LIGHT_DOMAIN)
-
-    state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 204
-    assert state.attributes.get(ATTR_RGB_COLOR) == (0, 64, 255)
-    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
-    assert state.attributes.get(ATTR_DEVICE_ID) == "ZB:db5b1a"
-    assert not state.attributes.get("battery_low")
-    assert not state.attributes.get("no_response")
-    assert state.attributes.get("device_type") == "RGB Dimmer"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Living Room Lamp"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
-    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.HS
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-    ]
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_switch_off(hass: HomeAssistant) -> None:

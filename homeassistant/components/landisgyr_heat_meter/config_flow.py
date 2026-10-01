@@ -4,9 +4,9 @@ import asyncio
 import logging
 from typing import Any, override
 
+import probatio
 import serialx
 import ultraheat_api
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
@@ -18,9 +18,9 @@ from .const import DOMAIN, ULTRAHEAT_TIMEOUT
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
     }
 )
 

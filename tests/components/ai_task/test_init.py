@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import AITaskPreferences
@@ -176,19 +176,19 @@ async def test_generate_data_service_structure_fields(
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
     assert task.instructions == "Please generate a profile for a new user"
     assert task.structure
-    assert isinstance(task.structure, vol.Schema)
+    assert isinstance(task.structure, probatio.Schema)
     schema = list(task.structure.schema.items())
     assert len(schema) == 2
 
     name_key, name_value = schema[0]
     assert name_key == "name"
-    assert isinstance(name_key, vol.Required)
+    assert isinstance(name_key, probatio.Required)
     assert name_key.description == "First and last name of the user such as Alice Smith"
     assert isinstance(name_value, selector.TextSelector)
 
     age_key, age_value = schema[1]
     assert age_key == "age"
-    assert isinstance(age_key, vol.Optional)
+    assert isinstance(age_key, probatio.Optional)
     assert age_key.description == "Age of the user"
     assert isinstance(age_value, selector.NumberSelector)
     assert age_value.config["min"] == 0
@@ -207,7 +207,7 @@ async def test_generate_data_service_structure_fields(
                     "selector": {"invalid-selector": {}},
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"Unknown selector type invalid-selector.*",
         ),
         (
@@ -223,7 +223,7 @@ async def test_generate_data_service_structure_fields(
                     },
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"not a valid option.*",
         ),
         (
@@ -234,12 +234,12 @@ async def test_generate_data_service_structure_fields(
                     ),
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"required key not provided.*selector.*",
         ),
-        (12345, vol.Invalid, r"xpected a mapping.*"),
-        ("name", vol.Invalid, r"xpected a mapping.*"),
-        (["name"], vol.Invalid, r"xpected a mapping.*"),
+        (12345, probatio.Invalid, r"xpected a mapping.*"),
+        ("name", probatio.Invalid, r"xpected a mapping.*"),
+        (["name"], probatio.Invalid, r"xpected a mapping.*"),
         (
             {
                 "name": {
@@ -250,7 +250,7 @@ async def test_generate_data_service_structure_fields(
                     "extra-fields": "Some extra fields",
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"not a valid option .*",
         ),
         (
@@ -262,7 +262,7 @@ async def test_generate_data_service_structure_fields(
                     "selector": "invalid-schema",
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"xpected a dictionary.*",
         ),
     ],

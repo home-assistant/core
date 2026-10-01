@@ -148,6 +148,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
         self._attr_source = self._current_source
         self._attr_source_list = sorted(self._source_list)
+        self._attr_app_id = tv_state.current_app_id
 
         self._attr_media_content_type = None
         if tv_state.current_app_id == LIVE_TV_APP_ID:
@@ -201,6 +202,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         tv_state = self._client.tv_state
         source_list = self._source_list
         self._source_list = {}
+        self._current_source = None
         conf_sources = self._sources
 
         found_live_tv = False

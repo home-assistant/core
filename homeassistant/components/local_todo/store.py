@@ -24,7 +24,7 @@ class LocalTodoListStore:
         """Load the calendar from disk."""
         if not self._path.exists():
             return ""
-        return self._path.read_text()
+        return self._path.read_text(encoding="utf-8")
 
     async def async_store(self, ics_content: str) -> None:
         """Persist the calendar to storage."""
@@ -33,4 +33,4 @@ class LocalTodoListStore:
 
     def _store(self, ics_content: str) -> None:
         """Persist the calendar to storage."""
-        self._path.write_text(ics_content)
+        self._path.write_text(ics_content, encoding="utf-8")

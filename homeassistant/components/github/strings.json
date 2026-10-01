@@ -67,6 +67,10 @@
       "latest_release": {
         "name": "Latest release"
       },
+      "latest_release_downloads": {
+        "name": "Latest release downloads",
+        "unit_of_measurement": "downloads"
+      },
       "latest_tag": {
         "name": "Latest tag"
       },
