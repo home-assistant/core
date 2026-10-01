@@ -209,26 +209,40 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 self._attr_native_target_temperature = float(round(temperature))
 
         current_mode = self._attr_hvac_mode
+        last_extra_data = await self.async_get_last_extra_data()
+        restored = (
+            _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
+            if last_extra_data is not None
+            else None
+        )
         if current_mode is not None and current_mode is not HVACMode.OFF:
             self._last_active_hvac_mode = current_mode
-        elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
-            restored = last_extra_data.as_dict()
-            data = _GreeAcExtraStoredData.from_dict(restored)
-            last_active_hvac_mode: str | None
-            if data is not None:
-                last_active_hvac_mode = data.last_active_hvac_mode
-            else:
-                # Saved before 2026.11 without the temperatures, remove in 2027.5
-                last_active_hvac_mode = restored.get("last_active_hvac_mode")
-            if isinstance(last_active_hvac_mode, str) and last_active_hvac_mode in (
-                mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
-            ):
-                self._last_active_hvac_mode = HVACMode(last_active_hvac_mode)
-            if data is not None and self._supports_options:
-                self._state.turbo = data.turbo
-                self._state.light = data.light
-                self._state.health = data.health
-                self._state.xfan = data.xfan
+        elif restored is not None and restored.last_active_hvac_mode in (
+            mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
+        ):
+            self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+        elif (
+            last_extra_data is not None
+            and isinstance(
+                last_active_hvac_mode := last_extra_data.as_dict().get(
+                    "last_active_hvac_mode"
+                ),
+                str,
+            )
+            and last_active_hvac_mode
+            in (
+                mode.value
+                for mode in self._attr_hvac_modes
+                if mode is not HVACMode.OFF
+            )
+        ):
+            # Saved before 2026.11 without the temperatures, remove in 2027.5
+            self._last_active_hvac_mode = HVACMode(last_active_hvac_mode)
+        if restored is not None and self._supports_options:
+            self._state.turbo = restored.turbo
+            self._state.light = restored.light
+            self._state.health = restored.health
+            self._state.xfan = restored.xfan
         for switch in tuple(self._state.switches):
             switch.async_write_ha_state()
 
