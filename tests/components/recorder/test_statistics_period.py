@@ -195,16 +195,16 @@ def test_mean_period_statement_requires_mean_type() -> None:
         pytest.param(None, False, id="all-sensors"),
     ],
 )
-def test_latest_start_statement_cache_key(
+def test_start_end_statement_cache_key(
     metadata_ids: list[int] | None, same_key: bool
 ) -> None:
-    """The latest-timestamp query must track the presence of the sensor filter."""
-    baseline = statistics._generate_latest_statistics_start_stmt(
-        [1]
-    )._generate_cache_key()
-    actual = statistics._generate_latest_statistics_start_stmt(
+    """The range query must track the presence of the sensor filter."""
+    baseline = statistics._generate_statistics_start_end_stmt([1])._generate_cache_key()
+
+    actual = statistics._generate_statistics_start_end_stmt(
         metadata_ids
     )._generate_cache_key()
+
     assert baseline is not None
     assert actual is not None
     assert (actual == baseline) is same_key
@@ -483,6 +483,93 @@ async def test_period_query_unbounded_sensor_filter(
         )
     assert execute.call_count == queries
     assert [(row.metadata_id, row.sum) for row in rows] == expected
+
+
+async def test_period_query_unbounded_clips_to_available_range(
+    statistics_session: Session,
+) -> None:
+    """Clip an unbounded request to the selected statistics' available range."""
+    start = datetime(2020, 1, 1, tzinfo=dt_util.UTC)
+    data_start = start + timedelta(days=1200, hours=12)
+
+    statistics_session.add(
+        Statistics(
+            metadata_id=3,
+            start_ts=data_start.timestamp(),
+            sum=20.0,
+        )
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "execute_stmt_lambda_element",
+        wraps=execute_stmt_lambda_element,
+    ) as execute:
+        rows = statistics._get_statistics_period_rows(
+            statistics_session,
+            start,
+            None,
+            [3],
+            statistics.reduce_day_ts_factory()[1],
+            {"sum"},
+            4000,
+        )
+
+    # One MIN/MAX range query and one period query.
+    assert execute.call_count == 2
+    assert [(row.metadata_id, row.sum) for row in rows] == [(3, 20.0)]
+
+
+async def test_period_query_unbounded_clips_to_period_start(
+    statistics_session: Session,
+) -> None:
+    """Clip an unbounded request to the start of the first available period."""
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+    first_statistic = start + timedelta(days=10, hours=12)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=3,
+                start_ts=first_statistic.timestamp(),
+                sum=10.0,
+            ),
+            Statistics(
+                metadata_id=3,
+                start_ts=(first_statistic + timedelta(hours=6)).timestamp(),
+                sum=20.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_generate_statistics_period_stmt",
+        wraps=statistics._generate_statistics_period_stmt,
+    ) as generate_period_stmt:
+        rows = statistics._get_statistics_period_rows(
+            statistics_session,
+            start,
+            None,
+            [3],
+            statistics.reduce_day_ts_factory()[1],
+            {"sum"},
+            4000,
+        )
+
+    assert generate_period_stmt.call_count == 1
+
+    period_bounds = generate_period_stmt.call_args.args[1]
+    assert period_bounds == (
+        (
+            (start + timedelta(days=10)).timestamp(),
+            (start + timedelta(days=11)).timestamp(),
+        ),
+    )
+
+    assert [(row.metadata_id, row.sum) for row in rows] == [(3, 20.0)]
 
 
 @pytest.mark.parametrize(

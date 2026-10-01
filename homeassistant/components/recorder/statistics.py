@@ -1590,20 +1590,34 @@ def _generate_statistics_period_stmt(
     )
 
 
-def _generate_latest_statistics_start_stmt(
+def _generate_statistics_start_end_stmt(
     metadata_ids: list[int] | None,
 ) -> StatementLambdaElement:
-    """Find the last timestamp for the requested statistics."""
+    """Find the first and last timestamp for the requested statistics."""
     if metadata_ids is None:
-        return lambda_stmt(lambda: select(func.max(Statistics.start_ts)))
-    # Group by metadata_id to allow an index-only lookup per statistic.
-    latest_per_id = (
-        select(func.max(Statistics.start_ts).label("start_ts"))
+        return lambda_stmt(
+            lambda: select(
+                func.min(Statistics.start_ts),
+                func.max(Statistics.start_ts),
+            )
+        )
+
+    range_per_id = (
+        select(
+            func.min(Statistics.start_ts).label("first_ts"),
+            func.max(Statistics.start_ts).label("last_ts"),
+        )
         .where(Statistics.metadata_id.in_(metadata_ids))
         .group_by(Statistics.metadata_id)
         .subquery()
     )
-    return lambda_stmt(lambda: select(func.max(latest_per_id.c.start_ts)))
+
+    return lambda_stmt(
+        lambda: select(
+            func.min(range_per_id.c.first_ts),
+            func.max(range_per_id.c.last_ts),
+        )
+    )
 
 
 def _get_statistics_period_rows(
@@ -1639,14 +1653,23 @@ def _get_statistics_period_rows(
         start_ts = start_time.timestamp()
         if end_time is None:
             # Include future imported statistics as well as the current period.
-            latest = cast(
+            available_range = cast(
                 Sequence[Row],
                 execute_stmt_lambda_element(
-                    session, _generate_latest_statistics_start_stmt(ids), orm_rows=False
+                    session,
+                    _generate_statistics_start_end_stmt(ids),
+                    orm_rows=False,
                 ),
             )
-            if (last_ts := latest[0][0]) is None or last_ts < start_ts:
+            first_ts, last_ts = available_range[0]
+
+            if first_ts is None or last_ts is None or last_ts < start_ts:
                 continue
+
+            start_ts = max(
+                start_ts,
+                period_start_end(first_ts)[0],
+            )
             end_ts = period_start_end(last_ts)[1]
         else:
             end_ts = end_time.timestamp()
