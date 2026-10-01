@@ -12,6 +12,7 @@ from infrared_protocols.commands.gree_ac import (
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.gree_infrared import climate as gree_climate
 from homeassistant.components.gree_infrared.const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
@@ -425,7 +426,7 @@ async def test_restore_switches_when_previously_active(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_infrared_emitter_entity.send_command_calls == []
-    state = hass.data[DOMAIN][mock_config_entry.entry_id]
+    state = mock_config_entry.runtime_data
     assert (state.turbo, state.light, state.health, state.xfan) == (
         True,
         False,
@@ -445,6 +446,86 @@ async def test_restore_switches_when_previously_active(
         True,
         True,
     )
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+async def test_switches_restore_when_added_before_climate(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Switches become available and restore flags regardless of platform order."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE, HVACMode.OFF, {ATTR_TEMPERATURE: 24}),
+                {
+                    "last_active_hvac_mode": HVACMode.COOL.value,
+                    "turbo": True,
+                    "light": False,
+                    "health": True,
+                    "xfan": True,
+                },
+            )
+        ],
+    )
+
+    climate_gate = asyncio.Event()
+    original_climate_setup = gree_climate.async_setup_entry
+
+    async def delayed_climate_setup(hass, entry, async_add_entities):
+        await climate_gate.wait()
+        await original_climate_setup(hass, entry, async_add_entities)
+
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(gree_climate, "async_setup_entry", delayed_climate_setup):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(mock_config_entry.entry_id)
+        )
+
+        registry = er.async_get(hass)
+        for _ in range(1000):
+            if all(
+                (
+                    (
+                        entity_id := registry.async_get_entity_id(
+                            "switch", DOMAIN, f"{ENTRY_ID}_{key}"
+                        )
+                    )
+                    is not None
+                    and (state := hass.states.get(entity_id)) is not None
+                    and state.state == STATE_UNAVAILABLE
+                )
+                for key in ("turbo", "light", "health", "xfan")
+            ):
+                break
+            await asyncio.sleep(0)
+        else:
+            pytest.fail("switches were not added while climate was gated")
+
+        # Climate is still gated, so the switches must stay unavailable.
+        assert [
+            hass.states.get(_option_entity_id(hass, key)).state
+            for key in ("turbo", "light", "health", "xfan")
+        ] == [STATE_UNAVAILABLE] * 4
+
+        climate_gate.set()
+        await setup_task
+
+    await hass.async_block_till_done()
+
+    assert [
+        hass.states.get(_option_entity_id(hass, key)).state
+        for key in ("turbo", "light", "health", "xfan")
+    ] == ["on", "off", "on", "on"]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -551,12 +632,12 @@ async def test_two_entries_keep_independent_options(
         {ATTR_ENTITY_ID: _option_entity_id(hass, "turbo")},
         blocking=True,
     )
-    second_climate = hass.data[DOMAIN][second.entry_id].climate
+    second_climate = second.runtime_data.climate
     assert second_climate is not None
     await second_climate.async_set_hvac_mode(HVACMode.COOL)
     assert _last_command(second_emitter).turbo is False
     assert mock_infrared_emitter_entity.send_command_calls == []
-    assert hass.data[DOMAIN][second.entry_id].turbo is False
+    assert second.runtime_data.turbo is False
 
 
 @pytest.mark.usefixtures("init_integration")
