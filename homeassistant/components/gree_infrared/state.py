@@ -1,9 +1,9 @@
 """Assumed Gree state shared within one config entry."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import TYPE_CHECKING
+
+from homeassistant.core import callback
 
 if TYPE_CHECKING:
     from .climate import GreeAcClimateEntity
@@ -22,3 +22,9 @@ class GreeAcState:
         self.climate: GreeAcClimateEntity | None = None
         self.switches: list[GreeAcOptionSwitch] = []
         self.command_lock = asyncio.Lock()
+
+    @callback
+    def async_notify_switches(self) -> None:
+        """Refresh every switch listening to this entry's state."""
+        for switch in tuple(self.switches):
+            switch.async_write_ha_state()
