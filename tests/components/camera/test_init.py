@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from http import HTTPStatus
 import io
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 from aiohttp import hdrs
@@ -17,6 +18,7 @@ from homeassistant.components.camera.const import (
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera.prefs import get_dynamic_camera_stream_settings
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -499,6 +501,64 @@ async def test_websocket_update_orientation_prefs(
     msg = await client.receive_json()
     # orientation entry for this camera should have been added
     assert msg["result"]["orientation"] == camera.Orientation.ROTATE_180
+
+
+@pytest.mark.usefixtures("mock_camera_with_device", "mock_camera")
+async def test_prefs_follow_entity_id_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test camera preferences move with the camera when its entity_id changes."""
+    old_entity_id = entity_registry.async_get_entity_id(DOMAIN, "demo", "Demo camera")
+    assert old_entity_id
+    new_entity_id = "camera.renamed"
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "camera/update_prefs",
+            "entity_id": old_entity_id,
+            "preload_stream": True,
+            "orientation": camera.Orientation.ROTATE_180,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    # The same object is handed to the camera's Stream
+    stream_settings = await get_dynamic_camera_stream_settings(hass, old_entity_id)
+
+    entity_registry.async_update_entity(old_entity_id, new_entity_id=new_entity_id)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(new_entity_id)
+
+    await client.send_json_auto_id(
+        {"type": "camera/get_prefs", "entity_id": new_entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["result"] == {
+        PREF_PRELOAD_STREAM: True,
+        PREF_ORIENTATION: camera.Orientation.ROTATE_180,
+    }
+    assert hass_storage[DOMAIN]["data"] == {new_entity_id: {PREF_PRELOAD_STREAM: True}}
+
+    await client.send_json_auto_id(
+        {
+            "type": "camera/update_prefs",
+            "entity_id": new_entity_id,
+            "preload_stream": False,
+            "orientation": camera.Orientation.ROTATE_LEFT,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    # Updates through the new entity_id reach the running stream
+    assert stream_settings == camera.DynamicStreamSettings(
+        preload_stream=False, orientation=camera.Orientation.ROTATE_LEFT
+    )
+    assert (
+        await get_dynamic_camera_stream_settings(hass, new_entity_id) is stream_settings
+    )
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
