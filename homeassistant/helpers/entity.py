@@ -54,6 +54,7 @@ from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.async_ import wait_shared_future
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er
@@ -1486,7 +1487,7 @@ class Entity(
         or if force_remove=True, its state will be removed.
         """
         if self.__remove_future is not None:
-            await self.__remove_future
+            await wait_shared_future(self.__remove_future)
             return
 
         self.__remove_future = self.hass.loop.create_future()
@@ -1637,6 +1638,16 @@ class Entity(
             self.__group.async_will_remove_from_hass()
 
     @callback
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move bookkeeping from old_entity_id to the new self.entity_id.
+
+        Called after the entity was removed under old_entity_id, before it is
+        added again under the new entity_id.
+
+        Not to be extended by integrations.
+        """
+
+    @callback
     def _async_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
@@ -1662,9 +1673,6 @@ class Entity(
         if data["action"] != "update":
             return
 
-        if "device_id" in data["changes"]:
-            self._async_subscribe_device_updates()
-
         # Invalidate friendly name cache if relevant fields changed
         changes = data["changes"]
         if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
@@ -1675,6 +1683,9 @@ class Entity(
         registry_entry = ent_reg.async_get(data["entity_id"])
         assert registry_entry is not None
         self.registry_entry = registry_entry
+
+        if "device_id" in changes:
+            self._async_subscribe_device_updates()
 
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
@@ -1691,9 +1702,11 @@ class Entity(
             self.async_write_ha_state()
             return
 
+        old_entity_id = self.entity_id
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
+        self.async_internal_entity_id_changed(old_entity_id)
 
         # Clear the remove future to handle entity added again after entity id change
         self.__remove_future = None
