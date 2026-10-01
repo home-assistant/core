@@ -1,13 +1,9 @@
 """Tests for the Daikin Onecta API client."""
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-from daikin_onecta import OnectaApiError
-from daikin_onecta import OnectaConnectionError
-from daikin_onecta import OnectaRateLimitError
+from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
 from daikin_onecta.rate_limit import RateLimit
+import pytest
 from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
