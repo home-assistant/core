@@ -97,7 +97,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

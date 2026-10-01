@@ -1,5 +1,6 @@
 """Common tests for HomematicIP devices."""
 
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -24,7 +25,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 391
+    assert len(mock_hap.hmip_device_by_entity_id) == 392
 
 
 async def test_hmip_remove_device(
@@ -364,3 +365,57 @@ async def test_hmip_unknown_device_type(
         state = hass.states.get(entry.entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
+
+
+def _entity_handlers(handlers: list[Callable[..., Any]], entity_id: str) -> list[Any]:
+    """Return the handlers bound to the entity with the given entity_id."""
+    return [
+        handler
+        for handler in handlers
+        if getattr(getattr(handler, "__self__", None), "entity_id", None) == entity_id
+    ]
+
+
+async def test_hmip_entity_removal_removes_device_callbacks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test removing an entity drops its device handlers and mapping."""
+    entity_id = "switch.schrank"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Schrank"]
+    )
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    assert len(_entity_handlers(hmip_device._on_update, entity_id)) == 1
+    assert len(_entity_handlers(hmip_device._on_remove, entity_id)) == 1
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert _entity_handlers(hmip_device._on_update, entity_id) == []
+    assert _entity_handlers(hmip_device._on_remove, entity_id) == []
+    assert entity_id not in mock_hap.hmip_device_by_entity_id
+
+
+async def test_hmip_entity_id_change_keeps_single_device_callbacks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test an entity_id change re-keys the mapping without duplicate handlers."""
+    entity_id = "switch.schrank"
+    new_entity_id = "switch.renamed"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Schrank"]
+    )
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+
+    # Changing the entity_id removes and re-adds the same entity object.
+    entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    assert entity_id not in mock_hap.hmip_device_by_entity_id
+    assert mock_hap.hmip_device_by_entity_id[new_entity_id] is hmip_device
+    assert len(_entity_handlers(hmip_device._on_update, new_entity_id)) == 1
+    assert len(_entity_handlers(hmip_device._on_remove, new_entity_id)) == 1

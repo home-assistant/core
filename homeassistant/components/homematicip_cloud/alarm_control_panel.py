@@ -192,6 +192,9 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._home.on_update(self._async_device_changed)
+        self.async_on_remove(
+            lambda: self._home.remove_callback(self._async_device_changed)
+        )
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:

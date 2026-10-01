@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -244,7 +244,10 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
                         # No-op: IP unchanged and the running integration already
                         # proves it works. Skip the reload to avoid a needless
                         # reconnect.
-                        return self.async_abort(reason="reconfigure_successful")
+                        return self.async_abort(
+                            reason="reconfigure_successful",
+                            translation_domain=HOMEASSISTANT_DOMAIN,
+                        )
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
                         data_updates={CONF_IP_ADDRESS: new_ip},

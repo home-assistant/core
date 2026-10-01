@@ -30,7 +30,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_PORT): probatio.Port(),
             }
         )
     },

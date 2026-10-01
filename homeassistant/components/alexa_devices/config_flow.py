@@ -25,19 +25,19 @@ from .const import CONF_LOGIN_DATA, DOMAIN
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_CODE): cv.string,
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_CODE): cv.string,
     }
 )
 STEP_RECONFIGURE = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_CODE): cv.string,
     }
 )

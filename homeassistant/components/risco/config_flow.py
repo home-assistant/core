@@ -45,15 +45,15 @@ _LOGGER = logging.getLogger(__name__)
 CLOUD_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 LOCAL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=1000): int,
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 HA_STATES = [

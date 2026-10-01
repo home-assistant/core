@@ -39,7 +39,7 @@ on:
 env:
   CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.10"
+  HA_SHORT_VERSION: "2026.11"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
   # - 10.3 and 10.6 are the versions currently phased out until 2027.3
@@ -52,11 +52,9 @@ env:
   # and some queries that work on MariaDB do not work on MySQL
   MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.11.2','mariadb:11.4.9','mariadb:11.8.8','mariadb:12.3.3','mysql:8.0.32']"
   # 12 is the oldest supported version
-  # - 12.22 is the latest (as of 19 Aug 2026)
   # 15 is a supported version
-  # - 15.19 is the latest (as of 19 Aug 2026)
   # 18 is the latest version
-  # - 18.6 is the latest (as of 19 Aug 2026)
+  # Renovate keeps each entry on the latest release of its major version
   POSTGRESQL_VERSIONS: "['postgres:12.22','postgres:15.19', 'postgres:18.6']"
   # 3.40.1 is the oldest supported version (recorder MIN_VERSION_SQLITE),
   # shipped in Debian 12 (bookworm)
@@ -134,12 +132,7 @@ jobs:
           filters: .core_files.yaml
       - name: Create a list of integrations to filter for changes
         run: |
-          integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
-          touch .integration_paths.yaml
-          for integration in $integrations; do
-            echo "${integration}: [homeassistant/components/${integration}/**, tests/components/${integration}/**]" \
-              >> .integration_paths.yaml;
-          done
+          python3 -m script.gen_integration_paths
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
@@ -349,7 +342,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e
+        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
         with:
           args: hadolint ${{ matrix.file }}
 
@@ -762,7 +755,7 @@ jobs:
         || contains(fromJSON(needs.info.outputs.core), 'benchmarks'))
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Set up Python and restore venv
@@ -775,7 +768,7 @@ jobs:
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@a4a36bb07c0638b0b4ca52bf1f3dad1b4289e52f # v4.18.1
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
@@ -825,13 +818,15 @@ jobs:
           path: pytest_test_counts.json
           # Primary key is a sentinel; restore-keys pick the most recent
           # prefix match since the real (content-addressed) key isn't
-          # known until split_tests.py runs below.
+          # known until split_tests.py runs below. The keys leave out the
+          # requirements: split_tests.py recounts a file when it or a conftest
+          # or helper module on its path changes, and a count that shifts with
+          # a library update only makes the buckets slightly uneven.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
-            steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-restore-sentinel
+            steps.python.outputs.python-version }}-restore-sentinel
           restore-keys: |
-            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
@@ -859,7 +854,6 @@ jobs:
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-${{
             steps.cache-pytest-counts-hash.outputs.hash }}
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -950,7 +944,7 @@ jobs:
             --timeout=9 \
             --durations=0 \
             --durations-min=1 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
@@ -1366,7 +1360,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
-            --numprocesses auto \
+            --numprocesses logical \
             --dist=loadfile \
             --snapshot-details \
             -o console_output_style=count \
@@ -1505,7 +1499,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
