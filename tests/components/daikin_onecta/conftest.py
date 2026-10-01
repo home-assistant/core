@@ -35,7 +35,7 @@ FAKE_AUTH_IMPL = "conftest-imported-cred"
 
 
 def load_fixture_json(name):
-    with open(f"tests/fixtures/{name}.json") as json_file:
+    with open(f"tests/components/daikin_onecta/fixtures/{name}.json") as json_file:
         data = json.load(json_file)
         return data
 
@@ -56,6 +56,20 @@ async def resolve_system_health_coroutines(info: dict) -> dict:
     return info
 
 
+@pytest.fixture(autouse=True)
+def mock_system_health_url_checks():
+    """Prevent unit tests from starting external system health URL checks."""
+    with patch(
+        "homeassistant.components.daikin_onecta.system_health.system_health.async_check_can_reach_url",
+        new_callable=MagicMock,
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="auto_enable_custom_integrations", autouse=True)
+def auto_enable_custom_integrations(hass: Any, enable_custom_integrations: Any) -> None:
+    """Enable custom integrations defined in the test dir."""
 
 
 @pytest.mark.freeze_time("2026-01-01 12:00:00+00:00")
