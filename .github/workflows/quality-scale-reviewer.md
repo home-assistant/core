@@ -159,7 +159,7 @@ jobs:
           set -euo pipefail
           MARKER='<!-- quality-scale-reviewer-too-long -->'
           if gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '.[].body' \
-              | grep -qF "${MARKER}"; then
+              | grep -F "${MARKER}" >/dev/null; then
             echo "Comment already posted on PR #${PR_NUMBER}"
             exit 0
           fi
