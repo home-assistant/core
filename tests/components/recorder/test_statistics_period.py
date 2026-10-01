@@ -1256,6 +1256,15 @@ async def test_circular_mean_uses_fast_path(
 
 
 @pytest.mark.parametrize(
+    "period",
+    [
+        pytest.param("day", id="day"),
+        pytest.param("week", id="week"),
+        pytest.param("month", id="month"),
+        pytest.param("year", id="year"),
+    ],
+)
+@pytest.mark.parametrize(
     "statistic_ids",
     [
         pytest.param(None, id="all-statistics"),
@@ -1268,6 +1277,7 @@ async def test_circular_mean_uses_fast_path(
 async def test_mixed_mean_types_use_fast_path(
     statistics_session: Session,
     hass: HomeAssistant,
+    period: Literal["day", "week", "month", "year"],
     statistic_ids: set[str] | None,
 ) -> None:
     """Reduce mixed mean types with separate optimized queries."""
@@ -1331,7 +1341,7 @@ async def test_mixed_mean_types_use_fast_path(
             start,
             start + timedelta(days=1),
             statistic_ids,
-            "day",
+            period,
             None,
             {"mean"},
         )
@@ -1339,6 +1349,70 @@ async def test_mixed_mean_types_use_fast_path(
     assert optimized.call_count == 2
     assert result["test:statistic_1"][0]["mean"] == pytest.approx(15.0)
     assert result["test:statistic_2"][0]["mean"] == pytest.approx(5.0)
+
+
+async def test_circular_mean_with_missing_weight_matches_legacy(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Treat missing circular mean weights as zero."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.CIRCULAR,
+            StatisticsMeta.unit_class: None,
+            StatisticsMeta.unit_of_measurement: None,
+            StatisticsMeta.has_sum: False,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=350.0,
+                mean_weight=None,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                mean_weight=None,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        side_effect=_unoptimized_statistics,
+    ):
+        expected = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            None,
+            {"mean"},
+        )
+
+    actual = statistics._statistics_during_period_with_session(
+        hass,
+        statistics_session,
+        start,
+        start + timedelta(days=1),
+        {"test:statistic_1"},
+        "day",
+        None,
+        {"mean"},
+    )
+
+    assert actual == expected
 
 
 @pytest.mark.parametrize(

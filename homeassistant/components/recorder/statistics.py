@@ -156,8 +156,9 @@ def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
     # in Python.
     # https://en.wikipedia.org/wiki/Circular_mean
     radians = func.radians(table.mean)
-    weighted_sum_sin = func.sum(func.sin(radians) * table.mean_weight)
-    weighted_sum_cos = func.sum(func.cos(radians) * table.mean_weight)
+    mean_weight = func.coalesce(table.mean_weight, 0.0)
+    weighted_sum_sin = func.sum(func.sin(radians) * mean_weight)
+    weighted_sum_cos = func.sum(func.cos(radians) * mean_weight)
     weight = func.sqrt(
         func.power(weighted_sum_sin, 2) + func.power(weighted_sum_cos, 2)
     )
