@@ -1398,7 +1398,9 @@ class EntityPlatform:
                 # and its claim must still win - otherwise this stale cycle
                 # would poll the entity a second time right after it.
                 existing = self._polling_tasks.get(id(entity))
-                if existing is not None and existing[0] > cycle_id:
+                if existing is not None and (
+                    existing[0] > cycle_id or not existing[1].done()
+                ):
                     continue
                 task = create_eager_task(
                     entity.async_update_ha_state(True), loop=self.hass.loop
