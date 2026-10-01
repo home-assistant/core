@@ -10,6 +10,7 @@ from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
+from habluetooth.const import STRONG_OWNER_STALE_RSSI
 import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -79,9 +80,6 @@ from .helpers import (
     cloud_energy_site,
 )
 from .models import TeslemetryEnergyData
-
-# habluetooth treats an advertisement this strong as a close device (STRONG_OWNER_STALE_RSSI).
-STRONG_RSSI = -70
 
 
 class PowerwallSetupError(Exception):
@@ -334,7 +332,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                             errors["base"] = "device_not_found"
                         elif isinstance(cause, BleakOutOfConnectionSlotsError):
                             errors["base"] = "no_connection_slot"
-                        elif last_info.rssi >= STRONG_RSSI:
+                        # habluetooth treats this signal as a close device, so the timeout is not about range.
+                        elif last_info.rssi >= STRONG_OWNER_STALE_RSSI:
                             errors["base"] = "vehicle_busy"
                         else:
                             errors["base"] = "weak_signal"
