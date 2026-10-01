@@ -384,11 +384,12 @@ class FakeInput:
     async def settle(self, *, wait_for_executor: bool = True) -> None:
         """Wait until everything emitted so far has been handled.
 
-        Done once no executor job is pending, no callback is scheduled and
-        every task is blocked on something, like a queue or a timer. Executor jobs started from
-        background tasks are invisible to async_block_till_done, so they are
-        waited for separately. Pass wait_for_executor=False while a test holds
-        an executor job, which would otherwise be waited for.
+        Done once no executor job is pending and no callback is scheduled, so
+        every task is blocked on something, like a queue or a timer. Executor
+        jobs started from background tasks are invisible to
+        async_block_till_done, so they are waited for separately. Pass
+        wait_for_executor=False while a test holds an executor job, which would
+        otherwise be waited for.
         """
         for _ in range(10_000):
             if wait_for_executor:
@@ -418,17 +419,9 @@ class FakeInput:
         ]
 
     def _idle(self) -> bool:
-        # Scheduled callbacks, like a finished task waking its waiter, are
-        # work that no task shows yet
-        if self._queued() or self.hass.loop._ready:  # type: ignore[attr-defined]
-            return False
-        for task in self._tasks():
-            if isinstance(task, asyncio.Task) and not task.done():
-                # A runnable task, or one only yielding, has no pending waiter
-                waiter = task._fut_waiter  # type: ignore[attr-defined]
-                if waiter is None or waiter.done():
-                    return False
-        return True
+        # Every runnable task, and every finished future waking its waiter,
+        # has a callback scheduled
+        return not self._queued() and not self.hass.loop._ready  # type: ignore[attr-defined]
 
     def _queued(self) -> bool:
         if self.inotify is not None and not self.inotify.queue.empty():

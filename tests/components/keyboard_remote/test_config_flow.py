@@ -656,50 +656,55 @@ async def test_import_already_configured(
     assert result["reason"] == "already_configured"
 
 
-def _legacy_import_entry(import_data: dict[str, str], name: str) -> MockConfigEntry:
+LEGACY_DESCRIPTOR_DATA = {
+    CONF_DEVICE_PATH: FAKE_DEVICE_REAL_PATH,
+    CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+}
+LEGACY_IMPORTS = [
+    # The device was unplugged at the first import, so its name is unknown
+    pytest.param(
+        {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+        FAKE_DEVICE_REAL_PATH,
+        {**LEGACY_DESCRIPTOR_DATA, CONF_DEVICE_NAME: FAKE_DEVICE_REAL_PATH},
+        id="descriptor",
+    ),
+    pytest.param(
+        {"device_name": FAKE_DEVICE_NAME},
+        FAKE_DEVICE_NAME,
+        {CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        id="name",
+    ),
+]
+
+
+def _legacy_import_entry(unique_id: str, data: dict[str, str]) -> MockConfigEntry:
     """Create an entry as imported from YAML before the device had a link."""
-    if descriptor := import_data.get("device_descriptor"):
-        data = {
-            CONF_DEVICE_PATH: descriptor,
-            CONF_DEVICE_NAME: name,
-            CONF_DEVICE_DESCRIPTOR: descriptor,
-        }
-    else:
-        data = {CONF_DEVICE_NAME: name}
     return MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_IMPORT,
-        unique_id=descriptor or name,
-        title=name,
+        unique_id=unique_id,
+        title=data[CONF_DEVICE_NAME],
         data=data,
     )
 
 
 @pytest.mark.parametrize(
-    ("import_data", "first_name"),
-    [
-        # The device was unplugged at the first import, so its name is unknown
-        pytest.param(
-            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
-            FAKE_DEVICE_REAL_PATH,
-            id="descriptor",
-        ),
-        pytest.param({"device_name": FAKE_DEVICE_NAME}, FAKE_DEVICE_NAME, id="name"),
-    ],
+    ("import_data", "legacy_unique_id", "legacy_data"), LEGACY_IMPORTS
 )
 async def test_import_adopts_entry_created_before_by_id_existed(
     hass: HomeAssistant,
     fake_input: FakeInput,
     mock_setup_entry: AsyncMock,
     import_data: dict[str, str],
-    first_name: str,
+    legacy_unique_id: str,
+    legacy_data: dict[str, str],
 ) -> None:
     """Test a re-import moves the earlier entry onto the device's by-id link.
 
     The first import can run before udev created the link, which leaves the
     entry keyed by the raw descriptor or name.
     """
-    existing = _legacy_import_entry(import_data, first_name)
+    existing = _legacy_import_entry(legacy_unique_id, legacy_data)
     existing.add_to_hass(hass)
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
 
@@ -732,7 +737,10 @@ async def test_import_adoption_refreshes_fallback_title(
     A title the user has changed since is kept.
     """
     import_data = {"device_descriptor": FAKE_DEVICE_REAL_PATH}
-    existing = _legacy_import_entry(import_data, FAKE_DEVICE_REAL_PATH)
+    existing = _legacy_import_entry(
+        FAKE_DEVICE_REAL_PATH,
+        {**LEGACY_DESCRIPTOR_DATA, CONF_DEVICE_NAME: FAKE_DEVICE_REAL_PATH},
+    )
     existing.add_to_hass(hass)
     hass.config_entries.async_update_entry(existing, title=title)
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
@@ -743,15 +751,7 @@ async def test_import_adoption_refreshes_fallback_title(
 
 
 @pytest.mark.parametrize(
-    ("import_data", "first_name"),
-    [
-        pytest.param(
-            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
-            FAKE_DEVICE_REAL_PATH,
-            id="descriptor",
-        ),
-        pytest.param({"device_name": FAKE_DEVICE_NAME}, FAKE_DEVICE_NAME, id="name"),
-    ],
+    ("import_data", "legacy_unique_id", "legacy_data"), LEGACY_IMPORTS
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_does_not_adopt_onto_a_taken_unique_id(
@@ -759,7 +759,8 @@ async def test_import_does_not_adopt_onto_a_taken_unique_id(
     fake_input: FakeInput,
     mock_config_entry: MockConfigEntry,
     import_data: dict[str, str],
-    first_name: str,
+    legacy_unique_id: str,
+    legacy_data: dict[str, str],
 ) -> None:
     """Test the legacy entry is left alone when the by-id ID is already in use.
 
@@ -767,7 +768,7 @@ async def test_import_does_not_adopt_onto_a_taken_unique_id(
     so adopting would give both entries the same unique ID.
     """
     mock_config_entry.add_to_hass(hass)
-    legacy = _legacy_import_entry(import_data, first_name)
+    legacy = _legacy_import_entry(legacy_unique_id, legacy_data)
     legacy.add_to_hass(hass)
     unique_id, data = legacy.unique_id, dict(legacy.data)
     fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
@@ -788,7 +789,10 @@ async def test_import_does_not_adopt_onto_another_device(
     entry knows the name of the device it was created for.
     """
     import_data = {"device_descriptor": FAKE_DEVICE_REAL_PATH}
-    legacy = _legacy_import_entry(import_data, "Old Keyboard")
+    legacy = _legacy_import_entry(
+        FAKE_DEVICE_REAL_PATH,
+        {**LEGACY_DESCRIPTOR_DATA, CONF_DEVICE_NAME: "Old Keyboard"},
+    )
     legacy.add_to_hass(hass)
     fake_input.add(FAKE_DEVICE_REAL_PATH, "USB Mouse", link=FAKE_DEVICE_PATH)
 
