@@ -17,7 +17,6 @@ from mcp import types
 from mcp.server import Server
 from mcp.server.lowlevel.helper_types import ReadResourceContents
 import probatio
-from probatio import to_openapi
 from pydantic import AnyUrl
 
 from homeassistant.core import HomeAssistant
@@ -44,7 +43,7 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
-    input_schema = to_openapi(
+    input_schema = probatio.to_openapi(
         tool.parameters,
         custom_serializer=custom_serializer,
         openapi_version="3.1.0",

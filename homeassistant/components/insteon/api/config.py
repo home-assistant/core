@@ -3,7 +3,6 @@
 from typing import Any, TypedDict
 
 import probatio
-from probatio import to_field_list
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
 from pyinsteon.aldb.aldb_record import ALDBRecord
@@ -216,10 +215,12 @@ async def websocket_get_modem_schema(
     config_data = config_entry.data
     if device := config_data.get(CONF_DEVICE):
         ports = await async_get_usb_ports(hass=hass)
-        plm_schema = to_field_list(build_plm_schema(ports=ports, device=device))
+        plm_schema = probatio.to_field_list(
+            build_plm_schema(ports=ports, device=device)
+        )
         connection.send_result(msg[ID], plm_schema)
     else:
-        hub_schema = to_field_list(build_hub_schema(**config_data))
+        hub_schema = probatio.to_field_list(build_hub_schema(**config_data))
         connection.send_result(msg[ID], hub_schema)
 
 
