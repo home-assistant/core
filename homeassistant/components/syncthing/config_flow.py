@@ -15,7 +15,7 @@ from .const import DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL, default=DEFAULT_URL): str,
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
         probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )

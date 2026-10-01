@@ -233,7 +233,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
                     probatio.Optional(CONF_PORT): probatio.Coerce(int),
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
@@ -253,7 +253,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
@@ -313,7 +313,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=default_username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"host": self._host},

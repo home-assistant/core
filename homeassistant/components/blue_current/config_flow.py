@@ -17,7 +17,7 @@ from homeassistant.const import CONF_API_TOKEN
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_API_TOKEN)): str})
 
 
 class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):

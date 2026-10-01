@@ -1986,6 +1986,21 @@ class ConfigEntriesFlowManager(
         return False
 
     @callback
+    def async_dismiss_discovery_flows(
+        self, init_data_type: type, matcher: Callable[[Any], bool]
+    ) -> None:
+        """Abort discovery flows for a thing that is no longer reachable.
+
+        Flows the user has started interacting with are left alone, because a
+        device often stops answering discovery precisely because it is being
+        paired.
+        """
+        for flow in self.async_progress_by_init_data_type(init_data_type, matcher):
+            if flow["context"].get("dismiss_protected"):
+                continue
+            self.async_abort(flow["flow_id"])
+
+    @callback
     def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
         """Check if an existing matching flow is in progress."""
         if not (flows := self._handler_progress_index.get(flow.handler)):
@@ -2406,8 +2421,22 @@ class ConfigEntries:
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
+        migrated_domains: set[str] = set()
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
+            entry_domain = entry["domain"]
+
+            # A custom integration that a built-in integration took over keeps its
+            # entries, they belong to the built-in domain from now on. Recovery
+            # and safe mode change nothing, they are often the way back to an
+            # older version that still knows the custom integration.
+            if (
+                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(entry_domain))
+                and not self.hass.config.recovery_mode
+                and not self.hass.config.safe_mode
+            ):
+                migrated_domains.add(entry_domain)
+                entry_domain = replacement
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2419,7 +2448,7 @@ class ConfigEntries:
                         for domain, keys in entry["discovery_keys"].items()
                     }
                 ),
-                domain=entry["domain"],
+                domain=entry_domain,
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),
@@ -2435,6 +2464,17 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+
+        if migrated_domains:
+            _LOGGER.info(
+                "Migrated config entries of %s",
+                ", ".join(
+                    f"'{domain}' to '{loader.MIGRATED_CUSTOM_INTEGRATIONS[domain]}'"
+                    for domain in sorted(migrated_domains)
+                ),
+            )
+            self._async_schedule_save()
+
         self.async_update_issues()
 
         if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:

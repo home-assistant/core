@@ -201,13 +201,12 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             connections={(dr.CONNECTION_NETWORK_MAC, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
+            hw_version=self.get_hw_version(data),
         )
 
         model_number = data.get(Attribute.MODEL_NUMBER)
         if model_number is not None:
             device_info["model"] = MODELS.get(model_number, f"Unknown ({model_number})")
-
-        device_info["hw_version"] = self.get_hw_version(data)
 
         firmware_major_revision = data.get(Attribute.FIRMWARE_MAJOR_REVISION)
         firmware_minor_revision = data.get(Attribute.FIRMWARE_MINOR_REVISION)

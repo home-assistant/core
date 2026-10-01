@@ -122,7 +122,9 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._config[CONF_HOST],
                 CONF_LOCATION: self._config[CONF_LOCATION],
             },
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
