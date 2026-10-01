@@ -30,7 +30,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MEDIA, DOMAIN
+from .const import ATTR_CURRENT_MEDIA_ID, CONF_MEDIA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,6 +249,12 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_content_type = resolved.mime_type
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {ATTR_CURRENT_MEDIA_ID: self._current_image_id}
 
     @override
     async def async_added_to_hass(self) -> None:
