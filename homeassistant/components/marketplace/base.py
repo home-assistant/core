@@ -137,7 +137,6 @@ class MarketplaceConfiguration:
 
     config_entry: MarketplaceConfigEntry
     token: str | None = None
-    debug: bool = False
     plugin_path: str = "www/community/"
     theme_path: str = "themes/"
 
@@ -186,7 +185,6 @@ class MarketplaceSystem:
     """System info of the Marketplace."""
 
     disabled_reason: DisabledReason | None = None
-    stage: MarketplaceStage = MarketplaceStage.SETUP
 
     @property
     def disabled(self) -> bool:
@@ -403,7 +401,7 @@ class MarketplaceManager:
         self.data_client = CatalogClient(session=self.session, client_name=CLIENT_NAME)
 
         self.data = MarketplaceData(marketplace=self)
-        self.queue = QueueManager(hass=hass)
+        self.queue = QueueManager()
         self.stage: MarketplaceStage | None = None
         self.common = MarketplaceCommon()
         self.critical_repositories: list[dict[str, Any]] = []
@@ -800,7 +798,7 @@ class MarketplaceManager:
             candidate.ref = probe.ref
             candidate.tree = probe.tree
             candidate.treefiles = probe.treefiles
-            if candidate.holds_content():
+            if candidate.try_resolve_content():
                 categories.append(category)
 
         return categories

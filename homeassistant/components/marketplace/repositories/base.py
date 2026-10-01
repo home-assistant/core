@@ -381,13 +381,8 @@ class RepositoryManifest:
         return attr.asdict(self)
 
     @staticmethod
-    def from_dict(manifest: dict[str, Any] | None) -> RepositoryManifest:
+    def from_dict(manifest: dict[str, Any]) -> RepositoryManifest:
         """Set attributes from dicts."""
-        if manifest is None:
-            raise MarketplaceError(
-                translation_domain=DOMAIN, translation_key="repository_manifest_missing"
-            )
-
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {}
         for key, value in manifest.items():
@@ -633,7 +628,6 @@ class Repository:
         ]:
             if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
-                self.data.update_data(self.repository_manifest.to_dict())
         else:
             # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
@@ -709,7 +703,6 @@ class Repository:
         ]:
             if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
-                self.data.update_data(self.repository_manifest.to_dict())
 
         self.additional_info = await self.async_get_readme_contents()
 
@@ -839,7 +832,7 @@ class Repository:
             )
 
         self._download_budget = MAX_DOWNLOAD_SIZE
-        download_queue = QueueManager(hass=self.marketplace.hass)
+        download_queue = QueueManager()
         for content in wanted:
             download_queue.add(self.download_repository_file(content))
 
@@ -1106,8 +1099,14 @@ class Repository:
         await self.async_pre_install()
         self.logger.info("%s Pre installation steps completed", self.string)
 
-    async def async_install(self, *, version: str | None = None) -> None:
-        """Run install steps."""
+    async def _async_install_via_github_api(
+        self, *, version: str | None = None
+    ) -> None:
+        """Run the install steps through the GitHub API.
+
+        Without the lock and the stored state, async_install_repository is
+        what installs a repository.
+        """
         await self._async_run_install(
             partial(self._async_write_version, version=version)
         )
@@ -2081,7 +2080,7 @@ class Repository:
             with self._install_failure_names_the_version(
                 ref or self.data.last_version or self.data.last_commit
             ):
-                await self.async_install(version=ref)
+                await self._async_install_via_github_api(version=ref)
         finally:
             self._end_install()
 
@@ -2090,7 +2089,8 @@ class Repository:
 
         Anonymous access to the API runs out after a handful of installs. The
         catalog already names the version, and the files come from hosts
-        without that limit. A version the user picked keeps using the API.
+        without that limit. Asked for, the version the catalog names goes
+        this way too, any other version uses the API.
         """
         if not self.marketplace.repositories.is_default(self.data.id):
             return None
@@ -2212,8 +2212,12 @@ class Repository:
         Raises MarketplaceError when the tree holds nothing to install.
         """
 
-    def holds_content(self) -> bool:
-        """Return if the tree holds content of this category, as an install finds it."""
+    def try_resolve_content(self) -> bool:
+        """Resolve the content from the tree, return if that worked.
+
+        Like an install, it points the content at what it finds, so it is
+        only for a repository that is not installed.
+        """
         try:
             self.resolve_content()
         except AppRepositoryError:

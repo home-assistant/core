@@ -35,7 +35,7 @@ STORAGE_CACHE_KEY: HassKey[dict[str, Store[Any]]] = HassKey("marketplace_storage
 
 def get_storage_key(key: str) -> str:
     """Return the key to use with homeassistant.helpers.storage.Storage."""
-    return key if "/" in key else f"{STORENAME}.{key}"
+    return f"{STORENAME}.{key}"
 
 
 def get_storage_for_key(hass: HomeAssistant, key: str) -> Store[Any]:
@@ -129,7 +129,7 @@ async def async_load_from_storage(hass: HomeAssistant, key: str) -> Any:
 async def async_save_to_storage(hass: HomeAssistant, key: str, data: Any) -> None:
     """Save the data, unless it matches what is stored already."""
     current = await async_load_from_storage(hass, key)
-    if current is None or current != data:
+    if current != data:
         await get_storage_for_key(hass, key).async_save(data)
         return
     LOGGER.debug(

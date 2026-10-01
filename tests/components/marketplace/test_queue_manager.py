@@ -7,15 +7,12 @@ import pytest
 
 from homeassistant.components.marketplace.exceptions import ExecutionInProgressError
 from homeassistant.components.marketplace.utils.queue_manager import QueueManager
-from homeassistant.core import HomeAssistant
 
 
-async def test_queue_manager(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_queue_manager(caplog: pytest.LogCaptureFixture) -> None:
     """Test adding to and executing the queue."""
     task = AsyncMock()
-    queue_manager = QueueManager(hass=hass)
+    queue_manager = QueueManager()
 
     assert not queue_manager.running
     assert not queue_manager.has_pending_tasks
@@ -38,18 +35,18 @@ async def test_queue_manager(
     assert "The queue is empty" in caplog.text
 
 
-async def test_queue_manager_already_running(hass: HomeAssistant) -> None:
+async def test_queue_manager_already_running() -> None:
     """Test executing a queue that is already being executed."""
-    queue_manager = QueueManager(hass=hass)
+    queue_manager = QueueManager()
     queue_manager.running = True
 
     with pytest.raises(ExecutionInProgressError):
         await queue_manager.execute()
 
 
-async def test_clear_during_execution(hass: HomeAssistant) -> None:
+async def test_clear_during_execution() -> None:
     """Test clearing the queue while it runs, like an unload does, finishes cleanly."""
-    queue_manager = QueueManager(hass)
+    queue_manager = QueueManager()
     started = asyncio.Event()
     release = asyncio.Event()
 

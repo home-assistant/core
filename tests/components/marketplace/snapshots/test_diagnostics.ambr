@@ -27,9 +27,6 @@
         'template',
         'theme',
       ]),
-      'configuration': dict({
-        'debug': False,
-      }),
       'disabled_reason': None,
       'github_connected': True,
       'ignored_repositories': list([

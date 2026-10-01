@@ -39,7 +39,6 @@ async def async_get_config_entry_diagnostics(
             "archived_repositories": marketplace.common.archived_repositories,
             "ignored_repositories": marketplace.common.ignored_repositories,
             "lovelace_mode": marketplace.core.lovelace_mode,
-            "configuration": {},
         },
         "custom_repositories": [
             repo.data.full_name
@@ -48,11 +47,6 @@ async def async_get_config_entry_diagnostics(
         ],
         "repositories": [],
     }
-
-    for key in ("debug",):
-        data["marketplace"]["configuration"][key] = getattr(
-            marketplace.configuration, key, None
-        )
 
     for repository in marketplace.repositories.list_installed:
         data["repositories"].append(

@@ -18,8 +18,9 @@ from .path import is_safe, resolve_in_directory
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
 
-# Next to the installed content on the same file system, so a backup is a
-# move instead of a copy, and it survives a restart in the middle of an install.
+# In .storage of the configuration directory, so it survives a restart in the
+# middle of an install. On another file system than the content, a backup is
+# copied instead of moved.
 BACKUP_DIRECTORY = "marketplace_backups"
 
 # Holds the path the backed up content belongs to, for restoring after a restart.

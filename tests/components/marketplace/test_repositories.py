@@ -121,12 +121,6 @@ def test_manifest_defaults() -> None:
     assert manifest.hide_default_branch is False
 
 
-def test_manifest_rejects_none() -> None:
-    """Test that a missing hacs.json is not silently accepted."""
-    with pytest.raises(MarketplaceError):
-        RepositoryManifest.from_dict(None)
-
-
 @pytest.mark.parametrize(
     ("key", "value"),
     [
@@ -2123,7 +2117,7 @@ async def test_template_reloads_custom_templates(
 async def installed_plugin(marketplace: MarketplaceManager) -> PluginRepository:
     """Return an installed dashboard plugin repository."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
-    await repository.async_install()
+    await repository._async_install_via_github_api()
     return repository
 
 
@@ -2213,7 +2207,7 @@ async def test_dashboard_resource_restart_issue(
     marketplace.status.created_www_directory = created_www_directory
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
 
-    await repository.async_install()
+    await repository._async_install_via_github_api()
 
     issue = issue_registry.async_get_issue(
         "marketplace", f"restart_required_{repository.data.id}_{repository.ref}"

@@ -293,13 +293,13 @@ class IntegrationRepository(Repository):
             self.async_dispatch_changed("update")
 
     @override
-    def holds_content(self) -> bool:
+    def try_resolve_content(self) -> bool:
         """Return if the tree holds an integration, a manifest.json included.
 
         With content_in_root any tree resolves, the manifest.json tells.
         """
         return (
-            super().holds_content()
+            super().try_resolve_content()
             and self._integration_manifest_path() in self.treefiles
         )
 

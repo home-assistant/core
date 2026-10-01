@@ -110,10 +110,6 @@ COMMANDS: tuple[dict[str, Any], ...] = (
     },
     {"type": "marketplace/repository/refresh", "repository": REPOSITORY_INTEGRATION_ID},
     {
-        "type": "marketplace/repository/release_notes",
-        "repository": REPOSITORY_INTEGRATION_ID,
-    },
-    {
         "type": "marketplace/repository/uninstall",
         "repository": REPOSITORY_INTEGRATION_ID,
     },
@@ -235,7 +231,6 @@ REPOSITORY_COMMANDS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     ("marketplace/repository/version", "repository", {"version": "1.0.0"}),
     ("marketplace/repository/beta", "repository", {"show_beta": True}),
     ("marketplace/repository/refresh", "repository", {}),
-    ("marketplace/repository/release_notes", "repository", {}),
     ("marketplace/repository/uninstall", "repository", {}),
     ("marketplace/repository/releases", "repository_id", {}),
     ("marketplace/repositories/remove", "repository", {}),
@@ -310,7 +305,6 @@ async def test_info(
     # The categories are a set, so they are asserted separately in their own test
     assert response["result"] | {"categories": None} == {
         "categories": None,
-        "debug": False,
         "disabled_reason": None,
         "github_connected": True,
         "has_pending_tasks": False,
@@ -1320,51 +1314,6 @@ async def test_repository_uninstall_refused_while_in_use(
 
     assert response["error"]["code"] == "repository_in_use"
     assert repository.data.installed is True
-
-
-async def test_repository_release_notes(
-    hass: HomeAssistant,
-    marketplace: MarketplaceManager,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test the release notes of the versions newer than the installed one."""
-    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.update_repository(force=True)
-    repository.data.installed_version = "0.9.0"
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "marketplace/repository/release_notes",
-            "repository": REPOSITORY_INTEGRATION_ID,
-        }
-    )
-    response = await client.receive_json()
-
-    assert response["success"]
-    assert [entry["tag"] for entry in response["result"]] == ["1.0.0"]
-
-
-async def test_repository_release_notes_when_not_installed(
-    hass: HomeAssistant,
-    marketplace: MarketplaceManager,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test that a repository that is not installed lists every release."""
-    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    await repository.update_repository(force=True)
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "marketplace/repository/release_notes",
-            "repository": REPOSITORY_INTEGRATION_ID,
-        }
-    )
-    response = await client.receive_json()
-
-    assert response["success"]
-    assert [entry["tag"] for entry in response["result"]] == ["1.0.0"]
 
 
 async def test_repository_releases(

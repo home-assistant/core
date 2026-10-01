@@ -248,9 +248,6 @@
     "repository_installed": {
       "message": "Uninstall {repository} first."
     },
-    "repository_manifest_missing": {
-      "message": "The hacs.json is missing."
-    },
     "repository_manifest_not_in_root": {
       "message": "{repository} has no hacs.json in its root, the Marketplace needs one to install it."
     },

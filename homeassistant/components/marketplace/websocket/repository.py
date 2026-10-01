@@ -21,7 +21,6 @@ from ..exceptions import (
 )
 from ..utils.logger import LOGGER
 from ..utils.validate import valid_ref
-from ..utils.version import is_newer_version
 from .decorators import (
     ERR_GITHUB_RATE_LIMITED,
     marketplace_command,
@@ -429,44 +428,6 @@ async def marketplace_repository_refresh(
     marketplace.coordinators[repository.data.category].async_update_listeners()
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))
-
-
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): "marketplace/repository/release_notes",
-        probatio.Required("repository"): cv.string,
-    }
-)
-@websocket_api.require_admin
-@websocket_api.async_response
-@marketplace_command()
-async def marketplace_repository_release_notes(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-    marketplace: MarketplaceManager,
-) -> None:
-    """Return release notes."""
-    repository = marketplace.repositories.get_by_id(msg["repository"])
-    if repository is None:
-        send_repository_not_found(connection, msg["id"], msg["repository"])
-        return
-
-    connection.send_message(
-        websocket_api.result_message(
-            msg["id"],
-            [
-                {
-                    "name": x.name,
-                    "body": x.body,
-                    "tag": x.tag_name,
-                }
-                for x in repository.releases.objects
-                if not repository.data.installed_version
-                or is_newer_version(x.tag_name, repository.data.installed_version)
-            ],
-        )
-    )
 
 
 @websocket_api.websocket_command(

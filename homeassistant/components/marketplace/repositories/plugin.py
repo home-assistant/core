@@ -188,12 +188,12 @@ class PluginRepository(Repository):
             self.async_dispatch_changed("update")
 
     @override
-    def holds_content(self) -> bool:
+    def try_resolve_content(self) -> bool:
         """Return if the tree holds a dashboard resource, which is a JavaScript module.
 
         The filename of hacs.json alone would also match the template it names.
         """
-        return super().holds_content() and self.data.file_name.endswith(".js")
+        return super().try_resolve_content() and self.data.file_name.endswith(".js")
 
     @override
     def resolve_content(self) -> None:

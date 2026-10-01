@@ -6,8 +6,6 @@ import inspect
 import time
 from typing import Any
 
-from homeassistant.core import HomeAssistant
-
 from ..exceptions import ExecutionInProgressError
 from .logger import LOGGER
 
@@ -15,9 +13,8 @@ from .logger import LOGGER
 class QueueManager:
     """The QueueManager class."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self) -> None:
         """Initialize the queue manager."""
-        self.hass = hass
         self.queue: list[Coroutine[Any, Any, Any]] = []
         self.running = False
 
