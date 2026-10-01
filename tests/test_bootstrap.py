@@ -951,6 +951,9 @@ async def test_setup_hass_recovery_mode(
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
 
+    # Downloading custom integrations is the last thing recovery mode needs
+    assert "marketplace" not in hass.config.components
+
 
 @pytest.mark.parametrize("domain", ["cloud", "backup"])
 async def test_setup_hass_recovery_mode_with_failing_integration(

@@ -204,6 +204,45 @@ async def test_custom_integration_version_blocked(
 @pytest.mark.parametrize(
     "blocked_versions",
     [
+        loader.BlockedIntegration(None, "is now built in", replaced_by="marketplace"),
+        loader.BlockedIntegration(
+            AwesomeVersion("2.0.0"), "is now built in", replaced_by="marketplace"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_custom_integration_replaced_by_built_in(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    blocked_versions: loader.BlockedIntegration,
+) -> None:
+    """Test a custom integration taken over by a built-in one is not reported."""
+    with patch.dict(
+        loader.BLOCKED_CUSTOM_INTEGRATIONS, {"test_blocked_version": blocked_versions}
+    ):
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test_blocked_version")
+
+        assert (
+            "Custom integration 'test_blocked_version' is now part of Home Assistant"
+            " as 'marketplace' and is no longer loaded"
+        ) in caplog.text
+        assert "please report it to the author" not in caplog.text
+        assert "custom integration test_blocked_version which" not in caplog.text
+
+
+async def test_hacs_replaced_by_marketplace() -> None:
+    """Test the HACS custom integration is blocked in favor of the Marketplace."""
+    blocked = loader.BLOCKED_CUSTOM_INTEGRATIONS["hacs"]
+    assert blocked.lowest_good_version is None
+    assert blocked.replaced_by == "marketplace"
+
+    assert loader.MIGRATED_CUSTOM_INTEGRATIONS == {"hacs": "marketplace"}
+
+
+@pytest.mark.parametrize(
+    "blocked_versions",
+    [
         loader.BlockedIntegration(AwesomeVersion("0.9.9"), "breaks Home Assistant"),
         loader.BlockedIntegration(AwesomeVersion("1.0.0"), "breaks Home Assistant"),
     ],
@@ -864,6 +903,82 @@ async def test_get_custom_components_concurrent_load_cancelled(
         assert await load_task1 == custom_components
 
     assert await loader.async_get_custom_components(hass) == custom_components
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_clear_custom_components_cache(hass: HomeAssistant) -> None:
+    """Verify that clearing the cache makes the next call scan again."""
+    integration = _get_test_integration(hass, "test_1", False)
+
+    with patch("homeassistant.loader._get_custom_components") as mock_get:
+        mock_get.return_value = {"test_1": integration}
+
+        assert await loader.async_get_custom_components(hass) == mock_get.return_value
+
+        loader.async_clear_custom_components_cache(hass)
+
+        assert await loader.async_get_custom_components(hass) == mock_get.return_value
+        assert mock_get.call_count == 2
+
+
+async def test_clear_custom_components_cache_without_a_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Verify that clearing an empty cache is a no-op."""
+    loader.async_clear_custom_components_cache(hass)
+
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_clear_custom_components_cache_while_it_is_built(
+    hass: HomeAssistant,
+) -> None:
+    """Verify that a caller waiting for the list still gets its result."""
+    integration = _get_test_integration(hass, "test_1", False)
+    scan: asyncio.Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = scan
+
+    waiting = hass.async_create_task(loader.async_get_custom_components(hass))
+    await asyncio.sleep(0)
+
+    loader.async_clear_custom_components_cache(hass)
+    scan.set_result({"test_1": integration})
+
+    assert await waiting == {"test_1": integration}
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+
+
+async def test_clear_custom_components_cache_during_a_scan(
+    hass: HomeAssistant,
+) -> None:
+    """Verify a scan that started before a clear does not put its result back."""
+    before = {"test_1": _get_test_integration(hass, "test_1", False)}
+    after = {**before, "test_2": _get_test_integration(hass, "test_2", False)}
+    first_scan: asyncio.Future[dict[str, loader.Integration]] = (
+        hass.loop.create_future()
+    )
+    second_scan: asyncio.Future[dict[str, loader.Integration]] = (
+        hass.loop.create_future()
+    )
+    second_scan.set_result(after)
+    loader.async_clear_custom_components_cache(hass)
+
+    with patch.object(
+        hass, "async_add_executor_job", side_effect=[first_scan, second_scan]
+    ) as mock_scan:
+        first = hass.async_create_task(loader.async_get_custom_components(hass))
+        await asyncio.sleep(0)
+        assert mock_scan.call_count == 1
+
+        # Something was downloaded while the first scan still runs
+        loader.async_clear_custom_components_cache(hass)
+        assert await loader.async_get_custom_components(hass) == after
+
+        first_scan.set_result(before)
+        assert await first == before
+
+    assert await loader.async_get_custom_components(hass) == after
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
