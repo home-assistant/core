@@ -65,9 +65,9 @@ async def test_device_already_configured(
     assert result["type"] is FlowResultType.ABORT
 
 
+@pytest.mark.usefixtures("mock_transmission_client")
 async def test_options(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
@@ -75,23 +75,20 @@ async def test_options(
         data=MOCK_CONFIG_DATA,
         options={"limit": 10, "order": "oldest_first"},
     )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.transmission.async_setup_entry",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, entry)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"limit": 20}
-    )
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"limit": 20}
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_awaited_once_with(entry.entry_id)
 
     assert result["data"]["limit"] == 20
     assert result["data"]["order"] == "oldest_first"

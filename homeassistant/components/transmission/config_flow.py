@@ -12,10 +12,9 @@ from transmission_rpc.error import (
 
 from homeassistant.config_entries import (
     ConfigEntry,
-    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -26,7 +25,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.core import callback
 
 from . import get_api
 from .const import (
@@ -80,7 +79,10 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
             )
             try:
                 api = await get_api(self.hass, user_input)
@@ -133,19 +135,8 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
                 if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
                     errors["base"] = "transmission_version"
                 else:
-                    data_updated = self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         reauth_entry, data=user_input
-                    )
-                    if (
-                        reauth_entry.state is not ConfigEntryState.LOADED
-                        or not data_updated
-                    ):
-                        self.hass.config_entries.async_schedule_reload(
-                            reauth_entry.entry_id
-                        )
-                    return self.async_abort(
-                        reason="reauth_successful",
-                        translation_domain=HOMEASSISTANT_DOMAIN,
                     )
 
         return self.async_show_form(
@@ -163,7 +154,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class TransmissionOptionsFlowHandler(OptionsFlow):
+class TransmissionOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Transmission client options."""
 
     async def async_step_init(
