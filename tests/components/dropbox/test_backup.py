@@ -1,6 +1,7 @@
 """Test the Dropbox backup platform."""
 
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from io import StringIO
 import json
 from types import SimpleNamespace
@@ -153,6 +154,49 @@ async def test_agents_list_backups(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
     mock_dropbox_client.list_folder.assert_awaited()
+
+
+async def test_agents_list_multiple_backups(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_dropbox_client: Mock,
+) -> None:
+    """Test listing several backups, skipping one with invalid metadata."""
+
+    backups = [
+        replace(
+            TEST_AGENT_BACKUP,
+            backup_id=f"dropbox-backup-{i}",
+            name=f"Dropbox backup {i}",
+        )
+        for i in range(3)
+    ]
+    files = {}
+    for backup in backups:
+        tar_name, metadata_name = _suggested_filenames(backup)
+        files[tar_name] = b""
+        files[metadata_name] = json.dumps(backup.as_dict()).encode()
+    files["invalid.tar"] = b""
+    files["invalid.metadata.json"] = b"not valid json"
+
+    async def _download(path: str) -> AsyncIterator[bytes]:
+        yield files[path.removeprefix("/")]
+
+    mock_dropbox_client.list_folder = AsyncMock(
+        return_value=[SimpleNamespace(name=name) for name in files]
+    )
+    mock_dropbox_client.download_file = Mock(side_effect=_download)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert sorted(b["backup_id"] for b in response["result"]["backups"]) == [
+        backup.backup_id for backup in backups
+    ]
+    assert mock_dropbox_client.download_file.call_count == 4
 
 
 async def test_agents_list_backups_metadata_without_tar(
