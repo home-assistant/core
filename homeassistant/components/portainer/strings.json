@@ -266,7 +266,7 @@
       "description": "Prunes the build cache on a Portainer endpoint.",
       "fields": {
         "all": {
-          "description": "If true, prune all unused build cache. If false, only prune dangling build cache.",
+          "description": "If true (default), prune all unused build cache. If false, only prune dangling build cache.",
           "name": "All"
         },
         "device_id": {
