@@ -1,4 +1,40 @@
 # serializer version: 1
+# name: test_entities_not_created_for_missing_market_segment[missing_electricity]
+  list([
+    'sensor.zonneplan_gas_cost_this_month',
+    'sensor.zonneplan_gas_price_daily',
+    'sensor.zonneplan_gas_used_this_month',
+  ])
+# ---
+# name: test_entities_not_created_for_missing_market_segment[missing_gas]
+  list([
+    'binary_sensor.thuisbatterij_backup_power_active',
+    'binary_sensor.thuisbatterij_grid_congestion',
+    'binary_sensor.thuisbatterij_home_optimization_active',
+    'binary_sensor.thuisbatterij_load_balancing_overload',
+    'binary_sensor.zonneplan_electricity_price_low',
+    'sensor.zonneplan_current_electricity_price',
+    'sensor.zonneplan_current_electricity_tariff_group',
+    'sensor.zonneplan_current_sustainability_score',
+    'sensor.zonneplan_electricity_cost_this_month',
+    'sensor.zonneplan_electricity_price_low_today_end_time',
+    'sensor.zonneplan_electricity_price_low_today_start_time',
+    'sensor.zonneplan_electricity_price_low_tomorrow_end_time',
+    'sensor.zonneplan_electricity_price_low_tomorrow_start_time',
+    'sensor.zonneplan_electricity_prices_tomorrow_status',
+    'sensor.zonneplan_electricity_returned_this_month',
+    'sensor.zonneplan_electricity_used_this_month',
+    'sensor.zonneplan_highest_electricity_price_today',
+    'sensor.zonneplan_highest_electricity_price_tomorrow',
+    'sensor.zonneplan_lowest_electricity_price_today',
+    'sensor.zonneplan_lowest_electricity_price_tomorrow',
+    'sensor.zonneplan_next_hour_electricity_price',
+  ])
+# ---
+# name: test_entities_not_created_for_missing_market_segment[no_energy_contract]
+  list([
+  ])
+# ---
 # name: test_sensor[prices_incoming][sensor.zonneplan_current_electricity_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
