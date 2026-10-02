@@ -12,6 +12,7 @@ async def test_home_assistant_restart_not_required(hass: HomeAssistant) -> None:
     assert state.as_dict() == {
         "home_assistant_restart_required": False,
         "home_assistant_restart_sources": [],
+        "host_reboot_required": False,
     }
 
 
@@ -34,10 +35,12 @@ async def test_set_home_assistant_restart_required(hass: HomeAssistant) -> None:
         {
             "home_assistant_restart_required": True,
             "home_assistant_restart_sources": ["hacs"],
+            "host_reboot_required": False,
         },
         {
             "home_assistant_restart_required": True,
             "home_assistant_restart_sources": ["demo", "hacs"],
+            "host_reboot_required": False,
         },
     ]
 
@@ -57,3 +60,19 @@ async def test_unsubscribe(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert updates == []
+
+
+async def test_set_host_reboot_required(hass: HomeAssistant) -> None:
+    """Test the host reboot flag follows Supervisor, and only updates on change."""
+    updates: list[bool] = []
+    system_state.async_subscribe(
+        hass, callback(lambda state: updates.append(state.host_reboot_required))
+    )
+
+    system_state.async_set_host_reboot_required(hass, True)
+    system_state.async_set_host_reboot_required(hass, True)
+    system_state.async_set_host_reboot_required(hass, False)
+    await hass.async_block_till_done()
+
+    assert updates == [True, False]
+    assert not system_state.async_get(hass).host_reboot_required
