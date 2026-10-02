@@ -70,7 +70,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        probatio.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     },
@@ -78,7 +78,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
