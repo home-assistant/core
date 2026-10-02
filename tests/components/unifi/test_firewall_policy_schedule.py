@@ -22,6 +22,7 @@ from homeassistant.components.unifi.firewall_policy_schedule import (
     build_schedule,
     parse_date,
     parse_time,
+    schedule_days,
     schedule_uses_times,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONTENT_TYPE_JSON
@@ -279,6 +280,62 @@ CUSTOM = {
                 "time_range_end": "06:00",
             },
         ),
+        # Days are replaced and sent Monday first.
+        (
+            WEEKLY,
+            {"days": {"fri", "mon"}},
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["mon", "fri"],
+                "time_all_day": False,
+                "time_range_start": "15:00",
+                "time_range_end": "17:00",
+            },
+        ),
+        # All day on drops the times.
+        (
+            WEEKLY,
+            {"all_day": True},
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["mon", "wed"],
+                "time_all_day": True,
+            },
+        ),
+        # All day off on a schedule without times uses the default times.
+        (
+            WEEKLY_ALL_DAY,
+            {"all_day": False},
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["fri"],
+                "time_all_day": False,
+                "time_range_start": "09:00",
+                "time_range_end": "12:00",
+            },
+        ),
+        # Days the library doesn't know are dropped.
+        (
+            {**WEEKLY, "repeat_on_days": ["MON", "wed", "someday"]},
+            {"end": time(18, 0)},
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["wed"],
+                "time_all_day": False,
+                "time_range_start": "15:00",
+                "time_range_end": "18:00",
+            },
+        ),
+        # Days and all day mean nothing outside the modes that have them.
+        (
+            EVERY_DAY,
+            {"days": {"mon"}, "all_day": True},
+            {
+                "mode": "EVERY_DAY",
+                "time_range_start": "21:00",
+                "time_range_end": "08:00",
+            },
+        ),
         # An all-day schedule has no times, and a stray date isn't carried.
         (
             {**WEEKLY_ALL_DAY, "date": "2026-01-01"},
@@ -360,6 +417,21 @@ def test_parse_time(value: object, expected: time | None) -> None:
 def test_parse_date(value: object, expected: date | None) -> None:
     """Malformed dates give None."""
     assert parse_date(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("schedule", "expected"),
+    [
+        (WEEKLY, ["mon", "wed"]),
+        ({**WEEKLY, "repeat_on_days": []}, []),
+        ({**WEEKLY, "repeat_on_days": ["MON", "sun", "tue"]}, ["tue", "sun"]),
+        ({**WEEKLY, "repeat_on_days": "mon"}, []),
+        ({"mode": "EVERY_WEEK"}, []),
+    ],
+)
+def test_schedule_days(schedule: dict[str, Any], expected: list[str]) -> None:
+    """Known days are returned Monday first; anything else is ignored."""
+    assert schedule_days(schedule) == expected
 
 
 SELECT = "select.unifi_network_block_streaming_schedule"

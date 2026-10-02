@@ -4,7 +4,7 @@ The controller stores schedule keys the current mode doesn't use, so a
 schedule is always built from scratch with exactly the keys its mode needs.
 """
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from datetime import date, time, timedelta
 from typing import TYPE_CHECKING, Any, NoReturn
 
@@ -57,6 +57,14 @@ def schedule_uses_times(schedule: FirewallPolicySchedule) -> bool:
     return not (mode in MODES_WITH_DAYS and schedule.get("time_all_day") is True)
 
 
+def schedule_days(schedule: FirewallPolicySchedule) -> list[str]:
+    """Return the schedule's selected days of the week, Monday first."""
+    days = schedule.get("repeat_on_days")
+    if not isinstance(days, list):
+        return []
+    return [day for day in WEEKDAYS if day in days]
+
+
 def parse_time(value: object) -> time | None:
     """Parse the controller's HH:MM, or return None if it is malformed."""
     if not isinstance(value, str):
@@ -87,13 +95,16 @@ def build_schedule(
     end: time | None = None,
     start_date: date | None = None,
     end_date: date | None = None,
+    all_day: bool | None = None,
+    days: Collection[str] | None = None,
 ) -> FirewallPolicySchedule:
     """Build the schedule for a mode from the current one plus changes.
 
     Times are taken from the changes, then from the current schedule if it
     uses them, then from defaults; a malformed stored time or date is replaced
     the same way a missing one is. Dates and days are only kept when the mode
-    doesn't change: choosing a mode starts it today, on every day of the week.
+    doesn't change: choosing a mode starts it today, on every day of the week,
+    with a time window.
     """
     current_mode = schedule_mode(current)
     new_mode = mode or current_mode
@@ -122,18 +133,18 @@ def build_schedule(
             changed = parse_time(current_values.get(key))
         return default if changed is None else changed.strftime("%H:%M")
 
-    all_day = False
+    all_day_on = False
     if new_mode in MODES_WITH_DAYS:
         if same_mode:
             # A value change leaves the days alone, even if none are chosen.
-            days = current.get("repeat_on_days")
-            schedule["repeat_on_days"] = [
-                day for day in WEEKDAYS if isinstance(days, list) and day in days
-            ]
-            all_day = current.get("time_all_day") is True
+            selected = schedule_days(current) if days is None else days
+            schedule["repeat_on_days"] = [day for day in WEEKDAYS if day in selected]
+            all_day_on = (
+                current.get("time_all_day") is True if all_day is None else all_day
+            )
         else:
             schedule["repeat_on_days"] = list(WEEKDAYS)
-        schedule["time_all_day"] = all_day
+        schedule["time_all_day"] = all_day_on
     if new_mode is FirewallPolicyScheduleMode.ONE_TIME_ONLY:
         # Choosing One time, even again, dates it today.
         schedule["date"] = _date(start_date, "date", keep=mode is None).isoformat()
@@ -150,7 +161,7 @@ def build_schedule(
             )
         schedule["date_start"] = first_day.isoformat()
         schedule["date_end"] = last_day.isoformat()
-    if not all_day:
+    if not all_day_on:
         schedule["time_range_start"] = _time(
             start, "time_range_start", DEFAULT_TIME_RANGE_START
         )
@@ -177,6 +188,8 @@ async def async_save_schedule(
     end: time | None = None,
     start_date: date | None = None,
     end_date: date | None = None,
+    all_day: bool | None = None,
+    days: Collection[str] | None = None,
 ) -> None:
     """Save a change to a firewall policy's schedule.
 
@@ -191,5 +204,7 @@ async def async_save_schedule(
         end=end,
         start_date=start_date,
         end_date=end_date,
+        all_day=all_day,
+        days=days,
     )
     await hub.api.firewall_policies.save(policy, schedule=schedule)
