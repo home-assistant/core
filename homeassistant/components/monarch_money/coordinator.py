@@ -2,11 +2,11 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import override
+from datetime import timedelta
+from typing import Never, override
 
-from aiohttp import ClientResponseError
-from gql.transport.exceptions import TransportServerError
+from aiohttp import ClientError, ClientResponseError
+from gql.transport.exceptions import TransportError, TransportServerError
 from monarchmoney import LoginFailedException
 from typedmonarchmoney import TypedMonarchMoney
 from typedmonarchmoney.models import (
@@ -17,8 +17,9 @@ from typedmonarchmoney.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 
@@ -32,6 +33,17 @@ class MonarchData:
 
 
 type MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]
+
+
+def _raise_update_error(err: Exception) -> Never:
+    """Translate Monarch Money API errors to coordinator errors."""
+    if isinstance(err, LoginFailedException) or (
+        isinstance(err, (TransportServerError, ClientResponseError))
+        and (err.status if isinstance(err, ClientResponseError) else err.code)
+        in (401, 403)
+    ):
+        raise ConfigEntryAuthFailed("Authentication failed") from err
+    raise UpdateFailed("Error communicating with Monarch Money") from err
 
 
 class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
@@ -63,22 +75,25 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             sub_details: MonarchSubscription = (
                 await self.client.get_subscription_details()
             )
-        except (TransportServerError, LoginFailedException, ClientResponseError) as err:
-            raise ConfigEntryError("Authentication failed") from err
+        except (LoginFailedException, TransportError, ClientError, TimeoutError) as err:
+            _raise_update_error(err)
         self.subscription_id = sub_details.id
 
     @override
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
 
-        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        now = dt_util.now()
 
-        account_data, cashflow_summary = await asyncio.gather(
-            self.client.get_accounts_as_dict_with_id_key(),
-            self.client.get_cashflow_summary(
-                start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
-            ),
-        )
+        try:
+            account_data, cashflow_summary = await asyncio.gather(
+                self.client.get_accounts_as_dict_with_id_key(),
+                self.client.get_cashflow_summary(
+                    start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
+                ),
+            )
+        except (LoginFailedException, TransportError, ClientError, TimeoutError) as err:
+            _raise_update_error(err)
 
         return MonarchData(account_data=account_data, cashflow_summary=cashflow_summary)
 

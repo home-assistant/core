@@ -1,12 +1,12 @@
 """Support for Gatus binary sensors."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
@@ -23,10 +23,22 @@ async def async_setup_entry(
     """Set up the Gatus binary sensor platform."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
-        for endpoint_key in coordinator.data
-    )
+    known_endpoints: set[str] = set()
+
+    @callback
+    def _check_endpoints() -> None:
+        current_endpoints = set(coordinator.data)
+        new_endpoints = current_endpoints - known_endpoints
+        if new_endpoints:
+            known_endpoints.update(new_endpoints)
+            async_add_entities(
+                GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
+                for endpoint_key in new_endpoints
+            )
+        known_endpoints.intersection_update(current_endpoints)
+
+    _check_endpoints()
+    entry.async_on_unload(coordinator.async_add_listener(_check_endpoints))
 
 
 class GatusEndpointBinarySensor(GatusEndpointEntity, BinarySensorEntity):
@@ -47,10 +59,9 @@ class GatusEndpointBinarySensor(GatusEndpointEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the endpoint is up and healthy."""
-        latest_result = self.latest_result
-        if latest_result is None:
-            return None
+        if TYPE_CHECKING:
+            assert self.latest_result is not None
 
-        return latest_result.success
+        return self.latest_result.success

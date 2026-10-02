@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action, unit_ids
 from .const import DOMAIN
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
@@ -183,17 +183,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home numbers."""
+    coordinator = entry.runtime_data.coordinator
 
     async_setup_unit_entities(
-        entry.runtime_data,
+        coordinator,
         async_add_entities,
         lambda units: (
-            ATANumber(entry.runtime_data, entity_description, unit)
+            ATANumber(coordinator, entity_description, unit)
             for entity_description in ATA_NUMBERS
             for unit in units
         ),
         lambda units: (
-            ATWNumber(entry.runtime_data, entity_description, unit)
+            ATWNumber(coordinator, entity_description, unit)
             for entity_description in ATW_NUMBERS
             for unit in units
         ),
@@ -204,17 +205,6 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
     """Representation of a MELCloud Home ATA number."""
 
     entity_description: MelCloudHomeNumberEntityDescription[ATAUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeNumberEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
     @override
@@ -250,17 +240,6 @@ class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
     """Representation of a MELCloud Home ATW number."""
 
     entity_description: MelCloudHomeNumberEntityDescription[ATWUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeNumberEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
     @override

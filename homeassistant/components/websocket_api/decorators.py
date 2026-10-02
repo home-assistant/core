@@ -4,9 +4,9 @@ from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.typing import VolDictType
@@ -117,7 +117,10 @@ def ws_require_user(
                 output_error("only_inactive_user", "Not allowed as active user")
                 return None
 
-            if only_supervisor and connection.user.name != HASSIO_USER_NAME:
+            if only_supervisor and (
+                (supervisor_user := hass.data.get(DATA_SUPERVISOR_USER)) is None
+                or connection.user.id != supervisor_user.id
+            ):
                 output_error("only_supervisor", "Only allowed as Supervisor")
                 return None
 
@@ -129,12 +132,12 @@ def ws_require_user(
 
 
 def websocket_command(
-    schema: VolDictType | vol.All,
+    schema: VolDictType | probatio.All,
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Tag a function as a websocket command.
 
-    The schema must be either a dictionary where the keys are voluptuous markers, or
-    a voluptuous.All schema where the first item is a voluptuous Mapping schema.
+    The schema must be either a dictionary where the keys are probatio markers, or
+    a probatio.All schema where the first item is a probatio Mapping schema.
     """
     if is_dict := isinstance(schema, dict):
         command = schema["type"]
@@ -150,7 +153,7 @@ def websocket_command(
         else:
             if TYPE_CHECKING:
                 assert not isinstance(schema, dict)
-            extended_schema = vol.All(
+            extended_schema = probatio.All(
                 schema.validators[0].extend(
                     messages.BASE_COMMAND_MESSAGE_SCHEMA.schema
                 ),

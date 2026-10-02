@@ -450,11 +450,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ),
                 )
         except Exception as ex:
-            if not self.hass.is_stopping:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="error_refresh_hosts_info",
-                ) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_refresh_hosts_info",
+            ) from ex
 
         hosts: dict[str, Device] = {}
         if hosts_attributes:
@@ -546,9 +545,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            default_manufacturer="FRITZ!",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
+            manufacturer="FRITZ!",
+            model="FRITZ!Box Tracked device",
+            name=device.hostname,
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self.unique_id),
@@ -575,10 +574,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new network devices."""
-
-        if self.hass.is_stopping:
-            ha_is_stopping("scan devices")
-            return
 
         LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()

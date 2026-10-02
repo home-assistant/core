@@ -3,7 +3,6 @@
 import logging
 from typing import Final
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
@@ -101,63 +100,3 @@ UNIT_MAP: Final[dict[str, str]] = {
     "Watt": UnitOfPower.WATT,
     "Kilowatt": UnitOfPower.KILO_WATT,
 }
-
-# Everything that follows from the unit alone. Device classes that also need
-# the readout identifier or its source (humidity, CO2, wind, gas) are set in
-# sensor.py. Precision is display only, and needs a default because the API
-# emits float32-converted doubles (90.15303039550781 %).
-UNIT_DESCRIPTIONS: Final[dict[str, SensorEntityDescription]] = {
-    unit: SensorEntityDescription(
-        key=unit,
-        native_unit_of_measurement=unit,
-        device_class=device_class,
-        suggested_display_precision=precision,
-    )
-    for unit, device_class, precision in (
-        (UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE, 1),
-        (UnitOfTemperature.FAHRENHEIT, SensorDeviceClass.TEMPERATURE, 1),
-        (UnitOfTemperature.KELVIN, SensorDeviceClass.TEMPERATURE, 1),
-        (PERCENTAGE, None, 1),
-        ("g/kg", None, 1),
-        ("g/m³", None, 1),
-        ("J/cm²", None, 1),
-        ("J/m²", None, 0),
-        (UnitOfSpeed.METERS_PER_SECOND, None, 1),
-        (UnitOfSpeed.KILOMETERS_PER_HOUR, None, 1),
-        (UnitOfVolumeFlowRate.LITERS_PER_MINUTE, SensorDeviceClass.VOLUME_FLOW_RATE, 1),
-        (
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            SensorDeviceClass.VOLUME_FLOW_RATE,
-            1,
-        ),
-        ("l/m²", None, 1),
-        ("ml/m²", None, 0),
-        (UnitOfEnergy.KILO_WATT_HOUR, SensorDeviceClass.ENERGY, 2),
-        (UnitOfVolume.CUBIC_METERS, None, 2),
-        (UnitOfVolume.LITERS, None, 1),
-        (UnitOfVolume.MILLILITERS, None, 0),
-        (UnitOfTime.SECONDS, SensorDeviceClass.DURATION, 0),
-        (UnitOfTime.MINUTES, SensorDeviceClass.DURATION, 0),
-        (UnitOfTime.HOURS, SensorDeviceClass.DURATION, 1),
-        (UnitOfIrradiance.WATTS_PER_SQUARE_METER, SensorDeviceClass.IRRADIANCE, 0),
-        (UnitOfRatio.PARTS_PER_MILLION, None, 0),
-        (LIGHT_LUX, SensorDeviceClass.ILLUMINANCE, 0),
-        (UnitOfConductivity.MILLISIEMENS_PER_CM, SensorDeviceClass.CONDUCTIVITY, 2),
-        (UnitOfConductivity.MICROSIEMENS_PER_CM, SensorDeviceClass.CONDUCTIVITY, 0),
-        ("pH", None, 1),
-        (UnitOfPressure.BAR, SensorDeviceClass.PRESSURE, 2),
-        (UnitOfPressure.MBAR, SensorDeviceClass.PRESSURE, 0),
-        (UnitOfPressure.HPA, SensorDeviceClass.PRESSURE, 0),
-        (UnitOfPressure.PA, SensorDeviceClass.PRESSURE, 0),
-        ("µmol/m²/s", None, 0),
-        ("mol/m²/d", None, 1),
-        (DEGREE, None, 0),
-        (UnitOfPower.WATT, SensorDeviceClass.POWER, 0),
-        (UnitOfPower.KILO_WATT, SensorDeviceClass.POWER, 2),
-        (UnitOfMass.KILOGRAMS, SensorDeviceClass.WEIGHT, 1),
-        (UnitOfMass.GRAMS, SensorDeviceClass.WEIGHT, 0),
-    )
-}
-
-# pH has no device class on purpose: SensorDeviceClass.PH accepts no unit, and
-# keeping the "pH" unit is worth more than the class.

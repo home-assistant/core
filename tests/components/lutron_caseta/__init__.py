@@ -67,6 +67,7 @@ _LEAP_DEVICE_TYPES = {
         "RightDrawDrape",
         "Shade",
         "SerenaTiltOnlyWoodBlind",
+        "OpenCloseStop",
     ],
     "sensor": [
         "Pico1Button",
@@ -503,3 +504,25 @@ async def async_setup_integration(
         await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
     return mock_entry
+
+
+class MockBridgeWithOpenCloseStopCover(MockBridge):
+    """Mock bridge that also exposes an OpenCloseStop cover."""
+
+    def load_devices(self):
+        """Add an OpenCloseStop zone to the mock devices."""
+        devices = super().load_devices()
+        devices["805"] = {
+            "device_id": "805",
+            "current_state": -1,
+            "fan_speed": None,
+            "zone": "805",
+            "name": "Basement Bedroom_Armor Screen",
+            "button_groups": None,
+            "type": "OpenCloseStop",
+            "model": None,
+            "serial": 5442325,
+            "tilt": None,
+            "area": "822",
+        }
+        return devices

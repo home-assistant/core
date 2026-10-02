@@ -28,9 +28,6 @@
     },
     "invalid_auth": {
       "message": "The HortOS API rejected the API key"
-    },
-    "no_devices": {
-      "message": "The HortOS API reported no controllers for this API key"
     }
   }
 }

@@ -396,11 +396,11 @@ async def test_uptime_sensor(
 
 async def test_hub_device_info_mac_connections(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test that the hub DeviceInfo includes MAC address connections."""
-    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    device = dev_reg.async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, SERIAL), setup_dsm_with_usb.mock_entry.entry_id
     )
     assert device is not None
@@ -412,21 +412,23 @@ async def test_hub_device_info_mac_connections(
 
 async def test_storage_device_via_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test that storage/USB child devices link to the hub via via_device_id."""
-    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entry_id = setup_dsm_with_usb.mock_entry.entry_id
-    hub_device = dev_reg.async_get_device_by_identifier((DOMAIN, SERIAL), entry_id)
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry_id
+    )
     assert hub_device is not None
 
-    volume_device = dev_reg.async_get_device_by_identifier(
+    volume_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{SERIAL}_volume_1"), entry_id
     )
     assert volume_device is not None
     assert volume_device.via_device_id == hub_device.id
 
-    usb_partition_device = dev_reg.async_get_device_by_identifier(
+    usb_partition_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{SERIAL}_USB Disk 1 Partition 1"), entry_id
     )
     assert usb_partition_device is not None

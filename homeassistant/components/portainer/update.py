@@ -6,10 +6,6 @@ from datetime import timedelta
 from typing import Any, override
 
 from pyportainer import Portainer
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-)
 from pyportainer.models.docker import (
     DockerContainer,
     LocalImageInformation,
@@ -23,10 +19,8 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
@@ -52,17 +46,27 @@ PARALLEL_UPDATES = 1
 DEFAULT_RECREATE_TIMEOUT = timedelta(minutes=10)
 
 
+def _short_digest(digest: str) -> str:
+    """Shorten a digest to its algorithm and the leading hex characters."""
+    algorithm, separator, hex_digest = digest.partition(":")
+    return f"{algorithm}{separator}{hex_digest[:12]}"
+
+
 CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
     PortainerContainerUpdateEntityDescription(
         key="container_image_update",
         translation_key="container_image_update",
         entity_category=EntityCategory.CONFIG,
         installed_version=lambda data: (
-            data.repo_digests[0].split("@")[1]
-            if data.repo_digests and isinstance(data.repo_digests[0], str)
+            _short_digest(data.repo_digests[0].partition("@")[2])
+            if data.repo_digests
             else None
         ),
-        latest_version=lambda data: data.registry_digest if data is not None else None,
+        latest_version=lambda data: (
+            _short_digest(digest)
+            if data is not None and (digest := data.registry_digest)
+            else None
+        ),
         update_func=(
             lambda portainer, endpoint_id, container_id: portainer.container_recreate(
                 endpoint_id=endpoint_id,
@@ -154,22 +158,11 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install update."""
-        try:
-            await self.entity_description.update_func(
+        await self.coordinator.async_call_portainer(
+            self.entity_description.update_func(
                 self.coordinator.portainer,
                 self.endpoint_id,
                 self.container_data.container.id,
-            )
-        except PortainerAuthenticationError as ex:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from ex
-        except PortainerConnectionError as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from ex
-        else:
-            await self.coordinator.async_request_refresh()
+            ),
+        )
+        await self.coordinator.async_request_refresh()

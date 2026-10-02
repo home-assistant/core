@@ -21,8 +21,8 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
 from .const import DOMAIN
@@ -35,6 +35,21 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Immich media source."""
     hass.http.register_view(ImmichMediaView(hass))
     return ImmichMediaSource(hass)
+
+
+@callback
+def _async_get_loaded_entry(hass: HomeAssistant, unique_id: str) -> ImmichConfigEntry:
+    """Return the loaded config entry with the given unique ID."""
+    entry: ImmichConfigEntry | None = (
+        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, unique_id)
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="account_not_loaded",
+            translation_placeholders={"unique_id": unique_id},
+        )
+    return entry
 
 
 class ImmichMediaSourceIdentifier:
@@ -131,42 +146,43 @@ class ImmichMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
+        if not self.hass.config_entries.async_entries(DOMAIN):
             raise BrowseError(
                 translation_domain=DOMAIN, translation_key="not_configured"
             )
+        entries = self.hass.config_entries.async_loaded_entries(DOMAIN)
 
         can_search = False
         if item.identifier:
             can_search = bool(ImmichMediaSourceIdentifier(item.identifier).unique_id)
+
+        title, children = await self._async_build_immich(item, entries)
 
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=item.identifier,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaClass.IMAGE,
-            title="Immich",
+            title=title,
             can_play=False,
             can_expand=True,
             can_search=can_search,
             search_media_classes=[MediaClass.IMAGE, MediaClass.VIDEO],
             children_media_class=MediaClass.DIRECTORY,
-            children=[
-                *await self._async_build_immich(item, entries),
-            ],
+            children=children,
         )
 
     async def _async_build_immich(
         self, item: MediaSourceItem, entries: list[ConfigEntry]
-    ) -> list[BrowseMediaSource]:
-        """Handle browsing different immich instances."""
+    ) -> tuple[str, list[BrowseMediaSource]]:
+        """Return the title and the children of the browsed item."""
 
         # --------------------------------------------------------
         # root level, render immich instances
         # --------------------------------------------------------
         if not item.identifier:
             LOGGER.debug("Render all Immich instances")
-            return [
+            return "Immich", [
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=entry.unique_id,
@@ -183,17 +199,12 @@ class ImmichMediaSource(MediaSource):
         # 1st level, render collections overview
         # --------------------------------------------------------
         identifier = ImmichMediaSourceIdentifier(item.identifier)
-        entry: ImmichConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, identifier.unique_id
-            )
-        )
-        assert entry
+        entry = _async_get_loaded_entry(self.hass, identifier.unique_id)
         immich_api = entry.runtime_data.api
 
         if identifier.collection is None:
             LOGGER.debug("Render all collections for %s", entry.title)
-            return [
+            return entry.title, [
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"{identifier.unique_id}|{collection}",
@@ -221,9 +232,9 @@ class ImmichMediaSource(MediaSource):
                         translation_placeholders={"msg": str(err)},
                     ) from err
                 except ImmichError:
-                    return []
+                    return identifier.collection, []
 
-                return [
+                return identifier.collection, [
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=f"{identifier.unique_id}|albums|{album.album_id}",
@@ -248,9 +259,9 @@ class ImmichMediaSource(MediaSource):
                         translation_placeholders={"msg": str(err)},
                     ) from err
                 except ImmichError:
-                    return []
+                    return identifier.collection, []
 
-                return [
+                return identifier.collection, [
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=f"{identifier.unique_id}|tags|{tag.tag_id}",
@@ -274,9 +285,9 @@ class ImmichMediaSource(MediaSource):
                         translation_placeholders={"msg": str(err)},
                     ) from err
                 except ImmichError:
-                    return []
+                    return identifier.collection, []
 
-                return [
+                return identifier.collection, [
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=f"{identifier.unique_id}|people|{person.person_id}",
@@ -295,6 +306,7 @@ class ImmichMediaSource(MediaSource):
         # --------------------------------------------------------
         assert identifier.collection_id is not None
         assets: list[ImmichAsset] = []
+        title = identifier.collection
         if identifier.collection == "albums":
             LOGGER.debug(
                 "Render all assets of album %s for %s",
@@ -302,6 +314,9 @@ class ImmichMediaSource(MediaSource):
                 entry.title,
             )
             try:
+                album = await immich_api.albums.async_get_album_info(
+                    identifier.collection_id
+                )
                 assets = await immich_api.search.async_get_all_by_album_ids(
                     [identifier.collection_id]
                 )
@@ -312,7 +327,9 @@ class ImmichMediaSource(MediaSource):
                     translation_placeholders={"msg": str(err)},
                 ) from err
             except ImmichError:
-                return []
+                return title, []
+
+            title = album.album_name
 
         elif identifier.collection == "tags":
             LOGGER.debug(
@@ -320,6 +337,9 @@ class ImmichMediaSource(MediaSource):
                 identifier.collection_id,
             )
             try:
+                tag = await immich_api.tags.async_get_tag_by_id(
+                    identifier.collection_id
+                )
                 assets = await immich_api.search.async_get_all_by_tag_ids(
                     [identifier.collection_id]
                 )
@@ -330,7 +350,9 @@ class ImmichMediaSource(MediaSource):
                     translation_placeholders={"msg": str(err)},
                 ) from err
             except ImmichError:
-                return []
+                return title, []
+
+            title = tag.name
 
         elif identifier.collection == "people":
             LOGGER.debug(
@@ -338,6 +360,9 @@ class ImmichMediaSource(MediaSource):
                 identifier.collection_id,
             )
             try:
+                person = await immich_api.people.async_get_person_by_id(
+                    identifier.collection_id
+                )
                 assets = await immich_api.search.async_get_all_by_person_ids(
                     [identifier.collection_id]
                 )
@@ -348,7 +373,10 @@ class ImmichMediaSource(MediaSource):
                     translation_placeholders={"msg": str(err)},
                 ) from err
             except ImmichError:
-                return []
+                return title, []
+
+            title = person.name
+
         elif identifier.collection == "favorites":
             LOGGER.debug("Render all assets for favorites collection")
             try:
@@ -360,9 +388,9 @@ class ImmichMediaSource(MediaSource):
                     translation_placeholders={"msg": str(err)},
                 ) from err
             except ImmichError:
-                return []
+                return title, []
 
-        return _parse_assets(assets, identifier)
+        return title, _parse_assets(assets, identifier)
 
     @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
@@ -398,13 +426,13 @@ class ImmichMediaSource(MediaSource):
 
         LOGGER.debug("search called with item:%s query:%s", item, query)
 
-        identifier = ImmichMediaSourceIdentifier(item.identifier)
-        entry: ImmichConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, identifier.unique_id
+        if not item.identifier:
+            raise BrowseError(
+                translation_domain=DOMAIN, translation_key="search_requires_account"
             )
-        )
-        assert entry
+
+        identifier = ImmichMediaSourceIdentifier(item.identifier)
+        entry = _async_get_loaded_entry(self.hass, identifier.unique_id)
         immich_api = entry.runtime_data.api
 
         search_args: ImmichSmartSearchArgs = {
@@ -475,12 +503,10 @@ class ImmichMediaView(HomeAssistantView):
         except ValueError as err:
             raise HTTPNotFound from err
 
-        entry: ImmichConfigEntry | None = (
-            self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, source_dir_id
-            )
-        )
-        assert entry
+        try:
+            entry = _async_get_loaded_entry(self.hass, source_dir_id)
+        except BrowseError as err:
+            raise HTTPNotFound from err
         immich_api = entry.runtime_data.api
 
         # stream response for videos

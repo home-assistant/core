@@ -52,6 +52,9 @@ def mock_connect_fixture(mock_gateway: Mock) -> Generator[None]:
     """Mock the connection to the Motion gateway."""
     with (
         patch(
+            "homeassistant.components.motion_blinds.coordinator.UPDATE_DELAY_BLIND", 0
+        ),
+        patch(
             "homeassistant.components.motion_blinds.AsyncMotionMulticast"
         ) as multicast_class,
         patch(

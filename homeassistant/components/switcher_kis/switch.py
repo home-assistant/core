@@ -10,7 +10,7 @@ from aioswitcher.device import (
     ShutterChildLock,
     SwitcherShutter,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
@@ -38,12 +38,12 @@ API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 API_SET_CHILD_LOCK = "set_shutter_child_lock"
 
 SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
-    vol.Required(CONF_AUTO_OFF): cv.time_period_str,
+    probatio.Required(CONF_AUTO_OFF): cv.time_period_str,
 }
 
 SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
-    vol.Required(CONF_TIMER_MINUTES): vol.All(
-        cv.positive_int, vol.Range(min=1, max=150)
+    probatio.Required(CONF_TIMER_MINUTES): probatio.All(
+        cv.positive_int, probatio.Range(min=1, max=150)
     ),
 }
 

@@ -287,8 +287,6 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_asyncio_debug_on_turns_hass_debug_on(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -754,28 +752,10 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_is_virtual_env() -> Generator[Mock]:
-    """Mock is_virtual_env."""
-    with patch(
-        "homeassistant.bootstrap.is_virtual_env", return_value=False
-    ) as is_virtual_env:
-        yield is_virtual_env
-
-
-@pytest.fixture
 def mock_enable_logging() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
         yield enable_logging
-
-
-@pytest.fixture
-def mock_mount_local_lib_path() -> Generator[AsyncMock]:
-    """Mock enable logging."""
-    with patch(
-        "homeassistant.bootstrap.async_mount_local_lib_path"
-    ) as mount_local_lib_path:
-        yield mount_local_lib_path
 
 
 @pytest.fixture
@@ -800,8 +780,6 @@ def mock_ensure_config_exists() -> Generator[AsyncMock]:
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -839,7 +817,6 @@ async def test_setup_hass(
         log_file,
         log_no_color,
     )
-    assert len(mock_mount_local_lib_path.mock_calls) == 1
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
 
@@ -853,8 +830,6 @@ async def test_setup_hass(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -894,8 +869,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
 
 async def test_setup_hass_invalid_yaml(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -916,13 +889,10 @@ async def test_setup_hass_invalid_yaml(
         )
 
     assert "recovery_mode" in hass.config.components
-    assert len(mock_mount_local_lib_path.mock_calls) == 0
 
 
 async def test_setup_hass_config_dir_nonexistent(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -947,8 +917,6 @@ async def test_setup_hass_config_dir_nonexistent(
 
 async def test_setup_hass_recovery_mode(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -978,18 +946,18 @@ async def test_setup_hass_recovery_mode(
     mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
-    assert len(mock_mount_local_lib_path.mock_calls) == 0
 
     # Validate we didn't try to set up config entry.
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
 
+    # Downloading custom integrations is the last thing recovery mode needs
+    assert "marketplace" not in hass.config.components
+
 
 @pytest.mark.parametrize("domain", ["cloud", "backup"])
 async def test_setup_hass_recovery_mode_with_failing_integration(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     domain: str,
@@ -1018,8 +986,6 @@ async def test_setup_hass_recovery_mode_with_failing_integration(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_safe_mode(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -1053,8 +1019,6 @@ async def test_setup_hass_safe_mode(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_recovery_mode_and_safe_mode(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -1090,8 +1054,6 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 async def test_storage_version_too_new_triggers_recovery_mode(
     hass_storage: dict[str, Any],
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
@@ -1129,8 +1091,6 @@ async def test_storage_version_too_new_triggers_recovery_mode(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -1168,8 +1128,6 @@ async def test_setup_hass_invalid_core_config(
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_recovery_mode_if_no_frontend(
     mock_enable_logging: AsyncMock,
-    mock_is_virtual_env: Mock,
-    mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
@@ -1306,13 +1264,16 @@ async def test_tasks_logged_that_block_stage_1(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 1 startup."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await hass.loop.create_future()
+
+            task = hass.async_create_task(_not_marked_background_task())
             await asyncio.sleep(0.1)
             return True
 
@@ -1331,12 +1292,16 @@ async def test_tasks_logged_that_block_stage_1(
     with (
         patch.object(bootstrap, "STAGE_1_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0),
         patch.object(
             bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
+
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
 
     assert "Setup timed out for stage 1 waiting on" in caplog.text
     assert "waiting on" in caplog.text
@@ -1348,13 +1313,16 @@ async def test_tasks_logged_that_block_stage_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 2 startup."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await hass.loop.create_future()
+
+            task = hass.async_create_task(_not_marked_background_task())
             await asyncio.sleep(0.1)
             return True
 
@@ -1372,9 +1340,13 @@ async def test_tasks_logged_that_block_stage_2(
     with (
         patch.object(bootstrap, "STAGE_2_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
+
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
 
     assert "Setup timed out for stage 2 waiting on" in caplog.text
     assert "waiting on" in caplog.text
