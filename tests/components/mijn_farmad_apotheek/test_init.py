@@ -296,14 +296,23 @@ async def test_order_medication_existing_draft(
     )
 
 
+@pytest.mark.parametrize(
+    "draft_id",
+    [
+        pytest.param(API_DRAFT_ID, id="with-id"),
+        pytest.param(None, id="without-id"),
+    ],
+)
 async def test_order_medication_existing_draft_items(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    draft_id: str | None,
 ) -> None:
     """Test ordering is rejected when the draft basket has products."""
     await init_integration(hass)
     client = mock_farmad_client.return_value
     client.async_get_draft_basket.return_value = DraftBasket(
-        id=API_DRAFT_ID,
+        id=draft_id,
         comment=None,
         items=(BasketItem(product_cnk=API_PRODUCT_CNK_2, quantity=1, unit_price=None),),
     )
