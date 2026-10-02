@@ -98,9 +98,9 @@ def build_schedule(
 ) -> FirewallPolicySchedule:
     """Build the schedule for a mode from the current one plus changes.
 
-    Values the new mode needs are taken from the changes, then from the
-    current schedule, then from defaults. A date is only kept when the mode
-    doesn't change: switching to a dated mode starts it today.
+    Times are taken from the changes, then from the current schedule, then
+    from defaults. Dates and days are only kept when the mode doesn't change:
+    choosing a mode starts it today, on every day of the week.
     """
     current_mode = schedule_mode(current)
     new_mode = mode or current_mode
@@ -113,27 +113,31 @@ def build_schedule(
     # Read through a Mapping: a TypedDict only accepts literal keys.
     current_values: Mapping[str, object] = current
 
-    def _date(changed: date | None, key: str) -> str:
+    def _date(changed: date | None, key: str, *, keep: bool) -> str:
         if changed is not None:
             return changed.isoformat()
-        if same_mode and isinstance(kept := current_values.get(key), str):
+        if keep and isinstance(kept := current_values.get(key), str):
             return kept
         return today_str
 
     all_day = False
     if new_mode in MODES_WITH_DAYS:
-        days = current.get("repeat_on_days")
-        chosen = [day for day in WEEKDAYS if isinstance(days, list) and day in days]
-        schedule["repeat_on_days"] = chosen or list(WEEKDAYS)
-        all_day = (
-            current_mode in MODES_WITH_DAYS and current.get("time_all_day") is True
-        )
+        if same_mode:
+            # A value change leaves the days alone, even if none are chosen.
+            days = current.get("repeat_on_days")
+            schedule["repeat_on_days"] = [
+                day for day in WEEKDAYS if isinstance(days, list) and day in days
+            ]
+            all_day = current.get("time_all_day") is True
+        else:
+            schedule["repeat_on_days"] = list(WEEKDAYS)
         schedule["time_all_day"] = all_day
     if new_mode is FirewallPolicyScheduleMode.ONE_TIME_ONLY:
-        schedule["date"] = _date(start_date, "date")
+        # Choosing One time, even again, dates it today.
+        schedule["date"] = _date(start_date, "date", keep=mode is None)
     if new_mode is FirewallPolicyScheduleMode.CUSTOM:
-        schedule["date_start"] = _date(start_date, "date_start")
-        schedule["date_end"] = _date(end_date, "date_end")
+        schedule["date_start"] = _date(start_date, "date_start", keep=same_mode)
+        schedule["date_end"] = _date(end_date, "date_end", keep=same_mode)
     if not all_day:
         schedule["time_range_start"] = (
             start.strftime("%H:%M")

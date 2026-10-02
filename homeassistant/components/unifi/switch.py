@@ -436,26 +436,28 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        try:
-            await self.entity_description.control_fn(self.hub, self._obj_id, True)
-        except aiounifi.AiounifiException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_request_failed",
-            ) from err
-        await self.async_refresh_after_control()
+        async with self.control_lock:
+            try:
+                await self.entity_description.control_fn(self.hub, self._obj_id, True)
+            except aiounifi.AiounifiException as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="action_request_failed",
+                ) from err
+            await self.async_refresh_after_control()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        try:
-            await self.entity_description.control_fn(self.hub, self._obj_id, False)
-        except aiounifi.AiounifiException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_request_failed",
-            ) from err
-        await self.async_refresh_after_control()
+        async with self.control_lock:
+            try:
+                await self.entity_description.control_fn(self.hub, self._obj_id, False)
+            except aiounifi.AiounifiException as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="action_request_failed",
+                ) from err
+            await self.async_refresh_after_control()
 
     @callback
     @override

@@ -1,6 +1,7 @@
 """UniFi entity representation."""
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
@@ -336,6 +337,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_update(self) -> None:
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+
+    @property
+    def control_lock(self) -> asyncio.Lock:
+        """Return the lock to hold while writing this entity's object."""
+        return self.hub.control_lock(self.entity_description.api_handler_fn(self.api))
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""

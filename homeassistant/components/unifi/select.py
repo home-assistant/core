@@ -120,16 +120,17 @@ class UnifiSelectEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.select_option_fn(
-                self.hub, self._obj_id, option
-            )
-        except aiounifi.AiounifiException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_request_failed",
-            ) from err
-        await self.async_refresh_after_control()
+        async with self.control_lock:
+            try:
+                await self.entity_description.select_option_fn(
+                    self.hub, self._obj_id, option
+                )
+            except aiounifi.AiounifiException as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="action_request_failed",
+                ) from err
+            await self.async_refresh_after_control()
 
     @callback
     @override

@@ -134,14 +134,17 @@ class UnifiTimeEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     async def async_set_value(self, value: time) -> None:
         """Change the time."""
-        try:
-            await self.entity_description.set_value_fn(self.hub, self._obj_id, value)
-        except aiounifi.AiounifiException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="action_request_failed",
-            ) from err
-        await self.async_refresh_after_control()
+        async with self.control_lock:
+            try:
+                await self.entity_description.set_value_fn(
+                    self.hub, self._obj_id, value
+                )
+            except aiounifi.AiounifiException as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="action_request_failed",
+                ) from err
+            await self.async_refresh_after_control()
 
     @callback
     @override

@@ -115,6 +115,12 @@ async def test_schedule_mode_states(hass: HomeAssistant, expected: str) -> None:
                 "time_range_end": "08:00",
             },
         ),
+        # A mode this library doesn't know can still be replaced.
+        (
+            [_policy({"mode": "SUNRISE", "time_range_start": "01:00"})],
+            "always",
+            {"mode": "ALWAYS"},
+        ),
         (
             [_policy({"mode": "ALWAYS"})],
             "every_day",
