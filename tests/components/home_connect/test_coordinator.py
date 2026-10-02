@@ -44,6 +44,7 @@ import pytest
 from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
+    BSH_OPERATION_STATE_FINISHED,
     BSH_POWER_OFF,
     DOMAIN,
 )
@@ -1080,6 +1081,26 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
         ]
     )
     await hass.async_block_till_done()
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
+                            raw_key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=BSH_OPERATION_STATE_FINISHED,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
 
     assert not hass.states.is_state(active_program_option_entity_id, STATE_UNAVAILABLE)
     assert not hass.states.get(selected_program_option_entity_id)
@@ -1110,6 +1131,30 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
                             level="",
                             handling="",
                             value=None,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_not_awaited()
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
+                            raw_key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="BSH.Common.EnumType.OperationState.Ready",
                         )
                     ]
                 ),

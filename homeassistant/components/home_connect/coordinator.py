@@ -332,24 +332,43 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                         ) and isinstance(event_value, str):
                             program_update_event_value = ProgramKey(event_value)
-                        if (
-                            event_key is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
-                            and event_value is None
-                            and (
-                                selected_program_event := events.get(
-                                    EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
-                                )
-                            )
-                            and isinstance(
-                                selected_program := selected_program_event.value, str
-                            )
-                        ):
-                            # When an appliance finishes the active program, the active program event is
-                            # sent with a null value. If a selected program is still available, use that
-                            # program so the UI shows the selected program options instead of the last
-                            # active program's options.
-                            program_update_event_value = ProgramKey(selected_program)
                         events[event_key] = event
+
+                    if (
+                        event_key
+                        in (
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
+                        )
+                        and (
+                            operation_state_event := events.get(
+                                EventKey.BSH_COMMON_STATUS_OPERATION_STATE
+                            )
+                        )
+                        and operation_state_event.value
+                        == "BSH.Common.EnumType.OperationState.Ready"
+                        and (
+                            active_program_event := events.get(
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                            )
+                        )
+                        and active_program_event.value is None
+                        and (
+                            selected_program_event := events.get(
+                                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                            )
+                        )
+                        and isinstance(
+                            selected_program := selected_program_event.value, str
+                        )
+                    ):
+                        # When an appliance finishes the active program, the active program event
+                        # is sent with a null value. If a selected program is still available, use
+                        # it so the UI shows its options instead of the last active program's
+                        # options. Wait until the operation state is ready before requesting the
+                        # program, otherwise the API returns an error.
+                        program_update_event_value = ProgramKey(selected_program)
+
                 # Process program update after all events to ensure
                 # BSH_COMMON_OPTION_BASE_PROGRAM event is available for
                 # favorite program resolution
