@@ -29,7 +29,7 @@ def _canonical_url(url: str) -> str:
 
     yarl lowercases the scheme/host and drops default ports, so spelling
     variants (https://FMD.EXAMPLE.COM:443 == https://fmd.example.com)
-    produce one identity. Unparseable or non-absolute input is returned
+    produce one identity. Unparsable or non-absolute input is returned
     as-is; entry creation still requires successful validation.
     """
     try:
@@ -70,9 +70,8 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # entity/device identities must all agree.
             user_input[CONF_URL] = _canonical_url(user_input[CONF_URL])
             # Account IDs are scoped per server.
-            await self.async_set_unique_id(
-                f"{user_input[CONF_URL]}/{user_input[CONF_ID]}"
-            )
+            server_url = user_input[CONF_URL]
+            await self.async_set_unique_id(f"{server_url}/{user_input[CONF_ID]}")
             self._abort_if_unique_id_configured()
             try:
                 artifacts = await validate_input(user_input)
