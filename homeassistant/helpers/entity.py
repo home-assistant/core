@@ -1708,6 +1708,11 @@ class Entity(
         the new entity_id, e.g. templates rendering `this`. Anything else belongs in
         async_entity_id_changed. Call super() so base classes can do the same.
 
+        Registry events are not serialized: while this awaits, the entity may be
+        renamed again, disabled or removed. After an await, re-check that the entity
+        is still added and that self.entity_id is unchanged before registering
+        anything, and undo work which is no longer wanted.
+
         To be extended by integrations.
         """
 
