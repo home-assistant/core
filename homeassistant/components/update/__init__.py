@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, system_state
 from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -108,6 +108,7 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: UpdateDeviceClass | None = None
     display_precision: int = 0
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+    post_restart_required: bool = False
 
 
 @lru_cache(maxsize=256)
@@ -123,6 +124,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "display_precision",
     "in_progress",
     "latest_version",
+    "post_restart_required",
     "release_summary",
     "release_url",
     "supported_features",
@@ -155,6 +157,7 @@ class UpdateEntity(
     _attr_display_precision: int
     _attr_in_progress: bool = False
     _attr_latest_version: str | None = None
+    _attr_post_restart_required: bool
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
     _attr_state: None = None
@@ -237,6 +240,15 @@ class UpdateEntity(
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._attr_latest_version
+
+    @cached_property
+    def post_restart_required(self) -> bool:
+        """Return if Home Assistant needs a restart after installing the update."""
+        if hasattr(self, "_attr_post_restart_required"):
+            return self._attr_post_restart_required
+        if hasattr(self, "entity_description"):
+            return self.entity_description.post_restart_required
+        return False
 
     @cached_property
     def release_summary(self) -> str | None:
@@ -432,6 +444,11 @@ class UpdateEntity(
             self._attr_in_progress = False
             self.__in_progress = False
             self.async_write_ha_state()
+
+        if self.post_restart_required:
+            system_state.async_set_home_assistant_restart_required(
+                self.hass, self.platform.platform_name
+            )
 
     @override
     async def async_internal_added_to_hass(self) -> None:
