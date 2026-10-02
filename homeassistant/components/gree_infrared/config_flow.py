@@ -11,6 +11,7 @@ from homeassistant.components.infrared import (
     async_get_receivers,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
@@ -27,7 +28,6 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
-    CONF_MODEL,
     DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,

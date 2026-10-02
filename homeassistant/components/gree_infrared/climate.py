@@ -37,6 +37,7 @@ from homeassistant.components.infrared import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_MODEL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -55,7 +56,6 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
-    CONF_MODEL,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
@@ -217,17 +217,24 @@ class _GreeAcExtraStoredData(ExtraStoredData):
         ):
             return None
         return cls(
-            last_active_hvac_mode,
-            *flags,
-            swing_v_position,
-            int(fresh_air),
-            None if timer_hours is None else float(timer_hours),
-            timer_deadline,
-            swing_h_position,
-            econo,
-            absence,
-            fahrenheit,
-            display_temp,
+            last_active_hvac_mode=last_active_hvac_mode,
+            turbo=flags[0],
+            light=flags[1],
+            health=flags[2],
+            xfan=flags[3],
+            sleep=flags[4],
+            ifeel=flags[5],
+            swing_v=flags[6],
+            swing_h=flags[7],
+            swing_v_position=swing_v_position,
+            fresh_air=int(fresh_air),
+            timer_hours=None if timer_hours is None else float(timer_hours),
+            timer_deadline=timer_deadline,
+            swing_h_position=swing_h_position,
+            econo=econo,
+            absence=absence,
+            fahrenheit=fahrenheit,
+            display_temp=display_temp,
         )
 
 
@@ -388,7 +395,16 @@ class GreeAcClimateEntity(
             self._state.fresh_air = restored.fresh_air
             self._state.timer_hours = restored.timer_hours
             self._timer_deadline = (
-                dt_util.as_utc(dt_util.parse_datetime(restored.timer_deadline))
+                (
+                    dt_util.as_utc(parsed_timer_deadline)
+                    if (
+                        parsed_timer_deadline := dt_util.parse_datetime(
+                            restored.timer_deadline
+                        )
+                    )
+                    is not None
+                    else None
+                )
                 if restored.timer_deadline is not None
                 else dt_util.utcnow() + timedelta(hours=restored.timer_hours)
                 if restored.timer_hours is not None
@@ -717,7 +733,7 @@ class GreeAcClimateEntity(
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set horizontal sweep."""
         self._valid_mode_or_raise(
-            "horizontal swing", swing_horizontal_mode, self.swing_horizontal_modes
+            "horizontal_swing", swing_horizontal_mode, self.swing_horizontal_modes
         )
         async with self._state.command_lock:
             previous = self._state.swing_h
