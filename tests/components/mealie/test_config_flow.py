@@ -546,6 +546,8 @@ async def test_options(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    parser_selector = result["data_schema"].schema[CONF_PARSER]
+    assert parser_selector.config["translation_key"] == CONF_PARSER
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"parse_todo_new": False, CONF_PARSER: "brute"}

@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import (
@@ -267,7 +268,12 @@ class MealieOptionsFlowHandler(OptionsFlowWithReload):
             probatio.Required(
                 CONF_PARSER,
                 default=self.config_entry.options.get(CONF_PARSER, DEFAULT_PARSER),
-            ): probatio.All(probatio.Coerce(str), probatio.In(list(RegisteredParser))),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[parser.value for parser in RegisteredParser],
+                    translation_key=CONF_PARSER,
+                )
+            ),
         }
 
         return self.async_show_form(

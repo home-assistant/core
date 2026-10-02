@@ -176,6 +176,8 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         ingredient = parsed_ingredient.ingredient
         if not ingredient.food:
             return None
+        if ingredient.unit and ingredient.unit.unit_id is None:
+            return None
 
         return MutateShoppingItem(
             is_food=ingredient.food.food_id is not None,
