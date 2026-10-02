@@ -30,6 +30,12 @@ STREAM_STATUS = {
     "unknown": None,
 }
 
+STREAM_PLAYBACK_STATUS = {
+    "playing": MediaPlayerState.PLAYING,
+    "paused": MediaPlayerState.PAUSED,
+    "stopped": MediaPlayerState.IDLE,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -131,6 +137,45 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Return the group the client is associated with."""
         return self._device.group
 
+    @property
+    def _stream_properties(self) -> Mapping[str, Any]:
+        """Return properties reported by the active Snapcast stream."""
+        if self._current_group is None:
+            return {}
+
+        try:
+            stream = self.coordinator.server.stream(self._current_group.stream)
+        except KeyError:
+            return {}
+
+        return stream.properties or {}
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return features supported by the active Snapcast stream."""
+        features = self._attr_supported_features
+        properties = self._stream_properties
+
+        if not properties.get("canControl", False):
+            return features
+
+        if properties.get("canPlay", False):
+            features |= MediaPlayerEntityFeature.PLAY
+
+        if properties.get("canPause", False):
+            features |= MediaPlayerEntityFeature.PAUSE
+
+        if properties.get("canGoNext", False):
+            features |= MediaPlayerEntityFeature.NEXT_TRACK
+
+        if properties.get("canGoPrevious", False):
+            features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+
+        features |= MediaPlayerEntityFeature.STOP
+
+        return features
+
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
@@ -164,6 +209,10 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 or self._current_group.muted
             ):
                 return MediaPlayerState.IDLE
+            playback_status = self._stream_properties.get("playbackStatus")
+            if playback_status in STREAM_PLAYBACK_STATUS:
+                return STREAM_PLAYBACK_STATUS[playback_status]
+
             try:
                 return STREAM_STATUS.get(self._current_group.stream_status)
             except KeyError:
@@ -244,6 +293,49 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Set the volume level."""
         await self._device.set_volume(round(volume * 100))
         self.async_write_ha_state()
+
+    async def _async_stream_control(self, command: str) -> None:
+        """Send a control command to the active Snapcast stream."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                f"Client '{self.entity_id}' has no group and no stream to control."
+            )
+
+        await self.coordinator.server.stream_control(
+            self._current_group.stream,
+            command,
+            {},
+        )
+
+    @override
+    async def async_media_play(self) -> None:
+        """Start playback."""
+        await self._async_stream_control("play")
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Pause playback."""
+        await self._async_stream_control("pause")
+
+    @override
+    async def async_media_play_pause(self) -> None:
+        """Toggle play/pause."""
+        await self._async_stream_control("playPause")
+
+    @override
+    async def async_media_stop(self) -> None:
+        """Stop playback."""
+        await self._async_stream_control("stop")
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Skip to the next track."""
+        await self._async_stream_control("next")
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Skip to the previous track."""
+        await self._async_stream_control("previous")
 
     async def async_snapshot(self) -> None:
         """Snapshot the group state."""
