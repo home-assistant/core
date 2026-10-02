@@ -14,8 +14,8 @@ from bsblan import (
     TimeSlot,
 )
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -583,7 +583,7 @@ async def test_non_standard_time_types(
 ) -> None:
     """Test service with non-standard time types raises error."""
     # Test with integer time values - schema validation will reject these
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             "set_hot_water_schedule",

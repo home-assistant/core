@@ -10,9 +10,9 @@ from easyenergy import (
     ElectricityGranularity,
     VatOption,
 )
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.easyenergy.services import (
@@ -285,7 +285,7 @@ async def test_service_schema_validation(
 ) -> None:
     """Test easyEnergy service schema validation."""
 
-    with pytest.raises(vol.error.Error, match=error_message):
+    with pytest.raises(probatio.error.Error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -313,7 +313,7 @@ async def test_service_schema_validation_vat(
 ) -> None:
     """Test easyEnergy service schema validation for VAT."""
 
-    with pytest.raises(vol.error.Error, match=error_message):
+    with pytest.raises(probatio.error.Error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -347,7 +347,7 @@ async def test_service_schema_validation_usage_price_type(
 ) -> None:
     """Test usage service schema validation for price type."""
 
-    with pytest.raises(vol.error.Error, match=error_message):
+    with pytest.raises(probatio.error.Error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -390,7 +390,7 @@ async def test_service_schema_validation_granularity(
     if service == ENERGY_USAGE_SERVICE_NAME:
         data["incl_vat"] = True
 
-    with pytest.raises(vol.error.Error, match=error_message):
+    with pytest.raises(probatio.error.Error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -407,7 +407,7 @@ async def test_service_schema_validation_return_vat(
 ) -> None:
     """Test return prices do not accept VAT selection."""
 
-    with pytest.raises(vol.error.Error, match="not a valid option .+"):
+    with pytest.raises(probatio.error.Error, match="not a valid option .+"):
         await hass.services.async_call(
             DOMAIN,
             ENERGY_RETURN_SERVICE_NAME,

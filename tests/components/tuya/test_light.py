@@ -5,12 +5,15 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tuya_device_handlers.device_wrapper.light import ColorTempWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -167,3 +170,23 @@ async def test_action(
         mock_device.id,
         expected_commands,
     )
+
+
+@pytest.mark.parametrize("mock_device_code", ["dj_ilddqqih3tucdk68"])
+async def test_color_temp_range_override(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test the entity reports the Kelvin range exposed by the wrapper."""
+    with (
+        patch.object(ColorTempWrapper, "min_kelvin", 1600),
+        patch.object(ColorTempWrapper, "max_kelvin", 4000),
+    ):
+        await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("light.ieskas")
+    assert state is not None
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 1600
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 4000

@@ -8,9 +8,9 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import DOMAIN, config_entries
@@ -458,13 +458,13 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
                 },
@@ -505,7 +505,7 @@ async def test_initialize_flow_unmet_dependency(
     """Test unmet dependencies are listed."""
     mock_platform(hass, "test.config_flow", None)
 
-    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    config_schema = probatio.Schema({"comp_conf": {"hello": str}}, required=True)
     mock_integration(
         hass, MockModule(domain="dependency_1", config_schema=config_schema)
     )
@@ -540,13 +540,13 @@ async def test_initialize_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 description_placeholders={"url": "https://example.com"},
                 errors={"username": "Should be unique."},
             )
@@ -662,7 +662,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
 
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
-                step_id="account", data_schema=vol.Schema({"user_title": str})
+                step_id="account", data_schema=probatio.Schema({"user_title": str})
             )
 
         async def async_step_account(self, user_input=None):
@@ -752,7 +752,7 @@ async def test_continue_flow_unauth(
 
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
-                step_id="account", data_schema=vol.Schema({"user_title": str})
+                step_id="account", data_schema=probatio.Schema({"user_title": str})
             )
 
         async def async_step_account(self, user_input=None):
@@ -883,13 +883,13 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -919,13 +919,13 @@ async def test_get_progress_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -1363,7 +1363,9 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                        data_schema=probatio.Schema(
+                            {probatio.Required("enabled"): bool}
+                        ),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1426,7 +1428,9 @@ async def test_options_flow_unauth(
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                        data_schema=probatio.Schema(
+                            {probatio.Required("enabled"): bool}
+                        ),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1463,7 +1467,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
-                        step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                        step_id="finish", data_schema=probatio.Schema({"enabled": bool})
                     )
 
                 async def async_step_finish(self, user_input=None):
@@ -1532,9 +1536,9 @@ async def test_options_flow_with_invalid_data(
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="finish",
-                        data_schema=vol.Schema(
+                        data_schema=probatio.Schema(
                             {
-                                vol.Required(
+                                probatio.Required(
                                     "choices", default=["invalid", "valid"]
                                 ): cv.multi_select({"valid": "Valid"})
                             }
@@ -1602,7 +1606,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
             async def async_step_user(self, user_input=None):
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    data_schema=probatio.Schema({probatio.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1664,7 +1668,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
 
                 return self.async_show_form(
                     step_id="reconfigure",
-                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    data_schema=probatio.Schema({probatio.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1729,6 +1733,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     assert data == {
         "handler": ["test1", "test"],
         "reason": "reconfigure_successful",
+        "translation_domain": "homeassistant",
         "type": "abort",
         "description_placeholders": None,
     }
@@ -1760,7 +1765,7 @@ async def test_subentry_flow_abort_duplicate(hass: HomeAssistant, client) -> Non
                     )
 
                 return self.async_show_form(
-                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                    step_id="finish", data_schema=probatio.Schema({"enabled": bool})
                 )
 
         @classmethod
@@ -1896,7 +1901,7 @@ async def test_subentry_flow_unauth(
             async def async_step_init(self, user_input=None):
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    data_schema=probatio.Schema({probatio.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1943,7 +1948,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
                     )
 
                 return self.async_show_form(
-                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                    step_id="finish", data_schema=probatio.Schema({"enabled": bool})
                 )
 
         @classmethod
@@ -2014,9 +2019,9 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
             async def async_step_user(self, user_input=None):
                 return self.async_show_form(
                     step_id="finish",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 "choices", default=["invalid", "valid"]
                             ): cv.multi_select({"valid": "Valid"})
                         }
@@ -3354,11 +3359,13 @@ async def test_flow_with_multiple_schema_errors(
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
-                        vol.Required(CONF_RADIUS): vol.All(int, vol.Range(min=5)),
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_RADIUS): probatio.All(
+                            int, probatio.Range(min=5)
+                        ),
                     }
                 ),
             )
@@ -3398,9 +3405,9 @@ async def test_flow_with_multiple_schema_errors_base(
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
                     }
                 ),
             )
@@ -3456,7 +3463,7 @@ async def test_supports_reconfigure(
         async def async_step_reconfigure(self, user_input=None):
             if user_input is None:
                 return self.async_show_form(
-                    step_id="reconfigure", data_schema=vol.Schema({})
+                    step_id="reconfigure", data_schema=probatio.Schema({})
                 )
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
