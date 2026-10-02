@@ -6,10 +6,6 @@ from datetime import timedelta
 from typing import Any, override
 
 from pyportainer import Portainer
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-)
 from pyportainer.models.docker import (
     DockerContainer,
     LocalImageInformation,
@@ -23,10 +19,8 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
@@ -34,6 +28,7 @@ from .coordinator import (
     PortainerCoordinatorData,
 )
 from .entity import PortainerContainerEntity
+from .util import async_call_portainer
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -164,22 +159,12 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install update."""
-        try:
-            await self.entity_description.update_func(
+        await async_call_portainer(
+            self.coordinator,
+            self.entity_description.update_func(
                 self.coordinator.portainer,
                 self.endpoint_id,
                 self.container_data.container.id,
-            )
-        except PortainerAuthenticationError as ex:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from ex
-        except PortainerConnectionError as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from ex
-        else:
-            await self.coordinator.async_request_refresh()
+            ),
+        )
+        await self.coordinator.async_request_refresh()

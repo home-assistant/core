@@ -54,7 +54,7 @@ async def _perform_action(
     coroutine: Coroutine[Any, Any, Any],
 ) -> None:
     """Perform a Portainer action with error handling and coordinator refresh."""
-    await async_call_portainer(coroutine)
+    await async_call_portainer(coordinator, coroutine)
     await coordinator.async_request_refresh()
 
 
