@@ -133,6 +133,8 @@ async def test_source_list_adds_label(hass: HomeAssistant) -> None:
         ("HDMI 1", "extInput:hdmi?port=1"),
         ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 4", "extInput:hdmi?port=4"),
+        # No exact match: falls back to the generic name containing the query.
+        ("3", "extInput:hdmi?port=3"),
     ],
 )
 async def test_select_source(
