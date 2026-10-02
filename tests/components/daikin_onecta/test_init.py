@@ -2596,9 +2596,7 @@ async def test_firmware_install_failure(caplog: pytest.LogCaptureFixture) -> Non
 
     await entity.async_install(None, False)
 
-    device.put.assert_awaited_once_with(
-        "device", "gateway-id", "firmware/firmware-id"
-    )
+    device.put.assert_awaited_once_with("device", "gateway-id", "firmware/firmware-id")
     assert "Failed to trigger firmware update for Device" in caplog.text
 
 

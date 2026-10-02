@@ -42,6 +42,7 @@ PLATFORMS = [
     Platform.WATER_HEATER,
 ]
 
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Establish connection with Daikin."""
     try:
