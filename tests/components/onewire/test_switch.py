@@ -131,7 +131,7 @@ async def test_switch_write_failure(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    owproxy.return_value.write.side_effect = OWServerConnectionError("Unreachable")
+    owproxy.return_value.write.side_effect = OWServerConnectionError
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -140,4 +140,4 @@ async def test_switch_write_failure(
             blocking=True,
         )
     assert exc_info.value.translation_key == "write_failed"
-    assert str(exc_info.value) == "Error writing to /05.111111111111/PIO: Unreachable"
+    assert str(exc_info.value) == "Error writing to /05.111111111111/PIO"

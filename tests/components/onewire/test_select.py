@@ -111,7 +111,7 @@ async def test_selection_option_write_failure(
     setup_owproxy_mock_devices(owproxy, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    owproxy.return_value.write.side_effect = OWServerConnectionError("Unreachable")
+    owproxy.return_value.write.side_effect = OWServerConnectionError
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -123,6 +123,4 @@ async def test_selection_option_write_failure(
             blocking=True,
         )
     assert exc_info.value.translation_key == "write_failed"
-    assert (
-        str(exc_info.value) == "Error writing to /28.111111111111/tempres: Unreachable"
-    )
+    assert str(exc_info.value) == "Error writing to /28.111111111111/tempres"

@@ -130,7 +130,7 @@
   },
   "exceptions": {
     "write_failed": {
-      "message": "Error writing to {device_file}: {error}"
+      "message": "Error writing to {device_file}"
     }
   },
   "options": {

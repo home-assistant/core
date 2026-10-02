@@ -53,10 +53,7 @@ class OneWireEntity(Entity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
-                translation_placeholders={
-                    "device_file": self._device_file,
-                    "error": str(exc),
-                },
+                translation_placeholders={"device_file": self._device_file},
             ) from exc
 
     async def async_update(self) -> None:
