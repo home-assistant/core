@@ -66,6 +66,7 @@ async def async_setup_entry(
                 EVENT_DOMAIN, DOMAIN, f"{device.serial_number}_{description.key}"
             ):
                 # The device never sends this event, so the entity could never fire.
+                # Can be removed in HA Core 2027.5.
                 entity_registry.async_remove(entity_id)
         async_add_entities(entities)
 
