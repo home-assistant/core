@@ -412,15 +412,9 @@ def _send_handle_get_states_response(
 class _StateDiffBatch:
     """Collects the state changes fired in one event loop iteration into one message.
 
-    The backend fired one websocket message per state change, and a client applying an
-    update rebuilds its whole state machine once per message - so a pass that changed
-    twenty entities cost twenty full rebuilds rather than one. The changes are already
-    produced together: an integration that refreshes a device sets all of its entities
-    without awaiting in between, so they land in a single iteration of the loop.
-
-    Nothing is delayed to achieve this. The flush is scheduled with call_soon, so it
-    runs at the end of the iteration that is already in progress, and a change that
-    arrives on its own is still sent on its own.
+    Nothing is delayed to do it: the flush is scheduled with call_soon, so it runs at
+    the end of the iteration that is already in progress, and a change that arrives on
+    its own is still sent on its own.
     """
 
     __slots__ = ("_entity_ids", "_events", "_loop", "_message_id", "_send_message")
@@ -461,9 +455,8 @@ class _StateDiffBatch:
         events = self._events
         self._events = []
         self._entity_ids = set()
-        self._send_message(
-            messages.batched_state_diff_message(self._message_id, events)
-        )
+        for message in messages.batched_state_diff_messages(self._message_id, events):
+            self._send_message(message)
 
     @callback
     def async_discard(self) -> None:

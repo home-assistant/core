@@ -4126,6 +4126,50 @@ async def test_subscribe_entities_discards_a_batch_that_was_unsubscribed(
     assert sent == []
 
 
+async def test_subscribe_entities_batch_survives_one_unserializable_change(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A change that will not serialize costs only its own update.
+
+    Unbatched, such a change became an error message for that change alone. Letting it
+    propagate out of a flush would instead lose every entity collected alongside it.
+    """
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.one", "on")
+    hass.states.async_set("light.bad", "on", {"bad": CannotSerializeMe()})
+    hass.states.async_set("light.two", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert set(msg["event"]["a"]) == {"light.one", "light.two"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "result"
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "Invalid JSON in response",
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("domain", "result"),
     [
