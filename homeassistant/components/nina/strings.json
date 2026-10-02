@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "no_fetch": "Cannot connect to NINA service to fetch city or counties. Please try again later.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
