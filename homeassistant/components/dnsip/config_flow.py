@@ -43,9 +43,9 @@ DATA_SCHEMA = probatio.Schema(
             probatio.Schema(
                 {
                     probatio.Optional(CONF_RESOLVER): cv.string,
-                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): probatio.Port(),
                     probatio.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    probatio.Optional(CONF_PORT_IPV6): cv.port,
+                    probatio.Optional(CONF_PORT_IPV6): probatio.Port(),
                 }
             ),
             SectionConfig(collapsed=True),
@@ -216,9 +216,9 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithReload):
             probatio.Schema(
                 {
                     probatio.Optional(CONF_RESOLVER): cv.string,
-                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): probatio.Port(),
                     probatio.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    probatio.Optional(CONF_PORT_IPV6): cv.port,
+                    probatio.Optional(CONF_PORT_IPV6): probatio.Port(),
                 }
             ),
             self.config_entry.options,

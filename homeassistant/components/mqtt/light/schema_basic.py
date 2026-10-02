@@ -177,7 +177,7 @@ PLATFORM_SCHEMA_MODERN_BASIC = (
             probatio.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
             probatio.Optional(CONF_EFFECT_COMMAND_TOPIC): valid_publish_topic,
             probatio.Optional(CONF_EFFECT_LIST): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
             probatio.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,

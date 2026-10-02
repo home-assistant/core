@@ -97,7 +97,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         await super().async_added_to_hass()
 
         # subscribe to NodeEvent events
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_matter_node_event,
                 event_filter=EventType.NODE_EVENT,

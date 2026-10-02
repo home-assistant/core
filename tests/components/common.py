@@ -2873,23 +2873,24 @@ async def assert_numerical_condition_unit_conversion(
 async def assert_availability_follows_source_entity(
     hass: HomeAssistant,
     entity_id: str,
-    source_entity_id: str,
+    source_entity_ids: list[str],
 ) -> None:
-    """Check that entity becomes unavailable when source entity is unavailable."""
+    """Check that the entity is available only when all source entities are available."""
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    hass.states.async_set(source_entity_id, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
+    for source_states in itertools.product(
+        (STATE_UNAVAILABLE, STATE_UNKNOWN), repeat=len(source_entity_ids)
+    ):
+        for source_entity_id, source_state in zip(
+            source_entity_ids, source_states, strict=True
+        ):
+            hass.states.async_set(source_entity_id, source_state)
+        await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    hass.states.async_set(source_entity_id, STATE_UNKNOWN)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert (state.state != STATE_UNAVAILABLE) == all(
+            source_state != STATE_UNAVAILABLE for source_state in source_states
+        )

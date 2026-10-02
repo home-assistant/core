@@ -42,14 +42,16 @@ ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
         probatio.Optional(CONF_EXPOSE, default=True): cv.boolean,
-        probatio.Optional(CONF_ALIASES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_ALIASES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_ROOM_HINT): cv.string,
     }
 )
 
 GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     {
-        probatio.Required(CONF_PRIVATE_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_PRIVATE_KEY)): cv.string,
         probatio.Required(CONF_CLIENT_EMAIL): cv.string,
     },
     extra=probatio.ALLOW_EXTRA,
@@ -73,7 +75,7 @@ GOOGLE_ASSISTANT_SCHEMA = probatio.All(
             ): cv.boolean,
             probatio.Optional(
                 CONF_EXPOSED_DOMAINS, default=DEFAULT_EXPOSED_DOMAINS
-            ): cv.ensure_list,
+            ): probatio.EnsureList(),
             probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
             probatio.Optional(CONF_SECURE_DEVICES_PIN): str,
