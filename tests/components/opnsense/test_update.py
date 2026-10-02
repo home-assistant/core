@@ -1,5 +1,6 @@
 """Tests for OPNsense firmware updates."""
 
+from asyncio import Event
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -233,6 +234,50 @@ async def test_firmware_install(
     assert hass.states.get("update.mock_title_firmware").attributes["in_progress"]
 
 
+async def test_firmware_install_concurrent_calls(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+) -> None:
+    """Test a pending firmware start prevents another installation."""
+    request_started = Event()
+    finish_request = Event()
+
+    async def start_upgrade(*, type: str) -> dict[str, str]:
+        request_started.set()
+        await finish_request.wait()
+        return {"status": "ok"}
+
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.side_effect = start_upgrade
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.mock_title_firmware"},
+            blocking=True,
+        )
+    )
+    await request_started.wait()
+
+    try:
+        assert hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "update",
+                "install",
+                {"entity_id": "update.mock_title_firmware"},
+                blocking=True,
+            )
+        mock_opnsense_client.upgrade_firmware.assert_awaited_once_with(type="update")
+    finally:
+        finish_request.set()
+        await install_task
+
+
 @pytest.mark.parametrize("terminal_status", ["done", "reboot", "error"])
 async def test_firmware_upgrade_finishes(
     hass: HomeAssistant,
@@ -337,26 +382,55 @@ async def test_firmware_upgrade_unload(
     mock_opnsense_client.upgrade_status.assert_not_awaited()
 
 
-@pytest.mark.parametrize("response", [{"status": "failure"}, None])
+@pytest.mark.parametrize(
+    ("response", "error", "expected_error"),
+    [
+        pytest.param({"status": "failure"}, None, HomeAssistantError, id="rejected"),
+        pytest.param(None, None, HomeAssistantError, id="empty-response"),
+        pytest.param(
+            None,
+            OPNsenseConnectionError("connection failed"),
+            OPNsenseConnectionError,
+            id="connection-error",
+        ),
+    ],
+)
 async def test_firmware_install_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     response: dict[str, str] | None,
+    error: OPNsenseConnectionError | None,
+    expected_error: type[Exception],
 ) -> None:
-    """Test failed firmware start is reported to the caller."""
+    """Test failed firmware starts clear progress and allow a retry."""
     mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
     mock_opnsense_client.upgrade_firmware.return_value = response
+    mock_opnsense_client.upgrade_firmware.side_effect = error
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(expected_error):
         await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.mock_title_firmware"},
             blocking=True,
         )
+
+    assert not hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_opnsense_client.upgrade_status.assert_not_awaited()
+
+    mock_opnsense_client.upgrade_firmware.side_effect = None
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+    assert hass.states.get("update.mock_title_firmware").attributes["in_progress"]
 
 
 async def test_firmware_install_without_update_status(

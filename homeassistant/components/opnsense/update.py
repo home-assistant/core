@@ -222,9 +222,18 @@ class OPNsenseFirmwareUpdate(
         """Start the firmware update available on OPNsense."""
         update_type = self.coordinator.data.get("status")
         if update_type in ("update", "upgrade"):
-            response = await self.coordinator.client.upgrade_firmware(type=update_type)
+            self._upgrade_in_progress = True
+            self.async_write_ha_state()
+            response = None
+            try:
+                response = await self.coordinator.client.upgrade_firmware(
+                    type=update_type
+                )
+            finally:
+                if not response or response.get("status") != "ok":
+                    self._upgrade_in_progress = False
+                    self.async_write_ha_state()
             if response and response.get("status") == "ok":
-                self._upgrade_in_progress = True
                 self._upgrade_started = dt_util.utcnow()
                 self._unsub_upgrade_status = async_track_time_interval(
                     self.hass, self._async_poll_upgrade_status, UPGRADE_STATUS_INTERVAL
