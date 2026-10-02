@@ -635,6 +635,32 @@ async def test_relay_mode_select_switches_via_lib_api(
     assert hass.states.get(entity_id).state == "auto"
 
 
+async def test_relay_mode_write_holds_block_lock(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """The relay-mode write runs under the block's timer_write_lock.
+
+    async_set_relay_mode rewrites the whole block, so it must be serialized
+    against the time and select platforms' writes on the same block.
+    """
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_mode")
+    coordinator = mock_config_entry_timers.runtime_data
+
+    locked_during_write = False
+
+    async def _check_lock(_relay: object, _mode: object) -> dict[str, object]:
+        nonlocal locked_during_write
+        locked_during_write = coordinator.timer_write_lock("relay_aux1").locked()
+        return {}
+
+    mock_neopool_client.async_set_relay_mode = AsyncMock(side_effect=_check_lock)
+    await _select_option(hass, entity_id, "auto")
+    assert locked_during_write
+
+
 async def test_relay_mode_manual_to_manual_is_noop(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,

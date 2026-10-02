@@ -207,7 +207,9 @@ async def _write_relay_mode(
         return
     relay = _RELAY_MODE_ENTITY_KIND[entity.entity_description.key]
     mode = RelayMode.AUTO if option == "auto" else RelayMode.ALWAYS_OFF
-    overrides = await client.async_set_relay_mode(relay, mode)
+    # async_set_relay_mode rewrites the whole block, so serialize it per block.
+    async with entity.coordinator.timer_write_lock(timer_name):
+        overrides = await client.async_set_relay_mode(relay, mode)
     entity.coordinator.async_set_updated_data({**entity.coordinator.data, **overrides})
     entity.coordinator.request_refresh_with_followup()
 
