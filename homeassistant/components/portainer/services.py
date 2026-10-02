@@ -1,6 +1,8 @@
 """Services for the Portainer integration."""
 
+from collections.abc import Coroutine
 from datetime import timedelta
+from typing import Any
 
 import probatio
 from pyportainer import (
@@ -117,18 +119,10 @@ def _async_get_container_and_endpoint_ids(
     )
 
 
-async def prune_images(call: ServiceCall) -> None:
-    """Prune unused images in Portainer, with more controls."""
-    device, config_entry = _async_get_device_and_entry(call, call.data[ATTR_DEVICE_ID])
-    coordinator = config_entry.runtime_data
-    endpoint_id = _async_get_endpoint_id(device, config_entry)
-
+async def _async_call_portainer(coroutine: Coroutine[Any, Any, Any]) -> None:
+    """Await a Portainer call, mapping library errors to HomeAssistantError."""
     try:
-        await coordinator.portainer.images_prune(
-            endpoint_id=endpoint_id,
-            until=call.data.get(ATTR_DATE_UNTIL),
-            dangling=call.data.get(ATTR_DANGLING, False),
-        )
+        await coroutine
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -144,6 +138,21 @@ async def prune_images(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="timeout_connect",
         ) from err
+
+
+async def prune_images(call: ServiceCall) -> None:
+    """Prune unused images in Portainer, with more controls."""
+    device, config_entry = _async_get_device_and_entry(call, call.data[ATTR_DEVICE_ID])
+    coordinator = config_entry.runtime_data
+    endpoint_id = _async_get_endpoint_id(device, config_entry)
+
+    await _async_call_portainer(
+        coordinator.portainer.images_prune(
+            endpoint_id=endpoint_id,
+            until=call.data.get(ATTR_DATE_UNTIL),
+            dangling=call.data.get(ATTR_DANGLING, False),
+        )
+    )
 
 
 async def prune_build_cache(call: ServiceCall) -> None:
@@ -152,27 +161,13 @@ async def prune_build_cache(call: ServiceCall) -> None:
     coordinator = config_entry.runtime_data
     endpoint_id = _async_get_endpoint_id(device, config_entry)
 
-    try:
-        await coordinator.portainer.prune_build_cache(
+    await _async_call_portainer(
+        coordinator.portainer.prune_build_cache(
             endpoint_id,
             all_cache=call.data[ATTR_ALL],
             until=call.data.get(ATTR_DATE_UNTIL),
         )
-    except PortainerAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        ) from err
-    except PortainerConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except PortainerTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-        ) from err
+    )
 
 
 async def recreate_container(call: ServiceCall) -> None:
@@ -186,28 +181,14 @@ async def recreate_container(call: ServiceCall) -> None:
     )
     timeout: timedelta | None = call.data.get(ATTR_TIMEOUT)
 
-    try:
-        await coordinator.portainer.container_recreate(
+    await _async_call_portainer(
+        coordinator.portainer.container_recreate(
             endpoint_id=endpoint_id,
             container_id=container_id,
             **({"timeout": timeout} if timeout is not None else {}),
             pull_image=call.data.get(ATTR_PULL_IMAGE, False),
         )
-    except PortainerAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        ) from err
-    except PortainerConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except PortainerTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-        ) from err
+    )
 
     await coordinator.async_request_refresh()
 
