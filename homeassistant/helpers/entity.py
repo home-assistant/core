@@ -54,6 +54,7 @@ from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.async_ import wait_shared_future
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er
@@ -1463,7 +1464,7 @@ class Entity(
         or if force_remove=True, its state will be removed.
         """
         if self.__remove_future is not None:
-            await self.__remove_future
+            await wait_shared_future(self.__remove_future)
             return
 
         self.__remove_future = self.hass.loop.create_future()
