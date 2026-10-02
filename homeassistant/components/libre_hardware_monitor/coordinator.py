@@ -25,7 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ORPHANED_DEVICE_REMOVAL_POLLS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             for device in device_entries
             if device.identifiers and device.name
         }
+        self._missed_polls: dict[DeviceId, int] = {}
 
     @override
     async def _async_update_data(self) -> LibreHardwareMonitorData:
@@ -121,10 +122,17 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         _LOGGER.debug("Previous device_ids: %s", previous_device_ids)
         _LOGGER.debug("Detected device_ids: %s", detected_device_ids)
 
-        if previous_device_ids == detected_device_ids:
-            return
+        # Devices that are reported again drop out, which resets their count.
+        self._missed_polls = {
+            device_id: self._missed_polls.get(device_id, 0) + 1
+            for device_id in previous_device_ids - detected_device_ids
+        }
 
-        if orphaned_devices := previous_device_ids - detected_device_ids:
+        if orphaned_devices := {
+            device_id
+            for device_id, missed_polls in self._missed_polls.items()
+            if missed_polls >= ORPHANED_DEVICE_REMOVAL_POLLS
+        }:
             _LOGGER.warning(
                 "Device(s) no longer available, will be removed: %s",
                 [self._previous_devices[device_id] for device_id in orphaned_devices],
@@ -138,5 +146,14 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
                         "Removing device: %s", self._previous_devices[device_id]
                     )
                     device_registry.async_remove_device(device.id)
+                del self._missed_polls[device_id]
 
-        self._previous_devices = detected_devices
+        self._previous_devices = {
+            device_id: self._previous_devices[device_id]
+            for device_id in self._missed_polls
+        } | detected_devices
+
+    @property
+    def tracked_device_ids(self) -> set[DeviceId]:
+        """Return the ids of devices currently kept in the device registry."""
+        return set(self._previous_devices)

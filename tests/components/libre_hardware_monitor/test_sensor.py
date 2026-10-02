@@ -23,6 +23,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    ORPHANED_DEVICE_REMOVAL_POLLS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -218,10 +219,17 @@ async def test_orphaned_devices_are_removed_if_not_present_after_update(
     freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test devices not found in LHM data after update are removed."""
+    """Test devices missing from consecutive LHM updates are removed."""
     orphaned_device = await _mock_orphaned_device(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
+
+    for _ in range(ORPHANED_DEVICE_REMOVAL_POLLS - 1):
+        freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert device_registry.async_get(orphaned_device.id) is not None
 
     freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
@@ -234,14 +242,28 @@ async def test_orphaned_devices_are_removed_if_not_present_during_startup(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test devices not found in LHM data during startup are removed."""
+    """Test devices missing from LHM data since startup are removed."""
     orphaned_device = await _mock_orphaned_device(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
 
-    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The first refresh after startup counts as the first missed poll.
+    for _ in range(ORPHANED_DEVICE_REMOVAL_POLLS - 2):
+        freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert device_registry.async_get(orphaned_device.id) is not None
+
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert device_registry.async_get(orphaned_device.id) is None
 
@@ -342,3 +364,39 @@ async def test_integration_dynamically_adds_new_devices(
     assert "sensor.gaming_pc_generic_memory_test_sensor" in [
         entry.entity_id for entry in entity_entries
     ]
+
+
+async def test_removed_device_is_added_again_when_it_reappears(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a removed device and its sensors are created again when it reappears."""
+    entity_id = "sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_core_temperature"
+    full_data = mock_lhm_client.get_data.return_value
+    orphaned_device = await _mock_orphaned_device(
+        device_registry, hass, mock_config_entry, mock_lhm_client
+    )
+
+    for _ in range(ORPHANED_DEVICE_REMOVAL_POLLS):
+        freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert device_registry.async_get(orphaned_device.id) is None
+    assert hass.states.get(entity_id) is None
+
+    mock_lhm_client.get_data.return_value = full_data
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_gpu-nvidia-0"),
+        mock_config_entry.entry_id,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "36.0"
