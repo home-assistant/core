@@ -265,7 +265,7 @@ async def test_service_get_charge_schedule_formats_local_time(
 ) -> None:
     """Test that service returns local charge schedule times."""
     await hass.config.async_set_time_zone("Europe/Paris")
-    freezer.move_to("2025-08-23 00:00:00+00:00")
+    freezer.move_to("2025-03-30 23:30:00+00:00")
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -275,7 +275,7 @@ async def test_service_get_charge_schedule_formats_local_time(
     )
     payload["data"]["attributes"]["schedules"][0]["monday"]["startTime"] = None
     payload["data"]["attributes"]["schedules"][1]["monday"] = {
-        "startTime": "T10:00Z",
+        "startTime": "T00:00Z",
         "duration": 16,
     }
     payload["data"]["attributes"]["schedules"][1]["sunday"]["duration"] = 17
@@ -304,7 +304,7 @@ async def test_service_get_charge_schedule_formats_local_time(
     assert response["schedules"][0]["monday"][0]["start_time"] is None
     assert response["schedules"][1]["monday"] == [
         {"start_time": "01:30", "duration": 17},
-        {"start_time": "12:00", "duration": 16},
+        {"start_time": "02:00", "duration": 16},
     ]
 
 

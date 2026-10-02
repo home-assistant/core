@@ -228,7 +228,7 @@ def _format_charge_schedule_time(
         return day, None
 
     utc_time = time.fromisoformat(start_time.removeprefix("T").removesuffix("Z"))
-    current_date = dt_util.utcnow().date()
+    current_date = dt_util.now().date()
     monday_date = current_date - timedelta(days=current_date.weekday())
     utc_datetime = datetime.combine(
         monday_date + timedelta(days=CHARGE_SCHEDULE_DAYS.index(day)),
