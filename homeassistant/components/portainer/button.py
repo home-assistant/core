@@ -7,11 +7,6 @@ from datetime import timedelta
 from typing import Any, override
 
 from pyportainer import DockerContainerState, Portainer
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
 from pyportainer.models.docker import DockerContainer
 from pyportainer.models.stacks import Stack, StackType
 
@@ -22,11 +17,9 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
@@ -38,6 +31,7 @@ from .entity import (
     PortainerEndpointEntity,
     PortainerStackEntity,
 )
+from .util import async_call_portainer
 
 PARALLEL_UPDATES = 1
 
@@ -275,24 +269,7 @@ class PortainerBaseButton(ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        try:
-            await self._async_press_call()
-        except PortainerConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
-        except PortainerAuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except PortainerTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-            ) from err
-
+        await async_call_portainer(self._async_press_call())
         await self.coordinator.async_request_refresh()
 
 

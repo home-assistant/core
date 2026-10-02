@@ -2131,6 +2131,38 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     mock_close.assert_called_once()
 
 
+async def test_energy_stream_stop_does_not_fail_coordinators(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_stream_listen: MagicMock,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """Stopping Home Assistant does not fail the energy coordinators."""
+
+    async def listen() -> None:
+        # Like the library, report a disconnect when the listen task ends.
+        try:
+            await asyncio.Event().wait()
+        finally:
+            mock_add_connection_listener.send(False)
+
+    mock_stream_listen.side_effect = listen
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+
+    await hass.async_stop()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
 async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     hass: HomeAssistant,
     mock_add_connection_listener: MagicMock,
