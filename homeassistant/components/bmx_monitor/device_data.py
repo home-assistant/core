@@ -124,7 +124,7 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             DEFAULT_RATE_LIMIT,
         )
 
-        poll_needed = last_poll > rate_limit
+        poll_needed = last_poll >= rate_limit
 
         _LOGGER.debug(
             "Poll rate limited for %s: rate_limit=%s, last_poll=%s, poll_needed=%s",

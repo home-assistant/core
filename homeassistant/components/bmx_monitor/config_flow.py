@@ -473,7 +473,7 @@ class BMxOptionsFlow(OptionsFlowWithReload):
                     default=self.config_entry.options.get(
                         CONF_RATE_LIMIT, DEFAULT_RATE_LIMIT
                     ),
-                ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=60)),
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=10, max=120)),
             }
         )
 
