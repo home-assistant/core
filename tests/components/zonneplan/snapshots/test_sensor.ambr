@@ -8,6 +8,10 @@
 # ---
 # name: test_entities_not_created_for_missing_market_segment[missing_gas]
   list([
+    'binary_sensor.thuisbatterij_backup_power_active',
+    'binary_sensor.thuisbatterij_grid_congestion',
+    'binary_sensor.thuisbatterij_home_optimization_active',
+    'binary_sensor.thuisbatterij_load_balancing_overload',
     'binary_sensor.zonneplan_electricity_price_low',
     'sensor.zonneplan_current_electricity_price',
     'sensor.zonneplan_current_electricity_tariff_group',
