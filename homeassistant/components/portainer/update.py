@@ -28,7 +28,6 @@ from .coordinator import (
     PortainerCoordinatorData,
 )
 from .entity import PortainerContainerEntity
-from .util import async_call_portainer
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -159,8 +158,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install update."""
-        await async_call_portainer(
-            self.coordinator,
+        await self.coordinator.async_call_portainer(
             self.entity_description.update_func(
                 self.coordinator.portainer,
                 self.endpoint_id,
