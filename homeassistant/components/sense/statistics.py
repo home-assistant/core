@@ -13,6 +13,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_import_statistics,
+    get_last_statistics,
     statistics_during_period,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -35,11 +36,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 WINDOW_HOURS = 6
 MAX_CACHED_HOURS = 24
-ANCHOR_LOOKBACKS = (
-    timedelta(hours=MAX_CACHED_HOURS),
-    timedelta(days=7),
-    timedelta(days=90),
-)
 
 STATISTIC_VARIANTS = (CONSUMPTION_ID, PRODUCTION_ID, FROM_GRID_ID, TO_GRID_ID)
 
@@ -95,6 +91,8 @@ class SenseStatistics:
             del self._hourly[hour]
 
         await self._async_import_hours(window, self._hourly)
+        if now.minute < TREND_UPDATE_MINUTES[0]:
+            self._hourly.pop(window[-1], None)
         if now.minute >= TREND_UPDATE_MINUTES[-1]:
             if values := await self._async_fetch(window_end):
                 self._provisional = (window_end, values)
@@ -169,23 +167,20 @@ class SenseStatistics:
     ) -> tuple[dict[str, float], dict[str, dict[float, float | None]]]:
         """Return each entity's anchor sum and the states already in the window."""
         anchors: dict[str, float] = {}
-        remaining = set(entity_ids)
-        for lookback in ANCHOR_LOOKBACKS:
-            rows = statistics_during_period(
-                self._hass,
-                window_start - lookback,
-                window_start,
-                remaining,
-                "hour",
-                None,
-                {"sum"},
+        window_start_ts = window_start.timestamp()
+        number_of_stats = round((window_end - window_start) / timedelta(hours=1)) + 1
+        for entity_id in entity_ids:
+            rows = get_last_statistics(
+                self._hass, number_of_stats, entity_id, False, {"sum"}
             )
-            for entity_id, entity_rows in rows.items():
-                if (last := entity_rows[-1].get("sum")) is not None:
-                    anchors[entity_id] = last
-            remaining -= set(anchors)
-            if not remaining:
-                break
+            previous = {
+                row["start"]: total
+                for row in rows.get(entity_id, [])
+                if row["start"] < window_start_ts
+                and (total := row.get("sum")) is not None
+            }
+            if previous:
+                anchors[entity_id] = previous[max(previous)]
 
         window_rows = statistics_during_period(
             self._hass,

@@ -187,15 +187,23 @@ async def test_signed_and_percentage_sensors_are_not_imported(
     assert await get_stats(hass, [NET_PRODUCTION]) == {}
 
 
+@pytest.mark.parametrize(
+    "anchor_age",
+    [
+        pytest.param(timedelta(hours=1), id="adjacent_hour"),
+        pytest.param(timedelta(days=120), id="long_outage"),
+    ],
+)
 async def test_continues_existing_sum(
     hass: HomeAssistant,
     mock_sense: MagicMock,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    anchor_age: timedelta,
 ) -> None:
     """Test an entity's accumulated history is continued rather than restarted."""
     freezer.move_to(NOW)
-    anchor = window()[0] - timedelta(hours=1)
+    anchor = window()[0] - anchor_age
     async_import_statistics(
         hass, seed_metadata(USAGE), [StatisticData(start=anchor, state=1.0, sum=1000.0)]
     )
@@ -233,6 +241,31 @@ async def test_import_wins_over_an_existing_row(
     assert rows[-1]["start"] == newest.timestamp()
     assert rows[-1]["sum"] == pytest.approx(HOURLY_ENERGY["usage"] * WINDOW_HOURS)
     assert rows[-1]["state"] == PERIOD_TO_DATE
+
+
+async def test_early_reading_of_newest_hour_is_fetched_again(
+    hass: HomeAssistant,
+    mock_sense: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_trends: MockTrends,
+) -> None:
+    """Test a reading taken before Sense settled the hour is not kept as final."""
+    freezer.move_to(NOW)
+    await setup_platform(hass, config_entry, Platform.SENSOR)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_sense.get_trend_data.call_count == WINDOW_HOURS
+
+    # The hour's final figure, which only the :10 refresh reads.
+    mock_trends.energy = HOURLY_ENERGY | {"usage": 2.0}
+    await trigger_trend_refresh(hass, freezer)
+    await async_wait_recording_done(hass)
+
+    assert mock_sense.get_trend_data.call_count == WINDOW_HOURS + 1
+    rows = (await get_stats(hass, [USAGE]))[USAGE]
+    assert rows[-1]["sum"] == pytest.approx(
+        HOURLY_ENERGY["usage"] * (WINDOW_HOURS - 1) + 2.0
+    )
 
 
 async def test_window_rewrite_is_idempotent(
