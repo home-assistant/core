@@ -13,7 +13,9 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 API_KEY_URL = "https://freedompro.eu/"
 
 

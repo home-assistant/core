@@ -253,7 +253,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfFrequency.HERTZ,
         get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "main")],
-        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "frame_rate") and api.supported(ch, "main")
+        ),
         value=lambda api, ch: str(api.frame_rate(ch, "main")),
         method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "main"),
     ),
@@ -266,7 +268,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfFrequency.HERTZ,
         get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "sub")],
-        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "frame_rate") and api.supported(ch, "sub")
+        ),
         value=lambda api, ch: str(api.frame_rate(ch, "sub")),
         method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "sub"),
     ),
@@ -279,7 +283,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "main")],
-        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "bit_rate") and api.supported(ch, "main")
+        ),
         value=lambda api, ch: str(api.bit_rate(ch, "main")),
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "main"),
     ),
@@ -292,7 +298,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "sub")],
-        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "bit_rate") and api.supported(ch, "sub")
+        ),
         value=lambda api, ch: str(api.bit_rate(ch, "sub")),
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
     ),
@@ -304,7 +312,9 @@ SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         get_options=[val.name for val in EncodingEnum],
-        supported=lambda api, ch: api.supported(ch, "encoding"),
+        supported=lambda api, ch: (
+            api.supported(ch, "encoding") and api.supported(ch, "main")
+        ),
         value=lambda api, ch: api.encoding(ch, "main"),
         method=lambda api, ch, value: api.set_encoding(ch, value, "main"),
     ),
@@ -316,7 +326,9 @@ SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         get_options=[val.name for val in EncodingEnum],
-        supported=lambda api, ch: api.supported(ch, "encoding"),
+        supported=lambda api, ch: (
+            api.supported(ch, "encoding") and api.supported(ch, "sub")
+        ),
         value=lambda api, ch: api.encoding(ch, "sub"),
         method=lambda api, ch, value: api.set_encoding(ch, value, "sub"),
     ),

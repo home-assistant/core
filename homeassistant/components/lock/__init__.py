@@ -6,7 +6,6 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any, final, override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,13 +22,18 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, LockEntityFeature, LockEntityStateAttribute, LockState
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    LockEntityFeature,
+    LockEntityStateAttribute,
+    LockState,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -39,10 +43,6 @@ ATTR_CHANGED_BY = "changed_by"
 CONF_DEFAULT_CODE = "default_code"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-LOCK_SERVICE_SCHEMA = cv.make_entity_service_schema(
-    {probatio.Optional(ATTR_CODE): cv.string}
-)
 
 
 PROP_TO_ATTR = {
@@ -61,18 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, "async_handle_unlock_service"
-    )
-    component.async_register_entity_service(
-        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, "async_handle_lock_service"
-    )
-    component.async_register_entity_service(
-        SERVICE_OPEN,
-        LOCK_SERVICE_SCHEMA,
-        "async_handle_open_service",
-        [LockEntityFeature.OPEN],
-    )
+    async_setup_services(hass)
 
     return True
 

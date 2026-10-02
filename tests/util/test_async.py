@@ -61,6 +61,49 @@ async def test_gather_with_limited_concurrency() -> None:
     assert results == [2, 2, -1, -1]
 
 
+async def test_wait_shared_future_result() -> None:
+    """Test wait_shared_future returns the result of a pending or done future."""
+    loop = asyncio.get_running_loop()
+    future: asyncio.Future[int] = loop.create_future()
+    loop.call_soon(future.set_result, 42)
+
+    assert await hasync.wait_shared_future(future) == 42
+    assert await hasync.wait_shared_future(future) == 42
+
+
+async def test_wait_shared_future_exception() -> None:
+    """Test wait_shared_future raises the exception of the future."""
+    loop = asyncio.get_running_loop()
+    future: asyncio.Future[int] = loop.create_future()
+    loop.call_soon(future.set_exception, ValueError("boom"))
+
+    with pytest.raises(ValueError, match="boom"):
+        await hasync.wait_shared_future(future)
+
+
+async def test_wait_shared_future_waiter_cancelled() -> None:
+    """Test cancelling a waiter leaves the shared future intact and logs nothing."""
+    loop = asyncio.get_running_loop()
+    future: asyncio.Future[int] = loop.create_future()
+    exception_handler = Mock()
+    loop.set_exception_handler(exception_handler)
+
+    waiter = asyncio.create_task(hasync.wait_shared_future(future))
+    await asyncio.sleep(0)
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+
+    assert not future.cancelled()
+    future.set_exception(ValueError("boom"))
+    with pytest.raises(ValueError, match="boom"):
+        future.result()
+    await asyncio.sleep(0)
+
+    # asyncio.shield would report "exception in shielded future" here
+    exception_handler.assert_not_called()
+
+
 async def test_shutdown_run_callback_threadsafe(hass: HomeAssistant) -> None:
     """Test we can shutdown run_callback_threadsafe."""
     hasync.shutdown_run_callback_threadsafe(hass.loop)
