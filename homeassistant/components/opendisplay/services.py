@@ -137,17 +137,16 @@ async def _async_get_pil_image(
 
     # Camera and image entities resolve to never-ending MJPEG streams,
     # so fetch a single snapshot from the entity instead.
-    if media_content_id.startswith("media-source://camera/"):
-        entity_id = media_content_id.removeprefix("media-source://camera/")
-        snapshot = await camera.async_get_image(hass, entity_id)
+    for integration in camera, image_component:
+        media_source_prefix = f"media-source://{integration.DOMAIN}/"
+        if not media_content_id.startswith(media_source_prefix):
+            continue
+
+        entity_id = media_content_id.removeprefix(media_source_prefix)
+        snapshot = await integration.async_get_image(hass, entity_id)
         return await hass.async_add_executor_job(
             _load_image_from_bytes, snapshot.content
         )
-
-    if media_content_id.startswith("media-source://image/"):
-        entity_id = media_content_id.removeprefix("media-source://image/")
-        img = await image_component.async_get_image(hass, entity_id)
-        return await hass.async_add_executor_job(_load_image_from_bytes, img.content)
 
     media = await async_resolve_media(hass, media_content_id, None)
     if media.path is not None:
