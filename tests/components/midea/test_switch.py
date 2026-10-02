@@ -9,6 +9,7 @@ from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
+from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -134,6 +135,10 @@ async def _assert_service_call(
             DummyDevice(DeviceType.C2, attributes={"child_lock": True}),
             id="c2",
         ),
+        pytest.param(
+            DummyDevice(DeviceType.DC, attributes={DCAttributes.ai_switch: False}),
+            id="dc",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -188,6 +193,40 @@ async def test_ac_switch_services(
         entity_entry.entity_id,
         SERVICE_TURN_OFF,
         [("set_attribute", ACAttributes.aux_heating, False)],
+        device,
+    )
+
+
+async def test_dc_ai_switch_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test DC ai_switch service calls reach the device."""
+    device = DummyDevice(
+        DeviceType.DC,
+        attributes={DCAttributes.ai_switch: False},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_ai_switch"]
+
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "off"
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", DCAttributes.ai_switch, True)],
+        device,
+    )
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", DCAttributes.ai_switch, False)],
         device,
     )
 

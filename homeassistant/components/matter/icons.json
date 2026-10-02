@@ -167,6 +167,9 @@
       "evse_charging_switch": {
         "default": "mdi:ev-station"
       },
+      "one_touch_locking": {
+        "default": "mdi:gesture-tap-button"
+      },
       "privacy_mode_button": {
         "default": "mdi:shield-lock"
       },

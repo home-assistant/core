@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools==78.1.1"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.10.0.dev0"
+version = "2026.11.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -67,21 +67,21 @@ dependencies = [
   "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "python-slugify==8.0.4",
+  "python-slugify==9.1.2",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
-  "SQLAlchemy==2.0.52",
+  "SQLAlchemy==2.0.54",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.11",
-  "probatio==0.12.1",
+  "uv==0.12.20",
+  "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
-  "zeroconf==0.151.3",
+  "zeroconf==0.151.5",
 ]
 
 [project.urls]
@@ -438,6 +438,13 @@ runtime-typing = false
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
 
+[tool.uv]
+# surepy (a surepetcare dependency) carries a stale upper pin on rich (<11) that
+# blocks pytest-codspeed (needs rich>=13.8.1) from resolving in the same
+# environment. rich keeps the Console API surepy uses backwards compatible, so
+# override the pin rather than holding the benchmark tooling back.
+override-dependencies = ["rich>=13.8.1"]
+
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
 testpaths = ["tests"]
@@ -638,7 +645,11 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.6"
+required-version = ">=0.16.9"
+extend-exclude = [
+  # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
+  "tests/components/marketplace/fixtures/proxy",
+]
 
 [tool.ruff.lint]
 select = [
@@ -662,6 +673,7 @@ select = [
   "INP",    # flake8-no-pep420
   "ISC",    # flake8-implicit-str-concat
   "ICN001", # import concentions; {name} should be imported as {asname}
+  "ICN002", # import conventions; {name} should not be imported as {asname}
   "LOG",    # flake8-logging
   "N804",   # First argument of a class method should be named cls
   "N805",   # First argument of a method should be named self
@@ -840,6 +852,9 @@ ignore = [
 "homeassistant.util.uuid" = "uuid_util"
 "homeassistant.util.yaml" = "yaml_util"
 
+[tool.ruff.lint.flake8-import-conventions.banned-aliases]
+"probatio" = ["vol"]
+
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 mark-parentheses = false
@@ -849,6 +864,10 @@ mark-parentheses = false
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
 "voluptuous".msg = "use probatio instead"
+"homeassistant.helpers.config_validation.ensure_list".msg = "use probatio.EnsureList() instead"
+"homeassistant.helpers.config_validation.port".msg = "use probatio.Port() instead"
+"homeassistant.helpers.config_validation.has_at_least_one_key".msg = "use probatio.AtLeastOne instead"
+"homeassistant.helpers.config_validation.has_at_most_one_key".msg = "use probatio.AtMostOne instead"
 "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]
@@ -871,6 +890,9 @@ split-on-trailing-comma = false
 "homeassistant/auth/*/*" = ["TID252"]
 "homeassistant/components/*/*/*" = ["TID252"]
 "tests/components/*/*/*" = ["TID252"]
+
+# Benchmarks reuse the test helpers to spin up a Home Assistant instance
+"benchmarks/**" = ["TID251"]
 
 # Temporary
 "homeassistant/**" = ["PTH"]
