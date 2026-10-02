@@ -138,7 +138,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             "name": self._device.name,
         }
         self._attr_has_entity_name = True
-        self._device.fill_device_info(self._attr_device_info, "gateway")
+        self._device.fill_gateway_device_info(self._attr_device_info)
         self.entity_description = CLIMATE_DESCRIPTIONS[setpoint]
         self.update_state()
 
@@ -435,6 +435,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     if res:
                         setpointdict = self.setpoint()
                         if setpointdict is not None:
+                            setpointdict.value = value
                             self._attr_target_temperature = value
                             self.async_write_ha_state()
                     else:

@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import system_health
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DAIKIN_API_URL, DOMAIN, OAUTH2_AUTHORIZE
@@ -21,10 +22,14 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if entries:
-        config_entry = entries[0]
-        coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if config_entry.state is not ConfigEntryState.LOADED:
+            continue
+        coordinator: OnectaDataUpdateCoordinator | None = getattr(
+            config_entry, "runtime_data", None
+        )
+        if coordinator is None:
+            continue
         daikin_api = coordinator.api
         return {
             "api_status": system_health.async_check_can_reach_url(

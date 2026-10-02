@@ -138,6 +138,17 @@ class TestOnectaDataUpdateCoordinator:
 
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
 
+    async def test_missing_cloud_device_is_marked_unavailable(self, coordinator):
+        """Mark cached gateways unavailable when the cloud no longer returns them."""
+        missing_device = MagicMock()
+        coordinator.data = {"missing": missing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+
+        await coordinator.async_update_data()
+
+        missing_device.mark_unavailable.assert_called_once_with()
+
     def test_update_settings(self, coordinator, mock_config_entry, mock_hass):
         """Apply changed polling options to the coordinator."""
         options = {

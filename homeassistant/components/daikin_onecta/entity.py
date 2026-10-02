@@ -88,7 +88,13 @@ class DaikinSwitch(CoordinatorEntity[OnectaDataUpdateCoordinator], ToggleEntity)
         if not self.is_on and await self._device.patch(
             self._device.id, self._embedded_id, self._value, "", "on"
         ):
-            self._switch_state = "on"
+            point = self._device.management_point(self._embedded_id)
+            characteristic = (
+                point.characteristic(self._value) if point is not None else None
+            )
+            if characteristic is not None:
+                characteristic.value = "on"
+            self.update_state()
             self.async_write_ha_state()
 
     @override
@@ -97,5 +103,11 @@ class DaikinSwitch(CoordinatorEntity[OnectaDataUpdateCoordinator], ToggleEntity)
         if self.is_on and await self._device.patch(
             self._device.id, self._embedded_id, self._value, "", "off"
         ):
-            self._switch_state = "off"
+            point = self._device.management_point(self._embedded_id)
+            characteristic = (
+                point.characteristic(self._value) if point is not None else None
+            )
+            if characteristic is not None:
+                characteristic.value = "off"
+            self.update_state()
             self.async_write_ha_state()

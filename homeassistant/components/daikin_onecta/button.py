@@ -50,7 +50,7 @@ class DaikinRefreshButton(CoordinatorEntity, ButtonEntity):
         self._attr_icon = "mdi:refresh"
         self._attr_name = "Refresh"
         self._attr_device_info = self._device.device_info()
-        self._device.fill_device_info(self._attr_device_info, "gateway")
+        self._device.fill_gateway_device_info(self._attr_device_info)
         self._attr_has_entity_name = True
         self._config_entry = config_entry
 

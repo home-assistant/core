@@ -154,7 +154,25 @@ class DaikinScheduleSelect(CoordinatorEntity, SelectEntity):
             },
         )
         if result:
-            self._attr_current_option = option
+            point = self._device.management_point(self._embedded_id)
+            schedule = (
+                point.schedule.value
+                if point is not None and point.schedule is not None
+                else None
+            )
+            mode_data = (
+                (schedule.modes or {}).get(selection.mode)
+                if schedule is not None
+                else None
+            )
+            if mode_data is not None:
+                current_schedule = mode_data.get("currentSchedule")
+                if isinstance(current_schedule, dict):
+                    current_schedule["value"] = schedule_id
+                enabled = mode_data.get("enabled")
+                if isinstance(enabled, dict):
+                    enabled["value"] = option != SCHEDULE_OFF
+            self.update_state()
             self.async_write_ha_state()
         return result  # type: ignore[return-value]
 

@@ -24,6 +24,7 @@ class DaikinOnectaDevice:
         self.api = apiInstance
         # get name from climateControl
         self.device = device
+        self._is_present_in_cloud = True
         self.id: str = device.id
         self.name: str = device.device_model
 
@@ -45,7 +46,13 @@ class DaikinOnectaDevice:
     @property
     def available(self) -> bool:
         """Return whether the device is connected to the Daikin cloud."""
-        return self.device.available
+        return self._is_present_in_cloud and self.device.available
+
+    @property
+    def gateway_embedded_id(self) -> str | None:
+        """Return the embedded ID of the gateway management point."""
+        gateway = self.device.management_point_by_type("gateway")
+        return gateway.embedded_id if gateway is not None else None
 
     def management_point(self, embedded_id: str):
         """Return a management point by embedded id."""
@@ -68,6 +75,12 @@ class DaikinOnectaDevice:
         if point.software_version is not None:
             device_info["sw_version"] = point.software_version.value
 
+    def fill_gateway_device_info(self, device_info: DeviceInfo) -> None:
+        """Fill device information from the gateway management point."""
+        device_info["manufacturer"] = "Daikin"
+        if (embedded_id := self.gateway_embedded_id) is not None:
+            self.fill_device_info(device_info, embedded_id)
+
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         gateway = self.device.management_point_by_type("gateway")
@@ -88,7 +101,7 @@ class DaikinOnectaDevice:
             model_id=self.device.device_model,
         )
 
-        self.fill_device_info(info, "gateway")
+        self.fill_gateway_device_info(info)
         return info
 
     def async_register_ha_device(
@@ -112,11 +125,16 @@ class DaikinOnectaDevice:
     def set_device_data(self, device: GatewayDevice) -> None:
         """Overwrite the typed and compatibility data for this device."""
         self.device = device
+        self._is_present_in_cloud = True
         _LOGGER.debug(
             "Device '%s' received new data from the Daikin cloud, isCloudConnectionUp '%s'",
             self.name,
             self.available,
         )
+
+    def mark_unavailable(self) -> None:
+        """Mark the device unavailable after it is absent from a cloud response."""
+        self._is_present_in_cloud = False
 
     async def patch(
         self,
@@ -217,7 +235,10 @@ def _legacy_entity_unique_id(
         climate_points = points_by_type.get("climateControl", [])
         old_prefix = f"{device.id}_"
         if climate_points and entry.unique_id.startswith(old_prefix):
-            return f"{device.id}_{climate_points[-1].embedded_id}_{entry.unique_id.removeprefix(old_prefix)}"
+            suffix = entry.unique_id.removeprefix(old_prefix)
+            if any(suffix.startswith(f"{point.embedded_id}_") for point in climate_points):
+                return None
+            return f"{device.id}_{climate_points[-1].embedded_id}_{suffix}"
 
     if entry.domain == "water_heater" and entry.unique_id == device.id:
         for management_point_type in (

@@ -518,11 +518,13 @@ class DaikinLimitSensor(CoordinatorEntity, SensorEntity):
         assert self._device.ha_device_id is not None
         self.entity_description = SENSOR_DESCRIPTIONS["RatelimitRemainingDay"]
         self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, self._device.id + "gateway")},
+            "identifiers": {
+                (DOMAIN, self._device.id + (self._device.gateway_embedded_id or "gateway"))
+            },
             "name": self._device.name + " " + "Gateway",
             "via_device_id": self._device.ha_device_id,
         }
-        self._device.fill_device_info(self._attr_device_info, "gateway")
+        self._device.fill_gateway_device_info(self._attr_device_info)
         self.update_state()
         _LOGGER.info(
             "Device '%s' supports sensor '%s'",
