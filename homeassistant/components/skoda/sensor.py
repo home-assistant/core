@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -28,7 +28,6 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -229,7 +228,7 @@ def _auxiliary_heating_mode_value(entity: SkodaEntity) -> str | None:
     return _AUXILIARY_HEATING_START_MODE_MAP.get(aux_heat.start_mode)
 
 
-def _aux_heating_duration_value(entity: SkodaEntity) -> int | None:
+def _aux_heating_duration_value(entity: SkodaEntity) -> datetime | None:
     aux_heat = entity.open_api_auxiliary_heating
     if not aux_heat or aux_heat.state in [
         AuxiliaryHeatingState.OFF,
@@ -237,7 +236,19 @@ def _aux_heating_duration_value(entity: SkodaEntity) -> int | None:
         AuxiliaryHeatingState.UNSUPPORTED,
     ]:
         return None
-    return aux_heat.duration_in_seconds
+    if aux_heat.duration_in_seconds is None or not aux_heat.car_captured_timestamp:
+        return None
+
+    captured_timestamp = aux_heat.car_captured_timestamp
+    if isinstance(captured_timestamp, datetime):
+        captured = dt_util.as_utc(captured_timestamp)
+    else:
+        parsed_dt = dt_util.parse_datetime(str(captured_timestamp))
+        if parsed_dt is None:
+            return None
+        captured = dt_util.as_utc(parsed_dt)
+
+    return captured + timedelta(seconds=aux_heat.duration_in_seconds)
 
 
 def _preset_temperature_value(entity: SkodaEntity) -> float | None:
@@ -374,8 +385,7 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
     SkodaSensorEntityDescription(
         key="aux_heating_duration",
         translation_key="aux_heating_duration",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:fan-clock",
         required_capabilities=frozenset({VehicleCapability.AUXILIARY_HEATING}),
         value_fn=_aux_heating_duration_value,

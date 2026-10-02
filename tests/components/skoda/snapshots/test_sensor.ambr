@@ -136,11 +136,8 @@
     'name': None,
     'object_id_base': 'Auxiliary heating remaining duration',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': 'mdi:fan-clock',
     'original_name': 'Auxiliary heating remaining duration',
     'platform': 'skoda',
@@ -149,16 +146,15 @@
     'supported_features': 0,
     'translation_key': 'aux_heating_duration',
     'unique_id': 'TMBJM7NP2M1TMP511_aux_heating_duration',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_remaining_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Auxiliary heating remaining duration',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:fan-clock',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.enyaq_coupe_auxiliary_heating_remaining_duration',
