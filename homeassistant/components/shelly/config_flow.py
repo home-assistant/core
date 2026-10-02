@@ -876,7 +876,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                         probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.PASSWORD,
-                                autocomplete="new-password",
+                                autocomplete="current-password",
                             )
                         ),
                     }
