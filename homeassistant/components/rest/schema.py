@@ -342,6 +342,8 @@ def _SUBENTRY_FLOW_SCHEMA(rest_data: str | None) -> probatio.Schema:
             pretty_json = json_dumps(json_loads(rest_data), indent=2, sort_keys=True)
         except JSON_DECODE_EXCEPTIONS:
             pretty_json = rest_data
+        if len(pretty_json) > 1000:
+            pretty_json = pretty_json[:999]
     return probatio.Schema(
         {
             probatio.Optional(CONF_NAME): selector.TemplateSelector(),

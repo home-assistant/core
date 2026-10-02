@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from functools import partial
 from types import MethodType
 from typing import Any, override
+from urllib.parse import urlsplit
 from xml.parsers.expat import ExpatError
 
 import probatio
@@ -122,7 +123,12 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_ENCODING] = "decoding_error"
                 placeholders["decoding_error_message"] = str(exc)
             if not errors:
-                self._title = f"{user_input[CONF_METHOD]} {Template(user_input[CONF_RESOURCE], self.hass).async_render()}"
+                resource = urlsplit(
+                    Template(user_input[CONF_RESOURCE], self.hass).async_render()
+                )  # strip out auth parameters
+                self._title = (
+                    f"{user_input[CONF_METHOD]} {resource.scheme}://{resource.hostname}"
+                )
                 self._data = user_input
                 return await self.async_step_subentries_menu()
         suggested_values = user_input or {}
@@ -355,11 +361,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 Platform(self._subentry_type)
             ].post_schema_validation:
                 if callable(schema_validator):
-                    schema_validator = schema_validator(
-                        rest_data
-                        if rest_data is None or len(rest_data) < 1000
-                        else rest_data[:999]
-                    )
+                    schema_validator = schema_validator(rest_data)
                 if isinstance(schema_validator, probatio.Schema):
                     try:
                         schema_validator(user_input)
