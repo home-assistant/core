@@ -32,25 +32,16 @@ from homeassistant.components.websocket_api.commands import (
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
     ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
     ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
-    _StateDiffBatch,
 )
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
-    EVENT_STATE_CHANGED,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
     EntityCategory,
 )
-from homeassistant.core import (
-    Context,
-    Event,
-    EventStateChangedData,
-    HomeAssistant,
-    State,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -4102,28 +4093,57 @@ async def test_subscribe_entities_batch_leaves_out_entities_the_user_cannot_see(
     await hass.async_block_till_done()
 
 
-async def test_subscribe_entities_discards_a_batch_that_was_unsubscribed(
+async def test_unsubscribing_discards_a_batch_that_was_not_sent(
     hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
     """Unsubscribing drops changes collected but not yet sent.
 
     The flush is scheduled on the loop, so a batch collected in the same iteration as
     an unsubscribe would otherwise still be handed to send_message afterwards, for a
-    subscription - and possibly a connection - that has gone.
+    subscription - and possibly a connection - that has gone. Driven through the
+    registered command, so that the unsubscribe callback it installs is the one being
+    tested rather than a batch built here.
     """
-    events: list[Event[EventStateChangedData]] = []
-    hass.bus.async_listen(EVENT_STATE_CHANGED, events.append)
+    handlers = hass.data[DOMAIN]
+    subscribe_entities, schema = handlers["subscribe_entities"]
+    connections: list[ActiveConnection] = []
+
+    @callback
+    def capture_connection(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        """Record the connection, so its subscription can be ended directly."""
+        connections.append(connection)
+        subscribe_entities(hass, connection, msg)
+
+    handlers["subscribe_entities"] = (capture_connection, schema)
+    try:
+        await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+        msg = await websocket_client.receive_json()
+        subscription = msg["id"]
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"]
+
+        msg = await websocket_client.receive_json()
+        assert msg["event"] == {"a": {}}
+    finally:
+        handlers["subscribe_entities"] = (subscribe_entities, schema)
+
+    # Both in one iteration, which is the case the discard exists for: the flush for
+    # this change is already scheduled by the time the subscription goes away.
     hass.states.async_set("light.one", "on")
-    await hass.async_block_till_done()
-    assert len(events) == 1
+    connections[0].subscriptions.pop(subscription)()
 
-    sent: list[Any] = []
-    batch = _StateDiffBatch(hass.loop, sent.append, b"1")
-    batch.async_add("light.one", events[0])
-    batch.async_discard()
     await hass.async_block_till_done()
 
-    assert sent == []
+    # The collected change would arrive ahead of the pong if it were still sent.
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
 
 
 async def test_subscribe_entities_batch_survives_one_unserializable_change(

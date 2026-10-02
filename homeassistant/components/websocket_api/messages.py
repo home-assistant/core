@@ -235,11 +235,8 @@ def cached_state_diff_fragment(
     Returns the group the change belongs to - "a", "r" or "c" - and the entry that
     goes inside it, or None if it cannot be serialized.
 
-    The cache is the same size as the single-message ones above and works because it
-    is asked the same question the same way: callers resolve a fragment while the bus
-    is still dispatching that event, so every subscription asks for it one after
-    another and only the first pays. Resolving at send time instead would make the
-    reuse distance a whole batch, and no fixed cache size would survive a large one.
+    Callers must resolve a fragment while the bus is dispatching that event, so that
+    every subscription asks for it consecutively and the cache is actually hit.
     """
     diff = _state_diff_event(event)
     key = next(iter(diff))

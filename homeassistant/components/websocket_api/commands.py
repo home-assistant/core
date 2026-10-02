@@ -451,13 +451,10 @@ class _StateDiffBatch:
             # what we have keeps the order the events actually occurred in.
             self.async_flush()
         self._entity_ids.add(entity_id)
-        # Serialized now, while the bus is still dispatching this event to every other
-        # subscription, so they all ask for the same fragment one after another and
-        # only the first pays for it. Deferring this to the flush would make the reuse
-        # distance a whole batch instead of one event, and a batch larger than the
-        # cache would then be re-serialized in full for every connected client - the
-        # opposite of what the cache is for, on exactly the installations that can
-        # least afford it.
+        # Resolved here rather than in the flush, while the bus is still dispatching
+        # this event to every other subscription, so they all ask for the same
+        # fragment consecutively and only the first pays. At flush time the reuse
+        # distance would be a whole batch, which no fixed cache size survives.
         if (fragment := messages.cached_state_diff_fragment(event)) is None:
             self._unserializable.append(event)
         else:
