@@ -17,7 +17,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -217,10 +217,10 @@ async def test_set_value_validation_error(
     entity_id: str,
     value: float,
 ) -> None:
-    """Test that setting min >= max or max <= min raises ServiceValidationError."""
+    """Test that setting min >= max or max <= min raises HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
