@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from .conftest import (
     CONF_SERIAL,
     DOMAIN,
+    MOCK_HOST,
     MOCK_HOST_2,
     MOCK_MAC,
     MOCK_SERIAL,
@@ -150,7 +151,36 @@ async def test_failed_setup_releases_listener(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_listener.unregister.assert_called_once_with(MOCK_HOST)
     mock_listener.stop.assert_awaited_once()
+
+
+async def test_failed_setup_unregisters_while_listener_kept(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+) -> None:
+    """Test a failed setup unregisters its host when another entry keeps the listener."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_SERIAL_2,
+    )
+    second_entry.add_to_hass(hass)
+
+    with patch.object(
+        ConfigEntries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("boom"),
+        autospec=True,
+    ):
+        await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_listener.unregister.assert_called_once_with(MOCK_HOST_2)
+    mock_listener.stop.assert_not_awaited()
 
 
 async def test_device_info(
