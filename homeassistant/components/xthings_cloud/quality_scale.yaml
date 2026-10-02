@@ -39,9 +39,7 @@ rules:
   entity-unavailable:
     status: done
     comment: Offloaded to coordinator.
-  action-exceptions:
-    status: exempt
-    comment: No service actions implemented.
+  action-exceptions: todo
   reauthentication-flow: todo
   parallel-updates: todo
   test-coverage: todo

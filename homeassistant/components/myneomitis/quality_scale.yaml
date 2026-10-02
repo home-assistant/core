@@ -32,9 +32,7 @@ rules:
   unique-config-entry: done
 
   # Silver tier rules
-  action-exceptions:
-    status: exempt
-    comment: Integration does not provide service actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
