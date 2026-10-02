@@ -1330,10 +1330,10 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="ThermostatPICoolingDemand",
+            key="PICoolingDemand",
             native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            translation_key="thermostat_pi_cooling_demand",
+            translation_key="pi_cooling_demand",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.PICoolingDemand,),

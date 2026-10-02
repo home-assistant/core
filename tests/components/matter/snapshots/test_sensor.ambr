@@ -25134,8 +25134,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'thermostat_pi_cooling_demand',
-    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatPICoolingDemand-513-7',
+    'translation_key': 'pi_cooling_demand',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-PICoolingDemand-513-7',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---

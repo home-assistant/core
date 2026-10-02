@@ -599,6 +599,9 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
+      "pi_cooling_demand": {
+        "name": "Cooling demand"
+      },
       "pi_heating_demand": {
         "name": "Heating demand"
       },
@@ -639,9 +642,6 @@
       },
       "tank_volume": {
         "name": "Tank volume"
-      },
-      "thermostat_pi_cooling_demand": {
-        "name": "Cooling demand"
       },
       "thread_channel": {
         "name": "Thread channel"
