@@ -16,6 +16,7 @@ from .climate import SLEEP_BLOCKED_HVAC_MODES
 from .const import (
     CONF_GENERIC_OPTIONS,
     CONF_INFRARED_EMITTER_ENTITY_ID,
+    DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
@@ -112,7 +113,9 @@ class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEnti
         """Delegate the option change to the per-entry climate owner."""
         climate = self._state.climate
         if climate is None:
-            raise HomeAssistantError("Gree climate entity is not available yet")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="climate_not_available"
+            )
         await climate.async_set_option(self._key, value)
 
     @override
