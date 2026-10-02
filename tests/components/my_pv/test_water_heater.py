@@ -52,7 +52,7 @@ async def test_water_heater_no_temp_sensor(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test if a water_heater not created when there is no temperature sensor connected."""
+    """Test if a water_heater is not created when there is no temperature sensor connected."""
     mock_config_entry.add_to_hass(hass)
 
     mock_my_pv_client.current_temperature = None
