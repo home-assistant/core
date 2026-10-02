@@ -74,13 +74,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     type(self._handler).__name__,
                 )
             raise UpdateFailed(str(err)) from err
-        except (
-            aiounifi.LoginRequired,
-            aiounifi.Unauthorized,
-            aiounifi.BadGateway,
-            aiounifi.ServiceUnavailable,
-            TimeoutError,
-        ) as err:
+        except (TimeoutError, aiounifi.AiounifiException) as err:
             self._connection.report_failure(err)
             return
 

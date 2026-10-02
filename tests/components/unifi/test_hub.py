@@ -232,10 +232,24 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
     assert state.state != "unavailable"
 
 
-async def test_polling_auth_failure_reports_connection_failure(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        aiounifi.LoginRequired,
+        aiounifi.Unauthorized,
+        aiounifi.Forbidden,
+        aiounifi.RequestError,
+        aiounifi.ResponseError,
+        aiounifi.BadGateway,
+        aiounifi.ServiceUnavailable,
+        TimeoutError,
+    ],
+)
+async def test_polling_connection_failure_reports_connection_failure(
     config_entry_setup: MockConfigEntry,
+    exception: type[Exception],
 ) -> None:
-    """Ensure polling authentication failures enter the shared reconnect path."""
+    """Ensure polling communication failures enter the shared reconnect path."""
     hub = config_entry_setup.runtime_data
     coordinator = hub.entity_loader.get_data_update_coordinator(
         hub.api.object_oriented_network_configs
@@ -245,7 +259,7 @@ async def test_polling_auth_failure_reports_connection_failure(
         patch.object(
             coordinator.handler,
             "update",
-            side_effect=aiounifi.LoginRequired,
+            side_effect=exception,
         ),
         patch.object(
             hub.connection,
@@ -261,6 +275,7 @@ async def test_polling_auth_failure_reports_connection_failure(
 
 
 async def test_connection_failure_reports_are_deduplicated(
+    caplog: pytest.LogCaptureFixture,
     config_entry_setup: MockConfigEntry,
 ) -> None:
     """Ensure concurrent failure sources schedule only one retry."""
@@ -269,9 +284,13 @@ async def test_connection_failure_reports_are_deduplicated(
     connection.report_failure()
     retry_handle = connection._retry_handle
     connection.report_failure()
+    connection._set_available(True)
+    connection._set_available(True)
 
     assert connection._retry_handle is retry_handle
     assert connection._attempt == 1
+    assert caplog.text.count("Connection to UniFi Network lost") == 1
+    assert caplog.text.count("Connection to UniFi Network restored") == 1
 
 
 async def test_websocket_updates_notify_coordinator(

@@ -45,9 +45,7 @@ class UnifiConnectionManager:
         ):
             return
 
-        if self.available:
-            self.available = False
-            async_dispatcher_send(self.hass, self.signal)
+        self._set_available(False)
 
         self._schedule_retry(log=log)
         if err is not None:
@@ -99,6 +97,10 @@ class UnifiConnectionManager:
             return
         self.available = available
         async_dispatcher_send(self.hass, self.signal)
+        if available:
+            LOGGER.info("Connection to UniFi Network restored")
+        else:
+            LOGGER.warning("Connection to UniFi Network lost")
 
     @callback
     def stop(self) -> None:
