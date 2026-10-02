@@ -1,6 +1,7 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any, Self, override
 
 from infrared_protocols.commands.gree_ac import (
@@ -47,6 +48,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import GreeInfraredConfigEntry
@@ -132,6 +134,7 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
     swing_v_position: int | None = None
     fresh_air: int = int(GreeAcFreshAir.OFF)
     timer_hours: float | None = None
+    timer_deadline: str | None = None
     swing_h_position: int = 0
     econo: bool = False
     absence: bool = False
@@ -181,6 +184,12 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
             or (float(timer_hours) * 2) % 1
         ):
             return None
+        timer_deadline = restored.get("timer_deadline")
+        if timer_deadline is not None and (
+            not isinstance(timer_deadline, str)
+            or dt_util.parse_datetime(timer_deadline) is None
+        ):
+            return None
         swing_h_position = restored.get("swing_h_position", 0)
         econo = restored.get("econo", False)
         absence = restored.get("absence", False)
@@ -203,6 +212,7 @@ class _GreeAcExtraStoredData(ClimateExtraStoredData):
             swing_v_position=swing_v_position,
             fresh_air=int(fresh_air),
             timer_hours=None if timer_hours is None else float(timer_hours),
+            timer_deadline=timer_deadline,
             swing_h_position=swing_h_position,
             econo=econo,
             absence=absence,
@@ -280,6 +290,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         # Power-off frames still need a mode field; this tracks the mode to send it
         # with, since the protocol has no dedicated OFF mode.
         self._last_active_hvac_mode = self._attr_hvac_modes[1]
+        self._timer_deadline: datetime | None = None
         self._state.climate = self
 
     @override
@@ -381,6 +392,13 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self._state.sleep = restored.sleep
             self._state.fresh_air = restored.fresh_air
             self._state.timer_hours = restored.timer_hours
+            self._timer_deadline = (
+                dt_util.as_utc(dt_util.parse_datetime(restored.timer_deadline))
+                if restored.timer_deadline is not None
+                else dt_util.utcnow() + timedelta(hours=restored.timer_hours)
+                if restored.timer_hours is not None
+                else None
+            )
             if self._is_yap1f:
                 self._state.ifeel = restored.ifeel
                 self._state.swing_v_position = restored.swing_v_position
@@ -421,12 +439,26 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             swing_v_position=self._state.swing_v_position,
             fresh_air=self._state.fresh_air,
             timer_hours=self._state.timer_hours,
+            timer_deadline=self._timer_deadline.isoformat()
+            if self._timer_deadline
+            else None,
             swing_h_position=self._state.swing_h_position,
             econo=self._state.econo,
             absence=self._state.absence,
             fahrenheit=self._state.fahrenheit,
             display_temp=self._state.display_temp,
         )
+
+    def _remaining_timer_hours(self) -> float | None:
+        """Return the active timer rounded to the protocol's half-hour step."""
+        if self._timer_deadline is None:
+            return self._state.timer_hours
+        remaining = (self._timer_deadline - dt_util.utcnow()).total_seconds() / 3600
+        if remaining <= 0:
+            self._timer_deadline = None
+            self._state.timer_hours = None
+            return None
+        return max(0.5, int(remaining * 2 + 0.5) / 2)
 
     async def _async_send_state(
         self, hvac_mode: HVACMode, temp: int, fan_mode: str
@@ -534,7 +566,13 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             raise ValueError(f"Unsupported timer value: {timer_hours}")
         async with self._state.command_lock:
             previous = self._state.timer_hours
+            previous_deadline = self._timer_deadline
             self._state.timer_hours = timer_hours
+            self._timer_deadline = (
+                dt_util.utcnow() + timedelta(hours=timer_hours)
+                if timer_hours is not None
+                else None
+            )
             try:
                 hvac_mode = self._attr_hvac_mode
                 if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
@@ -545,6 +583,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                     )
             except Exception:
                 self._state.timer_hours = previous
+                self._timer_deadline = previous_deadline
                 raise
             self._state.async_notify_switches()
 
@@ -798,7 +837,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             anion=self._state.health,
             blow=self._state.xfan,
             sleep=self._state.sleep,
-            timer_hours=self._state.timer_hours,
+            timer_hours=self._remaining_timer_hours(),
             fresh_air=GreeAcFreshAir(self._state.fresh_air),
             ifeel=self._state.ifeel if self._is_yap1f else False,
             swing_v_position=self._state.swing_v_position if self._is_yap1f else None,
@@ -832,7 +871,16 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
     @override
     @callback
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
-        """Update state from a physical remote signal."""
+        """Schedule received-state updates behind any in-flight send."""
+        self.hass.async_create_task(self._async_handle_signal(signal))
+
+    async def _async_handle_signal(self, signal: InfraredReceivedSignal) -> None:
+        """Update state from a physical remote signal under the command lock."""
+        async with self._state.command_lock:
+            self._handle_signal_locked(signal)
+
+    def _handle_signal_locked(self, signal: InfraredReceivedSignal) -> None:
+        """Apply a received physical remote signal."""
         command = GreeAcCommand.from_raw_timings(signal.timings, model=self._model)
         if command is None:
             return
@@ -876,6 +924,11 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
             self._state.sleep = False
         self._state.fresh_air = int(command.fresh_air)
         self._state.timer_hours = command.timer_hours
+        self._timer_deadline = (
+            dt_util.utcnow() + timedelta(hours=command.timer_hours)
+            if command.timer_hours is not None
+            else None
+        )
         if self._is_yap1f:
             self._state.ifeel = command.ifeel
             self._state.swing_v_position = command.swing_v_position
