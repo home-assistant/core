@@ -227,6 +227,8 @@ async def test_gateway_port_poe_switch(
             "set_gateway_wan_port_connect_state",
         ),
         ("switch.test_router_port_5_poe", "turn_off", "set_gateway_port_settings"),
+        ("switch.test_router_road_warriors", "turn_off", "set_vpn_policy_enabled"),
+        ("switch.test_router_branch_office", "turn_on", "set_vpn_policy_enabled"),
     ],
 )
 async def test_switch_action_failure_is_translated(

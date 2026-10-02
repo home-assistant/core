@@ -128,18 +128,18 @@ async def async_setup_entry(
     if gateway_coordinator:
         vpn_coordinator = controller.vpn_policies_coordinator
         gateway = next(iter(gateway_coordinator.data.values()))
-        known_policy_ids: set[str] = set()
+        known_policy_keys: set[str] = set()
 
         @callback
         def _async_add_vpn_entities() -> None:
             new_policies = [
                 policy
-                for policy_id, policy in vpn_coordinator.data.items()
-                if policy_id not in known_policy_ids
+                for policy_key, policy in vpn_coordinator.data.items()
+                if policy_key not in known_policy_keys
             ]
             if not new_policies:
                 return
-            known_policy_ids.update(policy.policy_id for policy in new_policies)
+            known_policy_keys.update(policy.unique_id for policy in new_policies)
             async_add_entities(
                 OmadaVpnSwitch(vpn_coordinator, gateway, policy)
                 for policy in new_policies
@@ -398,6 +398,7 @@ class OmadaVpnSwitch(
         """Initialize the VPN policy switch."""
         super().__init__(coordinator, gateway)
         self._policy_id = policy.policy_id
+        self._policy_key = policy.unique_id
         self._attr_unique_id = f"vpn_{policy.unique_id}"
         self._attr_name = policy.name
         self._attr_extra_state_attributes = {
@@ -405,25 +406,34 @@ class OmadaVpnSwitch(
             "category": policy.category.value,
         }
 
-    @override
     @property
+    @override
     def available(self) -> bool:
         """Return true if the VPN policy still exists on the controller."""
-        return super().available and self._policy_id in self.coordinator.data
+        return super().available and self._policy_key in self.coordinator.data
 
-    @override
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the VPN policy is enabled."""
-        policy = self.coordinator.data.get(self._policy_id)
+        policy = self.coordinator.data.get(self._policy_key)
         return policy.enabled if policy else None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the VPN policy."""
-        await self.coordinator.set_vpn_policy_enabled(self._policy_id, True)
+        await self._async_set_enabled(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the VPN policy."""
-        await self.coordinator.set_vpn_policy_enabled(self._policy_id, False)
+        await self._async_set_enabled(False)
+
+    async def _async_set_enabled(self, enabled: bool) -> None:
+        try:
+            await self.coordinator.set_vpn_policy_enabled(self._policy_id, enabled)
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from ex

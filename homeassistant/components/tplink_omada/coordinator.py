@@ -255,7 +255,7 @@ class OmadaVpnPoliciesCoordinator(OmadaCoordinator[OmadaVpnPolicy]):
     @override
     async def poll_update(self) -> dict[str, OmadaVpnPolicy]:
         """Poll the site's current VPN policies."""
-        return {p.policy_id: p for p in await self.omada_client.get_vpn_policies()}
+        return {p.unique_id: p for p in await self.omada_client.get_vpn_policies()}
 
     async def set_vpn_policy_enabled(self, policy_id: str, enabled: bool) -> None:
         """Enable or disable a VPN policy, then refresh the current state."""
