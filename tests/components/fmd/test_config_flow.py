@@ -139,3 +139,37 @@ async def test_equivalent_url_variants_share_identity(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("url", "error"),
+    [
+        ("https://user:secret@fmd.example.com", "invalid_url"),
+        ("https://user@fmd.example.com", "invalid_url"),
+        ("not a url", "invalid_url"),
+        ("fmd.example.com", "invalid_url"),
+    ],
+)
+async def test_invalid_url_rejected(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    url: str,
+    error: str,
+) -> None:
+    """Test credential-bearing and non-absolute URLs are rejected.
+
+    The URL becomes the config-entry unique_id and the entity/device
+    registry identity, so userinfo or junk must never reach storage.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(USER_INPUT, **{CONF_URL: url})
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: error}
+    assert not hass.config_entries.async_entries(DOMAIN)
+    mock_fmd_client.create.assert_not_called()

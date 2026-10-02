@@ -24,20 +24,22 @@ STEP_DATA_SCHEMA = probatio.Schema(
 )
 
 
-def _canonical_url(url: str) -> str:
+def _canonical_url(url: str) -> str | None:
     """Normalize a server URL for identity purposes.
 
     yarl lowercases the scheme/host and drops default ports, so spelling
     variants (https://FMD.EXAMPLE.COM:443 == https://fmd.example.com)
-    produce one identity. Unparsable or non-absolute input is returned
-    as-is; entry creation still requires successful validation.
+    produce one identity. Returns None for input the identity must never
+    carry: URLs with embedded credentials (userinfo would otherwise be
+    persisted in entry, entity, and device registry identifiers) or
+    unparsable/non-absolute URLs.
     """
     try:
         parsed = URL(url)
     except ValueError:
-        return url.rstrip("/")
-    if not parsed.is_absolute():
-        return url.rstrip("/")
+        return None
+    if not parsed.is_absolute() or parsed.user is not None:
+        return None
     return str(parsed).rstrip("/")
 
 
@@ -66,31 +68,35 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Canonical URL once: entry unique_id, stored data, and derived
-            # entity/device identities must all agree.
-            user_input[CONF_URL] = _canonical_url(user_input[CONF_URL])
-            # Account IDs are scoped per server.
-            server_url = user_input[CONF_URL]
-            await self.async_set_unique_id(f"{server_url}/{user_input[CONF_ID]}")
-            self._abort_if_unique_id_configured()
-            try:
-                artifacts = await validate_input(user_input)
-            except AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except FmdApiException:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error connecting to FMD server")
-                errors["base"] = "unknown"
+            canonical_url = _canonical_url(user_input[CONF_URL])
+            if canonical_url is None:
+                errors[CONF_URL] = "invalid_url"
             else:
-                return self.async_create_entry(
-                    title=user_input[CONF_ID],
-                    data={
-                        CONF_URL: user_input[CONF_URL],
-                        CONF_ID: user_input[CONF_ID],
-                        "artifacts": artifacts,
-                    },
-                )
+                # Canonical URL once: entry unique_id, stored data, and
+                # derived entity/device identities must all agree.
+                user_input[CONF_URL] = canonical_url
+                # Account IDs are scoped per server.
+                server_url = user_input[CONF_URL]
+                await self.async_set_unique_id(f"{server_url}/{user_input[CONF_ID]}")
+                self._abort_if_unique_id_configured()
+                try:
+                    artifacts = await validate_input(user_input)
+                except AuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except FmdApiException:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error connecting to FMD server")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_ID],
+                        data={
+                            CONF_URL: user_input[CONF_URL],
+                            CONF_ID: user_input[CONF_ID],
+                            "artifacts": artifacts,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user",
