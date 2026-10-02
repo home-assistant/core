@@ -90,7 +90,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [AdGuardHomeSensor(data, entry, description) for description in SENSORS],
-        True,
+        False,
     )
 
 
