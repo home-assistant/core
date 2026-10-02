@@ -658,3 +658,185 @@ async def test_option_switches_follow_emitter_and_unload(
         "switch", "turn_on", {ATTR_ENTITY_ID: light_entity_id}, blocking=True
     )
     assert mock_infrared_emitter_entity.send_command_calls == []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_yap1f_off_frame_remembers_mode_for_next_ha_off(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """A YAP1F off frame records its embedded mode for the next HA off frame."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                power=False,
+                mode=GreeAcMode.DRY,
+                temperature=24,
+                fan=GreeAcFanSpeed.MEDIUM,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(_CLIMATE).state == HVACMode.OFF
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    command = _last_command(mock_infrared_emitter_entity)
+    assert command.model is GreeAcModel.YAP1F
+    assert command.power is False
+    assert command.mode is GreeAcMode.DRY
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("hvac_modes", [[HVACMode.COOL, HVACMode.HEAT]])
+async def test_failed_mode_send_keeps_mode_cancelled_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Options cancelled by a mode change survive when the mode send fails."""
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    for key in ("sleep", "econo"):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {ATTR_ENTITY_ID: _option_entity_id(hass, key)},
+            blocking=True,
+        )
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError,
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "climate",
+                "set_hvac_mode",
+                {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
+                blocking=True,
+            )
+    state = mock_config_entry.runtime_data
+    assert (state.sleep, state.econo) == (True, True)
+    assert [
+        hass.states.get(_option_entity_id(hass, key)).state
+        for key in ("sleep", "econo")
+    ] == ["on", "on"]
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    for key in ("sleep", "absence"):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {ATTR_ENTITY_ID: _option_entity_id(hass, key)},
+            blocking=True,
+        )
+    with patch.object(
+        mock_infrared_emitter_entity,
+        "async_send_command",
+        side_effect=HomeAssistantError,
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "climate",
+                "set_hvac_mode",
+                {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.OFF},
+                blocking=True,
+            )
+    state = mock_config_entry.runtime_data
+    assert (state.sleep, state.absence) == (True, True)
+    assert [
+        hass.states.get(_option_entity_id(hass, key)).state
+        for key in ("sleep", "absence")
+    ] == ["on", "on"]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_received_fahrenheit_frame_restores_celsius_target_and_scale(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """A decoded Fahrenheit frame restores a Celsius target and the wire scale."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=75,
+                fahrenheit=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_CLIMATE).attributes[ATTR_TEMPERATURE] == 24
+    assert mock_config_entry.runtime_data.fahrenheit is True
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: _CLIMATE, ATTR_TEMPERATURE: 24},
+        blocking=True,
+    )
+    command = _last_command(mock_infrared_emitter_entity)
+    assert command.fahrenheit is True
+    assert command.temperature == 75
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_received_yap1f_fields_reach_shared_state_and_next_frame(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Decoded swing_h_position, econo and display_temp reach state and the next frame."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=24,
+                swing_h_position=3,
+                econo=True,
+                display_temp=1,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = mock_config_entry.runtime_data
+    assert (state.swing_h_position, state.econo, state.display_temp) == (3, True, 1)
+    assert state.absence is False
+
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {ATTR_ENTITY_ID: _CLIMATE, "fan_mode": "high"},
+        blocking=True,
+    )
+    command = _last_command(mock_infrared_emitter_entity)
+    assert (command.swing_h_position, command.econo, command.display_temp) == (
+        3,
+        True,
+        1,
+    )

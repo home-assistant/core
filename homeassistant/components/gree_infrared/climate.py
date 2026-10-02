@@ -433,25 +433,29 @@ class GreeAcClimateEntity(
         if power:
             self._last_active_hvac_mode = hvac_mode
 
-    def _clear_sleep_on_mode_change(self, new_hvac_mode: HVACMode) -> None:
+    def _clear_sleep_on_mode_change(self, new_hvac_mode: HVACMode) -> dict[str, bool]:
         """Cancel sleep when the mode changes or the unit turns off.
 
         The remote clears sleep on any mode change and on power-off, so the
         assumed state follows the same rule before building the next frame.
+        The previous value of each cancelled option is returned so the caller
+        can restore them when the frame never goes out; the switches are
+        notified only once the send has succeeded.
         """
+        cleared: dict[str, bool] = {}
         if (
             new_hvac_mode is HVACMode.OFF
             or new_hvac_mode != self._last_active_hvac_mode
-        ):
-            if self._state.sleep:
-                self._state.sleep = False
-                self._state.async_notify_switches()
+        ) and self._state.sleep:
+            cleared["sleep"] = self._state.sleep
+            self._state.sleep = False
         if new_hvac_mode is not HVACMode.COOL and self._state.econo:
+            cleared["econo"] = self._state.econo
             self._state.econo = False
-            self._state.async_notify_switches()
         if new_hvac_mode is not HVACMode.HEAT and self._state.absence:
+            cleared["absence"] = self._state.absence
             self._state.absence = False
-            self._state.async_notify_switches()
+        return cleared
 
     async def async_set_option(self, option: str, value: bool) -> None:
         """Set an option flag and send the updated state when active."""
@@ -589,12 +593,17 @@ class GreeAcClimateEntity(
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         async with self._state.command_lock:
-            self._clear_sleep_on_mode_change(hvac_mode)
-            await self._async_send_state(
-                hvac_mode,
-                int(self._attr_target_temperature or MIN_TEMP),
-                self._attr_fan_mode or FAN_AUTO,
-            )
+            cleared = self._clear_sleep_on_mode_change(hvac_mode)
+            try:
+                await self._async_send_state(
+                    hvac_mode,
+                    int(self._attr_target_temperature or MIN_TEMP),
+                    self._attr_fan_mode or FAN_AUTO,
+                )
+            except Exception:
+                for option, value in cleared.items():
+                    setattr(self._state, option, value)
+                raise
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
             self._state.async_notify_switches()
@@ -605,16 +614,22 @@ class GreeAcClimateEntity(
         async with self._state.command_lock:
             temp = round(kwargs[ATTR_TEMPERATURE])
             hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+            cleared: dict[str, bool] = {}
             if hvac_mode is not None:
                 self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
-                self._clear_sleep_on_mode_change(hvac_mode)
+                cleared = self._clear_sleep_on_mode_change(hvac_mode)
             effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
             if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
-                await self._async_send_state(
-                    effective_mode,
-                    temp,
-                    self._attr_fan_mode or FAN_AUTO,
-                )
+                try:
+                    await self._async_send_state(
+                        effective_mode,
+                        temp,
+                        self._attr_fan_mode or FAN_AUTO,
+                    )
+                except Exception:
+                    for option, value in cleared.items():
+                        setattr(self._state, option, value)
+                    raise
             if hvac_mode is not None:
                 self._attr_hvac_mode = hvac_mode
             self._attr_target_temperature = float(temp)
@@ -816,14 +831,26 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         # Off frames carry a mode field too, so the mode is recorded either way.
         embedded_hvac_mode = _LIB_MODE_TO_HA[command.mode]
         if embedded_hvac_mode in self._attr_hvac_modes:
-            if command.power or self._model is GreeAcModel.GENERIC:
-                self._last_active_hvac_mode = embedded_hvac_mode
+            self._last_active_hvac_mode = embedded_hvac_mode
         elif command.power:
             return
 
         self._attr_hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
-        self._attr_target_temperature = float(command.temperature)
+        temperature = command.temperature
+        if command.fahrenheit:
+            # The decoded value is the display value; HA tracks the Celsius
+            # target the wire field is derived from, keeping the decoded scale
+            # so the next frame converts back the same way.
+            temperature = round(
+                TemperatureConverter.convert(
+                    temperature,
+                    UnitOfTemperature.FAHRENHEIT,
+                    UnitOfTemperature.CELSIUS,
+                )
+            )
+        self._attr_target_temperature = float(temperature)
+        self._state.fahrenheit = command.fahrenheit
         self._state.swing_v = command.swing_v
         self._state.swing_h = command.swing_h
         self._attr_swing_mode = SWING_ON if command.swing_v else SWING_OFF
@@ -836,7 +863,10 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         if self._is_yap1f:
             self._state.ifeel = command.ifeel
             self._state.swing_v_position = command.swing_v_position
+            self._state.swing_h_position = command.swing_h_position
+            self._state.display_temp = command.display_temp
             # Byte 7 0x04 is econo in cool and absence in heat; one wire bit.
+            self._state.econo = command.econo and embedded_hvac_mode is HVACMode.COOL
             self._state.absence = (
                 command.absence and embedded_hvac_mode is HVACMode.HEAT
             )
