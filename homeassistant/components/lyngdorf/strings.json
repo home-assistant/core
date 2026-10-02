@@ -110,11 +110,20 @@
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "The command did not reach the device's streaming module"
+    },
+    "invalid_option": {
+      "message": "{option} is not available on this device. It offers: {options}"
+    },
     "setup_connection_error": {
       "message": "Failed to connect to {host}"
     },
     "setup_timeout": {
       "message": "Timeout connecting to {host}"
+    },
+    "unsupported_command": {
+      "message": "The current source does not support this command"
     },
     "unsupported_remote_key": {
       "message": "This device does not have that remote key. It supports: {keys}"
