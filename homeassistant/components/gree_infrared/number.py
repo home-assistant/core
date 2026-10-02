@@ -15,6 +15,8 @@ from .const import CONF_INFRARED_EMITTER_ENTITY_ID
 from .entity import GreeIrEntity
 from .state import GreeAcState
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -11,13 +11,13 @@ from homeassistant.components.gree_infrared.const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
-    CONF_MODEL,
     DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
 from homeassistant.components.infrared import DATA_COMPONENT
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er

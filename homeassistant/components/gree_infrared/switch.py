@@ -1,12 +1,12 @@
 """Feature switches for Gree infrared climate commands."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -16,7 +16,6 @@ from .climate import SLEEP_BLOCKED_HVAC_MODES
 from .const import (
     CONF_GENERIC_OPTIONS,
     CONF_INFRARED_EMITTER_ENTITY_ID,
-    CONF_MODEL,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
@@ -24,6 +23,9 @@ from .entity import GreeIrEntity
 from .state import GreeAcState
 
 _BASE_OPTIONS = ("turbo", "light", "health", "xfan")
+
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -94,7 +96,7 @@ class GreeAcOptionSwitch(GreeIrEntity, InfraredEmitterConsumerEntity, SwitchEnti
     @override
     def is_on(self) -> bool:
         """Return the assumed switch state."""
-        return getattr(self._state, self._key)
+        return cast(bool, getattr(self._state, self._key))
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

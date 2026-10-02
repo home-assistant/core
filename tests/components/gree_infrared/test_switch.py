@@ -17,16 +17,22 @@ from homeassistant.components.gree_infrared.const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
-    CONF_MODEL,
     DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
 from homeassistant.components.infrared import DATA_COMPONENT, InfraredReceivedSignal
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    CONF_MODEL,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .conftest import ENTRY_ID
 
@@ -137,10 +143,12 @@ async def test_option_switches_preserve_complete_state(
     [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY], CONF_MODEL: MODEL_GENERIC}],
     indirect=True,
 )
-async def test_generic_options_remain_hidden_by_default(hass: HomeAssistant) -> None:
+async def test_generic_options_remain_hidden_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Generic entries keep their established option-free defaults."""
     assert (
-        er.async_get(hass).async_get_entity_id("switch", DOMAIN, f"{ENTRY_ID}_light")
+        entity_registry.async_get_entity_id("switch", DOMAIN, f"{ENTRY_ID}_light")
         is None
     )
 
@@ -460,6 +468,7 @@ async def test_switches_restore_when_added_before_climate(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Switches become available and restore flags regardless of platform order."""
     mock_restore_cache_with_extra_data(
@@ -481,7 +490,11 @@ async def test_switches_restore_when_added_before_climate(
     climate_gate = asyncio.Event()
     original_climate_setup = gree_climate.async_setup_entry
 
-    async def delayed_climate_setup(hass, entry, async_add_entities):
+    async def delayed_climate_setup(
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
         await climate_gate.wait()
         await original_climate_setup(hass, entry, async_add_entities)
 
@@ -491,7 +504,7 @@ async def test_switches_restore_when_added_before_climate(
             hass.config_entries.async_setup(mock_config_entry.entry_id)
         )
 
-        registry = er.async_get(hass)
+        registry = entity_registry
         for _ in range(1000):
             if all(
                 (
@@ -716,18 +729,20 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
             {ATTR_ENTITY_ID: _option_entity_id(hass, key)},
             blocking=True,
         )
-    with patch.object(
-        mock_infrared_emitter_entity,
-        "async_send_command",
-        side_effect=HomeAssistantError,
+    with (
+        patch.object(
+            mock_infrared_emitter_entity,
+            "async_send_command",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "climate",
-                "set_hvac_mode",
-                {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.HEAT},
+            blocking=True,
+        )
     state = mock_config_entry.runtime_data
     assert (state.sleep, state.econo) == (True, True)
     assert [
@@ -748,18 +763,20 @@ async def test_failed_mode_send_keeps_mode_cancelled_options(
             {ATTR_ENTITY_ID: _option_entity_id(hass, key)},
             blocking=True,
         )
-    with patch.object(
-        mock_infrared_emitter_entity,
-        "async_send_command",
-        side_effect=HomeAssistantError,
+    with (
+        patch.object(
+            mock_infrared_emitter_entity,
+            "async_send_command",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "climate",
-                "set_hvac_mode",
-                {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.OFF},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {ATTR_ENTITY_ID: _CLIMATE, "hvac_mode": HVACMode.OFF},
+            blocking=True,
+        )
     state = mock_config_entry.runtime_data
     assert (state.sleep, state.absence) == (True, True)
     assert [
