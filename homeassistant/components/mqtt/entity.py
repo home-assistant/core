@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -43,7 +43,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -160,7 +163,7 @@ PUBLISH_KWARGS = (CONF_MESSAGE_EXPIRY_INTERVAL,)
 
 @callback
 def async_handle_schema_error(
-    discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid
+    discovery_payload: MQTTDiscoveryPayload, err: probatio.Invalid
 ) -> None:
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -212,7 +215,7 @@ def async_setup_non_entity_entry_helper(
     hass: HomeAssistant,
     domain: str,
     async_setup: _SetupNonEntityHelperCallbackProtocol,
-    discovery_schema: vol.Schema,
+    discovery_schema: probatio.Schema,
 ) -> None:
     """Set up automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
@@ -228,7 +231,7 @@ def async_setup_non_entity_entry_helper(
         try:
             config: ConfigType = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_payload.discovery_data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
         except Exception:
@@ -257,6 +260,22 @@ def async_setup_entity_entry_helper(  # noqa: C901
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
+    platform = async_get_current_platform()
+
+    async def _async_add_discovered_entity(
+        entity: MqttEntity, discovery_data: DiscoveryInfoType
+    ) -> None:
+        """Add a discovered entity and acknowledge the discovery once done.
+
+        The discovery is acknowledged only after async_add_entities returns, i.e.
+        after the entity wrote its initial state on success or the add was
+        aborted. This keeps a queued update for the same discovery hash from
+        draining into an entity that is not yet in the state machine.
+        """
+        try:
+            await platform.async_add_entities([entity])
+        finally:
+            send_discovery_done(hass, discovery_data)
 
     @callback
     def _async_migrate_subentry(
@@ -335,14 +354,18 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     "and repair flow must be completed first"
                 )
             else:
-                async_add_entities(
-                    [
-                        entity_class(
-                            hass, config, entry, discovery_payload.discovery_data
-                        )
-                    ]
+                entity = entity_class(
+                    hass, config, entry, discovery_payload.discovery_data
                 )
-        except vol.Invalid as err:
+                entry.async_create_task(
+                    hass,
+                    _async_add_discovered_entity(
+                        entity, discovery_payload.discovery_data
+                    ),
+                    f"mqtt add discovered {domain} entity",
+                    eager_start=True,
+                )
+        except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
         except Exception:
@@ -404,7 +427,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     if TYPE_CHECKING:
                         assert entity_class is not None
                     subentry_entities.append(entity_class(hass, config, entry, None))
-                except vol.Invalid as exc:
+                except probatio.Invalid as exc:
                     _LOGGER.error(
                         "Schema violation occurred when trying to set up "
                         "entity from subentry %s %s %s: %s",
@@ -430,7 +453,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     continue
 
                 entities.append(entity_class(hass, config, entry, None))
-            except vol.Invalid as exc:
+            except probatio.Invalid as exc:
                 error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
@@ -506,7 +529,8 @@ class MqttAttributesMixin(Entity):
                 _LOGGER.info(
                     "Group member update received for entity %s, "
                     "but this entity was not initialized with the `group` option. "
-                    "Reload the MQTT integration or restart Home Assistant to activate"
+                    "Reload the MQTT integration or restart Home Assistant to activate",
+                    self.entity_id,
                 )
 
         self._attributes_config = config
@@ -1009,6 +1033,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable[[], None] | None = None
         self._removed_from_hass = False
+        self._added_to_hass = False
         if discovery_data is None:
             return
         mqtt_data = hass.data[DATA_MQTT]
@@ -1017,6 +1042,14 @@ class MqttDiscoveryUpdateMixin(Entity):
         self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Register discovery cleanup that must also run if the add is aborted."""
+        self._added_to_hass = False
+        await super().async_prepare_to_add_to_hass()
+        if self._discovery_data is not None:
+            self.async_on_remove(self._async_teardown_discovery_on_remove)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -1218,37 +1251,32 @@ class MqttDiscoveryUpdateMixin(Entity):
             # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
 
-    @final
-    @override
-    async def add_to_platform_finish(self) -> None:
-        """Finish adding entity to platform."""
-        await super().add_to_platform_finish()
-        # Only send the discovery done after the entity is fully added
-        # and the state is written to the state machine.
-        if self._discovery_data is not None:
-            send_discovery_done(self.hass, self._discovery_data)
-
     @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        if self._discovery_data is not None:
+    def _async_teardown_discovery_on_remove(self) -> None:
+        """Tear down discovery when the entity is removed or its add is aborted.
+
+        Registered via async_on_remove in async_prepare_to_add_to_hass so it also
+        runs on the abort path, where async_will_remove_from_hass is never called.
+        When the add is aborted while the entity is already registered (e.g. a
+        disabled entity), a registry hook is installed so the retained discovery
+        topic is cleared if the entity is later removed from the registry.
+        """
+        if self._discovery_data is None:
+            return
+        if not self._added_to_hass and self.registry_entry is not None:
             discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
-            if self.registry_entry is not None:
-                self._registry_hooks[discovery_hash] = (
-                    async_track_entity_registry_updated_event(
+            self._registry_hooks[discovery_hash] = (
+                async_track_entity_registry_updated_event(
+                    self.hass,
+                    self.entity_id,
+                    partial(
+                        async_clear_discovery_topic_if_entity_removed,
                         self.hass,
-                        self.entity_id,
-                        partial(
-                            async_clear_discovery_topic_if_entity_removed,
-                            self.hass,
-                            self._discovery_data,
-                        ),
-                    )
+                        self._discovery_data,
+                    ),
                 )
-            stop_discovery_updates(self.hass, self._discovery_data)
-            send_discovery_done(self.hass, self._discovery_data)
-        super().add_to_platform_abort()
+            )
+        self._cleanup_discovery_on_remove()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -1569,6 +1597,7 @@ class MqttEntity(
             )
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
+        self._added_to_hass = True
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.
@@ -1586,7 +1615,7 @@ class MqttEntity(
         """Handle updated discovery message."""
         try:
             config: DiscoveryInfoType = self.config_schema()(discovery_payload)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             async_handle_schema_error(discovery_payload, err)
             return
         self._config = config
@@ -1782,9 +1811,9 @@ def update_device(
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
             device_info["via_device_id"] = via_device_id
-        update_device_info = cast(dict[str, Any], device_info)
-        update_device_info["config_entry_id"] = config_entry_id
-        device = device_registry.async_get_or_create(**update_device_info)
+        device = device_registry.async_get_or_create(
+            config_entry_id=config_entry_id, **device_info
+        )
 
     return device.id if device else None
 

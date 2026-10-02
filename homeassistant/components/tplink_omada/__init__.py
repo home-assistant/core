@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, entry, site_client)
+    controller = OmadaSiteController(hass, entry, client, site_client)
 
     entry.runtime_data = controller
 

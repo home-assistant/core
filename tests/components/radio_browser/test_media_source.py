@@ -1,6 +1,6 @@
 """Tests for radio_browser media_source."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiodns.error import DNSError
 import pytest
@@ -148,7 +148,13 @@ async def test_search_media(
         SearchMediaQuery(search_query="my search"),
     )
 
-    source.radios.search.assert_awaited_with(name="my search", hide_broken=True)
+    source.radios.search.assert_awaited_with(
+        name="my search",
+        hide_broken=True,
+        limit=100,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
     assert len(result.result) == 5
 
 
@@ -257,3 +263,51 @@ async def test_resolve_media_not_ready(
                 hass, f"{media_source.URI_SCHEME}{DOMAIN}/123456", None
             )
         assert exc_info.value.translation_key == "config_entry_not_ready"
+
+
+async def test_resolve_media_station_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test resolving a station that no longer exists."""
+
+    with patch(
+        "homeassistant.components.radio_browser.RadioBrowser",
+        autospec=True,
+    ) as mock_browser:
+        mock_config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_browser.return_value.station.return_value = None
+        with pytest.raises(media_source.Unresolvable) as exc_info:
+            await media_source.async_resolve_media(
+                hass, f"{media_source.URI_SCHEME}{DOMAIN}/123456", None
+            )
+        assert exc_info.value.translation_key == "station_not_found"
+
+
+async def test_resolve_media_unknown_stream_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test resolving a station whose stream type cannot be determined."""
+
+    with patch(
+        "homeassistant.components.radio_browser.RadioBrowser",
+        autospec=True,
+    ) as mock_browser:
+        mock_config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        station = MagicMock(codec="UNKNOWN", url="https://example.com/stream")
+        mock_browser.return_value.station.return_value = station
+        with pytest.raises(media_source.Unresolvable) as exc_info:
+            await media_source.async_resolve_media(
+                hass, f"{media_source.URI_SCHEME}{DOMAIN}/123456", None
+            )
+        assert exc_info.value.translation_key == "unknown_stream_type"
+        mock_browser.return_value.station_click.assert_not_called()

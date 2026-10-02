@@ -1,13 +1,14 @@
 """Tests for the Freebox config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from freebox_api.exceptions import (
     AuthorizationError,
     HttpRequestError,
     InvalidTokenError,
 )
+import pytest
 
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -48,12 +49,12 @@ async def test_user(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     # test with all provided
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
@@ -79,10 +80,25 @@ async def internal_test_link(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "link"
+        assert not result["errors"]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        await hass.async_block_till_done()
+
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == MOCK_HOST
         assert result["title"] == MOCK_HOST
@@ -92,26 +108,40 @@ async def internal_test_link(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_link(hass: HomeAssistant, router: Mock) -> None:
+@pytest.mark.usefixtures("router")
+async def test_link(hass: HomeAssistant) -> None:
     """Test link with standard router mode."""
     await internal_test_link(hass)
 
 
-async def test_link_bridge_mode(hass: HomeAssistant, router_bridge_mode: Mock) -> None:
+@pytest.mark.usefixtures("router_bridge_mode")
+async def test_link_bridge_mode(hass: HomeAssistant) -> None:
     """Test linking for a freebox in bridge mode."""
     await internal_test_link(hass)
 
 
-async def test_link_bridge_mode_error(
-    hass: HomeAssistant, mock_router_bridge_mode_error: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_router_bridge_mode_error")
+async def test_link_bridge_mode_error(hass: HomeAssistant) -> None:
     """Test linking for a freebox in bridge mode, unknown error received from API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -128,43 +158,126 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_on_link_failed(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "error_msg"),
+    [
+        (AuthorizationError, "register_failed"),
+        (HttpRequestError, "cannot_connect"),
+        (InvalidTokenError, "unknown"),
+    ],
+)
+async def test_on_link_failed(
+    hass: HomeAssistant,
+    side_effect: type[Exception],
+    error_msg: str,
+) -> None:
     """Test when we have errors during linking the router."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+    assert not result["errors"]
 
     with patch(
         "homeassistant.components.freebox.router.Freepybox.open",
-        side_effect=AuthorizationError(),
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": error_msg}
+
+
+async def test_on_link_failed_forgets_registration_on_invalid_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test that an invalid app token clears the stored registration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+
+    error = AuthorizationError(
+        'Starting session failed (APIResponse: {"success": false, '
+        '"msg": "Erreur d\'authentification de l\'application", '
+        '"error_code": "invalid_token"})'
+    )
+    with (
+        patch(
+            "homeassistant.components.freebox.router.Freepybox.open",
+            side_effect=error,
+        ),
+        patch(
+            "homeassistant.components.freebox.config_flow.async_forget_registration"
+        ) as mock_forget_registration,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "register_failed"}
+        mock_forget_registration.assert_awaited_once_with(hass, MOCK_HOST)
 
-    with patch(
-        "homeassistant.components.freebox.router.Freepybox.open",
-        side_effect=HttpRequestError(),
+
+async def test_on_link_failed_keeps_registration_on_other_authorization_error(
+    hass: HomeAssistant,
+) -> None:
+    """An AuthorizationError unrelated to the app token must not clear it.
+
+    freebox-api also raises AuthorizationError for a denied or timed out
+    pairing request, and for transient failures of the challenge/session
+    calls. None of those mean the stored token itself is bad, so the
+    registration must be left untouched for them.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+
+    with (
+        patch(
+            "homeassistant.components.freebox.router.Freepybox.open",
+            side_effect=AuthorizationError("Authorization timed out"),
+        ),
+        patch(
+            "homeassistant.components.freebox.config_flow.async_forget_registration"
+        ) as mock_forget_registration,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.freebox.router.Freepybox.open",
-        side_effect=InvalidTokenError(),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"] == {"base": "register_failed"}
+        mock_forget_registration.assert_not_awaited()
 
 
 async def test_zeroconf_missing_api_domain(

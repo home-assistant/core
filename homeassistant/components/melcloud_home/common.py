@@ -8,6 +8,7 @@ from aiomelcloudhome import (
     ATWUnit,
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeError,
     MelCloudHomeTimeoutError,
 )
 
@@ -63,6 +64,11 @@ async def perform_action(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="timeout_connect",
+        ) from err
+    except MelCloudHomeError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
         ) from err
     else:
         await coordinator.async_request_refresh()

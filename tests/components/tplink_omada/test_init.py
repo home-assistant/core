@@ -332,6 +332,33 @@ async def test_cleanup_devices_removes_orphans(
     assert device_registry.async_get(orphan.id) is None
 
 
+async def test_cleanup_preserves_controller_device(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device cleanup keeps the controller device entry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+
+    controller_mac = "00-11-22-33-44-55"
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_mac), mock_config_entry.entry_id
+    )
+
+    await async_cleanup_devices(hass, controller)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_mac), mock_config_entry.entry_id
+    )
+
+
 async def test_cleanup_task_guard_prevents_redundant_tasks(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,

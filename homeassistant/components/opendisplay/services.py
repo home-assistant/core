@@ -19,8 +19,9 @@ from opendisplay import (
     Rotation,
 )
 from PIL import Image as PILImage, ImageOps
-import voluptuous as vol
+import probatio
 
+from homeassistant.components import camera, image as image_component
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
@@ -55,26 +56,30 @@ def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
 
     def validate(value: str) -> IntEnum:
         if (result := members.get(value)) is None:
-            raise vol.Invalid(f"Invalid value: {value}")
+            raise probatio.Invalid(f"Invalid value: {value}")
         return result
 
     return validate
 
 
-SCHEMA_UPLOAD_IMAGE = vol.Schema(
+SCHEMA_UPLOAD_IMAGE = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_IMAGE): MediaSelector(
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_IMAGE): MediaSelector(
             MediaSelectorConfig(accept=["image/*"])
         ),
-        vol.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): vol.All(
-            vol.Coerce(int), vol.Coerce(Rotation)
+        probatio.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): probatio.All(
+            probatio.Coerce(int), probatio.Coerce(Rotation)
         ),
-        vol.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(DitherMode),
-        vol.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(RefreshMode),
-        vol.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
-        vol.Optional(ATTR_TONE_COMPRESSION): vol.All(
-            vol.Coerce(float), vol.Range(min=0.0, max=100.0)
+        probatio.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(
+            DitherMode
+        ),
+        probatio.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(
+            RefreshMode
+        ),
+        probatio.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
+        probatio.Optional(ATTR_TONE_COMPRESSION): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)
         ),
     }
 )
@@ -124,6 +129,31 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
     return await hass.async_add_executor_job(_load_image_from_bytes, data)
 
 
+async def _async_get_pil_image(
+    hass: HomeAssistant, image_data: dict[str, Any]
+) -> PILImage.Image:
+    """Return a PIL Image for the selected media."""
+    media_content_id: str = image_data["media_content_id"]
+
+    # Camera and image entities resolve to never-ending MJPEG streams,
+    # so fetch a single snapshot from the entity instead.
+    for integration in camera, image_component:
+        media_source_prefix = f"media-source://{integration.DOMAIN}/"
+        if not media_content_id.startswith(media_source_prefix):
+            continue
+
+        entity_id = media_content_id.removeprefix(media_source_prefix)
+        snapshot = await integration.async_get_image(hass, entity_id)
+        return await hass.async_add_executor_job(
+            _load_image_from_bytes, snapshot.content
+        )
+
+    media = await async_resolve_media(hass, media_content_id, None)
+    if media.path is not None:
+        return await hass.async_add_executor_job(_load_image, str(media.path))
+    return await _async_download_image(hass, media.url)
+
+
 async def _async_upload_image(call: ServiceCall) -> None:
     """Handle the upload_image service call."""
     entry = _get_entry_for_device(call)
@@ -162,16 +192,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     entry.runtime_data.upload_task = current
 
     try:
-        media = await async_resolve_media(
-            call.hass, image_data["media_content_id"], None
-        )
-
-        if media.path is not None:
-            pil_image = await call.hass.async_add_executor_job(
-                _load_image, str(media.path)
-            )
-        else:
-            pil_image = await _async_download_image(call.hass, media.url)
+        pil_image = await _async_get_pil_image(call.hass, image_data)
 
         raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
         if raw_key is not None and len(raw_key) != 32:

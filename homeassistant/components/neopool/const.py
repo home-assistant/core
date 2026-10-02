@@ -9,8 +9,10 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 DEFAULT_SCAN_INTERVAL = 20  # in seconds

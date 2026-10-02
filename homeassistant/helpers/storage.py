@@ -28,6 +28,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util, json as json_util
+from homeassistant.util.async_ import wait_shared_future
 from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.hass_dict import HassKey
 
@@ -312,7 +313,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         the second call will wait and return the result of the first call.
         """
         if self._load_future:
-            return await self._load_future
+            return await wait_shared_future(self._load_future)
 
         self._load_future = self.hass.loop.create_future()
         try:

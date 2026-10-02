@@ -1,17 +1,26 @@
 """Coordinator for the ZhongHong integration."""
 
 from dataclasses import dataclass
-from typing import override
+from datetime import datetime
+from typing import Final, override
 
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER, SCAN_INTERVAL
+
+# A unit acts on a command and then reports the new state unprompted. This is
+# how long to wait before asking for it anyway, to cover the reports that never
+# arrive. Ten runs against a Haier unit took between one and 3.4 seconds to
+# act, so this sits past the slowest of them: asking before the unit has moved
+# would read back the state the command was meant to change.
+READBACK_DELAY: Final = 5
 
 type DeviceAddress = tuple[int, int]
 
@@ -81,9 +90,46 @@ class ZhongHongCoordinator(DataUpdateCoordinator[None]):
             update_interval=SCAN_INTERVAL,
         )
         self.hub = hub
+        self._readback_cancel: CALLBACK_TYPE | None = None
 
         for device in devices.values():
             device.register_update_callback(self._handle_device_update)
+
+    @callback
+    def async_schedule_readback(self) -> None:
+        """Re-read the gateway shortly after it has been commanded.
+
+        A unit takes a second or three to act on a command, and the gateway
+        pushes the new state once it has. That push is the only thing the
+        state comes from, so if it goes missing the entity keeps showing what
+        the unit was doing before, until the next poll a minute later. Asking
+        again a few seconds in costs one round trip and closes that window.
+        """
+        # A command sits in the executor while it is sent, and the entry can
+        # be unloaded in the meantime, so this can be reached afterwards.
+        # Scheduling then would put back the timer the shutdown has just
+        # taken away.
+        if self._shutdown_requested:
+            return
+
+        if self._readback_cancel is not None:
+            self._readback_cancel()
+
+        @callback
+        def _readback(_now: datetime) -> None:
+            self._readback_cancel = None
+            # Refreshed rather than requested: a request goes through the
+            # coordinator's debouncer, whose cooldown is twice this delay, so
+            # a command given shortly after a re-read would have its own one
+            # held back past the point the unit has acted. The timer above is
+            # the rate limit this needs.
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.async_refresh(),
+                name=f"{self.name} readback",
+            )
+
+        self._readback_cancel = async_call_later(self.hass, READBACK_DELAY, _readback)
 
     def _handle_device_update(self, device: ZhongHongHVAC) -> None:
         """Handle a state push from the gateway.
@@ -107,3 +153,14 @@ class ZhongHongCoordinator(DataUpdateCoordinator[None]):
 
         if not await self.hass.async_add_executor_job(self.hub.query_all_status):
             raise UpdateFailed(f"Failed to query the gateway at {self.hub.ip_addr}")
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Drop the pending re-read, which would outlive the entry."""
+        # Shutting down first, so that anything on its way here from the
+        # executor finds the door already closed.
+        await super().async_shutdown()
+
+        if self._readback_cancel is not None:
+            self._readback_cancel()
+            self._readback_cancel = None

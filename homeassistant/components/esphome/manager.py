@@ -32,7 +32,7 @@ from aioesphomeapi import (
 )
 import aiohttp
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
@@ -431,7 +431,7 @@ class ESPHomeManager:
         except (
             ServiceNotFound,
             ServiceValidationError,
-            vol.Invalid,
+            probatio.Invalid,
             HomeAssistantError,
         ) as ex:
             self._send_service_call_response(
@@ -455,7 +455,7 @@ class ESPHomeManager:
             await self.hass.services.async_call(
                 domain, service_name, service_data, blocking=True
             )
-        except (ServiceNotFound, ServiceValidationError, vol.Invalid) as ex:
+        except (ServiceNotFound, ServiceValidationError, probatio.Invalid) as ex:
             self._send_service_call_response(call_id, False, str(ex), b"")
         else:
             self._send_service_call_response(call_id, True, "", b"")
@@ -802,9 +802,15 @@ class ESPHomeManager:
         # if it's a broken connection or Z-Wave controller or a not
         # yet provisioned controller.
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
-        assert self.entry_data.device_info is not None
-        self.entry_data.async_create_zwave_js_flow(
-            self.hass, self.entry_data.device_info, zwave_home_id
+        entry_data = self.entry_data
+        assert entry_data.device_info is not None
+        # DeviceInfo is a snapshot from connect time; keep its home ID current.
+        entry_data.device_info = EsphomeDeviceInfo.from_dict(
+            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        )
+        entry_data.async_save_to_store()
+        entry_data.async_create_zwave_js_flow(
+            self.hass, entry_data.device_info, zwave_home_id
         )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
@@ -1374,12 +1380,12 @@ ARG_TYPE_METADATA = {
         selector={"boolean": None},
     ),
     UserServiceArgType.INT: ServiceMetadata(
-        validator=vol.Coerce(int),
+        validator=probatio.Coerce(int),
         example="42",
         selector={"number": {CONF_MODE: "box"}},
     ),
     UserServiceArgType.FLOAT: ServiceMetadata(
-        validator=vol.Coerce(float),
+        validator=probatio.Coerce(float),
         example="12.3",
         selector={"number": {CONF_MODE: "box", "step": 1e-3}},
     ),
@@ -1395,13 +1401,13 @@ ARG_TYPE_METADATA = {
         selector={"object": {}},
     ),
     UserServiceArgType.INT_ARRAY: ServiceMetadata(
-        validator=[vol.Coerce(int)],
+        validator=[probatio.Coerce(int)],
         description="A list of integer values.",
         example="[42, 34]",
         selector={"object": {}},
     ),
     UserServiceArgType.FLOAT_ARRAY: ServiceMetadata(
-        validator=[vol.Coerce(float)],
+        validator=[probatio.Coerce(float)],
         description="A list of floating point numbers.",
         example="[ 12.3, 34.5 ]",
         selector={"object": {}},
@@ -1551,7 +1557,7 @@ def _async_register_service(
             )
             return
         metadata = ARG_TYPE_METADATA[arg.type]
-        schema[vol.Required(arg.name)] = metadata.validator
+        schema[probatio.Required(arg.name)] = metadata.validator
         fields[arg.name] = {
             "name": arg.name,
             "required": True,
@@ -1573,7 +1579,7 @@ def _async_register_service(
             service,
             supports_response=esphome_supports_response,
         ),
-        vol.Schema(schema),
+        probatio.Schema(schema),
         supports_response=ha_supports_response,
     )
     async_set_service_schema(
