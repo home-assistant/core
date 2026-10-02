@@ -3,20 +3,18 @@ rules:
   appropriate-polling:
     status: exempt
     comment: The integration polls nothing, the action runs on demand.
-  brands:
-    status: todo
-    comment: Waiting for a Farmad logo in the brands repository.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: todo
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: The integration has no conditions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: The integration has no triggers.
