@@ -818,20 +818,6 @@ def _legacy_instance_attribute(member: str, value: Any) -> type[MockShimClimateE
     )
 
 
-def _legacy_instance_property(member: str, value: Any) -> type[MockShimClimateEntity]:
-    """Return a subclass assigning the deprecated member on the instance."""
-
-    def __init__(self: MockShimClimateEntity, **values: Any) -> None:
-        MockShimClimateEntity.__init__(self, **values)
-        setattr(self, member, value)
-
-    return type(
-        "LegacyInstancePropertyClimateEntity",
-        (MockShimClimateEntity,),
-        {"__module__": __name__, "__init__": __init__},
-    )
-
-
 def _legacy_slots(member: str, value: Any) -> type[MockShimClimateEntity]:
     """Return a subclass declaring the deprecated member in __slots__."""
 
@@ -883,7 +869,7 @@ DEPRECATED_MEMBERS = [
     pytest.param(
         "temperature_unit",
         UnitOfTemperature.FAHRENHEIT,
-        # The unit is not a state attribute, it converts the published temperatures
+        # The native unit is not published, it converts the published temperatures
         ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
         37.2,
         id="temperature_unit",
@@ -917,42 +903,42 @@ DEPRECATED_SHAPES = [
     pytest.param(
         _legacy_property,
         "is overriding the deprecated {member} property",
+        "native_{member}",
         0,
         id="property",
     ),
     pytest.param(
         _legacy_cached_property,
         "is overriding the deprecated {member} property",
+        "native_{member}",
         0,
         id="cached-property",
     ),
     pytest.param(
         _legacy_class_value,
         "is overriding the deprecated {member} property",
+        "native_{member}",
         0,
         id="class-value",
     ),
     pytest.param(
         _legacy_class_attribute,
         "is setting the deprecated _attr_{member} class attribute",
+        "_attr_native_{member}",
         1,
         id="class-attribute",
     ),
     pytest.param(
         _legacy_instance_attribute,
         "is setting the deprecated _attr_{member} attribute",
+        "_attr_native_{member}",
         1,
         id="instance-attribute",
     ),
     pytest.param(
-        _legacy_instance_property,
-        "is setting the deprecated {member} attribute",
-        1,
-        id="instance-property",
-    ),
-    pytest.param(
         _legacy_slots,
         "is declaring the deprecated {member} in __slots__",
+        "_attr_native_{member}",
         0,
         id="slots",
     ),
@@ -960,30 +946,34 @@ DEPRECATED_SHAPES = [
 
 
 @pytest.mark.parametrize(
-    ("unit_system", "native_unit", "expected_temperature"),
+    ("unit_system", "native_unit", "expected_temperature", "expected_unit"),
     [
         pytest.param(
             METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             21.4,
+            UnitOfTemperature.CELSIUS,
             id="metric-native-celsius",
         ),
         pytest.param(
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             -5.9,
+            UnitOfTemperature.CELSIUS,
             id="metric-native-fahrenheit",
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.CELSIUS,
             71,
+            UnitOfTemperature.FAHRENHEIT,
             id="us-customary-native-celsius",
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             21,
+            UnitOfTemperature.FAHRENHEIT,
             id="us-customary-native-fahrenheit",
         ),
     ],
@@ -994,12 +984,13 @@ async def test_native_temperature_unit_conversion(
     unit_system: UnitSystem,
     native_unit: UnitOfTemperature,
     expected_temperature: float,
+    expected_unit: UnitOfTemperature,
 ) -> None:
     """Test the native unit converts the published temperatures."""
     hass.config.units = unit_system
     entity = MockClimateEntity(name="Test", unique_id="unique_climate_test")
     entity._attr_native_temperature_unit = native_unit
-    entity._attr_current_temperature = 21.4
+    entity._attr_native_current_temperature = 21.4
 
     setup_test_component_platform(
         hass, DOMAIN, entities=[entity], from_config_entry=True
@@ -1015,6 +1006,10 @@ async def test_native_temperature_unit_conversion(
     assert (
         state.attributes[ClimateEntityStateAttribute.CURRENT_TEMPERATURE]
         == expected_temperature
+    )
+    # The published unit is the one the published temperatures are converted to
+    assert (
+        state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT] == expected_unit
     )
 
 
@@ -1217,13 +1212,15 @@ async def test_set_temperature_service_converts_to_native_unit(
     DEPRECATED_MEMBERS,
 )
 @pytest.mark.parametrize(
-    ("entity_factory", "expected_warning", "expected_reads"), DEPRECATED_SHAPES
+    ("entity_factory", "expected_warning", "expected_replacement", "expected_reads"),
+    DEPRECATED_SHAPES,
 )
 async def test_deprecated_temperature_member(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     entity_factory: Callable[[str, Any], type[MockShimClimateEntity]],
     expected_warning: str,
+    expected_replacement: str,
     expected_reads: int,
     member: str,
     native_value: Any,
@@ -1244,7 +1241,7 @@ async def test_deprecated_temperature_member(
         f"{entity_class.__module__}::{entity_class.__name__} "
         f"{expected_warning.format(member=member)}, "
         "this will be unsupported from Home Assistant 2027.11, "
-        f"use ClimateEntity.native_{member} instead"
+        f"use ClimateEntity.{expected_replacement.format(member=member)} instead"
     ) in caplog.text
     assert _count_warnings(caplog, "is reading the deprecated") == expected_reads
 
@@ -1268,39 +1265,66 @@ async def test_deprecated_temperature_unit_drives_conversion(
 @pytest.mark.parametrize(
     ("member", "first_value", "second_value"), DEPRECATED_MEMBER_WRITES
 )
-@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
 async def test_deprecated_temperature_member_setter(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    prefix: str,
     member: str,
     first_value: Any,
     second_value: Any,
 ) -> None:
-    """Test writing a deprecated temperature member at runtime."""
-    warning = f"is setting the deprecated {prefix}{member} attribute"
+    """Test writing a deprecated _attr_ temperature member at runtime."""
+    warning = (
+        f"is setting the deprecated _attr_{member} attribute, this will be "
+        "unsupported from Home Assistant 2027.11, "
+        f"use ClimateEntity._attr_native_{member} instead"
+    )
     entity = MockShimClimateEntity()
     entity.hass = hass
 
-    setattr(entity, f"{prefix}{member}", first_value)
+    setattr(entity, f"_attr_{member}", first_value)
 
-    assert getattr(entity, f"{prefix}{member}") == first_value
+    assert getattr(entity, f"_attr_{member}") == first_value
     assert getattr(entity, f"_attr_native_{member}") == first_value
     assert getattr(entity, f"native_{member}") == first_value
     assert caplog.text.count(warning) == 1
 
-    setattr(entity, f"{prefix}{member}", second_value)
+    setattr(entity, f"_attr_{member}", second_value)
 
     assert getattr(entity, f"native_{member}") == second_value
     assert caplog.text.count(warning) == 1
 
 
 @pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
-@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
+@pytest.mark.parametrize(
+    "declarations",
+    [pytest.param({}, id="plain"), pytest.param({"_attr_{member}": None}, id="attr")],
+)
+async def test_deprecated_temperature_member_public_write_raises(
+    hass: HomeAssistant, declarations: dict[str, Any], member: str, native_value: Any
+) -> None:
+    """Test a deprecated public member cannot be written.
+
+    Only the _attr_ shorthands keep a setter. Below a deprecated _attr_ declaration a
+    write to the public member would otherwise land in storage nothing reads.
+    """
+    entity = type(
+        "PublicWriterClimateEntity",
+        (MockShimClimateEntity,),
+        {
+            "__module__": __name__,
+            **{name.format(member=member): v for name, v in declarations.items()},
+        },
+    )()
+    entity.hass = hass
+
+    with pytest.raises(AttributeError, match=f"property '{member}' .* has no setter"):
+        setattr(entity, member, native_value)
+
+
+@pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
 async def test_deprecated_temperature_member_setter_reported_once_per_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    prefix: str,
     member: str,
     native_value: Any,
 ) -> None:
@@ -1309,7 +1333,7 @@ async def test_deprecated_temperature_member_setter_reported_once_per_class(
     A multi-zone integration builds one entity per zone from a single class, so a
     once-per-instance report is one log line per zone per setup.
     """
-    warning = f"is setting the deprecated {prefix}{member} attribute"
+    warning = f"is setting the deprecated _attr_{member} attribute"
     first = type(
         "FirstWriterClimateEntity", (MockShimClimateEntity,), {"__module__": __name__}
     )
@@ -1324,7 +1348,7 @@ async def test_deprecated_temperature_member_setter_reported_once_per_class(
         for _ in range(3):
             entity = entity_class()
             entity.hass = hass
-            setattr(entity, f"{prefix}{member}", native_value)
+            setattr(entity, f"_attr_{member}", native_value)
 
     write(first)
 
@@ -1382,11 +1406,9 @@ async def test_deprecated_temperature_member_read(
 
 
 @pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
-@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
 async def test_deprecated_temperature_member_write_not_reported_as_read(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    prefix: str,
     member: str,
     native_value: Any,
 ) -> None:
@@ -1398,13 +1420,13 @@ async def test_deprecated_temperature_member_write_not_reported_as_read(
     )()
     entity.hass = hass
 
-    setattr(entity, f"{prefix}{member}", native_value)
+    setattr(entity, f"_attr_{member}", native_value)
 
     assert getattr(entity, f"native_{member}") == native_value
     assert entity.state_attributes
 
     assert (
-        _count_warnings(caplog, f"is setting the deprecated {prefix}{member} attribute")
+        _count_warnings(caplog, f"is setting the deprecated _attr_{member} attribute")
         == 1
     )
     assert _count_warnings(caplog, "is reading the deprecated") == 0
@@ -1754,3 +1776,65 @@ async def test_deprecated_temperature_member_override_not_cached(
     entity.reads = 0
 
     assert [getattr(entity, f"native_{member}") for _ in range(3)] == [1.0, 2.0, 3.0]
+
+
+@pytest.mark.parametrize(
+    ("member", "native_value", "state_attribute", "expected_state_value"),
+    DEPRECATED_MEMBERS,
+)
+@pytest.mark.parametrize(
+    "grandparent_declarations",
+    [
+        pytest.param({}, id="legacy-parent"),
+        pytest.param(
+            {"native_{member}": property(lambda self: "grandparent")},
+            id="legacy-parent-over-migrated-grandparent",
+        ),
+    ],
+)
+@pytest.mark.parametrize("depth", [1, 2], ids=["child", "grandchild"])
+async def test_migrated_child_wins_over_deprecated_parent_attribute(
+    hass: HomeAssistant,
+    depth: int,
+    grandparent_declarations: dict[str, Any],
+    member: str,
+    native_value: Any,
+    state_attribute: str,
+    expected_state_value: Any,
+) -> None:
+    """Test a class setting _attr_native_ wins over a parent's deprecated _attr_.
+
+    The parent's deprecated storage gets a fallback installed, which the migrated
+    class, and anything inheriting from it, must not keep serving.
+    """
+    grandparent = type(
+        "GrandparentClimateEntity",
+        (MockShimClimateEntity,),
+        {
+            "__module__": __name__,
+            **{
+                name.format(member=member): value
+                for name, value in grandparent_declarations.items()
+            },
+        },
+    )
+    entity_class = type(
+        "LegacyParentClimateEntity",
+        (grandparent,),
+        {"__module__": __name__, f"_attr_{member}": MIGRATED_PARENT_VALUES[member]},
+    )
+    entity_class = type(
+        "MigratedChildClimateEntity",
+        (entity_class,),
+        {"__module__": __name__, f"_attr_native_{member}": native_value},
+    )
+    for _ in range(depth - 1):
+        entity_class = type(
+            "GrandchildClimateEntity", (entity_class,), {"__module__": __name__}
+        )
+    entity = entity_class()
+    entity.hass = hass
+
+    assert getattr(entity, f"native_{member}") == native_value
+    assert getattr(entity, member) == native_value
+    assert entity.state_attributes[state_attribute] == expected_state_value

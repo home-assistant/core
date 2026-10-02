@@ -179,7 +179,7 @@ _DEPRECATED_TEMPERATURE_MEMBERS = (
 )
 
 
-def _log_deprecated_temperature_member(cls: type, member: str, usage: str) -> None:
+def _log_deprecated_temperature_member(cls: type, usage: str, replacement: str) -> None:
     """Log use of a deprecated temperature member."""
     report_issue = async_suggest_report_issue(
         async_get_hass_or_none(), module=cls.__module__
@@ -187,12 +187,12 @@ def _log_deprecated_temperature_member(cls: type, member: str, usage: str) -> No
     _LOGGER.warning(
         (
             "%s::%s is %s, this will be unsupported from Home Assistant 2027.11, "
-            "use ClimateEntity.native_%s instead, please %s"
+            "use ClimateEntity.%s instead, please %s"
         ),
         cls.__module__,
         cls.__name__,
         usage,
-        member,
+        replacement,
         report_issue,
     )
 
@@ -200,7 +200,9 @@ def _log_deprecated_temperature_member(cls: type, member: str, usage: str) -> No
 _REPORTED_DEPRECATED_MEMBERS: set[tuple[type, str]] = set()
 
 
-def _report_deprecated_temperature_member(cls: type, member: str, usage: str) -> None:
+def _report_deprecated_temperature_member(
+    cls: type, usage: str, replacement: str
+) -> None:
     """Report a declaration or a write of a deprecated member, once per class.
 
     The reported classes are tracked here rather than on the class itself: a
@@ -210,13 +212,15 @@ def _report_deprecated_temperature_member(cls: type, member: str, usage: str) ->
     if (key := (cls, usage)) in _REPORTED_DEPRECATED_MEMBERS:
         return
     _REPORTED_DEPRECATED_MEMBERS.add(key)
-    _log_deprecated_temperature_member(cls, member, usage)
+    _log_deprecated_temperature_member(cls, usage, replacement)
 
 
 _REPORTED_DEPRECATED_READS: set[tuple[type, str]] = set()
 
 
-def _report_deprecated_temperature_read(cls: type, member: str, usage: str) -> None:
+def _report_deprecated_temperature_read(
+    cls: type, usage: str, replacement: str
+) -> None:
     """Report a read of a deprecated temperature member, once per class.
 
     A read is attributed to the code doing it rather than to the entity's class: a
@@ -228,7 +232,7 @@ def _report_deprecated_temperature_read(cls: type, member: str, usage: str) -> N
     _REPORTED_DEPRECATED_READS.add(key)
     try:
         report_usage(
-            f"is {usage}, use ClimateEntity.native_{member} instead",
+            f"is {usage}, use ClimateEntity.{replacement} instead",
             breaks_in_ha_version="2027.11",
             core_behavior=ReportBehavior.LOG,
             exclude_integrations={DOMAIN},
@@ -236,7 +240,7 @@ def _report_deprecated_temperature_read(cls: type, member: str, usage: str) -> N
     except RuntimeError:
         # The frame helper is only set up once Home Assistant runs; a read before
         # that can only be attributed to the entity's class.
-        _log_deprecated_temperature_member(cls, member, usage)
+        _log_deprecated_temperature_member(cls, usage, replacement)
 
 
 def _read_deprecated_attr(entity: Any, member: str) -> Any:
@@ -258,6 +262,10 @@ class _DeprecatedFallback(property):
     Reading it reaches back to the deprecated member, so a deprecated member looking
     for the native value must skip it and serve an authored native member instead.
     """
+
+
+class _DeprecatedAttrFallback(_DeprecatedFallback):
+    """Marks a fallback serving a deprecated _attr_<member> class attribute."""
 
 
 def _read_authored_native(native: Any, entity: Any) -> Any:
@@ -282,11 +290,16 @@ def _deprecated_fallback(member: str, declaration: Any) -> _DeprecatedFallback:
     if declaration is None:
         # Only _attr_<member> is declared: read it off the entity, an assignment in
         # __init__ has to win over the class attribute.
-        return _DeprecatedFallback(attrgetter(f"_attr_{member}"))
+        return _DeprecatedAttrFallback(attrgetter(f"_attr_{member}"))
     if (getter := getattr(type(declaration), "__get__", None)) is None:
         # A plain class attribute, an instance attribute may shadow it.
         return _DeprecatedFallback(attrgetter(member))
     return _DeprecatedFallback(lambda entity: getter(declaration, entity, type(entity)))
+
+
+def _resolve(cls: type, name: str) -> Any:
+    """Return the raw class member name resolves to, without invoking descriptors."""
+    return next(vars(klass)[name] for klass in cls.__mro__ if name in vars(klass))
 
 
 def _link_deprecated_temperature_member(cls: type[ClimateEntity], member: str) -> None:
@@ -304,13 +317,16 @@ def _link_deprecated_temperature_member(cls: type[ClimateEntity], member: str) -
     * The nearest native member authored by a subclass is recorded for the deprecated
       member to serve, which is what lets a class that has migrated without ever
       assigning _attr_native_<member> keep answering reads of the deprecated name.
+    * A class setting _attr_native_<member> below an ancestor's deprecated
+      _attr_<member> gets the base native_<member> back, so its own value is served.
     """
     native_member = f"native_{member}"
     attr_member = f"_attr_{member}"
     native_attr_member = f"_attr_{native_member}"
     authored: tuple[Any] | None = None
-    deprecated: tuple[type, str] | None = None
+    deprecated: tuple[type, str, str] | None = None
     declaration: Any = None
+    migrated = False
     settled = False
 
     for klass in cls.__mro__:
@@ -327,15 +343,23 @@ def _link_deprecated_temperature_member(cls: type[ClimateEntity], member: str) -
             settled = True
         elif native_attr_member in namespace:
             # The class has migrated, an ancestor's deprecated member is moot.
+            migrated = migrated or not settled
             settled = True
         elif member in namespace:
             if not settled:
                 declaration = namespace[member]
                 deprecated = (
-                    klass,
-                    f"declaring the deprecated {member} in __slots__"
+                    (
+                        klass,
+                        f"declaring the deprecated {member} in __slots__",
+                        native_attr_member,
+                    )
                     if isinstance(declaration, MemberDescriptorType)
-                    else f"overriding the deprecated {member} property",
+                    else (
+                        klass,
+                        f"overriding the deprecated {member} property",
+                        native_member,
+                    )
                 )
                 settled = True
         elif attr_member in namespace:
@@ -343,10 +367,17 @@ def _link_deprecated_temperature_member(cls: type[ClimateEntity], member: str) -
                 deprecated = (
                     klass,
                     f"setting the deprecated {attr_member} class attribute",
+                    native_attr_member,
                 )
                 settled = True
             # The deprecated storage shadows a native member authored further up.
             break
+
+    if migrated and isinstance(_resolve(cls, native_member), _DeprecatedAttrFallback):
+        # The class has migrated the storage an inherited fallback serves, so its own
+        # _attr_native_<member> has to be served instead.
+        authored = (native := vars(ClimateEntity)[native_member],)
+        setattr(cls, native_member, native)
 
     setattr(cls, f"_{native_member}_authored", authored)
 
@@ -356,7 +387,7 @@ def _link_deprecated_temperature_member(cls: type[ClimateEntity], member: str) -
     # Deliberately not a cached property: the deprecated member is free to return a
     # new value on every read.
     setattr(cls, native_member, _deprecated_fallback(member, declaration))
-    _report_deprecated_temperature_member(deprecated[0], member, deprecated[1])
+    _report_deprecated_temperature_member(*deprecated)
 
 
 class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
@@ -507,6 +538,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 native_temperature_unit,
                 precision,
             ),
+            ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                hass.config.units.temperature_unit
+            ),
         }
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
@@ -569,25 +603,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "temperature_unit",
             "reading the deprecated temperature_unit property",
+            "native_temperature_unit",
         )
         if (authored := self._native_temperature_unit_authored) is not None:
             return cast(str, _read_authored_native(authored[0], self))
         return cast(str, _read_deprecated_attr(self, "temperature_unit"))
-
-    @temperature_unit.setter
-    def temperature_unit(self, value: str) -> None:
-        """Set the native unit of measurement.
-
-        Deprecated, use _attr_native_temperature_unit instead.
-        """
-        _report_deprecated_temperature_member(
-            type(self),
-            "temperature_unit",
-            "setting the deprecated temperature_unit attribute",
-        )
-        self._attr_native_temperature_unit = value
 
     @property
     def _attr_temperature_unit(self) -> str:
@@ -597,8 +618,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "temperature_unit",
             "reading the deprecated _attr_temperature_unit attribute",
+            "native_temperature_unit",
         )
         return self._attr_native_temperature_unit
 
@@ -610,8 +631,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_member(
             type(self),
-            "temperature_unit",
             "setting the deprecated _attr_temperature_unit attribute",
+            "_attr_native_temperature_unit",
         )
         self._attr_native_temperature_unit = value
 
@@ -653,25 +674,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "current_temperature",
             "reading the deprecated current_temperature property",
+            "native_current_temperature",
         )
         if (authored := self._native_current_temperature_authored) is not None:
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(float | None, _read_deprecated_attr(self, "current_temperature"))
-
-    @current_temperature.setter
-    def current_temperature(self, value: float | None) -> None:
-        """Set the current temperature in the native unit.
-
-        Deprecated, use _attr_native_current_temperature instead.
-        """
-        _report_deprecated_temperature_member(
-            type(self),
-            "current_temperature",
-            "setting the deprecated current_temperature attribute",
-        )
-        self._attr_native_current_temperature = value
 
     @property
     def _attr_current_temperature(self) -> float | None:
@@ -681,8 +689,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "current_temperature",
             "reading the deprecated _attr_current_temperature attribute",
+            "native_current_temperature",
         )
         return self._attr_native_current_temperature
 
@@ -694,8 +702,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_member(
             type(self),
-            "current_temperature",
             "setting the deprecated _attr_current_temperature attribute",
+            "_attr_native_current_temperature",
         )
         self._attr_native_current_temperature = value
 
@@ -712,25 +720,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "target_temperature",
             "reading the deprecated target_temperature property",
+            "native_target_temperature",
         )
         if (authored := self._native_target_temperature_authored) is not None:
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(float | None, _read_deprecated_attr(self, "target_temperature"))
-
-    @target_temperature.setter
-    def target_temperature(self, value: float | None) -> None:
-        """Set the temperature we try to reach, in the native unit.
-
-        Deprecated, use _attr_native_target_temperature instead.
-        """
-        _report_deprecated_temperature_member(
-            type(self),
-            "target_temperature",
-            "setting the deprecated target_temperature attribute",
-        )
-        self._attr_native_target_temperature = value
 
     @property
     def _attr_target_temperature(self) -> float | None:
@@ -740,8 +735,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "target_temperature",
             "reading the deprecated _attr_target_temperature attribute",
+            "native_target_temperature",
         )
         return self._attr_native_target_temperature
 
@@ -753,8 +748,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_member(
             type(self),
-            "target_temperature",
             "setting the deprecated _attr_target_temperature attribute",
+            "_attr_native_target_temperature",
         )
         self._attr_native_target_temperature = value
 
@@ -779,27 +774,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "target_temperature_high",
             "reading the deprecated target_temperature_high property",
+            "native_target_temperature_high",
         )
         if (authored := self._native_target_temperature_high_authored) is not None:
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(
             float | None, _read_deprecated_attr(self, "target_temperature_high")
         )
-
-    @target_temperature_high.setter
-    def target_temperature_high(self, value: float | None) -> None:
-        """Set the highbound target temperature we try to reach.
-
-        Deprecated, use _attr_native_target_temperature_high instead.
-        """
-        _report_deprecated_temperature_member(
-            type(self),
-            "target_temperature_high",
-            "setting the deprecated target_temperature_high attribute",
-        )
-        self._attr_native_target_temperature_high = value
 
     @property
     def _attr_target_temperature_high(self) -> float | None:
@@ -809,8 +791,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "target_temperature_high",
             "reading the deprecated _attr_target_temperature_high attribute",
+            "native_target_temperature_high",
         )
         return self._attr_native_target_temperature_high
 
@@ -822,8 +804,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_member(
             type(self),
-            "target_temperature_high",
             "setting the deprecated _attr_target_temperature_high attribute",
+            "_attr_native_target_temperature_high",
         )
         self._attr_native_target_temperature_high = value
 
@@ -843,25 +825,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "target_temperature_low",
             "reading the deprecated target_temperature_low property",
+            "native_target_temperature_low",
         )
         if (authored := self._native_target_temperature_low_authored) is not None:
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(float | None, _read_deprecated_attr(self, "target_temperature_low"))
-
-    @target_temperature_low.setter
-    def target_temperature_low(self, value: float | None) -> None:
-        """Set the lowbound target temperature we try to reach.
-
-        Deprecated, use _attr_native_target_temperature_low instead.
-        """
-        _report_deprecated_temperature_member(
-            type(self),
-            "target_temperature_low",
-            "setting the deprecated target_temperature_low attribute",
-        )
-        self._attr_native_target_temperature_low = value
 
     @property
     def _attr_target_temperature_low(self) -> float | None:
@@ -871,8 +840,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_read(
             type(self),
-            "target_temperature_low",
             "reading the deprecated _attr_target_temperature_low attribute",
+            "native_target_temperature_low",
         )
         return self._attr_native_target_temperature_low
 
@@ -884,8 +853,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         _report_deprecated_temperature_member(
             type(self),
-            "target_temperature_low",
             "setting the deprecated _attr_target_temperature_low attribute",
+            "_attr_native_target_temperature_low",
         )
         self._attr_native_target_temperature_low = value
 
