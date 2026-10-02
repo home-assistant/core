@@ -3,7 +3,12 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_SENDER,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 
 from . import SmtpConfigEntry
@@ -17,6 +22,7 @@ TO_REDACT = {
     CONF_REPLY_TO,
     CONF_REPLY_TO_NAME,
     CONF_SERVER,
+    CONF_RECIPIENT,
 }
 
 
