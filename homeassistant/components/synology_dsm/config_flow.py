@@ -439,7 +439,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                         probatio.Required(
                             CONF_BACKUP_PATH,
                             default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): probatio.All(str, probatio.Length(min=1)),
+                        ): probatio.All(str, probatio.NonEmpty()),
                     }
                 ),
             )
