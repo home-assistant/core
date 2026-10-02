@@ -283,7 +283,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD,
+                    probatio.Secret(CONF_PASSWORD),
                     default=probatio.UNDEFINED,
                 ): str,
             }
@@ -311,7 +311,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD,
+                    probatio.Secret(CONF_PASSWORD),
                     default=probatio.UNDEFINED,
                 ): str,
             }

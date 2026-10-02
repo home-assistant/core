@@ -855,7 +855,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
                 ): int,
                 probatio.Optional(
-                    CONF_TOKEN,
+                    probatio.Secret(CONF_TOKEN),
                     default=(self.found_device.get(CONF_TOKEN) or ""),
                 ): str,
                 probatio.Optional(
