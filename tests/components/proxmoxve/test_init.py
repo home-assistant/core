@@ -181,9 +181,6 @@ async def test_migration_v1_to_v3(
     entry.add_to_hass(hass)
     assert entry.version == 1
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-
     vm_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_vm_100")},
@@ -488,7 +485,7 @@ async def test_new_node_registers_device_before_children(
 
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entry_id = mock_config_entry.entry_id
     node_device = device_registry.async_get_device_by_identifier(

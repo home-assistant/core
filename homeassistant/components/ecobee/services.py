@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -42,49 +42,53 @@ DTGROUP_END_INCLUSIVE_MSG = (
     f"{ATTR_END_DATE} and {ATTR_END_TIME} must be specified together"
 )
 
-CREATE_VACATION_SCHEMA = vol.Schema(
+CREATE_VACATION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VACATION_NAME): vol.All(cv.string, vol.Length(max=12)),
-        vol.Required(ATTR_COOL_TEMP): vol.Coerce(float),
-        vol.Required(ATTR_HEAT_TEMP): vol.Coerce(float),
-        vol.Inclusive(
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_VACATION_NAME): probatio.All(
+            cv.string, probatio.Length(max=12)
+        ),
+        probatio.Required(ATTR_COOL_TEMP): probatio.Coerce(float),
+        probatio.Required(ATTR_HEAT_TEMP): probatio.Coerce(float),
+        probatio.Inclusive(
             ATTR_START_DATE, "dtgroup_start", msg=DTGROUP_START_INCLUSIVE_MSG
         ): ecobee_date,
-        vol.Inclusive(
+        probatio.Inclusive(
             ATTR_START_TIME, "dtgroup_start", msg=DTGROUP_START_INCLUSIVE_MSG
         ): ecobee_time,
-        vol.Inclusive(
+        probatio.Inclusive(
             ATTR_END_DATE, "dtgroup_end", msg=DTGROUP_END_INCLUSIVE_MSG
         ): ecobee_date,
-        vol.Inclusive(
+        probatio.Inclusive(
             ATTR_END_TIME, "dtgroup_end", msg=DTGROUP_END_INCLUSIVE_MSG
         ): ecobee_time,
-        vol.Optional(ATTR_FAN_MODE, default="auto"): vol.Any("auto", "on"),
-        vol.Optional(ATTR_FAN_MIN_ON_TIME, default=0): vol.All(
-            int, vol.Range(min=0, max=60)
+        probatio.Optional(ATTR_FAN_MODE, default="auto"): probatio.Any("auto", "on"),
+        probatio.Optional(ATTR_FAN_MIN_ON_TIME, default=0): probatio.All(
+            int, probatio.Range(min=0, max=60)
         ),
     }
 )
 
-DELETE_VACATION_SCHEMA = vol.Schema(
+DELETE_VACATION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VACATION_NAME): vol.All(cv.string, vol.Length(max=12)),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_VACATION_NAME): probatio.All(
+            cv.string, probatio.Length(max=12)
+        ),
     }
 )
 
-RESUME_PROGRAM_SCHEMA = vol.Schema(
+RESUME_PROGRAM_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
+        probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
     }
 )
 
-SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
+SET_FAN_MIN_ON_TIME_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+        probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_FAN_MIN_ON_TIME): probatio.Coerce(int),
     }
 )
 

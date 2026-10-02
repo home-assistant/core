@@ -11,6 +11,7 @@ from syrupy.filters import props
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import (
+    ATTR_APP_ID,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
@@ -28,6 +29,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.webostv.const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
+    CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
     WebOsTvCommandError,
@@ -535,6 +537,52 @@ async def test_update_sources_live_tv_find(hass: HomeAssistant, client) -> None:
 
     assert "Live TV" in sources
     assert len(sources) == 1
+
+
+async def test_source_unlisted_current_app(hass: HomeAssistant, client) -> None:
+    """Test source is cleared when the current app is not in the lists."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
+
+    # home screen and screen saver are not in the apps or inputs lists
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert ATTR_INPUT_SOURCE not in attributes
+    assert attributes[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
+
+
+async def test_source_cleared_with_filtered_out_sources(
+    hass: HomeAssistant, client
+) -> None:
+    """Test source is cleared when configured sources match nothing."""
+    client.tv_state.inputs = {}
+    await setup_webostv(hass, options={CONF_SOURCES: ["Netflix"]})
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "Live TV"
+
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    assert ATTR_INPUT_SOURCE not in hass.states.get(ENTITY_ID).attributes
+
+
+async def test_app_id(hass: HomeAssistant, client) -> None:
+    """Test app_id follows the foreground app id reported by the TV."""
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_APP_ID] == LIVE_TV_APP_ID
+
+    # apps outside the source list still get a usable app id
+    client.tv_state.current_app_id = "com.webos.app.home"
+    await client.mock_state_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_APP_ID] == "com.webos.app.home"
 
 
 async def test_client_disconnected(

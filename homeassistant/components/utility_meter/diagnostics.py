@@ -13,22 +13,18 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    tariff_sensors = []
-
-    for sensor in hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS]:
-        restored_last_extra_data = await sensor.async_get_last_extra_data()
-
-        tariff_sensors.append(
-            {
-                "name": sensor.name,
-                "entity_id": sensor.entity_id,
-                "extra_attributes": sensor.extra_state_attributes,
-                "last_sensor_data": restored_last_extra_data,
-                "period": sensor._period,  # noqa: SLF001
-                "cron": sensor._cron_pattern,  # noqa: SLF001
-                "source": sensor._sensor_source_id,  # noqa: SLF001
-            }
-        )
+    tariff_sensors = [
+        {
+            "name": sensor.name,
+            "entity_id": sensor.entity_id,
+            "extra_attributes": sensor.extra_state_attributes,
+            "last_sensor_data": sensor.extra_restore_state_data.as_dict(),
+            "period": sensor._period,  # noqa: SLF001
+            "cron": sensor._cron_pattern,  # noqa: SLF001
+            "source": sensor._sensor_source_id,  # noqa: SLF001
+        }
+        for sensor in hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS]
+    ]
 
     return {
         "config_entry": entry,

@@ -2,13 +2,16 @@
 
 from aioamazondevices.const.metadata import ALEXA_INFO_SKILLS
 from aioamazondevices.const.sounds import SOUNDS_LIST
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import DOMAIN, INFO_SKILLS_MAPPING
 from .coordinator import AmazonConfigEntry, alexa_api_call
@@ -17,22 +20,22 @@ ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
 ATTR_INFO_SKILL = "info_skill"
 
-SCHEMA_SOUND_SERVICE = vol.Schema(
+SCHEMA_SOUND_SERVICE = probatio.Schema(
     {
-        vol.Required(ATTR_SOUND): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_SOUND): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     },
 )
-SCHEMA_CUSTOM_COMMAND = vol.Schema(
+SCHEMA_CUSTOM_COMMAND = probatio.Schema(
     {
-        vol.Required(ATTR_TEXT_COMMAND): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_TEXT_COMMAND): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
-SCHEMA_INFO_SKILL = vol.Schema(
+SCHEMA_INFO_SKILL = probatio.Schema(
     {
-        vol.Required(ATTR_INFO_SKILL): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_INFO_SKILL): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 
@@ -42,29 +45,11 @@ def async_get_entry_id_for_service_call(
     call: ServiceCall,
 ) -> tuple[dr.DeviceEntry, AmazonConfigEntry]:
     """Get the entry ID related to a service call (by device ID)."""
-    device_id = call.data[ATTR_DEVICE_ID]
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        call.hass, device_id, domain=DOMAIN
+    config_entry: AmazonConfigEntry
+    # Callers read the device's serial number, which only a main device has
+    device, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID], include_child_devices=False
     )
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    if config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={"device_id": device_id},
-        )
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-            translation_placeholders={"entry": config_entry.title},
-        )
     return (device, config_entry)
 
 

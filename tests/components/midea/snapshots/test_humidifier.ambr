@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_humidifier_state_snapshot[a1][humidifier.bedroom_ac-entry]
+# name: test_humidifier_state_snapshot[a1][humidifier.dehumidifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -23,7 +23,7 @@
     'disabled_by': None,
     'domain': 'humidifier',
     'entity_category': None,
-    'entity_id': 'humidifier.bedroom_ac',
+    'entity_id': 'humidifier.dehumidifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -46,7 +46,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_humidifier_state_snapshot[a1][humidifier.bedroom_ac-state]
+# name: test_humidifier_state_snapshot[a1][humidifier.dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
@@ -58,7 +58,7 @@
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 60.0,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 55.0,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 85,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 35,
@@ -66,14 +66,14 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
-    'entity_id': 'humidifier.bedroom_ac',
+    'entity_id': 'humidifier.dehumidifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_humidifier_state_snapshot[fd][humidifier.bedroom_ac-entry]
+# name: test_humidifier_state_snapshot[fd][humidifier.humidifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -99,7 +99,7 @@
     'disabled_by': None,
     'domain': 'humidifier',
     'entity_category': None,
-    'entity_id': 'humidifier.bedroom_ac',
+    'entity_id': 'humidifier.humidifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,7 +122,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_humidifier_state_snapshot[fd][humidifier.bedroom_ac-state]
+# name: test_humidifier_state_snapshot[fd][humidifier.humidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
@@ -136,7 +136,7 @@
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 40.0,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 45.0,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 85,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 35,
@@ -144,7 +144,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
-    'entity_id': 'humidifier.bedroom_ac',
+    'entity_id': 'humidifier.humidifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

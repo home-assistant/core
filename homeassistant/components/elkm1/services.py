@@ -1,7 +1,7 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
 from elkm1_lib.elk import Elk, Panel
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -11,16 +11,18 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .models import ELKM1Data
 
-SPEAK_SERVICE_SCHEMA = vol.Schema(
+SPEAK_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
-        vol.Optional("prefix", default=""): cv.string,
+        probatio.Required("number"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=999)
+        ),
+        probatio.Optional("prefix", default=""): cv.string,
     }
 )
 
-SET_TIME_SERVICE_SCHEMA = vol.Schema(
+SET_TIME_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("prefix", default=""): cv.string,
+        probatio.Optional("prefix", default=""): cv.string,
     }
 )
 

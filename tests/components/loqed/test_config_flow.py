@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from ipaddress import ip_address
-import json
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -16,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_TOKEN = "eyadiuyfasiuasf"
@@ -35,7 +34,7 @@ zeroconf_data = ZeroconfServiceInfo(
 
 async def _async_init_zeroconf_flow(hass: HomeAssistant) -> dict[str, Any]:
     """Initialize a zeroconf flow and return the form result."""
-    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_result = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     with patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
@@ -65,7 +64,7 @@ async def test_create_entry_zeroconf(
     patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
 ) -> None:
     """Test we get can create a lock via zeroconf."""
-    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_result = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     with patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
@@ -82,8 +81,8 @@ async def test_create_entry_zeroconf(
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = "Webhook_ID"
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
     )
 
     with patch_lock_creation_flow(all_locks_response, mock_lock, webhook_id):
@@ -122,8 +121,8 @@ async def test_create_entry_user(
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = TEST_WEBHOOK_ID
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
     )
     found_lock = all_locks_response["data"][0]
 
@@ -160,8 +159,8 @@ async def test_create_entry_user_with_pick_lock(
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = TEST_WEBHOOK_ID
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
     )
     second_lock = all_locks_response["data"][0].copy()
     second_lock["id"] = "Bar"
@@ -242,8 +241,8 @@ async def test_recover_after_cannot_connect(
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = TEST_WEBHOOK_ID
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
     )
     found_lock = all_locks_response["data"][0]
 
@@ -342,8 +341,8 @@ async def test_cannot_connect_when_lock_not_reachable(
     """Test we handle a situation where the lock is not reachable."""
     result = await _async_init_user_flow(hass)
 
-    all_locks_response = json.loads(
-        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
     )
 
     with (

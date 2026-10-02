@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
@@ -54,29 +54,31 @@ MQTT_TRIGGER_BASE = {
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DEVICE,
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_DEVICE_ID): str,
+        probatio.Required(CONF_PLATFORM): DEVICE,
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_DEVICE_ID): str,
         # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
         # By default, a MQTT device trigger now will be referenced by
         # device_id, type and subtype instead.
-        vol.Optional(CONF_DISCOVERY_ID): str,
-        vol.Required(CONF_TYPE): cv.string,
-        vol.Required(CONF_SUBTYPE): cv.string,
+        probatio.Optional(CONF_DISCOVERY_ID): str,
+        probatio.Required(CONF_TYPE): cv.string,
+        probatio.Required(CONF_SUBTYPE): cv.string,
     },
 )
 
 TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_AUTOMATION_TYPE): str,
-        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
-        vol.Required(CONF_SUBTYPE): cv.string,
-        vol.Required(CONF_TOPIC): cv.string,
-        vol.Required(CONF_TYPE): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE, default=None): vol.Any(None, cv.string),
+        probatio.Required(CONF_AUTOMATION_TYPE): str,
+        probatio.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Optional(CONF_PAYLOAD, default=None): probatio.Any(None, cv.string),
+        probatio.Required(CONF_SUBTYPE): cv.string,
+        probatio.Required(CONF_TOPIC): cv.string,
+        probatio.Required(CONF_TYPE): cv.string,
+        probatio.Optional(CONF_VALUE_TEMPLATE, default=None): probatio.Any(
+            None, cv.string
+        ),
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 LOG_NAME = "Device trigger"

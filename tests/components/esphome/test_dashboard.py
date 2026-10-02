@@ -7,6 +7,7 @@ from aioesphomeapi import APIClient, DeviceInfo, InvalidEncryptionKeyAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
+from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -108,6 +109,35 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
         await hass.async_block_till_done()
         assert "test-slug is no longer installed" in caplog.text
         assert not mock_dashboard_api.called
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_restore_dashboard_storage_if_supervisor_not_ready(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Restore the dashboard, without failing setup, if Supervisor is not ready."""
+    hass_storage[dashboard.STORAGE_KEY] = {
+        "version": dashboard.STORAGE_VERSION,
+        "minor_version": dashboard.STORAGE_VERSION,
+        "key": dashboard.STORAGE_KEY,
+        "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
+    }
+    with (
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
+        ) as mock_dashboard_api,
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=HassioNotReadyError,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
 
 
 async def test_setup_dashboard_fails(

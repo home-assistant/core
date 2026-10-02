@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 import pylitejet
 from serial import SerialException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT
@@ -27,9 +27,9 @@ class LiteJetOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DEFAULT_TRANSITION,
                         default=self.config_entry.options.get(
                             CONF_DEFAULT_TRANSITION, 0
@@ -65,7 +65,7 @@ class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_PORT): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PORT): str}),
             errors=errors,
         )
 

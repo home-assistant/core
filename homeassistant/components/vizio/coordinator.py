@@ -15,8 +15,10 @@ from vizaio import (
     SettingInfo,
     StateExtended,
     Vizio,
+    VizioAuthError,
     VizioError,
     VizioNotFoundError,
+    VizioUnsupportedError,
     fetch_app_availability,
     fetch_remote_app_catalog,
     is_app_input,
@@ -27,6 +29,7 @@ from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -48,9 +51,14 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def _optional[T](coro: Coroutine[Any, Any, T]) -> T | None:
-    """Return the call result, or None when the device API call fails."""
+    """Return the call result, or None when the device API call fails.
+
+    Auth failures are not degradable — they surface as a reauth trigger.
+    """
     try:
         return await coro
+    except VizioAuthError as err:
+        raise ConfigEntryAuthFailed from err
     except VizioError:
         return None
 
@@ -144,9 +152,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        # Modern firmware bundles power/input/app state into one endpoint;
-        # firmware without it never gains it, so probe only until the first
-        # URI_NOT_FOUND response.
+        # Supported firmware bundles power/input/app state into one endpoint.
+        # Probe until the library reports that the endpoint is unavailable.
         self._use_state_extended = True
 
     @override
@@ -185,7 +192,11 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         if self._use_state_extended:
             try:
                 state = await self.device.get_state_extended()
-            except VizioNotFoundError:
+            except VizioAuthError as err:
+                if self.device.profile.requires_auth:
+                    raise ConfigEntryAuthFailed from err
+                self._use_state_extended = False
+            except VizioNotFoundError, VizioUnsupportedError:
                 self._use_state_extended = False
             except VizioError as err:
                 raise self._update_failed() from err
@@ -195,6 +206,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         else:
             try:
                 is_on = await self.device.get_power_state()
+            except VizioAuthError as err:
+                raise ConfigEntryAuthFailed from err
             except VizioError as err:
                 raise self._update_failed() from err
 

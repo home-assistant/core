@@ -3,8 +3,8 @@
 from collections.abc import Iterable
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -45,10 +45,10 @@ class InvalidBlueprint(BlueprintWithNameException):
         domain: str | None,
         blueprint_name: str | None,
         blueprint_data: Any,
-        msg_or_exc: str | vol.Invalid,
+        msg_or_exc: str | probatio.Invalid,
     ) -> None:
         """Initialize an invalid blueprint error."""
-        if isinstance(msg_or_exc, vol.Invalid):
+        if isinstance(msg_or_exc, probatio.Invalid):
             msg_or_exc = humanize_error(blueprint_data, msg_or_exc)
 
         super().__init__(

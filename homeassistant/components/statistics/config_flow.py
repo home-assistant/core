@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -49,7 +49,9 @@ from .sensor import (
 )
 
 
-async def get_state_characteristics(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_state_characteristics(
+    handler: SchemaCommonFlowHandler,
+) -> probatio.Schema:
     """Return schema with state characteristics."""
     is_binary = (
         split_entity_id(handler.options[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
@@ -59,9 +61,9 @@ async def get_state_characteristics(handler: SchemaCommonFlowHandler) -> vol.Sch
     else:
         options = list(STATS_NUMERIC_SUPPORT)
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_STATE_CHARACTERISTIC): SelectSelector(
+            probatio.Required(CONF_STATE_CHARACTERISTIC): SelectSelector(
                 SelectSelectorConfig(
                     options=list(options),
                     translation_key=CONF_STATE_CHARACTERISTIC,
@@ -94,20 +96,20 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
+DATA_SCHEMA_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_ENTITY_ID): EntitySelector(
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_ENTITY_ID): EntitySelector(
             EntitySelectorConfig(domain=[BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN])
         ),
     }
 )
-DATA_SCHEMA_OPTIONS = vol.Schema(
+DATA_SCHEMA_OPTIONS = probatio.Schema(
     {
-        vol.Optional(CONF_ENTITY_ID): EntitySelector(
+        probatio.Optional(CONF_ENTITY_ID): EntitySelector(
             EntitySelectorConfig(read_only=True)
         ),
-        vol.Optional(CONF_STATE_CHARACTERISTIC): SelectSelector(
+        probatio.Optional(CONF_STATE_CHARACTERISTIC): SelectSelector(
             SelectSelectorConfig(
                 options=list(
                     set(list(STATS_BINARY_SUPPORT) + list(STATS_NUMERIC_SUPPORT))
@@ -117,17 +119,17 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
                 read_only=True,
             )
         ),
-        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): NumberSelector(
+        probatio.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): NumberSelector(
             NumberSelectorConfig(min=1, step=1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_MAX_AGE): DurationSelector(
+        probatio.Optional(CONF_MAX_AGE): DurationSelector(
             DurationSelectorConfig(enable_day=False, allow_negative=False)
         ),
-        vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): BooleanSelector(),
-        vol.Optional(CONF_PERCENTILE, default=50): NumberSelector(
+        probatio.Optional(CONF_KEEP_LAST_SAMPLE, default=False): BooleanSelector(),
+        probatio.Optional(CONF_PERCENTILE, default=50): NumberSelector(
             NumberSelectorConfig(min=1, max=99, step=1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
+        probatio.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),
     }
@@ -179,10 +181,10 @@ class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "statistics/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "statistics/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @websocket_api.async_response

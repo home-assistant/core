@@ -17,7 +17,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -274,12 +281,20 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._retry_after = None
 
         next_refresh = int(loop.time()) + self._microsecond + update_interval
+        # Cancelled when Home Assistant stops so a refresh can't fire during
+        # the close stage, after shared resources like aiohttp sessions are closed
+        refresh_job = HassJob(
+            self.__wrap_handle_refresh_interval,
+            f"{self.name} refresh interval",
+            job_type=HassJobType.Callback,
+            cancel_on_shutdown=True,
+        )
         self._unsub_refresh = loop.call_at(
-            next_refresh, self.__wrap_handle_refresh_interval
+            next_refresh, self.__wrap_handle_refresh_interval, refresh_job
         ).cancel
 
     @callback
-    def __wrap_handle_refresh_interval(self) -> None:
+    def __wrap_handle_refresh_interval(self, _: HassJob) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
             self.config_entry.async_create_background_task(
@@ -355,8 +370,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             )
             if self.last_update_success:
                 return
-        ex = ConfigEntryNotReady()
-        ex.__cause__ = self.last_exception
+        cause = self.last_exception
+        ex = ConfigEntryNotReady(
+            translation_domain=getattr(cause, "translation_domain", None),
+            translation_key=getattr(cause, "translation_key", None),
+            translation_placeholders=getattr(cause, "translation_placeholders", None),
+        )
+        ex.__cause__ = cause
         raise ex
 
     async def __wrap_async_setup(self) -> bool:

@@ -1,5 +1,7 @@
 """The tests for the Template event platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -11,6 +13,8 @@ from homeassistant.components.template.coordinator import TriggerUpdateCoordinat
 from homeassistant.components.template.event import (
     CONF_EVENT_TYPE,
     CONF_EVENT_TYPES,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
     TriggerEventEntity,
 )
 from homeassistant.const import (
@@ -31,6 +35,7 @@ from .conftest import (
     RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -698,3 +703,52 @@ async def test_flow_preview(
     assert state["state"] == TEST_FROZEN_STATE
     assert state["attributes"]["event_type"] == "single"
     assert state["attributes"]["event_types"] == ["single", "double", "hold"]
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_EVENT,
+        style,
+        TEST_EVENT_CONFIG,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(EventEntityCapabilityAttribute, EventEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_EVENT,
+        style,
+        1,
+        {
+            **TEST_EVENT_CONFIG,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_EVENT.entity_id}: {attribute}"
+    assert error in caplog.text
