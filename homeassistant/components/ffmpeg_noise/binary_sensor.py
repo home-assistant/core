@@ -3,7 +3,7 @@
 from typing import Any, override
 
 import haffmpeg.sensor as ffmpeg_sensor
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -35,17 +35,17 @@ DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_INPUT): cv.string,
-        vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
-        vol.Optional(CONF_OUTPUT): cv.string,
-        vol.Optional(CONF_PEAK, default=-30): vol.Coerce(int),
-        vol.Optional(CONF_DURATION, default=1): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        probatio.Required(CONF_INPUT): cv.string,
+        probatio.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
+        probatio.Optional(CONF_OUTPUT): cv.string,
+        probatio.Optional(CONF_PEAK, default=-30): probatio.Coerce(int),
+        probatio.Optional(CONF_DURATION, default=1): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
-        vol.Optional(CONF_RESET, default=10): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        probatio.Optional(CONF_RESET, default=10): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
     }
 )

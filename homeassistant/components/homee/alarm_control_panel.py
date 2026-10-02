@@ -61,13 +61,16 @@ def get_supported_features(
 
 
 async def add_alarm_control_panel_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee alarm control panel entities."""
     async_add_entities(
-        HomeeAlarmPanel(attribute, config_entry, ALARM_DESCRIPTIONS[attribute.type])
+        HomeeAlarmPanel(
+            hass, attribute, config_entry, ALARM_DESCRIPTIONS[attribute.type]
+        )
         for node in nodes
         for attribute in node.attributes
         if attribute.type in ALARM_DESCRIPTIONS and attribute.editable
@@ -82,7 +85,7 @@ async def async_setup_entry(
     """Add the homee platform for the alarm control panel component."""
 
     await setup_homee_platform(
-        add_alarm_control_panel_entities, async_add_entities, config_entry
+        hass, add_alarm_control_panel_entities, async_add_entities, config_entry
     )
 
 
@@ -93,12 +96,13 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: HomeeAlarmControlPanelEntityDescription,
     ) -> None:
         """Initialize a Homee alarm control panel entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         self._attr_code_arm_required = description.code_arm_required
         self._attr_supported_features = get_supported_features(description.state_list)

@@ -66,6 +66,7 @@ def mock_imou_ha_device_manager(
     with patch(PATCH_IMOU_HA_DEVICE_MANAGER, autospec=True) as mock_manager:
         device_manager = mock_manager.return_value
         device_manager.async_get_devices.return_value = imou_mock_devices
+        device_manager.async_update_devices_status.return_value = set()
         yield device_manager
 
 
@@ -99,10 +100,10 @@ async def init_integration(
     mock_imou_openapi_client: AsyncMock,
     mock_imou_ha_device_manager: MagicMock,
     platforms: list[Platform],
-) -> MagicMock:
-    """Set up Imou with mocked library clients; returns the HA device manager mock."""
+) -> MockConfigEntry:
+    """Set up Imou with mocked library clients; returns the config entry."""
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.imou.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    return mock_imou_ha_device_manager
+    return mock_config_entry

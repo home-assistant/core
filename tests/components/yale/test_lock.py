@@ -40,10 +40,10 @@ async def test_lock_device_registry(
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     lock_one = await _mock_doorsense_enabled_yale_lock_detail(hass)
-    await _create_yale_with_devices(hass, [lock_one])
+    entry, _ = await _create_yale_with_devices(hass, [lock_one])
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("yale", "online_with_doorsense")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("yale", "online_with_doorsense"), entry.entry_id
     )
     assert reg_device == snapshot
 

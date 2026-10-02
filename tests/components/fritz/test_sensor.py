@@ -5,13 +5,14 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.lib.fritzstatus import FritzStatus
 import pytest
 from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -154,3 +155,34 @@ async def test_sensor_cpu_temp_not_supported(
         assert not entity_registry.async_is_registered(
             "sensor.mock_title_cpu_temperature"
         )
+
+
+@pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
+async def test_sensor_cpu_temp_unknown_on_request_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test the CPU temperature sensor turns unknown when reading it raises."""
+    entity_id = "sensor.mock_title_cpu_temperature"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "42"
+
+    with patch.object(
+        FritzStatus, "get_cpu_temperatures", side_effect=RequestException("boom")
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN

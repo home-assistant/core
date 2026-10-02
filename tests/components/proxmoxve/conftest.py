@@ -132,9 +132,15 @@ def mock_proxmox_client():
             not in mock_instance.access.permissions.get.return_value.get("/nodes", [])
             else load_json_array_fixture("nodes/tasks.json", DOMAIN)
         )
+        node_mock.version.get.return_value = load_json_object_fixture(
+            "nodes/version.json", DOMAIN
+        )
+        node_mock.apt.update.get.return_value = load_json_array_fixture(
+            "nodes/update.json", DOMAIN
+        )
 
-        qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}
-        lxc_by_vmid = {vm["vmid"]: vm for vm in lxc_list}
+        qemu_by_vmid = {int(vm["vmid"]): vm for vm in qemu_list}
+        lxc_by_vmid = {int(vm["vmid"]): vm for vm in lxc_list}
 
         # Cache resource mocks by vmid so callers (e.g. button tests) can
         # inspect specific call counts after pressing a button.

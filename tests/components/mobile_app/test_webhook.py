@@ -24,7 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    instance_id,
+)
 from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
@@ -297,6 +301,7 @@ async def test_webhook_handle_get_config(
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
         "hass_device_id": device.id,
+        "instance_id": await instance_id.async_get(hass),
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
@@ -1098,7 +1103,9 @@ async def test_webhook_handle_scan_tag(
     webhook_client: TestClient,
 ) -> None:
     """Test that we can scan tags."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+    [device] = device_registry.async_get_devices(
+        identifiers={(DOMAIN, "mock-device-id")}
+    )
     assert device is not None
 
     events = async_capture_events(hass, EVENT_TAG_SCANNED)

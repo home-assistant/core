@@ -40,7 +40,15 @@ async def test_user_config_flow_bad_connect_errors(
     mock_device.connect.side_effect = ConnectionError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -55,7 +63,15 @@ async def test_user_config_flow_unsupported_device_errors(
     mock_device.is_server_only = True
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -67,7 +83,15 @@ async def test_user_config_flow_unsupported_device_errors(
 async def test_user_config_flow_device_exists_abort(hass: HomeAssistant) -> None:
     """Test flow aborts when device already configured."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

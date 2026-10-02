@@ -64,7 +64,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self._from: str = config_entry.data[CONF_FROM]
         self._to: str = config_entry.data[CONF_TO]
-        self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
+        self._time: time | None = None
+        if config_entry.data[CONF_TIME]:
+            self._time = dt_util.parse_time(config_entry.data[CONF_TIME])
         self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
 
     @override

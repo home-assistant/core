@@ -3,7 +3,7 @@
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -35,31 +35,31 @@ from .const import (
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 
-PLANE_SCHEMA = vol.Schema(
+PLANE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DECLINATION): vol.All(
+        probatio.Required(CONF_DECLINATION): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=90, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_AZIMUTH): vol.All(
+        probatio.Required(CONF_AZIMUTH): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=360, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_MODULES_POWER): vol.All(
+        probatio.Required(CONF_MODULES_POWER): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
@@ -121,10 +121,10 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
                     }
                 ).extend(PLANE_SCHEMA.schema),
                 {
@@ -165,23 +165,23 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY,
                         default=suggested_api_key,
                     )
                     if planes_count > 1
-                    else vol.Optional(
+                    else probatio.Optional(
                         CONF_API_KEY,
                         description={"suggested_value": suggested_api_key},
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_MORNING, DEFAULT_DAMPING
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -190,14 +190,14 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(float),
+                        probatio.Coerce(float),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DAMPING_EVENING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_EVENING, DEFAULT_DAMPING
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -206,16 +206,16 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(float),
+                        probatio.Coerce(float),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_INVERTER_SIZE,
                         description={
                             "suggested_value": self.config_entry.options.get(
                                 CONF_INVERTER_SIZE
                             )
                         },
-                    ): vol.All(
+                    ): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=1,
@@ -223,7 +223,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
                 }
             ),

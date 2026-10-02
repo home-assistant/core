@@ -86,8 +86,8 @@ async def test_removing_old_device(
     )
 
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_identifier_entry.entry_id)}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_identifier_entry.entry_id), mock_identifier_entry.entry_id
         )
         is not None
     )
@@ -96,8 +96,8 @@ async def test_removing_old_device(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_identifier_entry.entry_id)}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_identifier_entry.entry_id), mock_identifier_entry.entry_id
         )
         is None
     )
@@ -132,7 +132,7 @@ async def test_load_missing_required_attribute(
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LONGITUDE: 7.610263},
     )
 
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
@@ -159,7 +159,7 @@ async def test_load_valid_device_tracker(
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
     )
 
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)

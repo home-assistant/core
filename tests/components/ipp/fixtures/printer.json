@@ -32,5 +32,12 @@
   "marker-colors": ["#000000", "#000000", "#00FFFF", "#FFFF00", "#FF00FF"],
   "marker-levels": [58, 98, 91, 95, 73],
   "marker-low-levels": [10, 10, 10, 10, 10],
-  "marker-high-levels": [100, 100, 100, 100, 100]
+  "marker-high-levels": [100, 100, 100, 100, 100],
+  "printer-impressions-completed": 2468,
+  "printer-impressions-completed-col": {
+    "monochrome": 1500,
+    "full-color": 968
+  },
+  "printer-media-sheets-completed": 1234,
+  "printer-pages-completed": 1234
 }
