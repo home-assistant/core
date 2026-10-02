@@ -35,6 +35,7 @@ from neopool_modbus.registers import (
     RelayKind,
     RelayMode,
     TimerRelayMode,
+    is_valid_relay_gpio,
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -161,7 +162,9 @@ async def _write_timer_period(
 ) -> None:
     """Update the repeat period of a timer via the library's write_timer."""
     timer_name = entity.entity_description.key.rsplit("_", 1)[0]
-    period_value = PERIOD_MAP[option]
+    # options surfaces an off-map device period as a raw-seconds string, so
+    # accept that back as seconds instead of indexing PERIOD_MAP blindly.
+    period_value = PERIOD_MAP.get(option, 0) or int(option)
     await client.write_timer(timer_name, {"period": period_value})
     entity.coordinator.request_refresh_with_followup()
 
@@ -262,6 +265,15 @@ async def _write_filt_mode(
     overrides = entity.apply_optimistic_update(value)
     entity.coordinator.async_set_updated_data({**entity.coordinator.data, **overrides})
     entity.coordinator.request_refresh_with_followup()
+
+
+def _light_gpio_supported(data: dict[str, Any]) -> bool:
+    """Gate light timer selects on a valid lighting relay GPIO.
+
+    The coordinator skips the relay_light block when the GPIO is invalid, so
+    without this gate the entity would be created and stay permanently unknown.
+    """
+    return is_valid_relay_gpio(data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0)
 
 
 SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
@@ -502,6 +514,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_key="relay_light_period",
         entity_category=EntityCategory.CONFIG,
         select_type="timer_period",
+        supported_fn=_light_gpio_supported,
         write_fn=_write_timer_period,
     ),
     "relay_aux1_mode": NeoPoolSelectEntityDescription(
@@ -541,6 +554,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_key="relay_light_mode",
         options_map={1: "auto", 4: "manual"},
         select_type="relay_mode",
+        supported_fn=_light_gpio_supported,
         write_fn=_write_relay_mode,
     ),
 }

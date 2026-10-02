@@ -12,7 +12,7 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_OPTION, SERVICE_SELECT_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_platform as ep, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
@@ -386,21 +386,14 @@ async def test_timer_period_options_and_current_option(
     }
     await setup_integration(hass, mock_config_entry_timers)
 
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if (
-                ent.entity_id.startswith("select.")
-                and getattr(ent, "_key", None) == "relay_aux1_period"
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    assert entity_obj is not None
-    assert entity_obj.current_option == "1_day"
-    assert "1_day" in entity_obj.options
-    assert "1_week" in entity_obj.options
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_period")
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # current_option resolves the seconds value back to its key.
+    assert state.state == "1_day"
+    # options list is the full PERIOD_MAP.
+    assert "1_day" in state.attributes["options"]
+    assert "1_week" in state.attributes["options"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

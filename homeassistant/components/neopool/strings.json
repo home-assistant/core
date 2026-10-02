@@ -220,14 +220,14 @@
       "filtvalve_interval": {
         "name": "Backwash duration",
         "state": {
+          "30s": "30 Seconds",
+          "60s": "60 Seconds",
+          "90s": "90 Seconds",
           "120s": "120 Seconds",
           "150s": "150 Seconds",
           "180s": "180 Seconds",
           "240s": "240 Seconds",
-          "300s": "300 Seconds",
-          "30s": "30 Seconds",
-          "60s": "60 Seconds",
-          "90s": "90 Seconds"
+          "300s": "300 Seconds"
         }
       },
       "filtvalve_mode": {
@@ -271,18 +271,18 @@
         "name": "pH pump activation delay",
         "state": {
           "10": "10 Seconds",
-          "10800": "3 Hours",
-          "120": "2 Minutes",
-          "180": "3 Minutes",
-          "1800": "30 Minutes",
           "20": "20 Seconds",
           "30": "30 Seconds",
-          "300": "5 Minutes",
-          "3600": "1 Hour",
           "40": "40 Seconds",
           "50": "50 Seconds",
           "60": "1 Minute",
-          "900": "15 Minutes"
+          "120": "2 Minutes",
+          "180": "3 Minutes",
+          "300": "5 Minutes",
+          "900": "15 Minutes",
+          "1800": "30 Minutes",
+          "3600": "1 Hour",
+          "10800": "3 Hours"
         }
       },
       "relay_aux_mode": {
