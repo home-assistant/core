@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Generator
+from contextlib import nullcontext
 from dataclasses import replace
 from datetime import timedelta
 from io import BytesIO, StringIO
@@ -1868,6 +1869,120 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
     assert str(err.value) == "Error during pre-backup: Test exception"
 
 
+async def test_pre_backup_failure_cleans_up_successful_platforms(
+    hass: HomeAssistant,
+) -> None:
+    """Test cleanup after a partial pre-backup failure."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+    prepared_platform = Mock(
+        async_pre_backup=AsyncMock(),
+        async_post_backup=AsyncMock(),
+    )
+    failed_platform = Mock(
+        async_pre_backup=AsyncMock(side_effect=HomeAssistantError("Prepare failed")),
+        async_post_backup=AsyncMock(),
+    )
+    manager.platforms = {
+        "prepared": prepared_platform,
+        "failed": failed_platform,
+    }
+
+    with pytest.raises(BackupManagerError, match="Prepare failed"):
+        await hass.services.async_call(DOMAIN, "create", blocking=True)
+
+    prepared_platform.async_post_backup.assert_awaited_once_with(hass)
+    failed_platform.async_post_backup.assert_not_awaited()
+
+
+async def test_pre_backup_failure_preserves_error_when_cleanup_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cleanup failure does not replace the preparation error."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+    cleanup_error = HomeAssistantError("Cleanup failed")
+    prepared_platform = Mock(
+        async_pre_backup=AsyncMock(),
+        async_post_backup=AsyncMock(side_effect=cleanup_error),
+    )
+    prepare_error = HomeAssistantError("Prepare failed")
+    failed_platform = Mock(
+        async_pre_backup=AsyncMock(side_effect=prepare_error),
+        async_post_backup=AsyncMock(),
+    )
+    manager.platforms = {
+        "prepared": prepared_platform,
+        "failed": failed_platform,
+    }
+
+    with pytest.raises(BackupManagerError, match="Prepare failed") as err:
+        await hass.services.async_call(DOMAIN, "create", blocking=True)
+
+    cause: BaseException = err.value
+    while cause.__cause__:
+        cause = cause.__cause__
+    assert cause is prepare_error
+    prepared_platform.async_post_backup.assert_awaited_once_with(hass)
+    failed_platform.async_post_backup.assert_not_awaited()
+
+
+async def test_pre_backup_cancellation_cleans_up_successful_platforms(
+    hass: HomeAssistant,
+) -> None:
+    """Test cleanup after a pre-backup cancellation."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+    prepared_platform = Mock(
+        async_pre_backup=AsyncMock(),
+        async_post_backup=AsyncMock(),
+    )
+    cancelled_platform = Mock(
+        async_pre_backup=AsyncMock(side_effect=asyncio.CancelledError),
+        async_post_backup=AsyncMock(),
+    )
+    manager.platforms = {
+        "prepared": prepared_platform,
+        "cancelled": cancelled_platform,
+    }
+
+    with pytest.raises(asyncio.CancelledError):
+        await manager.async_pre_backup_actions()
+
+    prepared_platform.async_post_backup.assert_awaited_once_with(hass)
+    cancelled_platform.async_post_backup.assert_not_awaited()
+
+
+async def test_post_backup_cancellation_propagates(hass: HomeAssistant) -> None:
+    """Test post-backup cancellation is not mistaken for success."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+    manager.platforms = {
+        "cancelled": Mock(
+            async_post_backup=AsyncMock(side_effect=asyncio.CancelledError)
+        )
+    }
+
+    with pytest.raises(asyncio.CancelledError):
+        await manager.async_post_backup_actions()
+
+
+async def test_backup_success_runs_platform_actions_once(hass: HomeAssistant) -> None:
+    """Test normal backups prepare and clean up each platform once."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+    platform = Mock(
+        async_pre_backup=AsyncMock(),
+        async_post_backup=AsyncMock(),
+    )
+    manager.platforms = {"test": platform}
+
+    await hass.services.async_call(DOMAIN, "create", blocking=True)
+
+    platform.async_pre_backup.assert_awaited_once_with(hass)
+    platform.async_post_backup.assert_awaited_once_with(hass)
+
+
 @pytest.mark.parametrize(
     ("unhandled_error", "expected_exception", "expected_msg"),
     [
@@ -1876,7 +1991,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             HomeAssistantError("Boom"),
             BackupManagerExceptionGroup,
             (
-                "Multiple errors when creating backup: Error during pre-backup: Boom, "
+                "Multiple errors when creating backup: Boom, "
                 "Error during post-backup: Test exception"
             ),
         ),
@@ -1884,7 +1999,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             Exception("Boom"),
             BackupManagerExceptionGroup,
             (
-                "Multiple errors when creating backup: Error during pre-backup: Boom, "
+                "Multiple errors when creating backup: Boom, "
                 "Error during post-backup: Test exception"
             ),
         ),
@@ -1903,9 +2018,7 @@ async def test_exception_platform_post(
         hass,
         domain="test",
         platform=Mock(
-            # We let the pre_backup fail to test that unhandled errors are not discarded
-            # when post backup fails
-            async_pre_backup=AsyncMock(side_effect=unhandled_error),
+            async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(
                 side_effect=HomeAssistantError("Test exception")
             ),
@@ -1914,7 +2027,16 @@ async def test_exception_platform_post(
     )
     await setup_backup_integration(hass)
 
-    with pytest.raises(expected_exception, match=re.escape(expected_msg)):
+    with (
+        patch(
+            "homeassistant.components.backup.manager."
+            "CoreBackupReaderWriter._mkdir_and_generate_backup_contents",
+            side_effect=unhandled_error,
+        )
+        if unhandled_error
+        else nullcontext(),
+        pytest.raises(expected_exception, match=re.escape(expected_msg)),
+    ):
         await hass.services.async_call(
             DOMAIN,
             "create",

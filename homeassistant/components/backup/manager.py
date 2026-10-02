@@ -3,7 +3,7 @@
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterable
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
@@ -502,26 +502,39 @@ class BackupManager:
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
+        platforms = tuple(self.platforms.values())
         pre_backup_results = await asyncio.gather(
-            *(
-                platform.async_pre_backup(self.hass)
-                for platform in self.platforms.values()
-            ),
+            *(platform.async_pre_backup(self.hass) for platform in platforms),
             return_exceptions=True,
         )
         for result in pre_backup_results:
-            if isinstance(result, Exception):
-                raise BackupManagerError(
-                    f"Error during pre-backup: {result}"
-                ) from result
+            if isinstance(result, BaseException):
+                try:
+                    await self.async_post_backup_actions(
+                        platform
+                        for platform, pre_backup_result in zip(
+                            platforms, pre_backup_results, strict=True
+                        )
+                        if not isinstance(pre_backup_result, BaseException)
+                    )
+                except BackupManagerError:
+                    LOGGER.exception(
+                        "Error cleaning up after failed pre-backup actions"
+                    )
+                if isinstance(result, Exception):
+                    raise BackupManagerError(
+                        f"Error during pre-backup: {result}"
+                    ) from result
+                raise result
 
-    async def async_post_backup_actions(self) -> None:
+    async def async_post_backup_actions(
+        self, platforms: Iterable[BackupPlatformProtocol] | None = None
+    ) -> None:
         """Perform post backup actions."""
+        if platforms is None:
+            platforms = self.platforms.values()
         post_backup_results = await asyncio.gather(
-            *(
-                platform.async_post_backup(self.hass)
-                for platform in self.platforms.values()
-            ),
+            *(platform.async_post_backup(self.hass) for platform in platforms),
             return_exceptions=True,
         )
         for result in post_backup_results:
@@ -529,6 +542,8 @@ class BackupManager:
                 raise BackupManagerError(
                     f"Error during post-backup: {result}"
                 ) from result
+            if isinstance(result, BaseException):
+                raise result
 
     async def load_platforms(self) -> None:
         """Load backup platforms."""
@@ -1805,10 +1820,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 state=CreateBackupState.IN_PROGRESS,
             )
         )
+        # Inform integrations a backup is about to be made
+        await manager.async_pre_backup_actions()
         try:
-            # Inform integrations a backup is about to be made
-            await manager.async_pre_backup_actions()
-
             backup_data = {
                 "compressed": True,
                 "date": date_str,
@@ -1831,8 +1845,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 password,
                 local_agent_tar_file_path,
             )
-        except (BackupManagerError, OSError, tarfile.TarError, ValueError) as err:
-            # BackupManagerError from async_pre_backup_actions
+        except (OSError, tarfile.TarError, ValueError) as err:
             # OSError from file operations
             # TarError from tarfile
             # ValueError from json_bytes
