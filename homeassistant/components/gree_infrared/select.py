@@ -5,7 +5,7 @@ from typing import override
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,14 +18,11 @@ from .climate import (
     VANE_AUTO,
     VANE_OPTIONS,
 )
-from .const import (
-    CONF_INFRARED_EMITTER_ENTITY_ID,
-    CONF_MODEL,
-    MODEL_GENERIC,
-    MODEL_YAP1F,
-)
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, MODEL_GENERIC, MODEL_YAP1F
 from .entity import GreeIrEntity
 from .state import GreeAcState
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

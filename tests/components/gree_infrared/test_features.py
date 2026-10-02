@@ -3,7 +3,6 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
-
 from infrared_protocols.commands.gree_ac import (
     GreeAcCommand,
     GreeAcFreshAir,
@@ -16,12 +15,11 @@ from homeassistant.components.gree_infrared import PLATFORMS
 from homeassistant.components.gree_infrared.const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
-    CONF_MODEL,
     DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -332,7 +330,9 @@ async def test_timer_countdown_sends_remaining_and_expires(
         blocking=True,
     )
     assert _last_command(mock_infrared_emitter_entity).timer_hours is None
-    assert hass.config_entries.async_get_entry(ENTRY_ID).runtime_data.timer_hours is None
+    assert (
+        hass.config_entries.async_get_entry(ENTRY_ID).runtime_data.timer_hours is None
+    )
 
 
 @pytest.mark.usefixtures(
@@ -353,7 +353,9 @@ async def test_timer_deadline_restored_as_remaining_duration(
                 {
                     "last_active_hvac_mode": HVACMode.COOL.value,
                     "timer_hours": 2.0,
-                    "timer_deadline": (dt_util.utcnow() + timedelta(hours=1)).isoformat(),
+                    "timer_deadline": (
+                        dt_util.utcnow() + timedelta(hours=1)
+                    ).isoformat(),
                 },
             )
         ],

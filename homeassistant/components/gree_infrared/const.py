@@ -1,7 +1,6 @@
 """Constants for the Gree IR integration."""
 
 DOMAIN = "gree_infrared"
-CONF_MODEL = "model"
 MODEL_GENERIC = "generic"
 MODEL_YAP1F = "yap1f"
 CONF_GENERIC_OPTIONS = "generic_options"
