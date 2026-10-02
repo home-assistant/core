@@ -1604,11 +1604,11 @@ class EntityPlatform:
                 exc_info=result,
             )
         elif isinstance(result, BaseException):
-            # gather(..., return_exceptions=True) can return other
-            # BaseException subclasses too; the tracked task is already
-            # cleared above, but these must still propagate instead of
-            # being silently suppressed. Return (rather than raise) it so
-            # the caller can finish handling any other results in the
+            # task.exception() can return other BaseException subclasses
+            # too (e.g. SystemExit, KeyboardInterrupt); the tracked task is
+            # already cleared above, but these must still propagate instead
+            # of being silently suppressed. Return (rather than raise) it
+            # so the caller can finish handling any other results in the
             # same completed batch first.
             return result
         return None
