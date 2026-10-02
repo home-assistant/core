@@ -145,7 +145,7 @@ def async_setup_service_schemas(hass: HomeAssistant, data: FarmadData) -> None:
         ATTR_QUANTITY: {
             "name": "Quantity",
             "description": "The number of packages to order.",
-            "required": True,
+            "required": False,
             "default": 1,
             "selector": {"number": {"min": 1, "mode": "box"}},
         },

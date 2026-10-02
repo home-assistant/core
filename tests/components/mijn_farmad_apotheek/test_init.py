@@ -137,7 +137,7 @@ async def test_setup_entry_schemas(
     assert search is not None
     assert order["name"] == "Order medication"
     assert order["fields"]["product"]["selector"] == {"text": None}
-    assert order["fields"]["quantity"]["required"] is True
+    assert order["fields"]["quantity"]["required"] is False
     assert order["fields"]["quantity"]["default"] == 1
     assert order["fields"]["comment"]["required"] is False
     assert ATTR_APB not in order["fields"]
