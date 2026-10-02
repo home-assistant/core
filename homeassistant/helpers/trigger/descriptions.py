@@ -16,7 +16,7 @@ from homeassistant.loader import Integration, async_get_integrations
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
-from .models import TRIGGERS
+from .models import TRIGGER_CLASSES, TRIGGERS, has_dynamic_fields_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +33,12 @@ _FIELD_DESCRIPTION_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+_FIELDS_DESCRIPTION_SCHEMA = probatio.Schema({str: _FIELD_DESCRIPTION_SCHEMA})
+
 _TRIGGER_DESCRIPTION_SCHEMA = probatio.Schema(
     {
         probatio.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        probatio.Optional("fields"): probatio.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
+        probatio.Optional("fields"): _FIELDS_DESCRIPTION_SCHEMA,
     },
     extra=probatio.ALLOW_EXTRA,
 )
@@ -100,6 +102,7 @@ async def async_get_all_descriptions(
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
+    trigger_classes = hass.data[TRIGGER_CLASSES]
     # See if there are new triggers not seen before.
     # Any trigger that we saw before already has an entry in description_cache.
     all_triggers = set(triggers)
@@ -158,7 +161,67 @@ async def async_get_all_descriptions(
         description = {"fields": yaml_description.get("fields", {})}
         if (target := yaml_description.get("target")) is not None:
             description["target"] = target
+        if (
+            trigger_cls := trigger_classes.get(missing_trigger)
+        ) is not None and has_dynamic_fields_schema(trigger_cls):
+            description["has_dynamic_fields"] = True
 
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache
+
+
+def _fields_from_schema(schema: probatio.Schema) -> dict[str, dict[str, Any]]:
+    """Convert a fields schema to the triggers.yaml field format."""
+    fields: dict[str, dict[str, Any]] = {}
+    field_list = cast(
+        list[dict[str, Any]],
+        probatio.to_field_list(schema, custom_serializer=cv.custom_serializer),
+    )
+    for item in field_list:
+        if "selector" not in item:
+            raise probatio.Invalid(f"Field '{item['name']}' must use a selector")
+        field: dict[str, Any] = {
+            "required": item["required"],
+            "selector": item["selector"],
+        }
+        if "default" in item:
+            field["default"] = item["default"]
+        fields[item["name"]] = field
+    return fields
+
+
+async def async_get_description(
+    hass: HomeAssistant, trigger_key: str
+) -> dict[str, Any] | None:
+    """Return the description of a trigger with its dynamic fields merged in.
+
+    Returns None if the trigger is not registered or has no description.
+    The returned dict is a new object; the description cache is not modified.
+    """
+    descriptions = await async_get_all_descriptions(hass)
+    if (description := descriptions.get(trigger_key)) is None:
+        return None
+    if not description.get("has_dynamic_fields"):
+        return dict(description)
+
+    trigger_cls = hass.data[TRIGGER_CLASSES][trigger_key]
+    try:
+        schema = await trigger_cls.async_get_fields_schema(hass)
+    except Exception:
+        _LOGGER.exception("Error getting dynamic fields for trigger %s", trigger_key)
+        return dict(description)
+    if schema is None:
+        return dict(description)
+    try:
+        dynamic_fields = _FIELDS_DESCRIPTION_SCHEMA(_fields_from_schema(schema))
+    except (probatio.Invalid, ValueError) as ex:
+        # The serializer raises ValueError for unsupported schemas, e.g. nested sections
+        _LOGGER.warning("Invalid dynamic fields for trigger %s: %s", trigger_key, ex)
+        return dict(description)
+
+    static_fields: dict[str, dict[str, Any]] = description["fields"]
+    fields = dict(static_fields)
+    for name, field in dynamic_fields.items():
+        fields[name] = {**static_fields.get(name, {}), **field}
+    return {**description, "fields": fields}
