@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import MagicMock
 
 from aiofarmad import (
+    BasketItem,
     DraftBasket,
     DraftProduct,
     FarmadAuthenticationError,
@@ -293,6 +294,29 @@ async def test_order_medication_existing_draft(
     client.async_submit_basket.assert_awaited_once_with(
         API_APB, API_DRAFT_ID, products=PRODUCTS, comment=None
     )
+
+
+async def test_order_medication_existing_draft_items(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test ordering is rejected when the draft basket has products."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    client.async_get_draft_basket.return_value = DraftBasket(
+        id=API_DRAFT_ID,
+        comment=None,
+        items=(BasketItem(product_cnk=API_PRODUCT_CNK_2, quantity=1, unit_price=None),),
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "draft_not_empty"
+    client.async_update_draft_basket.assert_not_awaited()
+    client.async_save_draft_basket.assert_not_awaited()
+    client.async_submit_basket.assert_not_awaited()
 
 
 async def test_order_medication_with_comment(

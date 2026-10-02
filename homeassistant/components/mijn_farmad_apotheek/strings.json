@@ -28,6 +28,9 @@
     "authentication_failed": {
       "message": "The Farmad session expired. Remove the integration and set it up again."
     },
+    "draft_not_empty": {
+      "message": "Your draft basket at pharmacy {apb} still has products. Submit or clear the draft in the Mijn Farmad Apotheek app and try again."
+    },
     "invalid_product": {
       "message": "{product} is not a CNK code of seven digits. Use the search_medication action to find the CNK code of a product."
     },

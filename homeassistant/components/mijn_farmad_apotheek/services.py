@@ -282,6 +282,12 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
             draft = await data.client.async_get_draft_basket(apb)
             draft_id: str | None
             if draft is not None and draft.id is not None:
+                if draft.items:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="draft_not_empty",
+                        translation_placeholders={ATTR_APB: apb},
+                    )
                 await data.client.async_update_draft_basket(
                     apb, draft.id, products=products
                 )
