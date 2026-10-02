@@ -407,14 +407,15 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_progress_done(next_step_id="instructions")
         except WhitelistOperationAttemptingToAddExistingKey as err:
             LOGGER.debug("Virtual key is already on the whitelist: %s", err)
-        except (
-            WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
-            WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
-        ) as err:
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap as err:
             LOGGER.debug(
                 "No key card was tapped before the vehicle stopped waiting: %s", err
             )
             self._pair_error = {"base": "tap_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck as err:
+            LOGGER.debug("Key was not confirmed on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "confirm_timeout"}
             return self.async_show_progress_done(next_step_id="instructions")
         except (
             WhitelistOperationLocalEntityAuthFailedUIDenied,

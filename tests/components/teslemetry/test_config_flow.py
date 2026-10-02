@@ -1013,7 +1013,10 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
         (BluetoothTimeout, "timeout"),
         (BluetoothTransportError, "cannot_connect"),
         (WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap, "tap_timeout"),
-        (WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck, "tap_timeout"),
+        (
+            WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
+            "confirm_timeout",
+        ),
         (WhitelistOperationLocalEntityAuthFailedUIDenied, "pair_denied"),
         (WhitelistOperationLocalEntityAuthFailedCancelled, "pair_denied"),
         (WhitelistOperationCouldNotStartLocalEntityAuth, "auth_not_started"),
