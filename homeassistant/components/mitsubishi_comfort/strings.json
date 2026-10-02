@@ -1,16 +1,30 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "Sign in with the same Mitsubishi Comfort account that was used to set up this integration."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "No devices were found on this account",
-      "no_usable_devices": "The cloud did not return complete local-control information for any device on this account. Wait a few minutes and try again.",
+      "no_usable_devices": "No supported devices were found. Kumo Station devices require local-control credentials.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Kumo Cloud account.",
+          "username": "The email address for your Kumo Cloud account."
+        },
+        "description": "Sign in with the same Mitsubishi Comfort account to restore cloud access.",
+        "title": "Reauthenticate Mitsubishi Comfort"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -19,7 +33,8 @@
         "data_description": {
           "password": "The password for your Kumo Cloud account.",
           "username": "The email address for your Kumo Cloud account."
-        }
+        },
+        "description": "Indoor units use local control when local credentials and an IP address are available. Otherwise, they use Mitsubishi Comfort cloud control, which requires an internet connection."
       }
     }
   },
@@ -55,7 +70,7 @@
         },
         "step": {
           "addresses": {
-            "description": "These devices have no known local IP address, so they have no entities yet. Enter the local IPv4 address for each device below; each field is labeled with the device's MAC address. Leave a field blank to keep waiting for DHCP discovery (which only works when the device is on the same network as Home Assistant). After you submit, the integration reloads and sets up every device that has an address. Devices: {devices}",
+            "description": "These devices have local-control credentials but no known local IP address. Indoor units use cloud control until an address is available. Enter the local IPv4 address for each device to enable local control; each field is labeled with its MAC address. Leave a field blank to keep waiting for DHCP discovery, which only works on the same network as Home Assistant. Devices: {devices}",
             "title": "Device IP addresses"
           },
           "confirm": {

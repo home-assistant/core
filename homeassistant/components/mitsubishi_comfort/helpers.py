@@ -31,7 +31,7 @@ def async_create_missing_address_issue(hass: HomeAssistant, entry_id: str) -> No
         DOMAIN,
         f"missing_address_{entry_id}",
         is_fixable=True,
-        severity=ir.IssueSeverity.ERROR,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="missing_address",
         data={"entry_id": entry_id},
     )

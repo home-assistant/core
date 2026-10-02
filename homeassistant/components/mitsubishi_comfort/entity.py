@@ -1,6 +1,6 @@
 """Base entity for Mitsubishi Comfort integration."""
 
-from mitsubishi_comfort import IndoorUnit, KumoStation
+from mitsubishi_comfort import CloudIndoorUnit, IndoorUnit, KumoStation
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,7 +20,11 @@ class MitsubishiComfortEntity(CoordinatorEntity[MitsubishiComfortCoordinator]):
         device = coordinator.device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
+            connections=(
+                {(CONNECTION_NETWORK_MAC, coordinator.mac)}
+                if coordinator.mac
+                else set()
+            ),
             name=device.name,
             manufacturer="Mitsubishi",
             serial_number=device.serial,
@@ -29,6 +33,6 @@ class MitsubishiComfortEntity(CoordinatorEntity[MitsubishiComfortCoordinator]):
         )
 
     @property
-    def _device(self) -> IndoorUnit | KumoStation:
+    def _device(self) -> IndoorUnit | CloudIndoorUnit | KumoStation:
         """Return the underlying device from coordinator data."""
         return self.coordinator.data
