@@ -1,6 +1,6 @@
 """Test the Škoda sensor platform."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock
@@ -192,15 +192,59 @@ def test_aux_heating_duration_returns_none_when_off() -> None:
     assert sensor.native_value is None
 
 
-def test_aux_heating_duration_reports_remaining_time_while_heating() -> None:
-    """The remaining duration is reported while auxiliary heating is active."""
+def test_aux_heating_duration_reports_end_time_while_heating() -> None:
+    """The computed end time is reported while auxiliary heating is active."""
     auxiliary_heating = SimpleNamespace(
-        state=AuxiliaryHeatingState.HEATING, duration_in_seconds=1200
+        state=AuxiliaryHeatingState.HEATING,
+        duration_in_seconds=1200,
+        car_captured_timestamp="2024-01-10T10:00:00+00:00",
     )
     coordinator = _make_auxiliary_heating_coordinator(auxiliary_heating)
     sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
 
-    assert sensor.native_value == 1200
+    assert sensor.native_value == dt_util.as_utc(
+        datetime.fromisoformat("2024-01-10T10:20:00+00:00")
+    )
+
+
+def test_aux_heating_duration_parses_datetime_captured_timestamp() -> None:
+    """A captured timestamp already provided as a datetime is handled as-is."""
+    captured = datetime(2024, 1, 10, 10, 0, 0)
+    auxiliary_heating = SimpleNamespace(
+        state=AuxiliaryHeatingState.HEATING,
+        duration_in_seconds=1200,
+        car_captured_timestamp=captured,
+    )
+    coordinator = _make_auxiliary_heating_coordinator(auxiliary_heating)
+    sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
+
+    assert sensor.native_value == dt_util.as_utc(captured) + timedelta(seconds=1200)
+
+
+def test_aux_heating_duration_returns_none_for_unparseable_timestamp() -> None:
+    """No end time is reported when the captured timestamp can't be parsed."""
+    auxiliary_heating = SimpleNamespace(
+        state=AuxiliaryHeatingState.HEATING,
+        duration_in_seconds=1200,
+        car_captured_timestamp="not-a-timestamp",
+    )
+    coordinator = _make_auxiliary_heating_coordinator(auxiliary_heating)
+    sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
+
+    assert sensor.native_value is None
+
+
+def test_aux_heating_duration_returns_none_without_captured_timestamp() -> None:
+    """No end time is reported when the API doesn't provide a captured timestamp."""
+    auxiliary_heating = SimpleNamespace(
+        state=AuxiliaryHeatingState.HEATING,
+        duration_in_seconds=1200,
+        car_captured_timestamp=None,
+    )
+    coordinator = _make_auxiliary_heating_coordinator(auxiliary_heating)
+    sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
+
+    assert sensor.native_value is None
 
 
 def test_licence_plate_returns_none_without_license_plate() -> None:
