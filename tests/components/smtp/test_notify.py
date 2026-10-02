@@ -10,7 +10,7 @@ import aiosmtplib
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import camera, image, media_source
+from homeassistant.components import media_source
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -436,8 +436,8 @@ async def test_smtp_send_message_camera_source(
     assert config_entry.state is ConfigEntryState.LOADED
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+            "homeassistant.components.smtp.helpers.async_get_media_image",
+            return_value=media_source.MediaImage(b"I play the sax\n", "image/jpeg"),
         ) as mock_get_image,
     ):
         await hass.services.async_call(
@@ -460,7 +460,9 @@ async def test_smtp_send_message_camera_source(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
+    mock_get_image.assert_called_once_with(
+        hass, "media-source://camera/camera.demo_camera"
+    )
     msg = aiosmtplib.__aenter__.return_value.send_message.call_args[0][0]
     assert msg.as_string() == snapshot
 
@@ -481,8 +483,8 @@ async def test_smtp_send_message_image_source(
 
     assert config_entry.state is ConfigEntryState.LOADED
     with patch(
-        "homeassistant.components.image.async_get_image",
-        return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+        "homeassistant.components.smtp.helpers.async_get_media_image",
+        return_value=media_source.MediaImage(b"\x89PNG", "image/jpeg"),
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
@@ -511,7 +513,7 @@ async def test_smtp_send_message_image_source(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_with(hass, "image.test")
+    mock_get_image.assert_called_with(hass, "media-source://image/image.test")
     msg = aiosmtplib.__aenter__.return_value.send_message.call_args[0][0]
     assert msg.as_string() == snapshot
 
@@ -626,8 +628,8 @@ async def test_smtp_send_message_media_source_missing_filename(
     assert config_entry.state is ConfigEntryState.LOADED
     with (
         patch(
-            "homeassistant.components.image.async_get_image",
-            return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+            "homeassistant.components.smtp.helpers.async_get_media_image",
+            return_value=media_source.MediaImage(b"\x89PNG", "image/jpeg"),
         ) as mock_get_image,
         pytest.raises(
             ServiceValidationError,
@@ -650,7 +652,7 @@ async def test_smtp_send_message_media_source_missing_filename(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_once_with(hass, "media-source://image/image.test")
     assert err.value.translation_key == "media_source_missing_filename"
     assert err.value.translation_placeholders == {
         "media_content_id": "media-source://image/image.test"

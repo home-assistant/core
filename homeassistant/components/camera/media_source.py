@@ -6,6 +6,7 @@ from typing import override
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     BrowseMediaSource,
+    MediaImage,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
@@ -16,7 +17,7 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import Camera, async_stream_endpoint_url
+from . import Camera, _async_get_image, async_stream_endpoint_url
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 
 
@@ -85,6 +86,17 @@ class CameraMediaSource(MediaSource):
             raise Unresolvable(str(err)) from err
 
         return PlayMedia(url, FORMAT_CONTENT_TYPE[HLS_PROVIDER])
+
+    @override
+    async def async_get_media_image(self, item: MediaSourceItem) -> MediaImage:
+        """Return a snapshot of the camera."""
+        camera = self.hass.data[DATA_COMPONENT].get_entity(item.identifier)
+
+        if not camera:
+            raise Unresolvable(f"Could not resolve media item: {item.identifier}")
+
+        snapshot = await _async_get_image(camera)
+        return MediaImage(snapshot.content, snapshot.content_type)
 
     @override
     async def async_browse_media(
