@@ -164,7 +164,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=reconfigure_entry.data[CONF_CONTAINER_NAME],
                     ): str,
                     probatio.Required(
-                        CONF_STORAGE_ACCOUNT_KEY,
+                        probatio.Secret(CONF_STORAGE_ACCOUNT_KEY),
                         default=reconfigure_entry.data[CONF_STORAGE_ACCOUNT_KEY],
                     ): str,
                 }

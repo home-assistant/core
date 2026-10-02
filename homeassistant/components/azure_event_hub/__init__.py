@@ -48,7 +48,9 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Optional(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
-                probatio.Optional(CONF_EVENT_HUB_CON_STRING): cv.string,
+                probatio.Optional(
+                    probatio.Secret(CONF_EVENT_HUB_CON_STRING)
+                ): cv.string,
                 probatio.Optional(CONF_EVENT_HUB_NAMESPACE): cv.string,
                 probatio.Optional(CONF_EVENT_HUB_SAS_POLICY): cv.string,
                 probatio.Optional(probatio.Secret(CONF_EVENT_HUB_SAS_KEY)): cv.string,

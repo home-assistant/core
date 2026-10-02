@@ -42,7 +42,7 @@ BASE_SCHEMA = probatio.Schema(
 
 CONN_STRING_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_EVENT_HUB_CON_STRING): str,
+        probatio.Required(probatio.Secret(CONF_EVENT_HUB_CON_STRING)): str,
     }
 )
 
