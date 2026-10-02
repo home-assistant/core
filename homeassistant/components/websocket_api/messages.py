@@ -192,6 +192,9 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
     )[:-1]
 
 
+_REMOVE_KEY: Final = ENTITY_EVENT_REMOVE.encode()
+
+
 def batched_state_diff_message(
     message_id_as_bytes: bytes, fragments: list[tuple[bytes, bytes]]
 ) -> bytes:
@@ -221,9 +224,6 @@ def batched_state_diff_message(
         parts.extend((b'"', key, opening, b",".join(entries), closing))
     parts.append(b"}}")
     return b"".join(parts)
-
-
-_REMOVE_KEY: Final = ENTITY_EVENT_REMOVE.encode()
 
 
 @lru_cache(maxsize=128)
