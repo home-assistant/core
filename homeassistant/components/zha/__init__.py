@@ -61,6 +61,7 @@ from .repairs.wrong_silabs_firmware import (
     AlreadyRunningEZSP,
     warn_on_wrong_silabs_firmware,
 )
+from .services import async_setup_services
 
 DEVICE_CONFIG_SCHEMA_ENTRY = probatio.Schema({probatio.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -96,7 +97,9 @@ PLATFORMS = (
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -105,6 +108,7 @@ PLATFORMS = (
     Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VALVE,
 )
 
 
@@ -121,6 +125,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_ZHA] = ha_zha_data
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+
+    async_setup_services(hass)
 
     return True
 
@@ -298,8 +304,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     with contextlib.suppress(KeyError):
         for platform in PLATFORMS:
             del ha_zha_data.platforms[platform]
-
-    websocket_api.async_unload_api(hass)
 
     return True
 

@@ -60,6 +60,8 @@ from zha.application.helpers import (
     QuirksConfiguration,
     ZHAConfiguration,
     ZHAData,
+    convert_install_code,
+    qr_to_install_code,
 )
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
@@ -118,27 +120,31 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.logging import HomeAssistantQueueHandler
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
     ATTR_AVAILABLE,
     ATTR_DEVICE_TYPE,
+    ATTR_DURATION,
     ATTR_ENDPOINT_NAMES,
     ATTR_EXPOSES_FEATURES,
     ATTR_IEEE,
+    ATTR_INSTALL_CODE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
     ATTR_MANUFACTURER_CODE,
     ATTR_NEIGHBORS,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
+    ATTR_QR_CODE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
+    ATTR_SOURCE_IEEE,
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
@@ -386,7 +392,7 @@ class ZHADeviceProxy(EventBase):
         device_info[ENTITIES] = [
             {
                 ATTR_ENTITY_ID: entity_ref.ha_entity_id,
-                ATTR_NAME: entity_ref.ha_device_info[ATTR_NAME],
+                ATTR_NAME: device_info[ATTR_NAME],
             }
             for entity_ref in self.gateway_proxy.ha_entity_refs[self.device.ieee]
         ]
@@ -565,7 +571,6 @@ class EntityReference(NamedTuple):
 
     ha_entity_id: str
     entity_data: EntityData
-    ha_device_info: dr.DeviceInfo
     remove_future: asyncio.Future[Any]
 
 
@@ -617,7 +622,6 @@ class ZHAGatewayProxy(EventBase):
         self,
         ha_entity_id: str,
         entity_data: EntityData,
-        ha_device_info: dr.DeviceInfo,
         remove_future: asyncio.Future[Any],
     ) -> None:
         """Record the creation of a hass entity associated with ieee."""
@@ -625,7 +629,6 @@ class ZHAGatewayProxy(EventBase):
             EntityReference(
                 ha_entity_id=ha_entity_id,
                 entity_data=entity_data,
-                ha_device_info=ha_device_info,
                 remove_future=remove_future,
             )
         )
@@ -1289,7 +1292,7 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
 @callback
 def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
-    entity_class: type[ZHAEntity],
+    entity_class: Callable[[EntityData], ZHAEntity],
     entities: list[EntityData],
     **kwargs,
 ) -> None:
@@ -1473,3 +1476,20 @@ def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
 def get_config_entry_unique_id(network_info: NetworkInfo) -> str:
     """Generate a unique id for a config entry based on the network info."""
     return f"epid={network_info.extended_pan_id}".lower()
+
+
+IEEE_SCHEMA = probatio.All(cv.string, EUI64.convert)
+
+SERVICE_PERMIT_PARAMS: VolDictType = {
+    probatio.Optional(ATTR_IEEE): IEEE_SCHEMA,
+    probatio.Optional(ATTR_DURATION, default=60): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 254)
+    ),
+    probatio.Inclusive(ATTR_SOURCE_IEEE, "install_code"): IEEE_SCHEMA,
+    probatio.Inclusive(ATTR_INSTALL_CODE, "install_code"): probatio.All(
+        cv.string, convert_install_code
+    ),
+    probatio.Exclusive(ATTR_QR_CODE, "install_code"): probatio.All(
+        cv.string, qr_to_install_code
+    ),
+}

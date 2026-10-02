@@ -21,7 +21,8 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from . import CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from .const import DOMAIN
 
 # mypy: disallow-any-generics
 
@@ -41,7 +42,7 @@ POSITION_CONDITION_SCHEMA = probatio.All(
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(

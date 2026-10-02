@@ -11,12 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_TWILIO, DOMAIN
 
 CONF_ACCOUNT_SID = "account_sid"
 CONF_AUTH_TOKEN = "auth_token"
-
-DATA_TWILIO = DOMAIN
 
 RECEIVED_DATA = f"{DOMAIN}_data_received"
 
@@ -25,7 +23,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(DOMAIN): probatio.Schema(
             {
                 probatio.Required(CONF_ACCOUNT_SID): cv.string,
-                probatio.Required(CONF_AUTH_TOKEN): cv.string,
+                probatio.Required(probatio.Secret(CONF_AUTH_TOKEN)): cv.string,
             }
         )
     },
@@ -39,8 +37,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
-    hass.data[DATA_TWILIO] = Client(
-        conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN)
+    hass.data[DATA_TWILIO] = await hass.async_add_executor_job(
+        Client, conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN)
     )
     return True
 

@@ -7,7 +7,6 @@ import probatio
 from homeassistant.const import CONF_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
@@ -29,7 +28,7 @@ MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_MODE): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [str]
+                probatio.EnsureList(), probatio.Length(min=1), [str]
             ),
         },
     }

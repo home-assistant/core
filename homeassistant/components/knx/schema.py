@@ -48,7 +48,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util import slugify
 
 from .const import (
@@ -78,6 +77,7 @@ from .dpt import get_supported_dpts
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
     dpt_base_type_validator,
+    entity_category_validator,
     ga_list_validator,
     ga_validator,
     numeric_type_validator,
@@ -97,7 +97,15 @@ def _number_limit_sub_validator(config: dict) -> dict:
     """Validate min, max, and step values for a number entity."""
     transcoder = DPTNumeric.parse_transcoder(config[CONF_TYPE])
     assert transcoder is not None  # already checked by numeric_type_validator
-    return validate_number_attributes(transcoder, config)
+    validate_number_attributes(
+        transcoder,
+        min_config=config.get(NumberConf.MIN),
+        max_config=config.get(NumberConf.MAX),
+        step_config=config.get(NumberConf.STEP),
+        device_class=config.get(CONF_DEVICE_CLASS),
+        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
+    )
+    return config
 
 
 def _max_payload_value(payload_length: int) -> int:
@@ -167,7 +175,13 @@ def _sensor_attribute_sub_validator(config: dict) -> dict:
         config[CONF_TYPE]
     )
     dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
-    return validate_sensor_attributes(dpt_metadata, config)
+    validate_sensor_attributes(
+        dpt_metadata,
+        state_class=config.get(CONF_SENSOR_STATE_CLASS),
+        device_class=config.get(CONF_DEVICE_CLASS),
+        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
+    )
+    return config
 
 
 #########
@@ -180,14 +194,16 @@ class EventSchema:
 
     KNX_EVENT_FILTER_SCHEMA = probatio.Schema(
         {
-            probatio.Required(KNX_ADDRESS): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(KNX_ADDRESS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(CONF_TYPE): dpt_base_type_validator,
         }
     )
 
     SCHEMA = {
         probatio.Optional(CONF_EVENT, default=[]): probatio.All(
-            cv.ensure_list, [KNX_EVENT_FILTER_SCHEMA]
+            probatio.EnsureList(), [KNX_EVENT_FILTER_SCHEMA]
         )
     }
 
@@ -224,7 +240,9 @@ class KNXPlatformSchema(ABC):
         """Return a schema node for the platform."""
         return {
             probatio.Optional(str(cls.PLATFORM)): probatio.All(
-                cv.ensure_list, [cls.ENTITY_SCHEMA], _unique_id_duplicate_validator
+                probatio.EnsureList(),
+                [cls.ENTITY_SCHEMA],
+                _unique_id_duplicate_validator,
             )
         }
 
@@ -260,7 +278,9 @@ def _entity_base_schema(platform: Platform) -> probatio.Schema:
             probatio.Optional(CONF_DEFAULT_ENTITY_ID): probatio.All(
                 cv.entity_id, cv.entity_domain(platform)
             ),
-            probatio.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            probatio.Optional(CONF_ENTITY_CATEGORY): entity_category_validator(
+                platform
+            ),
             probatio.Optional(CONF_UNIQUE_ID): probatio.All(
                 cv.string, probatio.Length(min=1)
             ),
@@ -460,11 +480,11 @@ class ClimateSchema(KNXPlatformSchema):
                     ClimateConf.ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 probatio.Optional(ClimateConf.OPERATION_MODES): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
                 probatio.Optional(ClimateConf.CONTROLLER_MODES): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 probatio.Optional(

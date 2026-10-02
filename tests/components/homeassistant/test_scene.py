@@ -81,6 +81,8 @@ async def test_reload_config_service_failed(
 async def test_apply_service(hass: HomeAssistant) -> None:
     """Test the apply service."""
     assert await async_setup_component(hass, "scene", {})
+    # demo needs the homeassistant component, set up by scene in the background
+    await hass.async_block_till_done()
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 

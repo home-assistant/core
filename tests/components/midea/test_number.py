@@ -62,6 +62,7 @@ def _ed_device() -> DummyDevice:
             EDAttributes.water_hardness: 120,
             EDAttributes.flushing_days: 14,
             EDAttributes.leak_water_protection_value: 500,
+            EDAttributes.salt_setting: 25,
         },
     )
 
@@ -181,7 +182,7 @@ async def test_ed_number_entities(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
 ) -> None:
-    """Test ED exposes water_hardness, flushing_days and leak_water_protection_value."""
+    """Test ED exposes water_hardness, flushing_days, leak_water_protection_value and salt_setting."""
     device = _ed_device()
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
@@ -191,6 +192,7 @@ async def test_ed_number_entities(
     assert f"{TEST_DEVICE_ID}_water_hardness" in entities
     assert f"{TEST_DEVICE_ID}_flushing_days" in entities
     assert f"{TEST_DEVICE_ID}_leak_water_protection_value" in entities
+    assert f"{TEST_DEVICE_ID}_salt_setting" in entities
 
     leak_entry = entities[f"{TEST_DEVICE_ID}_leak_water_protection_value"]
     await _assert_service_call(
@@ -198,6 +200,20 @@ async def test_ed_number_entities(
         leak_entry.entity_id,
         550,
         [("set_attribute", "leak_water_protection_value", 550)],
+        device,
+    )
+
+    salt_entry = entities[f"{TEST_DEVICE_ID}_salt_setting"]
+    assert (salt_state := hass.states.get(salt_entry.entity_id)) is not None
+    assert float(salt_state.state) == 25
+    assert salt_state.attributes[ATTR_MIN] == 0
+    assert salt_state.attributes[ATTR_MAX] == 255
+
+    await _assert_service_call(
+        hass,
+        salt_entry.entity_id,
+        30,
+        [("set_attribute", "salt_setting", 30)],
         device,
     )
 

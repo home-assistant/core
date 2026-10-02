@@ -12,7 +12,12 @@ from typing import Any
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -21,6 +26,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     template,
 )
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -324,6 +330,21 @@ def valid_publish_topic(topic: Any) -> str:
     if "+" in validated_topic or "#" in validated_topic:
         raise probatio.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
+
+
+def entity_category_without_config(value: Any) -> EntityCategory:
+    """Validate the entity category of a platform not supporting `CONFIG`.
+
+    Entities of these platforms raise when they are added as config entities.
+    """
+    entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
+    if entity_category is EntityCategory.CONFIG:
+        _options = ", ".join(sorted(set(EntityCategory) - {EntityCategory.CONFIG}))
+        raise probatio.Invalid(
+            f"Entity category '{entity_category}' is not supported by this platform."
+            f" Valid options are: {_options}"
+        )
+    return entity_category
 
 
 def valid_qos_schema(qos: Any) -> int:

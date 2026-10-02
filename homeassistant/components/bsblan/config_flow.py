@@ -120,7 +120,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Optional(CONF_PASSKEY): str,
                     probatio.Optional(CONF_USERNAME): str,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 }
             )
             if not self._auth_required:
@@ -158,7 +158,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         {
                             probatio.Optional(CONF_PASSKEY): str,
                             probatio.Optional(CONF_USERNAME): str,
-                            probatio.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                         }
                     ),
                     errors={"base": "invalid_auth"},
@@ -173,7 +173,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         {
                             probatio.Optional(CONF_PASSKEY): str,
                             probatio.Optional(CONF_USERNAME): str,
-                            probatio.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                         }
                     ),
                     errors={"base": "cannot_connect"},
@@ -283,7 +283,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD,
+                    probatio.Secret(CONF_PASSWORD),
                     default=probatio.UNDEFINED,
                 ): str,
             }
@@ -311,7 +311,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD,
+                    probatio.Secret(CONF_PASSWORD),
                     default=probatio.UNDEFINED,
                 ): str,
             }

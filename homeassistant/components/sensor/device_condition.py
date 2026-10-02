@@ -27,7 +27,8 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, SensorDeviceClass, SensorEntityCapabilityAttribute
+from . import SensorDeviceClass, SensorEntityCapabilityAttribute
+from .const import DOMAIN
 
 DEVICE_CLASS_NONE = "none"
 
@@ -228,7 +229,7 @@ CONDITION_SCHEMA = probatio.All(
             probatio.Optional(CONF_ABOVE): probatio.Any(probatio.Coerce(float)),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 
