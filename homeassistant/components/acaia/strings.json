@@ -42,10 +42,5 @@
         "name": "Tare"
       }
     }
-  },
-  "exceptions": {
-    "button_press_failed": {
-      "message": "Failed to send command to the Acaia scale."
-    }
   }
 }
