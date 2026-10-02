@@ -20,7 +20,7 @@ mypy==2.3.1
 prek==0.5.4
 pydantic==2.13.5
 PyGithub==2.10.0
-pylint==4.0.8
+pylint==4.0.9
 pylint-per-file-ignores==4.0.0
 pipdeptree==4.2.5
 pytest-asyncio==1.4.0
