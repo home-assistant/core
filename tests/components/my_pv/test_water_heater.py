@@ -390,7 +390,7 @@ async def test_water_heater_set_temp_rate_limiting(
         (MyPVTooManyRequestsError(), HomeAssistantError),
     ],
 )
-async def test_number_set_value_raises_error(
+async def test_water_heater_set_temp_raises_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
