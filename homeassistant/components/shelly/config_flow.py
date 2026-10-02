@@ -67,6 +67,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
@@ -102,7 +105,7 @@ from .utils import (
 
 CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): TextSelector(),
         probatio.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): probatio.Coerce(int),
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -647,17 +650,25 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     probatio.Secret(CONF_PASSWORD),
                     default=user_input.get(CONF_PASSWORD, ""),
-                ): str,
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         else:
             schema = {
                 probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                ): str,
+                ): TextSelector(TextSelectorConfig(autocomplete="username")),
                 probatio.Required(
                     probatio.Secret(CONF_PASSWORD),
                     default=user_input.get(CONF_PASSWORD, ""),
-                ): str,
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
 
         return self.async_show_form(
@@ -862,7 +873,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 custom_value=True,
                             )
                         ),
-                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="new-password",
+                            )
+                        ),
                     }
                 ),
                 suggested_values,
@@ -1291,11 +1307,23 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
             schema = {
-                probatio.Required(CONF_USERNAME): str,
-                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                probatio.Required(CONF_USERNAME): TextSelector(
+                    TextSelectorConfig(autocomplete="username")
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         else:
-            schema = {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            schema = {
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                )
+            }
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -1346,7 +1374,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_HOST, default=self.host): str,
+                    probatio.Required(CONF_HOST, default=self.host): TextSelector(),
                     probatio.Required(CONF_PORT, default=self.port): probatio.Coerce(
                         int
                     ),
