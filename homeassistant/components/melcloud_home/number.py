@@ -13,7 +13,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action, unit_ids
@@ -224,7 +224,7 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
         if self.entity_description.validate_fn and (
             error_key := self.entity_description.validate_fn(self.unit, value)
         ):
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=error_key,
             )
@@ -259,7 +259,7 @@ class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
         if self.entity_description.validate_fn and (
             error_key := self.entity_description.validate_fn(self.unit, value)
         ):
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=error_key,
             )
