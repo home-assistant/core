@@ -1343,7 +1343,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PIHeatingDemand",
-            translation_key="thermostat_pi_heating_demand",
+            translation_key="pi_heating_demand",
             native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
