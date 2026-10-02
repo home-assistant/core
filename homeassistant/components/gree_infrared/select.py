@@ -18,7 +18,7 @@ from .climate import (
     VANE_AUTO,
     VANE_OPTIONS,
 )
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, MODEL_GENERIC, MODEL_YAP1F
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, MODEL_GENERIC, MODEL_YAP1F
 from .entity import GreeIrEntity
 from .state import GreeAcState
 
@@ -102,7 +102,9 @@ class GreeAcOptionSelect(GreeIrEntity, InfraredEmitterConsumerEntity, SelectEnti
         """Delegate the select change to the per-entry climate owner."""
         climate = self._state.climate
         if climate is None:
-            raise HomeAssistantError("Gree climate entity is not available yet")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="climate_not_available"
+            )
         if self._key == "fresh_air":
             await climate.async_set_fresh_air(option)
         elif self._key == "swing_v_position":

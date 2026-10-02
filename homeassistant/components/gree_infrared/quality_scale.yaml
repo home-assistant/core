@@ -88,10 +88,7 @@ rules:
     comment: |
       No entities should be disabled by default.
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: |
-      This integration does not raise exceptions.
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |

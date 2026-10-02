@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GreeInfraredConfigEntry
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
 from .entity import GreeIrEntity
 from .state import GreeAcState
 
@@ -76,7 +76,9 @@ class GreeAcTimerNumber(GreeIrEntity, InfraredEmitterConsumerEntity, NumberEntit
         """Delegate the timer change to the per-entry climate owner."""
         climate = self._state.climate
         if climate is None:
-            raise HomeAssistantError("Gree climate entity is not available yet")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="climate_not_available"
+            )
         await climate.async_set_timer_hours(None if value == 0 else float(value))
 
     @override
