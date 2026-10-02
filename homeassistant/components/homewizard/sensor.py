@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 from typing import Final, override
 
 from homewizard_energy.const import Model
@@ -30,6 +31,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceInfo,
     async_get_device_id_by_identifier,
@@ -811,7 +813,9 @@ def _async_migrate_external_device_identifier(
     parent_serial: str | None,
 ) -> None:
     """Migrate a HomeWizard external device identifier when needed."""
-    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, old_unique_id)})
+    old_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, old_unique_id), entry.entry_id
+    )
     if old_device is None:
         return
 
@@ -822,7 +826,9 @@ def _async_migrate_external_device_identifier(
     ):
         return
 
-    new_device = dev_reg.async_get_device(identifiers={(DOMAIN, new_unique_id)})
+    new_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, new_unique_id), entry.entry_id
+    )
     if new_device is None:
         dev_reg.async_update_device(
             old_device.id,

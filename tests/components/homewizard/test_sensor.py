@@ -23,14 +23,16 @@ EXTERNAL_DEVICE_OLD_UNIQUE_ID = "G001"
 EXTERNAL_DEVICE_NEW_UNIQUE_ID = f"gas_meter_{EXTERNAL_DEVICE_OLD_UNIQUE_ID}"
 
 
-def _cleanup_external_migration_devices(device_registry: dr.DeviceRegistry) -> None:
+def _cleanup_external_migration_devices(
+    device_registry: dr.DeviceRegistry, config_entry_id: str
+) -> None:
     """Remove external devices used by migration tests."""
-    if existing_old := device_registry.async_get_device(
-        identifiers={(DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID)}
+    if existing_old := device_registry.async_get_device_by_identifier(
+        (DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID), config_entry_id
     ):
         device_registry.async_remove_device(existing_old.id)
-    if existing_new := device_registry.async_get_device(
-        identifiers={(DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID)}
+    if existing_new := device_registry.async_get_device_by_identifier(
+        (DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID), config_entry_id
     ):
         device_registry.async_remove_device(existing_new.id)
 
@@ -645,7 +647,7 @@ async def test_external_device_registry_migration(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    _cleanup_external_migration_devices(device_registry)
+    _cleanup_external_migration_devices(device_registry, init_integration.entry_id)
 
     old_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
@@ -680,7 +682,7 @@ async def test_external_device_registry_migration_old_only(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    _cleanup_external_migration_devices(device_registry)
+    _cleanup_external_migration_devices(device_registry, init_integration.entry_id)
 
     old_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
@@ -709,7 +711,7 @@ async def test_external_device_registry_migration_new_only_noop(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    _cleanup_external_migration_devices(device_registry)
+    _cleanup_external_migration_devices(device_registry, init_integration.entry_id)
 
     new_device = device_registry.async_get_or_create(
         config_entry_id=init_integration.entry_id,
