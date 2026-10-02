@@ -3,9 +3,8 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiodns.error import DNSError
 import pytest
-from radios import FilterBy, Order, RadioBrowserError
+from radios import FilterBy, Order, RadioBrowserConnectionError, RadioBrowserError
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError, SearchMediaQuery
@@ -83,7 +82,7 @@ async def test_browsing_local(
 
 @pytest.mark.parametrize(
     "exception",
-    [DNSError, RadioBrowserError],
+    [RadioBrowserConnectionError, RadioBrowserError],
 )
 async def test_browsing_exceptions(
     hass: HomeAssistant,
@@ -161,7 +160,7 @@ async def test_search_media(
 
 @pytest.mark.parametrize(
     "exception",
-    [DNSError, RadioBrowserError],
+    [RadioBrowserConnectionError, RadioBrowserError],
 )
 async def test_search_media_exceptions(
     hass: HomeAssistant,
@@ -213,7 +212,7 @@ async def test_search_media_not_ready(
 
 @pytest.mark.parametrize(
     "exception",
-    [DNSError, RadioBrowserError],
+    [RadioBrowserConnectionError, RadioBrowserError],
 )
 async def test_resolve_media_exceptions(
     hass: HomeAssistant,

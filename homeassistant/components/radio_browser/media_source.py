@@ -3,7 +3,6 @@
 import mimetypes
 from typing import override
 
-from aiodns.error import DNSError
 import pycountry
 from radios import FilterBy, Order, RadioBrowser, RadioBrowserError, Station
 
@@ -74,7 +73,7 @@ class RadioMediaSource(MediaSource):
         radios = self.radios
         try:
             station = await radios.station(uuid=item.identifier)
-        except (DNSError, RadioBrowserError) as e:
+        except RadioBrowserError as e:
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="radio_browser_error",
@@ -129,7 +128,7 @@ class RadioMediaSource(MediaSource):
                     *await self._async_build_by_country(radios, item),
                 ],
             )
-        except (DNSError, RadioBrowserError) as e:
+        except RadioBrowserError as e:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="radio_browser_error",
@@ -162,7 +161,7 @@ class RadioMediaSource(MediaSource):
                     ),
                 )
             )
-        except (DNSError, RadioBrowserError) as e:
+        except RadioBrowserError as e:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="radio_browser_error",
