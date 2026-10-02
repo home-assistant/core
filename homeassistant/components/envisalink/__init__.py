@@ -81,7 +81,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_PARTITIONS): {
                     probatio.Coerce(int): PARTITION_SCHEMA
                 },
-                probatio.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): probatio.Port(),
                 probatio.Optional(
                     CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION
                 ): probatio.All(probatio.Coerce(int), probatio.Range(min=3, max=4)),

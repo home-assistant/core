@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any, override
 
 import probatio
-from pysnooz.api import UnknownSnoozState
+from pysnooz import UnknownSnoozState
 from pysnooz.commands import (
     SnoozCommandData,
     SnoozCommandResultStatus,
@@ -50,7 +50,7 @@ async def async_setup_entry(
         SERVICE_TRANSITION_ON,
         {
             probatio.Optional(ATTR_VOLUME): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(
                 ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION
@@ -139,7 +139,7 @@ class SnoozFan(FanEntity, RestoreEntity):
     @override
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return not self._device.is_connected or self._device.state is UnknownSnoozState
+        return not self._device.is_connected or self._device.state == UnknownSnoozState
 
     @override
     async def async_turn_on(

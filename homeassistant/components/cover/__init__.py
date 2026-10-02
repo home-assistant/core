@@ -6,11 +6,10 @@ import functools as ft
 import logging
 from typing import Any, final, override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -29,7 +28,6 @@ from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .condition import make_cover_is_closed_condition, make_cover_is_open_condition
 from .const import (
@@ -39,6 +37,8 @@ from .const import (
     ATTR_POSITION,
     ATTR_SPEED,
     ATTR_TILT_POSITION,
+    DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     INTENT_CLOSE_COVER,
     INTENT_OPEN_COVER,
@@ -48,17 +48,17 @@ from .const import (
     CoverEntityStateAttribute,
     CoverState,
 )
+from .services import async_setup_services
 from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
 
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
+
 DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
 
 # mypy: disallow-any-generics
@@ -108,81 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_OPEN_COVER,
-        {probatio.Optional(ATTR_SPEED): cv.string},
-        "async_handle_open_cover",
-        [CoverEntityFeature.OPEN],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_CLOSE_COVER,
-        {probatio.Optional(ATTR_SPEED): cv.string},
-        "async_handle_close_cover",
-        [CoverEntityFeature.CLOSE],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_COVER_POSITION,
-        {
-            probatio.Required(ATTR_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
-            ),
-            probatio.Optional(ATTR_SPEED): cv.string,
-        },
-        "async_handle_set_cover_position",
-        [CoverEntityFeature.SET_POSITION],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_STOP_COVER, None, "async_stop_cover", [CoverEntityFeature.STOP]
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE,
-        None,
-        "async_toggle",
-        [CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_OPEN_COVER_TILT,
-        None,
-        "async_open_cover_tilt",
-        [CoverEntityFeature.OPEN_TILT],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_CLOSE_COVER_TILT,
-        None,
-        "async_close_cover_tilt",
-        [CoverEntityFeature.CLOSE_TILT],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_STOP_COVER_TILT,
-        None,
-        "async_stop_cover_tilt",
-        [CoverEntityFeature.STOP_TILT],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_COVER_TILT_POSITION,
-        {
-            probatio.Required(ATTR_TILT_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
-            )
-        },
-        "async_set_cover_tilt_position",
-        [CoverEntityFeature.SET_TILT_POSITION],
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE_COVER_TILT,
-        None,
-        "async_toggle_tilt",
-        [CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT],
-    )
+    async_setup_services(hass)
 
     return True
 

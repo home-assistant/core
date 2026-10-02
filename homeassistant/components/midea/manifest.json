@@ -12,6 +12,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["midealocal"],
-  "quality_scale": "bronze",
-  "requirements": ["midea-local==12.0.0"]
+  "quality_scale": "gold",
+  "requirements": ["midea-local==12.1.0"]
 }

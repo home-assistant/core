@@ -82,7 +82,9 @@ def get_user_step_schema(data: Mapping[str, Any]) -> probatio.Schema:
         travel_mode = TRAVEL_MODE_PUBLIC
     return probatio.Schema(
         {
-            probatio.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,
+            probatio.Required(
+                probatio.Secret(CONF_API_KEY), default=data.get(CONF_API_KEY)
+            ): cv.string,
             probatio.Optional(
                 CONF_MODE, default=data.get(CONF_MODE, TRAVEL_MODE_CAR)
             ): probatio.In(TRAVEL_MODES),

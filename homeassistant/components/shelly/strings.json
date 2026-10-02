@@ -658,6 +658,9 @@
     "firmware_unsupported": {
       "message": "{device} is running an unsupported firmware, please update the firmware"
     },
+    "http_call_error": {
+      "message": "HTTP call error occurred for {device}"
+    },
     "invalid_trigger": {
       "message": "Invalid device automation trigger (type, subtype): {trigger}"
     },
