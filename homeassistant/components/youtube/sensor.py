@@ -15,7 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ATTR_LATEST_SHORT,
     ATTR_LATEST_VIDEO,
+    ATTR_LATEST_VIDEO_NON_SHORT,
     ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
@@ -23,6 +25,7 @@ from .const import (
     ATTR_TOTAL_VIEWS,
     ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
+    SUBENTRY_TYPE_CHANNEL,
 )
 from .coordinator import YouTubeConfigEntry
 from .entity import YouTubeChannelEntity
@@ -48,6 +51,30 @@ SENSOR_TYPES = [
         attributes_fn=lambda channel: {
             ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID],
             ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO][ATTR_PUBLISHED_AT],
+        },
+    ),
+    YouTubeSensorEntityDescription(
+        key="latest_short",
+        translation_key="latest_short",
+        available_fn=lambda channel: channel[ATTR_LATEST_SHORT] is not None,
+        value_fn=lambda channel: channel[ATTR_LATEST_SHORT][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_SHORT][ATTR_THUMBNAIL],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_SHORT][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_SHORT][ATTR_PUBLISHED_AT],
+        },
+    ),
+    YouTubeSensorEntityDescription(
+        key="latest_video",
+        translation_key="latest_video",
+        available_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT] is not None,
+        value_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT][
+            ATTR_THUMBNAIL
+        ],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_PUBLISHED_AT],
         },
     ),
     YouTubeSensorEntityDescription(
@@ -91,11 +118,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the YouTube sensor."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        YouTubeSensor(coordinator, sensor_type, channel_id)
-        for channel_id in coordinator.data
-        for sensor_type in SENSOR_TYPES
-    )
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
+        async_add_entities(
+            (
+                YouTubeSensor(coordinator, subentry, sensor_type)
+                for sensor_type in SENSOR_TYPES
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
@@ -108,14 +138,14 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(
-            self.coordinator.data[self._channel_id]
+            self._channel_data
         )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
+        return self.entity_description.value_fn(self._channel_data)
 
     @property
     @override
@@ -123,16 +153,12 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         """Return the value reported by the sensor."""
         if not self.available:
             return None
-        return self.entity_description.entity_picture_fn(
-            self.coordinator.data[self._channel_id]
-        )
+        return self.entity_description.entity_picture_fn(self._channel_data)
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         if self.entity_description.attributes_fn:
-            return self.entity_description.attributes_fn(
-                self.coordinator.data[self._channel_id]
-            )
+            return self.entity_description.attributes_fn(self._channel_data)
         return None

@@ -207,6 +207,6 @@ async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Risco integration services."""
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True

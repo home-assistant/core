@@ -529,7 +529,7 @@ def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
 
 async def async_init_integration(
     hass: HomeAssistant,
-) -> None:
+) -> MockConfigEntry:
     """Set up the Airzone integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
@@ -568,3 +568,5 @@ async def async_init_integration(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    return config_entry

@@ -16,7 +16,7 @@ from aiohttp.web_exceptions import (
     HTTPUnauthorized,
 )
 from aiohttp.web_urldispatcher import AbstractResource, AbstractRoute
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -92,7 +92,7 @@ def request_handler_factory(
                 result = await handler(request, **request.match_info)
             else:
                 result = handler(request, **request.match_info)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
             raise HTTPInternalServerError from err

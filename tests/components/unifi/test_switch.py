@@ -735,6 +735,34 @@ PDU_DEVICE_1 = {
     "x_has_ssh_hostkey": True,
 }
 
+UPS_DEVICE_1 = deepcopy(PDU_DEVICE_1)
+UPS_DEVICE_1.update(
+    {
+        "device_id": "mock-ups",
+        "mac": "02:00:00:00:00:01",
+        "model": "USPDA2B",
+        "name": "Dummy UPS 2U Pro",
+        "type": "usp",
+        "outlet_table": [
+            {
+                "index": 1,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "outlet_caps": 65539,
+            }
+        ],
+        "outlet_overrides": [
+            {
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "relay_state": True,
+                "index": 1,
+            }
+        ],
+    }
+)
+
 WLAN = {
     "_id": "012345678910111213141516",
     "bc_filter_enabled": False,
@@ -1264,7 +1292,7 @@ async def test_traffic_rules(
     expected_enable_call = deepcopy(traffic_rule)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 1
+    assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
@@ -1319,7 +1347,7 @@ async def test_traffic_routes(
     expected_enable_call = deepcopy(traffic_route)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 1
+    assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
@@ -1408,13 +1436,25 @@ async def test_object_oriented_network_configs(
     aioclient_mock.put(config_url)
 
     call_count = aioclient_mock.call_count
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        "turn_off",
-        {"entity_id": entity_id},
-        blocking=True,
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.object_oriented_network_configs
+        )
     )
+
+    with (
+        patch.object(coordinator, "async_refresh") as async_refresh,
+        patch.object(coordinator, "async_request_refresh") as async_request_refresh,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            "turn_off",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    async_refresh.assert_awaited_once()
+    async_request_refresh.assert_not_awaited()
     expected_disable_call = deepcopy(config)
     expected_disable_call["enabled"] = False
 
@@ -1455,6 +1495,7 @@ async def test_object_oriented_network_configs(
         ([OUTLET_UP1], "plug_outlet_1", 1, 1),
         ([PDU_DEVICE_1], "dummy_usp_pdu_pro_usb_outlet_1", 1, 2),
         ([PDU_DEVICE_1], "dummy_usp_pdu_pro_outlet_2", 2, 2),
+        ([UPS_DEVICE_1], "dummy_ups_2u_pro_outlet_1", 1, 1),
     ],
 )
 async def test_outlet_switches(

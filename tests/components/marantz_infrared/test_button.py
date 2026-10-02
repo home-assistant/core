@@ -103,5 +103,5 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, BUTTON_ENTITY_ID_LOUDNESS, MOCK_INFRARED_EMITTER_ENTITY_ID
+        hass, BUTTON_ENTITY_ID_LOUDNESS, [MOCK_INFRARED_EMITTER_ENTITY_ID]
     )

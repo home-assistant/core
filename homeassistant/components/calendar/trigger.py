@@ -7,7 +7,7 @@ import datetime
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -51,26 +51,30 @@ OFFSET_TYPE_AFTER = "after"
 
 
 _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA = {
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
-    vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
+    probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+    probatio.Optional(CONF_EVENT, default=EVENT_START): probatio.In(
+        {EVENT_START, EVENT_END}
+    ),
+    probatio.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
 }
 
-_SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = vol.Schema(
+_SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA,
+        probatio.Required(CONF_OPTIONS): _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA,
     },
 )
 
-_EVENT_TRIGGER_SCHEMA = vol.Schema(
+_EVENT_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
-            vol.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
-                {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
-            ),
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(
+                CONF_OFFSET, default=datetime.timedelta(0)
+            ): cv.time_period,
+            probatio.Required(
+                CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE
+            ): probatio.In({OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}),
         },
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 

@@ -54,7 +54,7 @@ class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return not self.coordinator.is_device_stale()
+        return super().available and self.coordinator.data.is_online
 
 
 class ActronAirAcEntity(ActronAirEntity):

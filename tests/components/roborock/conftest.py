@@ -35,10 +35,12 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.b01_q7.b01_q7_containers import Q7MapListEntry
 from roborock.data.v1.v1_containers import StatusV2
 from roborock.device_features import RoborockDockFeatures
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
+from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
 from roborock.devices.traits.common import DpsDataConverter
 from roborock.devices.traits.v1 import PropertiesApi
@@ -67,6 +69,7 @@ from roborock.roborock_message import (
     RoborockDyadDataProtocol,
     RoborockZeoProtocol,
 )
+from vacuum_map_parser_base.map_data import MapData
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
@@ -102,17 +105,22 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
+DYAD_VALUES: dict[RoborockDyadDataProtocol, Any] = {
+    RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
+    RoborockDyadDataProtocol.POWER: 100,
+    RoborockDyadDataProtocol.MESH_LEFT: 111,
+    RoborockDyadDataProtocol.BRUSH_LEFT: 222,
+    RoborockDyadDataProtocol.ERROR: DyadError.none.name,
+    RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
+}
+
+
 def create_dyad_trait() -> Mock:
     """Create dyad trait for A01 devices."""
     dyad_trait = AsyncMock()
-    dyad_trait.query_values.return_value = {
-        RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
-        RoborockDyadDataProtocol.POWER: 100,
-        RoborockDyadDataProtocol.MESH_LEFT: 111,
-        RoborockDyadDataProtocol.BRUSH_LEFT: 222,
-        RoborockDyadDataProtocol.ERROR: DyadError.none.name,
-        RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
-    }
+    dyad_trait.add_update_listener = Mock(return_value=Mock())
+    dyad_trait.values = dict(DYAD_VALUES)
+    dyad_trait.last_message_time = None
     return dyad_trait
 
 
@@ -173,7 +181,45 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_clean_path_preference = AsyncMock()
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
+
+    b01_trait.map = AsyncMock()
+    b01_trait.map.refresh = AsyncMock()
+    b01_trait.map.map_list = []
+    b01_trait.map.current_map_id = None
+
+    b01_trait.map_content = AsyncMock()
+    b01_trait.map_content.refresh = AsyncMock()
+    b01_trait.map_content.image_content = None
+    b01_trait.map_content.map_data = None
+
+    b01_trait.clean_segments = AsyncMock()
+
     return b01_trait
+
+
+def seed_q7_map(
+    api: Q7PropertiesApi,
+    entries: list[tuple[int | None, bool | None]],
+    room_names: dict[int, str] | None = None,
+    image_content: bytes | None = None,
+) -> None:
+    """Seed Q7 map traits, deriving the current map like the library does.
+
+    Mirrors Q7MapList.current_map_id: prefers the entry marked current,
+    otherwise falls back to the first entry.
+    """
+    api.map.map_list = [Q7MapListEntry(id=map_id, cur=cur) for map_id, cur in entries]
+    current_map_id = next(
+        (map_id for map_id, cur in entries if cur),
+        entries[0][0] if entries else None,
+    )
+    api.map.current_map_id = current_map_id if isinstance(current_map_id, int) else None
+    if room_names is not None:
+        map_data = MapData()
+        map_data.additional_parameters = {"room_names": room_names}
+        api.map_content.map_data = map_data
+    if image_content is not None:
+        api.map_content.image_content = image_content
 
 
 def attach_update_listeners(trait: Mock) -> Callable[[], None]:
@@ -261,6 +307,13 @@ def create_b01_q10_trait() -> Mock:
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
         Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
     ]
+    q10_trait.map.as_dict = Mock(
+        return_value={"rooms": [room.as_dict() for room in q10_trait.map.rooms]}
+    )
+    # Mirror Q10PropertiesApi.as_dict, which only serializes RoborockBase traits.
+    q10_trait.as_dict = Mock(
+        return_value={"status": status.as_dict(), "map": q10_trait.map.as_dict()}
+    )
     return q10_trait
 
 
@@ -464,7 +517,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}
-    _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
+    _mop_route_mapping = {m.code: m.display_name for m in CleanRoutes}
     v1_properties.status.fan_speed_options = list(VacuumModes)
     v1_properties.status.fan_speed_mapping = _fan_speed_mapping
     v1_properties.status.fan_speed_name = _fan_speed_mapping.get(STATUS.fan_power)

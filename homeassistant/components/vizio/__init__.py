@@ -1,6 +1,12 @@
 """The vizio component."""
 
-from vizaio import Vizio, VizioError, async_resolve_host
+from vizaio import (
+    DeviceType,
+    Vizio,
+    VizioError,
+    async_classify_device,
+    async_resolve_host,
+)
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.const import (
@@ -21,6 +27,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_APPS,
+    CONF_DEVICE_TYPE,
     CONF_VOLUME_STEP,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -37,7 +44,12 @@ from .services import async_setup_services
 DATA_APPS: HassKey[VizioAppsDataUpdateCoordinator] = HassKey(f"{DOMAIN}_apps")
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.REMOTE,
+    Platform.SENSOR,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -70,6 +82,42 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> b
     return True
 
 
+async def _async_resolve_device_type(
+    hass: HomeAssistant, entry: VizioConfigEntry
+) -> DeviceType:
+    """Resolve the vizaio device type for a config entry.
+
+    Speaker entries are classified once to distinguish battery-powered
+    Crave models (own volume scale, battery sensors) from soundbars, and
+    the result is persisted on the entry. Entries from before this key
+    existed are classified here as well.
+    """
+    if (stored := entry.data.get(CONF_DEVICE_TYPE)) is not None:
+        return DeviceType(stored)
+
+    device_class = entry.data[CONF_DEVICE_CLASS]
+    fallback: DeviceType = VIZIO_DEVICE_CLASSES[device_class]
+    if device_class != MediaPlayerDeviceClass.SPEAKER:
+        return fallback
+
+    try:
+        device_type = await async_classify_device(
+            entry.data[CONF_HOST],
+            session=async_get_clientsession(hass, False),
+        )
+    except VizioError:
+        # Device unreachable; use the generic profile and retry next setup
+        return fallback
+    if device_type is DeviceType.TV:
+        # Classification contradicts the configured device class; trust the user
+        return fallback
+
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_DEVICE_TYPE: device_type.value}
+    )
+    return device_type
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
@@ -100,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
     # Create device
     device = Vizio(
         host,
-        device_type=VIZIO_DEVICE_CLASSES[device_class],
+        device_type=await _async_resolve_device_type(hass, entry),
         auth_token=token,
         session=async_get_clientsession(hass, False),
         timeout=DEFAULT_TIMEOUT,

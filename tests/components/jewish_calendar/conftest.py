@@ -30,7 +30,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import TimeValue
+from . import GetCalendarEvents, TimeValue
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -209,7 +209,7 @@ async def setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
 
 
 @pytest.fixture
-def get_calendar_events():
+def get_calendar_events() -> GetCalendarEvents:
     """Fixture that returns a function to get calendar events for a date range."""
 
     async def _get_events(

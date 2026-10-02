@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -103,7 +103,7 @@ async def test_climate_data_update(
     assert state.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,
@@ -331,7 +331,7 @@ async def test_climate_remove_stale(
     assert state.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,

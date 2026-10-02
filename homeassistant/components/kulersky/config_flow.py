@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
+import probatio
 import pykulersky
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -123,13 +123,13 @@ class KulerskyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         if self._discovery_info:
-            data_schema = vol.Schema(
-                {vol.Required(CONF_ADDRESS): self._discovery_info.address}
+            data_schema = probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): self._discovery_info.address}
             )
         else:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             service_info.address: (
                                 f"{service_info.name} ({service_info.address})"

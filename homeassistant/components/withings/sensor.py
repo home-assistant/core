@@ -866,7 +866,7 @@ async def async_setup_entry(
                         )
                     )
                     and config_entry.state is ConfigEntryState.LOADED
-                    for device in device_registry.devices.get_entries(
+                    for device in device_registry.async_get_devices(
                         identifiers={(DOMAIN, device_id)}
                     )
                 ):

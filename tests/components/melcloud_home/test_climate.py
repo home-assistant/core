@@ -10,12 +10,16 @@ from aiomelcloudhome import (
     ATAVaneHorizontal,
     ATAVaneVertical,
     ATWZoneMode,
+    MelCloudHomeAuthenticationError,
+    MelCloudHomeConnectionError,
+    MelCloudHomeTimeoutError,
     UserContext,
 )
 import pytest
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
@@ -25,6 +29,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -36,6 +41,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -127,8 +133,7 @@ async def test_ata_hvac_modes(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state is not None
+    assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["hvac_modes"] == expected_hvac_modes
 
 
@@ -469,8 +474,7 @@ async def test_ata_temperature_range_by_mode(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state is not None
+    assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["min_temp"] == expected_min
     assert state.attributes["max_temp"] == expected_max
 
@@ -489,8 +493,7 @@ async def test_ata_no_capabilities_temperature_range(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(ATA_ENTITY_ID)
-    assert state is not None
+    assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["min_temp"] == 7
     assert state.attributes["max_temp"] == 35
     assert HVACMode.FAN_ONLY in state.attributes["hvac_modes"]
@@ -517,12 +520,160 @@ async def test_atw_zone_temperature_range(
 
     await setup_integration(hass, mock_config_entry)
 
-    state1 = hass.states.get(ATW_ZONE1_ENTITY_ID)
-    assert state1 is not None
+    assert (state1 := hass.states.get(ATW_ZONE1_ENTITY_ID))
     assert state1.attributes["min_temp"] == 10.0
     assert state1.attributes["max_temp"] == 30.0
 
-    state2 = hass.states.get(ATW_ZONE2_ENTITY_ID)
-    assert state2 is not None
+    assert (state2 := hass.states.get(ATW_ZONE2_ENTITY_ID))
     assert state2.attributes["min_temp"] == 12.0
     assert state2.attributes["max_temp"] == 28.0
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected_action"),
+    [
+        pytest.param({"OperationMode": "Stop"}, HVACAction.IDLE, id="idle"),
+        pytest.param({"OperationMode": "HotWater"}, HVACAction.IDLE, id="hot_water"),
+        pytest.param({"OperationMode": "Heat"}, HVACAction.HEATING, id="heat"),
+        pytest.param(
+            {"OperationMode": "HeatZones"}, HVACAction.HEATING, id="heat_zones"
+        ),
+        pytest.param({"OperationMode": "Cool"}, HVACAction.COOLING, id="cool"),
+        pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
+        pytest.param(
+            {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"
+        ),
+    ],
+)
+async def test_atw_zone_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+    overrides: dict[str, str],
+    expected_action: HVACAction | None,
+) -> None:
+    """Test the ATW zone HVAC action follows the unit's operation mode."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    settings = {
+        setting["name"]: setting
+        for setting in context["buildings"][0]["airToWaterUnits"][0]["settings"]
+    }
+    for name, value in overrides.items():
+        settings[name]["value"] = value
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ATW_ZONE1_ENTITY_ID))
+    assert state.attributes.get(ATTR_HVAC_ACTION) == expected_action
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "method", "service", "service_data"),
+    [
+        pytest.param(
+            ATA_ENTITY_ID,
+            "control_ata_unit",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.HEAT},
+            id="ata_set_hvac_mode",
+        ),
+        pytest.param(
+            ATA_ENTITY_ID,
+            "control_ata_unit",
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 23.0},
+            id="ata_set_temperature",
+        ),
+        pytest.param(
+            ATA_ENTITY_ID,
+            "control_ata_unit",
+            SERVICE_SET_FAN_MODE,
+            {ATTR_FAN_MODE: "auto"},
+            id="ata_set_fan_mode",
+        ),
+        pytest.param(
+            ATA_ENTITY_ID,
+            "control_ata_unit",
+            SERVICE_SET_SWING_MODE,
+            {ATTR_SWING_MODE: "auto"},
+            id="ata_set_swing_mode",
+        ),
+        pytest.param(
+            ATA_ENTITY_ID,
+            "control_ata_unit",
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {ATTR_SWING_HORIZONTAL_MODE: "auto"},
+            id="ata_set_swing_horizontal_mode",
+        ),
+        pytest.param(
+            ATA_ENTITY_ID, "control_ata_unit", SERVICE_TURN_ON, {}, id="ata_turn_on"
+        ),
+        pytest.param(
+            ATA_ENTITY_ID, "control_ata_unit", SERVICE_TURN_OFF, {}, id="ata_turn_off"
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "control_atw_unit",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.HEAT},
+            id="atw_set_hvac_mode",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "control_atw_unit",
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 23.0},
+            id="atw_set_temperature",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "control_atw_unit",
+            SERVICE_TURN_ON,
+            {},
+            id="atw_turn_on",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "control_atw_unit",
+            SERVICE_TURN_OFF,
+            {},
+            id="atw_turn_off",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("raise_exception", "translation_key"),
+    [
+        (MelCloudHomeAuthenticationError, "invalid_auth"),
+        (MelCloudHomeConnectionError, "cannot_connect"),
+        (MelCloudHomeTimeoutError, "timeout_connect"),
+    ],
+)
+async def test_action_exceptions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+    entity_id: str,
+    method: str,
+    service: str,
+    service_data: dict[str, Any],
+    raise_exception: type[Exception],
+    translation_key: str,
+) -> None:
+    """Test climate actions raise translated errors on client errors."""
+    await setup_integration(hass, mock_config_entry)
+
+    getattr(mock_melcloud_client, method).side_effect = raise_exception
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
