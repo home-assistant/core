@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
-from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
+from homeassistant.components.unifi.hub.backoff import BackoffPolicy
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -380,6 +380,8 @@ class WebsocketStateManager(asyncio.Event):
         """Store hass object and initialize asyncio.Event."""
         self.hass = hass
         self.aioclient_mock = aioclient_mock
+        self._backoff = BackoffPolicy()
+        self._attempt = 0
         super().__init__()
 
     async def waiter(self, input: Callable[[bytes], None]) -> None:
@@ -407,7 +409,9 @@ class WebsocketStateManager(asyncio.Event):
 
         if not fail:
             self.clear()
-        new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
+        delay = self._backoff.next_delay(self._attempt)
+        self._attempt = self._attempt + 1 if fail else 0
+        new_time = dt_util.utcnow() + timedelta(seconds=delay)
         async_fire_time_changed(self.hass, new_time)
         await self.hass.async_block_till_done()
 

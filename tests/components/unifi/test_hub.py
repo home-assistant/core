@@ -232,6 +232,48 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
     assert state.state != "unavailable"
 
 
+async def test_polling_auth_failure_reports_connection_failure(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure polling authentication failures enter the shared reconnect path."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(
+        hub.api.object_oriented_network_configs
+    )
+
+    with (
+        patch.object(
+            coordinator.handler,
+            "update",
+            side_effect=aiounifi.LoginRequired,
+        ),
+        patch.object(
+            hub.connection,
+            "report_failure",
+            wraps=hub.connection.report_failure,
+        ) as report_failure,
+    ):
+        await coordinator.async_refresh()
+
+    report_failure.assert_called_once()
+    assert not hub.available
+    assert coordinator.last_update_success is True
+
+
+async def test_connection_failure_reports_are_deduplicated(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure concurrent failure sources schedule only one retry."""
+    connection = config_entry_setup.runtime_data.connection
+
+    connection.report_failure()
+    retry_handle = connection._retry_handle
+    connection.report_failure()
+
+    assert connection._retry_handle is retry_handle
+    assert connection._attempt == 1
+
+
 async def test_websocket_updates_notify_coordinator(
     config_entry_setup: MockConfigEntry,
     mock_websocket_message: WebsocketMessageMock,
@@ -506,7 +548,7 @@ async def test_reconnect_mechanism_exceptions(
     with (
         patch("aiounifi.Controller.login", side_effect=exception),
         patch(
-            "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
+            "homeassistant.components.unifi.hub.connection.UnifiConnectionManager._async_reconnect"
         ) as mock_reconnect,
     ):
         await mock_websocket_state.disconnect()

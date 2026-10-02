@@ -3,6 +3,7 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
+import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
@@ -40,6 +41,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             update_interval=None if supports_websocket else POLL_INTERVAL,
         )
         self._handler = handler
+        self._connection = hub.connection
         self._disable_polling_on_endpoint_not_found = (
             disable_polling_on_endpoint_not_found
         )
@@ -55,6 +57,9 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     @override
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
+        if not self._connection.available:
+            return
+
         try:
             await self._handler.update()
         except EndpointNotFound as err:
@@ -69,6 +74,15 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     type(self._handler).__name__,
                 )
             raise UpdateFailed(str(err)) from err
+        except (
+            aiounifi.LoginRequired,
+            aiounifi.Unauthorized,
+            aiounifi.BadGateway,
+            aiounifi.ServiceUnavailable,
+            TimeoutError,
+        ) as err:
+            self._connection.report_failure(err)
+            return
 
         if self.update_interval is not None:
             self.update_interval = (

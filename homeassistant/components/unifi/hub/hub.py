@@ -23,6 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
 from .config import UnifiConfig
+from .connection import UnifiConnectionManager
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
@@ -44,17 +45,18 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
+        self.connection = UnifiConnectionManager(hass, api, self.signal_reachable)
+        self.websocket = UnifiWebsocket(hass, api, self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
-        self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
 
     @property
     def available(self) -> bool:
-        """Websocket connection state."""
-        return self.websocket.available
+        """Shared UniFi session state."""
+        return self.connection.available
 
     @property
     def signal_heartbeat_missed(self) -> str:
@@ -166,6 +168,7 @@ class UnifiHub:
 
         Used as an argument to EventBus.async_listen_once.
         """
+        self.connection.stop()
         self.websocket.stop()
 
     async def async_reset(self) -> bool:
@@ -174,6 +177,7 @@ class UnifiHub:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
+        await self.connection.stop_and_wait()
         await self.websocket.stop_and_wait()
 
         unload_ok = await self.hass.config_entries.async_unload_platforms(
