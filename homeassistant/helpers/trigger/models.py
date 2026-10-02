@@ -4,6 +4,7 @@ import abc
 import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
+import inspect
 from typing import Any, Protocol
 
 import probatio
@@ -142,6 +143,22 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
+    @classmethod
+    async def async_get_fields_schema(
+        cls, hass: HomeAssistant
+    ) -> probatio.Schema | None:
+        """Return a schema describing dynamic option fields.
+
+        Works like a device trigger's `async_get_trigger_capabilities`: map option
+        names (`probatio.Required`/`probatio.Optional`, optionally with a default)
+        to selectors. Each field amends the field of the same name in
+        triggers.yaml (selector, required and default take precedence, other keys
+        such as example are kept); new names are appended. The schema may only
+        depend on integration state, not on a trigger's config, and is not used
+        for validation. A triggers.yaml entry is still required.
+        """
+        return None
+
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
         self._hass = hass
@@ -180,3 +197,18 @@ class Trigger(abc.ABC):
         did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
+
+
+TRIGGER_CLASSES: HassKey[dict[str, type[Trigger]]] = HassKey("trigger_classes")
+
+_BASE_FIELDS_SCHEMA_HOOK = inspect.getattr_static(Trigger, "async_get_fields_schema")
+
+
+def has_dynamic_fields_schema(trigger_cls: type[Trigger]) -> bool:
+    """Return if the trigger class overrides async_get_fields_schema."""
+    return (
+        inspect.getattr_static(
+            trigger_cls, "async_get_fields_schema", _BASE_FIELDS_SCHEMA_HOOK
+        )
+        is not _BASE_FIELDS_SCHEMA_HOOK
+    )

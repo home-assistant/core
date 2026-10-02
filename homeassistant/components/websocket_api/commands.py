@@ -71,6 +71,7 @@ from homeassistant.helpers.service import (
 )
 from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
+    async_get_description as async_get_trigger_description,
     async_initialize_triggers,
     async_subscribe_platform_events as async_subscribe_trigger_platform_events,
     async_validate_trigger_config,
@@ -134,6 +135,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_subscribe_trigger_platforms)
+    async_reg(hass, handle_trigger_platforms_description)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
@@ -652,6 +654,26 @@ async def handle_subscribe_trigger_platforms(
     connection.send_result(msg["id"])
     triggers_json = await _async_get_all_trigger_descriptions_json(hass)
     connection.send_message(construct_event_message(msg["id"], triggers_json))
+
+
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "trigger_platforms/description",
+        probatio.Required("trigger"): str,
+    }
+)
+@decorators.async_response
+async def handle_trigger_platforms_description(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle request for a single trigger description with dynamic fields."""
+    description = await async_get_trigger_description(hass, msg["trigger"])
+    if description is None:
+        connection.send_error(
+            msg["id"], const.ERR_NOT_FOUND, f"Trigger {msg['trigger']} not found"
+        )
+        return
+    connection.send_result(msg["id"], description)
 
 
 @callback

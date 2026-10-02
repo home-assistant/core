@@ -62,6 +62,7 @@ from homeassistant.util.hass_dict import HassKey
 from .descriptions import (
     TRIGGER_DESCRIPTION_CACHE,
     async_get_all_descriptions,
+    async_get_description,
     starts_with_dot,
 )
 from .entity_trigger import (
@@ -95,6 +96,7 @@ from .entity_trigger import (
     make_numerical_state_changed_with_unit_schema,
 )
 from .models import (
+    TRIGGER_CLASSES,
     TRIGGERS,
     NotTriggeredInfo,
     Trigger,
@@ -103,6 +105,7 @@ from .models import (
     TriggerActionRunner,
     TriggerConfig,
     TriggerNotTriggeredReporter,
+    has_dynamic_fields_schema,
 )
 
 __all__ = [
@@ -116,6 +119,7 @@ __all__ = [
     "NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA",
     "NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA",
     "TRIGGERS",
+    "TRIGGER_CLASSES",
     "TRIGGER_DESCRIPTION_CACHE",
     "TRIGGER_PLATFORM_SUBSCRIPTIONS",
     "EntityNumericalStateChangedTriggerBase",
@@ -148,10 +152,12 @@ __all__ = [
     "async_extract_entities",
     "async_extract_targets",
     "async_get_all_descriptions",
+    "async_get_description",
     "async_initialize_triggers",
     "async_setup",
     "async_subscribe_platform_events",
     "async_validate_trigger_config",
+    "has_dynamic_fields_schema",
     "make_entity_numerical_state_changed_trigger",
     "make_entity_numerical_state_changed_with_unit_trigger",
     "make_entity_numerical_state_crossed_threshold_trigger",
@@ -188,6 +194,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
+    hass.data[TRIGGER_CLASSES] = {}
 
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
@@ -222,10 +229,12 @@ async def _register_trigger_platform(
 
     if hasattr(platform, "async_get_triggers"):
         all_triggers = await platform.async_get_triggers(hass)
-        for trigger_key in all_triggers:
-            trigger_key = get_absolute_description_key(integration_domain, trigger_key)
+        trigger_classes = hass.data[TRIGGER_CLASSES]
+        for relative_key in all_triggers:
+            trigger_key = get_absolute_description_key(integration_domain, relative_key)
             if trigger_key not in triggers:
                 triggers[trigger_key] = integration_domain
+                trigger_classes[trigger_key] = all_triggers[relative_key]
                 new_triggers.add(trigger_key)
         if not new_triggers:
             if not all_triggers:

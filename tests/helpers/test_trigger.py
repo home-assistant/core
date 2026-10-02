@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
+from copy import deepcopy
 import datetime
 import inspect
 import io
@@ -54,6 +55,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
     label_registry as lr,
+    selector,
     trigger,
 )
 from homeassistant.helpers.automation import (
@@ -69,6 +71,7 @@ from homeassistant.helpers.trigger import (
     BEHAVIOR_FIRST,
     DATA_PLUGGABLE_ACTIONS,
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
+    TRIGGER_CLASSES,
     TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
@@ -82,8 +85,10 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
+    async_get_description,
     async_initialize_triggers,
     async_validate_trigger_config,
+    has_dynamic_fields_schema,
     make_entity_numerical_state_changed_trigger,
     make_entity_numerical_state_changed_with_unit_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
@@ -1072,6 +1077,10 @@ async def test_get_trigger_platform_registers_triggers(
 
     assert hass.data[TRIGGERS]["test.trig_a"] == "test"
     assert hass.data[TRIGGERS]["test.trig_b"] == "test"
+    assert hass.data[TRIGGER_CLASSES] == {
+        "test.trig_a": MockTrigger,
+        "test.trig_b": MockTrigger,
+    }
     assert len(subscriber_events) == 1
     assert subscriber_events[0] == {"test.trig_a", "test.trig_b"}
 
@@ -1372,6 +1381,294 @@ async def test_invalid_trigger_platform(
     await async_setup_component(hass, "test", {})
 
     assert "Integration test does not provide trigger support, skipping" in caplog.text
+
+
+_TEST_TRIGGER_DESCRIPTIONS = """
+static:
+  fields:
+    name:
+      selector:
+        text:
+dynamic:
+  fields:
+    destination:
+      required: true
+      example: "1/2/3"
+      selector:
+        text:
+          multiple: true
+    type:
+      selector:
+        text:
+"""
+
+_TEXT_SELECTOR = {"text": {"multiline": False, "multiple": False}}
+_STATIC_DESCRIPTION = {"fields": {"name": {"selector": _TEXT_SELECTOR}}}
+_DYNAMIC_STATIC_DESCRIPTION = {
+    "fields": {
+        "destination": {
+            "required": True,
+            "example": "1/2/3",
+            "selector": {"text": {"multiline": False, "multiple": True}},
+        },
+        "type": {"selector": _TEXT_SELECTOR},
+    },
+    "has_dynamic_fields": True,
+}
+
+
+class _MockStaticTrigger(Trigger):
+    """Trigger without dynamic fields."""
+
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger."""
+        return lambda: None
+
+
+def _load_test_triggers_yaml(fname: str, secrets: Any = None) -> Any:
+    """Load the mocked triggers.yaml of the test integration."""
+    if not fname.endswith("test/triggers.yaml"):
+        raise FileNotFoundError
+    with io.StringIO(_TEST_TRIGGER_DESCRIPTIONS) as file:
+        return parse_yaml(file)
+
+
+async def _setup_dynamic_trigger_platform(
+    hass: HomeAssistant, fields_schema_hook: AsyncMock
+) -> None:
+    """Register a test trigger platform with a dynamic trigger."""
+
+    class MockDynamicTrigger(_MockStaticTrigger):
+        """Trigger with dynamic fields."""
+
+        @classmethod
+        async def async_get_fields_schema(
+            cls, hass: HomeAssistant
+        ) -> probatio.Schema | None:
+            """Return the dynamic fields schema."""
+            return await fields_schema_hook(hass)
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "static": _MockStaticTrigger,
+            "dynamic": MockDynamicTrigger,
+            "nodesc": _MockStaticTrigger,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await _async_get_trigger_platform(hass, "test.static")
+
+
+@pytest.mark.parametrize(
+    ("trigger_cls", "expected"),
+    [
+        pytest.param(_MockStaticTrigger, False, id="no_override"),
+        pytest.param(
+            type(
+                "Dynamic",
+                (_MockStaticTrigger,),
+                {"async_get_fields_schema": classmethod(AsyncMock(return_value=None))},
+            ),
+            True,
+            id="override",
+        ),
+        pytest.param(
+            type(
+                "InheritsOverride",
+                (
+                    type(
+                        "Dynamic",
+                        (_MockStaticTrigger,),
+                        {
+                            "async_get_fields_schema": classmethod(
+                                AsyncMock(return_value=None)
+                            )
+                        },
+                    ),
+                ),
+                {},
+            ),
+            True,
+            id="inherits_override",
+        ),
+        pytest.param(Mock, False, id="not_a_trigger"),
+    ],
+)
+def test_has_dynamic_fields_schema(trigger_cls: type, expected: bool) -> None:
+    """Test detection of triggers overriding async_get_fields_schema."""
+    assert has_dynamic_fields_schema(trigger_cls) is expected
+
+
+@patch("annotatedyaml.loader.load_yaml", side_effect=_load_test_triggers_yaml)
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_async_get_all_descriptions_has_dynamic_fields(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+) -> None:
+    """Test descriptions flag triggers with dynamic fields."""
+    fields_schema_hook = AsyncMock(return_value=None)
+    await _setup_dynamic_trigger_platform(hass, fields_schema_hook)
+
+    descriptions = await trigger.async_get_all_descriptions(hass)
+
+    assert descriptions == {
+        "test.static": _STATIC_DESCRIPTION,
+        "test.dynamic": _DYNAMIC_STATIC_DESCRIPTION,
+        "test.nodesc": None,
+    }
+    # The flag is derived from the class, the schema hook is not called
+    fields_schema_hook.assert_not_awaited()
+    assert await trigger.async_get_all_descriptions(hass) is descriptions
+
+
+@pytest.mark.parametrize(
+    ("fields_schema", "expected_fields"),
+    [
+        pytest.param(
+            probatio.Schema(
+                {
+                    probatio.Optional("destination"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=["1/2/3"], multiple=True, custom_value=True
+                        )
+                    ),
+                    probatio.Optional("extra", default=5): selector.NumberSelector(
+                        selector.NumberSelectorConfig(min=0, max=10)
+                    ),
+                }
+            ),
+            {
+                "destination": {
+                    "required": False,
+                    "example": "1/2/3",
+                    "selector": {
+                        "select": {
+                            "options": ["1/2/3"],
+                            "multiple": True,
+                            "custom_value": True,
+                            "sort": False,
+                        }
+                    },
+                },
+                "type": {"selector": _TEXT_SELECTOR},
+                "extra": {
+                    "required": False,
+                    "default": 5,
+                    "selector": {
+                        "number": {
+                            "min": 0.0,
+                            "max": 10.0,
+                            "step": 1.0,
+                            "mode": "slider",
+                        }
+                    },
+                },
+            },
+            id="amend_and_append",
+        ),
+        pytest.param(None, _DYNAMIC_STATIC_DESCRIPTION["fields"], id="none"),
+    ],
+)
+@patch("annotatedyaml.loader.load_yaml", side_effect=_load_test_triggers_yaml)
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_async_get_description(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    fields_schema: probatio.Schema | None,
+    expected_fields: dict[str, Any],
+) -> None:
+    """Test getting a description with dynamic fields merged in."""
+    fields_schema_hook = AsyncMock(return_value=fields_schema)
+    await _setup_dynamic_trigger_platform(hass, fields_schema_hook)
+    descriptions = await trigger.async_get_all_descriptions(hass)
+    cached_description = descriptions["test.dynamic"]
+    cached_description_copy = deepcopy(cached_description)
+
+    description = await async_get_description(hass, "test.dynamic")
+
+    assert description == {"fields": expected_fields, "has_dynamic_fields": True}
+    assert list(description["fields"]) == list(expected_fields)
+    fields_schema_hook.assert_awaited_once_with(hass)
+    # The description cache is not modified
+    assert description is not cached_description
+    assert cached_description == cached_description_copy
+    assert await trigger.async_get_all_descriptions(hass) is descriptions
+
+
+@pytest.mark.parametrize(
+    ("fields_schema_hook", "expected_log"),
+    [
+        pytest.param(
+            AsyncMock(side_effect=ValueError("Boom")),
+            "Error getting dynamic fields for trigger test.dynamic",
+            id="hook_raises",
+        ),
+        pytest.param(
+            AsyncMock(
+                return_value=probatio.Schema({probatio.Optional("bad"): cv.string})
+            ),
+            "Invalid dynamic fields for trigger test.dynamic: "
+            "Field 'bad' must use a selector",
+            id="no_selector",
+        ),
+    ],
+)
+@patch("annotatedyaml.loader.load_yaml", side_effect=_load_test_triggers_yaml)
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_async_get_description_fallback(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    fields_schema_hook: AsyncMock,
+    expected_log: str,
+) -> None:
+    """Test the static description is returned when dynamic fields fail."""
+    await _setup_dynamic_trigger_platform(hass, fields_schema_hook)
+    descriptions = await trigger.async_get_all_descriptions(hass)
+
+    description = await async_get_description(hass, "test.dynamic")
+
+    assert description == _DYNAMIC_STATIC_DESCRIPTION
+    assert description is not descriptions["test.dynamic"]
+    assert descriptions["test.dynamic"] == _DYNAMIC_STATIC_DESCRIPTION
+    assert expected_log in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "expected"),
+    [
+        pytest.param("test.static", _STATIC_DESCRIPTION, id="static"),
+        pytest.param("test.nodesc", None, id="no_description"),
+        pytest.param("test.unknown", None, id="unknown"),
+    ],
+)
+@patch("annotatedyaml.loader.load_yaml", side_effect=_load_test_triggers_yaml)
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_async_get_description_without_dynamic_fields(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    trigger_key: str,
+    expected: dict[str, Any] | None,
+) -> None:
+    """Test getting a description of a trigger without dynamic fields."""
+    fields_schema_hook = AsyncMock(return_value=None)
+    await _setup_dynamic_trigger_platform(hass, fields_schema_hook)
+    descriptions = await trigger.async_get_all_descriptions(hass)
+
+    description = await async_get_description(hass, trigger_key)
+
+    assert description == expected
+    assert description is not descriptions.get(trigger_key) or description is None
+    fields_schema_hook.assert_not_awaited()
 
 
 @patch("annotatedyaml.loader.load_yaml")
