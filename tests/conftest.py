@@ -90,6 +90,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
     config_entry_oauth2_flow,
+    deprecation,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -516,6 +517,7 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+    deprecation._REPORTED_DEPRECATED_ENTITY_USAGE.clear()
 
     # Reset patch_json
     if patch_json.mock_objects:

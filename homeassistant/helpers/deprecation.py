@@ -6,7 +6,12 @@ from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
-from typing import Any, NamedTuple, cast, override
+from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
+
+from propcache.api import cached_property
+
+if TYPE_CHECKING:
+    from .frame import ReportBehavior
 
 
 def deprecated_substitute[_ObjectT: object](
@@ -443,3 +448,169 @@ class EnumWithDeprecatedMembers(EnumType):
                 log_when_no_integration_is_found=False,
             )
         return super().__getattribute__(name)
+
+
+class DeprecatedEntityAlias[_T]:
+    """Deprecated name of an entity member, forwarding to its replacement.
+
+    Declare it on the entity base class for both the property and its _attr_
+    shorthand, and call migrate_deprecated_entity_members from the base class'
+    __init_subclass__ to serve subclasses which still provide the deprecated name.
+
+    core_integration_behavior applies to core integrations providing or using the
+    deprecated name, it defaults to ReportBehavior.LOG.
+    """
+
+    def __init__(
+        self,
+        replacement: str,
+        breaks_in_ha_version: str,
+        *,
+        core_integration_behavior: ReportBehavior | None = None,
+    ) -> None:
+        """Initialize the alias."""
+        from .frame import ReportBehavior  # noqa: PLC0415
+
+        self.replacement = replacement
+        self.breaks_in_ha_version = breaks_in_ha_version
+        self.core_integration_behavior = core_integration_behavior or ReportBehavior.LOG
+        self.name = ""
+        self.domain = ""
+
+    def __set_name__(self, owner: type, name: str) -> None:
+        """Store the deprecated name and the domain of the entity base class."""
+        self.name = name
+        self.domain = owner.__module__.rpartition(".")[2]
+
+    def __get__(self, instance: object | None, owner: type | None = None) -> Any:
+        """Read the replacement."""
+        if instance is None:
+            return self
+        self._report_usage(instance, "reads")
+        cls = type(instance)
+        if not isinstance(
+            inspect.getattr_static(cls, self.replacement), _DeprecatedEntityFallback
+        ):
+            return getattr(instance, self.replacement)
+        # A subclass providing the deprecated name reached it through super(), serve
+        # the replacement its fallback shadows instead of bouncing back to it
+        for klass in cls.__mro__:
+            target = vars(klass).get(self.replacement, _MISSING)
+            if target is _MISSING or isinstance(target, _DeprecatedEntityFallback):
+                continue
+            if isinstance(target, cached_property):
+                # Don't cache under the name the fallback serves
+                return target.func(instance)
+            if (getter := getattr(type(target), "__get__", None)) is not None:
+                return getter(target, instance, cls)
+            return target
+        raise AttributeError(self.replacement)
+
+    def __set__(self, instance: object, value: _T) -> None:
+        """Write the storage of the replacement."""
+        self._report_usage(instance, "writes")
+        if self.replacement.startswith("_attr_"):
+            setattr(instance, self.replacement, value)
+        else:
+            # Writing a cached property would only shadow it, write its storage
+            setattr(instance, f"_attr_{self.replacement}", value)
+
+    def _report_usage(self, instance: object, action: str) -> None:
+        from . import frame  # noqa: PLC0415
+
+        cls = type(instance)
+        what = (
+            f"{action} the deprecated {cls.__name__}.{self.name}, "
+            f"use {self.replacement} instead"
+        )
+        try:
+            frame.get_integration_frame(exclude_integrations={self.domain})
+        except frame.MissingIntegrationFrame:
+            pass
+        else:
+            # report_usage raises before the frame helper is set up; checked here
+            # because it also raises RuntimeError for ReportBehavior.ERROR
+            if frame._hass.hass is not None:  # noqa: SLF001
+                frame.report_usage(
+                    what,
+                    breaks_in_ha_version=self.breaks_in_ha_version,
+                    core_integration_behavior=self.core_integration_behavior,
+                    exclude_integrations={self.domain},
+                )
+                return
+        # Outside an integration, or before the frame helper is set up,
+        # report_usage can't report once per call site, report once per class
+        if (key := (cls, self.name, action)) in _REPORTED_DEPRECATED_ENTITY_USAGE:
+            return
+        _REPORTED_DEPRECATED_ENTITY_USAGE.add(key)
+        logging.getLogger(cls.__module__).warning(
+            "Detected code that %s. This will stop working in Home Assistant %s",
+            what,
+            self.breaks_in_ha_version,
+        )
+
+
+_REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, str, str]] = set()
+_MISSING = object()
+
+
+class _DeprecatedEntityFallback:
+    """Replacement serving a subclass which still provides the deprecated name."""
+
+    def __init__(self, name: str) -> None:
+        """Initialize the fallback."""
+        self.name = name
+
+    def __get__(self, instance: object | None, owner: type | None = None) -> Any:
+        """Read the deprecated name the subclass provides."""
+        if instance is None:
+            return self
+        return getattr(instance, self.name)
+
+
+def migrate_deprecated_entity_members(cls: type, base: type) -> None:
+    """Serve the replacements of base's deprecated members from what cls provides.
+
+    Must be called from base.__init_subclass__, which runs before the
+    CachedProperties metaclass wraps the _attr_ class attributes of cls.
+    """
+    from homeassistant.core import async_get_hass_or_none  # noqa: PLC0415
+    from homeassistant.loader import async_suggest_report_issue  # noqa: PLC0415
+
+    from .frame import ReportBehavior  # noqa: PLC0415
+
+    for name, alias in vars(base).items():
+        if not isinstance(alias, DeprecatedEntityAlias):
+            continue
+        # The most derived class providing either name wins
+        provider = next(
+            klass
+            for klass in cls.__mro__
+            if name in vars(klass) or alias.replacement in vars(klass)
+        )
+        if provider is base or alias.replacement in vars(provider):
+            continue
+        if name.startswith("_attr_"):
+            # Move the value to the replacement, which the metaclass wraps as
+            # storage, and restore the alias so later writes reach it
+            setattr(cls, alias.replacement, inspect.getattr_static(cls, name))
+            setattr(cls, name, alias)
+        else:
+            setattr(cls, alias.replacement, _DeprecatedEntityFallback(name))
+        behavior = ReportBehavior.LOG
+        if cls.__module__.startswith("homeassistant.components."):
+            behavior = alias.core_integration_behavior
+        if behavior is ReportBehavior.IGNORE:
+            continue
+        message = (
+            f"{cls.__module__}::{cls.__qualname__} provides the deprecated {name}, "
+            f"this will stop working in Home Assistant {alias.breaks_in_ha_version}, "
+            f"use {alias.replacement} instead"
+        )
+        if behavior is ReportBehavior.ERROR:
+            raise RuntimeError(message)
+        logging.getLogger(cls.__module__).warning(
+            "%s, please %s",
+            message,
+            async_suggest_report_issue(async_get_hass_or_none(), module=cls.__module__),
+        )

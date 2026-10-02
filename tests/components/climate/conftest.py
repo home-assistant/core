@@ -4,7 +4,6 @@ from collections.abc import Generator
 
 import pytest
 
-from homeassistant.components import climate
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -20,14 +19,6 @@ from tests.common import (
 
 class MockFlow(ConfigFlow):
     """Test flow."""
-
-
-@pytest.fixture(autouse=True)
-def reset_deprecated_reports() -> Generator[None]:
-    """Reset the reports the deprecation shim makes once per class."""
-    yield
-    climate._REPORTED_DEPRECATED_MEMBERS.clear()
-    climate._REPORTED_DEPRECATED_READS.clear()
 
 
 @pytest.fixture
