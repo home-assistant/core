@@ -10,22 +10,81 @@
     "step": {
       "user": {
         "data": {
+          "generic_options": "Expose Generic remote options",
           "hvac_modes": "Supported modes",
           "infrared_emitter_entity_id": "Infrared emitter",
           "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]",
-          "model": "Remote model",
-          "generic_options": "Expose Generic remote options"
+          "model": "Remote model"
         },
         "data_description": {
+          "generic_options": "Enable the four option switches while retaining the Generic command profile.",
           "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
           "infrared_emitter_entity_id": "The infrared emitter entity to use for sending commands.",
           "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used.",
-          "model": "Choose YAP1F for the Cooper&Hunter YAP1F remote; existing Gree configurations use Generic.",
-          "generic_options": "Enable the four option switches while retaining the Generic command profile."
+          "model": "Choose YAP1F for the Cooper&Hunter YAP1F remote; existing Gree configurations use Generic."
         },
         "description": "Select an infrared emitter and the modes your Gree AC supports.",
         "title": "Set up Gree AC"
       }
+    }
+  },
+  "entity": {
+    "number": {
+      "timer_hours": { "name": "Timer" }
+    },
+    "select": {
+      "display_temp": {
+        "name": "Display temperature",
+        "state": {
+          "indoor": "Indoor",
+          "off": "Off",
+          "outdoor": "Outdoor",
+          "setpoint": "Setpoint"
+        }
+      },
+      "fahrenheit": {
+        "name": "Unit display scale",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      },
+      "fresh_air": {
+        "name": "Fresh air",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "off": "Off"
+        }
+      },
+      "swing_h_position": {
+        "name": "Horizontal vane position",
+        "state": {
+          "auto": "Auto",
+          "left": "Left",
+          "max_left": "Maximum left",
+          "max_right": "Maximum right",
+          "middle": "Middle",
+          "off": "Off",
+          "right": "Right"
+        }
+      },
+      "swing_v_position": {
+        "name": "Vertical vane position",
+        "state": {
+          "auto": "Auto"
+        }
+      }
+    },
+    "switch": {
+      "absence": { "name": "Absence" },
+      "econo": { "name": "Econo" },
+      "health": { "name": "Health ionizer" },
+      "ifeel": { "name": "I-Feel" },
+      "light": { "name": "Display light" },
+      "sleep": { "name": "Sleep" },
+      "turbo": { "name": "Turbo" },
+      "xfan": { "name": "X-Fan" }
     }
   },
   "selector": {
@@ -43,65 +102,6 @@
         "generic": "Generic Gree",
         "yap1f": "YAP1F / YAP1FB"
       }
-    }
-  },
-  "entity": {
-    "switch": {
-      "turbo": { "name": "Turbo" },
-      "light": { "name": "Display light" },
-      "health": { "name": "Health ionizer" },
-      "xfan": { "name": "X-Fan" },
-      "sleep": { "name": "Sleep" },
-      "ifeel": { "name": "I-Feel" },
-      "econo": { "name": "Econo" },
-      "absence": { "name": "Absence" }
-    },
-    "select": {
-      "fresh_air": {
-        "name": "Fresh air",
-        "state": {
-          "off": "Off",
-          "level_1": "Level 1",
-          "level_2": "Level 2"
-        }
-      },
-      "swing_v_position": {
-        "name": "Vertical vane position",
-        "state": {
-          "auto": "Auto"
-        }
-      },
-      "swing_h_position": {
-        "name": "Horizontal vane position",
-        "state": {
-          "off": "Off",
-          "auto": "Auto",
-          "max_left": "Maximum left",
-          "left": "Left",
-          "middle": "Middle",
-          "right": "Right",
-          "max_right": "Maximum right"
-        }
-      },
-      "display_temp": {
-        "name": "Display temperature",
-        "state": {
-          "off": "Off",
-          "setpoint": "Setpoint",
-          "indoor": "Indoor",
-          "outdoor": "Outdoor"
-        }
-      },
-      "fahrenheit": {
-        "name": "Unit display scale",
-        "state": {
-          "celsius": "Celsius",
-          "fahrenheit": "Fahrenheit"
-        }
-      }
-    },
-    "number": {
-      "timer_hours": { "name": "Timer" }
     }
   }
 }
