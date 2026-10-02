@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -51,10 +51,10 @@ _TRANSMITTER_TRIGGER_TYPES = (
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(
+        probatio.Required(CONF_TYPE): probatio.In(
             _GATEWAY_TRIGGER_TYPES + _TRANSMITTER_TRIGGER_TYPES
         ),
-        vol.Required(CONF_SUBTYPE): str,
+        probatio.Required(CONF_SUBTYPE): str,
     }
 )
 
@@ -81,24 +81,19 @@ def _find_easywave_config_entry(
     Only entries that own the registry device (directly or via the gateway
     parent) are accepted, so advertised triggers match fire_device_event().
     """
-    device_registry = dr.async_get(hass)
-
-    for entry_id in device.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) and (
-            entry.domain == DOMAIN
-        ):
-            return entry
+    if (entry := hass.config_entries.async_get_entry(device.config_entry_id)) and (
+        entry.domain == DOMAIN
+    ):
+        return entry
 
     if (
         isinstance(device, dr.DeviceEntry)
         and device.via_device_id
-        and (via_device := device_registry.async_get(device.via_device_id))
+        and (via_device := dr.async_get(hass).async_get(device.via_device_id))
+        and (entry := hass.config_entries.async_get_entry(via_device.config_entry_id))
+        and entry.domain == DOMAIN
     ):
-        for entry_id in via_device.config_entries:
-            if (entry := hass.config_entries.async_get_entry(entry_id)) and (
-                entry.domain == DOMAIN
-            ):
-                return entry
+        return entry
 
     return None
 
@@ -230,6 +225,6 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """Return trigger capabilities."""
     return {}

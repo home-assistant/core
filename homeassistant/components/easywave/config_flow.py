@@ -4,8 +4,8 @@ import contextlib
 import logging
 from typing import Any, override
 
+import probatio
 from serialx import SerialPortInfo, list_serial_ports
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -167,7 +167,9 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="ports",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(port_list)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE_PATH): probatio.In(port_list)}
+            ),
             errors=errors,
         )
 
@@ -235,7 +237,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_show_form(
                     step_id="confirm",
-                    data_schema=vol.Schema({}),
+                    data_schema=probatio.Schema({}),
                     errors={"base": "unknown"},
                     description_placeholders={
                         "name": self._device["product"],
@@ -246,7 +248,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
             if not connected:
                 return self.async_show_form(
                     step_id="confirm",
-                    data_schema=vol.Schema({}),
+                    data_schema=probatio.Schema({}),
                     errors={"base": "cannot_connect"},
                     description_placeholders={
                         "name": self._device["product"],
@@ -268,7 +270,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "name": self._device["product"],
                 "serial_number": serial_number,

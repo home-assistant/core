@@ -1,7 +1,7 @@
 """Tests for Easywave purpose-specific triggers."""
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.components.easywave.const import (
@@ -469,7 +469,7 @@ async def test_trigger_rejects_unsupported_options(hass: HomeAssistant) -> None:
     """Easywave triggers expose no options and reject unknown keys."""
     trigger_cls = TRIGGERS["button_press_a"]
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await trigger_cls.async_validate_config(
             hass,
             {

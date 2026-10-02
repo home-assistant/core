@@ -7,7 +7,7 @@ from easywave_home_control.codec import (
     SensorLearnPayload,
     SensorTelegramEvent,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SubentryFlowResult
 
@@ -178,9 +178,9 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
         return self.async_show_form(
             step_id="transmitter_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "title",
                         default=self._next_default_name(ENTRY_TYPE_TRANSMITTER),
                     ): str,
@@ -249,9 +249,9 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
 
         return self.async_show_form(
             step_id="sensor_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "title",
                         default=self._next_default_name(ENTRY_TYPE_NEO_SENSOR),
                     ): str,

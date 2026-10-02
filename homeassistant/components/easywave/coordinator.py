@@ -585,7 +585,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if (
                     candidate.via_device_id
                     and (via := device_registry.async_get(candidate.via_device_id))
-                    and self.config_entry.entry_id in via.config_entries
+                    and via.config_entry_id == self.config_entry.entry_id
                 ):
                     device_entry = candidate
                     break

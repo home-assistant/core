@@ -3,7 +3,7 @@
 from abc import ABC
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -32,11 +32,11 @@ from .const import (
 
 CONF_SUBTYPE = "subtype"
 
-_TRIGGER_SCHEMA = vol.Schema(
+_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
         # Empty mapping: these triggers expose no options.
-        vol.Required(CONF_OPTIONS, default={}): {},
+        probatio.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
