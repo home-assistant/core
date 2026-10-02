@@ -1181,6 +1181,50 @@ async def test_polling_cancellation_drain_runs_in_the_cancelled_task_itself(
     assert len(config_entry._background_tasks) == 0
 
 
+async def test_polling_cancellation_drain_does_not_warn(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test cancelling the outer poll does not log a cancellation warning.
+
+    Regression contract: cancelling the outer poll (e.g. config entry
+    unload) deliberately cancels every pending per-entity task as part of
+    routine, expected cleanup. That must not be logged as a warning the
+    same way a sibling's independently-cancelled task would be, or every
+    normal unload would spam a "was cancelled" warning for each in-flight
+    entity.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    hang_forever = asyncio.Event()
+
+    async def _hang() -> None:
+        await hang_forever.wait()
+
+    entity = MockEntity(should_poll=True)
+    entity.async_update = _hang
+
+    await component.async_add_entities([entity])
+
+    task = hass.async_create_task(entity.async_update_ha_state(True))
+    cycle_id = platform._next_polling_cycle_id
+    platform._next_polling_cycle_id += 1
+    platform._polling_tasks[id(entity)] = (cycle_id, task)
+
+    outer = hass.async_create_task(
+        platform._async_await_polling_tasks([(entity, task)])
+    )
+    await asyncio.sleep(0)
+
+    outer.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await outer
+
+    assert "was cancelled" not in caplog.text
+
+
 async def test_update_state_adds_entities(hass: HomeAssistant) -> None:
     """Test if updating poll entities cause an entity to be added works."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)

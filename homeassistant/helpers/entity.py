@@ -1447,16 +1447,9 @@ class Entity(
                 _expected_platform_generation is not None
                 and self._platform_state is not EntityPlatformState.ADDED
             ):
-                # Generation equality only confirms this task belongs to
-                # the *current* attachment - not that the current
-                # attachment has actually finished. A new polling cycle
-                # can capture the current generation and acquire a permit
-                # while this same attachment's own `async_added_to_hass`
-                # is still pending (state is `ADDING`, not yet `ADDED`),
-                # so skip running it now; a later cycle will retry once
-                # the attachment completes. Direct/update-before-add calls
-                # never pass `_expected_platform_generation`, so they are
-                # unaffected and can still legitimately run while `ADDING`.
+                # Matching generation alone doesn't mean this attachment's
+                # own `async_added_to_hass` has finished restoring what
+                # `update()` depends on yet (state may still be `ADDING`).
                 return
             if hasattr(self, "async_update"):
                 await self.async_update()
