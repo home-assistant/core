@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import (
+    MyPVAuthenticationError,
+    MyPVConnectionError,
+    MyPVTooManyRequestsError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -346,7 +350,7 @@ async def test_water_heater_set_temp_false(
     assert state.attributes[ATTR_TEMPERATURE] == 62.1
 
 
-async def test_water_heater_set_temp_connection_error(
+async def test_water_heater_set_temp_rate_limiting(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
@@ -358,7 +362,7 @@ async def test_water_heater_set_temp_connection_error(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_my_pv_client.set_target_temperature.side_effect = MyPVConnectionError()
+    mock_my_pv_client.set_target_temperature.side_effect = MyPVTooManyRequestsError
 
     with (
         pytest.raises(HomeAssistantError),
@@ -378,22 +382,32 @@ async def test_water_heater_set_temp_connection_error(
     assert state.attributes[ATTR_TEMPERATURE] == 62.1
 
 
-async def test_water_heater_set_temp_authentication_error(
+@pytest.mark.parametrize(
+    ("error", "expected_ha_error"),
+    [
+        (MyPVConnectionError(), HomeAssistantError),
+        (MyPVAuthenticationError(), ConfigEntryAuthFailed),
+        (MyPVTooManyRequestsError(), HomeAssistantError),
+    ],
+)
+async def test_number_set_value_raises_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
+    error: MyPVConnectionError | MyPVAuthenticationError,
+    expected_ha_error: type[HomeAssistantError],
 ) -> None:
-    """Test authentication error when setting the target temperature."""
+    """Test for HomeAssistantError when set_target_temperature raises error."""
 
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_my_pv_client.set_target_temperature.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.set_target_temperature.side_effect = error
 
     with (
-        pytest.raises(ConfigEntryAuthFailed),
+        pytest.raises(expected_ha_error),
     ):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
