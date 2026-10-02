@@ -6,7 +6,9 @@ from typing import Any, override
 
 from infrared_protocols.commands.gree_ac import (
     MAX_TEMP,
+    MAX_TEMP_F,
     MIN_TEMP,
+    MIN_TEMP_F,
     YAP1F_SWING_POSITIONS,
     GreeAcCommand,
     GreeAcFanSpeed,
@@ -133,6 +135,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
     absence: bool = False
     fahrenheit: bool = False
     display_temp: int = 2
+    received_fahrenheit_temperature: int | None = None
 
     @override
     def as_dict(self) -> dict[str, Any]:
@@ -156,6 +159,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
             "absence": self.absence,
             "fahrenheit": self.fahrenheit,
             "display_temp": self.display_temp,
+            "received_fahrenheit_temperature": self.received_fahrenheit_temperature,
         }
 
     @classmethod
@@ -206,6 +210,14 @@ class _GreeAcExtraStoredData(ExtraStoredData):
         absence = restored.get("absence", False)
         fahrenheit = restored.get("fahrenheit", False)
         display_temp = restored.get("display_temp", 2)
+        received_fahrenheit_temperature = restored.get(
+            "received_fahrenheit_temperature"
+        )
+        if received_fahrenheit_temperature is not None and (
+            not isinstance(received_fahrenheit_temperature, int)
+            or received_fahrenheit_temperature not in range(MIN_TEMP_F, MAX_TEMP_F + 1)
+        ):
+            return None
         if (
             not isinstance(swing_h_position, int)
             or swing_h_position not in range(7)
@@ -235,6 +247,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
             absence=absence,
             fahrenheit=fahrenheit,
             display_temp=display_temp,
+            received_fahrenheit_temperature=received_fahrenheit_temperature,
         )
 
 
@@ -301,6 +314,7 @@ class GreeAcClimateEntity(
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = float(MIN_TEMP)
+        self._received_fahrenheit_temperature: int | None = None
         self._attr_fan_mode = FAN_AUTO
         self._attr_swing_mode = SWING_OFF
         self._attr_swing_horizontal_mode = SWING_OFF
@@ -430,6 +444,9 @@ class GreeAcClimateEntity(
             self._state.absence = restored.absence
             self._state.fahrenheit = restored.fahrenheit
             self._state.display_temp = restored.display_temp
+            self._received_fahrenheit_temperature = (
+                restored.received_fahrenheit_temperature
+            )
         self._state.async_notify_switches()
 
     @property
@@ -455,6 +472,7 @@ class GreeAcClimateEntity(
             self._state.absence,
             self._state.fahrenheit,
             self._state.display_temp,
+            self._received_fahrenheit_temperature,
         )
 
     def _remaining_timer_hours(self) -> float | None:
@@ -673,6 +691,10 @@ class GreeAcClimateEntity(
                 self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
                 cleared = self._clear_sleep_on_mode_change(hvac_mode)
             effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
+            previous_received_fahrenheit_temperature = (
+                self._received_fahrenheit_temperature
+            )
+            self._received_fahrenheit_temperature = None
             if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
                 try:
                     await self._async_send_state(
@@ -681,6 +703,9 @@ class GreeAcClimateEntity(
                         self._attr_fan_mode or FAN_AUTO,
                     )
                 except Exception:
+                    self._received_fahrenheit_temperature = (
+                        previous_received_fahrenheit_temperature
+                    )
                     for option, value in cleared.items():
                         setattr(self._state, option, value)
                     raise
@@ -816,13 +841,16 @@ class GreeAcClimateEntity(
     ) -> GreeAcCommand:
         """Build a command from a mode, power state, a temperature and a fan mode."""
         if self._is_yap1f and self._state.fahrenheit:
-            temp = round(
-                TemperatureConverter.convert(
-                    temp,
-                    UnitOfTemperature.CELSIUS,
-                    UnitOfTemperature.FAHRENHEIT,
+            if self._received_fahrenheit_temperature is not None:
+                temp = self._received_fahrenheit_temperature
+            else:
+                temp = round(
+                    TemperatureConverter.convert(
+                        temp,
+                        UnitOfTemperature.CELSIUS,
+                        UnitOfTemperature.FAHRENHEIT,
+                    )
                 )
-            )
         return GreeAcCommand(
             model=self._model,
             power=power,
@@ -900,11 +928,13 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
 
         self._attr_hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
+        self._received_fahrenheit_temperature = (
+            command.temperature if command.fahrenheit else None
+        )
         temperature = command.temperature
         if command.fahrenheit:
-            # The decoded value is the display value; HA tracks the Celsius
-            # target the wire field is derived from, keeping the decoded scale
-            # so the next frame converts back the same way.
+            # HA shows a Celsius target; the exact wire °F is retained separately
+            # so later commands cannot drift through a lossy F→C→F round trip.
             temperature = round(
                 TemperatureConverter.convert(
                     temperature,

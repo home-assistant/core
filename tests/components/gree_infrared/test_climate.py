@@ -1,15 +1,17 @@
 """Tests for the Gree Infrared climate platform."""
 
 import asyncio
-
 from typing import Any
 from unittest.mock import patch
 
 from infrared_protocols.commands.gree_ac import (
+    MAX_TEMP_F,
     MIN_TEMP,
+    MIN_TEMP_F,
     GreeAcCommand,
     GreeAcFanSpeed,
     GreeAcMode,
+    GreeAcModel,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -26,10 +28,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.gree_infrared.const import CONF_HVAC_MODES, MODEL_YAP1F
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    CONF_MODEL,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -64,6 +68,14 @@ def platforms() -> list[Platform]:
 def has_receiver() -> bool:
     """Return whether the config entry has an infrared receiver configured."""
     return False
+
+
+@pytest.fixture
+def extra_entry_data(
+    hvac_modes: list[HVACMode], request: pytest.FixtureRequest
+) -> dict[str, Any]:
+    """Return configured entry data, honoring tests that select a model."""
+    return getattr(request, "param", {CONF_HVAC_MODES: hvac_modes})
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -511,6 +523,121 @@ async def test_set_fan_mode_no_command_when_off(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["fan_mode"] == FAN_HIGH
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_received_fahrenheit_setpoint_survives_commands(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """A decoded Fahrenheit setpoint survives later commands until the user acts."""
+    for temperature in range(MIN_TEMP_F, MAX_TEMP_F + 1):
+        timings = GreeAcCommand(
+            model=GreeAcModel.YAP1F,
+            mode=GreeAcMode.COOL,
+            temperature=temperature,
+            fahrenheit=True,
+        ).get_raw_timings()
+        received = GreeAcCommand.from_raw_timings(timings, model=GreeAcModel.YAP1F)
+        assert received is not None
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(timings=timings)
+        )
+        await hass.async_block_till_done()
+        mock_infrared_emitter_entity.send_command_calls.clear()
+
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+                "fan_mode": FAN_LOW if temperature % 2 else FAN_HIGH,
+            },
+            blocking=True,
+        )
+
+        assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+        command = mock_infrared_emitter_entity.send_command_calls[0]
+        assert command.fahrenheit is True
+        assert command.temperature == received.temperature
+
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=74,
+                fahrenheit=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 24},
+        blocking=True,
+    )
+    assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
+
+    # The explicit target change dropped the wire value: a later command converts
+    # from the Celsius target instead of reviving the received 74 °F.
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
+        blocking=True,
+    )
+    assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
+
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=74,
+                fahrenheit=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=24,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
+        blocking=True,
+    )
+    command = mock_infrared_emitter_entity.send_command_calls[0]
+    assert (command.temperature, command.fahrenheit) == (24, False)
+
+    # The Celsius frame dropped the wire value too: re-selecting the scale
+    # converts the Celsius target instead of reviving the received 74 °F.
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await climate.async_set_fahrenheit(True)
+    assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
 
 
 @pytest.mark.parametrize("has_receiver", [True])
