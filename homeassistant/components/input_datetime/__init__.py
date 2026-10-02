@@ -62,7 +62,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
     probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
     probatio.Optional(CONF_ICON): cv.icon,

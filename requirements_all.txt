@@ -692,7 +692,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.7
+blebox-uniapi==2.5.8
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1442,7 +1442,7 @@ israel-rail-api==0.1.5
 jaraco.abode==6.4.0
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.16.0
+jellyfin-apiclient-python==1.19.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
@@ -1518,7 +1518,7 @@ libpyfoscamcgi==0.0.9
 libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.11.1
+librehardwaremonitor-api==1.12.0
 
 # homeassistant.components.mikrotik
 librouteros==4.2.2
@@ -1527,7 +1527,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.6.4
+lifx-async==7.6.5
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2715,7 +2715,7 @@ python-dropbox-api==0.1.4
 python-duco-connectivity==0.18.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.4.1
+python-ecobee-api==0.4.2
 
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2

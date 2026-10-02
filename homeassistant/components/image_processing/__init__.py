@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
             probatio.EnsureList(), [SOURCE_SCHEMA]
         ),
         probatio.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): probatio.All(
-            probatio.Coerce(float), probatio.Range(min=0, max=100)
+            probatio.Coerce(float), probatio.Percentage()
         ),
     }
 )
