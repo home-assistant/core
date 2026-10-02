@@ -1,6 +1,5 @@
 """Tests for 1-Wire config flow."""
 
-import logging
 from unittest.mock import MagicMock, patch
 
 from aio_ownet.exceptions import (
@@ -147,10 +146,9 @@ async def test_scan_for_new_devices_failure(
     assert config_entry.state is ConfigEntryState.LOADED
 
     setup_owproxy_mock_devices(owproxy, ["1F.111111111111"])
-    with caplog.at_level(logging.DEBUG):
-        freezer.tick(_DEVICE_SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Scanning for new devices recovered" in caplog.text
     assert (
