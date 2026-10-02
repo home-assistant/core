@@ -17,6 +17,7 @@ from .loader import (
     async_suggest_report_issue,
 )
 from .util import package as pkg_util
+from .util.async_ import wait_shared_future
 
 # The default is too low when the internet connection is satellite or high latency
 PIP_TIMEOUT = 60
@@ -153,7 +154,7 @@ class RequirementsManager:
         if int_or_fut := cache.get(domain):
             if isinstance(int_or_fut, Integration):
                 return int_or_fut
-            return await int_or_fut
+            return await wait_shared_future(int_or_fut)
 
         future = cache[domain] = self.hass.loop.create_future()
         try:
