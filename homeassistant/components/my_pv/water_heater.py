@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
-from .entity import MyPVDataEntity
+from .entity import MyPVBaseEntity
 
 
 async def async_setup_entry(
@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
+class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
     """my-PV water heater."""
 
     _attr_name = None
