@@ -271,20 +271,39 @@ async def test_import_wins_over_an_existing_row(
     """
     freezer.move_to(NOW)
     mock_trends.period_start = dt_util.parse_datetime(period_start)
-    newest = window()[-1]
+    hours = window()
+    newest = hours[-1]
+    last_reset = dt_util.parse_datetime("2026-01-15 00:00:00+00:00")
     async_import_statistics(
         hass,
         seed_metadata(USAGE),
-        [StatisticData(start=newest, state=99.0, sum=99.0)],
+        [
+            StatisticData(start=hour, state=99.0, sum=99.0, last_reset=last_reset)
+            for hour in hours[-2:]
+        ],
     )
     await async_wait_recording_done(hass)
 
     await setup_and_import(hass, config_entry, freezer)
 
-    rows = (await get_stats(hass, [USAGE]))[USAGE]
+    rows = (
+        await hass.async_add_executor_job(
+            statistics_during_period,
+            hass,
+            hours[0],
+            None,
+            {USAGE},
+            "hour",
+            None,
+            {"last_reset", "state", "sum"},
+        )
+    )[USAGE]
     assert rows[-1]["start"] == newest.timestamp()
     assert rows[-1]["sum"] == pytest.approx(HOURLY_ENERGY["usage"] * WINDOW_HOURS)
     assert rows[-1]["state"] == state
+    # The recorder's reset time survives the rewrite, as does an older hour's state.
+    assert [row["last_reset"] for row in rows[-2:]] == [last_reset.timestamp()] * 2
+    assert rows[-2]["state"] == 99.0
 
 
 async def test_early_reading_of_newest_hour_is_fetched_again(

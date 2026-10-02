@@ -16,6 +16,7 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
 )
 from homeassistant.components.recorder.statistics import (
+    StatisticsRow,
     async_import_statistics,
     get_last_statistics,
     get_metadata,
@@ -173,8 +174,8 @@ class SenseStatistics:
 
     def _read_statistics(
         self, entity_ids: set[str], window_start: datetime, window_end: datetime
-    ) -> tuple[dict[str, str], dict[str, float], dict[str, dict[float, float | None]]]:
-        """Return each entity's unit, anchor sum and the states already in the window."""
+    ) -> tuple[dict[str, str], dict[str, float], dict[str, dict[float, StatisticsRow]]]:
+        """Return each entity's unit, anchor sum and the rows already in the window."""
         units: dict[str, str] = {}
         for entity_id, (_, metadata) in get_metadata(
             self._hass, statistic_ids=entity_ids
@@ -199,7 +200,7 @@ class SenseStatistics:
             if previous:
                 anchors[entity_id] = previous[max(previous)]
 
-        existing: dict[str, dict[float, float | None]] = {}
+        existing: dict[str, dict[float, StatisticsRow]] = {}
         for unit in set(units.values()):
             window_rows = statistics_during_period(
                 self._hass,
@@ -212,12 +213,10 @@ class SenseStatistics:
                 },
                 "hour",
                 {EnergyConverter.UNIT_CLASS: unit},
-                {"state"},
+                {"last_reset", "state"},
             )
             for entity_id, entity_rows in window_rows.items():
-                existing[entity_id] = {
-                    row["start"]: row.get("state") for row in entity_rows
-                }
+                existing[entity_id] = {row["start"]: row for row in entity_rows}
         return units, anchors, existing
 
     def _write(
@@ -227,7 +226,7 @@ class SenseStatistics:
         hourly: dict[datetime, dict[str, float]],
         units: dict[str, str],
         anchors: dict[str, float],
-        existing: dict[str, dict[float, float | None]],
+        existing: dict[str, dict[float, StatisticsRow]],
     ) -> None:
         """Import the window for every target, each continuing its own sum."""
         newest = window[-1]
@@ -237,9 +236,9 @@ class SenseStatistics:
             period_reset = (
                 period_start is not None and dt_util.as_utc(period_start) > newest
             )
-            if not (states := existing.get(entity_id)):
+            if not (compiled := existing.get(entity_id)):
                 continue
-            compiled_until = max(states)
+            compiled_until = max(compiled)
             unit = units[entity_id]
             convert = EnergyConverter.converter_factory(
                 UnitOfEnergy.KILO_WATT_HOUR, unit
@@ -253,10 +252,13 @@ class SenseStatistics:
                     break
                 running += convert(values[variant])
                 row = StatisticData(start=hour, sum=running)
+                previous = compiled.get(hour.timestamp(), StatisticsRow())
+                if (last_reset := previous.get("last_reset")) is not None:
+                    row["last_reset"] = dt_util.utc_from_timestamp(last_reset)
                 state = (
                     convert(self._gateway.get_stat(scale, variant))
                     if hour == newest and not period_reset
-                    else states.get(hour.timestamp())
+                    else previous.get("state")
                 )
                 if state is not None:
                     row["state"] = state
