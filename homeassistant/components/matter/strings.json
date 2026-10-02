@@ -640,6 +640,9 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "thermostat_pi_cooling_demand": {
+        "name": "Cooling demand"
+      },
       "thread_channel": {
         "name": "Thread channel"
       },
