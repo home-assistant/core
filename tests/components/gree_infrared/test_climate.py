@@ -727,6 +727,172 @@ async def test_failed_scale_change_restores_received_wire_temperature(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_set_while_off_sends_off_state_timer_frame(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """A timer set while off is sent in a power-off frame."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.OFF)
+    previous_send_count = len(mock_infrared_emitter_entity.send_command_calls)
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {ATTR_ENTITY_ID: "number.gree_ac_timer", "value": 0.5},
+        blocking=True,
+    )
+
+    assert (
+        len(mock_infrared_emitter_entity.send_command_calls) == previous_send_count + 1
+    )
+    command = GreeAcCommand.from_raw_timings(
+        mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings(),
+        model=GreeAcModel.YAP1F,
+    )
+    assert command is not None
+    assert not command.power
+    assert command.timer_hours == 0.5
+    state = hass.states.get("number.gree_ac_timer")
+    assert state is not None
+    assert state.state == "0.5"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_mode_off_preserves_active_timer_frame(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """A power-off frame retains the active timer setting."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(1.0)
+    previous_deadline = climate._timer_deadline
+
+    await climate.async_set_hvac_mode(HVACMode.OFF)
+
+    command = GreeAcCommand.from_raw_timings(
+        mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings(),
+        model=GreeAcModel.YAP1F,
+    )
+    assert command is not None
+    assert not command.power
+    assert command.timer_hours == 1.0
+    assert previous_deadline is not None
+    assert climate._timer_deadline is not None
+    assert climate._timer_deadline >= previous_deadline
+    assert climate._timer_deadline - previous_deadline < timedelta(seconds=1)
+    state = hass.states.get("number.gree_ac_timer")
+    assert state is not None
+    assert state.state == "1.0"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_timer_send_reschedules_previous_expiry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed timer replacement leaves the previous expiry scheduled."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    previous_deadline = climate._timer_deadline
+    assert previous_deadline is not None
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_send(command: Any) -> None:
+        started.set()
+        await release.wait()
+        raise HomeAssistantError("send failed")
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        timer_task = hass.async_create_task(climate.async_set_timer_hours(1.0))
+        await started.wait()
+        freezer.move_to(previous_deadline)
+        async_fire_time_changed(hass)
+        release.set()
+        with pytest.raises(HomeAssistantError):
+            await timer_task
+
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("number.gree_ac_timer")
+    assert state is not None
+    assert state.state == "0.0"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_number_updates_after_full_state_send(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The number entity reflects a timer re-encoded by a full-state send."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(2.0)
+
+    freezer.move_to(freezer() + timedelta(hours=1))
+    await climate.async_set_fan_mode(FAN_AUTO)
+
+    assert climate._state.timer_hours == 1.0
+    state = hass.states.get("number.gree_ac_timer")
+    assert state is not None
+    assert state.state == "1.0"
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_task_is_cancelled_on_entry_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """A pending received-signal update ends when its config entry unloads."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate._state.command_lock.acquire()
+    try:
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(
+                timings=GreeAcCommand(
+                    mode=GreeAcMode.COOL, temperature=24
+                ).get_raw_timings()
+            )
+        )
+        await asyncio.sleep(0)
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    finally:
+        climate._state.command_lock.release()
+
+    await hass.async_block_till_done()
+    assert climate._attr_hvac_mode is HVACMode.OFF
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
 @pytest.mark.usefixtures("init_integration")
 async def test_timer_expiry_updates_number_without_another_command(
     hass: HomeAssistant,
@@ -893,6 +1059,45 @@ async def test_option_mode_errors_have_translation_keys(
         await climate.async_set_option(option, True)
 
     assert err.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_off_timer_frame_schedules_expiry(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A received off-state timer frame updates and expires the number value."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                power=False,
+                mode=GreeAcMode.COOL,
+                temperature=24,
+                timer_hours=0.5,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.gree_ac_timer")
+    assert state is not None
+    assert state.state == "0.5"
+    freezer.move_to(freezer() + timedelta(minutes=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.gree_ac_timer")
+    assert state is not None
+    assert state.state == "0.0"
 
 
 @pytest.mark.parametrize("has_receiver", [True])
