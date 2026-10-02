@@ -59,7 +59,9 @@ SOURCE_SCHEMA = probatio.Schema(
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
-        probatio.Optional(CONF_SOURCE): probatio.All(cv.ensure_list, [SOURCE_SCHEMA]),
+        probatio.Optional(CONF_SOURCE): probatio.All(
+            probatio.EnsureList(), [SOURCE_SCHEMA]
+        ),
         probatio.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0, max=100)
         ),

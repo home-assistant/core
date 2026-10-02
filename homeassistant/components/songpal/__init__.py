@@ -19,7 +19,11 @@ SONGPAL_CONFIG_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {probatio.Optional(DOMAIN): probatio.All(cv.ensure_list, [SONGPAL_CONFIG_SCHEMA])},
+    {
+        probatio.Optional(DOMAIN): probatio.All(
+            probatio.EnsureList(), [SONGPAL_CONFIG_SCHEMA]
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 

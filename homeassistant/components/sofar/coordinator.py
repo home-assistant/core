@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, BATTERY_COMPONENTS, DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,15 +70,14 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             report = await self._async_observed_poll()
             if not report.updated:
                 errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                    )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                ) from ExceptionGroup("all components failed to refresh", errors)
+                ) from (
+                    ExceptionGroup("all components failed to refresh", errors)
+                    if errors
+                    else None
+                )
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.
@@ -176,10 +175,10 @@ class SofarRuntimeData:
 
     def pack_is_wired(self, number: int) -> bool:
         """Whether a pack has answered, so it physically exists."""
-        component_name = BATTERY_COMPONENTS[number]
-        if component_name not in self.served_components:
+        string = self.readings.device.battery_string(number)
+        if string.component_name not in self.served_components:
             return False
-        return bool(self.readings.device.battery_string(number).voltage)
+        return bool(string.voltage)
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
