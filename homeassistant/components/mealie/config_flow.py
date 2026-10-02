@@ -17,18 +17,18 @@ from .utils import create_version
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
         probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
     }
 )
 DISCOVERY_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
     }
 )
 

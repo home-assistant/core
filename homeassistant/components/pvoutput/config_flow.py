@@ -113,7 +113,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             },
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -153,6 +153,8 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )

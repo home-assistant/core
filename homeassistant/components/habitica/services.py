@@ -146,7 +146,7 @@ BASE_TASK_SCHEMA = probatio.Schema(
         probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         probatio.Optional(ATTR_RENAME): cv.string,
         probatio.Optional(ATTR_NOTES): cv.string,
-        probatio.Optional(ATTR_TAG): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_TAG): probatio.All(probatio.EnsureList(), [str]),
         probatio.Optional(ATTR_ALIAS): probatio.All(
             cv.string, cv.matches_regex("^[a-zA-Z0-9-_]*$")
         ),
@@ -156,34 +156,36 @@ BASE_TASK_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_PRIORITY): probatio.All(
             probatio.Upper, probatio.In(TaskPriority._member_names_)
         ),
-        probatio.Optional(ATTR_UP_DOWN): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_UP_DOWN): probatio.All(probatio.EnsureList(), [str]),
         probatio.Optional(ATTR_COUNTER_UP): probatio.All(int, probatio.Range(0)),
         probatio.Optional(ATTR_COUNTER_DOWN): probatio.All(int, probatio.Range(0)),
         probatio.Optional(ATTR_FREQUENCY): probatio.Coerce(Frequency),
         probatio.Optional(ATTR_DATE): cv.date,
         probatio.Optional(ATTR_CLEAR_DATE): cv.boolean,
         probatio.Optional(ATTR_REMINDER): probatio.All(
-            cv.ensure_list, [probatio.Any(cv.datetime, cv.time)]
+            probatio.EnsureList(), [probatio.Any(cv.datetime, cv.time)]
         ),
         probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(
-            cv.ensure_list, [probatio.Any(cv.datetime, cv.time)]
+            probatio.EnsureList(), [probatio.Any(cv.datetime, cv.time)]
         ),
         probatio.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
-        probatio.Optional(ATTR_ADD_CHECKLIST_ITEM): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_ADD_CHECKLIST_ITEM): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
         probatio.Optional(ATTR_REMOVE_CHECKLIST_ITEM): probatio.All(
-            cv.ensure_list, [str]
+            probatio.EnsureList(), [str]
         ),
         probatio.Optional(ATTR_SCORE_CHECKLIST_ITEM): probatio.All(
-            cv.ensure_list, [str]
+            probatio.EnsureList(), [str]
         ),
         probatio.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): probatio.All(
-            cv.ensure_list, [str]
+            probatio.EnsureList(), [str]
         ),
         probatio.Optional(ATTR_COLLAPSE_CHECKLIST): probatio.In(COLLAPSE_CHECKLIST_MAP),
         probatio.Optional(ATTR_START_DATE): cv.date,
         probatio.Optional(ATTR_INTERVAL): probatio.All(int, probatio.Range(0)),
         probatio.Optional(ATTR_REPEAT): probatio.All(
-            cv.ensure_list, [probatio.In(WEEK_DAYS)]
+            probatio.EnsureList(), [probatio.In(WEEK_DAYS)]
         ),
         probatio.Optional(ATTR_REPEAT_MONTHLY): probatio.All(
             cv.string, probatio.In({"day_of_month", "day_of_week"})
@@ -195,7 +197,7 @@ BASE_TASK_SCHEMA = probatio.Schema(
 SERVICE_UPDATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
     {
         probatio.Required(ATTR_TASK): cv.string,
-        probatio.Optional(ATTR_REMOVE_TAG): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_REMOVE_TAG): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 
@@ -206,8 +208,10 @@ SERVICE_CREATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
 )
 
 SERVICE_DAILY_SCHEMA = {
-    probatio.Optional(ATTR_REMINDER): probatio.All(cv.ensure_list, [cv.time]),
-    probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(cv.ensure_list, [cv.time]),
+    probatio.Optional(ATTR_REMINDER): probatio.All(probatio.EnsureList(), [cv.time]),
+    probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(
+        probatio.EnsureList(), [cv.time]
+    ),
 }
 
 
@@ -217,15 +221,15 @@ SERVICE_GET_TASKS_SCHEMA = probatio.Schema(
             {"integration": DOMAIN}
         ),
         probatio.Optional(ATTR_TYPE): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.All(probatio.Upper, probatio.In({x.name for x in TaskType}))],
         ),
         probatio.Optional(ATTR_PRIORITY): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.All(probatio.Upper, probatio.In({x.name for x in TaskPriority}))],
         ),
-        probatio.Optional(ATTR_TASK): probatio.All(cv.ensure_list, [str]),
-        probatio.Optional(ATTR_TAG): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_TASK): probatio.All(probatio.EnsureList(), [str]),
+        probatio.Optional(ATTR_TAG): probatio.All(probatio.EnsureList(), [str]),
         probatio.Optional(ATTR_KEYWORD): cv.string,
     }
 )
