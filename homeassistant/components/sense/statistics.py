@@ -5,7 +5,11 @@ import logging
 
 from sense_energy import ASyncSenseable, Scale
 
-from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
+from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
+    get_instance,
+    is_entity_recorded,
+)
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
@@ -93,9 +97,10 @@ class SenseStatistics:
         await self._async_import_hours(window, self._hourly)
         if now.minute < TREND_UPDATE_MINUTES[0]:
             self._hourly.pop(window[-1], None)
-        if now.minute >= TREND_UPDATE_MINUTES[-1]:
-            if values := await self._async_fetch(window_end):
-                self._provisional = (window_end, values)
+        if now.minute >= TREND_UPDATE_MINUTES[-1] and (
+            values := await self._async_fetch(window_end)
+        ):
+            self._provisional = (window_end, values)
 
     async def async_import_provisional(self) -> None:
         """Import the newest completed hour from its last in-progress reading.
@@ -143,7 +148,8 @@ class SenseStatistics:
         """Return the entity ID of each taken-over sensor and what it reports.
 
         Resolved through the registry so renamed entities are followed. A sensor that
-        is not registered yet is picked up on a later run; a disabled one is skipped.
+        is not registered yet is picked up on a later run; one that is disabled or
+        excluded from the recorder is skipped.
         """
         registry = er.async_get(self._hass)
         monitor_id = self._gateway.sense_monitor_id
@@ -158,6 +164,8 @@ class SenseStatistics:
                     continue
                 entry = registry.async_get(entity_id)
                 if entry is None or entry.disabled:
+                    continue
+                if not is_entity_recorded(self._hass, entity_id):
                     continue
                 targets[entity_id] = (scale, variant)
         return targets
@@ -208,6 +216,11 @@ class SenseStatistics:
         """Import the window for every target, each continuing its own sum."""
         newest = window[-1]
         for entity_id, (scale, variant) in targets.items():
+            # After a reset the period-to-date value no longer describes the hour.
+            period_start = self._gateway.trend_start(scale)
+            period_reset = (
+                period_start is not None and dt_util.as_utc(period_start) > newest
+            )
             running = anchors.get(entity_id, 0.0)
             states = existing.get(entity_id, {})
             rows: list[StatisticData] = []
@@ -218,7 +231,7 @@ class SenseStatistics:
                 row = StatisticData(start=hour, sum=running)
                 state = (
                     self._gateway.get_stat(scale, variant)
-                    if hour == newest
+                    if hour == newest and not period_reset
                     else states.get(hour.timestamp())
                 )
                 if state is not None:

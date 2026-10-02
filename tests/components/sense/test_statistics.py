@@ -25,7 +25,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorStateClass,
 )
-from homeassistant.const import Platform, UnitOfEnergy
+from homeassistant.const import CONF_ENTITIES, CONF_EXCLUDE, Platform, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -215,11 +215,22 @@ async def test_continues_existing_sum(
     assert rows[0]["sum"] == pytest.approx(1000.0 + HOURLY_ENERGY["usage"])
 
 
+@pytest.mark.parametrize(
+    ("period_start", "state"),
+    [
+        pytest.param("2026-01-15 00:00:00+00:00", PERIOD_TO_DATE, id="same_period"),
+        # The period-to-date value belongs to the new period, not to the hour.
+        pytest.param("2026-01-15 10:00:00+00:00", 99.0, id="period_reset"),
+    ],
+)
 async def test_import_wins_over_an_existing_row(
     hass: HomeAssistant,
     mock_sense: MagicMock,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_trends: MockTrends,
+    period_start: str,
+    state: float,
 ) -> None:
     """Test a row the recorder already compiled for the hour is overwritten.
 
@@ -227,6 +238,7 @@ async def test_import_wins_over_an_existing_row(
     following hour, before any of the four import attempts run.
     """
     freezer.move_to(NOW)
+    mock_trends.period_start = dt_util.parse_datetime(period_start)
     newest = window()[-1]
     async_import_statistics(
         hass,
@@ -240,7 +252,7 @@ async def test_import_wins_over_an_existing_row(
     rows = (await get_stats(hass, [USAGE]))[USAGE]
     assert rows[-1]["start"] == newest.timestamp()
     assert rows[-1]["sum"] == pytest.approx(HOURLY_ENERGY["usage"] * WINDOW_HOURS)
-    assert rows[-1]["state"] == PERIOD_TO_DATE
+    assert rows[-1]["state"] == state
 
 
 async def test_early_reading_of_newest_hour_is_fetched_again(
@@ -411,6 +423,24 @@ async def test_skips_disabled_entities(
     stats = await get_stats(hass, [USAGE, disabled.entity_id])
     assert USAGE in stats
     assert disabled.entity_id not in stats
+
+
+@pytest.mark.parametrize(
+    "recorder_config", [{CONF_EXCLUDE: {CONF_ENTITIES: [TO_GRID]}}]
+)
+async def test_skips_entities_excluded_from_recorder(
+    hass: HomeAssistant,
+    mock_sense: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor the user excluded from the recorder gets no statistics."""
+    freezer.move_to(NOW)
+    await setup_and_import(hass, config_entry, freezer)
+
+    stats = await get_stats(hass, [USAGE, TO_GRID])
+    assert USAGE in stats
+    assert TO_GRID not in stats
 
 
 async def test_entities_keep_their_state_class(

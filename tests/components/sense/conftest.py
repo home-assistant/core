@@ -41,6 +41,10 @@ class MockTrends:
     # previously fetched hour in place, exactly as the library behaves.
     missing: set[datetime.datetime] = field(default_factory=set)
     energy: dict[str, float] = field(default_factory=lambda: dict(HOURLY_ENERGY))
+    # The start of the period the trend sensors report on.
+    period_start: datetime.datetime = datetime.datetime(
+        2024, 1, 1, 1, 1, tzinfo=datetime.UTC
+    )
 
 
 @pytest.fixture
@@ -99,7 +103,7 @@ def mock_sense(
         def trend_start(scale: Scale) -> datetime.datetime | None:
             if scale is Scale.HOUR:
                 return mock_trends.start
-            return datetime.datetime.fromisoformat("2024-01-01 01:01:00+00:00")
+            return mock_trends.period_start
 
         def get_stat(scale: Scale, variant: str) -> float:
             if scale is Scale.HOUR:
