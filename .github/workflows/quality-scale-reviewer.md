@@ -1,5 +1,6 @@
 ---
 name: quality-scale-reviewer
+run-name: "quality-scale-reviewer: ${{ github.event.workflow_run.display_title || format('PR #{0}', inputs.pull_request_number) }}"
 description: >
   Reviews pull requests that touch an integration against the Integration
   Quality Scale rules the integration declares as `done` or `exempt` in its
