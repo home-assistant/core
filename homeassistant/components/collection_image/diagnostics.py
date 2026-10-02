@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import ATTR_CURRENT_MEDIA_ID, CONF_MEDIA, DOMAIN
+from .const import CONF_MEDIA, DOMAIN
 
 
 async def _async_browse_source(
@@ -81,7 +81,7 @@ async def async_get_config_entry_diagnostics(
             IMAGE_DOMAIN, DOMAIN, entry.entry_id
         )
     ) and (state := hass.states.get(entity_id)):
-        media_content_id = state.attributes.get(ATTR_CURRENT_MEDIA_ID)
+        media_content_id = state.attributes.get("current_media_id")
         current_image = {
             "entity_id": entity_id,
             "state": state.state,
