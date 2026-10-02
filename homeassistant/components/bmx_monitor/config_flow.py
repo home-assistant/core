@@ -253,8 +253,6 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=title, data=user_input, options=options
             )
 
-        self._set_confirm_only()
-
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
 
