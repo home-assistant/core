@@ -37,18 +37,10 @@ from .const import (
     SOLAR_POWERED_NAME,
     TO_GRID_ID,
     TO_GRID_NAME,
+    TRENDS_SENSOR_TYPES,
 )
 from .coordinator import SenseRealtimeCoordinator, SenseTrendCoordinator
 from .entity import SenseDeviceEntity, SenseEntity
-
-# Sensor types/ranges
-TRENDS_SENSOR_TYPES = {
-    Scale.DAY: "Daily",
-    Scale.WEEK: "Weekly",
-    Scale.MONTH: "Monthly",
-    Scale.YEAR: "Yearly",
-    Scale.CYCLE: "Bill",
-}
 
 # Production/consumption variants
 SENSOR_VARIANTS = [(PRODUCTION_ID, PRODUCTION_NAME), (CONSUMPTION_ID, CONSUMPTION_NAME)]
@@ -88,7 +80,7 @@ async def async_setup_entry(
         )
         entities.extend(
             SenseDeviceEnergySensor(device, scale, trends_coordinator, sense_monitor_id)
-            for scale in Scale
+            for scale in TRENDS_SENSOR_TYPES
         )
 
     for variant_id, variant_name in SENSOR_VARIANTS:
@@ -103,7 +95,7 @@ async def async_setup_entry(
         for i in range(len(data.active_voltage))
     )
 
-    for scale in Scale:
+    for scale in TRENDS_SENSOR_TYPES:
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
             entities.append(
                 SenseTrendsSensor(

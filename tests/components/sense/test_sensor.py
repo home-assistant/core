@@ -14,14 +14,14 @@ from sense_energy import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE, TREND_UPDATE_RATE
+from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import setup_platform
+from . import setup_platform, trigger_trend_refresh
 from .const import (
     DEVICE_1_DAY_ENERGY,
     DEVICE_1_NAME,
@@ -96,9 +96,7 @@ async def test_device_energy_sensors(
 
     device_1.energy_kwh[Scale.DAY] = 0
     device_2.energy_kwh[Scale.DAY] = 0
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await trigger_trend_refresh(hass, freezer)
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_daily_energy")
     assert state.state == "0"
@@ -107,9 +105,7 @@ async def test_device_energy_sensors(
     assert state.state == "0"
 
     device_2.energy_kwh[Scale.DAY] = DEVICE_1_DAY_ENERGY
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await trigger_trend_refresh(hass, freezer)
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_daily_energy")
     assert state.state == "0"
@@ -183,8 +179,9 @@ async def test_trend_energy_sensors(
     entity_registry: er.EntityRegistry,
     mock_sense: MagicMock,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sense power sensors."""
+    """Test the Sense trend sensors."""
     mock_sense.get_stat.side_effect = lambda sensor_type, variant: {
         (Scale.DAY, "usage"): 100,
         (Scale.DAY, "production"): 200,
@@ -221,8 +218,7 @@ async def test_trend_energy_sensors(
         (Scale.DAY, "production_pct"): 6000,
         (Scale.DAY, "solar_powered"): 7000,
     }.get((sensor_type, variant), 0)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=600))
-    await hass.async_block_till_done()
+    await trigger_trend_refresh(hass, freezer)
 
     state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
     assert state.state == "1000"
@@ -265,18 +261,14 @@ async def test_trend_coordinator_update_failure(
 
     mock_sense.update_trend_data.side_effect = exception
 
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
+    await trigger_trend_refresh(hass, freezer)
 
     state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
     assert state.state == STATE_UNAVAILABLE
 
     mock_sense.update_trend_data.side_effect = None
 
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
+    await trigger_trend_refresh(hass, freezer)
 
     state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
     assert state.state != STATE_UNAVAILABLE
