@@ -318,6 +318,8 @@ def async_firewall_policy_schedule_status_value_fn(
     """
     if not policy.enabled:
         return "disabled"
+    if policy.raw.get("schedule") is None:
+        return None
     if (active := policy.is_active(dt_util.now(hub.time_zone))) is None:
         return None
     return "active" if active else "inactive"
@@ -909,8 +911,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.firewall_policies,
         device_info_fn=async_unifi_network_device_info_fn,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
-        # The state changes with the clock, not only when the policy changes.
-        should_poll=True,
         supported_fn=async_firewall_policy_supported_fn,
         translation_placeholders_fn=lambda policy: {"policy_name": policy.name},
         unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_status-{obj_id}",

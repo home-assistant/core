@@ -2664,14 +2664,16 @@ async def test_firewall_policy_schedule_status(
         assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == expected, now
 
 
-@pytest.mark.parametrize("time_zone", [None, "Mars/Olympus_Mons"])
+@pytest.mark.parametrize(
+    "time_zone", [None, "Mars/Olympus_Mons", "../../etc/passwd", 3600]
+)
 @pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
 async def test_firewall_policy_schedule_status_time_zone_fallback(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     config_entry_factory: ConfigEntryFactoryType,
     system_information_payload: list[dict[str, Any]],
-    time_zone: str | None,
+    time_zone: str | int | None,
 ) -> None:
     """Without a usable controller time zone, Home Assistant's is used.
 
@@ -2692,6 +2694,10 @@ async def test_firewall_policy_schedule_status_time_zone_fallback(
         ([{**FIREWALL_POLICY, "enabled": False}], "disabled"),
         ([{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}], "active"),
         ([{**FIREWALL_POLICY, "schedule": {"mode": "SUNRISE"}}], STATE_UNKNOWN),
+        (
+            [{k: v for k, v in FIREWALL_POLICY.items() if k != "schedule"}],
+            STATE_UNKNOWN,
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
