@@ -24,8 +24,12 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import service
 
 from . import (
@@ -45,6 +49,8 @@ from . import (
     get_mock_account,
     init_integration,
 )
+
+from tests.common import MockUser
 
 ORDER_DATA = {
     "product": API_PRODUCT_CNK,
@@ -197,6 +203,47 @@ async def test_token_rotation(
     )
     assert entry.data[CONF_ACCESS_TOKEN] == "new-access-token"
     assert entry.data[CONF_REFRESH_TOKEN] == "new-refresh-token"
+
+
+async def test_order_medication_requires_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_farmad_client: MagicMock,
+) -> None:
+    """Test ordering requires an admin user."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ORDER_MEDICATION,
+            ORDER_DATA,
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    client.async_get_draft_basket.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_farmad_client")
+async def test_search_medication_all_users(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test searching works for a user without admin access."""
+    await init_integration(hass)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH_MEDICATION,
+        SEARCH_DATA,
+        blocking=True,
+        return_response=True,
+        context=Context(user_id=hass_read_only_user.id),
+    )
+
+    assert response == SEARCH_RESPONSE
 
 
 async def test_order_medication_from_history(

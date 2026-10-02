@@ -75,7 +75,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SEARCH_MEDICATION_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_ORDER_MEDICATION,
         _async_order_medication,
