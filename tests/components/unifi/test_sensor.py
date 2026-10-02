@@ -2740,3 +2740,17 @@ async def test_firewall_policy_schedule_status_follows_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "disabled"
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.freeze_time("2021-01-01 01:01:00")
+async def test_firewall_policy_schedule_status_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Validate the schedule status entity's registry entry and state."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

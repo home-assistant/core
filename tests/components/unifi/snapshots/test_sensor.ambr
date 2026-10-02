@@ -2520,3 +2520,65 @@
     'state': '2021-01-01T01:00:00+00:00',
   })
 # ---
+# name: test_firewall_policy_schedule_status_entity[firewall_policy_payload0][sensor.unifi_network_block_streaming_schedule_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'inactive',
+        'active',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.unifi_network_block_streaming_schedule_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Block streaming schedule status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Block streaming schedule status',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_status',
+    'unique_id': 'firewall_policy_schedule_status-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_firewall_policy_schedule_status_entity[firewall_policy_payload0][sensor.unifi_network_block_streaming_schedule_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'inactive',
+        'active',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.unifi_network_block_streaming_schedule_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'active',
+  })
+# ---
