@@ -6,7 +6,7 @@ order_medication:
       selector:
         text:
     quantity:
-      required: true
+      required: false
       default: 1
       selector:
         number:
