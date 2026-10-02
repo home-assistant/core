@@ -419,6 +419,8 @@ async def test_reconfigure_flow_device_removal(
 
     result = await mock_config_entry_multiple_regions.start_reconfigure_flow(hass)
 
+    mock_nina_class.warnings = {"095760000000": deepcopy(nina_warnings)}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -434,10 +436,11 @@ async def test_reconfigure_flow_device_removal(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
+    await hass.async_block_till_done()
+
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry_multiple_regions.entry_id
     )
 
-    assert not any(
-        old_device.id in (device.id for device in devices) for old_device in old_devices
-    )
+    assert len(devices) == 1
+    assert devices[0].identifiers == {(DOMAIN, "095760000000")}
