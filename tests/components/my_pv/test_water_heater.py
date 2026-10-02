@@ -1,6 +1,6 @@
 """Test the my-PV water heater."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
@@ -47,6 +47,23 @@ async def test_water_heater(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_water_heater_no_temp_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test if a water_heater is not created when there is no temperature sensor connected."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_my_pv_client.current_temperature = None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.my_pv_ac_elwa_2")
+    assert state is None
+
+
 async def test_water_heater_unavailable_not_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -57,24 +74,6 @@ async def test_water_heater_unavailable_not_connected(
     mock_config_entry.add_to_hass(hass)
 
     mock_my_pv_client.connected = False
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("water_heater.my_pv_ac_elwa_2")
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_water_heater_unavailable_data_value_none(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_my_pv_client: AsyncMock,
-) -> None:
-    """Test if a water_heater is unavailable when data value is None."""
-
-    mock_config_entry.add_to_hass(hass)
-
-    mock_my_pv_client.get_data_value = Mock(return_value=None)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
