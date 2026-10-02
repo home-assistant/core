@@ -504,6 +504,39 @@ async def test_cleanup_recreates_tracker_when_client_reappears(
     )
 
 
+async def test_preserved_tracker_recreated_when_client_returns(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a preserved tracker is instantiated when its client returns."""
+    mock_config_entry.add_to_hass(hass)
+
+    client_mac = "2C-71-FF-ED-34-83"
+    tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id=f"scanner_Default_{client_mac}",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(tracker.entity_id) is None
+
+    # Client becomes known to the controller — the next interval run
+    # instantiates the preserved tracker
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, ""
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(tracker.entity_id) is not None
+
+
 async def test_cleanup_recreates_device_when_reappears(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,

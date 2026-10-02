@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
+from .const import DOMAIN
 from .controller import OmadaClientsCoordinator
 
 PARALLEL_UPDATES = 0
@@ -32,22 +33,35 @@ async def async_setup_entry(
     site_id = config_entry.data[CONF_SITE]
     known_clients_coordinator = controller.known_clients_coordinator
 
-    def _new_trackers() -> list[OmadaClientScannerEntity]:
-        """Return trackers for known clients without a registry entry."""
+    def _has_live_entity(unique_id: str) -> bool:
+        """Return if a registry entry is already handled.
+
+        A disabled entry needs no entity, and an enabled entry with a state
+        has a live entity. An enabled entry without a state is preserved from
+        an earlier session but was never instantiated.
+        """
         entity_registry = er.async_get(hass)
-        tracked_ids = {
-            entity.unique_id
-            for entity in er.async_entries_for_config_entry(
-                entity_registry, config_entry.entry_id
-            )
-            if entity.domain == DEVICE_TRACKER_DOMAIN and entity.unique_id is not None
-        }
+        entity_id = entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+        )
+        if (
+            entity_id is None
+            or (entity_entry := entity_registry.async_get(entity_id)) is None
+        ):
+            return False
+        return (
+            entity_entry.disabled_by is not None
+            or hass.states.get(entity_id) is not None
+        )
+
+    def _new_trackers() -> list[OmadaClientScannerEntity]:
+        """Return trackers for known clients without a live entity."""
         return [
             OmadaClientScannerEntity(
                 site_id, client.mac, client.name, controller.clients_coordinator
             )
             for client in (known_clients_coordinator.data or {}).values()
-            if f"scanner_{site_id}_{client.mac}" not in tracked_ids
+            if not _has_live_entity(f"scanner_{site_id}_{client.mac}")
         ]
 
     @callback
@@ -62,14 +76,7 @@ async def async_setup_entry(
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
     # tracked if the user enables the entity.
-    async_add_entities(
-        [
-            OmadaClientScannerEntity(
-                site_id, client.mac, client.name, controller.clients_coordinator
-            )
-            for client in (known_clients_coordinator.data or {}).values()
-        ]
-    )
+    async_add_entities(_new_trackers())
 
 
 class OmadaClientScannerEntity(
