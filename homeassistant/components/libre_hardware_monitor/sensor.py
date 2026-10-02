@@ -74,7 +74,7 @@ class LibreHardwareMonitorSensor(
 
         self._attr_name: str = sensor_data.name
 
-        self._set_state(coordinator.data.is_deprecated_version, sensor_data)
+        self._set_state(sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
 
         self._sensor_id: str = sensor_data.sensor_id
@@ -88,7 +88,6 @@ class LibreHardwareMonitorSensor(
 
     def _set_state(
         self,
-        is_deprecated_lhm_version: bool,
         sensor_data: LibreHardwareMonitorSensorData,
     ) -> None:
         value = sensor_data.value
@@ -96,12 +95,16 @@ class LibreHardwareMonitorSensor(
         max_value = sensor_data.max
         unit = sensor_data.unit
 
-        if not is_deprecated_lhm_version and sensor_data.type == SensorType.THROUGHPUT:
+        if sensor_data.type == SensorType.THROUGHPUT:
             # Temporary fix: convert the B/s value to KB/s to not break existing entries
             # This will be migrated properly once SensorDeviceClass is introduced
-            value = f"{(float(value) / 1024):.1f}" if value else None
-            min_value = f"{(float(min_value) / 1024):.1f}" if min_value else None
-            max_value = f"{(float(max_value) / 1024):.1f}" if max_value else None
+            value = f"{(float(value) / 1024):.1f}" if value is not None else None
+            min_value = (
+                f"{(float(min_value) / 1024):.1f}" if min_value is not None else None
+            )
+            max_value = (
+                f"{(float(max_value) / 1024):.1f}" if max_value is not None else None
+            )
             unit = "KB/s"
 
         self._attr_native_value: str | None = value
@@ -116,7 +119,7 @@ class LibreHardwareMonitorSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if sensor_data := self.coordinator.data.sensor_data.get(self._sensor_id):
-            self._set_state(self.coordinator.data.is_deprecated_version, sensor_data)
+            self._set_state(sensor_data)
         else:
             self._attr_native_value = None
 
