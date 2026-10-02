@@ -40,18 +40,10 @@ from .const import (
     CONF_TOP_P,
     DEFAULT,
     DEFAULT_CONVERSATION_NAME,
-    DEFAULT_STT_NAME,
-    DEFAULT_TTS_NAME,
     DOMAIN,
     MISTRAL_MODELS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    RECOMMENDED_STT_MODEL,
-    RECOMMENDED_STT_OPTIONS,
-    RECOMMENDED_TTS_MODEL,
-    RECOMMENDED_TTS_OPTIONS,
-    STT_MODELS,
-    TTS_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,21 +66,22 @@ def _validate_api_key(api_key: str) -> None:
 
 
 async def _async_fetch_models(
-    hass: HomeAssistant, api_key: str, capability: str, fallback: list[str]
+    hass: HomeAssistant, api_key: str, fallback: list[str]
 ) -> list[str]:
-    """Fetch available model IDs for a capability, with a fallback."""
+    """Fetch available model IDs, with a fallback."""
     cache = hass.data.setdefault(DATA_MODELS_CACHE, {})
-    cache_key = f"{api_key}:{capability}"
-    if cache_key in cache:
-        return cache[cache_key]
+    if api_key in cache:
+        return cache[api_key]
 
     try:
-        models = await hass.async_add_executor_job(get_model_ids, api_key, capability)
+        models = await hass.async_add_executor_job(
+            get_model_ids, api_key, "completion_chat"
+        )
     except Exception:  # noqa: BLE001
         models = []
     if not models:
         models = list(fallback)
-    cache[cache_key] = models
+    cache[api_key] = models
     return models
 
 
@@ -130,18 +123,6 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "title": DEFAULT_CONVERSATION_NAME,
                             "unique_id": None,
                         },
-                        {
-                            "subentry_type": "stt",
-                            "data": RECOMMENDED_STT_OPTIONS,
-                            "title": DEFAULT_STT_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "tts",
-                            "data": RECOMMENDED_TTS_OPTIONS,
-                            "title": DEFAULT_TTS_NAME,
-                            "unique_id": None,
-                        },
                     ],
                 )
 
@@ -177,21 +158,13 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the subentries supported by this integration."""
         return {
             "conversation": MistralConversationSubentryFlowHandler,
-            "stt": MistralAudioSubentryFlowHandler,
-            "tts": MistralAudioSubentryFlowHandler,
         }
 
 
-class _MistralSubentryFlowHandler(ConfigSubentryFlow):
-    """Base flow for managing Mistral AI subentries."""
+class MistralConversationSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing the conversation subentry."""
 
     options: dict[str, Any]
-
-    async def async_step_advanced(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle the advanced settings step."""
-        raise NotImplementedError
 
     @property
     def _is_new(self) -> bool:
@@ -202,12 +175,7 @@ class _MistralSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle the user step of a subentry flow."""
-        if self._subentry_type == "conversation":
-            self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
-        elif self._subentry_type == "stt":
-            self.options = RECOMMENDED_STT_OPTIONS.copy()
-        else:
-            self.options = RECOMMENDED_TTS_OPTIONS.copy()
+        self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -230,130 +198,74 @@ class _MistralSubentryFlowHandler(ConfigSubentryFlow):
         step_schema: VolDictType = {}
 
         if self._is_new:
-            if self._subentry_type == "conversation":
-                default_name = DEFAULT_CONVERSATION_NAME
-            elif self._subentry_type == "stt":
-                default_name = DEFAULT_STT_NAME
-            else:
-                default_name = DEFAULT_TTS_NAME
-            step_schema[probatio.Required(CONF_NAME, default=default_name)] = str
+            step_schema[
+                probatio.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME)
+            ] = str
 
         api_key = self._get_entry().data[CONF_API_KEY]
 
-        if self._subentry_type == "conversation":
-            hass_apis: list[SelectOptionDict] = [
-                SelectOptionDict(label=api.name, value=api.id)
-                for api in llm.async_get_apis(self.hass)
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(label=api.name, value=api.id)
+            for api in llm.async_get_apis(self.hass)
+        ]
+        if suggested_llm_apis := options.get(CONF_LLM_HASS_API):
+            if isinstance(suggested_llm_apis, str):
+                suggested_llm_apis = [suggested_llm_apis]
+            valid_apis = {api.id for api in llm.async_get_apis(self.hass)}
+            options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in valid_apis
             ]
-            if suggested_llm_apis := options.get(CONF_LLM_HASS_API):
-                if isinstance(suggested_llm_apis, str):
-                    suggested_llm_apis = [suggested_llm_apis]
-                valid_apis = {api.id for api in llm.async_get_apis(self.hass)}
-                options[CONF_LLM_HASS_API] = [
-                    api for api in suggested_llm_apis if api in valid_apis
-                ]
 
-            model_options = await _async_fetch_models(
-                self.hass, api_key, "completion_chat", MISTRAL_MODELS
-            )
-            step_schema.update(
-                {
-                    probatio.Optional(
-                        CONF_RECOMMENDED,
-                        default=options.get(CONF_RECOMMENDED, True),
-                    ): bool,
-                    probatio.Optional(
-                        CONF_CHAT_MODEL,
-                        default=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=model_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
+        model_options = await _async_fetch_models(self.hass, api_key, MISTRAL_MODELS)
+        step_schema.update(
+            {
+                probatio.Optional(
+                    CONF_RECOMMENDED,
+                    default=options.get(CONF_RECOMMENDED, True),
+                ): bool,
+                probatio.Optional(
+                    CONF_CHAT_MODEL,
+                    default=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=model_options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                    )
+                ),
+                probatio.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                         )
-                    ),
-                    probatio.Optional(
-                        CONF_PROMPT,
-                        description={
-                            "suggested_value": options.get(
-                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                            )
-                        },
-                    ): TemplateSelector(),
-                    probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
-                    ),
-                }
-            )
-        elif self._subentry_type == "stt":
-            model_options = await _async_fetch_models(
-                self.hass, api_key, "audio_transcription", STT_MODELS
-            )
-            step_schema.update(
-                {
-                    probatio.Optional(
-                        CONF_CHAT_MODEL,
-                        default=options.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=model_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                        )
-                    ),
-                }
-            )
-        else:
-            model_options = await _async_fetch_models(
-                self.hass, api_key, "audio_speech", TTS_MODELS
-            )
-            step_schema.update(
-                {
-                    probatio.Optional(
-                        CONF_CHAT_MODEL,
-                        default=options.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=model_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                        )
-                    ),
-                }
-            )
+                    },
+                ): TemplateSelector(),
+                probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
+                    SelectSelectorConfig(options=hass_apis, multiple=True)
+                ),
+            }
+        )
 
         if user_input is not None:
-            if self._subentry_type == "conversation":
-                if user_input.get(CONF_LLM_HASS_API) is None:
-                    user_input.pop(CONF_LLM_HASS_API, None)
-                if user_input.get(CONF_RECOMMENDED):
-                    if self._is_new:
-                        return self.async_create_entry(
-                            title=user_input.pop(CONF_NAME),
-                            data=user_input,
-                        )
-                    return self.async_update_and_abort(
-                        self._get_entry(),
-                        self._get_reconfigure_subentry(),
+            if user_input.get(CONF_LLM_HASS_API) is None:
+                user_input.pop(CONF_LLM_HASS_API, None)
+            if user_input.get(CONF_RECOMMENDED):
+                if self._is_new:
+                    return self.async_create_entry(
+                        title=user_input.pop(CONF_NAME),
                         data=user_input,
                     )
-
-                options.update(user_input)
-                if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
-                    options.pop(CONF_LLM_HASS_API)
-                return await self.async_step_advanced()
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data=user_input,
+                )
 
             options.update(user_input)
-            if self._is_new:
-                return self.async_create_entry(
-                    title=options.pop(CONF_NAME),
-                    data=options,
-                )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=options,
-            )
+            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                options.pop(CONF_LLM_HASS_API)
+            return await self.async_step_advanced()
 
         return self.async_show_form(
             step_id="init",
@@ -363,11 +275,6 @@ class _MistralSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
         )
 
-
-class MistralConversationSubentryFlowHandler(_MistralSubentryFlowHandler):
-    """Flow for managing the conversation subentry."""
-
-    @override
     async def async_step_advanced(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -408,7 +315,3 @@ class MistralConversationSubentryFlowHandler(_MistralSubentryFlowHandler):
                 }
             ),
         )
-
-
-class MistralAudioSubentryFlowHandler(_MistralSubentryFlowHandler):
-    """Flow for managing the STT and TTS subentries."""

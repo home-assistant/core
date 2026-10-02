@@ -29,7 +29,7 @@
         "data_description": {
           "api_key": "Your Mistral API key."
         },
-        "description": "Set up Mistral to use it as a conversation agent, speech-to-text and text-to-speech service for Home Assistant Assist."
+        "description": "Set up Mistral to use it as a conversation agent for Home Assistant Assist."
       }
     }
   },
@@ -73,52 +73,6 @@
             "recommended": "Use the recommended model settings."
           },
           "title": "Conversation agent"
-        }
-      }
-    },
-    "stt": {
-      "abort": {
-        "entry_not_loaded": "Cannot add things while the configuration is disabled."
-      },
-      "entry_type": "STT",
-      "initiate_flow": {
-        "reconfigure": "Reconfigure speech-to-text service",
-        "user": "Add speech-to-text service"
-      },
-      "step": {
-        "init": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "name": "[%key:common::config_flow::data::name%]"
-          },
-          "data_description": {
-            "chat_model": "The model to use to transcribe speech.",
-            "name": "The name of this configuration."
-          },
-          "title": "Speech-to-text"
-        }
-      }
-    },
-    "tts": {
-      "abort": {
-        "entry_not_loaded": "Cannot add things while the configuration is disabled."
-      },
-      "entry_type": "TTS",
-      "initiate_flow": {
-        "reconfigure": "Reconfigure text-to-speech service",
-        "user": "Add text-to-speech service"
-      },
-      "step": {
-        "init": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "name": "[%key:common::config_flow::data::name%]"
-          },
-          "data_description": {
-            "chat_model": "The model to use to generate speech.",
-            "name": "The name of this configuration."
-          },
-          "title": "Text-to-speech"
         }
       }
     }

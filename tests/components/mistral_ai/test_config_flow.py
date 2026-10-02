@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.mistral_ai import DOMAIN
 from homeassistant.components.mistral_ai.config_flow import (
     MistralAIConfigFlow,
-    MistralAudioSubentryFlowHandler,
     MistralConversationSubentryFlowHandler,
 )
 from homeassistant.components.mistral_ai.const import (
@@ -17,17 +16,9 @@ from homeassistant.components.mistral_ai.const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     DEFAULT_CONVERSATION_NAME,
-    DEFAULT_STT_NAME,
-    DEFAULT_TTS_NAME,
     MISTRAL_MODELS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    RECOMMENDED_STT_MODEL,
-    RECOMMENDED_STT_OPTIONS,
-    RECOMMENDED_TTS_MODEL,
-    RECOMMENDED_TTS_OPTIONS,
-    STT_MODELS,
-    TTS_MODELS,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -42,15 +33,9 @@ class _FakeError(Exception):
         super().__init__(f"error {status_code}")
 
 
-@pytest.fixture(autouse=True)
-def _patch_fetch_models() -> None:
-    """Avoid real network calls when the subentry flow lists models."""
-    return
-
-
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a loaded config entry with the three subentries."""
+    """Return a loaded config entry with a conversation subentry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Mistral",
@@ -64,18 +49,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "title": DEFAULT_CONVERSATION_NAME,
                 "unique_id": None,
             },
-            {
-                "subentry_type": "stt",
-                "data": RECOMMENDED_STT_OPTIONS,
-                "title": DEFAULT_STT_NAME,
-                "unique_id": None,
-            },
-            {
-                "subentry_type": "tts",
-                "data": RECOMMENDED_TTS_OPTIONS,
-                "title": DEFAULT_TTS_NAME,
-                "unique_id": None,
-            },
         ],
     )
     entry.add_to_hass(hass)
@@ -83,7 +56,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 async def test_form(hass: HomeAssistant) -> None:
-    """Test the initial form creates an entry with the three subentries."""
+    """Test the initial form creates an entry with a conversation subentry."""
     hass.config.components.add(DOMAIN)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,18 +79,6 @@ async def test_form(hass: HomeAssistant) -> None:
             "subentry_type": "conversation",
             "data": RECOMMENDED_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
-            "unique_id": None,
-        },
-        {
-            "subentry_type": "stt",
-            "data": RECOMMENDED_STT_OPTIONS,
-            "title": DEFAULT_STT_NAME,
-            "unique_id": None,
-        },
-        {
-            "subentry_type": "tts",
-            "data": RECOMMENDED_TTS_OPTIONS,
-            "title": DEFAULT_TTS_NAME,
             "unique_id": None,
         },
     ]
@@ -174,12 +135,10 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
 
 async def test_supported_subentry_types(hass: HomeAssistant) -> None:
-    """Test the supported subentry types match the three services."""
+    """Test the supported subentry types match the conversation service."""
     types = MistralAIConfigFlow.async_get_supported_subentry_types(None)
-    assert set(types) == {"conversation", "stt", "tts"}
+    assert set(types) == {"conversation"}
     assert types["conversation"] is MistralConversationSubentryFlowHandler
-    assert types["stt"] is MistralAudioSubentryFlowHandler
-    assert types["tts"] is MistralAudioSubentryFlowHandler
 
 
 async def test_creating_conversation_subentry(
@@ -212,72 +171,6 @@ async def test_creating_conversation_subentry(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Custom Agent"
-
-
-async def test_creating_stt_subentry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test creating an STT subentry."""
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=STT_MODELS,
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "stt"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=STT_MODELS,
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {"name": "My STT", CONF_CHAT_MODEL: RECOMMENDED_STT_MODEL},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "My STT"
-    assert result2["data"] == {CONF_CHAT_MODEL: RECOMMENDED_STT_MODEL}
-
-
-async def test_creating_tts_subentry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test creating a TTS subentry."""
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=TTS_MODELS,
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "tts"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=TTS_MODELS,
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {"name": "My TTS", CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "My TTS"
-    assert result2["data"] == {CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL}
 
 
 async def test_subentry_not_loaded(hass: HomeAssistant) -> None:
@@ -341,11 +234,7 @@ async def test_subentry_advanced(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the advanced settings step of a conversation subentry."""
-    subentry = next(
-        sub
-        for sub in mock_config_entry.subentries.values()
-        if sub.subentry_type == "conversation"
-    )
+    subentry = next(iter(mock_config_entry.subentries.values()))
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )

@@ -226,7 +226,7 @@ async def handle_chat_log(entity, chat_log: conversation.ChatLog) -> None:
     if tools:
         model_args["tools"] = tools
 
-    client = entity.entry.runtime_data.client
+    client = entity.entry.runtime_data
 
     # To prevent infinite loops, we limit the number of iterations
     for _iteration in range(MAX_TOOL_ITERATIONS):

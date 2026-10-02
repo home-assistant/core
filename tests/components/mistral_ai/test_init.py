@@ -1,15 +1,11 @@
 """Integration tests for the Mistral AI config entry setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.mistral_ai import DOMAIN
 from homeassistant.components.mistral_ai.const import (
     DEFAULT_CONVERSATION_NAME,
-    DEFAULT_STT_NAME,
-    DEFAULT_TTS_NAME,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    RECOMMENDED_STT_OPTIONS,
-    RECOMMENDED_TTS_OPTIONS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -40,7 +36,7 @@ async def test_config_entry_creates_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Setting up the entry creates conversation, STT and TTS entities."""
+    """Setting up the entry creates a conversation entity."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Mistral",
@@ -51,18 +47,6 @@ async def test_config_entry_creates_entities(
                 "subentry_type": "conversation",
                 "data": RECOMMENDED_CONVERSATION_OPTIONS,
                 "title": DEFAULT_CONVERSATION_NAME,
-                "unique_id": None,
-            },
-            {
-                "subentry_type": "stt",
-                "data": RECOMMENDED_STT_OPTIONS,
-                "title": DEFAULT_STT_NAME,
-                "unique_id": None,
-            },
-            {
-                "subentry_type": "tts",
-                "data": RECOMMENDED_TTS_OPTIONS,
-                "title": DEFAULT_TTS_NAME,
                 "unique_id": None,
             },
         ],
@@ -79,36 +63,19 @@ async def test_config_entry_creates_entities(
             "homeassistant.components.mistral_ai._setup_client",
             return_value=_FakeMistral(),
         ),
-        patch(
-            "homeassistant.components.mistral_ai.MistralModelsCoordinator.async_config_entry_first_refresh",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.mistral_ai.api.get_voices",
-            new_callable=AsyncMock,
-            return_value=[],
-        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     states = hass.states.async_all()
     entity_ids = {state.entity_id for state in states}
-
     domains = {entity_id.split(".")[0] for entity_id in entity_ids}
-    assert {
-        "conversation",
-        "stt",
-        "tts",
-        "select",
-        "sensor",
-        "binary_sensor",
-    } <= domains
+    assert "conversation" in domains
 
-    # Exactly the expected number of entities from this integration.
+    # Exactly one conversation entity from this integration.
     mistral_entities = [
         entity
         for entity in entity_registry.entities.values()
         if entity.platform == DOMAIN
     ]
-    assert len(mistral_entities) == 12
+    assert len(mistral_entities) == 1

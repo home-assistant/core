@@ -4,7 +4,10 @@ rules:
     status: exempt
     comment: |
       This integration does not register any service actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -48,7 +51,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: |
@@ -85,7 +88,7 @@ rules:
       No entities disabled by default.
   entity-translations: todo
   exception-translations: todo
-  icon-translations: done
+  icon-translations: todo
   reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
