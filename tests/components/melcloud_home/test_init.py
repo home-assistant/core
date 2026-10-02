@@ -13,15 +13,16 @@ import pytest
 
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.components.melcloud_home.coordinator import (
-    ENERGY_UPDATE_INTERVAL,
+    TELEMETRY_UPDATE_INTERVAL,
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+from .conftest import MOCK_USER_INPUT
 
 from tests.common import (
     MockConfigEntry,
@@ -216,27 +217,27 @@ async def test_energy_update_cycle_fails(
 ) -> None:
     """Test that a failing energy fetch clears the value without unloading the entry."""
     await setup_integration(hass, mock_config_entry)
-    energy_coordinator = mock_config_entry.runtime_data.energy_coordinator
+    telemetry_coordinator = mock_config_entry.runtime_data.telemetry_coordinator
 
-    assert energy_coordinator.data["ata-unit-uuid-1"] is not None
-    assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["ata-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["atw-unit-uuid-1"] is not None
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
-    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert energy_coordinator.data["ata-unit-uuid-1"] is None
-    assert energy_coordinator.data["atw-unit-uuid-1"] is None
+    assert telemetry_coordinator.data.energy["ata-unit-uuid-1"] is None
+    assert telemetry_coordinator.data.energy["atw-unit-uuid-1"] is None
 
     # Demonstrate a recovery
     mock_melcloud_client.get_energy_telemetry.side_effect = None
-    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert energy_coordinator.data["ata-unit-uuid-1"] is not None
-    assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["ata-unit-uuid-1"] is not None
+    assert telemetry_coordinator.data.energy["atw-unit-uuid-1"] is not None
 
 
 @pytest.mark.parametrize(
@@ -258,11 +259,13 @@ async def test_energy_telemetry_fetch_failure(
     await setup_integration(hass, mock_config_entry)
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
-    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.runtime_data.energy_coordinator.last_update_success is True
+    assert (
+        mock_config_entry.runtime_data.telemetry_coordinator.last_update_success is True
+    )
     assert mock_config_entry.runtime_data.coordinator.last_update_success is True
 
 
@@ -274,19 +277,19 @@ async def test_energy_telemetry_fetch_failure(
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
     ],
 )
-async def test_energy_coordinator_context_fetch_failure(
+async def test_telemetry_coordinator_context_fetch_failure(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test that a failing energy coordinator refresh doesn't affect the main coordinator."""
+    """Test that a failing telemetry coordinator refresh doesn't affect the main coordinator."""
     await setup_integration(hass, mock_config_entry)
 
     # Split the margin so the main coordinator's rescheduled refresh doesn't land
-    # exactly on the energy coordinator's, which would make both fail below.
-    freezer.tick(ENERGY_UPDATE_INTERVAL - UPDATE_INTERVAL / 2)
+    # exactly on the telemetry coordinator's, which would make both fail below.
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - UPDATE_INTERVAL / 2)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -308,3 +311,137 @@ async def test_energy_coordinator_context_fetch_failure(
         )
     )
     assert room_temperature_sensor.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
+        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
+        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+    ],
+)
+async def test_outdoor_temperature_update_cycle_fails(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test that a failing outdoor temperature fetch clears the value without unloading the entry."""
+    await setup_integration(hass, mock_config_entry)
+    telemetry_coordinator = mock_config_entry.runtime_data.telemetry_coordinator
+
+    assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is not None
+
+    mock_melcloud_client.get_outdoor_temperature.side_effect = exception
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is None
+
+    mock_melcloud_client.get_outdoor_temperature.side_effect = None
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert telemetry_coordinator.data.outdoor_temperature["ata-unit-uuid-1"] is not None
+
+
+@pytest.mark.parametrize(
+    ("method", "name"),
+    [
+        pytest.param("get_energy_telemetry", "Energy telemetry", id="energy"),
+        pytest.param(
+            "get_outdoor_temperature", "Outdoor temperature", id="outdoor_temperature"
+        ),
+    ],
+)
+async def test_telemetry_unavailable_logged_once(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+    name: str,
+) -> None:
+    """Test a failing telemetry fetch is logged once, and once when it recovers."""
+    await setup_integration(hass, mock_config_entry)
+    unavailable = f"{name} for ata-unit-uuid-1 is unavailable"
+    available = f"{name} for ata-unit-uuid-1 is available again"
+
+    getattr(mock_melcloud_client, method).side_effect = MelCloudHomeConnectionError
+    for _ in range(2):
+        freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count(unavailable) == 1
+    assert available not in caplog.text
+
+    getattr(mock_melcloud_client, method).side_effect = None
+    for _ in range(2):
+        freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count(unavailable) == 1
+    assert caplog.text.count(available) == 1
+
+
+@pytest.mark.usefixtures("mock_melcloud_client")
+@pytest.mark.parametrize(
+    ("platform", "old_unique_id", "new_unique_id"),
+    [
+        pytest.param(
+            Platform.CLIMATE, "ata-unit-uuid-1", "ata-unit-uuid-1_ata_unit", id="ata"
+        ),
+        pytest.param(
+            Platform.CLIMATE,
+            "atw-unit-uuid-1_zone_1",
+            "atw-unit-uuid-1_zone_1",
+            id="atw_zone",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            "ata-unit-uuid-1_room_temperature",
+            "ata-unit-uuid-1_room_temperature",
+            id="other_platform",
+        ),
+    ],
+)
+async def test_migrate_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    platform: Platform,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test the unique ID migration to the entity description key."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, old_unique_id, config_entry=entry
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    entity_entry = entity_registry.async_get(entity.entity_id)
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
+    # The platform must pick up the migrated entry instead of creating a new one
+    assert hass.states.get(entity.entity_id)
+
+
+async def test_migrate_future_version(hass: HomeAssistant) -> None:
+    """Test a config entry from a newer version isn't migrated."""
+    entry = MockConfigEntry(domain=DOMAIN, version=2)
+
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

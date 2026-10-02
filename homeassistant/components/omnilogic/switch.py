@@ -4,7 +4,7 @@ import time
 from typing import Any, override
 
 from omnilogic import OmniLogicException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -62,7 +62,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_SPEED,
-        {vol.Required("speed"): cv.positive_int},
+        {probatio.Required("speed"): cv.positive_int},
         "async_set_speed",
     )
 

@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from linkplay.bridge import LinkPlayBridge
+from linkplay.bridge import LinkPlayBridge, LinkPlayPlayer
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
@@ -189,37 +189,37 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._bridge.player.pause()
+        await self._active_player.pause()
 
     @exception_wrap
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._bridge.player.resume()
+        await self._active_player.resume()
 
     @exception_wrap
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._bridge.player.stop()
+        await self._active_player.stop()
 
     @exception_wrap
     @override
     async def async_media_next_track(self) -> None:
         """Send next command."""
-        await self._bridge.player.next()
+        await self._active_player.next()
 
     @exception_wrap
     @override
     async def async_media_previous_track(self) -> None:
         """Send previous command."""
-        await self._bridge.player.previous()
+        await self._active_player.previous()
 
     @exception_wrap
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
+        await self._active_player.set_loop_mode(REPEAT_MAP_INV[repeat])
 
     @override
     async def async_browse_media(
@@ -253,13 +253,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             media_id = play_item.url
 
         url = async_process_play_media_url(self.hass, media_id)
-        await self._bridge.player.play(url)
+        await self._active_player.play(url)
 
     @exception_wrap
     async def async_play_preset(self, preset_number: int) -> None:
         """Play preset number."""
         try:
-            await self._bridge.player.play_preset(preset_number)
+            await self._active_player.play_preset(preset_number)
         except ValueError as err:
             raise HomeAssistantError(err) from err
 
@@ -267,7 +267,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position."""
-        await self._bridge.player.seek(round(position))
+        await self._active_player.seek(round(position))
 
     @exception_wrap
     @override
@@ -327,11 +327,24 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return [leader_id, *followers]
 
     @property
+    def _active_player(self) -> LinkPlayPlayer:
+        """Return the player that holds the active media info.
+
+        A follower in a multiroom group does not expose the media info of the
+        stream it is playing; that info is only available on the group leader.
+        """
+        multiroom = self._bridge.multiroom
+        if multiroom is not None and multiroom.leader is not self._bridge:
+            return multiroom.leader.player
+        return self._bridge.player
+
+    @property
     @override
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
-        if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(self._bridge.player.album_art)
+        player = self._active_player
+        if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
+            return str(player.album_art)
         return None
 
     @exception_wrap
@@ -352,24 +365,28 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_state = STATE_MAP[self._bridge.player.status]
         self._attr_volume_level = self._bridge.player.volume / 100
         self._attr_is_volume_muted = self._bridge.player.muted
-        self._attr_repeat = REPEAT_MAP[self._bridge.player.loop_mode]
-        self._attr_shuffle = self._bridge.player.loop_mode == LoopMode.RANDOM_PLAYBACK
+        self._attr_repeat = REPEAT_MAP[self._active_player.loop_mode]
+        self._attr_shuffle = self._active_player.loop_mode == LoopMode.RANDOM_PLAYBACK
         self._attr_sound_mode = self._bridge.player.equalizer_mode.value
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:
-            if self._bridge.player.total_length != 0:
+            # A follower mirrors the media info from the group leader and routes
+            # its transport controls to the leader, so the seekable features
+            # follow the leader's player as well.
+            player = self._active_player
+            if player.total_length != 0:
                 self._attr_supported_features = (
                     self._attr_supported_features | SEEKABLE_FEATURES
                 )
 
             self._attr_source = SOURCE_MAP.get(self._bridge.player.play_mode, "other")
-            self._attr_media_position = self._bridge.player.current_position_in_seconds
+            self._attr_media_position = player.current_position_in_seconds
             self._attr_media_position_updated_at = utcnow()
-            self._attr_media_duration = self._bridge.player.total_length_in_seconds
-            self._attr_media_artist = self._bridge.player.artist
-            self._attr_media_title = self._bridge.player.title
-            self._attr_media_album_name = self._bridge.player.album
+            self._attr_media_duration = player.total_length_in_seconds
+            self._attr_media_artist = player.artist
+            self._attr_media_title = player.title
+            self._attr_media_album_name = player.album
         elif self._bridge.player.status == PlayingStatus.STOPPED:
             self._attr_media_position = None
             self._attr_media_position_updated_at = None

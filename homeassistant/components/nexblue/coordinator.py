@@ -1,5 +1,7 @@
 """Data update coordinator for NexBlue."""
 
+from collections.abc import Callable
+from datetime import datetime
 from typing import override
 
 from nexblue_api import (
@@ -14,13 +16,21 @@ from nexblue_api.models import ChargerStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_REFRESH_TOKEN, LOGGER, UPDATE_INTERVAL
 
 type NexBlueConfigEntry = ConfigEntry["NexBlueDataUpdateCoordinator"]
+
+INITIAL_COMMAND_REFRESH_DELAY = 3
+FINAL_COMMAND_REFRESH_DELAY = 20
+COMMAND_REFRESH_DELAYS = (
+    INITIAL_COMMAND_REFRESH_DELAY,
+    FINAL_COMMAND_REFRESH_DELAY,
+)
 
 
 class NexBlueDataUpdateCoordinator(
@@ -38,6 +48,8 @@ class NexBlueDataUpdateCoordinator(
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
+        self._pending_command_refreshes: dict[str, set[Callable[[], None]]] = {}
+        entry.async_on_unload(self.async_cancel_pending_command_refreshes)
         super().__init__(
             hass,
             LOGGER,
@@ -45,6 +57,55 @@ class NexBlueDataUpdateCoordinator(
             name=f"NexBlue {entry.title}",
             update_interval=UPDATE_INTERVAL,
         )
+
+    @callback
+    def async_schedule_command_refreshes(self, serial_number: str) -> None:
+        """Schedule shared follow-up refreshes after a charger command."""
+        self.async_cancel_pending_command_refreshes(serial_number)
+        pending_refreshes: set[Callable[[], None]] = set()
+        self._pending_command_refreshes[serial_number] = pending_refreshes
+
+        def _schedule_refresh(delay: int) -> None:
+            cancel: Callable[[], None] | None = None
+
+            @callback
+            def _request_refresh(_now: datetime) -> None:
+                """Request coordinator data after a charger command."""
+                if cancel is not None:
+                    pending_refreshes.discard(cancel)
+                if not pending_refreshes:
+                    self._pending_command_refreshes.pop(serial_number, None)
+                self.config_entry.async_create_task(
+                    self.hass,
+                    self.async_request_refresh(),
+                    name="NexBlue command refresh",
+                )
+
+            cancel = async_call_later(self.hass, delay, _request_refresh)
+            pending_refreshes.add(cancel)
+
+        for delay in COMMAND_REFRESH_DELAYS:
+            _schedule_refresh(delay)
+
+    @callback
+    def async_cancel_pending_command_refreshes(
+        self, serial_number: str | None = None
+    ) -> None:
+        """Cancel pending command refreshes for a charger or the whole entry."""
+        if serial_number is None:
+            pending_refreshes = [
+                cancel
+                for refreshes in self._pending_command_refreshes.values()
+                for cancel in refreshes
+            ]
+            self._pending_command_refreshes.clear()
+        else:
+            pending_refreshes = list(
+                self._pending_command_refreshes.pop(serial_number, set())
+            )
+
+        for cancel in pending_refreshes:
+            cancel()
 
     @override
     async def _async_update_data(self) -> dict[str, ChargerStatus | None]:

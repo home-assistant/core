@@ -80,6 +80,7 @@ async def test_poll_when_cover_has_command_state(
         await hass.async_block_till_done()
         mock_subprocess_run.assert_called_once_with(
             "echo state",
+            stdin=None,
             close_fds=False,
             stdout=-1,
         )

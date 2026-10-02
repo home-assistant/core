@@ -67,6 +67,9 @@ class LoqedLock(LoqedEntity, LockEntity):
     @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
+        # The bridge reports "unknown" after a restart until the lock reports again.
+        if self._lock.bolt_state == "unknown":
+            return None
         return self._lock.bolt_state in ["night_lock_remote", "night_lock"]
 
     @override

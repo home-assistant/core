@@ -13,7 +13,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -21,9 +20,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import setup_platform_integration
+from . import async_fire_coordinator_update, setup_platform_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
@@ -298,18 +297,14 @@ async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing
     assert state.state == "20.0"
 
     updated_target = replace(mock_bypass_supply_temperature_targets.pop(1), value=20.5)
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     mock_bypass_supply_temperature_targets[1] = updated_target
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -334,17 +329,13 @@ async def test_bypass_supply_temperature_target_recovers_from_refresh_error(
         DucoError("Temporary bypass target failure"),
         mock_bypass_supply_temperature_targets.copy(),
     ]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None

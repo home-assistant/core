@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The App ID does not match the previously configured account."
     },
     "error": {
@@ -142,6 +141,9 @@
     }
   },
   "exceptions": {
+    "alarm_arm_disarm_failed": {
+      "message": "Imou rejected the arming change"
+    },
     "get_image_failed": {
       "message": "Could not get a snapshot from Imou"
     },

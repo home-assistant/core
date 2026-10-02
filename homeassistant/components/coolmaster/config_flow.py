@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pycoolmasternet_async import CoolMasterNet
-import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,17 +29,17 @@ AVAILABLE_MODES = [
     HVACMode.FAN_ONLY.value,
 ]
 
-MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
+MODES_SCHEMA = {probatio.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
         **MODES_SCHEMA,
-        vol.Required(CONF_SWING_SUPPORT, default=False): bool,
-        vol.Required(CONF_MORE_OPTIONS): section(
-            vol.Schema(
+        probatio.Required(CONF_SWING_SUPPORT, default=False): bool,
+        probatio.Required(CONF_MORE_OPTIONS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_SEND_WAKEUP_PROMPT, default=False): bool,
+                    probatio.Required(CONF_SEND_WAKEUP_PROMPT, default=False): bool,
                 }
             ),
             SectionConfig(collapsed=True),

@@ -7,7 +7,7 @@ import logging
 from typing import Any, cast, override
 
 import httpx
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
@@ -30,9 +30,9 @@ from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
+        probatio.Required(CONF_URL): str,
     }
 )
 
@@ -115,11 +115,18 @@ async def validate_input(
     url = data[CONF_URL]
     try:
         cv.url(url)  # Cannot be added to schema directly
-    except vol.Invalid as error:
+    except probatio.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(hass, url, token_manager=token_manager) as session:
-            response = await session.initialize()
+        async with mcp_client(hass, url, token_manager=token_manager) as (
+            _session,
+            response,
+        ):
+            if not response.capabilities.tools:
+                raise MissingCapabilities(
+                    f"MCP Server {url} does not support 'Tools' capability"
+                )
+            return {"title": response.serverInfo.name}
     except httpx.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
@@ -132,13 +139,6 @@ async def validate_input(
     except httpx.HTTPError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
-
-    if not response.capabilities.tools:
-        raise MissingCapabilities(
-            f"MCP Server {url} does not support 'Tools' capability"
-        )
-
-    return {"title": response.serverInfo.name}
 
 
 class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -200,7 +200,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         try:
             # An unparsable URL, such as an unmatched IPv6 bracket, raises ValueError
             url = cv.url(url)
-        except vol.Invalid, ValueError:
+        except probatio.Invalid, ValueError:
             _LOGGER.debug(
                 "Ignoring discovery from app %s with invalid URL: %s",
                 discovery_info.slug,

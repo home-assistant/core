@@ -140,6 +140,16 @@ def cached_json_fragment(data: Any) -> orjson.Fragment:
     return orjson.Fragment(b"".join((json_bytes(data), b"")))
 
 
+def cached_json_fragment_sorted(data: Any) -> orjson.Fragment:
+    """Return a json fragment with sorted keys, right-sized for long-term caching.
+
+    The sorted-key variant of cached_json_fragment (see json_bytes_sorted).
+    """
+    # The empty second join item is load-bearing: it forces a copy into a
+    # right-sized buffer; a single-item join returns the input unchanged.
+    return orjson.Fragment(b"".join((json_bytes_sorted(data), b"")))
+
+
 def json_dumps(data: Any) -> str:
     r"""Dump json string.
 

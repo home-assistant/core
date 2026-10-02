@@ -24,6 +24,7 @@ from . import (
     LOCK_LITE_SERVICE_INFO,
     LOCK_PRO_WIFI_SERVICE_INFO,
     LOCK_SERVICE_INFO,
+    LOCK_ULTRA_MAX_SERVICE_INFO,
     LOCK_ULTRA_SERVICE_INFO,
     LOCK_VISION_PRO_SERVICE_INFO,
     LOCK_VISION_SERVICE_INFO,
@@ -41,6 +42,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ("lock", LOCK_SERVICE_INFO),
         ("lock_lite", LOCK_LITE_SERVICE_INFO),
         ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_ultra_max", LOCK_ULTRA_MAX_SERVICE_INFO),
         ("lock_vision", LOCK_VISION_SERVICE_INFO),
         ("lock_vision_pro", LOCK_VISION_PRO_SERVICE_INFO),
         ("lock_pro_wifi", LOCK_PRO_WIFI_SERVICE_INFO),
@@ -92,6 +94,7 @@ async def test_lock_services(
         ("lock", LOCK_SERVICE_INFO),
         ("lock_lite", LOCK_LITE_SERVICE_INFO),
         ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_ultra_max", LOCK_ULTRA_MAX_SERVICE_INFO),
         ("lock_vision", LOCK_VISION_SERVICE_INFO),
         ("lock_vision_pro", LOCK_VISION_PRO_SERVICE_INFO),
         ("lock_pro_wifi", LOCK_PRO_WIFI_SERVICE_INFO),
@@ -135,6 +138,28 @@ async def test_lock_services_with_night_latch_enabled(
         )
 
         mocked_instance.assert_awaited_once()
+
+
+async def test_lock_ultra_max_entities(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test Lock Ultra Max creates lock, door, and battery entities."""
+    inject_bluetooth_service_info(hass, LOCK_ULTRA_MAX_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="lock_ultra_max")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("lock.test_name") is not None
+    assert hass.states.get("binary_sensor.test_name") is not None
+    assert hass.states.get("sensor.test_name_battery") is not None
 
 
 @pytest.mark.parametrize(

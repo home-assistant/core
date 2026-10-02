@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -30,6 +29,8 @@
   },
   "device_automation": {
     "trigger_type": {
+      "double_tap": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::double_tap%]",
+      "single_tap": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::single_tap%]",
       "swipe_down": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_down%]",
       "swipe_left": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_left%]",
       "swipe_right": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_right%]",
@@ -43,6 +44,8 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "double_tap": "Double tap",
+              "single_tap": "Single tap",
               "swipe_down": "Swipe down",
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",

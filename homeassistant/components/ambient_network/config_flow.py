@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aioambient import OpenAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -90,10 +90,10 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors = {"base": "no_stations_found"}
 
-        schema: vol.Schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+        schema: probatio.Schema = self.add_suggested_values_to_schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION,
                     ): LocationSelector(LocationSelectorConfig(radius=True)),
                 }
@@ -140,9 +140,9 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             for mac_address, station in self._stations.items()
         ]
 
-        schema: vol.Schema = vol.Schema(
+        schema: probatio.Schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION): SelectSelector(
+                probatio.Required(CONF_STATION): SelectSelector(
                     SelectSelectorConfig(options=options, multiple=False, sort=True),
                 )
             }

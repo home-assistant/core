@@ -9,14 +9,8 @@ import sys
 from typing import Any
 
 from mysensors import BaseAsyncGateway, Message, Sensor, get_const, mysensors
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.mqtt import (
-    DOMAIN as MQTT_DOMAIN,
-    ReceiveMessage as MQTTReceiveMessage,
-    async_publish,
-    async_subscribe,
-)
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -35,6 +29,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
+    MQTT_DOMAIN,
     ConfGatewayType,
 )
 from .handler import HANDLERS
@@ -58,7 +53,7 @@ def is_serial_port(value: str) -> str:
         ports = (f"COM{idx + 1}" for idx in range(256))
         if value in ports:
             return value
-        raise vol.Invalid(f"{value} is not a serial port")
+        raise probatio.Invalid(f"{value} is not a serial port")
     return cv.isdevice(value)
 
 
@@ -67,7 +62,9 @@ def is_socket_address(value: str) -> str:
     try:
         socket.getaddrinfo(value, None)
     except OSError as err:
-        raise vol.Invalid("Device is not a valid domain name or ip address") from err
+        raise probatio.Invalid(
+            "Device is not a valid domain name or ip address"
+        ) from err
     return value
 
 
@@ -173,6 +170,12 @@ async def _get_gateway(
         # Naive check that doesn't consider config entry state.
         if MQTT_DOMAIN not in hass.config.components:
             return None
+
+        from homeassistant.components.mqtt import (  # noqa: PLC0415
+            ReceiveMessage as MQTTReceiveMessage,
+            async_publish,
+            async_subscribe,
+        )
 
         def pub_callback(topic: str, payload: str, qos: int, retain: bool) -> None:
             """Call MQTT publish function."""
