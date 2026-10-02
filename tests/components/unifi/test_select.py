@@ -24,7 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType
@@ -115,6 +115,50 @@ async def test_schedule_mode_states(hass: HomeAssistant, expected: str) -> None:
                 "time_range_end": "08:00",
             },
         ),
+        (
+            [FIREWALL_POLICY],
+            "every_week",
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                "time_all_day": False,
+                "time_range_start": "21:00",
+                "time_range_end": "08:00",
+            },
+        ),
+        (
+            [
+                _policy(
+                    {
+                        "mode": "ONE_TIME_ONLY",
+                        "date": "2026-01-10",
+                        "time_range_start": "21:30",
+                        "time_range_end": "08:30",
+                    }
+                )
+            ],
+            "every_week",
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                "time_all_day": False,
+                "time_range_start": "21:30",
+                "time_range_end": "08:30",
+            },
+        ),
+        (
+            [FIREWALL_POLICY],
+            "custom",
+            {
+                "mode": "CUSTOM",
+                "date_start": "2026-01-16",
+                "date_end": "2026-01-16",
+                "repeat_on_days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                "time_all_day": False,
+                "time_range_start": "21:00",
+                "time_range_end": "08:00",
+            },
+        ),
         # A mode this library doesn't know can still be replaced.
         (
             [_policy({"mode": "SUNRISE", "time_range_start": "01:00"})],
@@ -158,27 +202,6 @@ async def test_select_schedule_mode(
 
     assert aioclient_mock.mock_calls[call_count][0] == "put"
     assert aioclient_mock.mock_calls[call_count][2] == expected
-
-
-@pytest.mark.parametrize("option", ["every_week", "custom"])
-@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
-async def test_select_schedule_mode_not_supported(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, option: str
-) -> None:
-    """Modes that need day selection can't be chosen yet."""
-    call_count = aioclient_mock.call_count
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
-            blocking=True,
-        )
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "schedule_mode_not_supported"
-    assert aioclient_mock.call_count == call_count
-    assert hass.states.get(ENTITY_ID).state == "every_day"
 
 
 @pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])

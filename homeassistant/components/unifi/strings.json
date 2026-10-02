@@ -272,9 +272,6 @@
     "schedule_dates_out_of_order": {
       "message": "The schedule's start date must be before its end date"
     },
-    "schedule_mode_not_supported": {
-      "message": "This schedule mode can only be set in UniFi Network"
-    },
     "schedule_needs_a_day": {
       "message": "The schedule needs at least one day of the week"
     },
