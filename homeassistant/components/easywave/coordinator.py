@@ -425,7 +425,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return None
         task = self._listener_task
         self._listener_task = None
-        if not task.done():
+        if not task.done() and task is not asyncio.current_task():
             task.cancel()
         return task
 
@@ -461,6 +461,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     telegram = await self.transceiver.receive_telegram(timeout=30.0)
                     if telegram is None:
                         if not self.transceiver.is_connected:
+                            self._handle_disconnect()
                             break
                         continue
                     self._dispatch_telegram(telegram)

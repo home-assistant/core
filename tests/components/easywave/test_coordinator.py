@@ -627,6 +627,8 @@ async def test_telegram_listener_loop_exits_when_disconnected_receive_returns_no
 
     assert coordinator._listener_task is not None
     assert coordinator._listener_task.done()
+    assert coordinator.is_offline is True
+    assert coordinator.data == {"is_connected": False, "device_path": None}
     mock_transceiver.receive_telegram.assert_awaited_once()
     await coordinator.async_shutdown()
 
