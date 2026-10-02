@@ -137,9 +137,7 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
                     probatio.All(
                         probatio.Coerce(float), probatio.Range(min=0, max=360)
                     ),
-                    probatio.All(
-                        probatio.Coerce(float), probatio.Range(min=0, max=100)
-                    ),
+                    probatio.All(probatio.Coerce(float), probatio.Percentage()),
                 )
             ),
         ),
@@ -189,7 +187,7 @@ HSBK_SCHEMA = probatio.All(
     probatio.ExactSequence(
         (
             probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
-            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+            probatio.All(probatio.Coerce(float), probatio.Percentage()),
             probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=100)),
             probatio.All(probatio.Coerce(int), probatio.Clamp(min=1500, max=9000)),
         )

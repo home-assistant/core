@@ -470,6 +470,7 @@ FLOWS = {
         "madvr",
         "mailgun",
         "marantz_infrared",
+        "marketplace",
         "mastodon",
         "matter",
         "mcp",

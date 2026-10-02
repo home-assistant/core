@@ -96,6 +96,7 @@ class BlockedIntegration:
 
     lowest_good_version: AwesomeVersion | None
     reason: str
+    replaced_by: str | None = None
 
 
 BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
@@ -137,6 +138,20 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
         AwesomeVersion("0.7.1"),
         "crashes Home Assistant when it can't connect to the API",
     ),
+    # Added in 2026.11.0 because HACS ships with Home Assistant now
+    "hacs": BlockedIntegration(
+        None,
+        "is now built into Home Assistant as the Marketplace",
+        replaced_by="marketplace",
+    ),
+}
+
+# Custom integrations that a built-in integration took over. Their config
+# entries are rewritten to the built-in domain when they are loaded.
+MIGRATED_CUSTOM_INTEGRATIONS: dict[str, str] = {
+    domain: blocked.replaced_by
+    for domain, blocked in BLOCKED_CUSTOM_INTEGRATIONS.items()
+    if blocked.replaced_by is not None
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
@@ -284,7 +299,7 @@ class Manifest(TypedDict, total=False):
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the necessary data structures."""
-    _async_mount_config_dir(hass)
+    async_mount_config_dir(hass)
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
     hass.data[DATA_MISSING_PLATFORMS] = {}
@@ -342,7 +357,10 @@ async def async_get_custom_components(
 
         comps = await hass.async_add_executor_job(_get_custom_components, hass)
 
-        hass.data[DATA_CUSTOM_COMPONENTS] = comps
+        # A cache cleared during the scan asks for a newer scan, this one
+        # must not put its older result back.
+        if hass.data.get(DATA_CUSTOM_COMPONENTS) is future:
+            hass.data[DATA_CUSTOM_COMPONENTS] = comps
         future.set_result(comps)
         return comps
 
@@ -350,6 +368,18 @@ async def async_get_custom_components(
         return await wait_shared_future(comps_or_future)
 
     return comps_or_future
+
+
+@callback
+def async_clear_custom_components_cache(hass: HomeAssistant) -> None:
+    """Clear the cached list of custom integrations.
+
+    The next call to async_get_custom_components scans the custom_components
+    directory again, which is what makes a freshly installed integration
+    visible. Safe to call when nothing is cached, and when the list is still
+    being built: whoever is waiting for that gets the result it was promised.
+    """
+    hass.data.pop(DATA_CUSTOM_COMPONENTS, None)
 
 
 async def async_get_config_flows(
@@ -712,6 +742,21 @@ class Integration:
 
             if integration.is_built_in:
                 return integration
+
+            # A custom integration that a built-in one took over is left alone,
+            # without the warning that would make it look like a problem.
+            if (
+                blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain)
+            ) and blocked.replaced_by is not None:
+                _LOGGER.info(
+                    (
+                        "Custom integration '%s' is now part of Home Assistant"
+                        " as '%s' and is no longer loaded"
+                    ),
+                    integration.domain,
+                    blocked.replaced_by,
+                )
+                return None
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
 
@@ -1700,10 +1745,11 @@ def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     return func
 
 
-def _async_mount_config_dir(hass: HomeAssistant) -> None:
+def async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
-    Async friendly but not a coroutine.
+    Async friendly but not a coroutine. Only a custom_components folder that
+    exists is mounted, one created later needs another call.
     """
 
     sys.path.insert(0, hass.config.config_dir)
