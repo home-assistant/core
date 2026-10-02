@@ -38,7 +38,7 @@ mutagen==1.48.1
 orjson==3.11.9
 packaging>=23.1
 Pillow==12.3.0
-probatio==0.12.5
+probatio==0.13.0
 propcache==0.5.4
 psutil-home-assistant==0.0.1
 PyJWT==2.15.1
