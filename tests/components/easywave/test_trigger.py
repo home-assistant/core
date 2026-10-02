@@ -334,6 +334,57 @@ async def test_easywave_gateway_connected_trigger_fires(
     assert len(service_calls) == 1
 
 
+async def test_easywave_gateway_connected_trigger_fires_for_area_with_diagnostic_entity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Gateway triggers include diagnostic status entities when expanding areas."""
+    entry = await _async_setup_entry(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_rx11_gateway"
+    )
+    assert entity_id is not None
+
+    area = area_registry.async_get_or_create("gateway_room")
+    # Assign only the diagnostic entity to the area so expansion must honor
+    # primary_entities_only=False (matching triggers.yaml).
+    entity_registry.async_update_entity(entity_id, area_id=area.id)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "trigger": "easywave.gateway_connected",
+                    "target": {"area_id": area.id},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": device.id,
+            "type": EVENT_TYPE_GATEWAY_CONNECTED,
+            "subtype": "connected",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
 async def test_easywave_button_press_a_trigger_ignores_non_matching_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

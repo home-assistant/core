@@ -8,10 +8,11 @@ from homeassistant.components.easywave.const import (
     get_frequency_for_pid,
     is_country_allowed_for_frequency,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .conftest import async_setup_easywave_entry
+from .conftest import async_setup_easywave_entry, mock_easywave_transceiver
 
 from tests.common import MockConfigEntry
 
@@ -157,6 +158,63 @@ async def test_setup_fails_with_no_country_configured(
     )
     assert issue is not None
     assert issue.translation_key == "country_not_configured"
+
+
+async def test_regulatory_issue_replaces_previous_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Changing between unset and disallowed country replaces the repair issue."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config.country = None
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id) is False
+
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    issues = ir.async_get(hass)
+    assert (
+        issues.async_get_issue(
+            DOMAIN, f"country_not_configured_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
+
+    hass.config.country = "US"
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id) is False
+    await hass.async_block_till_done()
+
+    assert (
+        issues.async_get_issue(
+            DOMAIN, f"country_not_configured_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
+    issue = issues.async_get_issue(
+        DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "frequency_not_permitted"
+
+
+async def test_country_change_reloads_and_disables_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Changing HA country to a disallowed region reloads and disables Easywave."""
+    transceiver = mock_easywave_transceiver()
+    await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config.async_update(country="US")
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "frequency_not_permitted"
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    issues = ir.async_get(hass)
+    assert (
+        issues.async_get_issue(
+            DOMAIN, f"frequency_not_permitted_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
 
 
 async def test_repair_issue_created_on_disallowed_country(

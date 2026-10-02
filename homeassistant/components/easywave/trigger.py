@@ -1,7 +1,7 @@
 """Provides triggers for Easywave devices."""
 
 from abc import ABC
-from typing import cast, override
+from typing import ClassVar, cast, override
 
 import probatio
 
@@ -47,6 +47,8 @@ class EasywaveEventTrigger(Trigger, ABC):
     _event_type: str
     _subtype: str | None = None
     _schema = _TRIGGER_SCHEMA
+    # Match triggers.yaml: gateway triggers include diagnostic status entities.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -68,7 +70,9 @@ class EasywaveEventTrigger(Trigger, ABC):
     def _device_ids_from_target(self) -> set[str]:
         """Return device registry IDs referenced by the trigger target."""
         referenced = async_extract_referenced_entity_ids(
-            self._hass, TargetSelection(self._target)
+            self._hass,
+            TargetSelection(self._target),
+            primary_entities_only=self._primary_entities_only,
         )
         device_ids = set(referenced.referenced_devices)
         for entity_id in referenced.referenced | referenced.indirectly_referenced:
@@ -131,6 +135,7 @@ class EasywaveGatewayConnectedTrigger(EasywaveEventTrigger):
 
     _event_type = EVENT_TYPE_GATEWAY_CONNECTED
     _subtype = "connected"
+    _primary_entities_only = False
 
 
 class EasywaveGatewayDisconnectedTrigger(EasywaveEventTrigger):
@@ -138,6 +143,7 @@ class EasywaveGatewayDisconnectedTrigger(EasywaveEventTrigger):
 
     _event_type = EVENT_TYPE_GATEWAY_DISCONNECTED
     _subtype = "disconnected"
+    _primary_entities_only = False
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

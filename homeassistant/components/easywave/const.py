@@ -9,7 +9,8 @@ DOMAIN: Final = "easywave"
 
 # Home Assistant requires integrations to verify that RF hardware is permitted
 # in the user's configured country. The RX11 USB Transceiver operates on
-# 868 MHz (EU ISM band), which is harmonized across CEPT member states.
+# 868 MHz (EU ISM band). Permission is enforced via ALLOWED_COUNTRIES_868MHZ
+# below (an explicit allowlist), not by CEPT membership alone.
 FREQUENCY_868MHZ: Final = "868 MHz"
 
 # Single source of truth for supported USB sticks. Also register matching
@@ -78,7 +79,7 @@ ALLOWED_COUNTRIES_868MHZ: Final = frozenset(
         "SI",
         "ES",
         "SE",
-        # Other CEPT member states
+        # Additional allowlisted countries in the CEPT region
         "AD",
         "AL",
         "AZ",

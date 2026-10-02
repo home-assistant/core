@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import logging
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from easywave_home_control.codec import (
@@ -217,6 +218,7 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
     device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Periodic refresh reconnects from offline and updates gateway versions."""
     device_registry.async_get_or_create(
@@ -240,7 +242,8 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     mock_transceiver.hw_version = "RX11 v1.0"
     mock_transceiver.fw_version = "FW 2.3.4"
 
-    await coordinator.async_refresh()
+    with caplog.at_level(logging.INFO):
+        await coordinator.async_refresh()
 
     mock_transceiver.reconnect.assert_awaited_once()
     assert coordinator.is_offline is False
@@ -248,6 +251,7 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
         "is_connected": True,
         "device_path": "/dev/ttyACM0",
     }
+    assert "Reconnected to RX11" in caplog.text
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, coordinator.config_entry.entry_id),

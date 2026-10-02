@@ -4,10 +4,15 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICES, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_DEVICES, EVENT_CORE_CONFIG_UPDATE, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_USB_PID,
@@ -24,6 +29,8 @@ from .transceiver import RX11Transceiver
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 @dataclass
 class EasywaveRuntimeData:
@@ -39,11 +46,35 @@ type EasywaveConfigEntry = ConfigEntry[EasywaveRuntimeData]
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
+def _async_clear_regulatory_issues(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove any Easywave regulatory repair issues for a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry_id}")
+    ir.async_delete_issue(hass, DOMAIN, f"country_not_configured_{entry_id}")
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Easywave and reload entries when the HA country changes."""
+
+    @callback
+    def _async_core_config_updated(event: Event) -> None:
+        """Reload Easywave when the configured country changes."""
+        if "country" not in event.data:
+            return
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _async_core_config_updated)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
     """Set up the Easywave gateway config entry."""
     usb_pid = entry.data.get(CONF_USB_PID)
     frequency = get_frequency_for_pid(usb_pid)
     country_code = hass.config.country
+
+    # Drop any previous contradictory regulatory issue before creating a new one.
+    _async_clear_regulatory_issues(hass, entry.entry_id)
 
     if frequency and not is_country_allowed_for_frequency(frequency, country_code):
         if country_code is None:
@@ -84,9 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
             translation_placeholders=placeholders,
         )
 
-    ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
-    ir.async_delete_issue(hass, DOMAIN, f"country_not_configured_{entry.entry_id}")
-
     transceiver = RX11Transceiver(hass, entry.data)
     coordinator = EasywaveCoordinator(hass, transceiver, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -123,8 +151,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
     """Clean up repair issues when the config entry is deleted."""
     # Failed regulatory setup raises ConfigEntryError before unload hooks run, so
     # removal must clear the issue explicitly.
-    ir.async_delete_issue(hass, DOMAIN, f"frequency_not_permitted_{entry.entry_id}")
-    ir.async_delete_issue(hass, DOMAIN, f"country_not_configured_{entry.entry_id}")
+    _async_clear_regulatory_issues(hass, entry.entry_id)
 
 
 def _device_identifier(device: dr.AnyDeviceEntry) -> str | None:

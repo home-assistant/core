@@ -207,6 +207,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
         )
         if was_offline:
+            _LOGGER.info("Reconnected to RX11")
             self._sync_gateway_connection_events()
 
     @callback
@@ -251,6 +252,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self._update_gateway_device()
                     if self._has_telegram_listeners:
                         self._start_telegram_listener()
+                    _LOGGER.info("Reconnected to RX11")
                     self._sync_gateway_connection_events()
                     return {
                         "is_connected": self.transceiver.is_connected,
