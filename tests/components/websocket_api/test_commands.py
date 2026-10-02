@@ -18,7 +18,7 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
-from homeassistant.components.websocket_api import DOMAIN, const
+from homeassistant.components.websocket_api import DOMAIN, const, messages
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -4167,6 +4167,45 @@ async def test_subscribe_entities_batch_survives_one_unserializable_change(
     }
 
     await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_serializes_once_however_large_the_batch(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A batch bigger than the fragment cache is still serialized once for everyone.
+
+    Fragments are resolved while the bus is dispatching each event, so every
+    subscription asks for the same one consecutively and only the first pays.
+    Resolving them when the batch is sent instead would make the reuse distance a
+    whole batch, and a batch larger than the cache would then be serialized again in
+    full for every connected client.
+    """
+    clients = [await hass_ws_client(hass), await hass_ws_client(hass)]
+    for client in clients:
+        await client.send_json_auto_id({"type": "subscribe_entities"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        await client.receive_json()
+
+    maxsize = messages.cached_state_diff_fragment.cache_parameters()["maxsize"]
+    entity_count = maxsize * 2
+    messages.cached_state_diff_fragment.cache_clear()
+
+    for index in range(entity_count):
+        hass.states.async_set(f"light.bulb_{index}", "on")
+    await hass.async_block_till_done()
+
+    # Once each, with every other subscription served from the cache. Resolving at
+    # send time would evict each entry before the second connection reached it, so
+    # the whole batch would be serialized again per client: 2 * entity_count misses.
+    info = messages.cached_state_diff_fragment.cache_info()
+    assert info.misses == entity_count
+    assert info.hits == entity_count * (len(clients) - 1)
+
+    for client in clients:
+        await client.close()
     await hass.async_block_till_done()
 
 

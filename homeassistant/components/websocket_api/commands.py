@@ -417,7 +417,14 @@ class _StateDiffBatch:
     its own is still sent on its own.
     """
 
-    __slots__ = ("_entity_ids", "_events", "_loop", "_message_id", "_send_message")
+    __slots__ = (
+        "_entity_ids",
+        "_fragments",
+        "_loop",
+        "_message_id",
+        "_send_message",
+        "_unserializable",
+    )
 
     def __init__(
         self,
@@ -429,7 +436,8 @@ class _StateDiffBatch:
         self._loop = loop
         self._send_message = send_message
         self._message_id = message_id_as_bytes
-        self._events: list[Event[EventStateChangedData]] = []
+        self._fragments: list[tuple[bytes, bytes]] = []
+        self._unserializable: list[Event[EventStateChangedData]] = []
         self._entity_ids: set[str] = set()
 
     @callback
@@ -443,20 +451,41 @@ class _StateDiffBatch:
             # what we have keeps the order the events actually occurred in.
             self.async_flush()
         self._entity_ids.add(entity_id)
-        self._events.append(event)
-        if len(self._events) == 1:
+        # Serialized now, while the bus is still dispatching this event to every other
+        # subscription, so they all ask for the same fragment one after another and
+        # only the first pays for it. Deferring this to the flush would make the reuse
+        # distance a whole batch instead of one event, and a batch larger than the
+        # cache would then be re-serialized in full for every connected client - the
+        # opposite of what the cache is for, on exactly the installations that can
+        # least afford it.
+        if (fragment := messages.cached_state_diff_fragment(event)) is None:
+            self._unserializable.append(event)
+        else:
+            self._fragments.append(fragment)
+        if len(self._fragments) + len(self._unserializable) == 1:
             self._loop.call_soon(self.async_flush)
 
     @callback
     def async_flush(self) -> None:
         """Send everything collected so far, if anything."""
-        if not self._events:
+        if not self._fragments and not self._unserializable:
             return
-        events = self._events
-        self._events = []
+        fragments = self._fragments
+        unserializable = self._unserializable
+        self._fragments = []
+        self._unserializable = []
         self._entity_ids = set()
-        for message in messages.batched_state_diff_messages(self._message_id, events):
-            self._send_message(message)
+        if fragments:
+            self._send_message(
+                messages.batched_state_diff_message(self._message_id, fragments)
+            )
+        # One change that will not serialize must not cost the rest of the batch their
+        # update. cached_state_diff_message logs the bad data and substitutes the error
+        # payload, which is what this change would have been sent as unbatched.
+        for event in unserializable:
+            self._send_message(
+                messages.cached_state_diff_message(self._message_id, event)
+            )
 
     @callback
     def async_discard(self) -> None:
@@ -466,7 +495,8 @@ class _StateDiffBatch:
         as an unsubscribe would otherwise still be handed to send_message afterwards,
         for a subscription - and possibly a connection - that has gone.
         """
-        self._events = []
+        self._fragments = []
+        self._unserializable = []
         self._entity_ids = set()
 
 

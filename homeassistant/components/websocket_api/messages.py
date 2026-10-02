@@ -192,43 +192,24 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
     )[:-1]
 
 
-def batched_state_diff_messages(
-    message_id_as_bytes: bytes, events: list[Event[EventStateChangedData]]
-) -> list[bytes]:
-    """Return the messages describing a batch of state changes.
+def batched_state_diff_message(
+    message_id_as_bytes: bytes, fragments: list[tuple[bytes, bytes]]
+) -> bytes:
+    """Return one event message describing several state changes.
 
-    Normally one message, since the state update format already describes any number
-    of entities at once. A change whose data cannot be serialized is sent on its own
-    instead, so one bad entity costs only its own update rather than the whole batch.
-
-    Each change is serialized once into a fragment shared between connections, and
-    this only joins them.
+    The state update format already describes any number of entities at once. Takes
+    fragments resolved by cached_state_diff_fragment rather than events, because they
+    have to be serialized while the event is being dispatched - see _StateDiffBatch -
+    and this only joins them.
     """
-    if len(events) == 1:
-        return [cached_state_diff_message(message_id_as_bytes, events[0])]
-
     # Grouped rather than appended, because the format keys additions, removals and
     # changes separately. A caller must not place two updates for the same entity in
     # one batch - see _StateDiffBatch, which flushes instead, since the groups are
     # applied by the client in a fixed order that need not match the order the events
     # happened in.
     grouped: dict[bytes, list[bytes]] = {}
-    unserializable: list[Event[EventStateChangedData]] = []
-    for event in events:
-        if (fragment := _cached_state_diff_fragment(event)) is None:
-            unserializable.append(event)
-            continue
-        key, entry = fragment
+    for key, entry in fragments:
         grouped.setdefault(key, []).append(entry)
-
-    # cached_state_diff_message logs the bad data and substitutes the error payload,
-    # which is exactly what this change would have been sent as unbatched.
-    extra = [
-        cached_state_diff_message(message_id_as_bytes, event)
-        for event in unserializable
-    ]
-    if not grouped:
-        return extra
 
     parts: list[bytes] = [b'{"id":', message_id_as_bytes, b',"type":"event","event":{']
     first = True
@@ -239,23 +220,26 @@ def batched_state_diff_messages(
         opening, closing = (b'":[', b"]") if key == _REMOVE_KEY else (b'":{', b"}")
         parts.extend((b'"', key, opening, b",".join(entries), closing))
     parts.append(b"}}")
-    return [b"".join(parts), *extra]
+    return b"".join(parts)
 
 
 _REMOVE_KEY: Final = ENTITY_EVENT_REMOVE.encode()
 
 
-# Larger than the single-message caches above: those are reused by the next connection
-# immediately, whereas a fragment is reused a whole batch later, so its entry has to
-# survive every other change in that batch to be worth anything.
-@lru_cache(maxsize=512)
-def _cached_state_diff_fragment(
+@lru_cache(maxsize=128)
+def cached_state_diff_fragment(
     event: Event[EventStateChangedData],
 ) -> tuple[bytes, bytes] | None:
     """Cache and serialize one state change as a fragment of a batched message.
 
     Returns the group the change belongs to - "a", "r" or "c" - and the entry that
     goes inside it, or None if it cannot be serialized.
+
+    The cache is the same size as the single-message ones above and works because it
+    is asked the same question the same way: callers resolve a fragment while the bus
+    is still dispatching that event, so every subscription asks for it one after
+    another and only the first pays. Resolving at send time instead would make the
+    reuse distance a whole batch, and no fixed cache size would survive a large one.
     """
     diff = _state_diff_event(event)
     key = next(iter(diff))
