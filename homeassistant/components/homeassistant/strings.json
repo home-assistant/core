@@ -1,4 +1,14 @@
 {
+  "conditions": {
+    "host_reboot_required": {
+      "description": "Tests if the host needs a reboot to apply installed updates or changed settings.",
+      "name": "Host reboot required"
+    },
+    "restart_required": {
+      "description": "Tests if Home Assistant needs a restart to apply installed updates or changed settings.",
+      "name": "Restart required"
+    }
+  },
   "config": {
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -361,6 +371,16 @@
       "user": "User",
       "version": "Version",
       "virtualenv": "Virtual environment"
+    }
+  },
+  "triggers": {
+    "host_reboot_required": {
+      "description": "Triggers when the host needs a reboot to apply installed updates or changed settings.",
+      "name": "Host reboot required"
+    },
+    "restart_required": {
+      "description": "Triggers when Home Assistant needs a restart to apply installed updates or changed settings.",
+      "name": "Restart required"
     }
   }
 }
