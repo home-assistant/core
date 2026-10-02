@@ -45,6 +45,7 @@ def mock_only_feature(spec, set_spec: bool = True, **kwargs):
     if issubclass(spec, blebox_uniapi.sensor.BaseSensor):
         # Autospec would leave is_error as a truthy Mock, making entities unavailable.
         kwargs.setdefault("is_error", False)
+        kwargs.setdefault("needs_configuration", False)
     return mock.create_autospec(spec, set_spec, True, **kwargs)
 
 

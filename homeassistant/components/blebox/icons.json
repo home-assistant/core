@@ -21,11 +21,20 @@
       "co2_level": {
         "default": "mdi:molecule-co2"
       },
+      "fill_level": {
+        "default": "mdi:storage-tank"
+      },
+      "liquid_height": {
+        "default": "mdi:waves-arrow-up"
+      },
       "open_status": {
         "default": "mdi:window-open"
       },
       "power_consumption": {
         "default": "mdi:lightning-bolt"
+      },
+      "volume": {
+        "default": "mdi:water"
       }
     }
   }

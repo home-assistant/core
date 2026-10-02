@@ -99,6 +99,7 @@
       },
       "current": { "name": "Current" },
       "current_n": { "name": "Current {index}" },
+      "fill_level": { "name": "Fill level" },
       "forward_active_energy": { "name": "Forward active energy" },
       "forward_active_energy_n": { "name": "Forward active energy {index}" },
       "forward_reactive_energy": { "name": "Forward reactive energy" },
@@ -107,6 +108,8 @@
       },
       "frequency": { "name": "Frequency" },
       "frequency_n": { "name": "Frequency {index}" },
+      "gauge_pressure": { "name": "Gauge pressure" },
+      "liquid_height": { "name": "Liquid height" },
       "open_status": {
         "name": "Open status",
         "state": {
@@ -129,7 +132,8 @@
       "temperature": { "name": "Temperature" },
       "temperature_n": { "name": "Temperature {index}" },
       "voltage": { "name": "Voltage" },
-      "voltage_n": { "name": "Voltage {index}" }
+      "voltage_n": { "name": "Voltage {index}" },
+      "volume": { "name": "Volume" }
     }
   },
   "exceptions": {
@@ -150,6 +154,12 @@
     },
     "update_failed": {
       "message": "Failed to fetch firmware update information from the BleBox device: {error}"
+    }
+  },
+  "issues": {
+    "probe_not_configured": {
+      "description": "The {sensor_name} sensor of {device_name} reports that its probe is not configured, so it provides no readings.\n\nGo to the device settings in the wBox app and configure the probe or sensor.",
+      "title": "{device_name}: {sensor_name} probe not configured"
     }
   }
 }
