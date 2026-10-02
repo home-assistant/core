@@ -13,15 +13,8 @@ import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.services import (
-    ATTR_ALL,
-    ATTR_CONTAINER_DEVICE_ID,
-    ATTR_DANGLING,
-    ATTR_DATE_UNTIL,
-    ATTR_PULL_IMAGE,
-    ATTR_TIMEOUT,
-    SERVICE_PRUNE_BUILD_CACHE,
-    SERVICE_PRUNE_IMAGES,
-    SERVICE_RECREATE_CONTAINER,
+    PortainerService,
+    PortainerServiceArgument,
     _async_get_device_and_entry,
 )
 from homeassistant.const import ATTR_DEVICE_ID
@@ -61,10 +54,10 @@ async def test_services(
     assert device is not None
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRUNE_IMAGES,
+        PortainerService.PRUNE_IMAGES,
         {
             ATTR_DEVICE_ID: device.id,
-            ATTR_DATE_UNTIL: timedelta(hours=24),
+            PortainerServiceArgument.UNTIL: timedelta(hours=24),
         },
         blocking=True,
     )
@@ -79,9 +72,16 @@ async def test_services(
     ("call_arguments", "expected_until", "expected_dangling"),
     [
         ({}, None, False),
-        ({ATTR_DATE_UNTIL: timedelta(hours=12)}, timedelta(hours=12), False),
         (
-            {ATTR_DATE_UNTIL: timedelta(hours=12), ATTR_DANGLING: True},
+            {PortainerServiceArgument.UNTIL: timedelta(hours=12)},
+            timedelta(hours=12),
+            False,
+        ),
+        (
+            {
+                PortainerServiceArgument.UNTIL: timedelta(hours=12),
+                PortainerServiceArgument.DANGLING: True,
+            },
             timedelta(hours=12),
             True,
         ),
@@ -106,7 +106,7 @@ async def test_service_prune_images(
     assert device is not None
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRUNE_IMAGES,
+        PortainerService.PRUNE_IMAGES,
         {ATTR_DEVICE_ID: device.id, **call_arguments},
         blocking=True,
     )
@@ -121,10 +121,17 @@ async def test_service_prune_images(
     ("call_arguments", "expected_all", "expected_until"),
     [
         ({}, True, None),
-        ({ATTR_ALL: False}, False, None),
-        ({ATTR_DATE_UNTIL: timedelta(hours=12)}, True, timedelta(hours=12)),
+        ({PortainerServiceArgument.ALL: False}, False, None),
         (
-            {ATTR_ALL: False, ATTR_DATE_UNTIL: timedelta(hours=12)},
+            {PortainerServiceArgument.UNTIL: timedelta(hours=12)},
+            True,
+            timedelta(hours=12),
+        ),
+        (
+            {
+                PortainerServiceArgument.ALL: False,
+                PortainerServiceArgument.UNTIL: timedelta(hours=12),
+            },
             False,
             timedelta(hours=12),
         ),
@@ -148,7 +155,7 @@ async def test_service_prune_build_cache(
     assert device is not None
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRUNE_BUILD_CACHE,
+        PortainerService.PRUNE_BUILD_CACHE,
         {ATTR_DEVICE_ID: device.id, **call_arguments},
         blocking=True,
     )
@@ -188,7 +195,7 @@ async def test_service_prune_build_cache_portainer_exceptions(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_BUILD_CACHE,
+            PortainerService.PRUNE_BUILD_CACHE,
             {ATTR_DEVICE_ID: device.id},
             blocking=True,
         )
@@ -200,9 +207,11 @@ async def test_service_prune_build_cache_portainer_exceptions(
 @pytest.mark.parametrize(
     ("service", "client_method"),
     [
-        pytest.param(SERVICE_PRUNE_IMAGES, "images_prune", id="prune_images"),
+        pytest.param(PortainerService.PRUNE_IMAGES, "images_prune", id="prune_images"),
         pytest.param(
-            SERVICE_PRUNE_BUILD_CACHE, "prune_build_cache", id="prune_build_cache"
+            PortainerService.PRUNE_BUILD_CACHE,
+            "prune_build_cache",
+            id="prune_build_cache",
         ),
     ],
 )
@@ -238,11 +247,14 @@ async def test_service_requires_admin(
     [
         ({}, {"pull_image": False}),
         (
-            {ATTR_TIMEOUT: timedelta(minutes=10)},
+            {PortainerServiceArgument.TIMEOUT: timedelta(minutes=10)},
             {"pull_image": False, "timeout": timedelta(minutes=10)},
         ),
         (
-            {ATTR_TIMEOUT: timedelta(minutes=12), ATTR_PULL_IMAGE: True},
+            {
+                PortainerServiceArgument.TIMEOUT: timedelta(minutes=12),
+                PortainerServiceArgument.PULL_IMAGE: True,
+            },
             {"pull_image": True, "timeout": timedelta(minutes=12)},
         ),
     ],
@@ -265,9 +277,9 @@ async def test_service_recreate_container(
     assert container is not None
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RECREATE_CONTAINER,
+        PortainerService.RECREATE_CONTAINER,
         {
-            ATTR_CONTAINER_DEVICE_ID: container.id,
+            PortainerServiceArgument.CONTAINER_DEVICE_ID: container.id,
             **call_arguments,
         },
         blocking=True,
@@ -317,8 +329,8 @@ async def test_service_recreate_container_portainer_exceptions(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RECREATE_CONTAINER,
-            {ATTR_CONTAINER_DEVICE_ID: container.id},
+            PortainerService.RECREATE_CONTAINER,
+            {PortainerServiceArgument.CONTAINER_DEVICE_ID: container.id},
             blocking=True,
         )
 
@@ -347,7 +359,7 @@ async def test_service_validation_errors(
     with pytest.raises(MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_IMAGES,
+            PortainerService.PRUNE_IMAGES,
             {},
             blocking=True,
         )
@@ -356,8 +368,11 @@ async def test_service_validation_errors(
     with pytest.raises(MultipleInvalid, match="value must be at least"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_IMAGES,
-            {ATTR_DEVICE_ID: device.id, ATTR_DATE_UNTIL: timedelta(seconds=30)},
+            PortainerService.PRUNE_IMAGES,
+            {
+                ATTR_DEVICE_ID: device.id,
+                PortainerServiceArgument.UNTIL: timedelta(seconds=30),
+            },
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_not_called()
@@ -365,8 +380,11 @@ async def test_service_validation_errors(
     with pytest.raises(MultipleInvalid, match="value must be at least"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_BUILD_CACHE,
-            {ATTR_DEVICE_ID: device.id, ATTR_DATE_UNTIL: timedelta(seconds=30)},
+            PortainerService.PRUNE_BUILD_CACHE,
+            {
+                ATTR_DEVICE_ID: device.id,
+                PortainerServiceArgument.UNTIL: timedelta(seconds=30),
+            },
             blocking=True,
         )
     mock_portainer_client.prune_build_cache.assert_not_called()
@@ -374,7 +392,7 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_BUILD_CACHE,
+            PortainerService.PRUNE_BUILD_CACHE,
             {ATTR_DEVICE_ID: container.id},
             blocking=True,
         )
@@ -383,7 +401,7 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_IMAGES,
+            PortainerService.PRUNE_IMAGES,
             {ATTR_DEVICE_ID: "invalid_device_id"},
             blocking=True,
         )
@@ -392,8 +410,8 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RECREATE_CONTAINER,
-            {ATTR_CONTAINER_DEVICE_ID: "invalid_device_id"},
+            PortainerService.RECREATE_CONTAINER,
+            {PortainerServiceArgument.CONTAINER_DEVICE_ID: "invalid_device_id"},
             blocking=True,
         )
     mock_portainer_client.container_recreate.assert_not_called()
@@ -409,8 +427,8 @@ async def test_service_validation_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RECREATE_CONTAINER,
-            {ATTR_CONTAINER_DEVICE_ID: non_portainer_device.id},
+            PortainerService.RECREATE_CONTAINER,
+            {PortainerServiceArgument.CONTAINER_DEVICE_ID: non_portainer_device.id},
             blocking=True,
         )
     mock_portainer_client.container_recreate.assert_not_called()
@@ -418,8 +436,8 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RECREATE_CONTAINER,
-            {ATTR_CONTAINER_DEVICE_ID: device.id},
+            PortainerService.RECREATE_CONTAINER,
+            {PortainerServiceArgument.CONTAINER_DEVICE_ID: device.id},
             blocking=True,
         )
     mock_portainer_client.container_recreate.assert_not_called()
@@ -427,7 +445,7 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_IMAGES,
+            PortainerService.PRUNE_IMAGES,
             {ATTR_DEVICE_ID: container.id},
             blocking=True,
         )
@@ -485,7 +503,7 @@ async def test_service_portainer_exceptions(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_IMAGES,
+            PortainerService.PRUNE_IMAGES,
             {ATTR_DEVICE_ID: device.id},
             blocking=True,
         )
