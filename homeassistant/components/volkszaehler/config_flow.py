@@ -40,7 +40,7 @@ STEP_SUBENTRY_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_UUID): cv.st
 RECONFIGURE_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
