@@ -6,7 +6,7 @@ from typing import Any, override
 from aiohttp.client_exceptions import ClientConnectorError
 from mawaqit import AsyncMawaqitClient
 from mawaqit.exceptions import BadCredentialsException, MawaqitException, NoMosqueAround
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
@@ -38,12 +38,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         errors = {}
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): selector.TextSelector(
+                probatio.Required(CONF_USERNAME): selector.TextSelector(
                     selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
                 ),
-                vol.Required(CONF_PASSWORD): selector.TextSelector(
+                probatio.Required(CONF_PASSWORD): selector.TextSelector(
                     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
                 ),
             }
@@ -127,9 +127,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="mosques_coordinates",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_UUID): vol.In(
+                    probatio.Required(CONF_UUID): probatio.In(
                         {
                             mosque.uuid: mosque.display_name
                             for mosque in self.mosques.values()
