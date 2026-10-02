@@ -197,14 +197,25 @@ async def test_service_prune_build_cache_portainer_exceptions(
     mock_portainer_client.prune_build_cache.assert_called_once()
 
 
-async def test_service_prune_build_cache_requires_admin(
+@pytest.mark.parametrize(
+    ("service", "client_method"),
+    [
+        pytest.param(SERVICE_PRUNE_IMAGES, "images_prune", id="prune_images"),
+        pytest.param(
+            SERVICE_PRUNE_BUILD_CACHE, "prune_build_cache", id="prune_build_cache"
+        ),
+    ],
+)
+async def test_service_requires_admin(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
     device_registry: DeviceRegistry,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
+    client_method: str,
 ) -> None:
-    """Test prune build cache service is only available to admins."""
+    """Test the prune services are only available to admins."""
     await setup_integration(hass, mock_config_entry)
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
@@ -214,12 +225,12 @@ async def test_service_prune_build_cache_requires_admin(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PRUNE_BUILD_CACHE,
+            service,
             {ATTR_DEVICE_ID: device.id},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
-    mock_portainer_client.prune_build_cache.assert_not_called()
+    getattr(mock_portainer_client, client_method).assert_not_called()
 
 
 @pytest.mark.parametrize(

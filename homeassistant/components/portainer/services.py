@@ -216,7 +216,8 @@ async def recreate_container(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_PRUNE_IMAGES,
         prune_images,
