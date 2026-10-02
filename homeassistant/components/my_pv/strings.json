@@ -181,7 +181,7 @@
       "message": "Failed to fetch data."
     },
     "rate_limiting": {
-      "message": "Too many requests, try again."
+      "message": "Too many requests."
     },
     "unknown_error": {
       "message": "The device could not complete the requested action."
