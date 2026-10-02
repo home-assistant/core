@@ -1,5 +1,6 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, override
@@ -47,7 +48,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -322,12 +326,14 @@ class GreeAcClimateEntity(
         # with, since the protocol has no dedicated OFF mode.
         self._last_active_hvac_mode = self._attr_hvac_modes[1]
         self._timer_deadline: datetime | None = None
+        self._timer_expiry_unsub: Callable[[], None] | None = None
         self._state.climate = self
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Clear the shared climate owner on unload."""
         await super().async_will_remove_from_hass()
+        self._cancel_timer_expiry()
         if self._state.climate is self:
             self._state.climate = None
             self._state.async_notify_switches()
@@ -447,6 +453,12 @@ class GreeAcClimateEntity(
             self._received_fahrenheit_temperature = (
                 restored.received_fahrenheit_temperature
             )
+        if self._timer_deadline is not None:
+            if self._timer_deadline <= dt_util.utcnow():
+                self._timer_deadline = None
+                self._state.timer_hours = None
+            else:
+                self._schedule_timer_expiry()
         self._state.async_notify_switches()
 
     @property
@@ -481,10 +493,35 @@ class GreeAcClimateEntity(
             return self._state.timer_hours
         remaining = (self._timer_deadline - dt_util.utcnow()).total_seconds() / 3600
         if remaining <= 0:
+            self._cancel_timer_expiry()
             self._timer_deadline = None
             self._state.timer_hours = None
             return None
         return max(0.5, int(remaining * 2 + 0.5) / 2)
+
+    def _cancel_timer_expiry(self) -> None:
+        """Cancel the scheduled timer expiry, if any."""
+        if self._timer_expiry_unsub is not None:
+            self._timer_expiry_unsub()
+            self._timer_expiry_unsub = None
+
+    def _schedule_timer_expiry(self) -> None:
+        """Schedule state cleanup at the current timer deadline."""
+        self._cancel_timer_expiry()
+        if self._timer_deadline is not None:
+            self._timer_expiry_unsub = async_track_point_in_utc_time(
+                self.hass, self._handle_timer_expiry, self._timer_deadline
+            )
+
+    @callback
+    def _handle_timer_expiry(self, now: datetime) -> None:
+        """Clear expired timer state and publish the number's new value."""
+        self._timer_expiry_unsub = None
+        if self._timer_deadline is None or now < self._timer_deadline:
+            return
+        self._timer_deadline = None
+        self._state.timer_hours = None
+        self._state.async_notify_switches()
 
     async def _async_send_state(
         self, hvac_mode: HVACMode, temp: int, fan_mode: str
@@ -534,21 +571,29 @@ class GreeAcClimateEntity(
                 raise ValueError(f"Unsupported Gree option: {option}")
         else:
             raise ValueError(f"Unsupported Gree option: {option}")
-        if (
-            option == "sleep"
-            and value
-            and self._attr_hvac_mode
-            in (
-                *SLEEP_BLOCKED_HVAC_MODES,
-                HVACMode.OFF,
-            )
-        ):
-            raise HomeAssistantError("Sleep is not available in this HVAC mode")
-        if option == "econo" and value and self._attr_hvac_mode is not HVACMode.COOL:
-            raise HomeAssistantError("Econo is only available in cool mode")
-        if option == "absence" and value and self._attr_hvac_mode is not HVACMode.HEAT:
-            raise HomeAssistantError("Absence is only available in heat mode")
         async with self._state.command_lock:
+            if (
+                option == "sleep"
+                and value
+                and self._attr_hvac_mode
+                in (
+                    *SLEEP_BLOCKED_HVAC_MODES,
+                    HVACMode.OFF,
+                )
+            ):
+                raise HomeAssistantError("Sleep is not available in this HVAC mode")
+            if (
+                option == "econo"
+                and value
+                and self._attr_hvac_mode is not HVACMode.COOL
+            ):
+                raise HomeAssistantError("Econo is only available in cool mode")
+            if (
+                option == "absence"
+                and value
+                and self._attr_hvac_mode is not HVACMode.HEAT
+            ):
+                raise HomeAssistantError("Absence is only available in heat mode")
             previous = getattr(self._state, option)
             setattr(self._state, option, value)
             try:
@@ -611,6 +656,7 @@ class GreeAcClimateEntity(
                 self._state.timer_hours = previous
                 self._timer_deadline = previous_deadline
                 raise
+            self._schedule_timer_expiry()
             self._state.async_notify_switches()
 
     async def async_set_swing_v_position(self, position: int | None) -> None:
@@ -822,7 +868,12 @@ class GreeAcClimateEntity(
             raise ValueError(f"{key} is only available on the YAP1F model")
         async with self._state.command_lock:
             previous = getattr(self._state, key)
+            previous_received_fahrenheit_temperature = (
+                self._received_fahrenheit_temperature
+            )
             setattr(self._state, key, value)
+            if key == "fahrenheit" and value != previous:
+                self._received_fahrenheit_temperature = None
             try:
                 hvac_mode = self._attr_hvac_mode
                 if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
@@ -833,6 +884,9 @@ class GreeAcClimateEntity(
                     )
             except Exception:
                 setattr(self._state, key, previous)
+                self._received_fahrenheit_temperature = (
+                    previous_received_fahrenheit_temperature
+                )
                 raise
             self._state.async_notify_switches()
 
@@ -958,6 +1012,7 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
             if command.timer_hours is not None
             else None
         )
+        self._schedule_timer_expiry()
         if self._is_yap1f:
             self._state.ifeel = command.ifeel
             self._state.swing_v_position = command.swing_v_position

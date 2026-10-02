@@ -1,9 +1,11 @@
 """Tests for the Gree Infrared climate platform."""
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.gree_ac import (
     MAX_TEMP_F,
     MIN_TEMP,
@@ -44,6 +46,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
@@ -638,6 +641,177 @@ async def test_received_fahrenheit_setpoint_survives_commands(
     mock_infrared_emitter_entity.send_command_calls.clear()
     await climate.async_set_fahrenheit(True)
     assert mock_infrared_emitter_entity.send_command_calls[0].temperature == 75
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_changing_fahrenheit_scale_drops_received_wire_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Changing scale must convert the current target, not revive receiver data."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=74,
+                fahrenheit=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await climate.async_set_fahrenheit(False)
+    await climate.async_set_fahrenheit(True)
+
+    assert mock_infrared_emitter_entity.send_command_calls[-1].temperature == 73
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_scale_change_restores_received_wire_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """A failed scale send restores the received wire setpoint."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=GreeAcMode.COOL,
+                temperature=74,
+                fahrenheit=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+
+    with (
+        patch.object(
+            mock_infrared_emitter_entity,
+            "async_send_command",
+            side_effect=RuntimeError("send failed"),
+        ),
+        pytest.raises(RuntimeError, match="send failed"),
+    ):
+        await climate.async_set_fahrenheit(False)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
+        blocking=True,
+    )
+    command = mock_infrared_emitter_entity.send_command_calls[-1]
+    assert (command.temperature, command.fahrenheit) == (74, True)
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_expiry_updates_number_without_another_command(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The timer entity turns off when its deadline passes without a command."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_timer_hours(0.5)
+    entity_id = "number.gree_ac_timer"
+    assert hass.states.get(entity_id).state == "0.5"
+
+    freezer.move_to(freezer() + timedelta(minutes=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "0.0"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_expired_restored_timer_starts_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    platforms: list[Platform],
+) -> None:
+    """A restored timer whose deadline passed is cleared during setup."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE_ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 24.0}),
+                {
+                    "last_active_hvac_mode": HVACMode.COOL.value,
+                    "timer_hours": 0.5,
+                    "timer_deadline": "2024-01-01T11:30:00+00:00",
+                },
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_option_validation_uses_mode_after_waiting_for_command_lock(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """An option queued behind a mode change validates against the new mode."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_send(command: Any) -> None:
+        started.set()
+        await release.wait()
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        mode_task = hass.async_create_task(climate.async_set_hvac_mode(HVACMode.HEAT))
+        await started.wait()
+        option_task = hass.async_create_task(climate.async_set_option("econo", True))
+        await asyncio.sleep(0)
+        release.set()
+        await mode_task
+        with pytest.raises(HomeAssistantError, match="only available in cool mode"):
+            await option_task
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
 
 
 @pytest.mark.parametrize("has_receiver", [True])
