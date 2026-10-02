@@ -65,11 +65,7 @@ def mock_timeout() -> Generator[None]:
             0.05,
         ),
         patch(
-            "homeassistant.components.droplet.coordinator.VERSION_TIMEOUT",
-            0.1,
-        ),
-        patch(
-            "homeassistant.components.droplet.coordinator.CONNECT_DELAY",
+            "homeassistant.components.droplet.coordinator.CONNECT_TIMEOUT",
             0.1,
         ),
     ):

@@ -1,6 +1,6 @@
 """Constants for the droplet integration."""
 
-CONNECT_DELAY = 5
+CONNECT_TIMEOUT = 10
 
 DOMAIN = "droplet"
 DEVICE_NAME = "Droplet"

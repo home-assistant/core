@@ -14,9 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONNECT_DELAY, DOMAIN
-
-VERSION_TIMEOUT = 5
+from .const import CONNECT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +49,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryNotReady("Device is offline")
 
         # Droplet should send its metadata within 5 seconds
-        end = time.time() + VERSION_TIMEOUT
+        end = time.time() + CONNECT_TIMEOUT
         while not self.droplet.version_info_available():
             await asyncio.sleep(TIMEOUT)
             if time.time() > end:
@@ -70,10 +68,10 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         self.config_entry.async_on_unload(self.droplet.stop_listening)
         self.config_entry.async_create_background_task(
             self.hass,
-            self.droplet.listen_forever(CONNECT_DELAY, self.async_set_updated_data),
+            self.droplet.listen_forever(CONNECT_TIMEOUT, self.async_set_updated_data),
             "droplet-listen",
         )
-        end = time.time() + CONNECT_DELAY
+        end = time.time() + CONNECT_TIMEOUT
         while time.time() < end:
             if self.droplet.connected:
                 return True
