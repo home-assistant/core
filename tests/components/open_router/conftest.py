@@ -5,9 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from openai.types import CompletionUsage
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
+from openai.types.chat import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
 import pytest
 from python_open_router import KeyData, ModelsDataWrapper
 
@@ -116,27 +115,26 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
     with patch("homeassistant.components.open_router.AsyncOpenAI") as mock_client:
         client = mock_client.return_value
         client.chat.completions.create = AsyncMock(
-            return_value=ChatCompletion(
-                id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-                choices=[
-                    Choice(
-                        finish_reason="stop",
-                        index=0,
-                        message=ChatCompletionMessage(
-                            content="Hello, how can I help you?",
-                            role="assistant",
-                            function_call=None,
-                            tool_calls=None,
-                        ),
+            return_value=get_generator_from_data(
+                [
+                    ChatCompletionChunk.model_construct(
+                        id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                        choices=[
+                            ChunkChoice.model_construct(
+                                index=0,
+                                delta=ChoiceDelta(
+                                    role="assistant",
+                                    content="Hello, how can I help you?",
+                                ),
+                                finish_reason="stop",
+                            )
+                        ],
+                        created=1700000000,
+                        model="gpt-3.5-turbo-0613",
+                        object="chat.completion.chunk",
+                        system_fingerprint=None,
                     )
-                ],
-                created=1700000000,
-                model="gpt-3.5-turbo-0613",
-                object="chat.completion",
-                system_fingerprint=None,
-                usage=CompletionUsage(
-                    completion_tokens=9, prompt_tokens=8, total_tokens=17
-                ),
+                ]
             )
         )
         yield client

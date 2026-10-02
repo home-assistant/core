@@ -390,7 +390,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Zonneplan sensor platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         [
