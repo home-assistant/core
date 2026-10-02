@@ -32,9 +32,6 @@
       },
       "power_consumption": {
         "default": "mdi:lightning-bolt"
-      },
-      "volume": {
-        "default": "mdi:water"
       }
     }
   }
