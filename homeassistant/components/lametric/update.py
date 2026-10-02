@@ -33,6 +33,7 @@ class LaMetricUpdate(LaMetricEntity, UpdateEntity):
     def __init__(self, coordinator: LaMetricDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.data.serial_number}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property

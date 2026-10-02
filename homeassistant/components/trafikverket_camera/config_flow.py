@@ -86,7 +86,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
                 }
             ),
             errors=errors,
@@ -122,7 +122,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
                     probatio.Required(CONF_LOCATION): TextSelector(),
                 }
             ),
@@ -164,7 +164,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
                     probatio.Required(CONF_LOCATION): TextSelector(),
                 }
             ),

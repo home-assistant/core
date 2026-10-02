@@ -65,17 +65,17 @@ YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
     probatio.Required(ATTR_TRANSITIONS): [
         {
             probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
-                cv.ensure_list, [cv.positive_int]
+                probatio.EnsureList(), [cv.positive_int]
             ),
             probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
-                cv.ensure_list, [cv.positive_int]
+                probatio.EnsureList(), [cv.positive_int]
             ),
             probatio.Exclusive(
                 YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
-            ): probatio.All(cv.ensure_list, [cv.positive_int]),
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
             probatio.Exclusive(
                 YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
-            ): probatio.All(cv.ensure_list, [cv.positive_int]),
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
         }
     ],
 }

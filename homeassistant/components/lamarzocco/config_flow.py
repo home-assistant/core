@@ -151,7 +151,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -331,7 +331,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=probatio.Schema(
                     {
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
             )
@@ -356,7 +356,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                             ),
                         ),
                         probatio.Required(
-                            CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
+                            probatio.Secret(CONF_PASSWORD),
+                            default=reconfigure_entry.data[CONF_PASSWORD],
                         ): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.PASSWORD,
