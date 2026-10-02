@@ -8819,6 +8819,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[wrr5fva8vgffwlxqbdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'wrr5fva8vgffwlxqbdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Test No Loop-Multi-Channel Metering Cat.1',
+    'model_id': 'qxlwffgv8avf5rrw',
+    'name': '测试无回路-多路计量cat.1',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[x4nogasbi8ggpb3lcd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

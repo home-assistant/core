@@ -94,7 +94,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,
                         probatio.Required(CONF_USERNAME): str,
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                         probatio.Optional(CONF_IS_TOU, default=False): bool,
                     }
                 ),

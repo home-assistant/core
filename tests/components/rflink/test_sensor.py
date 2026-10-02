@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .test_init import mock_rflink
 
@@ -701,3 +702,53 @@ async def test_empty_discovery_info(
     assert not hass.states.get(f"{DOMAIN}.protocol_0_0")
     assert not hass.states.get("light.protocol_0_0")
     assert "device_id not known and automatic add disabled" in caplog.text
+
+
+async def test_removed_sensor_unregisters_lookups(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a removed sensor is dropped from the event lookups."""
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "automatic_add": False,
+                "devices": {
+                    "test_02": {
+                        "name": "test_02",
+                        "sensor_type": "humidity",
+                        "aliases": ["test_alias_02_0"],
+                    },
+                    # Shares the alias of the removed sensor
+                    "test_03": {
+                        "name": "test_03",
+                        "sensor_type": "humidity",
+                        "aliases": ["test_alias_02_0"],
+                    },
+                },
+            },
+        },
+    }
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    lookup = hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]
+    assert lookup["test_02"] == ["sensor.test_02"]
+
+    entity_registry.async_remove("sensor.test_02")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_02") is None
+
+    assert lookup == {
+        "test_03": ["sensor.test_03"],
+        "test_alias_02_0": ["sensor.test_03"],
+    }
+
+    for event_id in ("test_02", "test_alias_02_0"):
+        event_callback(
+            {"id": event_id, "sensor": "humidity", "value": 65, "unit": PERCENTAGE}
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_02") is None
+    assert hass.states.get("sensor.test_03").state == "65"

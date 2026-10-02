@@ -6,11 +6,10 @@ import functools as ft
 import logging
 from typing import Any, final, override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -22,44 +21,40 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, RemoteEntityFeature, RemoteEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_ACTIVITY,
+    ATTR_ACTIVITY_LIST,
+    ATTR_ALTERNATIVE,
+    ATTR_COMMAND_TYPE,
+    ATTR_CURRENT_ACTIVITY,
+    ATTR_DELAY_SECS,
+    ATTR_DEVICE,
+    ATTR_HOLD_SECS,
+    ATTR_NUM_REPEATS,
+    ATTR_TIMEOUT,
+    DATA_COMPONENT,
+    DEFAULT_DELAY_SECS,
+    DEFAULT_HOLD_SECS,
+    DEFAULT_NUM_REPEATS,
+    DOMAIN,
+    SERVICE_DELETE_COMMAND,
+    SERVICE_LEARN_COMMAND,
+    SERVICE_SEND_COMMAND,
+    SERVICE_SYNC,
+    RemoteEntityFeature,
+    RemoteEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ATTR_ACTIVITY = "activity"
-ATTR_ACTIVITY_LIST = "activity_list"
-ATTR_CURRENT_ACTIVITY = "current_activity"
-ATTR_COMMAND_TYPE = "command_type"
-ATTR_DEVICE = "device"
-ATTR_NUM_REPEATS = "num_repeats"
-ATTR_DELAY_SECS = "delay_secs"
-ATTR_HOLD_SECS = "hold_secs"
-ATTR_ALTERNATIVE = "alternative"
-ATTR_TIMEOUT = "timeout"
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-SERVICE_SEND_COMMAND = "send_command"
-SERVICE_LEARN_COMMAND = "learn_command"
-SERVICE_DELETE_COMMAND = "delete_command"
-SERVICE_SYNC = "sync"
-
-DEFAULT_NUM_REPEATS = 1
-DEFAULT_DELAY_SECS = 0.4
-DEFAULT_HOLD_SECS = 0
-
-
-REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
-    {probatio.Optional(ATTR_ACTIVITY): cv.string}
-)
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -74,54 +69,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, REMOTE_SERVICE_ACTIVITY_SCHEMA, "async_turn_off"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, REMOTE_SERVICE_ACTIVITY_SCHEMA, "async_turn_on"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE, REMOTE_SERVICE_ACTIVITY_SCHEMA, "async_toggle"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SEND_COMMAND,
-        {
-            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
-            probatio.Optional(ATTR_DEVICE): cv.string,
-            probatio.Optional(
-                ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
-            ): cv.positive_int,
-            probatio.Optional(ATTR_DELAY_SECS): probatio.Coerce(float),
-            probatio.Optional(
-                ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS
-            ): probatio.Coerce(float),
-        },
-        "async_send_command",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_LEARN_COMMAND,
-        {
-            probatio.Optional(ATTR_DEVICE): cv.string,
-            probatio.Optional(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
-            probatio.Optional(ATTR_COMMAND_TYPE): cv.string,
-            probatio.Optional(ATTR_ALTERNATIVE): cv.boolean,
-            probatio.Optional(ATTR_TIMEOUT): cv.positive_int,
-        },
-        "async_learn_command",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_DELETE_COMMAND,
-        {
-            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
-            probatio.Optional(ATTR_DEVICE): cv.string,
-        },
-        "async_delete_command",
-    )
+    async_setup_services(hass)
 
     return True
 

@@ -385,6 +385,7 @@ homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
+homeassistant.components.marketplace.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -452,6 +453,7 @@ homeassistant.components.openuv.*
 homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
+homeassistant.components.osram_infrared.*
 homeassistant.components.otbr.*
 homeassistant.components.otp.*
 homeassistant.components.ouman_eh_800.*
@@ -604,6 +606,7 @@ homeassistant.components.teltonika.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
+homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
@@ -647,6 +650,7 @@ homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
 homeassistant.components.vistapool.*
+homeassistant.components.vitesy.*
 homeassistant.components.vivotek.*
 homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*
