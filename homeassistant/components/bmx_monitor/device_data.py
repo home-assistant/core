@@ -99,7 +99,6 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             self._charging,
         )
 
-        # Decide if we should process this advertisement and update the sensors
         if self._ignore_advertisement:
             return False
 
@@ -118,7 +117,6 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         ):
             return True
 
-        # We're rate-limiting... check to see if sufficient time has passed since the last update
         rate_limit = self.entry.options.get(
             CONF_RATE_LIMIT,
             DEFAULT_RATE_LIMIT,
@@ -219,8 +217,6 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         if interpreted.charging is not None:
             self._charging = interpreted.charging
 
-        # Generation is inferred from advertisements.  Publish it alongside
-        # either an active or fallback update once it is known.
         if self._bm2_generation is not BM2Generation.UNKNOWN:
             self.update_sensor(
                 key="bm2_generation",

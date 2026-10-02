@@ -147,6 +147,9 @@ async def test_bluetooth_discovery(
     result = await _discovery_form(hass, service_info, validation)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert not flows[0]["context"].get("confirm_only", False)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
     )
@@ -663,6 +666,7 @@ async def test_bluetooth_matcher_discovery(
         assert len(flows) == 1
         assert flows[0]["context"]["source"] == SOURCE_BLUETOOTH
         assert flows[0]["context"]["unique_id"] == ADDRESS
+        assert not flows[0]["context"].get("confirm_only", False)
         validate.assert_awaited_once()
         discovered_info = validate.call_args.args[0]
         assert discovered_info.address == ADDRESS

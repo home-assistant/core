@@ -1,21 +1,36 @@
 """Test BM2 sensor conversion, registration and entity properties."""
 
+from datetime import timedelta
+from time import monotonic
 from unittest.mock import MagicMock, patch
 
+from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sensor_state_data import DeviceKey, SensorUpdate
 
-from homeassistant.components import bmx_monitor as integration
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothEntityKey,
 )
 from homeassistant.components.bmx_monitor import sensor
-from homeassistant.components.bmx_monitor.const import DOMAIN
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.bmx_monitor.const import (
+    CONF_BATTERY_TYPE,
+    CONF_RATE_LIMIT_MODE,
+    DOMAIN,
+)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.bluetooth import (
+    async_setup_with_default_adapter,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+)
 
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 
@@ -56,35 +71,116 @@ def test_empty_update() -> None:
     assert result.entity_data == {}
 
 
-@pytest.mark.usefixtures("mock_bluetooth")
-async def test_platform_registration(hass: HomeAssistant) -> None:
-    """Load the real sensor platform through config-entry setup."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS)
+@pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize("connectable", [False, True])
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    connectable: bool,
+) -> None:
+    """Advertisements create and update sensors through the real BLE processors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ADDRESS,
+        options={CONF_BATTERY_TYPE: "Lead-acid", CONF_RATE_LIMIT_MODE: "never"},
+    )
     entry.add_to_hass(hass)
-    with (
-        patch.object(integration, "async_address_present", return_value=True),
-        patch.object(integration, "async_last_service_info", return_value=MagicMock()),
-        patch.object(
-            integration, "async_validate_device", return_value="valid_passive"
-        ),
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator") as coordinator,
-        patch.object(sensor, "PassiveBluetoothDataProcessor") as factory,
-    ):
+    await async_setup_with_default_adapter(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = generate_ble_device(ADDRESS, "Battery Monitor")
+    advertisement = generate_advertisement_data(
+        local_name="Battery Monitor",
+        manufacturer_data={27928: bytes.fromhex("95185a633bc8fafdea8897c7c435")},
+        rssi=-60,
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass, device, advertisement, monotonic(), "test-proxy", connectable
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert not hass.states.async_all("sensor")
+
+    with patch.object(
+        BM2Protocol,
+        "async_poll",
+        side_effect=[
+            BM2Reading(
+                12.5,
+                67,
+                2 if connectable else None,
+                "active" if connectable else "advertisement",
+            ),
+            BM2Reading(
+                14.5,
+                80,
+                4 if connectable else None,
+                "active" if connectable else "advertisement",
+            ),
+        ],
+    ) as poll:
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        factory.assert_called_once_with(sensor.sensor_update_to_bluetooth_data_update)
-        processor = factory.return_value
-        processor.async_add_entities_listener.assert_called_once()
-        listener_args = processor.async_add_entities_listener.call_args.args
-        assert listener_args[0] is sensor.BMxBluetoothSensorEntity
-        assert callable(listener_args[1])
-        coordinator.return_value.async_register_processor.assert_called_once_with(
-            processor, SensorEntityDescription
+        await hass.async_block_till_done(wait_background_tasks=True)
+        poll.assert_awaited_once()
+        assert (poll.call_args.args[1] is not None) is connectable
+
+        expected = {
+            "battery_voltage": "12.5",
+            "battery_percent": "90",
+            "battery_status": "normal",
+            "battery_chemistry": "Lead-acid",
+            "bm2_generation": str(BM2Generation.ENHANCED),
+            "signal_strength": "-60",
+        }
+        entity_ids = {}
+        for key, value in expected.items():
+            entity_id = entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{ADDRESS}-{key}"
+            )
+            assert entity_id is not None
+            entity_ids[key] = entity_id
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == value
+        assert (
+            len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 6
         )
+
+        # The real coordinator debounces polls even when rate limiting is disabled.
+        freezer.tick(timedelta(seconds=11))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        advertisement = generate_advertisement_data(
+            local_name="Battery Monitor",
+            manufacturer_data={28183: bytes.fromhex("ef5156042924d1202023336420b7")},
+            rssi=-65,
+        )
+        inject_advertisement_with_time_and_source_connectable(
+            hass, device, advertisement, monotonic(), "test-proxy", connectable
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert poll.await_count == 2
+        expected |= {
+            "battery_voltage": "14.5",
+            "battery_percent": "100",
+            "battery_status": "charging",
+            "signal_strength": "-65",
+        }
+        for key, value in expected.items():
+            state = hass.states.get(entity_ids[key])
+            assert state is not None
+            assert state.state == value
+        assert (
+            len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 6
+        )
+
         assert await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-        processor.async_add_entities_listener.return_value.assert_called_once()
-        coordinator.return_value.async_register_processor.return_value.assert_called_once()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        for entity_id in entity_ids.values():
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == "unavailable"
 
 
 @pytest.mark.parametrize("value", [12.5, 67, "charging", None])

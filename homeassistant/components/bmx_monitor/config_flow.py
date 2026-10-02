@@ -75,7 +75,6 @@ class DiscoveredDevice:
     discovery_info: BluetoothServiceInfoBleak
 
 
-# Functions shared in multiple flows
 def custom_battery_schema(
     options: Mapping[str, Any],
 ) -> probatio.Schema:
@@ -236,15 +235,11 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
         title = self._bm2_title(self._discovery_info.address)
 
         if user_input is not None:
-            # Store now, in case they need to be combined with the next page's user_input
             self._user_input = user_input
 
-            # We want CONF_BATTERY_TYPE in options, not data
             options = {CONF_BATTERY_TYPE: self._user_input[CONF_BATTERY_TYPE]}
             del self._user_input[CONF_BATTERY_TYPE]
 
-            # If the user chooses 'custom' as the battery type, show the next form
-            # Otherwise just create the config entry
             if options[CONF_BATTERY_TYPE] == "Custom":
                 self._user_input[CONF_ADDRESS] = self._discovery_info.address
                 return await self.async_step_custom_battery_details()
@@ -337,12 +332,9 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
                 validation = await self._async_validate_device(selected.discovery_info)
 
                 if validation in ("valid_passive", "valid_active"):
-                    # We want CONF_BATTERY_TYPE in options, not data
                     options = {CONF_BATTERY_TYPE: self._user_input[CONF_BATTERY_TYPE]}
                     del self._user_input[CONF_BATTERY_TYPE]
 
-                    # We've got as far as validating the device as best we're able.
-                    # If the user chooses 'custom' as the battery type, show the next form
                     if options[CONF_BATTERY_TYPE] == "Custom":
                         return await self.async_step_custom_battery_details()
 
@@ -376,7 +368,6 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Everything here should be saved in options
             options, errors = process_custom_battery_input(user_input)
 
             if not errors:
@@ -433,15 +424,11 @@ class BMxOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Handle options flow page 1."""
         if user_input is not None:
-            # Store now, in case they need to be combined with the next page's user_input
             self._user_input = user_input
 
-            # If the user chooses 'custom' as the battery type, show the next form and wait for it to return
-            # Combined user input will be stored in self._user_input
             if self._user_input[CONF_BATTERY_TYPE] == "Custom":
                 return await self.async_step_custom_battery_details()
 
-            # Update the options, with an automatic entry reload
             return self.async_create_entry(data=self._user_input)
 
         data_schema = probatio.Schema(
@@ -488,7 +475,6 @@ class BMxOptionsFlow(OptionsFlowWithReload):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Combine the stored user_input from the previous page with the current page's user_input
             self._user_input |= user_input
             options, errors = process_custom_battery_input(self._user_input)
 
