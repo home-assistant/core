@@ -716,6 +716,16 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
             """
             send_message(WebRTCAnswer(answer="answer"))
 
+        async def async_handle_async_webrtc_re_offer(
+            self,
+            camera: Camera,
+            offer_sdp: str,
+            session_id: str,
+            send_message: WebRTCSendMessage,
+        ) -> None:
+            """Handle the WebRTC offer on renegotiation and return the answer."""
+            send_message(WebRTCAnswer(answer="answer"))
+
         async def async_on_webrtc_candidate(
             self, session_id: str, candidate: RTCIceCandidateInit
         ) -> None:
@@ -726,6 +736,9 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     # Call all interface methods
     assert provider.async_is_supported("stream_source") is True
     await provider.async_handle_async_webrtc_offer(
+        camera, "offer_sdp", "session_id", Mock()
+    )
+    await provider.async_handle_async_webrtc_re_offer(
         camera, "offer_sdp", "session_id", Mock()
     )
     await provider.async_on_webrtc_candidate(
