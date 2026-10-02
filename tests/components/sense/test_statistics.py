@@ -16,6 +16,7 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     StatisticsRow,
     async_import_statistics,
+    get_metadata,
     statistics_during_period,
 )
 from homeassistant.components.sense.const import DOMAIN, TREND_UPDATE_MINUTES
@@ -47,6 +48,13 @@ PRODUCTION = f"sensor.sense_{MONITOR_ID}_daily_production"
 FROM_GRID = f"sensor.sense_{MONITOR_ID}_daily_from_grid"
 TO_GRID = f"sensor.sense_{MONITOR_ID}_daily_to_grid"
 NET_PRODUCTION = f"sensor.sense_{MONITOR_ID}_daily_net_production"
+STATISTIC_SENSORS = [
+    f"sensor.sense_{MONITOR_ID}_{scale}_{variant}"
+    for scale in ("daily", "weekly", "monthly", "yearly", "bill")
+    for variant in ("energy", "production", "from_grid", "to_grid")
+]
+# What the recorder is made to hold for an hour the import has not rewritten.
+SEED_VALUE = 77.0
 SCALE_USAGE_SENSORS = [
     USAGE,
     f"sensor.sense_{MONITOR_ID}_weekly_energy",
@@ -62,8 +70,10 @@ def window(now: str = NOW) -> list[datetime]:
     return [end - timedelta(hours=offset) for offset in range(WINDOW_HOURS, 0, -1)]
 
 
-def seed_metadata(entity_id: str) -> StatisticMetaData:
-    """Return metadata matching what the integration imports with."""
+def seed_metadata(
+    entity_id: str, unit: str = UnitOfEnergy.KILO_WATT_HOUR
+) -> StatisticMetaData:
+    """Return metadata matching what the recorder compiles the sensors with."""
     return StatisticMetaData(
         mean_type=StatisticMeanType.NONE,
         has_sum=True,
@@ -71,8 +81,13 @@ def seed_metadata(entity_id: str) -> StatisticMetaData:
         source="recorder",
         statistic_id=entity_id,
         unit_class=EnergyConverter.UNIT_CLASS,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        unit_of_measurement=unit,
     )
+
+
+async def get_sums(hass: HomeAssistant, entity_id: str) -> list[float | None]:
+    """Return the sum of every row held for the entity."""
+    return [row["sum"] for row in (await get_stats(hass, [entity_id]))[entity_id]]
 
 
 async def get_stats(
@@ -91,6 +106,22 @@ async def get_stats(
     )
 
 
+async def seed_compiled_hour(hass: HomeAssistant, hour: datetime) -> None:
+    """Add the row the recorder compiles for hour, for every sensor lacking one.
+
+    Only hours the recorder has already compiled are rewritten.
+    """
+    existing = await get_stats(hass, STATISTIC_SENSORS, hour)
+    for entity_id in STATISTIC_SENSORS:
+        if entity_id not in existing:
+            async_import_statistics(
+                hass,
+                seed_metadata(entity_id),
+                [StatisticData(start=hour, state=SEED_VALUE, sum=SEED_VALUE)],
+            )
+    await async_wait_recording_done(hass)
+
+
 async def setup_and_import(
     hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -99,6 +130,7 @@ async def setup_and_import(
     The refresh during setup runs before the platform has registered its entities, so
     the statistics are written by the refresh after it.
     """
+    await seed_compiled_hour(hass, window(str(dt_util.utcnow()))[-1])
     await setup_platform(hass, config_entry, Platform.SENSOR)
     await trigger_trend_refresh(hass, freezer)
     await async_wait_recording_done(hass)
@@ -264,6 +296,7 @@ async def test_early_reading_of_newest_hour_is_fetched_again(
 ) -> None:
     """Test a reading taken before Sense settled the hour is not kept as final."""
     freezer.move_to(NOW)
+    await seed_compiled_hour(hass, window()[-1])
     await setup_platform(hass, config_entry, Platform.SENSOR)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_sense.get_trend_data.call_count == WINDOW_HOURS
@@ -278,6 +311,89 @@ async def test_early_reading_of_newest_hour_is_fetched_again(
     assert rows[-1]["sum"] == pytest.approx(
         HOURLY_ENERGY["usage"] * (WINDOW_HOURS - 1) + 2.0
     )
+
+
+@pytest.mark.parametrize(
+    ("compiled", "imported"),
+    [
+        pytest.param([], 0, id="nothing_compiled"),
+        pytest.param([3], 4, id="catching_up"),
+    ],
+)
+async def test_hours_the_recorder_has_not_compiled_are_left_alone(
+    hass: HomeAssistant,
+    mock_sense: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    compiled: list[int],
+    imported: int,
+) -> None:
+    """Test no row is written ahead of the recorder, whose compile it would abort."""
+    freezer.move_to(NOW)
+    hours = window()
+    async_import_statistics(
+        hass,
+        seed_metadata(USAGE),
+        [
+            StatisticData(start=hours[index], state=SEED_VALUE, sum=SEED_VALUE)
+            for index in compiled
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    await setup_platform(hass, config_entry, Platform.SENSOR)
+    await trigger_trend_refresh(hass, freezer)
+    await async_wait_recording_done(hass)
+
+    rows = (await get_stats(hass, [USAGE])).get(USAGE, [])
+    assert [row["start"] for row in rows] == [
+        hour.timestamp() for hour in hours[:imported]
+    ]
+
+
+async def test_keeps_the_existing_statistics_unit(
+    hass: HomeAssistant,
+    mock_sense: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test statistics stored in another energy unit are continued in that unit."""
+    freezer.move_to(NOW)
+    hours = window()
+    metadata = seed_metadata(USAGE, UnitOfEnergy.WATT_HOUR)
+    async_import_statistics(
+        hass,
+        metadata,
+        [
+            StatisticData(start=hours[0] - timedelta(hours=1), state=1.0, sum=1000.0),
+            StatisticData(start=hours[-1], state=1.0, sum=1000.0),
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    await setup_and_import(hass, config_entry, freezer)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        hours[0],
+        None,
+        {USAGE},
+        "hour",
+        {EnergyConverter.UNIT_CLASS: UnitOfEnergy.WATT_HOUR},
+        {"state", "sum"},
+    )
+    assert [row["sum"] for row in stats[USAGE]] == pytest.approx(
+        [
+            1000.0 + HOURLY_ENERGY["usage"] * 1000 * (index + 1)
+            for index in range(WINDOW_HOURS)
+        ]
+    )
+    assert stats[USAGE][-1]["state"] == PERIOD_TO_DATE * 1000
+    metadata_now = await hass.async_add_executor_job(
+        lambda: get_metadata(hass, statistic_ids={USAGE})
+    )
+    assert metadata_now[USAGE][1]["unit_of_measurement"] == UnitOfEnergy.WATT_HOUR
 
 
 async def test_window_rewrite_is_idempotent(
@@ -314,7 +430,7 @@ async def test_recovers_after_missed_refreshes(
     await setup_and_import(hass, config_entry, freezer)
     await trigger_trend_refresh(hass, freezer)
     await async_wait_recording_done(hass)
-    assert await get_stats(hass, [USAGE]) == {}
+    assert await get_sums(hass, USAGE) == [SEED_VALUE]
 
     # The attempt at :40 rewrites the whole window.
     mock_sense.get_trend_data.side_effect = hour_fetch
@@ -339,7 +455,10 @@ async def test_does_not_fabricate_across_a_gap(
     await setup_and_import(hass, config_entry, freezer)
 
     rows = (await get_stats(hass, [USAGE]))[USAGE]
-    assert [row["start"] for row in rows] == [hour.timestamp() for hour in hours[:2]]
+    assert [row["start"] for row in rows] == [
+        hour.timestamp() for hour in (*hours[:2], hours[-1])
+    ]
+    assert rows[-1]["sum"] == SEED_VALUE
 
 
 async def test_ignores_mismatched_trend_start(
@@ -354,7 +473,7 @@ async def test_ignores_mismatched_trend_start(
     mock_trends.missing = set(window())
     await setup_and_import(hass, config_entry, freezer)
 
-    assert await get_stats(hass, [USAGE]) == {}
+    assert await get_sums(hass, USAGE) == [SEED_VALUE]
 
 
 async def test_without_solar_the_solar_streams_stay_flat(
@@ -420,9 +539,8 @@ async def test_skips_disabled_entities(
 
     await setup_and_import(hass, config_entry, freezer)
 
-    stats = await get_stats(hass, [USAGE, disabled.entity_id])
-    assert USAGE in stats
-    assert disabled.entity_id not in stats
+    assert len(await get_sums(hass, USAGE)) == WINDOW_HOURS
+    assert await get_sums(hass, disabled.entity_id) == [SEED_VALUE]
 
 
 @pytest.mark.parametrize(
@@ -438,9 +556,8 @@ async def test_skips_entities_excluded_from_recorder(
     freezer.move_to(NOW)
     await setup_and_import(hass, config_entry, freezer)
 
-    stats = await get_stats(hass, [USAGE, TO_GRID])
-    assert USAGE in stats
-    assert TO_GRID not in stats
+    assert len(await get_sums(hass, USAGE)) == WINDOW_HOURS
+    assert await get_sums(hass, TO_GRID) == [SEED_VALUE]
 
 
 async def test_entities_keep_their_state_class(
@@ -503,7 +620,7 @@ async def test_statistics_failure_does_not_break_the_sensors(
     mock_sense.get_trend_data.side_effect = SenseAPIException("boom")
     await setup_and_import(hass, config_entry, freezer)
 
-    assert await get_stats(hass, [USAGE]) == {}
+    assert await get_sums(hass, USAGE) == [SEED_VALUE]
     assert hass.states.get(USAGE).state == str(PERIOD_TO_DATE)
 
 
