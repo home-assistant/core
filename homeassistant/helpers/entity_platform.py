@@ -306,6 +306,16 @@ class EntityPlatform:
         # The entry is left tracked until the task itself completes and
         # `_async_handle_entity_update_result` clears it.
         self._polling_tasks: dict[int, tuple[int, asyncio.Task[None]]] = {}
+        # The highest cycle id that has claimed (created a task for) each
+        # entity, kept even after that task finishes and is cleared from
+        # `_polling_tasks`. A stale sequential cycle, resumed after a
+        # newer cycle already claimed *and fully finished* its own task
+        # for an entity, would otherwise see no entry in `_polling_tasks`
+        # and wrongly poll that entity a second time. Cleaned up once it
+        # is safe to do so (see `remove_entity_cb` and
+        # `_async_handle_entity_update_result` below) so it does not grow
+        # unbounded for entities that are never reused.
+        self._entity_poll_cycle_claims: dict[int, int] = {}
         # Monotonically increasing id identifying each call to
         # `_async_update_entity_states`, used to detect when a newer
         # polling cycle has already claimed an entity.
@@ -918,6 +928,20 @@ class EntityPlatform:
             del self.entities[entity_id]
             del self.domain_entities[entity_id]
             del self.domain_platform_entities[entity_id]
+            # Not cleared from `_polling_tasks` here: a hung synchronous
+            # update()'s executor thread keeps running regardless, and an
+            # entity-id rename could then race a new poll against it (see
+            # `_polling_tasks`'s own docstring above). The cycle-claim
+            # watermark must stick around for that same in-flight task too
+            # - it is what lets a stale cycle correctly defer to this
+            # entity's claim even if the in-flight task finishes (clearing
+            # `_polling_tasks`) before the stale cycle resumes and checks -
+            # so only clear it immediately here if nothing is in flight;
+            # otherwise `_async_handle_entity_update_result` clears it once
+            # that task finishes, but only if the entity was not meanwhile
+            # re-added under the same id (see there for why).
+            if id(entity) not in self._polling_tasks:
+                self._entity_poll_cycle_claims.pop(id(entity), None)
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -1387,12 +1411,13 @@ class EntityPlatform:
                 # A newer, independent call may already have claimed this
                 # entity (started its own task for it) while this (now
                 # stale) cycle was stuck awaiting an earlier one. Compare
-                # cycle ids rather than checking if that task is done: a
-                # newer cycle's task can finish *during* this cycle's wait,
-                # and its claim must still win - otherwise this stale cycle
-                # would poll the entity a second time right after it.
-                existing = self._polling_tasks.get(id(entity))
-                if existing is not None and existing[0] > cycle_id:
+                # cycle ids via the watermark, not `self._polling_tasks`:
+                # a newer cycle's task can finish (and be cleared from
+                # `_polling_tasks` by `_async_handle_entity_update_result`)
+                # *during* this cycle's wait, and its claim must still
+                # win - otherwise this stale cycle would poll the entity a
+                # second time right after it.
+                if self._entity_poll_cycle_claims.get(id(entity), -1) > cycle_id:
                     continue
                 task = create_eager_task(
                     entity.async_update_ha_state(
@@ -1402,6 +1427,7 @@ class EntityPlatform:
                     loop=self.hass.loop,
                 )
                 self._polling_tasks[id(entity)] = (cycle_id, task)
+                self._entity_poll_cycle_claims[id(entity)] = cycle_id
                 # Routed through `_async_await_polling_tasks` (even for
                 # this single task) rather than a bare `gather`, so a
                 # cancellation of this await (e.g. config entry unload)
@@ -1425,6 +1451,7 @@ class EntityPlatform:
         ]
         for entity, task in new_tasks:
             self._polling_tasks[id(entity)] = (cycle_id, task)
+            self._entity_poll_cycle_claims[id(entity)] = cycle_id
 
         await self._async_await_polling_tasks(new_tasks)
 
@@ -1541,6 +1568,16 @@ class EntityPlatform:
             existing[1] is task
         ):
             del self._polling_tasks[id(entity)]
+            if self.entities.get(entity.entity_id) is not entity:
+                # This entity was removed while this task was still
+                # in-flight (`remove_entity_cb` deferred clearing the
+                # watermark until now, see there) and was not re-added
+                # under the same id in the meantime, so it is safe to
+                # drop its watermark entry now rather than leak it
+                # forever. If it *was* re-added under the same id, keep
+                # the watermark: a still-suspended stale cycle may yet
+                # need it to correctly defer to this (now finished) claim.
+                self._entity_poll_cycle_claims.pop(id(entity), None)
         if isinstance(result, asyncio.CancelledError):
             # Deliberately not re-raised: this task was cancelled on its
             # own (e.g. by hass shutdown), independently of whichever

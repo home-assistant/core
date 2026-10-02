@@ -601,7 +601,10 @@ async def test_stale_poll_does_not_repoll_entity_claimed_by_finished_newer_cycle
     Regression contract: in sequential (`PARALLEL_UPDATES = 1`) mode, a
     resumed, previously-stuck outer call must not poll an entity a second
     time just because a newer, overlapping cycle's task for it has already
-    finished by the time the stale call resumes and reaches it.
+    finished (and been cleared from `_polling_tasks`) by the time the stale
+    call resumes and reaches it. The newer cycle's task is deterministically
+    forced to completion, and its tracked entry's absence confirmed, before
+    the stale cycle is ever allowed to resume and check it.
     """
     scan_interval = timedelta(seconds=1)
     platform = MockPlatform()
@@ -630,39 +633,40 @@ async def test_stale_poll_does_not_repoll_entity_claimed_by_finished_newer_cycle
 
     await platform_handle.async_add_entities([entity_a, entity_b])
 
-    semaphore = entity_a.parallel_updates
-    assert semaphore is not None
+    # entity_b must not queue behind entity_a's shared platform permit:
+    # this test needs to run a newer cycle's task for entity_b to full
+    # completion *before* entity_a is released, so the stale cycle's
+    # later check is deterministically proven to happen after that claim
+    # is gone from `_polling_tasks`, not merely by scheduling luck.
+    entity_b.parallel_updates = None
 
     # Cycle 1: this outer call gets stuck awaiting entity_a's own update,
     # holding entity_a's task in its for-loop before it can ever reach
     # entity_b.
-    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    cycle_1 = hass.async_create_task(platform_handle._async_update_entity_states())
     await a_started.wait()
     await asyncio.sleep(0)
-    assert semaphore._value == 0
 
     # Cycle 2: a separate, newer outer call detects entity_a as stale and
-    # starts its own task for entity_b. With only one permit on the
-    # platform (still held by entity_a), entity_b's task queues behind it.
-    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
-    await asyncio.sleep(0)
-    assert entity_b.async_update.call_count == 0
-    assert id(entity_b) in platform_handle._polling_tasks
+    # starts its own task for entity_b, which (its permit removed above)
+    # runs to completion independently of entity_a. Awaiting the whole
+    # call guarantees entity_b's task has finished and its tracked entry
+    # has already been cleared before cycle 1 is ever let to resume.
+    cycle_2 = hass.async_create_task(platform_handle._async_update_entity_states())
+    await cycle_2
 
-    # entity_a's update now finally completes and releases its permit.
-    # entity_b's queued task (from cycle 2) acquires it and runs to
-    # completion - all before the very first, ancient outer call (still
-    # suspended awaiting entity_a's original task from cycle 1) gets a
-    # chance to resume and continue its own for-loop on to entity_b, which
-    # it captured in its OWN, now-stale `pollable_entities` snapshot back
-    # in cycle 1. By now entity_b's task from cycle 2 has already finished,
-    # so a liveness-only check would wrongly let this stale cycle poll
-    # entity_b a second time in a row.
-    # Assert only after the stale cycle 1 call has fully drained: it must
-    # be given every chance to resume and run its own, buggy re-poll
-    # before this assertion can rule it out.
+    assert entity_b.async_update.call_count == 1
+    assert id(entity_b) not in platform_handle._polling_tasks
+
+    # entity_a's update now finally completes, letting the ancient, stale
+    # cycle 1 (still suspended awaiting entity_a's original task) resume
+    # its own for-loop on to entity_b, which it captured in its OWN,
+    # now-stale `pollable_entities` snapshot back in cycle 1. A
+    # liveness-only check (whether `_polling_tasks` still has a live task)
+    # would wrongly let this stale cycle poll entity_b a second time, since
+    # cycle 2's claim was already proven gone from that dict above.
     a_release.set()
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await cycle_1
 
     assert entity_b.async_update.call_count == 1
 
@@ -849,6 +853,7 @@ async def test_polling_skips_update_while_readded_entity_still_attaching(
                 await attach_release.wait()
 
     entity = _ReaddableEntity(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     entity.async_update = AsyncMock()
 
     # First add completes normally and starts the platform's recurring
