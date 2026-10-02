@@ -19,17 +19,10 @@ from neopool_modbus.decoders import (
     FILTRATION_MODE_LABELS,
     FILTRATION_SPEED_LABELS,
     decode_cell_boost,
+    decode_filtration_speed_slot,
 )
 from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import (
-    FILTRATION_SPEED_MASK,
-    FILTRATION_SPEED_SHIFT,
-    FILTRATION_TIMER1_SPEED_MASK,
-    FILTRATION_TIMER1_SPEED_SHIFT,
-    FILTRATION_TIMER2_SPEED_MASK,
-    FILTRATION_TIMER2_SPEED_SHIFT,
-    FILTRATION_TIMER3_SPEED_MASK,
-    FILTRATION_TIMER3_SPEED_SHIFT,
     ConfigKind,
     FiltValveMode,
     RelayKind,
@@ -75,7 +68,6 @@ class NeoPoolSelectEntityDescription(SelectEntityDescription):
     options_map: dict[int, str] = field(default_factory=dict)
     select_type: str | None = None
     config_kind: ConfigKind | None = None
-    write_offset: int = 0
     fallback_suffix: str = ""
     supported_fn: Callable[[dict[str, Any]], bool] | None = None
     write_fn: _WriteFn | None = None
@@ -119,46 +111,59 @@ def _decode_cell_boost(data: dict[str, Any]) -> str | None:
     return decode_cell_boost(reg_val) or CELL_BOOST_MODE_LABELS[0]
 
 
-def _make_filtration_speed_decoder(
-    mask: int | None, shift: int | None
-) -> _CurrentOptionFn:
+def _make_filtration_speed_decoder(slot: int) -> _CurrentOptionFn:
     """Build a decoder that reads a filtration-speed slot from FILTRATION_CONF."""
 
     def _decode(data: dict[str, Any]) -> str | None:
-        raw = data.get("MBF_PAR_FILTRATION_CONF")
-        if raw is None:  # pragma: no cover - register always present once polled
-            return None
-        if mask is None or shift is None:  # pragma: no cover - set for every slot
-            return None
-        speed_value = (int(raw) & mask) >> shift
-        return FILTRATION_SPEED_LABELS.get(speed_value)
+        return decode_filtration_speed_slot(data.get("MBF_PAR_FILTRATION_CONF"), slot)
 
     return _decode
 
 
-async def _write_config_option(
-    entity: NeoPoolSelect, client: NeoPoolModbusClient, option: str
-) -> None:
-    """Reverse-lookup the option label and write it through async_set_config_option.
-
-    Applies ``desc.write_offset`` before writing (e.g. RELAY_ACTIVATION_DELAY
-    is stored register-value = actual-seconds - 10).
-    """
-    desc = entity.entity_description
-    if desc.config_kind is None:  # pragma: no cover - description validated upstream
-        return
+def _resolve_config_value(
+    desc: NeoPoolSelectEntityDescription, option: str
+) -> int | None:
+    """Reverse-lookup the option label to its register value, or None if unmapped."""
     reverse_map = {v: k for k, v in desc.options_map.items()}
     value = reverse_map.get(option)
     if value is None:
         try:  # pragma: no cover - mapped_register options cover every value
             value = int(option.rstrip("ms"))
         except ValueError:  # pragma: no cover - option list is numeric
-            return
-    write_val = max(0, value + desc.write_offset)
-    await client.async_set_config_option(desc.config_kind, write_val)
+            return None
+    return value
+
+
+def _commit_config_value(entity: NeoPoolSelect, value: int) -> None:
+    """Apply the optimistic update and request a follow-up refresh."""
     overrides = entity.apply_optimistic_update(value)
     entity.coordinator.async_set_updated_data({**entity.coordinator.data, **overrides})
     entity.coordinator.request_refresh_with_followup()
+
+
+async def _write_config_option(
+    entity: NeoPoolSelect, client: NeoPoolModbusClient, option: str
+) -> None:
+    """Reverse-lookup the option label and write it through async_set_config_option."""
+    desc = entity.entity_description
+    if desc.config_kind is None:  # pragma: no cover - description validated upstream
+        return
+    value = _resolve_config_value(desc, option)
+    if value is None:  # pragma: no cover - mapped_register options cover every value
+        return
+    await client.async_set_config_option(desc.config_kind, value)
+    _commit_config_value(entity, value)
+
+
+async def _write_relay_activation_delay(
+    entity: NeoPoolSelect, client: NeoPoolModbusClient, option: str
+) -> None:
+    """Write the relay activation delay via the lib, which owns the +10 s offset."""
+    value = _resolve_config_value(entity.entity_description, option)
+    if value is None:  # pragma: no cover - mapped_register options cover every value
+        return
+    await client.async_set_relay_activation_delay(value)
+    _commit_config_value(entity, value)
 
 
 async def _write_timer_period(
@@ -304,9 +309,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         options_map=FILTRATION_SPEED_LABELS,
         supported_fn=has_variable_speed_pump,
         write_fn=_write_filtration_speed,
-        current_option_fn=_make_filtration_speed_decoder(
-            FILTRATION_SPEED_MASK, FILTRATION_SPEED_SHIFT
-        ),
+        current_option_fn=_make_filtration_speed_decoder(0),
     ),
     "MBF_CELL_BOOST": NeoPoolSelectEntityDescription(
         key="MBF_CELL_BOOST",
@@ -397,7 +400,6 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         translation_key="relay_activation_delay",
         entity_category=EntityCategory.CONFIG,
         select_type="mapped_register",
-        write_offset=-10,  # Device adds +10s internally
         options_map={
             10: "10",
             20: "20",
@@ -415,7 +417,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         },
         config_kind=ConfigKind.RELAY_ACTIVATION_DELAY,
         supported_fn=is_ph_module_present,
-        write_fn=_write_config_option,
+        write_fn=_write_relay_activation_delay,
     ),
     "filtration1_speed": NeoPoolSelectEntityDescription(
         key="filtration1_speed",
@@ -425,9 +427,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         options_map=FILTRATION_SPEED_LABELS,
         supported_fn=has_variable_speed_pump,
         write_fn=_write_filtration_speed_timer,
-        current_option_fn=_make_filtration_speed_decoder(
-            FILTRATION_TIMER1_SPEED_MASK, FILTRATION_TIMER1_SPEED_SHIFT
-        ),
+        current_option_fn=_make_filtration_speed_decoder(1),
     ),
     "filtration2_speed": NeoPoolSelectEntityDescription(
         key="filtration2_speed",
@@ -438,9 +438,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         options_map=FILTRATION_SPEED_LABELS,
         supported_fn=has_variable_speed_pump,
         write_fn=_write_filtration_speed_timer,
-        current_option_fn=_make_filtration_speed_decoder(
-            FILTRATION_TIMER2_SPEED_MASK, FILTRATION_TIMER2_SPEED_SHIFT
-        ),
+        current_option_fn=_make_filtration_speed_decoder(2),
     ),
     "filtration3_speed": NeoPoolSelectEntityDescription(
         key="filtration3_speed",
@@ -451,9 +449,7 @@ SELECT_DESCRIPTIONS: dict[str, NeoPoolSelectEntityDescription] = {
         options_map=FILTRATION_SPEED_LABELS,
         supported_fn=has_variable_speed_pump,
         write_fn=_write_filtration_speed_timer,
-        current_option_fn=_make_filtration_speed_decoder(
-            FILTRATION_TIMER3_SPEED_MASK, FILTRATION_TIMER3_SPEED_SHIFT
-        ),
+        current_option_fn=_make_filtration_speed_decoder(3),
     ),
     "relay_aux1_period": NeoPoolSelectEntityDescription(
         key="relay_aux1_period",

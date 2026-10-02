@@ -153,6 +153,27 @@ async def test_filtvalve_interval_writes_mapped_register(
     )
 
 
+async def test_relay_activation_delay_uses_dedicated_lib_method(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """The activation-delay select calls the lib method with user-facing seconds.
+
+    The library owns the firmware -10 s offset, so the integration passes the
+    selected seconds unchanged.
+    """
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(
+        hass, mock_config_entry_timers, "mbf_par_relay_activation_delay"
+    )
+    mock_neopool_client.async_set_relay_activation_delay.reset_mock()
+    await _select_option(hass, entity_id, "20")
+    mock_neopool_client.async_set_relay_activation_delay.assert_any_await(20)
+    # The generic raw-write path is not used for this entity.
+    mock_neopool_client.async_set_config_option.assert_not_awaited()
+
+
 async def test_filtvalve_interval_current_option_reads_register(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,
