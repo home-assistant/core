@@ -1502,7 +1502,7 @@ class EntityPlatform:
                         except asyncio.CancelledError as err:
                             drained_result = err
                         self._async_handle_entity_update_result(
-                            entity, task, drained_result
+                            entity, task, drained_result, expected_cancel=True
                         )
                 raise
             fatal: BaseException | None = None
@@ -1559,6 +1559,7 @@ class EntityPlatform:
         entity: Entity,
         task: asyncio.Task[None],
         result: BaseException | None,
+        expected_cancel: bool = False,
     ) -> BaseException | None:
         """Clear a finished polling task, log its outcome, and return any fatal exception to re-raise."""
         # Only clear the tracked task if it is still the one we started;
@@ -1585,10 +1586,16 @@ class EntityPlatform:
             # the same polling cycle must still be handled normally
             # rather than having their own results discarded because a
             # sibling's task was cancelled.
-            self.logger.warning(
-                "Polling for entity %s was cancelled",
-                entity.entity_id,
-            )
+            if not expected_cancel:
+                # `expected_cancel` means *this* call deliberately
+                # cancelled every pending sibling because the outer poll
+                # itself was cancelled (e.g. config entry unload); that is
+                # routine, not a sign of a hung or misbehaving entity, so
+                # it is not worth warning about.
+                self.logger.warning(
+                    "Polling for entity %s was cancelled",
+                    entity.entity_id,
+                )
         elif isinstance(result, Exception):
             # Preserve original traceback in logs
             self.logger.exception(
