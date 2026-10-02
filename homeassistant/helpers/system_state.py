@@ -1,7 +1,10 @@
-"""Helpers to track pending restarts of the running Home Assistant instance.
+"""Helpers to track pending restarts and reboots of the running instance.
 
-The flags tracked here latch: once set, nothing clears them. Restarting
-Home Assistant creates a fresh instance, and that is what clears them.
+The restart flag latches: once set, nothing clears it. Restarting
+Home Assistant creates a fresh instance, and that is what clears it.
+
+The reboot flag is owned by Supervisor, which keeps it across restarts of
+Home Assistant. The hassio integration mirrors it here.
 """
 
 from collections.abc import Callable
@@ -21,9 +24,10 @@ SIGNAL_SYSTEM_STATE_UPDATED: SignalType[SystemState] = SignalType(
 
 @dataclass(slots=True)
 class SystemState:
-    """Pending restart state of the running Home Assistant instance."""
+    """Pending restart and reboot state of the running instance."""
 
     home_assistant_restart_sources: set[str] = field(default_factory=set)
+    host_reboot_required: bool = False
 
     @property
     def home_assistant_restart_required(self) -> bool:
@@ -37,6 +41,7 @@ class SystemState:
             "home_assistant_restart_sources": sorted(
                 self.home_assistant_restart_sources
             ),
+            "host_reboot_required": self.host_reboot_required,
         }
 
 
@@ -78,3 +83,20 @@ def async_subscribe(
     running in the executor would only read after it changed again.
     """
     return async_dispatcher_connect(hass, SIGNAL_SYSTEM_STATE_UPDATED, listener)
+
+
+@callback
+def async_set_host_reboot_required(hass: HomeAssistant, required: bool) -> None:
+    """Mirror whether Supervisor reports the host needs a reboot.
+
+    Only meant for the hassio integration. Supervisor owns this state, so
+    unlike the restart flag it is not latched here.
+    """
+    hass.verify_event_loop_thread("system_state.async_set_host_reboot_required")
+
+    system_state = async_get(hass)
+    if system_state.host_reboot_required is required:
+        return
+
+    system_state.host_reboot_required = required
+    async_dispatcher_send_internal(hass, SIGNAL_SYSTEM_STATE_UPDATED, system_state)

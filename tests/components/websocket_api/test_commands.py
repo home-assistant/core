@@ -3596,6 +3596,7 @@ async def test_subscribe_system_state(
     assert msg["event"] == {
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_required": False,
     }
 
     system_state.async_set_home_assistant_restart_required(hass, "demo")
@@ -3605,6 +3606,7 @@ async def test_subscribe_system_state(
     assert msg["event"] == {
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["demo", "hacs"],
+        "host_reboot_required": False,
     }
 
 
