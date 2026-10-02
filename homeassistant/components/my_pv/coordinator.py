@@ -39,9 +39,10 @@ def _my_pv_connection[T](
                 )
 
             return await func(self, *args, **kwargs)
-        except MyPVTooManyRequestsError:
-            _LOGGER.info("Device is rate limiting")
-            return False
+        except MyPVTooManyRequestsError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="rate_limiting"
+            ) from exc
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
