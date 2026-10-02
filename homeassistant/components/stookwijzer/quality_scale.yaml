@@ -35,10 +35,7 @@ rules:
   unique-config-entry: todo
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration is read-only and doesn't provide any actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
