@@ -21,7 +21,6 @@ from homeassistant.components.bmx_monitor.const import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -199,14 +198,3 @@ def test_availability(available: bool) -> None:
     entity.processor.available = available
     assert sensor.BMxBluetoothSensorEntity.available.fget(entity) is available
     assert sensor.BMxBluetoothSensorEntity.assumed_state.fget(entity) is not available
-
-
-def test_device_identity() -> None:
-    """Every sensor belongs to the same Bluetooth monitor device."""
-    entity = MagicMock()
-    entity.processor.coordinator.address = ADDRESS
-    info = sensor.BMxBluetoothSensorEntity.device_info.fget(entity)
-    assert info["identifiers"] == {(DOMAIN, ADDRESS)}
-    assert info["connections"] == {(CONNECTION_BLUETOOTH, ADDRESS)}
-    assert info["name"] == "BM2 battery monitor"
-    assert info["manufacturer"] == "Shenzhen Leagend Optoelectronics"

@@ -24,12 +24,10 @@ from homeassistant.const import (
     UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import BMxConfigEntry
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,15 +159,3 @@ class BMxBluetoothSensorEntity(
     def assumed_state(self) -> bool:
         """Return True if the device is no longer broadcasting."""
         return not self.processor.available
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        address = self.processor.coordinator.address
-        return DeviceInfo(
-            identifiers={(DOMAIN, address)},
-            connections={(CONNECTION_BLUETOOTH, address)},
-            name="BM2 battery monitor",
-            manufacturer="Shenzhen Leagend Optoelectronics",
-        )
