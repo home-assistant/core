@@ -53,7 +53,7 @@ async def test_listing_failure(
     exception: Exception,
 ) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
-    owproxy.return_value.read.side_effect = exception
+    setup_owproxy_mock_devices(owproxy, [])
     owproxy.return_value.dir.side_effect = exception
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -143,7 +143,6 @@ async def test_scan_for_new_devices_failure(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # The warning is only logged on the first failure
     assert caplog.text.count("Error scanning for new devices: Unreachable") == 1
     assert config_entry.state is ConfigEntryState.LOADED
 
