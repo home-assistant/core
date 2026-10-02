@@ -980,13 +980,15 @@ async def test_polling_handles_every_completed_task_before_reraising_fatal_error
 ) -> None:
     """Test all tasks completed in the same batch are handled before raising.
 
-    Regression contract: `asyncio.wait(..., FIRST_COMPLETED)` can return
-    multiple completed tasks in the same batch; if a fatal
-    `BaseException` happens to be iterated first, every other task in
-    that same batch must still have its tracked entry cleared and its own
-    result logged before the fatal one is re-raised, rather than being
-    left to a background drain that only ever receives the still-pending
-    tasks.
+    Regression contract: when multiple tasks have already completed by
+    the time `_async_await_polling_tasks` starts draining its completion
+    queue, it can pick up more than one of them in the same batch (the
+    first `await` plus anything already queued behind it); if a fatal
+    `BaseException` happens to be iterated first within that batch, every
+    other task in it must still have its tracked entry cleared and its
+    own result logged before the fatal one is re-raised, rather than
+    being left to a background drain that only ever receives the
+    still-pending tasks.
     """
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
     await component.async_setup({})
@@ -1007,28 +1009,15 @@ async def test_polling_handles_every_completed_task_before_reraising_fatal_error
     failing_entity = MockEntity(should_poll=True)
     failing_entity.entity_id = "test_domain.failing"
 
+    # Both tasks are already finished by the time `_async_await_polling_tasks`
+    # registers its completion callbacks below, so both land in its
+    # completion queue in the same batch - in the order the tasks are
+    # passed in, since the fatal one is listed (and so registered) first.
     fatal_task = hass.async_create_task(_raise_custom_base_exception())
     failing_task = hass.async_create_task(_raise_normal_exception())
     await asyncio.sleep(0)  # let both tasks run to completion
 
-    real_wait = asyncio.wait
-
-    async def _ordered_wait(
-        tasks: Iterable[asyncio.Task[None]], **kwargs: Any
-    ) -> tuple[list[asyncio.Task[None]], set[asyncio.Task[None]]]:
-        # Force the fatal task to be iterated first within the `done`
-        # batch, as a real `asyncio.wait` call might happen to order it,
-        # since `done` is a set whose iteration order is not guaranteed.
-        _, pending = await real_wait(tasks, **kwargs)
-        return [fatal_task, failing_task], pending
-
-    with (
-        patch(
-            "homeassistant.helpers.entity_platform.asyncio.wait",
-            side_effect=_ordered_wait,
-        ),
-        pytest.raises(_CustomBaseException),
-    ):
+    with pytest.raises(_CustomBaseException):
         await platform._async_await_polling_tasks(
             [(fatal_entity, fatal_task), (failing_entity, failing_task)]
         )
