@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_entity_and_device_data[firewall_policy_payload0][date.unifi_network_block_streaming_schedule_end_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'date',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'date.unifi_network_block_streaming_schedule_end_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Block streaming schedule end date',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block streaming schedule end date',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_end_date',
+    'unique_id': 'firewall_policy_schedule_end_date-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[firewall_policy_payload0][date.unifi_network_block_streaming_schedule_end_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule end date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'date.unifi_network_block_streaming_schedule_end_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-01-30',
+  })
+# ---
+# name: test_entity_and_device_data[firewall_policy_payload0][date.unifi_network_block_streaming_schedule_start_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'date',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'date.unifi_network_block_streaming_schedule_start_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Block streaming schedule start date',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block streaming schedule start date',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_start_date',
+    'unique_id': 'firewall_policy_schedule_start_date-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[firewall_policy_payload0][date.unifi_network_block_streaming_schedule_start_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule start date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'date.unifi_network_block_streaming_schedule_start_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-01-05',
+  })
+# ---
