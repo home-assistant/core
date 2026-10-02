@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import probatio
 
@@ -190,6 +190,75 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
         )
         or INVALID_JSON_PARTIAL_MESSAGE
     )[:-1]
+
+
+def batched_state_diff_message(
+    message_id_as_bytes: bytes, events: list[Event[EventStateChangedData]]
+) -> bytes:
+    """Return one event message carrying several state changes.
+
+    The state update format already describes any number of entities at once, but
+    subscribe_entities emitted one message per state change, so a client applying an
+    update had to walk its whole state machine once per changed entity rather than once
+    per batch. On a large installation that is the dominant cost of running the
+    frontend at all.
+
+    Serialization stays shared between connections: each event is still serialized once
+    into a cached fragment, and this only joins the fragments, which is why batching
+    does not trade one cost for another when many clients are subscribed.
+    """
+    if len(events) == 1:
+        return cached_state_diff_message(message_id_as_bytes, events[0])
+
+    # Grouped rather than appended, because the format keys additions, removals and
+    # changes separately. Insertion order is preserved per group, and a caller must not
+    # place two updates for the same entity in one batch - see _StateDiffBatch, which
+    # flushes instead, since the groups are applied by the client in a fixed order that
+    # need not match the order the events happened in.
+    grouped: dict[bytes, list[bytes]] = {}
+    for event in events:
+        key, fragment = _cached_state_diff_fragment(event)
+        grouped.setdefault(key, []).append(fragment)
+
+    parts: list[bytes] = [b'{"id":', message_id_as_bytes, b',"type":"event","event":{']
+    first = True
+    for key, fragments in grouped.items():
+        if not first:
+            parts.append(b",")
+        first = False
+        opening, closing = (b'":[', b"]") if key == _REMOVE_KEY else (b'":{', b"}")
+        parts.extend((b'"', key, opening, b",".join(fragments), closing))
+    parts.append(b"}}")
+    return b"".join(parts)
+
+
+_REMOVE_KEY: Final = ENTITY_EVENT_REMOVE.encode()
+
+
+@lru_cache(maxsize=128)
+def _cached_state_diff_fragment(
+    event: Event[EventStateChangedData],
+) -> tuple[bytes, bytes]:
+    """Cache and serialize one state change as a fragment of a batched message.
+
+    Returns the group the change belongs to - "a", "r" or "c" - and the serialized
+    entry that goes inside it, so several changes can be joined into one message
+    without any of them being serialized a second time.
+
+    Cached on the event for the same reason _partial_cached_state_diff_message is: with
+    many connections subscribed, the same change would otherwise be serialized once per
+    connection.
+    """
+    diff = _state_diff_event(event)
+    key = next(iter(diff))
+    value = diff[key]
+    if key == ENTITY_EVENT_REMOVE:
+        # {"r": ["light.kitchen"]} -> b'"light.kitchen"'
+        removed = cast(list[str], value)
+        return _REMOVE_KEY, json_bytes(removed[0])
+    # {"c": {"light.kitchen": diff}} -> b'"light.kitchen":{...}'
+    entity_id, payload = next(iter(cast(dict[str, Any], value).items()))
+    return key.encode(), b"".join((json_bytes(entity_id), b":", json_bytes(payload)))
 
 
 def _state_diff_event(
