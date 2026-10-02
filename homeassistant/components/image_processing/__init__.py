@@ -1,12 +1,10 @@
 """Provides functionality to interact with image processing services."""
 
-import asyncio
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import Any, Final, TypedDict, final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.const import (
@@ -16,36 +14,26 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SOURCE,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ImageProcessingEntityStateAttribute
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    SERVICE_SCAN,  # noqa: F401
+    ImageProcessingDeviceClass,
+    ImageProcessingEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
 
-
-class ImageProcessingDeviceClass(StrEnum):
-    """Device class for image processing entities."""
-
-    # Automatic license plate recognition
-    ALPR = "alpr"
-
-    # Face
-    FACE = "face"
-
-    # OCR
-    OCR = "ocr"
-
-
-SERVICE_SCAN = "scan"
 
 EVENT_DETECT_FACE = "image_processing.detect_face"
 
@@ -62,18 +50,20 @@ CONF_CONFIDENCE = "confidence"
 DEFAULT_TIMEOUT = 10
 DEFAULT_CONFIDENCE = 80
 
-SOURCE_SCHEMA = vol.Schema(
+SOURCE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain("camera"),
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain("camera"),
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
-        vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=100)
+        probatio.Optional(CONF_SOURCE): probatio.All(
+            probatio.EnsureList(), [SOURCE_SCHEMA]
+        ),
+        probatio.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=100)
         ),
     }
 )
@@ -94,27 +84,13 @@ class FaceInformation(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent[ImageProcessingEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ImageProcessingEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
 
-    async def async_scan_service(service: ServiceCall) -> None:
-        """Service handler for scan."""
-        image_entities = await component.async_extract_from_service(service)
-
-        update_tasks = []
-        for entity in image_entities:
-            entity.async_set_context(service.context)
-            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_scan_service, schema=make_entity_service_schema({})
-    )
+    async_setup_services(hass)
 
     return True
 

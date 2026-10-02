@@ -617,7 +617,7 @@ async def test_unique_id_and_friends_migration(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "2533274838782903")},
     )
-    assert device_friend.config_entries_subentries[config_entry.entry_id] == {None}
+    assert device_friend.config_subentry_id is None
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -640,9 +640,7 @@ async def test_unique_id_and_friends_migration(
     assert device_own.identifiers == {(DOMAIN, "271958441785640")}
 
     assert (device_friend := device_registry.async_get(device_friend.id))
-    assert device_friend.config_entries_subentries[config_entry.entry_id] == {
-        subentries[0].subentry_id
-    }
+    assert device_friend.config_subentry_id == subentries[0].subentry_id
 
 
 @pytest.mark.parametrize(
@@ -698,7 +696,7 @@ async def test_migration_exceptions(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
@@ -733,7 +731,7 @@ async def test_migration_implementation_unavailable(hass: HomeAssistant) -> None
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures(

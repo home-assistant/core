@@ -1,6 +1,5 @@
 """Provide functionality to keep track of devices."""
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, final, override
 
@@ -38,7 +37,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
@@ -114,10 +112,12 @@ def _async_register_mac(
             return
 
         dev_reg = dr.async_get(hass)
-        device_entry = dev_reg.async_get(ev.data["device_id"])
+        device_entry = dev_reg.async_get(
+            ev.data["device_id"], include_child_devices=False
+        )
 
         if device_entry is None:
-            # This should not happen, since the device was just created.
+            # A child device resolves to None here; it has no MAC to match.
             return
 
         # Check if device has a mac
@@ -646,47 +646,47 @@ class ScannerEntity(
     @override
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
-        # If mac_address is None, we can never find a device entry.
+        # If mac_address is None, we can never find a matching device.
         return (
-            # Do not disable if we won't activate our attach to device logic
+            # Do not disable if we won't activate our own device registration logic
             self.mac_address is None
             or self.device_info is not None
-            # Disable if we automatically attach but there is no device
-            or self.find_device_entry() is not None
+            # Disable if the tracked device is not known to any integration
+            or self._async_mac_address_registered()
         )
 
-    @callback
     @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
+
+        Registers the MAC address before the entity is added so a tracker that is
+        created disabled can still be enabled later when its device becomes known.
+        """
+        await super().async_prepare_to_add_to_hass()
         if self.mac_address and self.unique_id:
             _async_register_mac(
-                hass,
-                platform.platform_name,
+                self.hass,
+                self.platform.platform_name,
                 self.mac_address,
                 self.unique_id,
             )
             if self.is_connected and self.ip_address:
                 _async_connected_device_registered(
-                    hass,
+                    self.hass,
                     self.mac_address,
                     self.ip_address,
                     self.hostname,
                 )
 
     @callback
-    def find_device_entry(self) -> dr.DeviceEntry | None:
-        """Return device entry."""
+    def _async_mac_address_registered(self) -> bool:
+        """Return if a device with the entity's MAC address is registered."""
         assert self.mac_address is not None
 
-        return dr.async_get(self.hass).async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+        return bool(
+            dr.async_get(self.hass).async_get_devices(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            )
         )
 
     @override
@@ -697,7 +697,7 @@ class ScannerEntity(
             not self.registry_entry
             or not self.platform.config_entry
             or not self.mac_address
-            or (device_entry := self.find_device_entry()) is None
+            or not self._async_mac_address_registered()
             # Entities should not have a device info. We opt them out
             # of this logic if they do.
             or self.device_info
@@ -707,27 +707,18 @@ class ScannerEntity(
             await super().async_internal_added_to_hass()
             return
 
-        dev_reg = dr.async_get(self.hass)
-        # find_device_entry may return a synthesized pre-migration composite whose id is
-        # not a real device and can't be assigned to an entity; resolve it to the split
-        # owned by this config entry so we attach to a concrete device.
-        if device_entry.id not in dev_reg.devices:
-            device_entry = next(
-                (
-                    split
-                    for split in dev_reg.async_get_devices_for_composite_device_id(
-                        device_entry.id
-                    )
-                    if split.config_entry_id == self.platform.config_entry.entry_id
-                ),
-                None,
-            )
+        # Register our own device now that the tracked device is known to another
+        # integration; matching the split of a pre-migration composite device prunes
+        # the identifiers and connections copied from the composite.
+        device_entry = dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.platform.config_entry.entry_id,
+            config_subentry_id=self.registry_entry.config_subentry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            name=self.hostname or self.mac_address,
+        )
 
-        # Attach entry to device
-        if (
-            device_entry is not None
-            and self.registry_entry.device_id != device_entry.id
-        ):
+        # Link the entity's registry entry to the device
+        if self.registry_entry.device_id != device_entry.id:
             self.registry_entry = er.async_get(self.hass).async_update_entity(
                 self.entity_id, device_id=device_entry.id
             )

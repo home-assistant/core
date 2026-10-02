@@ -1,8 +1,9 @@
 """Data coordinator for Watts Vision integration."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+import time
 from typing import TYPE_CHECKING, override
 
 from visionpluspython.client import WattsVisionClient
@@ -22,7 +23,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    DISCOVERY_INTERVAL_MINUTES,
+    DISCOVERY_INTERVAL_SECONDS,
     DOMAIN,
     FAST_POLLING_INTERVAL_SECONDS,
     UPDATE_INTERVAL_SECONDS,
@@ -61,18 +62,17 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             config_entry=config_entry,
         )
         self.client = client
-        self.last_discovery: datetime | None = None
+        self.last_discovery: float | None = None
         self.previous_devices: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data and periodic device discovery."""
-        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        now = time.time()
         is_first_refresh = self.last_discovery is None
         discovery_interval_elapsed = (
             self.last_discovery is not None
-            and now - self.last_discovery
-            >= timedelta(minutes=DISCOVERY_INTERVAL_MINUTES)
+            and now - self.last_discovery >= DISCOVERY_INTERVAL_SECONDS
         )
 
         if is_first_refresh or discovery_interval_elapsed:
@@ -152,10 +152,7 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 (DOMAIN, device_id), self.config_entry.entry_id
             )
             if device:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                device_registry.async_remove_device(device.id)
 
     @property
     def device_ids(self) -> list[str]:
@@ -185,7 +182,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
         self.client = client
         self.device_id = device_id
         self.hub_coordinator = hub_coordinator
-        self.fast_polling_until: datetime | None = None
+        self.fast_polling_until: float | None = None
 
         # Listen to hub coordinator updates
         self.unsubscribe_hub_listener = hub_coordinator.async_add_listener(
@@ -208,7 +205,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
     @override
     async def _async_update_data(self) -> WattsVisionDeviceData:
         """Refresh specific device."""
-        if self.fast_polling_until and datetime.now() > self.fast_polling_until:  # pylint: disable=home-assistant-enforce-naive-now
+        if self.fast_polling_until and time.time() > self.fast_polling_until:
             self.fast_polling_until = None
             self.update_interval = None
             _LOGGER.debug(
@@ -244,10 +241,12 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
         _LOGGER.debug("Refreshed device %s", self.device_id)
         return WattsVisionDeviceData(device=device)
 
-    def trigger_fast_polling(self, duration: int = 60) -> None:
+    def trigger_fast_polling(self, duration_seconds: int = 60) -> None:
         """Activate fast polling for a specified duration after a command."""
-        self.fast_polling_until = datetime.now() + timedelta(seconds=duration)  # pylint: disable=home-assistant-enforce-naive-now
+        self.fast_polling_until = time.time() + duration_seconds
         self.update_interval = timedelta(seconds=FAST_POLLING_INTERVAL_SECONDS)
         _LOGGER.debug(
-            "Device %s: Activated fast polling for %d seconds", self.device_id, duration
+            "Device %s: Activated fast polling for %d seconds",
+            self.device_id,
+            duration_seconds,
         )

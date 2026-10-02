@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_PERSONS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import State, valid_entity_id
@@ -221,14 +220,14 @@ class StateExtension(BaseTemplateExtension):
             if point_state is None:
                 _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
-            if not loc_helper.has_location(point_state):
+            if (coordinates := loc_helper.get_state_coordinates(point_state)) is None:
                 _LOGGER.warning(
                     "Closest:State does not contain valid location: %s", point_state
                 )
                 return None
 
-            latitude = point_state.attributes[EntityStateAttribute.LATITUDE]
-            longitude = point_state.attributes[EntityStateAttribute.LONGITUDE]
+            latitude = coordinates.latitude
+            longitude = coordinates.longitude
 
             entities = args[1]
 
@@ -300,15 +299,17 @@ class StateExtension(BaseTemplateExtension):
                 longitude = longitude_to_process
 
             else:
-                if not loc_helper.has_location(point_state):
+                if (
+                    coordinates := loc_helper.get_state_coordinates(point_state)
+                ) is None:
                     _LOGGER.warning(
                         "Distance:State does not contain valid location: %s",
                         point_state,
                     )
                     return None
 
-                latitude = point_state.attributes[EntityStateAttribute.LATITUDE]
-                longitude = point_state.attributes[EntityStateAttribute.LONGITUDE]
+                latitude = coordinates.latitude
+                longitude = coordinates.longitude
 
             locations.append((latitude, longitude))
 

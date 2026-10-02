@@ -1,0 +1,103 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Flow-it device.",
+          "password": "The password is available on the physical device LCD display, by interacting with the menu, clicking on the 'settings' icon and then on the 'wifi icon'.",
+          "username": "The default username is 'api'."
+        },
+        "title": "Configure Flow-it"
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::flow_it::config::step::user::data_description::password%]",
+          "username": "[%key:component::flow_it::config::step::user::data_description::username%]"
+        },
+        "description": "Do you want to set up {name}?",
+        "title": "Discovered Flow-it"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "g4_filter_status": {
+        "name": "G4 filter status",
+        "state": {
+          "clean": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::clean%]",
+          "dirty_0": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_0%]",
+          "dirty_25": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_25%]",
+          "dirty_50": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_50%]",
+          "dirty_75": "[%key:component::flow_it::entity::sensor::hepa_filter_status::state::dirty_75%]"
+        }
+      },
+      "hepa_filter_status": {
+        "name": "HEPA filter status",
+        "state": {
+          "clean": "Clean",
+          "dirty_0": "0%",
+          "dirty_25": "25%",
+          "dirty_50": "50%",
+          "dirty_75": "75%"
+        }
+      },
+      "humidity_in": {
+        "name": "Indoor air humidity"
+      },
+      "humidity_out": {
+        "name": "Outdoor air humidity"
+      },
+      "iaq": {
+        "name": "Indoor air quality"
+      },
+      "pressure_in": {
+        "name": "Indoor air pressure"
+      },
+      "pressure_out": {
+        "name": "Outdoor air pressure"
+      },
+      "temperature_in": {
+        "name": "Indoor air temperature"
+      },
+      "temperature_out": {
+        "name": "Outdoor air temperature"
+      }
+    },
+    "switch": {
+      "flow_in": {
+        "name": "Air intake"
+      },
+      "flow_out": {
+        "name": "Air exhaust"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed when communicating with Flow-it VMC"
+    },
+    "command_failed": {
+      "message": "Failed to send command to Flow-it VMC"
+    },
+    "update_failed": {
+      "message": "Error communicating with API"
+    }
+  }
+}

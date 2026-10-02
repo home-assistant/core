@@ -18,12 +18,16 @@ from pyatmo.schedule import Schedule
 
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_device_registry_updated_event,
+    async_track_time_interval,
+)
 
 from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
@@ -50,6 +54,12 @@ from .const import (
     WEBHOOK_ACTIVATION,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
+)
+from .device import (
+    async_disabled_netatmo_ids,
+    async_register_parent_devices,
+    async_sync_home_disabled_state,
+    netatmo_module_parents,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +95,8 @@ DEFAULT_INTERVALS = {
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
+UNAVAILABLE_AFTER_ERRORS = 3
+MAX_ERROR_BACKOFF = 3600
 
 type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
 
@@ -136,6 +148,8 @@ class NetatmoPublisher:
     method: str
     kwargs: dict
     available: bool = True
+    error_count: int = 0
+    unavailable_logged: bool = False
 
 
 class NetatmoDataHandler:
@@ -170,6 +184,9 @@ class NetatmoDataHandler:
         self.device_ids: dict[str, str] = {}
         self.cameras: dict[str, str] = {}
         self.events: dict[str, dict] = {}
+        self.parent_device_ids: dict[str, str] = {}
+        self.module_parents: dict[str, str] = {}
+        self.home_device_ids: list[str] = []
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -187,9 +204,31 @@ class NetatmoDataHandler:
             )
         )
 
-        self.account = pyatmo.AsyncAccount(self.auth)
+        self.account = pyatmo.AsyncAccount(
+            self.auth,
+            disabled_homes_ids=async_disabled_netatmo_ids(self.hass, self.config_entry),
+        )
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
+
+        # Parents must exist before a platform links a child to one
+        self.module_parents = netatmo_module_parents(self.account)
+        self.parent_device_ids = async_register_parent_devices(
+            self.hass, self.config_entry, self.account, self.module_parents
+        )
+        self.home_device_ids = [
+            self.parent_device_ids[home_id]
+            for home_id in self.account.all_home_names
+            if home_id in self.parent_device_ids
+        ]
+        async_sync_home_disabled_state(
+            self.hass, self.config_entry, self.home_device_ids
+        )
+        self.config_entry.async_on_unload(
+            async_track_device_registry_updated_event(
+                self.hass, self.home_device_ids, self._handle_home_device_update
+            )
+        )
 
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
@@ -210,8 +249,9 @@ class NetatmoDataHandler:
                 error = await self.async_fetch_data(publisher)
 
                 if error:
-                    self.publisher[publisher].next_scan = (
-                        time() + data_class.interval * 10
+                    self.publisher[publisher].next_scan = time() + min(
+                        data_class.interval * 2 ** (data_class.error_count - 1),
+                        MAX_ERROR_BACKOFF,
                     )
                 else:
                     self.publisher[publisher].next_scan = time() + data_class.interval
@@ -249,11 +289,10 @@ class NetatmoDataHandler:
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
         self.poll_count += 1
+        publisher = self.publisher[signal_name]
         has_error = False
         try:
-            await getattr(self.account, self.publisher[signal_name].method)(
-                **self.publisher[signal_name].kwargs
-            )
+            await getattr(self.account, publisher.method)(**publisher.kwargs)
 
         except (
             pyatmo.NoDeviceError,
@@ -261,10 +300,24 @@ class NetatmoDataHandler:
             TimeoutError,
             aiohttp.ClientConnectorError,
         ) as err:
-            _LOGGER.debug(err)
             has_error = True
+            if not publisher.unavailable_logged:
+                _LOGGER.info("Error while fetching %s data: %s", signal_name, err)
+                publisher.unavailable_logged = True
+            else:
+                _LOGGER.debug(err)
+        else:
+            if publisher.unavailable_logged:
+                _LOGGER.info("Fetching %s data recovered", signal_name)
+                publisher.unavailable_logged = False
 
-        self.publisher[signal_name].available = not has_error
+        if has_error:
+            publisher.error_count += 1
+        else:
+            publisher.error_count = 0
+
+        # Tolerate transient backend errors before marking entities unavailable
+        publisher.available = publisher.error_count < UNAVAILABLE_AFTER_ERRORS
         self._notify_subscribers(signal_name)
         return has_error
 
@@ -356,6 +409,14 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
+
+    @callback
+    def _handle_home_device_update(
+        self, event: Event[EventDeviceRegistryUpdatedData]
+    ) -> None:
+        """Reload when a home device is enabled or disabled."""
+        if event.data["action"] == "update" and "disabled_by" in event.data["changes"]:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""

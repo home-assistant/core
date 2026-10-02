@@ -8,7 +8,7 @@ from unittest.mock import Mock, PropertyMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
@@ -77,6 +77,7 @@ async def test_single_entry_allowed(
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_user_no_devices_found(
@@ -90,6 +91,7 @@ async def test_user_no_devices_found(
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_user_has_confirmation(
@@ -151,6 +153,7 @@ async def test_user_has_confirmation_async_discovery_flow(
     [
         config_entries.SOURCE_BLUETOOTH,
         config_entries.SOURCE_DISCOVERY,
+        config_entries.SOURCE_HOMEKIT,
         config_entries.SOURCE_MQTT,
         config_entries.SOURCE_SSDP,
         config_entries.SOURCE_ZEROCONF,
@@ -170,6 +173,23 @@ async def test_discovery_single_instance(
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
+
+
+async def test_discovery_confirm_single_instance(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
+    """Test confirming a discovery aborts once an entry exists."""
+    flow = config_entries.HANDLERS["test"]()
+    flow.hass = hass
+    flow.context = {"source": config_entries.SOURCE_DISCOVERY}
+
+    MockConfigEntry(domain="test").add_to_hass(hass)
+    result = await flow.async_step_confirm({})
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 @pytest.mark.parametrize(
@@ -321,6 +341,8 @@ async def test_import_single_instance(
 
     result = await flow.async_step_import(None)
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_ignored_discoveries(
@@ -369,6 +391,7 @@ async def test_webhook_single_entry_allowed(
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_webhook_multiple_entries_allowed(
@@ -510,6 +533,7 @@ async def test_webhook_create_cloudhook_aborts_not_connected(
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_webhook_reconfigure_flow(

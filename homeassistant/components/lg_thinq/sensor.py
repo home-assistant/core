@@ -747,10 +747,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
         value = self.data.value
 
         if isinstance(value, time):
-            # pylint: disable-next=home-assistant-enforce-now
-            local_now = datetime.now(
-                tz=dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
-            )
+            local_now = dt_util.now()
             self._device_state = (
                 self.coordinator.data[self._device_state_id].value
                 if self._device_state_id in self.coordinator.data
@@ -832,9 +829,9 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         """Handle added to Hass."""
         await super().async_added_to_hass()
         if self.coordinator.update_energy_at_time_of_day is None:
-            # random time 01:00:00 ~ 02:59:00
+            # Random time between 01:00:00 and 05:59:00
             self.coordinator.update_energy_at_time_of_day = time(
-                hour=random.randint(1, 2), minute=random.randint(0, 59)
+                hour=random.randint(1, 5), minute=random.randint(0, 59)
             )
             _LOGGER.debug(
                 "[%s] Set energy update time: %s",
@@ -865,10 +862,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
     async def _async_update_and_schedule(self) -> None:
         """Update the state of the sensor."""
-        # pylint: disable-next=home-assistant-enforce-now
-        local_now = datetime.now(
-            dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
-        )
+        local_now = dt_util.now()
         next_update = local_now + self.entity_description.update_interval
         if (
             self.coordinator.update_energy_at_time_of_day is not None

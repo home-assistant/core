@@ -9,3 +9,6 @@ DOMAIN = "intelliclima"
 
 # Update interval
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+
+# Filter status is expensive to compute cloud-side, so it's polled far less often.
+FILTER_SCAN_INTERVAL = timedelta(days=1)

@@ -1,5 +1,6 @@
 """Test UniFi Protect views."""
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
@@ -9,6 +10,7 @@ import pytest
 from uiprotect.data import Camera, Event, EventType, ModelType
 from uiprotect.exceptions import ClientError
 
+from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
 from homeassistant.components.unifiprotect.views import (
     async_generate_event_video_url,
     async_generate_proxy_event_video_url,
@@ -966,3 +968,33 @@ async def test_event_video(
 
     assert response.status == 200
     ufp.api.request.assert_called_once()
+
+
+async def test_public_only_entry_id_lookup_404(
+    hass_client: ClientSessionGenerator,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The media proxy views reject a public-only entry id with a 404."""
+    await setup_public_only()
+
+    url = async_generate_thumbnail_url("test_id", ufp_public_only.entry.entry_id)
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
+
+
+async def test_public_only_entry_skipped_by_nvr_id_lookup(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The nvr-id lookup (thumbnail/video views) skips a public-only entry.
+
+    It iterates every loaded entry and reads the private bootstrap; a
+    public-only entry has none and must be skipped, not raise.
+    """
+    await setup_public_only()
+
+    assert async_get_data_for_nvr_id(hass, "nvr-id") is None

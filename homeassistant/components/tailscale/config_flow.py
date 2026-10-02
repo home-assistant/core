@@ -3,8 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from tailscale import Tailscale, TailscaleAuthenticationError, TailscaleError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -20,15 +20,17 @@ from .const import CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, CONF_TAILNET,
 OAUTH_URL = "https://login.tailscale.com/admin/settings/oauth"
 
 OAUTH_SCHEMA = {
-    vol.Required(CONF_OAUTH_CLIENT_ID): str,
-    vol.Required(CONF_OAUTH_CLIENT_SECRET): TextSelector(
+    probatio.Required(CONF_OAUTH_CLIENT_ID): str,
+    probatio.Required(CONF_OAUTH_CLIENT_SECRET): TextSelector(
         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
     ),
 }
 
-STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_TAILNET): str, **OAUTH_SCHEMA})
+STEP_USER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_TAILNET): str, **OAUTH_SCHEMA}
+)
 
-STEP_REAUTH_SCHEMA = vol.Schema(OAUTH_SCHEMA)
+STEP_REAUTH_SCHEMA = probatio.Schema(OAUTH_SCHEMA)
 
 
 async def validate_input(
