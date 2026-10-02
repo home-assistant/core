@@ -8,6 +8,7 @@ from aiofarmad import (
     DraftProduct,
     FarmadAuthenticationError,
     FarmadAuthorizationError,
+    FarmadCommunicationError,
     FarmadError,
 )
 import probatio
@@ -302,12 +303,19 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
                     translation_key="order_failed",
                     translation_placeholders={ATTR_APB: apb},
                 )
-            basket_id = await data.client.async_submit_basket(
-                apb,
-                draft_id,
-                products=products,
-                comment=call.data.get(ATTR_COMMENT),
-            )
+            try:
+                basket_id = await data.client.async_submit_basket(
+                    apb,
+                    draft_id,
+                    products=products,
+                    comment=call.data.get(ATTR_COMMENT),
+                )
+            except FarmadCommunicationError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="order_unconfirmed",
+                    translation_placeholders={ATTR_APB: apb},
+                ) from err
             if basket_id is None:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

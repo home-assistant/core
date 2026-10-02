@@ -10,6 +10,7 @@ from aiofarmad import (
     FarmadAuthenticationError,
     FarmadAuthorizationError,
     FarmadCommunicationError,
+    FarmadTimeoutError,
 )
 import probatio
 import pytest
@@ -466,8 +467,13 @@ async def test_order_medication_invalid_product(
         ),
         pytest.param(
             FarmadCommunicationError("mock"),
-            "order_failed",
+            "order_unconfirmed",
             id="communication",
+        ),
+        pytest.param(
+            FarmadTimeoutError("mock"),
+            "order_unconfirmed",
+            id="timeout",
         ),
     ],
 )
@@ -477,7 +483,7 @@ async def test_order_medication_errors(
     side_effect: Exception,
     translation_key: str,
 ) -> None:
-    """Test library errors map to translated Home Assistant errors."""
+    """Test library errors during submit map to translated Home Assistant errors."""
     await init_integration(hass)
     mock_farmad_client.return_value.async_submit_basket.side_effect = side_effect
 
