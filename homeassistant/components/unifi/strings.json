@@ -205,6 +205,30 @@
       "block_client": {
         "name": "Blocked"
       },
+      "firewall_policy_schedule_all_day": {
+        "name": "{policy_name} schedule all day"
+      },
+      "firewall_policy_schedule_day_fri": {
+        "name": "{policy_name} schedule Friday"
+      },
+      "firewall_policy_schedule_day_mon": {
+        "name": "{policy_name} schedule Monday"
+      },
+      "firewall_policy_schedule_day_sat": {
+        "name": "{policy_name} schedule Saturday"
+      },
+      "firewall_policy_schedule_day_sun": {
+        "name": "{policy_name} schedule Sunday"
+      },
+      "firewall_policy_schedule_day_thu": {
+        "name": "{policy_name} schedule Thursday"
+      },
+      "firewall_policy_schedule_day_tue": {
+        "name": "{policy_name} schedule Tuesday"
+      },
+      "firewall_policy_schedule_day_wed": {
+        "name": "{policy_name} schedule Wednesday"
+      },
       "poe_port_control": {
         "name": "{port_name} PoE"
       },
@@ -250,6 +274,9 @@
     },
     "schedule_mode_not_supported": {
       "message": "This schedule mode can only be set in UniFi Network"
+    },
+    "schedule_needs_a_day": {
+      "message": "The schedule needs at least one day of the week"
     },
     "schedule_setting_unused_in_mode": {
       "message": "The policy's current schedule mode doesn't use this setting"

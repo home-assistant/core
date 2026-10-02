@@ -1,5 +1,7 @@
 """UniFi Network switch platform tests."""
 
+import asyncio
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
@@ -13,8 +15,12 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -33,13 +39,16 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
+    CONTENT_TYPE_JSON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
@@ -2066,3 +2075,246 @@ async def test_switch_turn_off_request_failed(
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "action_request_failed"
+
+
+WEEKLY_SCHEDULE = {
+    "mode": "EVERY_WEEK",
+    "repeat_on_days": ["wed", "mon"],
+    "time_all_day": False,
+    "time_range_start": "15:00",
+    "time_range_end": "17:00",
+}
+WEEKLY_POLICY = {**FIREWALL_POLICY, "schedule": WEEKLY_SCHEDULE}
+SCHEDULE_ENTITY = "switch.unifi_network_allow_internal_to_iot_schedule_"
+DAY_ENTITIES = {
+    "mon": SCHEDULE_ENTITY + "monday",
+    "tue": SCHEDULE_ENTITY + "tuesday",
+    "wed": SCHEDULE_ENTITY + "wednesday",
+    "thu": SCHEDULE_ENTITY + "thursday",
+    "fri": SCHEDULE_ENTITY + "friday",
+    "sat": SCHEDULE_ENTITY + "saturday",
+    "sun": SCHEDULE_ENTITY + "sunday",
+}
+
+
+def _policy_put_url(config_entry: MockConfigEntry) -> str:
+    return (
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry.data[CONF_SITE_ID]}"
+        f"/firewall-policies/{FIREWALL_POLICY['_id']}"
+    )
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[WEEKLY_POLICY]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_schedule_switches_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """The schedule switches are created disabled."""
+    for entity_id in (SCHEDULE_ENTITY + "all_day", *DAY_ENTITIES.values()):
+        assert hass.states.get(entity_id) is None
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert entry.entity_category is EntityCategory.CONFIG
+
+
+@pytest.mark.parametrize(
+    ("firewall_policy_payload", "on_days", "all_day"),
+    [
+        ([WEEKLY_POLICY], {"mon", "wed"}, STATE_OFF),
+        (
+            [
+                {
+                    **FIREWALL_POLICY,
+                    "schedule": {**WEEKLY_SCHEDULE, "repeat_on_days": []},
+                }
+            ],
+            set(),
+            STATE_OFF,
+        ),
+        (
+            [
+                {
+                    **FIREWALL_POLICY,
+                    "schedule": {
+                        "mode": "CUSTOM",
+                        "date_start": "2026-01-05",
+                        "date_end": "2026-01-30",
+                        "repeat_on_days": ["sun", "MON"],
+                        "time_all_day": True,
+                    },
+                }
+            ],
+            {"sun"},
+            STATE_ON,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
+async def test_schedule_day_switches(
+    hass: HomeAssistant, on_days: set[str], all_day: str
+) -> None:
+    """The switches show the schedule's days and all-day setting."""
+    for day, entity_id in DAY_ENTITIES.items():
+        expected = STATE_ON if day in on_days else STATE_OFF
+        assert hass.states.get(entity_id).state == expected, day
+    assert hass.states.get(SCHEDULE_ENTITY + "all_day").state == all_day
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
+async def test_schedule_switches_unused_mode(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """In a mode without days the switches are unknown and can't be set."""
+    for entity_id in (SCHEDULE_ENTITY + "all_day", DAY_ENTITIES["mon"]):
+        assert hass.states.get(entity_id).state == STATE_UNKNOWN
+        call_count = aioclient_mock.call_count
+        with pytest.raises(ServiceValidationError) as exc_info:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "schedule_setting_unused_in_mode"
+        assert aioclient_mock.call_count == call_count
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "expected_schedule"),
+    [
+        (
+            DAY_ENTITIES["fri"],
+            SERVICE_TURN_ON,
+            {**WEEKLY_SCHEDULE, "repeat_on_days": ["mon", "wed", "fri"]},
+        ),
+        (
+            DAY_ENTITIES["mon"],
+            SERVICE_TURN_OFF,
+            {**WEEKLY_SCHEDULE, "repeat_on_days": ["wed"]},
+        ),
+        (
+            SCHEDULE_ENTITY + "all_day",
+            SERVICE_TURN_ON,
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["mon", "wed"],
+                "time_all_day": True,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize("firewall_policy_payload", [[WEEKLY_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_schedule_switch_writes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    entity_id: str,
+    service: str,
+    expected_schedule: dict[str, Any],
+) -> None:
+    """Switching a day or all day sends the whole schedule, days Monday first."""
+    expected = {**FIREWALL_POLICY, "schedule": expected_schedule}
+    aioclient_mock.put(
+        _policy_put_url(config_entry_setup),
+        json=expected,
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert aioclient_mock.mock_calls[call_count][0] == "put"
+    assert aioclient_mock.mock_calls[call_count][2] == expected
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload",
+    [[{**FIREWALL_POLICY, "schedule": {**WEEKLY_SCHEDULE, "repeat_on_days": ["mon"]}}]],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
+async def test_schedule_needs_a_day(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """The last selected day can't be turned off."""
+    call_count = aioclient_mock.call_count
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: DAY_ENTITIES["mon"]},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "schedule_needs_a_day"
+    assert aioclient_mock.call_count == call_count
+    assert hass.states.get(DAY_ENTITIES["mon"]).state == STATE_ON
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[WEEKLY_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_schedule_days_simultaneous(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[], None],
+) -> None:
+    """Two day switches turned on at the same moment both take effect."""
+    config_entry = await config_entry_factory()
+    stored = {"policy": deepcopy(WEEKLY_POLICY)}
+    url = (
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry.data[CONF_SITE_ID]}/firewall-policies"
+    )
+
+    async def get(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        return AiohttpClientMockResponse(
+            method,
+            url,
+            json=[deepcopy(stored["policy"])],
+            headers={"content-type": CONTENT_TYPE_JSON},
+        )
+
+    async def put(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        body = deepcopy(data)
+        await asyncio.sleep(0.05)
+        stored["policy"] = body
+        return AiohttpClientMockResponse(
+            method, url, json=body, headers={"content-type": CONTENT_TYPE_JSON}
+        )
+
+    # The first matching mock wins, so register these before the defaults.
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, side_effect=get)
+    aioclient_mock.put(f"{url}/{FIREWALL_POLICY['_id']}", side_effect=put)
+    mock_requests()
+
+    await asyncio.gather(
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: DAY_ENTITIES["fri"]},
+            blocking=True,
+        ),
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: DAY_ENTITIES["sun"]},
+            blocking=True,
+        ),
+    )
+
+    assert stored["policy"]["schedule"]["repeat_on_days"] == [
+        "mon",
+        "wed",
+        "fri",
+        "sun",
+    ]
+    assert hass.states.get(DAY_ENTITIES["fri"]).state == STATE_ON
+    assert hass.states.get(DAY_ENTITIES["sun"]).state == STATE_ON
