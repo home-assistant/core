@@ -1336,9 +1336,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="thermostat_pi_cooling_demand",
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.Thermostat.Attributes.PICoolingDemand,
-        ),
+        required_attributes=(clusters.Thermostat.Attributes.PICoolingDemand,),
         featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kCooling,
     ),
     MatterDiscoverySchema(
@@ -1350,9 +1348,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.Thermostat.Attributes.PIHeatingDemand,
-        ),
+        required_attributes=(clusters.Thermostat.Attributes.PIHeatingDemand,),
         featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kHeating,
     ),
     MatterDiscoverySchema(
