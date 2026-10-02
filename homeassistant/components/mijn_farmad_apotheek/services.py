@@ -89,14 +89,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 def async_setup_service_schemas(hass: HomeAssistant, data: FarmadData) -> None:
     """Register the per-account schemas of the actions.
 
-    The product options come from the order history and the pharmacy
-    options from the entitled pharmacies of the account, so a reload of
-    the config entry refreshes both lists.
+    The pharmacy options come from the entitled pharmacies of the
+    account, so a reload of the config entry refreshes the list.
     """
-    product_options = [
-        {"value": cnk, "label": description}
-        for cnk, description in data.products.items()
-    ]
 
     def apb_field(description: str) -> dict[str, Any]:
         """Build the pharmacy field for a per-account schema."""
@@ -140,16 +135,11 @@ def async_setup_service_schemas(hass: HomeAssistant, data: FarmadData) -> None:
         ATTR_PRODUCT: {
             "name": "Product",
             "description": (
-                "The product to order: a product from the list or a CNK code."
-                " The list refreshes when the integration reloads."
+                "The CNK code of the product to order. Use the search_medication"
+                " action to find the CNK code of a product."
             ),
             "required": True,
-            "selector": {
-                "select": {
-                    "options": product_options,
-                    "custom_value": True,
-                }
-            },
+            "selector": {"text": None},
         },
         ATTR_QUANTITY: {
             "name": "Quantity",

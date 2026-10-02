@@ -23,8 +23,9 @@ class FarmadData:
     """Runtime data of the Mijn Farmad Apotheek integration.
 
     The pharmacies hold the options of the pharmacy fields of the
-    actions and the products the options of the product field, with the
-    CNK code as value and the product name as label.
+    actions. The products map the CNK codes of the order history to
+    their descriptions, so ordering a known CNK needs no catalog
+    search.
     """
 
     client: FarmadClient

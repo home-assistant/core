@@ -29,7 +29,7 @@
       "message": "The Farmad session expired. Remove the integration and set it up again."
     },
     "invalid_product": {
-      "message": "{product} is neither a product from the list nor a CNK code of seven digits. Use the search_medication action to find the CNK code of a product."
+      "message": "{product} is not a CNK code of seven digits. Use the search_medication action to find the CNK code of a product."
     },
     "multiple_pharmacies": {
       "message": "Your account is linked to several pharmacies: {pharmacies}. Pass the apb number of the pharmacy to use."
@@ -66,7 +66,7 @@
           "name": "Comment"
         },
         "product": {
-          "description": "The product to order: a product from the list or a CNK code. The list refreshes when the integration reloads.",
+          "description": "The CNK code of the product to order. Use the search_medication action to find the CNK code of a product.",
           "name": "Product"
         },
         "quantity": {

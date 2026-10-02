@@ -133,10 +133,7 @@ async def test_setup_entry_schemas(
     assert order is not None
     assert search is not None
     assert order["name"] == "Order medication"
-    assert order["fields"]["product"]["selector"]["select"]["options"] == [
-        {"value": API_PRODUCT_CNK, "label": API_PRODUCT_DESCRIPTION}
-    ]
-    assert order["fields"]["product"]["selector"]["select"]["custom_value"] is True
+    assert order["fields"]["product"]["selector"] == {"text": None}
     assert order["fields"]["quantity"]["required"] is True
     assert order["fields"]["quantity"]["default"] == 1
     assert order["fields"]["comment"]["required"] is False

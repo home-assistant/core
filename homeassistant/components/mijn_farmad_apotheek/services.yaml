@@ -4,9 +4,7 @@ order_medication:
       required: true
       example: "3093242"
       selector:
-        select:
-          options: []
-          custom_value: true
+        text:
     quantity:
       required: true
       default: 1
