@@ -42,13 +42,16 @@ async def test_sensor_device_assignment(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-    tracker_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "device_id_123")}
+    tracker_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device_id_123"), mock_config_entry.entry_id
     )
     assert tracker_device is not None
 
-    pet_device = device_registry.async_get_device(identifiers={(DOMAIN, "pet_id_123")})
+    pet_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "pet_id_123"), mock_config_entry.entry_id
+    )
     assert pet_device is not None
+    assert pet_device.via_device_id == tracker_device.id
 
     for entity_id in (
         "sensor.tracker_device_id_123_battery",

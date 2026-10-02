@@ -1,6 +1,6 @@
 """Support for Vera thermostats."""
 
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
@@ -60,6 +60,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -75,12 +76,14 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
         if fan_mode == FAN_ON:
@@ -91,6 +94,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         vera_temp_units = self.vera_device.vera_controller.temperature_units
@@ -101,6 +105,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.vera_device.get_current_temperature()
@@ -111,10 +116,12 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
         return self.vera_device.get_hvac_mode()
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.vera_device.get_current_goal_temperature()
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
@@ -122,6 +129,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
         self.schedule_update_ha_state()
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:

@@ -1,6 +1,6 @@
 """Support for DomesticHotWaterProduction."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -112,6 +112,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return False
 
     @property
+    @override
     def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
 
@@ -154,6 +155,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return None
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temp = self.device.states.get(
@@ -164,6 +166,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_temp = self.device.states.get(
@@ -174,6 +177,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return DEFAULT_MAX_TEMP
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(
@@ -189,6 +193,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
 
@@ -213,6 +218,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         target_temperature_high = self.device.states.get(
@@ -223,6 +229,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         target_temperature_low = self.device.states.get(
@@ -232,6 +239,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             return target_temperature_low.value_as_float
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs[ATTR_TEMPERATURE]
@@ -257,6 +265,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             )
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
         if self._is_boost_mode_on:
@@ -273,6 +282,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
         return None
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
 

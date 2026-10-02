@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pysmartthings import (
     Attribute,
@@ -147,12 +147,14 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
             features |= LightEntityFeature.TRANSITION
         self._attr_supported_features = features
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_extra_data()) is not None:
             self._attr_color_mode = last_state.as_dict()[ATTR_COLOR_MODE]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         tasks = []
@@ -177,6 +179,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
                 Command.ON,
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         # Switch/transition
@@ -188,6 +191,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
                 Command.OFF,
             )
 
+    @override
     def _update_attr(self) -> None:
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
@@ -264,6 +268,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
             argument=[level, duration],
         )
 
+    @override
     def _update_handler(self, event: DeviceEvent) -> None:
         """Handle device updates."""
         if event.capability in (Capability.COLOR_CONTROL, Capability.COLOR_TEMPERATURE):
@@ -274,6 +279,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         super()._update_handler(event)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if light is on."""
         if (
@@ -314,6 +320,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         self._attr_color_mode = list(color_modes)[0]
         self._attr_supported_color_modes = color_modes
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the lamp on."""
         # Switch/brightness/transition
@@ -326,6 +333,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         else:
             await self.async_set_level(255)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the lamp off."""
         if self._use_switch and self.supports_capability(Capability.SWITCH):
@@ -363,6 +371,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         ):
             await self.execute_device_command(Capability.SWITCH, Command.ON)
 
+    @override
     def _update_attr(self) -> None:
         """Update lamp-specific attributes."""
         level = self.get_attribute_value(
@@ -386,6 +395,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         self._attr_brightness = int(convert_scale(percent, 100, 255))
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if lamp is on."""
         if self._use_switch and self.supports_capability(Capability.SWITCH):

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -136,6 +137,7 @@ class KioskerSensor(KioskerEntity, SensorEntity):
     entity_description: KioskerSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

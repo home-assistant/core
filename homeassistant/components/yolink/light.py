@@ -1,6 +1,6 @@
 """YoLink Dimmer."""
 
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_DIMMER
@@ -45,6 +45,7 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         self._attr_unique_id = f"{coordinator.device.device_id}"
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         if (dimmer_state := state.get("state")) is not None:
@@ -64,11 +65,13 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         self._attr_is_on = state == "open"
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         await self.toggle_light_state("open", brightness)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.toggle_light_state("close", None)

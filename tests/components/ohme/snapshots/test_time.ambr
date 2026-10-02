@@ -39,7 +39,7 @@
 # name: test_time[time.ohme_home_pro_target_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Target time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Target time',
     }),
     'context': <ANY>,
     'entity_id': 'time.ohme_home_pro_target_time',

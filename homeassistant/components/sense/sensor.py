@@ -1,6 +1,7 @@
 """Support for monitoring a Sense energy sensor."""
 
 from datetime import datetime
+from typing import override
 
 from sense_energy import ASyncSenseable, Scale
 from sense_energy.sense_api import SenseDevice
@@ -144,6 +145,7 @@ class SensePowerSensor(SenseEntity, SensorEntity):
         self._variant_id = variant_id
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return round(
@@ -175,6 +177,7 @@ class SenseVoltageSensor(SenseEntity, SensorEntity):
         self._voltage_index = index
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return round(self._gateway.active_voltage[self._voltage_index], 1)
@@ -214,11 +217,13 @@ class SenseTrendsSensor(SenseEntity, SensorEntity):
             self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return round(self._gateway.get_stat(self._scale, self._variant_id), 1)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self._attr_state_class == SensorStateClass.TOTAL:
@@ -245,6 +250,7 @@ class SenseDevicePowerSensor(SenseDeviceEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._device.power_w
@@ -277,6 +283,7 @@ class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
         self._device = device
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._device.energy_kwh[self._scale]

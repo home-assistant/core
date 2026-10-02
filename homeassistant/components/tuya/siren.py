@@ -1,6 +1,7 @@
 """Support for Tuya siren."""
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, override
 
 from tuya_device_handlers.definition.siren import (
     SirenDefinition,
@@ -20,30 +21,36 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
+
+@dataclass(frozen=True)
+class TuyaSirenEntityDescription(TuyaEntityDescription, SirenEntityDescription):
+    """Describes a Tuya siren entity."""
+
+
+SIRENS: dict[DeviceCategory, tuple[TuyaSirenEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             entity_category=EntityCategory.CONFIG,
             translation_key="siren",
         ),
     ),
     DeviceCategory.DGNBJ: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             translation_key="siren",
         ),
     ),
     DeviceCategory.SGBJ: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             name=None,
         ),
     ),
     DeviceCategory.SP: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
             translation_key="siren",
         ),
@@ -93,7 +100,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: SirenEntityDescription,
+        description: TuyaSirenEntityDescription,
         definition: SirenDefinition,
     ) -> None:
         """Init Tuya Siren."""
@@ -101,10 +108,12 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         self._dpcode_wrapper = definition.siren_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -119,10 +128,12 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

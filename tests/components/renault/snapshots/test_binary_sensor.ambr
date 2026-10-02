@@ -39,8 +39,8 @@
 # name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-ZOE-40 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_charging',
@@ -90,7 +90,7 @@
 # name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_hvac',
@@ -140,8 +140,8 @@
 # name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-ZOE-40 Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_plug',
@@ -191,8 +191,8 @@
 # name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-ZOE-40 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_charging',
@@ -242,7 +242,7 @@
 # name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_hvac',
@@ -292,8 +292,8 @@
 # name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-ZOE-40 Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_plug',
@@ -343,7 +343,7 @@
 # name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR-FUEL HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR-FUEL HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_captur_fuel_hvac',
@@ -393,8 +393,8 @@
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-CAPTUR_PHEV Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR_PHEV Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_captur_phev_charging',
@@ -444,7 +444,7 @@
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR_PHEV HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR_PHEV HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_captur_phev_hvac',
@@ -494,8 +494,8 @@
 # name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-CAPTUR_PHEV Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR_PHEV Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_captur_phev_plug',
@@ -545,8 +545,8 @@
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-MEG-0 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-MEG-0 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_meg_0_charging',
@@ -596,7 +596,7 @@
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-MEG-0 HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-MEG-0 HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_meg_0_hvac',
@@ -646,8 +646,8 @@
 # name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-MEG-0 Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-MEG-0 Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_meg_0_plug',
@@ -697,8 +697,8 @@
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-TWINGO-III Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-TWINGO-III Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_twingo_iii_charging',
@@ -748,7 +748,7 @@
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-TWINGO-III HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_twingo_iii_hvac',
@@ -798,8 +798,8 @@
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-TWINGO-III Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-TWINGO-III Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_twingo_iii_plug',
@@ -849,8 +849,8 @@
 # name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-ZOE-40 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_charging',
@@ -900,7 +900,7 @@
 # name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-40 HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_hvac',
@@ -950,8 +950,8 @@
 # name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-ZOE-40 Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_40_plug',
@@ -1001,8 +1001,8 @@
 # name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'REG-ZOE-50 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_50_charging',
@@ -1052,7 +1052,7 @@
 # name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_50_hvac',
@@ -1102,8 +1102,8 @@
 # name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'REG-ZOE-50 Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.reg_zoe_50_plug',

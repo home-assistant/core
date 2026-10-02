@@ -1,12 +1,12 @@
 """Config flow for Tradfri."""
 
 import asyncio
-from typing import Any, cast
+from typing import Any, cast, override
 from uuid import uuid4
 
+import probatio
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -39,6 +39,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,16 +69,21 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         fields = {}
 
         if self._host is None:
-            fields[vol.Required(CONF_HOST, default=user_input.get(CONF_HOST))] = str
+            fields[probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST))] = (
+                str
+            )
 
         fields[
-            vol.Required(KEY_SECURITY_CODE, default=user_input.get(KEY_SECURITY_CODE))
+            probatio.Required(
+                KEY_SECURITY_CODE, default=user_input.get(KEY_SECURITY_CODE)
+            )
         ] = str
 
         return self.async_show_form(
-            step_id="auth", data_schema=vol.Schema(fields), errors=errors
+            step_id="auth", data_schema=probatio.Schema(fields), errors=errors
         )
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

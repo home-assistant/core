@@ -34,7 +34,7 @@
   "title": "Garage door",
   "triggers": {
     "closed": {
-      "description": "Triggers after one or more garage doors close.",
+      "description": "Triggers when one or more garage doors close.",
       "fields": {
         "behavior": {
           "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
@@ -46,7 +46,7 @@
       "name": "Garage door closed"
     },
     "opened": {
-      "description": "Triggers after one or more garage doors open.",
+      "description": "Triggers when one or more garage doors open.",
       "fields": {
         "behavior": {
           "name": "[%key:component::garage_door::common::trigger_behavior_name%]"

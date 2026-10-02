@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiolichess import AioLichess
 from aiolichess.exceptions import AioLichessError
@@ -34,6 +35,7 @@ class LichessCoordinator(DataUpdateCoordinator[LichessStatistics]):
         )
         self.client = AioLichess(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> LichessStatistics:
         """Update data for Lichess."""
         try:

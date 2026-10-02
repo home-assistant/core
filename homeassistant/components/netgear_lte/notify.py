@@ -1,6 +1,6 @@
 """Support for Netgear LTE notifications."""
 
-from typing import Any
+from typing import Any, override
 
 import eternalegypt
 from eternalegypt.eternalegypt import Modem
@@ -8,9 +8,10 @@ from eternalegypt.eternalegypt import Modem
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_NOTIFY, LOGGER
+from .const import CONF_NOTIFY, DOMAIN, LOGGER
 
 
 async def async_get_service(
@@ -38,6 +39,7 @@ class NetgearNotifyService(BaseNotificationService):
         self.modem: Modem = discovery_info["modem"]
         discovery_info["entry"].async_on_unload(self.async_unregister_services)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -56,6 +58,9 @@ class NetgearNotifyService(BaseNotificationService):
         for target in targets:
             try:
                 await self.modem.sms(target, message)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except eternalegypt.Error:
-                LOGGER.error("Unable to send to %s", target)
+            except eternalegypt.Error as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="send_message_failed",
+                    translation_placeholders={"target": target},
+                ) from err

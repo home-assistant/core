@@ -153,8 +153,8 @@
 # name: test_todos[todo.test_user_dailies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Dailies',
-      'supported_features': <TodoListEntityFeature: 92>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Dailies',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 92>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.test_user_dailies',
@@ -204,8 +204,8 @@
 # name: test_todos[todo.test_user_to_do_s-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': "test-user To-Do's",
-      'supported_features': <TodoListEntityFeature: 95>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "test-user To-Do's",
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 95>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.test_user_to_do_s',

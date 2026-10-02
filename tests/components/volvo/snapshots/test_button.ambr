@@ -39,7 +39,7 @@
 # name: test_button[ex30_2024][button.volvo_ex30_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_flash',
@@ -89,7 +89,7 @@
 # name: test_button[ex30_2024][button.volvo_ex30_honk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Honk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Honk',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_honk',
@@ -139,7 +139,7 @@
 # name: test_button[ex30_2024][button.volvo_ex30_honk_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Honk & flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Honk & flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_honk_flash',
@@ -189,7 +189,7 @@
 # name: test_button[ex30_2024][button.volvo_ex30_lock_reduced_guard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Lock reduced guard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Lock reduced guard',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_lock_reduced_guard',
@@ -239,7 +239,7 @@
 # name: test_button[ex30_2024][button.volvo_ex30_start_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Start climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Start climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_start_climatization',
@@ -289,7 +289,7 @@
 # name: test_button[ex30_2024][button.volvo_ex30_stop_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Stop climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Stop climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_stop_climatization',
@@ -339,7 +339,7 @@
 # name: test_button[s90_diesel_2018][button.volvo_s90_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_flash',
@@ -389,7 +389,7 @@
 # name: test_button[s90_diesel_2018][button.volvo_s90_honk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Honk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Honk',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_honk',
@@ -439,7 +439,7 @@
 # name: test_button[s90_diesel_2018][button.volvo_s90_honk_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Honk & flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Honk & flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_honk_flash',
@@ -489,7 +489,7 @@
 # name: test_button[s90_diesel_2018][button.volvo_s90_lock_reduced_guard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Lock reduced guard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Lock reduced guard',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_lock_reduced_guard',
@@ -539,7 +539,7 @@
 # name: test_button[s90_diesel_2018][button.volvo_s90_start_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Start climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Start climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_start_climatization',
@@ -589,7 +589,7 @@
 # name: test_button[s90_diesel_2018][button.volvo_s90_stop_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Stop climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Stop climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_stop_climatization',
@@ -639,7 +639,7 @@
 # name: test_button[xc40_electric_2024][button.volvo_xc40_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_flash',
@@ -689,7 +689,7 @@
 # name: test_button[xc40_electric_2024][button.volvo_xc40_honk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Honk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Honk',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_honk',
@@ -739,7 +739,7 @@
 # name: test_button[xc40_electric_2024][button.volvo_xc40_honk_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Honk & flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Honk & flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_honk_flash',
@@ -789,7 +789,7 @@
 # name: test_button[xc40_electric_2024][button.volvo_xc40_lock_reduced_guard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Lock reduced guard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Lock reduced guard',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_lock_reduced_guard',
@@ -839,7 +839,7 @@
 # name: test_button[xc40_electric_2024][button.volvo_xc40_start_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Start climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Start climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_start_climatization',
@@ -889,7 +889,7 @@
 # name: test_button[xc40_electric_2024][button.volvo_xc40_stop_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Stop climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Stop climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_stop_climatization',
@@ -939,7 +939,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_flash',
@@ -989,7 +989,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_honk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Honk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Honk',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_honk',
@@ -1039,7 +1039,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_honk_flash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Honk & flash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Honk & flash',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_honk_flash',
@@ -1089,7 +1089,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_lock_reduced_guard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Lock reduced guard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Lock reduced guard',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_lock_reduced_guard',
@@ -1139,7 +1139,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_start_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Start climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Start climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_start_climatization',
@@ -1189,7 +1189,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_start_engine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Start engine',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Start engine',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_start_engine',
@@ -1239,7 +1239,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_stop_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Stop climatization',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Stop climatization',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_stop_climatization',
@@ -1289,7 +1289,7 @@
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_stop_engine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Stop engine',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Stop engine',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_stop_engine',

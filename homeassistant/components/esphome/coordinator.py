@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 MIN_VERSION_SUPPORTS_UPDATE = AwesomeVersion("2023.1.0")
+MIN_VERSION_SUPPORTS_BUILD_QUEUE = AwesomeVersion("2026.6.0")
 REFRESH_INTERVAL = timedelta(minutes=5)
 
 
@@ -34,6 +35,7 @@ class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevi
         self.url = url
         self.api = ESPHomeDashboardAPI(url, async_get_clientsession(hass))
         self.supports_update: bool | None = None
+        self.supports_build_queue = False
 
     @override
     async def _async_update_data(self) -> dict[str, ConfiguredDevice]:
@@ -41,13 +43,14 @@ class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevi
         devices = await self.api.get_devices()
         configured_devices = devices["configured"]
 
-        if (
-            self.supports_update is None
-            and configured_devices
-            and (current_version := configured_devices[0].get("current_version"))
+        if configured_devices and (
+            current_version := configured_devices[0].get("current_version")
         ):
-            self.supports_update = (
-                AwesomeVersion(current_version) > MIN_VERSION_SUPPORTS_UPDATE
-            )
+            version = AwesomeVersion(current_version)
+            if self.supports_update is None:
+                self.supports_update = version > MIN_VERSION_SUPPORTS_UPDATE
+            # The dashboard has its own build queue since 2026.6.0
+            # and can accept multiple compile requests at once
+            self.supports_build_queue = version >= MIN_VERSION_SUPPORTS_BUILD_QUEUE
 
         return {dev["name"]: dev for dev in configured_devices}

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from eternalegypt.eternalegypt import Information
 
@@ -137,6 +138,7 @@ class NetgearLTESensor(LTEEntity, SensorEntity):
     entity_description: NetgearLTESensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.entity_description.value_fn is not None:

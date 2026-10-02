@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from httpx import HTTPError, InvalidURL, TimeoutException
 from ical.calendar import Calendar
@@ -26,7 +27,6 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     """Class to manage fetching calendar data."""
 
     config_entry: RemoteCalendarConfigEntry
-    ics: str
 
     def __init__(
         self,
@@ -48,7 +48,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         self._url = config_entry.data[CONF_URL]
         self._username: str | None = config_entry.data.get(CONF_USERNAME)
         self._password: str | None = config_entry.data.get(CONF_PASSWORD)
+        self.ics = ""
 
+    @override
     async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
         try:
@@ -78,5 +80,4 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_parse",
-                translation_placeholders={"err": str(err)},
             ) from err

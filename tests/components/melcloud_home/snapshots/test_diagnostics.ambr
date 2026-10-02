@@ -11,7 +11,7 @@
       }),
       'domain': 'melcloud_home',
       'entry_id': 'config-entry-uuid-1',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -33,11 +33,11 @@
                 'has_auto_operation_mode': True,
                 'has_cool_operation_mode': True,
                 'has_dry_operation_mode': True,
-                'has_energy_consumed_meter': False,
+                'has_energy_consumed_meter': True,
                 'has_fan_operation_mode': None,
                 'has_half_degree_increments': True,
-                'has_outdoor_temperature_sensor': False,
-                'has_standby_mode': False,
+                'has_outdoor_temperature_sensor': True,
+                'has_standby_mode': True,
                 'has_vane_horizontal': True,
                 'has_vane_vertical': True,
                 'max_temp_auto': 31.0,
@@ -141,7 +141,7 @@
                 'has_energy_consumed_meter': True,
                 'has_half_degrees': False,
                 'has_hot_water': True,
-                'has_standby_mode': False,
+                'has_standby_mode': True,
                 'has_zone2': True,
                 'max_set_tank_temperature': 60.0,
                 'max_set_temperature_zone1': None,
@@ -151,7 +151,12 @@
                 'min_set_temperature_zone2': None,
               }),
               'forced_hot_water_mode': False,
-              'frost_protection': None,
+              'frost_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 8.0,
+                'min': 5.0,
+              }),
               'has_zone2': False,
               'holiday_mode': None,
               'id': '**REDACTED**',
@@ -161,7 +166,12 @@
               'operation_mode': 'HeatZones',
               'operation_mode_zone1': 'HeatRoomTemperature',
               'operation_mode_zone2': 'HeatRoomTemperature',
-              'overheat_protection': None,
+              'overheat_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 42.0,
+                'min': 40.0,
+              }),
               'power': True,
               'raw_settings': list([
                 dict({
@@ -258,6 +268,15 @@
       'number_of_devices_allowed': 10,
       'number_of_guest_devices_allowed': 10,
       'number_of_guests_allowed_per_unit': 5,
+    }),
+    'telemetry_coordinator': dict({
+      'energy': dict({
+        'ata-unit-uuid-1': 450.5,
+        'atw-unit-uuid-1': 450.5,
+      }),
+      'outdoor_temperature': dict({
+        'ata-unit-uuid-1': 19.5,
+      }),
     }),
   })
 # ---

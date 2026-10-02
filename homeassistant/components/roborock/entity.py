@@ -1,6 +1,6 @@
 """Support for Roborock device base class."""
 
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1.command import CommandTrait
 from roborock.exceptions import RoborockException
@@ -93,6 +93,7 @@ class RoborockCoordinatedEntityV1(
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
 
+    @override
     async def send(
         self,
         command: RoborockCommand | str,

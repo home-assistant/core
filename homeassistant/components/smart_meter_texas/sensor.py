@@ -1,6 +1,6 @@
 """Support for Smart Meter Texas sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from smart_meter_texas import Meter
 
@@ -52,6 +52,7 @@ class SmartMeterTexasSensor(
         self._attr_unique_id = f"{meter.esiid}_{meter.meter}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {
@@ -61,6 +62,7 @@ class SmartMeterTexasSensor(
         }
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call when the coordinator has an update."""
         self._attr_available = self.coordinator.last_update_success
@@ -68,6 +70,7 @@ class SmartMeterTexasSensor(
             self._attr_native_value = self.meter.reading
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()

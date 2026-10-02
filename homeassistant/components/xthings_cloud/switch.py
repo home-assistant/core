@@ -1,6 +1,6 @@
 """Switch platform for Xthings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -29,14 +29,17 @@ class XthingsCloudSwitch(XthingsCloudEntity, SwitchEntity):
     """Xthings Cloud switch entity."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.device_data["status"]["on"]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.coordinator.client.async_plug_on(self._device_id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.coordinator.client.async_plug_off(self._device_id)

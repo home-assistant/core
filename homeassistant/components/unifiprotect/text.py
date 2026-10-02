@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import override
 
 from uiprotect.data import (
     Camera,
@@ -41,7 +42,10 @@ def _get_doorbell_current(obj: Camera) -> str | None:
 
 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
-    await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
+    # reset_at=None keeps the message up until it is changed
+    await obj.set_lcd_message_public(
+        DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
+    )
 
 
 CAMERA: tuple[ProtectTextEntityDescription, ...] = (
@@ -95,6 +99,7 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
     _state_attrs = ("_attr_available", "_attr_native_value")
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_value(
@@ -102,6 +107,7 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
         )
 
     @async_ufp_instance_command
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        await self.entity_description.ufp_set(self.device, value)
+        await self.entity_description.ufp_set(self._ufp_set_target(), value)

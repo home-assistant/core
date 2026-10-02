@@ -1,6 +1,6 @@
 """Support for Z-Wave controls using the select platform."""
 
-from typing import cast
+from typing import cast, override
 
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
 from zwave_js_server.const.command_class.lock import TARGET_MODE_PROPERTY
@@ -76,6 +76,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
         self._attr_options = list(self.info.primary_value.metadata.states.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.info.primary_value.value is None:
@@ -86,6 +87,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
             )
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         key = next(
@@ -106,6 +108,7 @@ class ZWaveDoorLockSelectEntity(ZwaveSelectEntity):
         super().__init__(config_entry, driver, info)
         self._target_value = self.get_zwave_value(TARGET_MODE_PROPERTY)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         assert self._target_value is not None
@@ -154,6 +157,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
         self._attr_name = self.generate_name(alternate_value_name=info.platform_hint)
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         # We know we can assert because this value is part of the discovery schema
@@ -165,6 +169,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
         ]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         # We know we can assert because this value is part of the discovery schema
@@ -175,6 +180,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
             )
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         # We know we can assert because this value is part of the discovery schema
@@ -205,6 +211,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
         self._attr_options = list(self._lookup_map.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.info.primary_value.value is None:
@@ -215,6 +222,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
             )
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         assert self._target_value is not None

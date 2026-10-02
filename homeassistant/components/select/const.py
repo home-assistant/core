@@ -1,6 +1,24 @@
 """Provides the constants needed for the component."""
 
-DOMAIN = "select"
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import SelectEntity
+
+DOMAIN: Final = "select"
+DATA_COMPONENT: HassKey[EntityComponent[SelectEntity]] = HassKey(DOMAIN)
+
+
+class SelectEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for select entities."""
+
+    OPTIONS = "options"
+
 
 ATTR_CYCLE = "cycle"
 ATTR_OPTIONS = "options"

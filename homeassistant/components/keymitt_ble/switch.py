@@ -1,8 +1,8 @@
 """Switch platform for MicroBot."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -18,9 +18,9 @@ from .entity import MicroBotEntity
 
 CALIBRATE = "calibrate"
 CALIBRATE_SCHEMA: VolDictType = {
-    vol.Required("depth"): cv.positive_int,
-    vol.Required("duration"): cv.positive_int,
-    vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
+    probatio.Required("depth"): cv.positive_int,
+    probatio.Required("duration"): cv.positive_int,
+    probatio.Required("mode"): probatio.In(["normal", "invert", "toggle"]),
 }
 
 
@@ -44,17 +44,20 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
 
     _attr_translation_key = "push"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.api.push_on()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.coordinator.api.push_off()
         self.async_write_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.coordinator.api.is_on

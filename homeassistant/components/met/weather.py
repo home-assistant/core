@@ -1,7 +1,7 @@
 """Support for Met.no weather service."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -141,6 +141,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         self._attr_name = name
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         condition = self.coordinator.data.current_weather_data.get("condition")
@@ -153,6 +154,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         return format_condition(condition)
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get(
@@ -160,6 +162,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_weather_data.get(
@@ -167,6 +170,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.current_weather_data.get(
@@ -174,6 +178,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_weather_data.get(
@@ -181,6 +186,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get(
@@ -188,6 +194,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
         return self.coordinator.data.current_weather_data.get(
@@ -195,6 +202,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def cloud_coverage(self) -> float | None:
         """Return the cloud coverage."""
         return self.coordinator.data.current_weather_data.get(
@@ -202,6 +210,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
         return self.coordinator.data.current_weather_data.get(
@@ -209,6 +218,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def uv_index(self) -> float | None:
         """Return the uv index."""
         return self.coordinator.data.current_weather_data.get(
@@ -239,11 +249,13 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         return ha_forecast
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast(False)
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(True)

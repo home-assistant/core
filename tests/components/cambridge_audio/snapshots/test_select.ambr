@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Speaker A',
         'Speaker B',
         'Headphones',
@@ -45,8 +45,8 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_audio_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Audio output',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Audio output',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Speaker A',
         'Speaker B',
         'Headphones',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'amplifier',
         'receiver',
         'off',
@@ -106,8 +106,8 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_control_bus_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Control Bus mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Control Bus mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'amplifier',
         'receiver',
         'off',
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',
         'off',
@@ -167,8 +167,8 @@
 # name: test_all_entities[select.cambridge_audio_cxnv2_display_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Display brightness',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Display brightness',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bright',
         'dim',
         'off',

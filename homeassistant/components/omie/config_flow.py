@@ -1,6 +1,6 @@
 """Config flow for OMIE - Spain and Portugal electricity prices integration."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 import pyomie.main as pyomie
@@ -21,6 +21,7 @@ class OMIEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

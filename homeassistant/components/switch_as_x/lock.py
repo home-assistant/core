@@ -1,6 +1,6 @@
 """Lock support for switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -48,6 +48,7 @@ async def async_setup_entry(
 class LockSwitch(BaseInvertableEntity, LockEntity):
     """Represents a Switch as a Lock."""
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.hass.services.async_call(
@@ -58,6 +59,7 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.hass.services.async_call(
@@ -69,6 +71,7 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
         )
 
     @callback
+    @override
     def async_state_changed_listener(
         self, event: Event[EventStateChangedData] | None = None
     ) -> None:

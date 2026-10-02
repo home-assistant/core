@@ -6,12 +6,12 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -19,16 +19,14 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -63,19 +61,20 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     MIN_THINKING_BUDGET,
+    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
-from .coordinator import model_alias
+from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -95,9 +94,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = anthropic.AsyncAnthropic(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
+    client = await async_create_client(hass, data[CONF_API_KEY])
     await client.models.list(timeout=10.0)
 
 
@@ -111,7 +108,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle setup, reauthentication, and API key reconfiguration."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -134,9 +131,18 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
+                    )
+                    if entry.update_listeners:
+                        return self.async_update_and_abort(
+                            entry, data_updates=user_input
+                        )
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                        entry, data_updates=user_input
                     )
                 return self.async_create_entry(
                     title="Claude",
@@ -157,8 +163,14 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                     ],
                 )
 
+        step_id = "user"
+        if self.source == SOURCE_REAUTH:
+            step_id = "reauth_confirm"
+        elif self.source == SOURCE_RECONFIGURE:
+            step_id = "reconfigure"
+
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors or None,
             description_placeholders={
@@ -176,10 +188,12 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        return await self.async_step_user(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the API key."""
         return await self.async_step_user(user_input)
 
     @classmethod
@@ -254,13 +268,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 default_name = DEFAULT_AI_TASK_NAME
             else:
                 default_name = DEFAULT_CONVERSATION_NAME
-            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+            step_schema[probatio.Required(CONF_NAME, default=default_name)] = str
 
         if self._subentry_type == "conversation":
             step_schema.update(
                 {
-                    vol.Optional(CONF_PROMPT): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(CONF_PROMPT): TemplateSelector(),
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
@@ -269,13 +283,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         step_schema[
-            vol.Required(
+            probatio.Required(
                 CONF_RECOMMENDED, default=self.options.get(CONF_RECOMMENDED, False)
             )
         ] = bool
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
+            if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
 
             if user_input[CONF_RECOMMENDED]:
@@ -298,31 +312,31 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 ):
                     self.options.pop(CONF_LLM_HASS_API)
                 if not errors:
-                    return await self.async_step_advanced()
+                    return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
+                probatio.Schema(step_schema), self.options
             ),
             errors=errors or None,
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
         step_schema: VolDictType = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
                 SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PROMPT_CACHING,
                 default=DEFAULT[CONF_PROMPT_CACHING],
             ): SelectSelector(
@@ -360,9 +374,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
+                probatio.Schema(step_schema), self.options
             ),
             errors=errors,
             description_placeholders=description_placeholders,
@@ -375,14 +389,14 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         step_schema: VolDictType = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_MAX_TOKENS,
                 default=DEFAULT[CONF_MAX_TOKENS],
-            ): vol.All(
+            ): probatio.All(
                 NumberSelector(
                     NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             )
             if self.model_info.max_tokens
             else cv.positive_int,
@@ -394,15 +408,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             and not self.model_info.capabilities.thinking.types.adaptive.supported
         ):
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
                 )
             ] = (
-                vol.All(
+                probatio.All(
                     NumberSelector(
                         NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 )
                 if self.model_info.max_tokens
                 else cv.positive_int
@@ -416,7 +430,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         ):
             effort_options: list[str] = []
             if self.model_info.capabilities.thinking.types.adaptive.supported:
-                effort_options.append("none")
+                if (
+                    model_alias(self.model_info.id)
+                    in THINKING_EFFORT_NONE_SUPPORTED_MODELS
+                ):
+                    effort_options.append("none")
+                elif self.options.get(CONF_THINKING_EFFORT) == "none":
+                    self.options.pop(CONF_THINKING_EFFORT)
             if effort_capability.low.supported:
                 effort_options.append("low")
             if effort_capability.medium.supported:
@@ -428,7 +448,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             if effort_capability.max.supported:
                 effort_options.append("max")
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_THINKING_EFFORT,
                     default=DEFAULT[CONF_THINKING_EFFORT],
                 )
@@ -444,27 +464,27 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         step_schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CODE_EXECUTION,
                     default=DEFAULT[CONF_CODE_EXECUTION],
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_SEARCH,
                     default=DEFAULT[CONF_WEB_SEARCH],
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_SEARCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
                 ): cv.positive_int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_SEARCH_USER_LOCATION,
                     default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_FETCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
                 ): cv.positive_int,
@@ -480,7 +500,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
             step_schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOOL_SEARCH,
                     default=DEFAULT[CONF_TOOL_SEARCH],
                 )
@@ -527,7 +547,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="model",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
+                probatio.Schema(step_schema), self.options
             ),
             errors=errors or None,
             last_step=True,
@@ -549,19 +569,18 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = anthropic.AsyncAnthropic(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
+            client = await async_create_client(
+                self.hass, self._get_entry().data[CONF_API_KEY]
             )
-            location_schema = vol.Schema(
+            location_schema = probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_CITY,
                         description=(
                             "Free text input for the city, e.g. `San Francisco`"
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_WEB_SEARCH_REGION,
                         description="Free text input for the region, e.g. `California`",
                     ): str,
@@ -573,8 +592,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "user",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
@@ -582,7 +601,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     "format": {
                         "type": "json_schema",
                         "schema": {
-                            **convert(location_schema),
+                            **probatio.to_openapi(
+                                location_schema, openapi_version="3.1.0"
+                            ),
                             "additionalProperties": False,
                         },
                     }

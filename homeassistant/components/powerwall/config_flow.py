@@ -2,9 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import CookieJar
+import probatio
 from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
@@ -12,7 +13,6 @@ from tesla_powerwall import (
     Powerwall,
     PowerwallUnreachableError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -136,6 +136,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             or not async_last_update_was_successful(self.hass, entry)
         ) and not await _powerwall_is_reachable(ip_address, password)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -251,6 +252,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -281,10 +283,10 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_IP_ADDRESS, default=self.ip_address): str,
-                    vol.Optional(CONF_PASSWORD): str,
+                    probatio.Required(CONF_IP_ADDRESS, default=self.ip_address): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -315,7 +317,9 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )

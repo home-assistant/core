@@ -1,11 +1,13 @@
 """DataUpdateCoordinator for the Smart Meter Texas integration."""
 
 import logging
+from typing import override
 
 from smart_meter_texas import Account, Client, Meter
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
+    SmartMeterTexasTimeoutError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -47,7 +49,11 @@ class SmartMeterTexasData:
         for meter in self.meters:
             try:
                 await meter.read_meter(self.client)
-            except (SmartMeterTexasAPIError, SmartMeterTexasAuthError) as error:
+            except (
+                SmartMeterTexasAPIError,
+                SmartMeterTexasAuthError,
+                SmartMeterTexasTimeoutError,
+            ) as error:
                 raise UpdateFailed(error) from error
         return self.meters
 
@@ -79,6 +85,7 @@ class SmartMeterTexasCoordinator(DataUpdateCoordinator[None]):
         )
         self.smart_meter_texas_data = smart_meter_texas_data
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch latest data."""
         _LOGGER.debug("Fetching latest data")

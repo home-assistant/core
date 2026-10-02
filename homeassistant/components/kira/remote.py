@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
@@ -39,6 +39,7 @@ class KiraRemote(remote.RemoteEntity):
         self._attr_name = name
         self._kira = kira
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         for single_command in command:

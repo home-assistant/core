@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from synology_dsm.api.core.external_usb import (
     SynoCoreExternalUSB,
@@ -444,6 +444,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
     """Representation a Synology Utilisation sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         attr = getattr(self._api.utilisation, self.entity_description.key)
@@ -460,6 +461,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
         return attr  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._api.utilisation) and super().available
@@ -481,6 +483,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return cast(
@@ -505,6 +508,7 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         external_usb = self._api.external_usb
@@ -529,6 +533,7 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         return attr  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         external_usb = self._api.external_usb
@@ -549,6 +554,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
     """Representation a Synology information sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         if self._api.information is None:

@@ -3,8 +3,9 @@
 from collections.abc import Callable
 import functools
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
@@ -43,11 +44,11 @@ TAG = "tag"
 
 DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Required(CONF_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Required(CONF_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 
@@ -125,12 +126,13 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
+    @override
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
         try:
             config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             async_handle_schema_error(discovery_data, err)
             return
         self._config = config
@@ -171,6 +173,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         )
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_tear_down(self) -> None:
         """Cleanup tag scanner."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]

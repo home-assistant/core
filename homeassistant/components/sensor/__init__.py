@@ -1,6 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
 
-import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -24,7 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -51,6 +49,8 @@ from .const import (  # noqa: F401
     UNIT_CONVERTERS,
     UNITS_PRECISION,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorStateClass,
 )
 from .websocket_api import async_setup as async_setup_ws_api
@@ -77,7 +77,9 @@ __all__ = [
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",
+    "SensorEntityCapabilityAttribute",
     "SensorEntityDescription",
+    "SensorEntityStateAttribute",
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
@@ -184,7 +186,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Allow per-entity override of drift tolerance
     _attr_uptime_drift_tolerance: int = UPTIME_DEFAULT_TOLERANCE_SECONDS
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset(
+        {SensorEntityCapabilityAttribute.OPTIONS}
+    )
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
@@ -203,7 +207,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
-    _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _sensor_option_unit_of_measurement: str | UndefinedType | None = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
     _get_uptime: Callable[[datetime], datetime] | None = None
 
@@ -219,14 +223,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
         return self._get_uptime(current_uptime)
 
-    @callback
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform.
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
 
         Allows integrations to remove legacy custom unit conversion which is no longer
         needed without breaking existing sensors. Only works for sensors which are in
@@ -235,7 +234,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         This can be removed once core integrations have dropped unneeded custom unit
         conversion.
         """
-        super().add_to_platform_start(hass, platform, parallel_updates)
+        await super().async_prepare_to_add_to_hass()
 
         # Bail out if the sensor doesn't have a unique_id or a device class
         if self.unique_id is None or self.device_class is None:
@@ -245,7 +244,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Bail out if the entity is not yet registered
         if not (
             entity_id := registry.async_get_entity_id(
-                platform.domain, platform.platform_name, self.unique_id
+                self.platform.domain, self.platform.platform_name, self.unique_id
             )
         ):
             # Prime _sensor_option_unit_of_measurement to ensure the correct unit
@@ -295,6 +294,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # is stored in the entity registry.
         self._async_read_entity_options()
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -309,6 +309,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._async_read_entity_options()
         self._update_suggested_precision()
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -369,10 +370,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
-            return {ATTR_STATE_CLASS: state_class}
+            return {SensorEntityCapabilityAttribute.STATE_CLASS: state_class}
 
         if options := self.options:
-            return {ATTR_OPTIONS: options}
+            return {SensorEntityCapabilityAttribute.OPTIONS: options}
 
         return None
 
@@ -435,6 +436,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return suggested_unit_of_measurement
 
+    @override
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
@@ -471,7 +473,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 )
 
             if state_class == SensorStateClass.TOTAL:
-                return {ATTR_LAST_RESET: last_reset.isoformat()}
+                return {SensorEntityStateAttribute.LAST_RESET: last_reset.isoformat()}
 
         return None
 
@@ -900,7 +902,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _custom_unit_or_undef(
         self, primary_key: str, secondary_key: str
-    ) -> str | None | UndefinedType:
+    ) -> str | UndefinedType | None:
         """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
         assert self.registry_entry
         if (
@@ -925,6 +927,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return cast(str, custom_unit)
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()
@@ -965,6 +968,7 @@ class SensorExtraStoredData(ExtraStoredData):
     native_value: StateType | date | datetime | Decimal
     native_unit_of_measurement: str | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
         native_value: StateType | date | datetime | Decimal | dict[str, str] = (
@@ -1018,6 +1022,7 @@ class RestoreSensor(SensorEntity, RestoreEntity):
     """Mixin class for restoring previous sensor state."""
 
     @property
+    @override
     def extra_restore_state_data(self) -> SensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return SensorExtraStoredData(self.native_value, self.native_unit_of_measurement)

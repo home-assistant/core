@@ -39,8 +39,8 @@
 # name: test_setup[binary_sensor.freeze_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'cold',
-      'friendly_name': 'Freeze Protection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'cold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freeze Protection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freeze_protection',

@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from ProgettiHWSW.input import Input
 
@@ -37,6 +38,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name="binary_sensor",
         update_method=async_update_data,
         update_interval=timedelta(seconds=DEFAULT_POLLING_INTERVAL_SEC),
@@ -48,6 +50,8 @@ async def async_setup_entry(
             coordinator,
             f"Input #{i}",
             setup_input(board_api, i),
+            config_entry.entry_id,
+            config_entry.data["host"],
         )
         for i in range(1, int(input_count) + 1)
     )
@@ -56,13 +60,17 @@ async def async_setup_entry(
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
-    def __init__(self, coordinator, name, sensor: Input) -> None:
+    def __init__(
+        self, coordinator, name, sensor: Input, entry_id: str, host: str
+    ) -> None:
         """Set initializing values."""
         super().__init__(coordinator)
         self._attr_name = name
         self._sensor = sensor
+        self._attr_unique_id = f"{entry_id}_{host}_input_{sensor.id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get sensor state."""
-        return self.coordinator.data[self._sensor.id]
+        return self.coordinator.data[self._sensor.id - 1]

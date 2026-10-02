@@ -1,10 +1,10 @@
 """Support for Sony projectors via SDCP network control."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import pysdcp
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -22,8 +22,8 @@ DEFAULT_NAME = "Sony Projector"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -68,6 +68,7 @@ class SonyProjector(SwitchEntity):
             _LOGGER.error("Projector connection refused")
             self._attr_available = False
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
         _LOGGER.debug("Powering on projector '%s'", self.name)
@@ -77,6 +78,7 @@ class SonyProjector(SwitchEntity):
         else:
             _LOGGER.error("Power on command was not successful")
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the projector off."""
         _LOGGER.debug("Powering off projector '%s'", self.name)

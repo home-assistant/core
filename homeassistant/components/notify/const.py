@@ -1,10 +1,21 @@
 """Provide common notify constants."""
 
+from enum import IntFlag
 import logging
+from typing import TYPE_CHECKING, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import NotifyEntity
+
+DOMAIN: Final = "notify"
+
+DATA_COMPONENT: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 
 ATTR_DATA = "data"
 
@@ -20,7 +31,6 @@ ATTR_RECIPIENTS = "recipients"
 # Title of notification
 ATTR_TITLE = "title"
 
-DOMAIN = "notify"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -28,11 +38,19 @@ SERVICE_NOTIFY = "notify"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
-NOTIFY_SERVICE_SCHEMA = vol.Schema(
+NOTIFY_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DATA): dict,
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_TITLE): cv.string,
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(ATTR_DATA): dict,
     }
 )
+
+
+class NotifyEntityFeature(IntFlag):
+    """Supported features of a notify entity."""
+
+    TITLE = 1

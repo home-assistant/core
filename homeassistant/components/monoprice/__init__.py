@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 
 from pymonoprice import Monoprice, get_monoprice
-from serial import SerialException
+from serialx import SerialException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform

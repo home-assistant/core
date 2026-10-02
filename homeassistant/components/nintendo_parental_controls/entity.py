@@ -1,5 +1,7 @@
 """Base entity definition for Nintendo parental controls."""
 
+from typing import override
+
 from pynintendoparental.device import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,11 +33,13 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
             serial_number=device.extra["serialNumber"],
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is loaded."""
         await super().async_added_to_hass()
         self._device.add_device_callback(self.async_write_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When will be removed from HASS."""
         self._device.remove_device_callback(self.async_write_ha_state)

@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zone 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_1',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zone 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_2',

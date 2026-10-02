@@ -3,12 +3,12 @@
 from collections.abc import Callable
 import datetime as datetime_library
 import logging
-from typing import Any
+from typing import Any, override
 from zoneinfo import ZoneInfo
 
 from dateutil.parser import ParserError, parse
 from dateutil.tz import UTC
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import datetime
 from homeassistant.components.datetime import DateTimeEntity
@@ -50,15 +50,15 @@ MQTT_DATETIME_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_TIMEZONE): str,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_TIMEZONE): str,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -95,10 +95,12 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._timezone_config = config.get(CONF_TIMEZONE)
@@ -115,6 +117,7 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
         self._attr_assumed_state = bool(self._optimistic)
 
+    @override
     async def _async_finish_update_config(self) -> None:
         """Called after added to hass and after discovery update."""
         self._zone_info = None
@@ -178,6 +181,7 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
         self._attr_native_value = value
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -186,10 +190,12 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
             {"_attr_native_value"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_set_value(self, value: datetime_library.datetime) -> None:
         """Change the date and time."""
         payload = self._command_template(value.isoformat(), {"value": value})

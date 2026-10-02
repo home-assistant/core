@@ -198,7 +198,7 @@
   "title": "Fan",
   "triggers": {
     "turned_off": {
-      "description": "Triggers after one or more fans turn off.",
+      "description": "Triggers when one or more fans turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
@@ -210,7 +210,7 @@
       "name": "Fan turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more fans turn on.",
+      "description": "Triggers when one or more fans turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::fan::common::trigger_behavior_name%]"

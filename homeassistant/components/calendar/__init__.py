@@ -1,17 +1,16 @@
 """Support for Calendar event device sensors."""
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 from http import HTTPStatus
-from itertools import groupby
 import logging
 import re
-from typing import Any, Final, cast, final, override
+from typing import Any, cast, final, override
 
 from aiohttp import web
-from dateutil.rrule import rrulestr
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
@@ -25,14 +24,7 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EVENT, STATE_OFF, STATE_ON
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
@@ -44,7 +36,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import (
+from .const import (  # noqa: F401
+    CREATE_EVENT_SERVICE,
     DATA_COMPONENT,
     DOMAIN,
     EVENT_DESCRIPTION,
@@ -67,7 +60,29 @@ from .const import (
     EVENT_TYPES,
     EVENT_UID,
     LIST_EVENT_FIELDS,
+    SERVICE_GET_EVENTS,
     CalendarEntityFeature,
+    CalendarEntityStateAttribute,
+    CalendarEventStatus,
+)
+from .helper import (
+    MIN_EVENT_DURATION,
+    MIN_NEW_EVENT_DURATION,
+    api_event_dict_factory,
+    as_local_timezone,
+    empty_as_none,
+    event_dict_factory,
+    get_datetime_local,
+    has_consistent_timezone,
+    has_min_duration,
+    has_same_type,
+    has_timezone,
+    validate_rrule,
+)
+from .services import (  # noqa: F401
+    CREATE_EVENT_SCHEMA,
+    async_create_event,
+    async_setup_services,
 )
 
 # mypy: disallow-any-generics
@@ -80,233 +95,39 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
-# Don't support rrules more often than daily
-VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
-# Ensure events created in Home Assistant have a positive duration
-MIN_NEW_EVENT_DURATION = datetime.timedelta(seconds=1)
-
-# Events must have a non-negative duration e.g. Google Calendar can create zero
-# duration events in the UI.
-MIN_EVENT_DURATION = datetime.timedelta(seconds=0)
-
-
-def _has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Assert that all datetime values have a timezone."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Validate that all datetime values have a timezone."""
-        for k in keys:
-            if (
-                (value := obj.get(k))
-                and isinstance(value, datetime.datetime)
-                and value.tzinfo is None
-            ):
-                raise vol.Invalid("Expected all values to have a timezone")
-        return obj
-
-    return validate
-
-
-def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that all datetime values have a consistent timezone."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys that are datetime values have the same timezone."""
-        tzinfos = []
-        for key in keys:
-            if not (value := obj.get(key)) or not isinstance(value, datetime.datetime):
-                return obj
-            tzinfos.append(value.tzinfo)
-        uniq_values = groupby(tzinfos)
-        if len(list(uniq_values)) > 1:
-            raise vol.Invalid("Expected all values to have the same timezone")
-        return obj
-
-    return validate
-
-
-def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Convert all datetime values to the local timezone."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Convert all keys that are datetime values to local timezone."""
-        for k in keys:
-            if (value := obj.get(k)) and isinstance(value, datetime.datetime):
-                obj[k] = dt_util.as_local(value)
-        return obj
-
-    return validate
-
-
-def _has_min_duration(
-    start_key: str, end_key: str, min_duration: datetime.timedelta
-) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the time span between start and end has a minimum duration."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        if (start := obj.get(start_key)) and (end := obj.get(end_key)):
-            duration = end - start
-            if duration < min_duration:
-                raise vol.Invalid(
-                    "Expected minimum event duration"
-                    f" of {min_duration} ({start}, {end})"
-                )
-        return obj
-
-    return validate
-
-
-def _has_positive_interval(
-    start_key: str, end_key: str, duration_key: str
-) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the time span between start and end is greater than zero."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        if (duration := obj.get(duration_key)) is not None:
-            if duration <= datetime.timedelta(seconds=0):
-                raise vol.Invalid(f"Expected positive duration ({duration})")
-            return obj
-
-        if (start := obj.get(start_key)) and (end := obj.get(end_key)):
-            if start >= end:
-                raise vol.Invalid(
-                    f"Expected end time to be after start time ({start}, {end})"
-                )
-        return obj
-
-    return validate
-
-
-def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that all values are of the same type."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict have values of the same type."""
-        uniq_values = groupby(type(obj[k]) for k in keys)
-        if len(list(uniq_values)) > 1:
-            raise vol.Invalid(f"Expected all values to be the same type: {keys}")
-        return obj
-
-    return validate
-
-
-def _validate_rrule(value: Any) -> str:
-    """Validate a recurrence rule string."""
-    if value is None:
-        raise vol.Invalid("rrule value is None")
-
-    if not isinstance(value, str):
-        raise vol.Invalid("rrule value expected a string")
-
-    try:
-        rrulestr(value)
-    except ValueError as err:
-        raise vol.Invalid(f"Invalid rrule '{value}': {err}") from err
-
-    # Example format: FREQ=DAILY;UNTIL=...
-    rule_parts = dict(s.split("=", 1) for s in value.split(";"))
-    if not (freq := rule_parts.get("FREQ")):
-        raise vol.Invalid("rrule did not contain FREQ")
-
-    if freq not in VALID_FREQS:
-        raise vol.Invalid(f"Invalid frequency for rule: {value}")
-
-    return str(value)
-
-
-def _empty_as_none(value: str | None) -> str | None:
-    """Convert any empty string values to None."""
-    return value or None
-
-
-CREATE_EVENT_SERVICE = "create_event"
-CREATE_EVENT_SCHEMA = vol.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.make_entity_service_schema(
+WEBSOCKET_EVENT_SCHEMA = probatio.Schema(
+    probatio.All(
         {
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Optional(EVENT_LOCATION): cv.string,
-            vol.Inclusive(
-                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_START_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Inclusive(
-                EVENT_END_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Optional(EVENT_IN): vol.Schema(
-                {
-                    vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
-                    vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
-                }
-            ),
+            probatio.Required(EVENT_START): probatio.Any(cv.date, cv.datetime),
+            probatio.Required(EVENT_END): probatio.Any(cv.date, cv.datetime),
+            probatio.Required(EVENT_SUMMARY): cv.string,
+            probatio.Optional(EVENT_DESCRIPTION): cv.string,
+            probatio.Optional(EVENT_LOCATION): cv.string,
+            probatio.Optional(EVENT_RRULE): validate_rrule,
         },
-    ),
-    _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    _has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
-    _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
-)
-
-WEBSOCKET_EVENT_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION): cv.string,
-            vol.Optional(EVENT_LOCATION): cv.string,
-            vol.Optional(EVENT_RRULE): _validate_rrule,
-        },
-        _has_same_type(EVENT_START, EVENT_END),
-        _has_consistent_timezone(EVENT_START, EVENT_END),
-        _as_local_timezone(EVENT_START, EVENT_END),
-        _has_min_duration(EVENT_START, EVENT_END, MIN_NEW_EVENT_DURATION),
+        has_same_type(EVENT_START, EVENT_END),
+        has_consistent_timezone(EVENT_START, EVENT_END),
+        as_local_timezone(EVENT_START, EVENT_END),
+        has_min_duration(EVENT_START, EVENT_END, MIN_NEW_EVENT_DURATION),
     )
 )
 
 # Validation for the CalendarEvent dataclass
-CALENDAR_EVENT_SCHEMA = vol.Schema(
-    vol.All(
+CALENDAR_EVENT_SCHEMA = probatio.Schema(
+    probatio.All(
         {
-            vol.Required("start"): vol.Any(cv.date, cv.datetime),
-            vol.Required("end"): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_RRULE): _validate_rrule,
+            probatio.Required("start"): probatio.Any(cv.date, cv.datetime),
+            probatio.Required("end"): probatio.Any(cv.date, cv.datetime),
+            probatio.Required(EVENT_SUMMARY): cv.string,
+            probatio.Optional(EVENT_RRULE): validate_rrule,
         },
-        _has_same_type("start", "end"),
-        _has_timezone("start", "end"),
-        _as_local_timezone("start", "end"),
-        _has_min_duration("start", "end", MIN_EVENT_DURATION),
+        has_same_type("start", "end"),
+        has_timezone("start", "end"),
+        as_local_timezone("start", "end"),
+        has_min_duration("start", "end", MIN_EVENT_DURATION),
     ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-SERVICE_GET_EVENTS: Final = "get_events"
-SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
-    cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
-    cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
-    cv.make_entity_service_schema(
-        {
-            vol.Optional(EVENT_START_DATETIME): cv.datetime,
-            vol.Optional(EVENT_END_DATETIME): cv.datetime,
-            vol.Optional(EVENT_DURATION): vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-        }
-    ),
-    _has_positive_interval(EVENT_START_DATETIME, EVENT_END_DATETIME, EVENT_DURATION),
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -326,18 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, handle_calendar_event_update)
     websocket_api.async_register_command(hass, handle_calendar_event_subscribe)
 
-    component.async_register_entity_service(
-        CREATE_EVENT_SERVICE,
-        CREATE_EVENT_SCHEMA,
-        async_create_event,
-        required_features=[CalendarEntityFeature.CREATE_EVENT],
-    )
-    component.async_register_entity_service(
-        SERVICE_GET_EVENTS,
-        SERVICE_GET_EVENTS_SCHEMA,
-        async_get_events_service,
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
     await component.async_setup(config)
     return True
 
@@ -378,16 +188,17 @@ class CalendarEvent:
     uid: str | None = None
     recurrence_id: str | None = None
     rrule: str | None = None
+    status: CalendarEventStatus | None = None
 
     @property
     def start_datetime_local(self) -> datetime.datetime:
         """Return event start time as a local datetime."""
-        return _get_datetime_local(self.start)
+        return get_datetime_local(self.start)
 
     @property
     def end_datetime_local(self) -> datetime.datetime:
         """Return event end time as a local datetime."""
-        return _get_datetime_local(self.end)
+        return get_datetime_local(self.end)
 
     @property
     def all_day(self) -> bool:
@@ -397,7 +208,7 @@ class CalendarEvent:
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
         return {
-            **dataclasses.asdict(self, dict_factory=_event_dict_factory),
+            **dataclasses.asdict(self, dict_factory=event_dict_factory),
             "all_day": self.all_day,
         }
 
@@ -409,7 +220,7 @@ class CalendarEvent:
 
         try:
             CALENDAR_EVENT_SCHEMA(dataclasses.asdict(self, dict_factory=skip_none))
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise HomeAssistantError(
                 f"Failed to validate CalendarEvent: {err}"
             ) from err
@@ -423,57 +234,6 @@ class CalendarEvent:
             and self.start == self.end
         ):
             self.end = self.start + datetime.timedelta(days=1)
-
-
-def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
-    """Convert CalendarEvent dataclass items to dictionary of attributes."""
-    result: dict[str, str] = {}
-    for name, value in obj:
-        if isinstance(value, (datetime.datetime, datetime.date)):
-            result[name] = value.isoformat()
-        elif value is not None:
-            result[name] = str(value)
-    return result
-
-
-def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
-    """Convert CalendarEvent dataclass items to the API format."""
-    result: dict[str, Any] = {}
-    for name, value in obj:
-        if isinstance(value, datetime.datetime):
-            result[name] = {"dateTime": dt_util.as_local(value).isoformat()}
-        elif isinstance(value, datetime.date):
-            result[name] = {"date": value.isoformat()}
-        else:
-            result[name] = value
-    return result
-
-
-def _list_events_dict_factory(
-    obj: Iterable[tuple[str, Any]],
-) -> dict[str, JsonValueType]:
-    """Convert CalendarEvent dataclass items to dictionary of attributes."""
-    return {
-        name: value
-        for name, value in _event_dict_factory(obj).items()
-        if name in LIST_EVENT_FIELDS and value is not None
-    }
-
-
-def _get_datetime_local(
-    dt_or_d: datetime.datetime | datetime.date,
-) -> datetime.datetime:
-    """Convert a calendar event date/datetime to a datetime if needed."""
-    if isinstance(dt_or_d, datetime.datetime):
-        return dt_util.as_local(dt_or_d)
-    return dt_util.start_of_local_day(dt_or_d)
-
-
-def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
-    """Convert a calendar event date/datetime to a datetime if needed."""
-    if isinstance(dt_or_d, datetime.datetime):
-        return {"dateTime": dt_util.as_local(dt_or_d).isoformat()}
-    return {"date": dt_or_d.isoformat()}
 
 
 def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
@@ -519,7 +279,9 @@ class CalendarEntity(Entity):
 
     entity_description: CalendarEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({"description"})
+    _entity_component_unrecorded_attributes = frozenset(
+        {CalendarEntityStateAttribute.DESCRIPTION}
+    )
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
     _event_listeners: (
@@ -554,7 +316,7 @@ class CalendarEntity(Entity):
         # Validate that it's a valid hex color string with # prefix
         try:
             validated_color = cv.color_hex(self.initial_color)
-        except vol.Invalid:
+        except probatio.Invalid:
             return None
 
         return {DOMAIN: {"color": validated_color}}
@@ -573,12 +335,16 @@ class CalendarEntity(Entity):
             return None
 
         return {
-            "message": event.summary,
-            "all_day": event.all_day,
-            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
-            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location or "",
-            "description": event.description or "",
+            CalendarEntityStateAttribute.MESSAGE: event.summary,
+            CalendarEntityStateAttribute.ALL_DAY: event.all_day,
+            CalendarEntityStateAttribute.START_TIME: event.start_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.END_TIME: event.end_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.LOCATION: event.location or "",
+            CalendarEntityStateAttribute.DESCRIPTION: event.description or "",
         }
 
     @final
@@ -710,8 +476,18 @@ class CalendarEntity(Entity):
         if not self._event_listeners:
             return
 
+        # Expanding the events is the expensive part, and every dashboard
+        # showing the same days asks for the same range, so those listeners
+        # are served from a single fetch.
+        listeners_by_range: defaultdict[
+            tuple[datetime.datetime, datetime.datetime],
+            list[Callable[[list[JsonValueType] | None], None]],
+        ] = defaultdict(list)
         for start_date, end_date, listener in self._event_listeners:
-            self.async_update_single_event_listener(start_date, end_date, listener)
+            listeners_by_range[(start_date, end_date)].append(listener)
+
+        for (start_date, end_date), listeners in listeners_by_range.items():
+            self._async_schedule_listener_update(start_date, end_date, listeners)
 
     @final
     @callback
@@ -722,17 +498,27 @@ class CalendarEntity(Entity):
         listener: Callable[[list[JsonValueType] | None], None],
     ) -> None:
         """Schedule an event fetch and push to a single listener."""
-        self.hass.async_create_task(
-            self._async_update_listener(start_date, end_date, listener)
-        )
+        self._async_schedule_listener_update(start_date, end_date, [listener])
 
-    async def _async_update_listener(
+    @callback
+    def _async_schedule_listener_update(
         self,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-        listener: Callable[[list[JsonValueType] | None], None],
+        listeners: list[Callable[[list[JsonValueType] | None], None]],
     ) -> None:
-        """Fetch events and push to a single listener."""
+        """Schedule an event fetch and push to the given listeners."""
+        self.hass.async_create_task(
+            self._async_update_listeners(start_date, end_date, listeners)
+        )
+
+    async def _async_update_listeners(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        listeners: list[Callable[[list[JsonValueType] | None], None]],
+    ) -> None:
+        """Fetch events and push them to the listeners of that range."""
         try:
             events = await self.async_get_events(self.hass, start_date, end_date)
         except HomeAssistantError as err:
@@ -741,11 +527,13 @@ class CalendarEntity(Entity):
                 self.entity_id,
                 err,
             )
-            listener(None)
+            for listener in listeners:
+                listener(None)
             return
 
         event_list: list[JsonValueType] = [event.as_dict() for event in events]
-        listener(event_list)
+        for listener in listeners:
+            listener(event_list)
 
     async def async_get_events(
         self,
@@ -829,7 +617,7 @@ class CalendarEventView(http.HomeAssistantView):
 
         return self.json(
             [
-                dataclasses.asdict(event, dict_factory=_api_event_dict_factory)
+                dataclasses.asdict(event, dict_factory=api_event_dict_factory)
                 for event in calendar_event_list
             ]
         )
@@ -864,8 +652,8 @@ class CalendarListView(http.HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/create",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "calendar/event/create",
+        probatio.Required("entity_id"): cv.entity_id,
         CONF_EVENT: WEBSOCKET_EVENT_SCHEMA,
     }
 )
@@ -902,13 +690,13 @@ async def handle_calendar_event_create(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/delete",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
-            vol.All(cv.string, _empty_as_none), None
+        probatio.Required("type"): "calendar/event/delete",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required(EVENT_UID): cv.string,
+        probatio.Optional(EVENT_RECURRENCE_ID): probatio.Any(
+            probatio.All(cv.string, empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        probatio.Optional(EVENT_RECURRENCE_RANGE): cv.string,
     }
 )
 @websocket_api.async_response
@@ -949,14 +737,14 @@ async def handle_calendar_event_delete(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/update",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
-            vol.All(cv.string, _empty_as_none), None
+        probatio.Required("type"): "calendar/event/update",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required(EVENT_UID): cv.string,
+        probatio.Optional(EVENT_RECURRENCE_ID): probatio.Any(
+            probatio.All(cv.string, empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
-        vol.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
+        probatio.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        probatio.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -998,10 +786,10 @@ async def handle_calendar_event_update(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "calendar/event/subscribe",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
-        vol.Required("start"): cv.datetime,
-        vol.Required("end"): cv.datetime,
+        probatio.Required("type"): "calendar/event/subscribe",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("start"): cv.datetime,
+        probatio.Required("end"): cv.datetime,
     }
 )
 @websocket_api.async_response
@@ -1056,67 +844,3 @@ async def handle_calendar_event_subscribe(
 
     # Push initial events only to the new subscriber
     entity.async_update_single_event_listener(start_date, end_date, event_listener)
-
-
-def _validate_timespan(
-    values: dict[str, Any],
-) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
-    """Parse a create event service call.
-
-    Convert the args for a create event entity call.
-    This converts the input service arguments into a
-    `start` and `end` date or date time. This exists because
-    service calls use `start_date` and `start_date_time`
-    whereas the normal entity methods can take either a
-    `datetime` or `date` as a single `start` argument.
-    It also handles the other service call variations like "in days" as well.
-    """
-
-    if event_in := values.get(EVENT_IN):
-        days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
-        today = dt_util.now().date()
-        return (
-            today + datetime.timedelta(days=days),
-            today + datetime.timedelta(days=days + 1),
-        )
-
-    if EVENT_START_DATE in values and EVENT_END_DATE in values:
-        return (values[EVENT_START_DATE], values[EVENT_END_DATE])
-
-    if EVENT_START_DATETIME in values and EVENT_END_DATETIME in values:
-        return (values[EVENT_START_DATETIME], values[EVENT_END_DATETIME])
-
-    raise ValueError("Missing required fields to set start or end date/datetime")
-
-
-async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
-    """Add a new event to calendar."""
-    # Convert parameters to format used by async_create_event
-    (start, end) = _validate_timespan(call.data)
-    params = {
-        **{k: v for k, v in call.data.items() if k not in EVENT_TIME_FIELDS},
-        EVENT_START: start,
-        EVENT_END: end,
-    }
-    await entity.async_create_event(**params)
-
-
-async def async_get_events_service(
-    calendar: CalendarEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """List events on a calendar during a time range."""
-    start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
-    if EVENT_DURATION in service_call.data:
-        end = start + service_call.data[EVENT_DURATION]
-    else:
-        end = service_call.data[EVENT_END_DATETIME]
-
-    calendar_event_list = await calendar.async_get_events(
-        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
-    )
-    return {
-        "events": [
-            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
-            for event in calendar_event_list
-        ]
-    }

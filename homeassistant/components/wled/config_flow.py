@@ -1,8 +1,8 @@
 """Config flow to configure the WLED integration."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
 import yarl
 
@@ -42,12 +42,14 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: WLEDConfigEntry,
     ) -> WLEDOptionsFlowHandler:
         """Get the options flow for this handler."""
         return WLEDOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,7 +85,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=device.info.name,
                     data={CONF_HOST: host},
                 )
-        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
             data_schema = self.add_suggested_values_to_schema(
@@ -103,6 +105,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reconfigure flow for WLED entry."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -172,9 +175,9 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_KEEP_MAIN_LIGHT,
                         default=self.config_entry.options.get(
                             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT

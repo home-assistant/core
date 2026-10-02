@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from hatasmota import switch as tasmota_switch
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -69,6 +69,7 @@ class TasmotaBinarySensor(
         if self._tasmota_entity.off_delay is not None:
             self._attr_force_update = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.on_off_state_updated)
@@ -99,6 +100,7 @@ class TasmotaBinarySensor(
         self.async_write_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._on_off_state

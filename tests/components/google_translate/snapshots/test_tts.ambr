@@ -39,7 +39,7 @@
 # name: test_platform[tts.google_translate_en_com-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Google Translate en com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Translate en com',
     }),
     'context': <ANY>,
     'entity_id': 'tts.google_translate_en_com',

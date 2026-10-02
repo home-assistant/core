@@ -1,5 +1,7 @@
 """Update entity for VeSync.."""
 
+from typing import override
+
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
 
@@ -60,11 +62,13 @@ class VeSyncDeviceUpdate(VeSyncBaseEntity, UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return installed_version."""
         return self.device.current_firm_version
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return latest_version."""
         return self.device.latest_firm_version

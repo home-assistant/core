@@ -3,7 +3,7 @@
 from collections.abc import Coroutine, Iterable
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
@@ -97,6 +97,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         else:
             self.reverse_time = None
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         state = pypck.lcn_defs.MotorStateModifier.DOWN
@@ -108,6 +109,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         state = pypck.lcn_defs.MotorStateModifier.UP
@@ -120,6 +122,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         state = pypck.lcn_defs.MotorStateModifier.STOP
@@ -143,6 +146,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
                 ]
             )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
         if (
@@ -202,6 +206,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._is_closing = False
         self._is_opening = False
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -214,6 +219,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -227,6 +233,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -239,6 +246,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_opening = False
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -275,6 +283,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             )
         self._attr_available = any([await coro for coro in coros])
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
         if isinstance(input_obj, pypck.inputs.ModStatusRelays):

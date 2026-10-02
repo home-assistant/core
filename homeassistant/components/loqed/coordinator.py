@@ -1,11 +1,12 @@
 """Provides the coordinator for a LOQED lock."""
 
 import asyncio
+from http import HTTPStatus
 import logging
-from typing import TypedDict
+from typing import TypedDict, override
 
 import aiohttp
-from aiohttp.web import Request
+from aiohttp.web import Request, Response
 from loqedAPI import loqed
 
 from homeassistant.components import cloud, webhook
@@ -53,7 +54,7 @@ class TransitionMessage(TypedDict):
 
 
 class StatusMessage(TypedDict):
-    """Properties returned by the status endpoint of the bridhge."""
+    """Properties returned by the status endpoint of the bridge."""
 
     battery_percentage: int
     battery_type: str
@@ -89,6 +90,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
 
+    @override
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):
@@ -96,9 +98,12 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
-    ) -> None:
+    ) -> Response | None:
         """Handle incoming Loqed messages."""
         _LOGGER.debug("Callback received: %s", request.headers)
+        if "TIMESTAMP" not in request.headers or "HASH" not in request.headers:
+            _LOGGER.warning("Callback without TIMESTAMP or HASH header rejected")
+            return Response(status=HTTPStatus.BAD_REQUEST)
         received_ts = request.headers["TIMESTAMP"]
         received_hash = request.headers["HASH"]
         body = await request.text()
@@ -108,9 +113,10 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         event_data = await self.lock.receiveWebhook(body, received_hash, received_ts)
         if "error" in event_data:
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
-            return
+            return None
 
         self.async_update_listeners()
+        return None
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""
@@ -132,7 +138,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             )
         else:
             webhook_url = webhook.async_generate_url(
-                self.hass, self.config_entry.data[CONF_WEBHOOK_ID]
+                self.hass,
+                self.config_entry.data[CONF_WEBHOOK_ID],
+                prefer_external=False,
             )
 
         _LOGGER.debug("Webhook URL: %s", webhook_url)
@@ -150,19 +158,45 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
             _LOGGER.debug("Webhook got index %s", webhook_index)
 
+        if webhook_index:
+            await self._remove_stale_webhooks(webhook_id, webhook_index, webhooks)
+
+    async def _remove_stale_webhooks(
+        self, webhook_id: str, webhook_index: int, webhooks: list[dict]
+    ) -> None:
+        cloudhook_url = self.config_entry.data.get(CONF_CLOUDHOOK_URL)
+
+        for existing_webhook in webhooks:
+            url = existing_webhook["url"]
+            index = existing_webhook["id"]
+            is_integration_webhook = url.endswith(f"/{webhook_id}") or (
+                cloudhook_url and url == cloudhook_url
+            )
+
+            if is_integration_webhook and webhook_index != index:
+                _LOGGER.debug("Removing stale webhook with URL: %s", url)
+                try:
+                    await self.lock.deleteWebhook(index)
+                except (TimeoutError, aiohttp.ClientError) as err:
+                    _LOGGER.warning(
+                        "Could not remove stale webhook from LOQED bridge: %s", err
+                    )
+
     async def remove_webhooks(self) -> None:
         """Remove webhook from LOQED bridge."""
         webhook_id = self.config_entry.data[CONF_WEBHOOK_ID]
 
-        if CONF_CLOUDHOOK_URL in self.config_entry.data:
-            webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
-        else:
-            webhook_url = webhook.async_generate_url(self.hass, webhook_id)
-
-        _LOGGER.debug("Webhook URL: %s", webhook_url)
-
         try:
             webhooks = await self.lock.getWebhooks()
+
+            if CONF_CLOUDHOOK_URL in self.config_entry.data:
+                webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
+            else:
+                webhook_url = next(
+                    (x["url"] for x in webhooks if x["url"].endswith(f"/{webhook_id}")),
+                    None,
+                )
+                _LOGGER.debug("Webhook URL: %s", webhook_url)
 
             webhook_index = next(
                 (x["id"] for x in webhooks if x["url"] == webhook_url), None

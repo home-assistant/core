@@ -4,9 +4,9 @@ import datetime as py_datetime
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_DATE,
     ATTR_EDITABLE,
     ATTR_TIME,
@@ -23,6 +23,11 @@ import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
+
+from .const import (
+    InputDatetimeEntityCapabilityAttribute,
+    InputDatetimeEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +54,7 @@ def validate_set_datetime_attrs(config):
         sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
         > 1
     ):
-        raise vol.Invalid(f"Cannot use together: {', '.join(config.keys())}")
+        raise probatio.Invalid(f"Cannot use together: {', '.join(config.keys())}")
     return config
 
 
@@ -57,11 +62,11 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
-    vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL): cv.string,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
+    probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_INITIAL): cv.string,
 }
 
 
@@ -70,7 +75,7 @@ def has_date_or_time(conf):
     if conf[CONF_HAS_DATE] or conf[CONF_HAS_TIME]:
         return conf
 
-    raise vol.Invalid("Entity needs at least a date or a time")
+    raise probatio.Invalid("Entity needs at least a date or a time")
 
 
 def valid_initial(conf: dict[str, Any]) -> dict[str, Any]:
@@ -78,7 +83,7 @@ def valid_initial(conf: dict[str, Any]) -> dict[str, Any]:
     if not (conf.get(CONF_INITIAL)):
         return conf
 
-    # Ensure we can parse the initial value, raise vol.Invalid on failure
+    # Ensure we can parse the initial value, raise probatio.Invalid on failure
     parse_initial_datetime(conf)
     return conf
 
@@ -90,37 +95,39 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
         if (datetime := dt_util.parse_datetime(initial)) is not None:
             return datetime
-        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
+        raise probatio.Invalid(
+            f"Initial value '{initial}' can't be parsed as a datetime"
+        )
 
     if conf[CONF_HAS_DATE]:
         if (date := dt_util.parse_date(initial)) is not None:
             return py_datetime.datetime.combine(date, DEFAULT_TIME)
-        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
+        raise probatio.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
         return py_datetime.datetime.combine(dt_util.now().date(), time)
-    raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
+    raise probatio.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
-                    vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_INITIAL): cv.string,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
+                    probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_INITIAL): cv.string,
                 },
                 has_date_or_time,
                 valid_initial,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -170,18 +177,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         "set_datetime",
-        vol.All(
+        probatio.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Optional(ATTR_DATE): cv.date,
-                    vol.Optional(ATTR_TIME): cv.time,
-                    vol.Optional(ATTR_DATETIME): cv.datetime,
-                    vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
+                    probatio.Optional(ATTR_DATE): cv.date,
+                    probatio.Optional(ATTR_TIME): cv.time,
+                    probatio.Optional(ATTR_DATETIME): cv.datetime,
+                    probatio.Optional(ATTR_TIMESTAMP): probatio.Coerce(float),
                 },
             ),
-            cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
-            ),
+            probatio.AtLeastOne(ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP),
             validate_set_datetime_attrs,
         ),
         "async_set_datetime",
@@ -193,7 +198,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class DateTimeStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))
+    CREATE_UPDATE_SCHEMA = probatio.Schema(
+        probatio.All(STORAGE_FIELDS, has_date_or_time)
+    )
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
@@ -216,7 +223,13 @@ class DateTimeStorageCollection(collection.DictStorageCollection):
 class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE, CONF_HAS_DATE, CONF_HAS_TIME})
+    _unrecorded_attributes = frozenset(
+        {
+            InputDatetimeEntityStateAttribute.EDITABLE,
+            InputDatetimeEntityCapabilityAttribute.HAS_DATE,
+            InputDatetimeEntityCapabilityAttribute.HAS_TIME,
+        }
+    )
 
     _attr_should_poll = False
     editable: bool
@@ -338,8 +351,8 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return the capability attributes."""
         return {
-            CONF_HAS_DATE: self.has_date,
-            CONF_HAS_TIME: self.has_time,
+            InputDatetimeEntityCapabilityAttribute.HAS_DATE: self.has_date,
+            InputDatetimeEntityCapabilityAttribute.HAS_TIME: self.has_time,
         }
 
     @property
@@ -347,24 +360,30 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {
-            ATTR_EDITABLE: self.editable,
+            InputDatetimeEntityStateAttribute.EDITABLE: self.editable,
         }
 
         if self._current_datetime is None:
             return attrs
 
         if self.has_date and self._current_datetime is not None:
-            attrs["year"] = self._current_datetime.year
-            attrs["month"] = self._current_datetime.month
-            attrs["day"] = self._current_datetime.day
+            attrs[InputDatetimeEntityStateAttribute.YEAR] = self._current_datetime.year
+            attrs[InputDatetimeEntityStateAttribute.MONTH] = (
+                self._current_datetime.month
+            )
+            attrs[InputDatetimeEntityStateAttribute.DAY] = self._current_datetime.day
 
         if self.has_time and self._current_datetime is not None:
-            attrs["hour"] = self._current_datetime.hour
-            attrs["minute"] = self._current_datetime.minute
-            attrs["second"] = self._current_datetime.second
+            attrs[InputDatetimeEntityStateAttribute.HOUR] = self._current_datetime.hour
+            attrs[InputDatetimeEntityStateAttribute.MINUTE] = (
+                self._current_datetime.minute
+            )
+            attrs[InputDatetimeEntityStateAttribute.SECOND] = (
+                self._current_datetime.second
+            )
 
         if not self.has_date:
-            attrs["timestamp"] = (
+            attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = (
                 self._current_datetime.hour * 3600
                 + self._current_datetime.minute * 60
                 + self._current_datetime.second
@@ -372,12 +391,16 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
 
         elif not self.has_time:
             extended = py_datetime.datetime.combine(
-                self._current_datetime, py_datetime.time(0, 0)
+                self._current_datetime,
+                py_datetime.time(0, 0),
+                dt_util.get_default_time_zone(),
             )
-            attrs["timestamp"] = extended.timestamp()
+            attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = extended.timestamp()
 
         else:
-            attrs["timestamp"] = self._current_datetime.timestamp()
+            attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = (
+                self._current_datetime.timestamp()
+            )
 
         return attrs
 
@@ -404,7 +427,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             time = None
 
         if not date and not time:
-            raise vol.Invalid("Nothing to set")
+            raise probatio.Invalid("Nothing to set")
 
         if not date:
             date = self._current_datetime.date()

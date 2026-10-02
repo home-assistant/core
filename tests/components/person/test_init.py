@@ -153,16 +153,19 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    # A legacy tracker reporting home (no coordinates) is placed at the home zone.
+    # A legacy tracker reporting home (no in_zones) is placed in the home zone
+    # and given the home zone's coordinates.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
     }
 
-    # Test home with coordinates
+    # Test home with coordinates: a legacy tracker reporting "home" is placed in
+    # the home zone while keeping its own coordinates.
     hass.states.async_set(
         DEVICE_TRACKER,
         "home",
@@ -174,6 +177,7 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
         ATTR_GPS_ACCURACY: 10,
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 10.123456,
         ATTR_LONGITUDE: 11.123456,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -295,10 +299,12 @@ async def test_setup_two_trackers(
     hass.states.async_set(DEVICE_TRACKER_2, "zone2", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()
 
-    # Legacy router reporting home (no in_zones) is placed at the home zone.
+    # Legacy router reporting home (no in_zones) is placed in the home zone and
+    # given the home zone's coordinates.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -499,12 +505,13 @@ async def _async_setup_person_two_trackers(hass: HomeAssistant, user_id: str) ->
             id="scanner_beats_gps",
         ),
         # A legacy "home" tracker (no in_zones) likewise outranks GPS; it is
-        # placed at the home zone.
+        # placed in the home zone.
         pytest.param(
             _LEGACY_HOME,
             _GPS_NOT_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -614,12 +621,13 @@ async def test_state_priority_overrides_recency(
             id="not_home_newer",
         ),
         # A pair of legacy "home" trackers (no in_zones) likewise picks the
-        # most recent; it is placed at the home zone.
+        # most recent; it is placed in the home zone.
         pytest.param(
             _LEGACY_HOME,
             _LEGACY_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER_2,
@@ -706,12 +714,13 @@ async def test_scanner_associated_with_other_zone(
 @pytest.mark.parametrize(
     ("tracker", "expected_state", "expected_extra"),
     [
-        # A legacy "home" tracker has no coordinates of its own, so it is
-        # placed at the home zone.
+        # A legacy "home" tracker has no in_zones or coordinates of its own, so
+        # it is placed in the home zone with the home zone's coordinates.
         pytest.param(
             _LEGACY_HOME,
             "home",
             {
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 32.87336,
                 ATTR_LONGITUDE: -117.22743,
                 ATTR_SOURCE: DEVICE_TRACKER,
@@ -973,6 +982,7 @@ async def test_restore_home_state(
     assert await async_setup_component(hass, DOMAIN, config)
 
     # When restoring state the entity_id of the person will be used as source.
+    # A restored "home" state without in_zones is placed in the home zone.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == {
@@ -981,7 +991,7 @@ async def test_restore_home_state(
         ATTR_ENTITY_PICTURE: "/bla",
         ATTR_FRIENDLY_NAME: "tracked person",
         ATTR_ID: "1234",
-        ATTR_IN_ZONES: [],
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 10.12346,
         ATTR_LONGITUDE: 11.12346,
         ATTR_SOURCE: "person.tracked_person",
@@ -1042,10 +1052,12 @@ async def test_load_person_storage(
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
-    # A legacy tracker reporting home (no coordinates) is placed at the home zone.
+    # A legacy tracker reporting home (no in_zones) is placed in the home zone
+    # and given the home zone's coordinates.
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes == expected_attributes | {
+        ATTR_IN_ZONES: ["zone.home"],
         ATTR_LATITUDE: 32.87336,
         ATTR_LONGITUDE: -117.22743,
         ATTR_SOURCE: DEVICE_TRACKER,
@@ -1246,6 +1258,7 @@ async def test_ws_delete(
 ) -> None:
     """Test deleting via WS."""
     manager = hass.data[DOMAIN][1]
+    entity = hass.data[DOMAIN][2].get_entity("person.tracked_person")
 
     client = await hass_ws_client(hass)
     persons = manager.async_items()
@@ -1261,6 +1274,12 @@ async def test_ws_delete(
     assert resp["success"]
     assert len(hass.states.async_entity_ids(DOMAIN)) == 0
     assert not entity_registry.async_is_registered("person.tracked_person")
+
+    # The removed person no longer follows its device tracker
+    with patch.object(entity, "_update_state") as mock_update_state:
+        hass.states.async_set(DEVICE_TRACKER, "home")
+        await hass.async_block_till_done()
+    mock_update_state.assert_not_called()
 
 
 async def test_ws_delete_require_admin(
@@ -1519,3 +1538,249 @@ async def test_entities_in_person(hass: HomeAssistant) -> None:
         "device_tracker.paulus_iphone",
         "device_tracker.paulus_ipad",
     ]
+
+
+IMAGE_ID = "0123456789abcdef0123456789abcdef"
+IMAGE_URL = f"/api/image/serve/{IMAGE_ID}/512x512"
+
+
+@pytest.fixture
+async def own_profile_setup(
+    hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
+) -> None:
+    """Set up a person linked to a regular user, and an uploaded image."""
+    hass_admin_user.groups = []
+    hass_storage["image"] = {
+        "key": "image",
+        "version": 1,
+        "data": {
+            "items": [
+                {
+                    "id": IMAGE_ID,
+                    "name": "me.png",
+                    "content_type": "image/png",
+                    "filesize": 1234,
+                    "uploaded_at": "2026-09-27T12:00:00+00:00",
+                }
+            ]
+        },
+    }
+    hass_storage[DOMAIN] = {
+        "key": DOMAIN,
+        "version": 2,
+        "data": {
+            "items": [
+                {
+                    "id": "1234",
+                    "name": "tracked person",
+                    "user_id": hass_admin_user.id,
+                    "device_trackers": [DEVICE_TRACKER],
+                }
+            ]
+        },
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+async def test_ws_update_own_profile(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a non-admin user can update their own name and picture."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "person/update_own_profile",
+            "name": "  New name  ",
+            "picture": IMAGE_URL,
+        }
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"]["user_name"] == "New name"
+    assert resp["result"]["person"]["name"] == "New name"
+    assert resp["result"]["person"]["picture"] == IMAGE_URL
+    # Device trackers and the user link are left alone
+    assert resp["result"]["person"]["device_trackers"] == [DEVICE_TRACKER]
+    assert resp["result"]["person"]["user_id"] == hass_admin_user.id
+    assert hass_admin_user.name == "New name"
+
+    state = hass.states.get("person.tracked_person")
+    assert state.name == "New name"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == IMAGE_URL
+    assert state.attributes[ATTR_DEVICE_TRACKERS] == [DEVICE_TRACKER]
+
+    # Remove the picture again
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "picture": None}
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"]["person"]["picture"] is None
+    assert resp["result"]["person"]["name"] == "New name"
+    state = hass.states.get("person.tracked_person")
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+@pytest.mark.parametrize(
+    "picture",
+    [
+        "https://example.com/tracking.png",
+        "/api/image/serve/ffffffffffffffffffffffffffffffff/512x512",
+        f"/api/image/serve/{IMAGE_ID}/512x512/../../etc",
+        f"//example.com/api/image/serve/{IMAGE_ID}/512x512",
+        "/local/me.png",
+    ],
+)
+async def test_ws_update_own_profile_invalid_picture(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    picture: str,
+) -> None:
+    """Test only images uploaded to Home Assistant are accepted."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "person/update_own_profile",
+            "name": "New name",
+            "picture": picture,
+        }
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "invalid_picture"
+    # Nothing is changed when the request is rejected
+    assert hass_admin_user.name == "Mock User"
+    state = hass.states.get("person.tracked_person")
+    assert state.name == "tracked person"
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+async def test_ws_update_own_profile_no_person(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a user without a person can change their name, but not a picture."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "picture": IMAGE_URL}
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "no_person_linked"
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "name": "New name"}
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"] == {"user_name": "New name", "person": None}
+    assert hass_admin_user.name == "New name"
+
+
+async def test_ws_update_own_profile_yaml_person(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a person configured in YAML is not changed."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"id": "1234", "name": "yaml person", "user_id": hass_admin_user.id}},
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "picture": None}
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "person_not_editable"
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "name": "New name"}
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+    assert resp["result"] == {"user_name": "New name", "person": None}
+    assert hass.states.get("person.yaml_person").name == "yaml person"
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+async def test_ws_update_own_profile_empty_name(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test an empty name is rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "person/update_own_profile", "name": " "})
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    assert hass_admin_user.name == "Mock User"
+
+
+@pytest.mark.usefixtures("own_profile_setup")
+async def test_ws_update_own_profile_only_own_fields(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test other person fields cannot be changed through this command."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "person/update_own_profile",
+            "device_trackers": [DEVICE_TRACKER_2],
+        }
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    state = hass.states.get("person.tracked_person")
+    assert state.attributes[ATTR_DEVICE_TRACKERS] == [DEVICE_TRACKER]
+
+
+async def test_ws_update_own_profile_system_generated_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test system-generated users cannot update a profile."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    system_user = await hass.auth.async_create_system_user("System")
+    refresh_token = await hass.auth.async_create_refresh_token(system_user)
+    client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+
+    await client.send_json_auto_id(
+        {"type": "person/update_own_profile", "name": "New name"}
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["translation_key"] == "system_generated_user"
+    assert system_user.name == "System"

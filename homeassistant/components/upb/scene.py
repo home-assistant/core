@@ -1,6 +1,6 @@
 """Platform for UPB link integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
@@ -55,6 +55,7 @@ class UpbLink(UpbEntity, Scene):
         super().__init__(element, unique_id, upb)
         self._attr_name = element.name
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""
         self._element.activate()

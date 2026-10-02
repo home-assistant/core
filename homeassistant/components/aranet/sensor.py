@@ -23,10 +23,10 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     EntityCategory,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -62,7 +62,7 @@ SENSOR_DESCRIPTIONS = {
         key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": AranetSensorEntityDescription(
@@ -83,7 +83,7 @@ SENSOR_DESCRIPTIONS = {
         key="co2",
         name="Carbon Dioxide",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radiation_rate": AranetSensorEntityDescription(
@@ -108,14 +108,15 @@ SENSOR_DESCRIPTIONS = {
         key="radon_concentration",
         translation_key="radon_concentration",
         name="Radon Concentration",
-        native_unit_of_measurement="Bq/m³",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": AranetSensorEntityDescription(
         key="battery",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -209,6 +210,17 @@ class Aranet4BluetoothSensorEntity(
     SensorEntity,
 ):
     """Representation of an Aranet sensor."""
+
+    def __init__(
+        self,
+        processor: PassiveBluetoothDataProcessor[
+            float | int | None, Aranet4Advertisement
+        ],
+        entity_key: PassiveBluetoothEntityKey,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize with current metadata instead of a cached description."""
+        super().__init__(processor, entity_key, SENSOR_DESCRIPTIONS[entity_key.key])
 
     @property
     @override

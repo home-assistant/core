@@ -1,6 +1,8 @@
 """Support for MQTT notify."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.components import notify
 from homeassistant.components.notify import NotifyEntity
@@ -24,14 +26,14 @@ DEFAULT_NAME = "MQTT notify"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -58,10 +60,12 @@ class MqttNotify(MqttEntity, NotifyEntity):
     _entity_id_format = notify.ENTITY_ID_FORMAT
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    @override
+    def config_schema() -> probatio.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._command_template = MqttCommandTemplate(
@@ -69,12 +73,15 @@ class MqttNotify(MqttEntity, NotifyEntity):
         ).async_render
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         payload = self._command_template(message)

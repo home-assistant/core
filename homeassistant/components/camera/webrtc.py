@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from mashumaro import MissingField
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCConfiguration, RTCIceCandidate, RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
@@ -155,7 +155,7 @@ class CameraWebRTCProvider(ABC):
     @callback
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
-        return  ## This is an optional method so we need a default here.
+        return  # This is an optional method so we need a default here.
 
     async def async_get_image(
         self,
@@ -165,6 +165,18 @@ class CameraWebRTCProvider(ABC):
     ) -> bytes | None:
         """Get an image from the camera."""
         return None
+
+    async def async_register_camera(self, camera: Camera) -> None:
+        """Will be called when the provider is registered for a camera."""
+        return  # This is an optional method so we need a default here.
+
+    async def async_unregister_camera(self, camera: Camera) -> None:
+        """Will be called when the provider is unregistered for a camera."""
+        return  # This is an optional method so we need a default here.
+
+    async def async_on_camera_prefs_update(self, camera: Camera) -> None:
+        """Will be called when the camera preferences are updated."""
+        return  # This is an optional method so we need a default here.
 
 
 @callback
@@ -249,9 +261,9 @@ def require_webrtc_support(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/webrtc/offer",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required("offer"): str,
+        probatio.Required("type"): "camera/webrtc/offer",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required("offer"): str,
     }
 )
 @websocket_api.async_response
@@ -303,10 +315,10 @@ async def ws_webrtc_offer(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/webrtc/re_offer",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required("offer"): str,
-        vol.Required("session_id"): str,
+        probatio.Required("type"): "camera/webrtc/re_offer",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required("offer"): str,
+        probatio.Required("session_id"): str,
     }
 )
 @websocket_api.async_response
@@ -355,8 +367,8 @@ async def ws_webrtc_re_offer(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/webrtc/get_client_config",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "camera/webrtc/get_client_config",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response
@@ -377,15 +389,15 @@ def _parse_webrtc_candidate_init(value: Any) -> RTCIceCandidateInit:
     try:
         return RTCIceCandidateInit.from_dict(value)
     except (MissingField, ValueError) as ex:
-        raise vol.Invalid(str(ex)) from ex
+        raise probatio.Invalid(str(ex)) from ex
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/webrtc/candidate",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required("session_id"): str,
-        vol.Required("candidate"): _parse_webrtc_candidate_init,
+        probatio.Required("type"): "camera/webrtc/candidate",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required("session_id"): str,
+        probatio.Required("candidate"): _parse_webrtc_candidate_init,
     }
 )
 @websocket_api.async_response

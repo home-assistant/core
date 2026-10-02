@@ -39,7 +39,7 @@
 # name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arcam FMJ (127.0.0.1) Incoming video interlaced',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arcam FMJ (127.0.0.1) Incoming video interlaced',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced',
@@ -89,7 +89,7 @@
 # name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2 Incoming video interlaced',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arcam FMJ (127.0.0.1) Zone 2 Incoming video interlaced',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced',

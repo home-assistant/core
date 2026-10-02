@@ -1,6 +1,7 @@
 """Support for Telegram bot using polling."""
 
 import logging
+from typing import override
 
 from telegram import Bot, Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
@@ -8,7 +9,7 @@ from telegram.ext import ApplicationBuilder, CallbackContext, TypeHandler
 
 from homeassistant.core import HomeAssistant
 
-from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .bot import ALLOWED_UPDATES, BaseTelegramBot, TelegramBotConfigEntry
 from .helpers import get_base_url
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ class PollBot(BaseTelegramBot):
             lambda update, context: process_error(self.bot, update, context)
         )
 
+    @override
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_polling()
@@ -80,7 +82,8 @@ class PollBot(BaseTelegramBot):
         await self.application.initialize()
         if self.application.updater:
             await self.application.updater.start_polling(
-                error_callback=lambda error: error_callback(self.bot, error, None)
+                allowed_updates=ALLOWED_UPDATES,
+                error_callback=lambda error: error_callback(self.bot, error, None),
             )
         await self.application.start()
         _LOGGER.info(

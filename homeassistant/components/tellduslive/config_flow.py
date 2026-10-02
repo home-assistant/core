@@ -3,10 +3,10 @@
 import asyncio
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
+import probatio
 from tellduslive import Session, supports_local_api
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -52,6 +52,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self._session.authorize_url
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,8 +67,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_HOST): vol.In(list(self._hosts))}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST): probatio.In(list(self._hosts))}
             ),
         )
 
@@ -117,6 +118,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_discovery(
         self,
         discovery_info: list[str],  # type: ignore[override]

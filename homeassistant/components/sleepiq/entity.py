@@ -1,6 +1,7 @@
 """Entity for the SleepIQ integration."""
 
 from abc import abstractmethod
+from typing import override
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
@@ -70,6 +71,7 @@ class SleepIQBedEntity[_SleepIQCoordinatorT: _DataCoordinatorType](
         self._async_update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()

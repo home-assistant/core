@@ -6,14 +6,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Rainbow',
         'Sunset',
         'Nemo',
       ]),
-      'max_color_temp_kelvin': 4500,
-      'min_color_temp_kelvin': 1200,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 4500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1200,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
@@ -51,26 +51,26 @@
 # name: test_entities[light.nanoleaf-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'color_temp_kelvin': None,
-      'effect': None,
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: None,
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Rainbow',
         'Sunset',
         'Nemo',
       ]),
-      'friendly_name': 'Nanoleaf',
-      'hs_color': None,
-      'max_color_temp_kelvin': 4500,
-      'min_color_temp_kelvin': 1200,
-      'rgb_color': None,
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nanoleaf',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 4500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1200,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.nanoleaf',

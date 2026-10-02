@@ -1,7 +1,7 @@
 """Support for MotionMount sensors."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import motionmount
 
@@ -56,6 +56,7 @@ class MotionMountEntity(Entity):
             }
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the MotionMount is available (we're connected)."""
         return self.mm.is_connected
@@ -69,12 +70,14 @@ class MotionMountEntity(Entity):
             device_registry = dr.async_get(self.hass)
             device_registry.async_update_device(self.device_entry.id, name=self.mm.name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
         self.mm.add_listener(self.async_write_ha_state)
         self.mm.add_listener(self.update_name)
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove register state change callback."""
         self.mm.remove_listener(self.async_write_ha_state)

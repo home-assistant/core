@@ -1,5 +1,7 @@
 """Base entity for microBees."""
 
+from typing import override
+
 from microBeesPy import Actuator, Bee
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,6 +32,7 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Status of the bee."""
         return (

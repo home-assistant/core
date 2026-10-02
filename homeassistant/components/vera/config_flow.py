@@ -3,11 +3,11 @@
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
+import probatio
 import pyvera as pv
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -50,11 +50,11 @@ def options_schema(options: Mapping[str, Any] | None = None) -> VolDictType:
     """Return options schema."""
     options = options or {}
     return {
-        vol.Optional(
+        probatio.Optional(
             CONF_LIGHTS,
             default=list_to_str(options.get(CONF_LIGHTS, [])),
         ): str,
-        vol.Optional(
+        probatio.Optional(
             CONF_EXCLUDE,
             default=list_to_str(options.get(CONF_EXCLUDE, [])),
         ): str,
@@ -85,7 +85,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(options_schema(self.config_entry.options)),
+            data_schema=probatio.Schema(options_schema(self.config_entry.options)),
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",
                 "documentation_url": "https://www.home-assistant.io/integrations/vera/",
@@ -98,10 +98,12 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: VeraConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -118,8 +120,8 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_CONTROLLER): str, **options_schema()}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",

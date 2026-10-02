@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_grid',
         'backup',
         'on_grid',
@@ -46,8 +46,8 @@
 # name: test_selects[select.imeon_inverter_inverter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Imeon inverter Inverter mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Imeon inverter Inverter mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_grid',
         'backup',
         'on_grid',

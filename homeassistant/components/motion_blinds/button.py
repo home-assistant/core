@@ -1,5 +1,7 @@
 """Support for Motionblinds button entity using their WLAN API."""
 
+from typing import override
+
 from motionblinds.motion_blinds import LimitStatus, MotionBlind
 
 from homeassistant.components.button import ButtonEntity
@@ -47,6 +49,7 @@ class MotionGoFavoriteButton(MotionCoordinatorEntity, ButtonEntity):
         super().__init__(coordinator, blind)
         self._attr_unique_id = f"{blind.mac}-go-favorite"
 
+    @override
     async def async_press(self) -> None:
         """Execute the button action."""
         async with self._api_lock:
@@ -67,6 +70,7 @@ class MotionSetFavoriteButton(MotionCoordinatorEntity, ButtonEntity):
         super().__init__(coordinator, blind)
         self._attr_unique_id = f"{blind.mac}-set-favorite"
 
+    @override
     async def async_press(self) -> None:
         """Execute the button action."""
         async with self._api_lock:

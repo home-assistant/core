@@ -39,7 +39,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_clear_blackout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Clear blackout',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Clear blackout',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_clear_blackout',
@@ -89,7 +89,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_clear_cache-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Clear cache',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Clear cache',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_clear_cache',
@@ -139,7 +139,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_clear_cookies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Clear cookies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Clear cookies',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_clear_cookies',
@@ -189,7 +189,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_dismiss_screensaver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Dismiss screensaver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Dismiss screensaver',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_dismiss_screensaver',
@@ -239,7 +239,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_go_back-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Go back',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Go back',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_go_back',
@@ -289,7 +289,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_go_forward-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Go forward',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Go forward',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_go_forward',
@@ -339,7 +339,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_go_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Go home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Go home',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_go_home',
@@ -389,7 +389,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_ping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Ping',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Ping',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_ping',
@@ -439,7 +439,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_print_page-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Print page',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Print page',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_print_page',
@@ -489,7 +489,7 @@
 # name: test_all_entities[button.kiosker_a98be1ce_refresh_page-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Refresh page',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Refresh page',
     }),
     'context': <ANY>,
     'entity_id': 'button.kiosker_a98be1ce_refresh_page',

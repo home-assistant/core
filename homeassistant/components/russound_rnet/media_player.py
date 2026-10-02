@@ -5,12 +5,12 @@ from collections.abc import Callable, Coroutine
 import contextlib
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.exceptions import CommandError
 from aiorussound.rnet.client import RussoundRNETClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -43,17 +43,19 @@ RNET_EXCEPTIONS = (
     OSError,
 )
 
-ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+ZONE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
-SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SOURCE_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-        vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_PORT): probatio.Port(),
+        probatio.Required(CONF_ZONES): probatio.Schema({cv.positive_int: ZONE_SCHEMA}),
+        probatio.Required(CONF_SOURCES): probatio.All(
+            probatio.EnsureList(), [SOURCE_SCHEMA]
+        ),
     }
 )
 
@@ -185,6 +187,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         if self.source_list and 0 <= index < len(self.source_list):
             self._attr_source = self.source_list[index]
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level. Volume has a range (0..1)."""
         device_volume = max(0, min(_MAX_VOLUME, int(volume * _MAX_VOLUME)))
@@ -194,6 +197,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_run_with_retry(
@@ -202,6 +206,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._async_run_with_retry(
@@ -210,6 +215,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
 
@@ -219,6 +225,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
 
         await self._async_run_with_retry(_mute_if_needed)
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         if self.source_list and source in self.source_list:

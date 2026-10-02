@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyportainer import DockerContainerState, Portainer, StackStatus
 from pyportainer.exceptions import (
@@ -65,17 +65,17 @@ async def _perform_action(
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
+            translation_key="invalid_auth",
         ) from err
     except PortainerConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
+            translation_key="cannot_connect",
         ) from err
     except PortainerTimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="timeout_connect_no_details",
+            translation_key="timeout_connect",
         ) from err
     else:
         await coordinator.async_request_refresh()
@@ -169,10 +169,12 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
     entity_description: PortainerSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(self.container_data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the container."""
         await _perform_action(
@@ -182,6 +184,7 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
             ),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the container."""
         await _perform_action(
@@ -198,10 +201,12 @@ class PortainerStackSwitch(PortainerStackEntity, SwitchEntity):
     entity_description: PortainerStackSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(self.stack_data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the stack."""
         await _perform_action(
@@ -211,6 +216,7 @@ class PortainerStackSwitch(PortainerStackEntity, SwitchEntity):
             ),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the stack."""
         await _perform_action(

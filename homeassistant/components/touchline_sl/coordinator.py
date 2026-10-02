@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pytouchlinesl import Module, Zone
 from pytouchlinesl.client import RothAPIError
@@ -47,6 +48,7 @@ class TouchlineSLModuleCoordinator(DataUpdateCoordinator[TouchlineSLModuleData])
 
         self.module = module
 
+    @override
     async def _async_update_data(self) -> TouchlineSLModuleData:
         """Fetch data from the upstream API and pre-process into the right format."""
         try:

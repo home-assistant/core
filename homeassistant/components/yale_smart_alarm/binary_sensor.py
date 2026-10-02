@@ -1,5 +1,7 @@
 """Binary sensors for Yale Alarm."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -69,6 +71,7 @@ class YaleDoorSensor(YaleEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self.coordinator.data["sensor_map"][self._attr_unique_id] == "open")
@@ -89,6 +92,7 @@ class YaleDoorBatterySensor(YaleEntity, BinarySensorEntity):
         self._attr_unique_id = f"{data['address']}-battery"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the battery is low."""
         state: bool = self.coordinator.data["sensor_battery_map"][self._attr_unique_id]
@@ -113,6 +117,7 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(

@@ -1,7 +1,7 @@
 """Code to manage fetching LIVISI data API."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from livisi import LivisiEvent, Websocket
@@ -52,6 +52,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.is_avatar: bool = False
         self.port: int = 0
 
+    @override
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Get device configuration from LIVISI."""
         try:

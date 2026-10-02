@@ -1,12 +1,13 @@
 """Tests for the Yoto integration setup."""
 
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
-import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from yoto_api import AuthenticationError, YotoAPIError, YotoError
+from yoto_api import AuthenticationError, Device, YotoAPIError, YotoError, YotoPlayer
 
+from homeassistant.components.yoto import coordinator
 from homeassistant.components.yoto.const import (
     DOMAIN,
     SCAN_INTERVAL,
@@ -15,14 +16,17 @@ from homeassistant.components.yoto.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
 from . import setup_integration
+from .conftest import PLAYER_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -79,6 +83,24 @@ async def test_mqtt_event_updates_entity(
     assert state_after.last_updated > state_before.last_updated
 
 
+async def test_client_gets_token_from_config_entry(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The client asks the config entry session for a valid access token."""
+    await setup_integration(hass, mock_config_entry)
+    auth = coordinator.YotoClient.call_args.kwargs["auth"]
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+    ) as mock_ensure_token_valid:
+        access_token = await auth.async_get_access_token()
+
+    mock_ensure_token_valid.assert_awaited_once()
+    assert access_token == mock_config_entry.data["token"]["access_token"]
+
+
 async def test_status_push_tick(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -95,6 +117,28 @@ async def test_status_push_tick(
     await hass.async_block_till_done()
 
     mock_yoto_client.request_player_status.assert_called_once_with("player-test")
+
+
+async def test_status_push_tick_error(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed status request is logged and the timer keeps running."""
+    caplog.set_level(logging.DEBUG)
+    mock_yoto_client.is_mqtt_connected = True
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.request_player_status.side_effect = YotoError("timed out")
+
+    for _ in range(2):
+        freezer.tick(STATUS_PUSH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_yoto_client.request_player_status.call_count == 2
+    assert "Status request for player-test failed: timed out" in caplog.text
 
 
 async def test_status_push_skipped_when_mqtt_disconnected(
@@ -149,7 +193,7 @@ async def test_setup_retries_when_implementation_missing(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        aiohttp.ClientError("boom"),
+        OAuth2TokenRequestConnectionError(domain=DOMAIN),
         OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
     ],
 )
@@ -223,29 +267,6 @@ async def test_poll_reauth_on_authentication_error(
     )
 
 
-@pytest.mark.usefixtures("mock_yoto_client")
-async def test_poll_reauth_on_invalid_refresh_token(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """An unrecoverable token refresh during the poll starts a reauth flow."""
-    await setup_integration(hass, mock_config_entry)
-
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
-    ):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
-    )
-
-
 async def test_setup_retries_when_mqtt_unavailable(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -272,34 +293,6 @@ async def test_setup_succeeds_without_card_library(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        aiohttp.ClientError("boom"),
-        OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
-    ],
-)
-@pytest.mark.usefixtures("mock_yoto_client")
-async def test_periodic_poll_fails_on_token_validation_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    side_effect: Exception,
-) -> None:
-    """A failure refreshing the OAuth token marks the coordinator failed."""
-    await setup_integration(hass, mock_config_entry)
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=side_effect,
-    ):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is False
-
-
 async def test_periodic_poll_fails_on_api_error(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -316,3 +309,100 @@ async def test_periodic_poll_fails_on_api_error(
 
     coordinator = mock_config_entry.runtime_data
     assert coordinator.last_update_success is False
+
+
+def _build_second_player() -> YotoPlayer:
+    """Build a second Yoto player discovered after setup."""
+    return YotoPlayer(
+        device=Device(
+            device_id="player-2",
+            name="Playroom Yoto",
+            device_type="v3",
+            device_family="v3",
+            generation="gen3",
+        ),
+        is_online=True,
+    )
+
+
+async def test_dynamic_device_added(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A player discovered after setup gets its entity without a reload."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("media_player.nursery_yoto") is not None
+    assert hass.states.get("media_player.playroom_yoto") is None
+
+    mock_yoto_client.players["player-2"] = _build_second_player()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.playroom_yoto") is not None
+    assert hass.states.get("binary_sensor.playroom_yoto_charging") is not None
+    assert hass.states.get("sensor.playroom_yoto_battery") is not None
+    assert hass.states.get("time.playroom_yoto_day_mode_start") is not None
+    assert hass.states.get("number.playroom_yoto_day_mode_brightness") is not None
+    assert hass.states.get("select.playroom_yoto_day_mode_color") is not None
+    assert hass.states.get("switch.playroom_yoto_bluetooth_pairing") is not None
+    mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
+
+
+async def test_subscription_failure_does_not_fail_refresh(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A subscription error keeps the refreshed data and retries next cycle."""
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.players["player-2"] = _build_second_player()
+    mock_yoto_client.subscribe_player_events.side_effect = YotoAPIError("boom")
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.playroom_yoto") is not None
+    assert mock_config_entry.runtime_data.last_update_success is True
+
+    mock_yoto_client.subscribe_player_events.side_effect = None
+    mock_yoto_client.subscribe_player_events.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
+
+
+async def test_stale_device_removed(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A player removed from the account has its device dropped."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, PLAYER_ID), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+    mock_yoto_client.players.clear()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, PLAYER_ID), mock_config_entry.entry_id
+        )
+        is None
+    )
+    mock_yoto_client.unsubscribe_player_events.assert_called_once_with(PLAYER_ID)

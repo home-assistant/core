@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 
@@ -44,6 +45,7 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from the UniFi AP."""
         try:

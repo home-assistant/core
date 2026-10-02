@@ -1,7 +1,7 @@
 """Support for myStrom Wifi bulbs."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymystrom.exceptions import MyStromConnectionError
 
@@ -63,6 +63,7 @@ class MyStromLight(LightEntity):
             sw_version=self._bulb.firmware,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
@@ -94,6 +95,7 @@ class MyStromLight(LightEntity):
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the bulb."""
         try:

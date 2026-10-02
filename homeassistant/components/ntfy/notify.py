@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiontfy import Message
 from aiontfy.exceptions import (
@@ -11,7 +11,7 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 
-from homeassistant.components import camera, image
+from homeassistant.components import camera, image, tts
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.notify import (
     NotifyEntity,
@@ -62,6 +62,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     )
     _attr_supported_features = NotifyEntityFeature.TITLE
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic via notify.send_message action."""
         await self._publish(message=message, title=title)
@@ -98,6 +99,10 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
             elif media_content_id.startswith("media-source://image/"):
                 entity_id = media_content_id.removeprefix("media-source://image/")
                 attachment = (await image.async_get_image(self.hass, entity_id)).content
+            elif media_content_id.startswith("media-source://tts/"):
+                _, attachment = await tts.async_get_media_source_audio(
+                    self.hass, media_content_id
+                )
             else:
                 media = await async_resolve_media(
                     self.hass, file["media_content_id"], None

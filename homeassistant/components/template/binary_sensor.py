@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -21,10 +21,8 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
@@ -36,7 +34,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -45,7 +43,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -57,21 +55,27 @@ CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
 
 
-BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
+BINARY_SENSOR_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_AUTO_OFF): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DELAY_OFF): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DELAY_ON): probatio.Any(
+            cv.positive_time_period, cv.template
+        ),
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_STATE): cv.template,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
+
 BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_attributes_schema(
-        BINARY_SENSOR_DOMAIN, DEFAULT_NAME
-    ).schema
+    make_template_entity_common_schema(BINARY_SENSOR_DOMAIN, DEFAULT_NAME).schema
 )
 
 BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
@@ -129,6 +133,8 @@ class AbstractTemplateBinarySensor(
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
+    _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -151,14 +157,20 @@ class AbstractTemplateBinarySensor(
         self._delay_on = None
         try:
             self._delay_on = cv.positive_time_period(config.get(CONF_DELAY_ON))
-        except vol.Invalid:
+        except probatio.Invalid:
             self.setup_template(CONF_DELAY_ON, "_delay_on", cv.positive_time_period)
 
         self._delay_off = None
         try:
             self._delay_off = cv.positive_time_period(config.get(CONF_DELAY_OFF))
-        except vol.Invalid:
+        except probatio.Invalid:
             self.setup_template(CONF_DELAY_OFF, "_delay_off", cv.positive_time_period)
+
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_is_on = last_state.state == STATE_ON
+        return True
 
     @callback
     @abstractmethod
@@ -181,22 +193,8 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateBinarySensor.__init__(self, config)
 
-    async def async_added_to_hass(self) -> None:
-        """Restore state."""
-        if (
-            (
-                CONF_DELAY_ON in self._templates
-                or CONF_DELAY_OFF in self._templates
-                or self._delay_on is not None
-                or self._delay_off is not None
-            )
-            and (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
-            self._attr_is_on = last_state.state == STATE_ON
-        await super().async_added_to_hass()
-
     @callback
+    @override
     def _update_state(self, result):
         super()._update_state(result)
 
@@ -224,17 +222,65 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         def _set_state(_):
             """Set state of template binary sensor."""
             self._attr_is_on = state
-            self.async_write_ha_state()
+            if self._preview_callback:
+                self._async_preview_update()
+            else:
+                self.async_write_ha_state()
 
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
+
+    @override
+    def _call_on_remove_callbacks(self):
+        if self._delay_cancel:
+            self._delay_cancel()
+        return super()._call_on_remove_callbacks()
+
+
+@dataclass
+class AutoOffExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    auto_off_time: datetime | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of additional data."""
+        auto_off_time: datetime | dict[str, str] | None = self.auto_off_time
+        if isinstance(auto_off_time, datetime):
+            auto_off_time = {
+                "__type": str(type(auto_off_time)),
+                "isoformat": auto_off_time.isoformat(),
+            }
+        return {
+            "auto_off_time": auto_off_time,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored binary sensor state from a dict."""
+        try:
+            auto_off_time = restored["auto_off_time"]
+        except KeyError:
+            return None
+        try:
+            type_ = auto_off_time["__type"]
+            if type_ == "<class 'datetime.datetime'>":
+                auto_off_time = dt_util.parse_datetime(auto_off_time["isoformat"])
+        except TypeError:
+            pass
+        except KeyError:
+            return None
+
+        return cls(auto_off_time)
 
 
 class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
     """Sensor entity based on trigger data."""
 
     domain = BINARY_SENSOR_DOMAIN
+    _restore_state_extra_data = AutoOffExtraStoredData
 
     # delay on and delay off are validated when the state is validated.
     skip_rendered_result = (CONF_DELAY_ON, CONF_DELAY_OFF)
@@ -261,32 +307,20 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._to_render_simple.append(CONF_AUTO_OFF)
             self._parse_result.add(CONF_AUTO_OFF)
 
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
+    @override
+    def restore_extra_data(self, extra_data: AutoOffExtraStoredData) -> None:
+        """Restore extra data from the last state."""
+        if CONF_AUTO_OFF not in self._config:
+            return
+
         if (
-            (last_state := await self.async_get_last_state()) is not None
-            and (extra_data := await self.async_get_last_binary_sensor_data())
-            is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and self._attr_is_on is None
-        ):
-            self._attr_is_on = last_state.state == STATE_ON
-            self.restore_attributes(last_state)
+            auto_off_time := extra_data.auto_off_time
+        ) is not None and auto_off_time <= dt_util.utcnow():
+            # It's already past the saved auto off time
+            self._attr_is_on = False
 
-            if CONF_AUTO_OFF not in self._config:
-                return
-
-            if (
-                auto_off_time := extra_data.auto_off_time
-            ) is not None and auto_off_time <= dt_util.utcnow():
-                # It's already past the saved auto off time
-                self._attr_is_on = False
-
-            if self._attr_is_on and auto_off_time is not None:
-                self._set_auto_off(auto_off_time)
+        if self._attr_is_on and auto_off_time is not None:
+            self._set_auto_off(auto_off_time)
 
     @callback
     def _cancel_delays(self):
@@ -300,6 +334,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._auto_off_time = None
 
     @callback
+    @override
     def _update_state(self, result):
         state: bool | None = None
         if result is not None:
@@ -328,7 +363,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if not isinstance(delay, timedelta):
             try:
                 delay = cv.positive_time_period(delay)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 key = CONF_DELAY_ON if state else CONF_DELAY_OFF
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", key, err
@@ -362,7 +397,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if not isinstance(auto_off_delay, timedelta):
             try:
                 auto_off_delay = cv.positive_time_period(auto_off_delay)
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 logging.getLogger(__name__).warning(
                     "Error rendering %s template: %s", CONF_AUTO_OFF, err
                 )
@@ -371,6 +406,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         auto_off_time = dt_util.utcnow() + auto_off_delay
         self._set_auto_off(auto_off_time)
 
+    @override
     def _render_availability_template(self, variables):
         available = super()._render_availability_template(variables)
         if not available:
@@ -392,53 +428,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         )
 
     @property
+    @override
     def extra_restore_state_data(self) -> AutoOffExtraStoredData:
         """Return specific state data to be restored."""
         return AutoOffExtraStoredData(self._auto_off_time)
-
-    async def async_get_last_binary_sensor_data(
-        self,
-    ) -> AutoOffExtraStoredData | None:
-        """Restore auto_off_time."""
-        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
-            return None
-        return AutoOffExtraStoredData.from_dict(restored_last_extra_data.as_dict())
-
-
-@dataclass
-class AutoOffExtraStoredData(ExtraStoredData):
-    """Object to hold extra stored data."""
-
-    auto_off_time: datetime | None
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of additional data."""
-        auto_off_time: datetime | dict[str, str] | None = self.auto_off_time
-        if isinstance(auto_off_time, datetime):
-            auto_off_time = {
-                "__type": str(type(auto_off_time)),
-                "isoformat": auto_off_time.isoformat(),
-            }
-        return {
-            "auto_off_time": auto_off_time,
-        }
-
-    @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
-        """Initialize a stored binary sensor state from a dict."""
-        try:
-            auto_off_time = restored["auto_off_time"]
-        except KeyError:
-            return None
-        try:
-            type_ = auto_off_time["__type"]
-            if type_ == "<class 'datetime.datetime'>":
-                auto_off_time = dt_util.parse_datetime(auto_off_time["isoformat"])
-        except TypeError:
-            # native_value is not a dict
-            pass
-        except KeyError:
-            # native_value is a dict, but does not have all values
-            return None
-
-        return cls(auto_off_time)

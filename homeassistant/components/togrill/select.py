@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from togrill_bluetooth.packets import (
     GrillType,
@@ -159,11 +159,13 @@ class ToGrillSelect(ToGrillEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
 
         return self.entity_description.get_value(self.coordinator)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set value on device."""
 

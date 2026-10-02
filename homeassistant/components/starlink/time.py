@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, tzinfo
 import math
+from typing import override
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,7 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
     entity_description: StarlinkTimeEntityDescription
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self.entity_description.value_fn(
@@ -49,10 +51,12 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.entity_description.available_fn(self.coordinator.data)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Change the time."""
         return await self.entity_description.update_fn(self.coordinator, value)

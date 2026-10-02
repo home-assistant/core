@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from opensensemap_api import _TITLES, OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
@@ -104,6 +104,7 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMapStationData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> OpenSenseMapStationData:
         """Fetch latest data from the openSenseMap API."""
         try:

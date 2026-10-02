@@ -1,5 +1,7 @@
 """Base entity for the WiiM integration."""
 
+from typing import override
+
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.helpers import device_registry as dr
@@ -29,6 +31,7 @@ class WiimBaseEntity(Entity):
             self._attr_device_info["configuration_url"] = self._device.http_api_url
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.available

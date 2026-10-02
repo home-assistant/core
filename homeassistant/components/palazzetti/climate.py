@@ -1,6 +1,6 @@
 """Support for Palazzetti climates."""
 
-from typing import Any
+from typing import Any, override
 
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 
@@ -62,11 +62,13 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
             self._attr_fan_modes.append(FAN_AUTO)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat or off mode."""
         return HVACMode.HEAT if self.coordinator.client.is_on else HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return hvac action ie. heating or idle."""
         return (
@@ -75,6 +77,7 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
             else HVACAction.IDLE
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
@@ -90,15 +93,18 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return self.coordinator.client.room_temperature
 
     @property
+    @override
     def target_temperature(self) -> int | None:
         """Return the temperature."""
         return self.coordinator.client.target_temperature
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = int(kwargs[ATTR_TEMPERATURE])
@@ -119,11 +125,13 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan mode."""
         api_state = self.coordinator.client.current_fan_speed()
         return FAN_MODES[api_state]
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         try:

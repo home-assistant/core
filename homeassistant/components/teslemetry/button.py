@@ -2,9 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -75,7 +76,7 @@ async def async_setup_entry(
 class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     entity_description: TeslemetryButtonEntityDescription
 
     def __init__(
@@ -90,6 +91,7 @@ class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.func(self)

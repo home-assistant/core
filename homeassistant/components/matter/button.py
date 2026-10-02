@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.custom_clusters import HeimanCluster
@@ -43,6 +43,7 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
 
     entity_description: MatterButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press leveraging a Matter command."""
         if TYPE_CHECKING:

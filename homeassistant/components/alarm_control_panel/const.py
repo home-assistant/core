@@ -1,12 +1,28 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import AlarmControlPanelEntity
 
 DOMAIN: Final = "alarm_control_panel"
+DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
 
 ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
+
+
+class AlarmControlPanelEntityStateAttribute(StrEnum):
+    """State attributes for alarm control panel entities."""
+
+    CODE_FORMAT = "code_format"
+    CHANGED_BY = "changed_by"
+    CODE_ARM_REQUIRED = "code_arm_required"
 
 
 class AlarmControlPanelState(StrEnum):

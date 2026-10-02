@@ -1,7 +1,7 @@
 """Climate entities for MyNeomitis integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyaxencoapi import (
     PRESET_MODE_MAP,
@@ -135,6 +135,7 @@ class MyNeoClimate(ClimateEntity):
                 else HVACMode.HEAT
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
@@ -202,6 +203,7 @@ class MyNeoClimate(ClimateEntity):
                     self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature for the climate entity."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -234,6 +236,7 @@ class MyNeoClimate(ClimateEntity):
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the climate entity."""
         if preset_mode not in PRESET_MODE_MAP:
@@ -265,6 +268,7 @@ class MyNeoClimate(ClimateEntity):
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
         if hvac_mode == HVACMode.OFF:

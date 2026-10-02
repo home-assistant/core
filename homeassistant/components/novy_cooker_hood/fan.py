@@ -1,13 +1,17 @@
 """Fan platform for the Novy Cooker Hood (calibrated speed control)."""
 
+import asyncio
 import math
-from typing import Any
+from typing import Any, override
 
+from rf_protocols import RadioFrequencyCommand
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
-from rf_protocols.commands.novy import NovyCookerHoodCommand
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
-from homeassistant.components.radio_frequency import async_send_command
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
@@ -18,12 +22,17 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import SPEED_COUNT
+from .const import CONF_TRANSMITTER, SPEED_COUNT
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1
 
 _SPEED_RANGE = (1, SPEED_COUNT)
+
+# Minimum gap the hood needs to register consecutive presses as distinct
+# button events. Without it, low-latency transmitters collapse rapid presses
+# into a single one.
+_COMMAND_DELAY = 0.5
 
 
 async def async_setup_entry(
@@ -49,32 +58,37 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the fan."""
         super().__init__(entry)
+        self._rf_transmitter_entity_id_or_uuid = entry.data[CONF_TRANSMITTER]
         self._code: int = entry.data[CONF_CODE]
         self._level = 0
         self._attr_unique_id = entry.entry_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the fan is currently on."""
         return self._level > 0
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed as a percentage."""
         if self._level == 0:
             return 0
         return ranged_value_to_percentage(_SPEED_RANGE, self._level)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore the last known speed level from the saved percentage."""
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is None:
             return
-        last_pct = last.attributes.get(ATTR_PERCENTAGE)
+        last_pct = last.attributes.get(FanEntityStateAttribute.PERCENTAGE)
         if isinstance(last_pct, (int, float)) and last_pct > 0:
             self._level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, last_pct))
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -88,10 +102,12 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
             level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, percentage))
         await self._async_set_level(level)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off by sending the calibration sequence to level 0."""
         await self._async_set_level(0)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed via calibration."""
         if percentage <= 0:
@@ -100,21 +116,21 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, percentage))
         await self._async_set_level(level)
 
+    @override
     async def async_increase_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed up by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
         plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
-        for _ in range(steps):
-            await self._async_send(plus)
+        await self._async_send_repeated(plus, steps)
         self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
 
+    @override
     async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed down by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
         minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
-        for _ in range(steps):
-            await self._async_send(minus)
+        await self._async_send_repeated(minus, steps)
         self._level = max(0, self._level - steps)
         self.async_write_ha_state()
 
@@ -128,17 +144,19 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
         minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
-        for _ in range(SPEED_COUNT):
-            await self._async_send(minus)
+        await self._async_send_repeated(minus, SPEED_COUNT)
         if level > 0:
+            await asyncio.sleep(_COMMAND_DELAY)
             plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
-            for _ in range(level):
-                await self._async_send(plus)
+            await self._async_send_repeated(plus, level)
         self._level = level
         self.async_write_ha_state()
 
-    async def _async_send(self, command: NovyCookerHoodCommand) -> None:
-        """Send a single RF command via the configured transmitter."""
-        await async_send_command(
-            self.hass, self._transmitter, command, context=self._context
-        )
+    async def _async_send_repeated(
+        self, command: RadioFrequencyCommand, count: int
+    ) -> None:
+        """Send the same RF command N times, pausing between presses."""
+        for i in range(count):
+            if i > 0:
+                await asyncio.sleep(_COMMAND_DELAY)
+            await self._send_command(command)

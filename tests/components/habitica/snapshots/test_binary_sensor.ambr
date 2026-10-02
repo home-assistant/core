@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.test_user_pending_quest_invitation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_dustbunnies.png',
-      'friendly_name': 'test-user Pending quest invitation',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_dustbunnies.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Pending quest invitation',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_user_pending_quest_invitation',
@@ -90,7 +90,7 @@
 # name: test_binary_sensors[binary_sensor.test_user_s_party_quest_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': "test-user's Party Quest status",
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "test-user's Party Quest status",
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_user_s_party_quest_status',

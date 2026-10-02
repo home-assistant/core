@@ -1,5 +1,7 @@
 """Support for Nexia / Trane XL Thermostats."""
 
+from typing import override
+
 from nexia.thermostat import NexiaThermostat
 
 from homeassistant.components.number import NumberEntity
@@ -57,11 +59,13 @@ class NexiaFanSpeedEntity(NexiaThermostatEntity, NumberEntity):
         self._attr_native_max_value = percent_conv(max_value)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
         fan_speed = self._thermostat.get_fan_speed_setpoint()
         return percent_conv(fan_speed)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self._thermostat.set_fan_setpoint(value / 100)

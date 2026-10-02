@@ -1,7 +1,7 @@
 """Support for Atlantic Pass APC Heating Control."""
 
 from asyncio import sleep
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import cached_property
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -183,6 +183,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return HVACAction.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
 
@@ -201,6 +202,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return hvac_action
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, dry, off mode."""
 
@@ -235,6 +237,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         return device_hvac_mode
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -263,6 +266,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         await self.async_refresh_modes()
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., schedule, manual."""
 
@@ -289,6 +293,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
 
@@ -309,6 +314,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         await self.async_refresh_modes()
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return hvac target temperature."""
 
@@ -341,6 +347,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         )
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach (cooling)."""
 
@@ -353,6 +360,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         )
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach (heating)."""
 
@@ -364,6 +372,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             self.device.states.get_value(OverkizState.CORE_HEATING_TARGET_TEMPERATURE),
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
 
@@ -436,6 +445,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         )
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return Minimum Temperature for AC of this group."""
 
@@ -460,6 +470,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return super().min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return Max Temperature for AC of this group."""
 

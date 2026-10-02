@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import lru_cache
+from typing import override
 
 from homeassistant.util import dt as dt_util, slugify
 
@@ -43,6 +44,7 @@ class NormalizedNameBaseRegistryItems[_VT: NormalizedNameBaseRegistryEntry](
         super().__init__()
         self._normalized_names: dict[str, _VT] = {}
 
+    @override
     def _unindex_entry(self, key: str, replacement_entry: _VT | None = None) -> None:
         old_entry = self.data[key]
         if (
@@ -57,6 +59,7 @@ class NormalizedNameBaseRegistryItems[_VT: NormalizedNameBaseRegistryEntry](
             )
         del self._normalized_names[old_entry.normalized_name]
 
+    @override
     def _index_entry(self, key: str, entry: _VT) -> None:
         self._normalized_names[entry.normalized_name] = entry
 

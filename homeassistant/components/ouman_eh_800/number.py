@@ -1,6 +1,7 @@
 """Number platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import (
     FloatControlOumanEndpoint,
@@ -246,12 +247,14 @@ class OumanEh800NumberEntity(OumanEh800Entity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
         value = self.coordinator.data[self._endpoint]
         assert isinstance(value, float)
         return value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value on the device."""
         final_value: int | float = (

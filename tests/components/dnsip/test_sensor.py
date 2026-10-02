@@ -234,3 +234,38 @@ async def test_sensor_timeout(
 
     state = hass.states.get("sensor.home_assistant_io")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_handle_cname(hass: HomeAssistant) -> None:
+    """Test CNAME records are dropped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: False,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dnsip.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("sensor.home_assistant_io")
+
+    assert state1.state == "1.1.1.1"
+    assert state1.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]

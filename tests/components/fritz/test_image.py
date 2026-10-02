@@ -237,7 +237,7 @@ async def test_migrate_to_new_unique_id(
     entity_registry.async_get_or_create(
         suggested_object_id="mock_title_mywifi",
         disabled_by=None,
-        domain=IMAGE_DOMAIN,
+        domain=Platform.IMAGE,
         platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,

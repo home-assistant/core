@@ -39,8 +39,8 @@
 # name: test_switch[load_platforms0][switch.bedroom_bedroom_pure_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Bedroom Pure Boost',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure Boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.bedroom_bedroom_pure_boost',
@@ -90,8 +90,8 @@
 # name: test_switch[load_platforms0][switch.hallway_hallway_climate_react-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Hallway Climate React',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Climate React',
       'type': 'temperature',
     }),
     'context': <ANY>,
@@ -142,8 +142,8 @@
 # name: test_switch[load_platforms0][switch.hallway_hallway_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Hallway Timer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Timer',
       'id': None,
       'turn_on': None,
     }),
@@ -195,8 +195,8 @@
 # name: test_switch[load_platforms0][switch.kitchen_kitchen_pure_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Kitchen Pure Boost',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure Boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kitchen_kitchen_pure_boost',

@@ -1,0 +1,151 @@
+# serializer version: 1
+# name: test_hybrid_entities[button.hydxxktl_3p_iv_curve_scan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.hydxxktl_3p_iv_curve_scan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IV curve scan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IV curve scan',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'iv_curve_scan',
+    'unique_id': 'SP1XXES100XX_iv_curve_scan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hybrid_entities[button.hydxxktl_3p_iv_curve_scan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P IV curve scan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.hydxxktl_3p_iv_curve_scan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_hybrid_entities[button.hydxxktl_3p_rtc_sync-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.hydxxktl_3p_rtc_sync',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RTC sync',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RTC sync',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rtc_sync',
+    'unique_id': 'SP1XXES100XX_rtc_sync',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hybrid_entities[button.hydxxktl_3p_rtc_sync-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P RTC sync',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.hydxxktl_3p_rtc_sync',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_pv_entities[button.4_4_ktlx_g3_rtc_sync-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.4_4_ktlx_g3_rtc_sync',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RTC sync',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RTC sync',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rtc_sync',
+    'unique_id': 'SS2ES104N5S445_rtc_sync',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_pv_entities[button.4_4_ktlx_g3_rtc_sync-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '4.4 KTLX-G3 RTC sync',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.4_4_ktlx_g3_rtc_sync',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

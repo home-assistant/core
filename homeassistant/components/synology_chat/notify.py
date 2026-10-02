@@ -3,10 +3,10 @@
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -22,8 +22,8 @@ ATTR_FILE_URL = "file_url"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Required(CONF_RESOURCE): cv.url,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -50,6 +50,7 @@ class SynologyChatNotificationService(BaseNotificationService):
         self._resource = resource
         self._verify_ssl = verify_ssl
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {"text": message}

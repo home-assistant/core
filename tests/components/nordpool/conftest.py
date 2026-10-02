@@ -1,6 +1,7 @@
 """Fixtures for the Nord Pool integration."""
 
 from collections.abc import AsyncGenerator
+from http import HTTPStatus
 import json
 from typing import Any
 
@@ -16,6 +17,15 @@ from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry, load_fixture, patch
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture(name="mock_asyncio_sleep", autouse=True)
+async def mock_asyncio_sleep() -> AsyncGenerator[None]:
+    """Mock asyncio.sleep to avoid actual sleeping during tests."""
+    with patch(
+        "pynordpool.asyncio.sleep",
+    ):
+        yield
 
 
 @pytest.fixture(name="load_platforms")
@@ -107,6 +117,28 @@ async def get_data_from_library(
             "currency": "SEK",
         },
         json=load_json[2],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-03",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-04",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
     )
     client = NordPoolClient(aioclient_mock.create_session(hass.loop))
     yield client

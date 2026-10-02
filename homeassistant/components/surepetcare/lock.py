@@ -1,6 +1,6 @@
 """Support for Sure PetCare Flaps locks."""
 
-from typing import Any
+from typing import Any, override
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState as SurepyLockState
@@ -53,11 +53,13 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         self._attr_unique_id = f"{self._device_id}-{self._lock_state}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return self._available and super().available
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state."""
         status = surepy_entity.raw_data()["status"]
@@ -68,6 +70,7 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
 
         self._available = bool(status.get("online"))
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         if self.state != LockState.UNLOCKED:
@@ -82,6 +85,7 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
             self._attr_is_locking = False
             self.async_write_ha_state()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         if self.state != LockState.LOCKED:

@@ -5,9 +5,9 @@ import logging
 import os
 from pathlib import Path
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_panel_exists
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.helpers.json import json_bytes, json_fragment
+from homeassistant.helpers.json import cached_json_fragment, json_fragment
 from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
@@ -111,10 +111,12 @@ class LovelaceStorage(LovelaceConfig):
         self._json_config: json_fragment | None = None
 
     @property
+    @override
     def mode(self) -> str:
         """Return mode of the lovelace config."""
         return MODE_STORAGE
 
+    @override
     async def async_get_info(self) -> dict[str, Any]:
         """Return the Lovelace storage info."""
         data = self._data or await self._load()
@@ -122,6 +124,7 @@ class LovelaceStorage(LovelaceConfig):
             return {"mode": "auto-gen"}
         return _config_info(self.mode, data["config"])
 
+    @override
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
         if self.hass.config.recovery_mode:
@@ -133,6 +136,7 @@ class LovelaceStorage(LovelaceConfig):
 
         return config  # type: ignore[no-any-return]
 
+    @override
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
         if self.hass.config.recovery_mode:
@@ -141,6 +145,7 @@ class LovelaceStorage(LovelaceConfig):
             await self._load()
         return self._json_config or self._async_build_json()
 
+    @override
     async def async_save(self, config: dict[str, Any]) -> None:
         """Save config."""
         if self.hass.config.recovery_mode:
@@ -155,6 +160,7 @@ class LovelaceStorage(LovelaceConfig):
         self._config_updated()
         await self._store.async_save(self._data)
 
+    @override
     async def async_delete(self) -> None:
         """Delete config."""
         if self.hass.config.recovery_mode:
@@ -176,7 +182,7 @@ class LovelaceStorage(LovelaceConfig):
         """Build JSON representation of the config."""
         if self._data is None or self._data["config"] is None:
             raise ConfigNotFound
-        self._json_config = json_fragment(json_bytes(self._data["config"]))
+        self._json_config = cached_json_fragment(self._data["config"])
         return self._json_config
 
 
@@ -195,10 +201,12 @@ class LovelaceYAML(LovelaceConfig):
         self._cache: tuple[dict[str, Any], float, json_fragment] | None = None
 
     @property
+    @override
     def mode(self) -> str:
         """Return mode of the lovelace config."""
         return MODE_YAML
 
+    @override
     async def async_get_info(self) -> dict[str, Any]:
         """Return the YAML storage mode."""
         try:
@@ -211,11 +219,13 @@ class LovelaceYAML(LovelaceConfig):
 
         return _config_info(self.mode, config)
 
+    @override
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
         config, _json = await self._async_load_or_cached(force)
         return config
 
+    @override
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
         _config, json = await self._async_load_or_cached(force)
@@ -250,7 +260,7 @@ class LovelaceYAML(LovelaceConfig):
         except FileNotFoundError:
             raise ConfigNotFound from None
 
-        json = json_fragment(json_bytes(config))
+        json = cached_json_fragment(config)
         self._cache = (config, time.time(), json)
         return is_updated, config, json
 
@@ -266,8 +276,8 @@ def _config_info(mode: str, config: dict[str, Any]) -> dict[str, Any]:
 class DashboardsCollection(collection.DictStorageCollection):
     """Collection of dashboards."""
 
-    CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the dashboards collection."""
@@ -275,6 +285,7 @@ class DashboardsCollection(collection.DictStorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
         )
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         url_path = data[CONF_URL_PATH]
@@ -282,7 +293,7 @@ class DashboardsCollection(collection.DictStorageCollection):
         allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
 
         if not allow_single_word and "-" not in url_path:
-            raise vol.Invalid("Url path needs to contain a hyphen (-)")
+            raise probatio.Invalid("Url path needs to contain a hyphen (-)")
 
         if async_panel_exists(self.hass, url_path):
             raise HomeAssistantError(
@@ -294,10 +305,12 @@ class DashboardsCollection(collection.DictStorageCollection):
         return self.CREATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_URL_PATH]  # type: ignore[no-any-return]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
@@ -313,6 +326,7 @@ class DashboardsCollectionWebSocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
     @callback
+    @override
     def ws_list_item(
         self,
         hass: HomeAssistant,

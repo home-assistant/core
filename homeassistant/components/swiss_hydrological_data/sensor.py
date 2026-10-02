@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from swisshydrodata import SwissHydroData
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -50,10 +49,10 @@ CONDITION_DETAILS = [
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION): vol.Coerce(int),
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]): vol.All(
-            cv.ensure_list, [vol.In(CONDITIONS)]
-        ),
+        probatio.Required(CONF_STATION): probatio.Coerce(int),
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]
+        ): probatio.All(probatio.EnsureList(), [probatio.In(CONDITIONS)]),
     }
 )
 
@@ -110,6 +109,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
         self._station = station
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attrs: dict[str, Any] = {}

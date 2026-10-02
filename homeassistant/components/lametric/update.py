@@ -1,5 +1,7 @@
 """LaMetric Update platform."""
 
+from typing import override
+
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
@@ -31,14 +33,16 @@ class LaMetricUpdate(LaMetricEntity, UpdateEntity):
     def __init__(self, coordinator: LaMetricDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data.serial_number}-update"
+        self._attr_unique_id = f"{coordinator.data.serial_number}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return the installed version of the entity."""
         return self.coordinator.data.os_version
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version of the entity."""
         if not self.coordinator.data.update:

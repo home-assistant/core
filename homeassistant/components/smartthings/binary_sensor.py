@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pysmartthings import Attribute, Capability, Category, SmartThings, Status
 
@@ -351,6 +352,7 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
             self._attr_translation_key = translation_key
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return (

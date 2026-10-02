@@ -13,12 +13,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_integration
+from . import assert_device_removed_and_readded, setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -143,6 +142,24 @@ async def test_dynamic_device(
     assert state.state == STATE_ON
 
 
+async def test_device_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities are recreated when a device is removed and re-added."""
+    await assert_device_removed_and_readded(
+        hass,
+        freezer,
+        mock_amazon_devices_client,
+        mock_config_entry,
+        entity_id="binary_sensor.echo_test_2_connectivity",
+        devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1, TEST_DEVICE_2_SN: TEST_DEVICE_2},
+        devices_without={TEST_DEVICE_1_SN: TEST_DEVICE_1},
+    )
+
+
 @pytest.mark.parametrize(
     "key",
     [
@@ -176,7 +193,7 @@ async def test_deprecated_sensor_removal(
     )
 
     entity = entity_registry.async_get_or_create(
-        BINARY_SENSOR_DOMAIN,
+        Platform.BINARY_SENSOR,
         DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-{key}",
         device_id=device.id,

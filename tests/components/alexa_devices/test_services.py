@@ -13,7 +13,7 @@ from homeassistant.components.alexa_devices.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -48,8 +48,8 @@ async def test_info_skill_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -78,8 +78,8 @@ async def test_send_sound_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -108,8 +108,8 @@ async def test_send_text_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -128,17 +128,25 @@ async def test_send_text_service(
 
 
 @pytest.mark.parametrize(
-    ("sound", "device_id", "translation_key", "translation_placeholders"),
+    (
+        "sound",
+        "device_id",
+        "translation_domain",
+        "translation_key",
+        "translation_placeholders",
+    ),
     [
         (
             "bell_02",
             "fake_device_id",
-            "invalid_device_id",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
             {"device_id": "fake_device_id"},
         ),
         (
             "wrong_sound_name",
             TEST_DEVICE_1_ID,
+            DOMAIN,
             "invalid_sound_value",
             {
                 "sound": "wrong_sound_name",
@@ -152,13 +160,16 @@ async def test_invalid_parameters(
     mock_config_entry: MockConfigEntry,
     sound: str,
     device_id: str,
+    translation_domain: str,
     translation_key: str,
     translation_placeholders: dict[str, str],
 ) -> None:
     """Test invalid service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+        config_entry_id=mock_config_entry.entry_id,
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
     mock_device_registry(
         hass,
@@ -178,23 +189,31 @@ async def test_invalid_parameters(
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_domain == translation_domain
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders == translation_placeholders
 
 
 @pytest.mark.parametrize(
-    ("info_skill", "device_id", "translation_key", "translation_placeholders"),
+    (
+        "info_skill",
+        "device_id",
+        "translation_domain",
+        "translation_key",
+        "translation_placeholders",
+    ),
     [
         (
             "tell_joke",
             "fake_device_id",
-            "invalid_device_id",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
             {"device_id": "fake_device_id"},
         ),
         (
             "wrong_info_skill_name",
             TEST_DEVICE_1_ID,
+            DOMAIN,
             "invalid_info_skill_value",
             {
                 "info_skill": "wrong_info_skill_name",
@@ -208,13 +227,16 @@ async def test_invalid_info_skillparameters(
     mock_config_entry: MockConfigEntry,
     info_skill: str,
     device_id: str,
+    translation_domain: str,
     translation_key: str,
     translation_placeholders: dict[str, str],
 ) -> None:
     """Test invalid info skill service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+        config_entry_id=mock_config_entry.entry_id,
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
     mock_device_registry(
         hass,
@@ -234,7 +256,7 @@ async def test_invalid_info_skillparameters(
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_domain == translation_domain
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders == translation_placeholders
 
@@ -249,8 +271,8 @@ async def test_config_entry_not_loaded(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -271,28 +293,31 @@ async def test_config_entry_not_loaded(
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "entry_not_loaded"
-    assert exc_info.value.translation_placeholders == {"entry": mock_config_entry.title}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
+    assert exc_info.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": mock_config_entry.title,
+    }
 
 
 async def test_invalid_config_entry(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a non-existing entry ID in device config entries is skipped."""
+    """Test that a device pointing to a non-existing config entry ID is skipped."""
 
-    await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = dr.DeviceEntry(
+        config_entry_id="non_existing_entry_id",
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
-    assert device_entry
-
-    device_entry.config_entries.clear()
-    device_entry.config_entries.add("non_existing_entry_id")
+    mock_device_registry(
+        hass,
+        {device_entry.id: device_entry},
+    )
+    await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
@@ -300,14 +325,17 @@ async def test_invalid_config_entry(
             "send_sound",
             {
                 ATTR_SOUND: "bell_02",
-                ATTR_DEVICE_ID: device_entry.id,
+                ATTR_DEVICE_ID: TEST_DEVICE_1_ID,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": device_entry.id}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": TEST_DEVICE_1_ID,
+        "domain": DOMAIN,
+    }
 
 
 async def test_missing_config_entry(
@@ -316,16 +344,21 @@ async def test_missing_config_entry(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test missing config entry."""
+    """Test that a device not owned by an Alexa config entry is rejected."""
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
-    device_entry.config_entries.clear()
+    # Move the device to a config entry from a different integration
+    other_entry = MockConfigEntry(domain="other_domain", data={})
+    other_entry.add_to_hass(hass)
+    device_registry.async_update_device(
+        device_entry.id, new_config_entry_id=other_entry.entry_id
+    )
 
     # Call Service
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -339,6 +372,9 @@ async def test_missing_config_entry(
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": device_entry.id}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": device_entry.name,
+        "domain": DOMAIN,
+    }

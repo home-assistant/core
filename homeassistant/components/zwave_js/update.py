@@ -5,7 +5,7 @@ from collections import Counter
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
@@ -19,11 +19,11 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.firmware import NodeFirmwareUpdateInfo
 
 from homeassistant.components.update import (
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -94,6 +94,7 @@ class ZWaveFirmwareUpdateExtraStoredData(ExtraStoredData):
 
     latest_version_firmware: FirmwareUpdateInfo | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
@@ -195,10 +196,11 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
 
         # Entity class attributes
         self._attr_name = "Firmware"
-        self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
+        self._attr_unique_id = f"{self._base_unique_id}.firmware_update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_installed_version = node.firmware_version
 
     @property
+    @override
     def extra_restore_state_data(self) -> ZWaveFirmwareUpdateExtraStoredData:
         """Return ZWave Node Firmware Update specific state data to be restored."""
         return ZWaveFirmwareUpdateExtraStoredData(self._latest_version_firmware)
@@ -297,12 +299,14 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
                 self.hass, timedelta(days=1), self._async_update
             )
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Get release notes."""
         if self._latest_version_firmware is None:
             return None
         return self._latest_version_firmware.changelog
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -339,6 +343,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         self._latest_version_firmware = None
         self._unsub_firmware_events_and_reset_progress()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -350,7 +355,11 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         # If we have a complete previous state, use that to set the latest version
         if (
             (state := await self.async_get_last_state())
-            and (latest_version := state.attributes.get(ATTR_LATEST_VERSION))
+            and (
+                latest_version := state.attributes.get(
+                    UpdateEntityStateAttribute.LATEST_VERSION
+                )
+            )
             is not None
             and (extra_data := await self.async_get_last_extra_data())
             and (
@@ -380,6 +389,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
             async_call_later(self.hass, self._delay, self._async_update)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
         if self._poll_unsub:

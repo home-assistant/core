@@ -4,7 +4,7 @@ import logging
 import select
 import socket
 import ssl
-from typing import Final
+from typing import Final, override
 
 from homeassistant.const import (
     CONF_HOST,
@@ -60,6 +60,7 @@ class TcpEntity(Entity):
         self.update()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this sensor."""
         return self._config[CONF_NAME]
@@ -70,7 +71,13 @@ class TcpEntity(Entity):
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
+
+                if self._ssl_context is not None:
+                    sock = self._ssl_context.wrap_socket(
+                        sock, server_hostname=self._config[CONF_HOST]
+                    )
             except OSError as err:
+                self._attr_available = False
                 _LOGGER.error(
                     "Unable to connect to %s on port %s: %s",
                     self._config[CONF_HOST],
@@ -79,14 +86,10 @@ class TcpEntity(Entity):
                 )
                 return
 
-            if self._ssl_context is not None:
-                sock = self._ssl_context.wrap_socket(
-                    sock, server_hostname=self._config[CONF_HOST]
-                )
-
             try:
                 sock.send(self._config[CONF_PAYLOAD].encode())
             except OSError as err:
+                self._attr_available = False
                 _LOGGER.error(
                     "Unable to send payload %r to %s on port %s: %s",
                     self._config[CONF_PAYLOAD],
@@ -98,6 +101,7 @@ class TcpEntity(Entity):
 
             readable, _, _ = select.select([sock], [], [], self._config[CONF_TIMEOUT])
             if not readable:
+                self._attr_available = False
                 _LOGGER.warning(
                     (
                         "Timeout (%s second(s)) waiting for a response after "
@@ -110,8 +114,19 @@ class TcpEntity(Entity):
                 )
                 return
 
-            value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
+            try:
+                value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
+            except OSError as err:
+                self._attr_available = False
+                _LOGGER.error(
+                    "Unable to receive data from %s on port %s: %s",
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT],
+                    err,
+                )
+                return
 
+        self._attr_available = True
         value_template = self._config[CONF_VALUE_TEMPLATE]
         if value_template is not None:
             try:

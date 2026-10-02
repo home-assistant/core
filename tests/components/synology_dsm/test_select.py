@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from pylint_home_assistant.const import Platform
 import pytest
 from synology_dsm.api.core.hardware import FanSpeed
 from syrupy.assertion import SnapshotAssertion
@@ -85,7 +84,12 @@ async def test_fan_speed(
 
 @pytest.mark.parametrize(
     ("fan_speed", "fan_speed_parameter"),
-    [("full_speed", FanSpeed.FULL), ("cool", FanSpeed.COOL), ("quiet", FanSpeed.QUIET)],
+    [
+        ("full_speed", FanSpeed.FULL),
+        ("cool", FanSpeed.COOL),
+        ("quiet", FanSpeed.QUIET),
+        ("low_power", FanSpeed.QUIET_STOP),
+    ],
 )
 async def test_fan_speed_select_option(
     hass: HomeAssistant,
@@ -99,7 +103,7 @@ async def test_fan_speed_select_option(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
             return_value=mock_dsm,
         ),
-        patch("homeassistant.components.synology_dsm.PLATFORMS", [Platform.SELECT]),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", ["select"]),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -127,3 +131,39 @@ async def test_fan_speed_select_option(
         blocking=True,
     )
     assert mock_dsm.hardware.set_fan_speed.call_args[0][0] == fan_speed_parameter
+
+
+async def test_fan_speed_supported_option(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_dsm: MagicMock,
+) -> None:
+    """Test selecting a fan speed mode option."""
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=mock_dsm,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", ["select"]),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_MAC: MACS[0],
+            },
+            unique_id=SERIAL,
+        )
+        entry.add_to_hass(hass)
+
+        mock_dsm.hardware.supported_fan_speeds = [FanSpeed.FULL, FanSpeed.COOL]
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

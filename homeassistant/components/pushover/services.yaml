@@ -1,0 +1,13 @@
+cancel:
+  fields:
+    entry_id:
+      required: true
+      example: 8955375327824e14ba89e4b29cc3ec9a
+      selector:
+        config_entry:
+          integration: pushover
+    tag:
+      required: false
+      example: "alarm"
+      selector:
+        text:

@@ -1,7 +1,9 @@
 """Support for Rflink devices."""
 
 import asyncio
+from collections import defaultdict
 import logging
+from typing import override
 
 from rflink.protocol import ProtocolBase
 
@@ -97,6 +99,7 @@ class RflinkDevice(Entity):
         return self._state
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Assume device state until first device event sets state."""
         return self._state is None
@@ -107,6 +110,24 @@ class RflinkDevice(Entity):
         self._attr_available = availability
         self.async_write_ha_state()
 
+    @callback
+    def _async_register_lookup(
+        self, lookup: defaultdict[str, list[str]], event_id: str
+    ) -> None:
+        """Route events for event_id to this entity until it is removed."""
+        entity_id = self.entity_id
+        lookup[event_id].append(entity_id)
+
+        @callback
+        def _async_unregister() -> None:
+            entity_ids = lookup[event_id]
+            entity_ids.remove(entity_id)
+            if not entity_ids:
+                del lookup[event_id]
+
+        self.async_on_remove(_async_unregister)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
@@ -121,34 +142,24 @@ class RflinkDevice(Entity):
             ].remove(tmp_entity)
 
         # Register id and aliases
-        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][self._device_id].append(
-            self.entity_id
-        )
+        lookup = self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND]
+        group_lookup = self.hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND]
+        self._async_register_lookup(lookup, self._device_id)
         if self._group:
-            self.hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND][
-                self._device_id
-            ].append(self.entity_id)
+            self._async_register_lookup(group_lookup, self._device_id)
         # aliases respond to both normal and group commands (allon/alloff)
         if self._aliases:
             for _id in self._aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][_id].append(
-                    self.entity_id
-                )
-                self.hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND][_id].append(
-                    self.entity_id
-                )
+                self._async_register_lookup(lookup, _id)
+                self._async_register_lookup(group_lookup, _id)
         # group_aliases only respond to group commands (allon/alloff)
         if self._group_aliases:
             for _id in self._group_aliases:
-                self.hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND][_id].append(
-                    self.entity_id
-                )
+                self._async_register_lookup(group_lookup, _id)
         # nogroup_aliases only respond to normal commands
         if self._nogroup_aliases:
             for _id in self._nogroup_aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][_id].append(
-                    self.entity_id
-                )
+                self._async_register_lookup(lookup, _id)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_AVAILABILITY, self._availability_callback
@@ -287,12 +298,14 @@ class RflinkCommand(RflinkDevice):
 class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:
             self._state = old_state.state == STATE_ON
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()

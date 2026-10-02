@@ -32,6 +32,7 @@ from homeassistant.components.calendar import (
     CalendarEntityDescription,
     CalendarEntityFeature,
     CalendarEvent,
+    CalendarEventStatus,
     extract_offset,
     is_offset_reached,
 )
@@ -143,7 +144,7 @@ def _get_entity_descriptions(
         local_sync = True
         if (
             search := data.get(CONF_SEARCH)
-        ) or calendar_item.access_role is AccessRole.FREE_BUSY_READER:
+        ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
             read_only = True
             local_sync = False
         entity_description = GoogleCalendarEntityDescription(
@@ -179,6 +180,7 @@ def _get_entity_descriptions(
                     event_type=EventTypeEnum.BIRTHDAY,
                     name=None,
                     entity_id=None,
+                    ignore_availability=True,
                 )
             )
             # Create an optional disabled by default entity for Work Location
@@ -191,6 +193,7 @@ def _get_entity_descriptions(
                     name=None,
                     entity_id=None,
                     entity_registry_enabled_default=False,
+                    ignore_availability=True,
                 )
             )
     return entity_descriptions
@@ -388,14 +391,14 @@ class GoogleCalendarEntity(
         """Return True if the event is visible and not declined."""
 
         if any(
-            attendee.is_self and attendee.response_status is ResponseStatus.DECLINED
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
             for attendee in event.attendees
         ):
             return False
         # Calendar enttiy may be limited to a specific event type
         if (
             self.entity_description.event_type is not None
-            and self.entity_description.event_type is not event.event_type
+            and self.entity_description.event_type != event.event_type
         ):
             return False
         # Default calendar entity omits the special types but includes all the others
@@ -533,6 +536,11 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         end=event.end.value,
         description=event.description,
         location=event.location,
+        # The Google API defaults an omitted status to confirmed, and gcal_sync
+        # applies that default, so this is never None. It drops cancelled
+        # events when building the timeline, so only the statuses a calendar
+        # entity reports reach here, already in lower case.
+        status=CalendarEventStatus(event.status.value),
     )
 
 

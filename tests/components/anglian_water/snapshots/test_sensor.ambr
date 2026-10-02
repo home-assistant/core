@@ -39,8 +39,8 @@
 # name: test_sensor[sensor.testsn_last_meter_reading_processed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'TESTSN Last meter reading processed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TESTSN Last meter reading processed',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testsn_last_meter_reading_processed',
@@ -57,7 +57,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,10 +95,10 @@
 # name: test_sensor[sensor.testsn_latest_reading-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'TESTSN Latest reading',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TESTSN Latest reading',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testsn_latest_reading',
@@ -148,9 +148,9 @@
 # name: test_sensor[sensor.testsn_yesterday_s_sewerage_cost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': "TESTSN Yesterday's sewerage cost",
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "TESTSN Yesterday's sewerage cost",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testsn_yesterday_s_sewerage_cost',
@@ -167,7 +167,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -205,10 +205,10 @@
 # name: test_sensor[sensor.testsn_yesterday_s_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': "TESTSN Yesterday's usage",
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "TESTSN Yesterday's usage",
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testsn_yesterday_s_usage',
@@ -258,9 +258,9 @@
 # name: test_sensor[sensor.testsn_yesterday_s_water_cost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': "TESTSN Yesterday's water cost",
-      'unit_of_measurement': 'GBP',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "TESTSN Yesterday's water cost",
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testsn_yesterday_s_water_cost',

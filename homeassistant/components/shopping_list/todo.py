@@ -1,6 +1,6 @@
 """A shopping list todo platform."""
 
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -44,12 +44,14 @@ class ShoppingTodoListEntity(TodoListEntity):
         self._attr_unique_id = unique_id
         self._data = data
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         await self._data.async_add(
             item.summary, complete=(item.status == TodoItemStatus.COMPLETED)
         )
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
         data = {
@@ -63,10 +65,12 @@ class ShoppingTodoListEntity(TodoListEntity):
                 f"Shopping list item '{item.uid}' was not found"
             ) from err
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the To-do list."""
         await self._data.async_remove_items(set(uids))
 
+    @override
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:
@@ -79,6 +83,7 @@ class ShoppingTodoListEntity(TodoListEntity):
                 f"Shopping list item '{uid}' could not be re-ordered"
             ) from err
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         # Shopping list integration doesn't currently support config entry unload
@@ -87,6 +92,7 @@ class ShoppingTodoListEntity(TodoListEntity):
         self.async_on_remove(self._data.async_add_listener(self.async_write_ha_state))
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem]:
         """Get items in the To-do list."""
         results = []

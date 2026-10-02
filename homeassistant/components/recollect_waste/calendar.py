@@ -1,6 +1,7 @@
 """Support for ReCollect Waste calendars."""
 
 import datetime
+from typing import override
 
 from aiorecollect.client import PickupEvent
 
@@ -58,11 +59,13 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
@@ -80,6 +83,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

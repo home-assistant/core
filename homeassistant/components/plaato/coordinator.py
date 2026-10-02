@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import Plaato, PlaatoDeviceType
@@ -58,6 +59,7 @@ class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> PlaatoDevice:
         """Update data via library."""
         return await self.api.get_data(

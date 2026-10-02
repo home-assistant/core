@@ -1,6 +1,8 @@
 """Support for openSenseMap Air Quality data."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.components.air_quality import (
     DOMAIN as AIR_QUALITY_DOMAIN,
@@ -36,7 +38,10 @@ from .const import (
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {
+        probatio.Required(CONF_STATION_ID): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+    }
 )
 
 
@@ -183,11 +188,13 @@ class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQuality
         self._attr_unique_id = station_id
 
     @property
+    @override
     def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
         return self.coordinator.data.pm2_5.value
 
     @property
+    @override
     def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
         return self.coordinator.data.pm10.value

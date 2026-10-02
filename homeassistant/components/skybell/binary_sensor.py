@@ -1,5 +1,7 @@
 """Binary sensor support for the Skybell HD Doorbell."""
 
+from typing import override
+
 from aioskybell.helpers import const as CONST
 
 from homeassistant.components.binary_sensor import (
@@ -52,6 +54,7 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         self._event: dict[str, str] = {}
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         event = self._device.latest(self.entity_description.key)

@@ -266,7 +266,7 @@ async def _async_process_integration_platforms(
 
 
 # Any = platform.
-type ProcessPlatform[_R] = Callable[[HomeAssistant, str, Any], _R]
+type ProcessPlatform[_R] = Callable[[HomeAssistant, str, Any], _R | Awaitable[_R]]
 
 
 class LazyIntegrationPlatforms[_R]:
@@ -276,6 +276,8 @@ class LazyIntegrationPlatforms[_R]:
     platform for every loaded integration up front (and as integrations load),
     this only imports and processes the platform for an integration the first
     time it is requested, and only for integrations that are loaded.
+
+    The process callback may be a coroutine function; its result is awaited.
 
     The platform is intentionally not registered for preloading, since for a
     rarely used platform that would import it for every integration during
@@ -358,7 +360,10 @@ class LazyIntegrationPlatforms[_R]:
             result: _R | None = None
             if platform is not None:
                 try:
-                    result = self._process_platform(self._hass, domain, platform)
+                    processed = self._process_platform(self._hass, domain, platform)
+                    if isinstance(processed, Awaitable):
+                        processed = await processed
+                    result = processed
                 except Exception:
                     _LOGGER.exception(
                         "Error processing %s platform for %s",

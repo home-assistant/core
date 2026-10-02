@@ -39,7 +39,7 @@
 # name: test_binary_sensor[1][binary_sensor.bk1600_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BK1600 Electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bk1600_electric_heating',
@@ -89,8 +89,8 @@
 # name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'BK1600 Meter connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Meter connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bk1600_meter_connected',
@@ -140,7 +140,7 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_1_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 1 electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_battery_pack_1_electric_heating',
@@ -190,7 +190,7 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_2_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 2 electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_battery_pack_2_electric_heating',
@@ -240,7 +240,7 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_3_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 3 electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_battery_pack_3_electric_heating',
@@ -290,7 +290,7 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_4_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 4 electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_battery_pack_4_electric_heating',
@@ -340,7 +340,7 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_battery_pack_5_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 5 electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_battery_pack_5_electric_heating',
@@ -390,7 +390,7 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Main electric heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main electric heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_main_electric_heating',
@@ -440,8 +440,8 @@
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_meter_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'CMS-SF2000 Meter connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Meter connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.cms_sf2000_meter_connected',

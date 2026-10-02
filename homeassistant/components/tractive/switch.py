@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from aiotractive.exceptions import TractiveError
 
@@ -65,7 +65,7 @@ async def async_setup_entry(
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveSwitch(client, item, description)
+        TractiveSwitch(hass, entry, client, item, description)
         for description in SWITCH_TYPES
         for item in trackables
     ]
@@ -80,12 +80,16 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: TractiveConfigEntry,
         client: TractiveClient,
         item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
         super().__init__(
+            hass,
+            entry,
             client,
             item.trackable,
             item.tracker_details,
@@ -98,6 +102,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self.entity_description = description
 
     @callback
+    @override
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         if ATTR_POWER_SAVING in event:
@@ -108,6 +113,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""
         try:
@@ -123,6 +129,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off a switch."""
         try:

@@ -2,11 +2,11 @@
 # name: test_invalid_coil[Sensor is available]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
@@ -19,11 +19,11 @@
 # name: test_invalid_coil[Sensor is not available]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
@@ -36,11 +36,11 @@
 # name: test_partial_refresh[1. Sensor is available]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
@@ -53,12 +53,12 @@
 # name: test_partial_refresh[2. Sensor is not available]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Min supply climate system 1',
-      'max': 80.0,
-      'min': 5.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': '°C',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Min supply climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 80.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
     }),
     'context': <ANY>,
     'entity_id': 'number.min_supply_climate_system_1_40035',
@@ -74,11 +74,11 @@
 # name: test_pushed_update[1. initial values]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
@@ -91,11 +91,11 @@
 # name: test_pushed_update[2. pushed values]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
@@ -108,11 +108,11 @@
 # name: test_pushed_update[3. seeded values]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
@@ -125,11 +125,11 @@
 # name: test_pushed_update[4. final values]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',

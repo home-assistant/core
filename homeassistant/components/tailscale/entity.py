@@ -1,5 +1,7 @@
 """The Tailscale integration."""
 
+from typing import override
+
 from tailscale import Device as TailscaleDevice
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -29,6 +31,7 @@ class TailscaleEntity(CoordinatorEntity[TailscaleDataUpdateCoordinator]):
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         device: TailscaleDevice = self.coordinator.data[self.device_id]

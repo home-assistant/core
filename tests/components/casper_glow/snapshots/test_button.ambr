@@ -39,7 +39,7 @@
 # name: test_entities[button.jar_pause_dimming-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Jar Pause dimming',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jar Pause dimming',
     }),
     'context': <ANY>,
     'entity_id': 'button.jar_pause_dimming',
@@ -89,7 +89,7 @@
 # name: test_entities[button.jar_resume_dimming-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Jar Resume dimming',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jar Resume dimming',
     }),
     'context': <ANY>,
     'entity_id': 'button.jar_resume_dimming',

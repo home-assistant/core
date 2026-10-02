@@ -1,6 +1,7 @@
 """Support for Twente Milieu Calendar."""
 
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.const import CONF_ID
@@ -35,10 +36,12 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -58,6 +61,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
         return events
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         next_waste_pickup_type = None
@@ -84,6 +88,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

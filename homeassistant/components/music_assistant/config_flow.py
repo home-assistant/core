@@ -1,7 +1,7 @@
 """Config flow for MusicAssistant integration."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlencode
 
 from music_assistant_client import MusicAssistantClient
@@ -13,7 +13,7 @@ from music_assistant_client.exceptions import (
 )
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -37,8 +37,10 @@ DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
 
 
-STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
-STEP_AUTH_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
+STEP_AUTH_TOKEN_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+)
 
 
 def _parse_zeroconf_server_info(properties: dict[str, str]) -> ServerInfoMessage:
@@ -85,6 +87,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -131,6 +134,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -201,6 +205,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -381,7 +386,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_manual",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+            ),
             description_placeholders={"url": self.url},
             errors=errors,
         )

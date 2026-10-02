@@ -1,10 +1,9 @@
 """Roborock Coordinator."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -58,14 +57,38 @@ MIN_UNAVAILABLE_DURATION = timedelta(minutes=2)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
 class RoborockCoordinators:
     """Roborock coordinators type."""
 
-    v1: list[RoborockDataUpdateCoordinator]
-    a01: list[RoborockDataUpdateCoordinatorA01]
-    b01_q7: list[RoborockB01Q7UpdateCoordinator]
-    b01_q10: list[RoborockB01Q10UpdateCoordinator]
+    def __init__(
+        self,
+    ) -> None:
+        """Initialize."""
+        self._coordinators: dict[
+            str,
+            RoborockDataUpdateCoordinator
+            | RoborockDataUpdateCoordinatorA01
+            | RoborockB01Q7UpdateCoordinator
+            | RoborockB01Q10UpdateCoordinator,
+        ] = {}
+
+    def add(
+        self,
+        coordinator: RoborockDataUpdateCoordinator
+        | RoborockDataUpdateCoordinatorA01
+        | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Add a coordinator."""
+        self._coordinators[coordinator.duid] = coordinator
+
+    def __contains__(self, duid: str) -> bool:
+        """Check if a coordinator exists by DUID."""
+        return duid in self._coordinators
+
+    def keys(self) -> list[str]:
+        """Return DUIDs of all registered coordinators."""
+        return list(self._coordinators.keys())
 
     def values(
         self,
@@ -77,6 +100,42 @@ class RoborockCoordinators:
     ]:
         """Return all coordinators."""
         return self.v1 + self.a01 + self.b01_q7 + self.b01_q10
+
+    @property
+    def v1(self) -> list[RoborockDataUpdateCoordinator]:
+        """Return V1 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockDataUpdateCoordinator)
+        ]
+
+    @property
+    def a01(self) -> list[RoborockDataUpdateCoordinatorA01]:
+        """Return A01 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockDataUpdateCoordinatorA01)
+        ]
+
+    @property
+    def b01_q7(self) -> list[RoborockB01Q7UpdateCoordinator]:
+        """Return Q7 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockB01Q7UpdateCoordinator)
+        ]
+
+    @property
+    def b01_q10(self) -> list[RoborockB01Q10UpdateCoordinator]:
+        """Return Q10 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockB01Q10UpdateCoordinator)
+        ]
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -110,13 +169,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
-        self._last_home_update_attempt: datetime
+        self._last_home_update_attempt = dt_util.utcnow()
         self.last_home_update: datetime | None = None
         # Tracks the last successful update to control when we report failure
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
         self._has_connected_locally: bool = False
         self._unsubs: list[Callable[[], None]] = []
+        self._setup_completed = False
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -135,13 +195,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             sw_version=self._device.device_info.fv,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self._verify_api()
         try:
             await self.properties_api.status.refresh()
         except RoborockException as err:
-            _LOGGER.debug("Failed to update data during setup: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
@@ -176,6 +236,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             self.properties_api.consumables.add_update_listener(
                 self._handle_trait_update
             )
+        )
+        self._unsubs.append(
+            self.properties_api.home.add_update_listener(self._handle_trait_update)
         )
 
     async def update_map(self) -> None:
@@ -235,9 +298,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         )
         _LOGGER.debug("Updated device properties")
 
+    @override
     async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
-        await self._verify_api()
+        if not self._setup_completed:
+            await self._async_setup()
+            self._setup_completed = True
+        else:
+            await self._verify_api()
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -312,6 +380,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # We optimize streaming updates to catch state transitions immediately, but
         # secondary updates (like refreshing the map) can happen on their own interval.
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and unsubscribe update listeners."""
         await super().async_shutdown()
@@ -424,6 +493,26 @@ class RoborockDataUpdateCoordinatorA01[
         return self._device
 
 
+ZEO_REQUEST_PROTOCOLS = [
+    RoborockZeoProtocol.STATE,
+    RoborockZeoProtocol.COUNTDOWN,
+    RoborockZeoProtocol.WASHING_LEFT,
+    RoborockZeoProtocol.ERROR,
+    RoborockZeoProtocol.TIMES_AFTER_CLEAN,
+    RoborockZeoProtocol.DETERGENT_EMPTY,
+    RoborockZeoProtocol.SOFTENER_EMPTY,
+    RoborockZeoProtocol.DETERGENT_TYPE,
+    RoborockZeoProtocol.SOFTENER_TYPE,
+    RoborockZeoProtocol.MODE,
+    RoborockZeoProtocol.PROGRAM,
+    RoborockZeoProtocol.TEMP,
+    RoborockZeoProtocol.RINSE_TIMES,
+    RoborockZeoProtocol.SPIN_LEVEL,
+    RoborockZeoProtocol.DRYING_MODE,
+    RoborockZeoProtocol.SOUND_SET,
+]
+
+
 class RoborockWashingMachineUpdateCoordinator(
     RoborockDataUpdateCoordinatorA01[RoborockZeoProtocol]
 ):
@@ -439,27 +528,14 @@ class RoborockWashingMachineUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        self.request_protocols: list[RoborockZeoProtocol] = []
-        # This currently only supports the washing machine protocols
+        supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
-            RoborockZeoProtocol.STATE,
-            RoborockZeoProtocol.COUNTDOWN,
-            RoborockZeoProtocol.WASHING_LEFT,
-            RoborockZeoProtocol.ERROR,
-            RoborockZeoProtocol.TIMES_AFTER_CLEAN,
-            RoborockZeoProtocol.DETERGENT_EMPTY,
-            RoborockZeoProtocol.SOFTENER_EMPTY,
-            RoborockZeoProtocol.DETERGENT_TYPE,
-            RoborockZeoProtocol.SOFTENER_TYPE,
-            RoborockZeoProtocol.MODE,
-            RoborockZeoProtocol.PROGRAM,
-            RoborockZeoProtocol.TEMP,
-            RoborockZeoProtocol.RINSE_TIMES,
-            RoborockZeoProtocol.SPIN_LEVEL,
-            RoborockZeoProtocol.DRYING_MODE,
-            RoborockZeoProtocol.SOUND_SET,
+            protocol
+            for protocol in ZEO_REQUEST_PROTOCOLS
+            if not supported_schema_ids or protocol in supported_schema_ids
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockZeoProtocol, StateType]:
@@ -471,6 +547,16 @@ class RoborockWashingMachineUpdateCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
+
+
+DYAD_REQUEST_PROTOCOLS = [
+    RoborockDyadDataProtocol.STATUS,
+    RoborockDyadDataProtocol.POWER,
+    RoborockDyadDataProtocol.MESH_LEFT,
+    RoborockDyadDataProtocol.BRUSH_LEFT,
+    RoborockDyadDataProtocol.ERROR,
+    RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+]
 
 
 class RoborockWetDryVacUpdateCoordinator(
@@ -488,27 +574,54 @@ class RoborockWetDryVacUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        # This currenltly only supports the WetDryVac protocols
-        self.request_protocols: list[RoborockDyadDataProtocol] = [
-            RoborockDyadDataProtocol.STATUS,
-            RoborockDyadDataProtocol.POWER,
-            RoborockDyadDataProtocol.MESH_LEFT,
-            RoborockDyadDataProtocol.BRUSH_LEFT,
-            RoborockDyadDataProtocol.ERROR,
-            RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+        self._unsub_update = api.add_update_listener(self._handle_update)
+        supported_schema_ids = device.product.supported_schema_ids
+        self.request_protocols = [
+            protocol
+            for protocol in DYAD_REQUEST_PROTOCOLS
+            if not supported_schema_ids or protocol in supported_schema_ids
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
         try:
-            return await self.api.query_values(self.request_protocols)
+            await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update wet dry vac data: %s", ex)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
+            if not self._should_suppress_update_failure():
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_data_fail",
+                ) from ex
+        return self.api.values
+
+    def _should_suppress_update_failure(self) -> bool:
+        """Determine if we should suppress update failure reporting.
+
+        The device leaves the network while it sleeps on its dock, so a poll can
+        fail while the device is still reporting its state on its own.
+        """
+        if (last_message_time := self.api.last_message_time) is None:
+            return False
+        failure_duration = dt_util.utcnow() - last_message_time
+        _LOGGER.debug("Update failure duration: %s", failure_duration)
+        return failure_duration < MIN_UNAVAILABLE_DURATION
+
+    @callback
+    def _handle_update(self) -> None:
+        """Apply the state the device reported on its own."""
+        _LOGGER.debug("Wet dry vac state updated, updating coordinator data")
+        self.data = self.api.values
+        self.last_update_success = True
+        self.async_update_listeners()
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop following the device state on shutdown."""
+        self._unsub_update()
+        await super().async_shutdown()
 
 
 class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
@@ -579,6 +692,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.QUANTITY,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> B01Props:
@@ -596,6 +710,21 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_key="update_data_fail",
             )
         return data
+
+    async def async_refresh_q7_map(self) -> bool:
+        """Refresh the Q7 map list and map content traits.
+
+        Returns True when the traits were refreshed without errors.
+        Never raises; callers fall back to the cached trait values on failure.
+        """
+        try:
+            await self.api.map.refresh()
+            if self.api.map.current_map_id is not None:
+                await self.api.map_content.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to refresh Q7 map: %s", ex)
+            return False
+        return True
 
 
 class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
@@ -631,6 +760,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.device_info = get_device_info(device)
 
+    @override
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
@@ -661,3 +791,11 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
     def device(self) -> RoborockDevice:
         """Get the RoborockDevice."""
         return self._device
+
+
+type RoborockCoordinatorType = (
+    RoborockDataUpdateCoordinator
+    | RoborockDataUpdateCoordinatorA01[Any]
+    | RoborockB01Q7UpdateCoordinator
+    | RoborockB01Q10UpdateCoordinator
+)

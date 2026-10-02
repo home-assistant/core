@@ -1,5 +1,7 @@
 """Support for WiZ sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -74,6 +76,7 @@ class WizSensor(WizEntity, SensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_native_value = self._device.state.pilotResult.get(
@@ -85,6 +88,7 @@ class WizPowerSensor(WizSensor):
     """Defines a WiZ power sensor."""
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         # Newer firmwares will have the power in their state

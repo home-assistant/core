@@ -39,9 +39,9 @@
 # name: test_all_binary_sensors[binary_sensor.home_controller_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'connectivity',
-      'friendly_name': 'Home Controller Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Controller Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_controller_connectivity',
@@ -91,9 +91,9 @@
 # name: test_all_binary_sensors[binary_sensor.home_controller_rain_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'moisture',
-      'friendly_name': 'Home Controller Rain sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Controller Rain sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_controller_rain_sensor',
@@ -143,9 +143,9 @@
 # name: test_all_binary_sensors[binary_sensor.zone_one_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'running',
-      'friendly_name': 'Zone One Watering',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone One Watering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zone_one_watering',
@@ -195,9 +195,9 @@
 # name: test_all_binary_sensors[binary_sensor.zone_two_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'running',
-      'friendly_name': 'Zone Two Watering',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone Two Watering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zone_two_watering',

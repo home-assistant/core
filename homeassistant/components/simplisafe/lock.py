@@ -1,6 +1,6 @@
 """Support for SimpliSafe locks."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
@@ -65,6 +65,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
         )
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         try:
@@ -77,6 +78,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         self._attr_is_locked = True
         self.async_write_ha_state()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         try:
@@ -90,6 +92,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_jammed = self._device.state is LockStates.JAMMED
@@ -103,6 +106,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         )
 
     @callback
+    @override
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         assert event.event_type

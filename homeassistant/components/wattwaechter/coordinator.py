@@ -1,19 +1,23 @@
 """DataUpdateCoordinator for the WattWächter Plus integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aio_wattwaechter import (
     Wattwaechter,
     WattwaechterAuthenticationError,
     WattwaechterConnectionError,
+    WattwaechterError,
     WattwaechterNoDataError,
 )
-from aio_wattwaechter.models import MeterData
+from aio_wattwaechter.models import MeterData, OtaData, SystemInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_FW_VERSION, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -23,7 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
 
-class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
+@dataclass
+class WattwaechterData:
+    """Data returned by a single WattWächter poll."""
+
+    meter: MeterData
+    system: SystemInfo | None
+    ota: OtaData | None
+
+
+class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
     """Coordinator for WattWächter Plus data updates."""
 
     config_entry: WattwaechterConfigEntry
@@ -50,7 +63,8 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> MeterData:
+    @override
+    async def _async_update_data(self) -> WattwaechterData:
         """Fetch data from the WattWächter device."""
         try:
             data = await self.client.meter_data()
@@ -61,7 +75,7 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
                 translation_placeholders={"host": self.host},
             ) from err
         except WattwaechterAuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
                 translation_placeholders={"error": str(err)},
@@ -80,4 +94,19 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
                 translation_placeholders={"host": self.host},
             )
 
-        return data
+        # System info and OTA status are fetched best-effort: a failure here
+        # must not take the meter sensors unavailable, so their entities just
+        # report unknown until the next successful poll.
+        system: SystemInfo | None
+        try:
+            system = await self.client.system_info()
+        except WattwaechterError:
+            system = None
+
+        ota: OtaData | None
+        try:
+            ota = (await self.client.ota_check()).data
+        except WattwaechterError:
+            ota = None
+
+        return WattwaechterData(meter=data, system=system, ota=ota)

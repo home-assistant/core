@@ -1,9 +1,8 @@
 """Represent an air purifier."""
 
-from collections.abc import Callable
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, override
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -69,7 +68,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
@@ -79,21 +78,26 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
             gateway_id=gateway_id,
         )
 
+        if TYPE_CHECKING:
+            assert self._device.air_purifier_control is not None
         self._device_control = self._device.air_purifier_control
         self._device_data = self._device_control.air_purifiers[0]
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
+        self._device_data = self._device_control.air_purifiers[0]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         if not self._device_data:
             return False
-        return cast(bool, self._device_data.state)
+        return self._device_data.state
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if not self._device_data:
@@ -105,6 +109,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         return None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if not self._device_data:
@@ -115,6 +120,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
 
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if not self._device_control:
@@ -124,6 +130,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
 
         await self._api(self._device_control.turn_on_auto_mode())
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -141,6 +148,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         preset_mode = preset_mode or ATTR_AUTO
         await self.async_set_preset_mode(preset_mode)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if not self._device_control:
@@ -154,6 +162,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
             self._device_control.set_fan_speed(_from_fan_percentage(percentage))
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         if not self._device_control:

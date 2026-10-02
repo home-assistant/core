@@ -1,6 +1,10 @@
 """Test KNX time."""
 
-from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
+from homeassistant.components.knx.const import (
+    CONF_RESPOND_TO_READ,
+    CONF_STATE_ADDRESS,
+    KNX_ADDRESS,
+)
 from homeassistant.components.knx.schema import TimeSchema
 from homeassistant.components.time import (
     ATTR_TIME,
@@ -88,6 +92,33 @@ async def test_time_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) ->
         test_passive_address,
         (0x0C, 0x00, 0x00),
     )
+    state = hass.states.get("time.test")
+    assert state.state == "12:00:00"
+
+
+async def test_time_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX time with state_address restores state until bus read completes."""
+    test_address = "1/1/1"
+    test_state_address = "2/2/2"
+    fake_state = State("time.test", "01:02:03")
+    mock_restore_cache(hass, (fake_state,))
+
+    await knx.setup_integration(
+        {
+            TimeSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: test_address,
+                CONF_STATE_ADDRESS: test_state_address,
+            }
+        }
+    )
+    # StateUpdater initialize state - restored value is used before response is received
+    await knx.assert_read(test_state_address)
+    state = hass.states.get("time.test")
+    assert state.state == "01:02:03"
+
+    # bus reports a different value than restored - state updates to the real value
+    await knx.receive_response(test_state_address, (0x0C, 0x00, 0x00))
     state = hass.states.get("time.test")
     assert state.state == "12:00:00"
 

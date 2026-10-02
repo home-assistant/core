@@ -1,7 +1,7 @@
 """The lookin integration light platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import Platform
@@ -48,18 +48,21 @@ class LookinLightEntity(LookinPowerPushRemoteEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         await self._async_send_command(self._power_on_command)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._async_send_command(self._power_off_command)
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     def _update_from_status(self, status: str) -> None:
         """Update media property from status.
 

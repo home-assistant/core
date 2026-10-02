@@ -1,6 +1,7 @@
 """Sensor configuration for VegeHub integration."""
 
 from itertools import count
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -87,6 +88,7 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
         self._attr_available = False
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the sensor's current value."""
         if self.coordinator.data is None:

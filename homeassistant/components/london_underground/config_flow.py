@@ -2,10 +2,10 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from london_tube_status import TubeData
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -31,12 +31,14 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         _: ConfigEntry,
     ) -> LondonUndergroundOptionsFlow:
         """Get the options flow for this handler."""
         return LondonUndergroundOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,9 +65,9 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LINE,
                         default=DEFAULT_LINES,
                     ): selector.SelectSelector(
@@ -134,9 +136,9 @@ class LondonUndergroundOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LINE,
                         default=self.config_entry.options.get(
                             CONF_LINE,

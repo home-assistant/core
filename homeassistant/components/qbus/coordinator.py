@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import cast
+from typing import cast, override
 
 from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -59,6 +59,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
 
+    @override
     async def _async_update_data(self) -> QbusMqttDevice | None:
         return self._controller
 

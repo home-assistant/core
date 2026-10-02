@@ -3,12 +3,13 @@
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pypoint import PointSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import parse_datetime
 
@@ -43,13 +44,23 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         self.new_device_callbacks: list[Callable[[str], None]] = []
         self.data: dict[str, dict[str, Any]] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         if not await self.point.update():
             raise UpdateFailed("Failed to fetch data from Point")
 
         if new_homes := set(self.point.homes) - self._known_homes:
             _LOGGER.debug("Found new homes: %s", new_homes)
+            device_registry = dr.async_get(self.hass)
             for home_id in new_homes:
+                # Register the home before its child devices so they can resolve
+                # it as their via_device parent when their entities are created.
+                device_registry.async_get_or_create(
+                    config_entry_id=self.config_entry.entry_id,
+                    identifiers={(DOMAIN, home_id)},
+                    manufacturer="Minut",
+                    name=self.point.homes[home_id]["name"],
+                )
                 if self.new_home_callback:
                     self.new_home_callback(home_id)
             self._known_homes.update(new_homes)

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 import math
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from waterfurnace.waterfurnace import (
     WaterFurnace,
@@ -89,10 +89,11 @@ class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):
                 (device for device in client.devices if device.gwid == self.unit), None
             )
 
+    @override
     async def _async_update_data(self) -> WFReading:
         """Fetch data from WaterFurnace API with built-in retry logic."""
         try:
-            return await self.hass.async_add_executor_job(self.client.read_with_retry)
+            return await self.hass.async_add_executor_job(self.client.read)
         except WFException as err:
             raise UpdateFailed(str(err)) from err
 
@@ -328,6 +329,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
         if self._backfill_task:
             await self._backfill_task
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch energy data and insert statistics.
 

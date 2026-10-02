@@ -1,6 +1,8 @@
 """Support for UniFi AP Direct access as device tracker using Coordinator."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -21,10 +23,10 @@ from .coordinator import UniFiDirectConfigEntry, UniFiDirectDataUpdateCoordinato
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): probatio.Port(),
     }
 )
 
@@ -115,16 +117,19 @@ class UniFiScannerEntity(
         self._attr_name = device.get("hostname") or mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the AP."""
         return self._mac in self.coordinator.data
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the IP address of the device."""
         if device := self.coordinator.data.get(self._mac):
@@ -132,6 +137,7 @@ class UniFiScannerEntity(
         return None
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         if device := self.coordinator.data.get(self._mac):

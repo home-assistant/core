@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
 from weatherflow4py.models.rest.observation import Observation
 from weatherflow4py.models.ws.websocket_response import (
@@ -87,6 +88,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
 ] = (
     WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
         key="wind_speed",
+        translation_key="wind_speed",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WIND_SPEED,
         suggested_display_precision=1,
@@ -476,6 +478,7 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
         return f"{self.station_id}_{self.entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Get if available."""
 
@@ -498,6 +501,7 @@ class WeatherFlowWebsocketSensorObservation(WeatherFlowSensorBase):
     entity_description: WeatherFlowCloudSensorEntityDescriptionWebsocketObservation
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value."""
         data = self.coordinator.data[self.station_id][self.device_id]
@@ -510,6 +514,7 @@ class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
     entity_description: WeatherFlowCloudSensorEntityDescriptionWebsocketWind
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
 
@@ -536,11 +541,13 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
         return observations[0]
 
     @property
+    @override
     def available(self) -> bool:
         """Get if available."""
         return super().available and self._observation is not None
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
         if (observation := self._observation) is None:

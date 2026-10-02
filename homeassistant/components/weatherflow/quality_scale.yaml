@@ -24,6 +24,9 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions:
@@ -31,6 +34,9 @@ rules:
     comment: |
       The external documentation page does not include removal/uninstall
       instructions for this integration.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -90,10 +96,8 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      Only config-flow tests exist (tests/components/weatherflow/
-      test_config_flow.py). There are no tests for the sensor or event
-      platform entities, nor for async_setup_entry / async_unload_entry
-      behaviour. Coverage is well below the 95% Silver threshold.
+      There are no tests for the event platform entities, nor for
+      async_unload_entry / device removal behaviour.
 
   # Gold
   devices: done
