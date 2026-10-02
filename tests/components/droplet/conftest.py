@@ -68,6 +68,10 @@ def mock_timeout() -> Generator[None]:
             "homeassistant.components.droplet.coordinator.CONNECT_TIMEOUT",
             0.1,
         ),
+        patch(
+            "homeassistant.components.droplet.coordinator.RECONNECT_DELAY",
+            0.1,
+        ),
     ):
         yield
 
