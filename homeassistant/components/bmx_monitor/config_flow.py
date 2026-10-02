@@ -13,11 +13,11 @@ treated as proof that the selected device is a BM2.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from itertools import pairwise
 import logging
 from typing import Any, override
 
 from bluetooth_data_tools import short_address
+from bmx_ble.battery import BatteryConfigurationError, custom_battery_profile
 import probatio
 
 from homeassistant.components.bluetooth import (
@@ -143,24 +143,24 @@ def process_custom_battery_input(
     errors: dict[str, str] = {}
 
     user_input[CONF_BATTERY_TYPE] = "Custom"
-    temp_numpy_volts = [
-        float(user_input[CONF_CUSTOM_CRITICAL_VOLTAGE]),
-        float(user_input[CONF_CUSTOM_LOW_VOLTAGE]),
-        float(user_input[CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE]),
-        float(user_input[CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE]),
-    ]
-    temp_numpy_percent = [0, 20, 50, 100]
-
-    user_input[CONF_CUSTOM_NUMPY_VOLTS] = temp_numpy_volts
-    user_input[CONF_CUSTOM_NUMPY_PERCENT] = temp_numpy_percent
-
-    voltage_thresholds = [
-        *temp_numpy_volts,
-        float(user_input[CONF_CUSTOM_FLOATING_VOLTAGE]),
-        float(user_input[CONF_CUSTOM_CHARGING_VOLTAGE]),
-    ]
-    if not all(a < b for a, b in pairwise(voltage_thresholds)):
+    try:
+        profile = custom_battery_profile(
+            battery_chemistry=user_input[CONF_CUSTOM_BATTERY_CHEMISTRY],
+            critical_voltage=float(user_input[CONF_CUSTOM_CRITICAL_VOLTAGE]),
+            low_voltage=float(user_input[CONF_CUSTOM_LOW_VOLTAGE]),
+            fifty_percent_voltage=float(user_input[CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE]),
+            hundred_percent_voltage=float(
+                user_input[CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE]
+            ),
+            floating_voltage=float(user_input[CONF_CUSTOM_FLOATING_VOLTAGE]),
+            charging_voltage=float(user_input[CONF_CUSTOM_CHARGING_VOLTAGE]),
+        )
+    except BatteryConfigurationError:
         errors["base"] = "custom_voltages_not_in_order"
+    else:
+        # Preserve the existing storage keys; no NumPy dependency is required.
+        user_input[CONF_CUSTOM_NUMPY_VOLTS] = list(profile.volts_to_percent)
+        user_input[CONF_CUSTOM_NUMPY_PERCENT] = list(profile.percentages)
 
     return user_input, errors
 
@@ -388,9 +388,7 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=options,
                 )
 
-        # This function expects a config entry's options but there aren't any options to read yet - the config entry doesn't exist
-        # So just send an empty dict
-        data_schema = custom_battery_schema({})
+        data_schema = custom_battery_schema(user_input or {})
 
         return self.async_show_form(
             step_id="custom_battery_details",
@@ -499,7 +497,9 @@ class BMxOptionsFlow(OptionsFlowWithReload):
             if not errors:
                 return self.async_create_entry(title="", data=options)
 
-        data_schema = custom_battery_schema(self.config_entry.options)
+        data_schema = custom_battery_schema(
+            self.config_entry.options | self._user_input
+        )
 
         return self.async_show_form(
             step_id="custom_battery_details",

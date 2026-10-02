@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BLEDevice
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
+from bmx_ble.battery import BATTERY_PROFILES, Battery, BatteryReading
 import pytest
 from sensor_state_data import SensorUpdate
 
@@ -19,11 +20,7 @@ from homeassistant.components.bmx_monitor.const import (
     CONF_RATE_LIMIT_MODE,
     DOMAIN,
 )
-from homeassistant.components.bmx_monitor.device_data import (
-    BATTERIES,
-    Battery,
-    BMxBluetoothDeviceData,
-)
+from homeassistant.components.bmx_monitor.device_data import BMxBluetoothDeviceData
 
 from tests.common import MockConfigEntry
 
@@ -109,9 +106,7 @@ def test_chemistry_selection(
 ) -> None:
     """Known options select the intended chemistry."""
     device.entry = MockConfigEntry(domain=DOMAIN, options={CONF_BATTERY_TYPE: option})
-    detail, custom = device._battery_detail()
-    assert detail is BATTERIES[battery]
-    assert custom is False
+    assert device._battery_profile() is BATTERY_PROFILES[battery]
 
 
 def test_custom_chemistry_is_independent(device: BMxBluetoothDeviceData) -> None:
@@ -128,38 +123,18 @@ def test_custom_chemistry_is_independent(device: BMxBluetoothDeviceData) -> None
             CONF_CUSTOM_CHARGING_VOLTAGE: 14.4,
         },
     )
-    detail, custom = device._battery_detail()
-    assert custom is True
+    detail = device._battery_profile()
     assert detail.battery_chemistry == "Test chemistry"
-    assert detail is not BATTERIES[Battery.custom]
-    assert device._adjust_percentage(99, detail, 12.3, custom=True) == 50
-    assert device._battery_detail()[0] is not detail
-
-
-@pytest.mark.parametrize(("voltage", "expected"), [(9.0, 0), (12.06, 50), (16.0, 100)])
-def test_standard_percentage(
-    device: BMxBluetoothDeviceData, voltage: float, expected: int
-) -> None:
-    """Interpolate known chemistry and clamp percentages at its endpoints."""
-    assert (
-        device._adjust_percentage(99, BATTERIES[Battery.leadacid], voltage) == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("voltage", "expected"),
-    [(14.5, 4), (13.7, 8), (12.06, 0), (12.2, 1), (12.4, 2)],
-)
-def test_status_thresholds(
-    device: BMxBluetoothDeviceData, voltage: float, expected: int
-) -> None:
-    """Classify charging, floating, critical, low and normal voltage."""
-    assert device._adjust_status(99, BATTERIES[Battery.leadacid], voltage) == expected
+    assert detail.volts_to_percent == (11.0, 11.5, 12.3, 12.8)
+    assert detail.percentages == (0, 20, 50, 100)
+    assert detail.floating_voltage == 13.5
+    assert detail.charging_voltage == 14.4
+    assert device._battery_profile() is not detail
 
 
 @pytest.mark.parametrize(
     ("status", "expected", "charging"),
-    [(4, "charging", True), (2, "normal", False), (99, "unknown", True)],
+    [(4, "charging", True), (2, "normal", False), (99, "unknown", False)],
 )
 def test_automatic_reading(
     device: BMxBluetoothDeviceData, status: int, expected: str, charging: bool
@@ -220,7 +195,7 @@ async def test_poll_publishes_protocol_reading(
     with patch.object(
         BM2Protocol, "async_poll", new_callable=AsyncMock, return_value=reading
     ) as poll:
-        update = await device.async_poll(ble_device)
+        update = await device.async_poll_sensors(ble_device)
     poll.assert_awaited_once_with(device, ble_device)
     assert isinstance(update, SensorUpdate)
     values = {
@@ -230,19 +205,44 @@ async def test_poll_publishes_protocol_reading(
     assert values["battery_percent"] == 60
 
 
-@pytest.mark.parametrize(
-    ("battery", "voltage"),
-    [
-        (Battery.agm, 12.05),
-        (Battery.deepcycle, 12.05),
-        (Battery.leadacid, 12.06),
-        (Battery.lifepo4, 13.0),
-        (Battery.lithiumion, 13.05),
-        (Battery.itech120x, 12.89),
-    ],
-)
-def test_predefined_curve_midpoint(
-    device: BMxBluetoothDeviceData, battery: Battery, voltage: float
-) -> None:
-    """Each predefined curve accepts interpolation and returns its 50% point."""
-    assert device._adjust_percentage(99, BATTERIES[battery], voltage) == 50
+def test_custom_profile_defaults(device: BMxBluetoothDeviceData) -> None:
+    """An entry without explicit custom thresholds uses the form defaults."""
+    device.entry = MockConfigEntry(domain=DOMAIN, options={CONF_BATTERY_TYPE: "Custom"})
+    profile = device._battery_profile()
+    assert profile.battery_chemistry == "Custom battery"
+    assert profile.volts_to_percent == (12.06, 12.2, 12.3, 12.7)
+    assert profile.floating_voltage == 13.7
+    assert profile.charging_voltage == 14.5
+
+
+def test_reading_interpretation_is_delegated(device: BMxBluetoothDeviceData) -> None:
+    """The adapter publishes library results instead of calculating them."""
+    raw = BM2Reading(12.5, 67, 2, "active")
+    interpreted = BatteryReading("Library chemistry", 12.8, 80, "floating", True)
+    with (
+        patch(
+            "homeassistant.components.bmx_monitor.device_data.interpret_reading",
+            return_value=interpreted,
+        ) as interpret,
+        patch.object(device, "update_sensor") as publish,
+    ):
+        device._apply_reading(raw)
+    interpret.assert_called_once_with(raw, BATTERY_PROFILES[Battery.automatic])
+    values = {
+        call.kwargs["key"]: call.kwargs["native_value"]
+        for call in publish.call_args_list
+    }
+    assert values == {
+        "battery_chemistry": "Library chemistry",
+        "battery_voltage": 12.8,
+        "battery_percent": 80,
+        "battery_status": "floating",
+    }
+    assert device._charging is True
+
+
+def test_missing_status_preserves_charging(device: BMxBluetoothDeviceData) -> None:
+    """A partial fallback must not reset the last known charging state."""
+    device._charging = True
+    device._apply_reading(BM2Reading(None, 45, None, "advertisement"))
+    assert device._charging is True

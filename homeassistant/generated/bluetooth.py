@@ -79,18 +79,22 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 307,
     },
     {
+        "connectable": False,
         "domain": "bmx_monitor",
         "local_name": "Battery Monitor",
     },
     {
+        "connectable": False,
         "domain": "bmx_monitor",
         "local_name": "Li Battery Monitor",
     },
     {
+        "connectable": False,
         "domain": "bmx_monitor",
         "local_name": "ZX-1689",
     },
     {
+        "connectable": False,
         "domain": "bmx_monitor",
         "manufacturer_data_start": [
             2,

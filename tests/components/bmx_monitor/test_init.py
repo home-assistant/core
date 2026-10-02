@@ -164,7 +164,7 @@ async def test_poll_callback(
     info.connectable = connectable
     active_device = MagicMock() if has_active_path else None
     data = MagicMock()
-    data.async_poll = AsyncMock()
+    data.async_poll_sensors = AsyncMock()
     with (
         patch.object(integration, "async_address_present", return_value=True),
         patch.object(integration, "async_last_service_info", return_value=info),
@@ -180,9 +180,9 @@ async def test_poll_callback(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         poll = coordinator.call_args.kwargs["poll_method"]
-        assert await poll(info) is data.async_poll.return_value
+        assert await poll(info) is data.async_poll_sensors.return_value
     expected_device = info.device if connectable else active_device
-    data.async_poll.assert_awaited_once_with(expected_device)
+    data.async_poll_sensors.assert_awaited_once_with(expected_device)
     assert find_device.call_count == int(not connectable)
 
 

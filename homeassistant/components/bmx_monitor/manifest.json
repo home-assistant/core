@@ -3,15 +3,19 @@
   "name": "BM2 battery monitor",
   "bluetooth": [
     {
+      "connectable": false,
       "local_name": "Battery Monitor"
     },
     {
+      "connectable": false,
       "local_name": "Li Battery Monitor"
     },
     {
+      "connectable": false,
       "local_name": "ZX-1689"
     },
     {
+      "connectable": false,
       "manufacturer_data_start": [
         2, 21, 101, 95, 131, 202, 174, 22, 161, 10, 112, 46, 49, 243, 13, 88,
         221, 130
@@ -26,5 +30,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["bmx-ble==0.1.0", "numpy==2.3.2"]
+  "requirements": ["bmx-ble==0.2.0"]
 }

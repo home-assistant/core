@@ -97,10 +97,10 @@ async def async_setup_entry(
                 connectable=True,
             )
 
-        # async_poll(None) is intentional.  BMxBluetoothDeviceData will treat
+        # async_poll_sensors(None) is intentional.  BMxBluetoothDeviceData will treat
         # "no connectable path" exactly like a failed active connection and use
         # the cached advertisement if the newer telemetry packet was decoded.
-        return await device_data.async_poll(connectable_device)
+        return await device_data.async_poll_sensors(connectable_device)
 
     coordinator = config_entry.runtime_data = ActiveBluetoothProcessorCoordinator(
         hass,

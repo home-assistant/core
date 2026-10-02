@@ -23,9 +23,7 @@ DEFAULT_CUSTOM_FLOATING_VOLTAGE = 13.7
 CONF_CUSTOM_CHARGING_VOLTAGE = "custom_charging_voltage"
 DEFAULT_CUSTOM_CHARGING_VOLTAGE = 14.5
 CONF_CUSTOM_NUMPY_VOLTS = "custom_numpy_volts"
-DEFAULT_CUSTOM_NUMPY_VOLTS = [10.5, 11.58, 12.06, 13.6]
 CONF_CUSTOM_NUMPY_PERCENT = "custom_numpy_percent"
-DEFAULT_CUSTOM_NUMPY_PERCENT = [0, 20, 50, 100]
 
 GATT_TIMEOUT = 20
 
@@ -48,11 +46,3 @@ BATTERY_TYPES = [
     "Lithium-ion",
     "Custom",
 ]
-
-BATTERY_STATUS_LIST = {
-    0: "critical",
-    1: "low",
-    2: "normal",
-    4: "charging",
-    8: "floating",
-}

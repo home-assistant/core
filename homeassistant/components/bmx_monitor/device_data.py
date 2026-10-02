@@ -1,7 +1,5 @@
 """Expose BM2 protocol readings as Home Assistant Bluetooth sensor updates."""
 
-from dataclasses import dataclass
-from enum import StrEnum
 import logging
 from typing import override
 
@@ -9,19 +7,25 @@ from bleak import BLEDevice
 from bluetooth_data_tools import short_address
 from bluetooth_sensor_state_data import BluetoothData
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
+from bmx_ble.battery import (
+    BatteryProfile,
+    custom_battery_profile,
+    get_battery_profile,
+    interpret_reading,
+)
 from home_assistant_bluetooth import BluetoothServiceInfo
-import numpy as np
 from sensor_state_data import SensorDeviceClass, SensorUpdate, Units
 
 from homeassistant.config_entries import ConfigEntry
 
 from .const import (
-    BATTERY_STATUS_LIST,
     CONF_BATTERY_TYPE,
     CONF_CUSTOM_BATTERY_CHEMISTRY,
     CONF_CUSTOM_CHARGING_VOLTAGE,
     CONF_CUSTOM_CRITICAL_VOLTAGE,
+    CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE,
     CONF_CUSTOM_FLOATING_VOLTAGE,
+    CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
     CONF_CUSTOM_LOW_VOLTAGE,
     CONF_CUSTOM_NUMPY_VOLTS,
     CONF_RATE_LIMIT,
@@ -30,133 +34,15 @@ from .const import (
     DEFAULT_CUSTOM_BATTERY_CHEMISTRY,
     DEFAULT_CUSTOM_CHARGING_VOLTAGE,
     DEFAULT_CUSTOM_CRITICAL_VOLTAGE,
+    DEFAULT_CUSTOM_FIFTY_PERCENT_VOLTAGE,
     DEFAULT_CUSTOM_FLOATING_VOLTAGE,
+    DEFAULT_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
     DEFAULT_CUSTOM_LOW_VOLTAGE,
-    DEFAULT_CUSTOM_NUMPY_VOLTS,
     DEFAULT_RATE_LIMIT,
     DEFAULT_RATE_LIMIT_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class Battery(StrEnum):
-    """Pre-defined battery chemistries."""
-
-    automatic = "automatic"
-    agm = "agm"
-    deepcycle = "deepcycle"
-    leadacid = "leadacid"
-    lifepo4 = "lifepo4"
-    lithiumion = "lithiumion"
-    itech120x = "itech120x"
-    custom = "custom"
-
-
-@dataclass
-class BatteryDetail:
-    """Battery chemistry characteristics."""
-
-    battery_chemistry: str
-    volts_to_percent: list[float]
-    critical_voltage: float
-    low_voltage: float
-    floating_voltage: float
-    charging_voltage: float
-
-
-BATTERIES = {
-    Battery.automatic: BatteryDetail(
-        "Automatic",
-        [],
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-    ),
-    Battery.agm: BatteryDetail(
-        "AGM",
-        [
-            10.5,
-            11.51,
-            11.66,
-            11.81,
-            11.95,
-            12.05,
-            12.15,
-            12.3,
-            12.5,
-            12.75,
-            12.85,
-        ],
-        11.66,
-        11.81,
-        13.2,
-        14.2,
-    ),
-    Battery.deepcycle: BatteryDetail(
-        "Deep-cycle",
-        [10.5, 11.51, 11.66, 11.81, 11.95, 12.05, 12.15, 12.3, 12.5, 12.75, 12.8],
-        11.66,
-        12.05,
-        13.6,
-        14.4,
-    ),
-    Battery.leadacid: BatteryDetail(
-        "Lead-acid",
-        [10.5, 11.31, 11.58, 11.75, 11.9, 12.06, 12.2, 12.32, 12.42, 12.5, 12.7],
-        12.06,
-        12.2,
-        13.7,
-        14.5,
-    ),
-    Battery.lifepo4: BatteryDetail(
-        "LiFePO4",
-        [10.0, 12.0, 12.5, 12.8, 12.9, 13.0, 13.1, 13.2, 13.3, 13.4, 13.6],
-        10.5,
-        12.0,
-        13.5,
-        14.4,
-    ),
-    Battery.lithiumion: BatteryDetail(
-        "Lithium-ion",
-        [10.0, 12.0, 12.8, 12.9, 13.0, 13.05, 13.1, 13.2, 13.3, 13.4, 13.6],
-        10.5,
-        12.0,
-        13.5,
-        14.25,
-    ),
-    Battery.itech120x: BatteryDetail(
-        "iTechworld 120X (LiFePO4)",
-        [9.5, 10.5, 12.5, 12.7, 12.8, 12.89, 12.91, 12.99, 13.01, 13.1, 13.5],
-        10.5,
-        12.5,
-        13.5,
-        14.35,
-    ),
-    Battery.custom: BatteryDetail(
-        "Custom",
-        [10.5, 11.58, 12.06, 13.6],
-        12.06,
-        12.2,
-        13.7,
-        14.5,
-    ),
-}
-
-
-CHEMISTRY_OPTION_TO_BATTERY = {
-    "Automatic": Battery.automatic,
-    "AGM": Battery.agm,
-    "Deep-cycle": Battery.deepcycle,
-    "Lead-acid": Battery.leadacid,
-    "LiFePO4": Battery.lifepo4,
-    "LifePO4": Battery.lifepo4,
-    "Lithium-ion": Battery.lithiumion,
-    "iTechworld 120X (LiFePO4)": Battery.itech120x,
-    "itech120x": Battery.itech120x,
-    "Custom": Battery.custom,
-}
 
 
 class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
@@ -250,49 +136,43 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         )
         return poll_needed
 
-    def _battery_detail(self) -> tuple[BatteryDetail, bool]:
-        """Return configured battery chemistry details and custom flag."""
-        battery_option = self.entry.options.get(
-            CONF_BATTERY_TYPE,
-            DEFAULT_BATTERY_TYPE,
-        )
+    def _battery_profile(self) -> BatteryProfile:
+        """Map entry options to a library battery profile."""
+        options = self.entry.options
+        chemistry = options.get(CONF_BATTERY_TYPE, DEFAULT_BATTERY_TYPE)
+        if chemistry != "Custom":
+            return get_battery_profile(chemistry)
 
-        if battery_option == "Automatic (via BM2)":
-            return BATTERIES[Battery.automatic], False
-
-        if battery_option != "Custom":
-            battery_chemistry = CHEMISTRY_OPTION_TO_BATTERY[battery_option]
-            return BATTERIES[battery_chemistry], False
-
-        # Create a fresh BatteryDetail rather than mutating the shared
-        # BATTERIES[Battery.custom] object.
-        battery_detail = BatteryDetail(
-            battery_chemistry=self.entry.options.get(
-                CONF_CUSTOM_BATTERY_CHEMISTRY,
-                DEFAULT_CUSTOM_BATTERY_CHEMISTRY,
-            ),
-            volts_to_percent=self.entry.options.get(
-                CONF_CUSTOM_NUMPY_VOLTS,
-                DEFAULT_CUSTOM_NUMPY_VOLTS,
-            ),
-            critical_voltage=self.entry.options.get(
-                CONF_CUSTOM_CRITICAL_VOLTAGE,
+        # Keep accepting the historical derived lookup key. New profiles use
+        # individual threshold options, with the lookup as a fallback only.
+        volts = options.get(
+            CONF_CUSTOM_NUMPY_VOLTS,
+            [
                 DEFAULT_CUSTOM_CRITICAL_VOLTAGE,
-            ),
-            low_voltage=self.entry.options.get(
-                CONF_CUSTOM_LOW_VOLTAGE,
                 DEFAULT_CUSTOM_LOW_VOLTAGE,
+                DEFAULT_CUSTOM_FIFTY_PERCENT_VOLTAGE,
+                DEFAULT_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
+            ],
+        )
+        return custom_battery_profile(
+            battery_chemistry=options.get(
+                CONF_CUSTOM_BATTERY_CHEMISTRY, DEFAULT_CUSTOM_BATTERY_CHEMISTRY
             ),
-            floating_voltage=self.entry.options.get(
-                CONF_CUSTOM_FLOATING_VOLTAGE,
-                DEFAULT_CUSTOM_FLOATING_VOLTAGE,
+            critical_voltage=options.get(CONF_CUSTOM_CRITICAL_VOLTAGE, volts[0]),
+            low_voltage=options.get(CONF_CUSTOM_LOW_VOLTAGE, volts[1]),
+            fifty_percent_voltage=options.get(
+                CONF_CUSTOM_FIFTY_PERCENT_VOLTAGE, volts[2]
             ),
-            charging_voltage=self.entry.options.get(
-                CONF_CUSTOM_CHARGING_VOLTAGE,
-                DEFAULT_CUSTOM_CHARGING_VOLTAGE,
+            hundred_percent_voltage=options.get(
+                CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE, volts[3]
+            ),
+            floating_voltage=options.get(
+                CONF_CUSTOM_FLOATING_VOLTAGE, DEFAULT_CUSTOM_FLOATING_VOLTAGE
+            ),
+            charging_voltage=options.get(
+                CONF_CUSTOM_CHARGING_VOLTAGE, DEFAULT_CUSTOM_CHARGING_VOLTAGE
             ),
         )
-        return battery_detail, True
 
     def _apply_reading(self, reading: BM2Reading) -> None:
         """Apply available fields and publish a decoded reading.
@@ -301,39 +181,16 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         percentage but no voltage/status, so unavailable fields are deliberately
         left at their previous Home Assistant values.
         """
-        voltage = reading.voltage
-        percentage = reading.percentage
-        status = reading.status
+        interpreted = interpret_reading(reading, self._battery_profile())
+        voltage = interpreted.voltage
+        percentage = interpreted.percentage
+        status = interpreted.status
 
-        battery_detail, custom = self._battery_detail()
-
-        # Chemistry-based percentage/status calculations require voltage.
-        if battery_detail is not None:
-            self.update_sensor(
-                key="battery_chemistry",
-                native_value=battery_detail.battery_chemistry,
-                native_unit_of_measurement=None,
-            )
-
-        if (
-            voltage is not None
-            and percentage is not None
-            and battery_detail.battery_chemistry != "Automatic"
-        ):
-            # Adjust the percentage based on the defined battery chemistry
-            percentage = self._adjust_percentage(
-                percentage,
-                battery_detail,
-                voltage,
-                custom,
-            )
-
-            # We can't revise the status without voltage information
-            status = self._adjust_status(
-                status if status is not None else 2,
-                battery_detail,
-                voltage,
-            )
+        self.update_sensor(
+            key="battery_chemistry",
+            native_value=interpreted.battery_chemistry,
+            native_unit_of_measurement=None,
+        )
 
         if percentage is not None:
             self.update_sensor(
@@ -354,14 +211,14 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         # Automatic-via-BM2 passive packets do not expose a decoded status.
         # Leave the previous status intact instead of inventing one.
         if status is not None:
-            status_text = BATTERY_STATUS_LIST.get(status, "unknown")
             self.update_sensor(
                 key="battery_status",
                 native_unit_of_measurement=None,
-                native_value=status_text,
+                native_value=status,
                 device_class=None,
             )
-            self._charging = status >= 4
+        if interpreted.charging is not None:
+            self._charging = interpreted.charging
 
         # Generation is inferred from advertisements.  Publish it alongside
         # either an active or fallback update once it is known.
@@ -383,72 +240,8 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             status,
         )
 
-    async def async_poll(self, ble_device: BLEDevice | None) -> SensorUpdate:
+    async def async_poll_sensors(self, ble_device: BLEDevice | None) -> SensorUpdate:
         """Publish an active reading or the cached advertisement fallback."""
         reading = await BM2Protocol.async_poll(self, ble_device)
         self._apply_reading(reading)
         return self._finish_update()
-
-    def _adjust_percentage(
-        self,
-        raw_percentage: int,
-        battery_detail: BatteryDetail,
-        voltage: float,
-        custom: bool = False,
-    ) -> int:
-        """Adjust battery percentage using the configured chemistry curve."""
-        if not custom:
-            np_percent = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-        else:
-            np_percent = [0, 20, 50, 100]
-
-        new_percentage = int(
-            np.interp(
-                voltage,
-                battery_detail.volts_to_percent,
-                np_percent,
-            )
-        )
-
-        _LOGGER.debug(
-            "Adjusting percentage based on battery chemistry %s: "
-            "voltage=%s, raw=%s, adjusted=%s",
-            battery_detail.battery_chemistry,
-            voltage,
-            raw_percentage,
-            new_percentage,
-        )
-        return new_percentage
-
-    def _adjust_status(
-        self,
-        raw_status: int,
-        battery_detail: BatteryDetail,
-        voltage: float,
-    ) -> int:
-        """Adjust battery status using the configured chemistry thresholds."""
-        if voltage >= battery_detail.charging_voltage:
-            new_status = 4  # Charging
-        elif voltage >= battery_detail.floating_voltage:
-            new_status = 8  # Floating
-        elif voltage <= battery_detail.critical_voltage:
-            new_status = 0  # Critical
-        elif voltage <= battery_detail.low_voltage:
-            new_status = 1  # Low
-        else:
-            new_status = 2  # Normal
-
-        _LOGGER.debug(
-            "Adjusting state based on battery chemistry %s: "
-            "critical=%s, low=%s, float=%s, charging=%s, voltage=%s, "
-            "raw=%s, adjusted=%s",
-            battery_detail.battery_chemistry,
-            battery_detail.critical_voltage,
-            battery_detail.low_voltage,
-            battery_detail.floating_voltage,
-            battery_detail.charging_voltage,
-            voltage,
-            raw_status,
-            new_status,
-        )
-        return new_status

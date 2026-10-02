@@ -1,12 +1,11 @@
-"""Tests for the BM2 battery monitor config and options flows.
-
-Place in tests/components/bmx_monitor/test_config_flow.py.
-"""
+"""Tests for the BM2 battery monitor config and options flows."""
 
 from collections.abc import Callable, Iterator
+from time import monotonic
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.exc import BleakError
 from bmx_ble import BM2Generation
 import probatio
 import pytest
@@ -39,11 +38,17 @@ from homeassistant.components.bmx_monitor.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import (
+    async_setup_with_default_adapter,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+)
 
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 CUSTOM_DETAILS = {
@@ -142,7 +147,6 @@ async def test_bluetooth_discovery(
     result = await _discovery_form(hass, service_info, validation)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
     )
@@ -374,7 +378,6 @@ async def test_manual_custom_details(
     validate.assert_awaited_once()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_battery_details"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CUSTOM_DETAILS.copy()
     )
@@ -395,7 +398,6 @@ async def test_bluetooth_custom_details(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_battery_details"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CUSTOM_DETAILS.copy()
     )
@@ -480,14 +482,12 @@ async def test_options_custom_error_and_retry(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_battery_details"
-
     invalid = {**CUSTOM_DETAILS, CONF_CUSTOM_LOW_VOLTAGE: 11.0}
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], invalid
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "custom_voltages_not_in_order"}
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], CUSTOM_DETAILS.copy()
     )
@@ -540,7 +540,10 @@ async def test_protocol_validation(
         get_device.assert_not_called()
 
 
-@pytest.mark.parametrize("active_path", [None, OSError("Connection lost")])
+@pytest.mark.parametrize(
+    "active_path",
+    [None, BleakError("Connection lost"), TimeoutError("Connection timed out")],
+)
 async def test_validation_cannot_connect(
     hass: HomeAssistant, service_info: MagicMock, active_path: object
 ) -> None:
@@ -577,7 +580,6 @@ async def test_second_advertisement_proves_identity(
     flow.hass = hass
     device = MagicMock()
     device.bm2_generation = BM2Generation.UNKNOWN
-
     calls = 0
 
     def check(_device: MagicMock, _service_info: MagicMock) -> bool:
@@ -609,3 +611,91 @@ async def test_second_advertisement_proves_identity(
     ):
         assert await flow._async_validate_device(service_info) == "valid_passive"
     get_device.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_bluetooth")
+@pytest.mark.parametrize("connectable", [False, True])
+@pytest.mark.parametrize(
+    ("local_name", "manufacturer_data"),
+    [
+        ("Battery Monitor", {}),
+        ("Li Battery Monitor", {}),
+        ("ZX-1689", {}),
+        (
+            None,
+            {76: bytes.fromhex("0215655f83caae16a10a702e31f30d58dd82000000002d")},
+        ),
+    ],
+    ids=["battery-monitor", "li-battery-monitor", "zx-1689", "manufacturer-data"],
+)
+async def test_bluetooth_matcher_discovery(
+    hass: HomeAssistant,
+    local_name: str | None,
+    manufacturer_data: dict[int, bytes],
+    connectable: bool,
+) -> None:
+    """Every generated matcher starts discovery through either scanner type."""
+    device = generate_ble_device(ADDRESS, local_name)
+    advertisement = generate_advertisement_data(
+        local_name=local_name,
+        manufacturer_data=manufacturer_data,
+        rssi=-60,
+    )
+    with patch.object(
+        config_flow.BMxConfigFlow,
+        "_async_validate_device",
+        return_value="valid_passive",
+    ) as validate:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        inject_advertisement_with_time_and_source_connectable(
+            hass,
+            device,
+            advertisement,
+            monotonic(),
+            "passive-test-proxy" if not connectable else "active-test-proxy",
+            connectable,
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert len(flows) == 1
+        assert flows[0]["context"]["source"] == SOURCE_BLUETOOTH
+        assert flows[0]["context"]["unique_id"] == ADDRESS
+        validate.assert_awaited_once()
+        discovered_info = validate.call_args.args[0]
+        assert discovered_info.address == ADDRESS
+        assert discovered_info.connectable is connectable
+        result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "bluetooth_confirm"
+        assert result["errors"] is None
+
+
+@pytest.mark.parametrize("error", [AttributeError, TypeError])
+async def test_validation_programming_error_propagates(
+    hass: HomeAssistant,
+    service_info: MagicMock,
+    error: type[Exception],
+) -> None:
+    """Programming defects must not be converted into a validation retry."""
+    device = MagicMock()
+    device.bm2_generation = BM2Generation.UNKNOWN
+    device.async_validate_active = AsyncMock(side_effect=error("Unexpected defect"))
+    with (
+        patch.object(protocol_validation, "DeviceData", return_value=device),
+        patch.object(
+            protocol_validation,
+            "async_process_advertisements",
+            new_callable=AsyncMock,
+            side_effect=TimeoutError,
+        ),
+        patch.object(
+            protocol_validation,
+            "async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        pytest.raises(error, match="Unexpected defect"),
+    ):
+        await protocol_validation.async_validate_device(hass, service_info)

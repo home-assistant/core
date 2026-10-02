@@ -4,6 +4,7 @@ import contextlib
 import logging
 from typing import Literal
 
+from bleak.exc import BleakError
 from bmx_ble import BM2Generation
 
 from homeassistant.components.bluetooth import (
@@ -78,12 +79,16 @@ async def async_validate_device(
 
     try:
         valid = await device.async_validate_active(ble_device)
-    except Exception as ex:  # noqa: BLE001
+
+    except (BleakError, TimeoutError) as ex:
         # A connection failure is not proof that the device is not a BM2.
         _LOGGER.debug("%s could not be actively validated as BM2: %s", address, ex)
+
         return "cannot_validate"
+
     else:
         if valid:
             _LOGGER.debug("%s validated using active BM2 GATT protocol", address)
             return "valid_active"
+
         return "not_bm2"
