@@ -36,7 +36,7 @@ from aiounifi.models.device import (
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
+from aiounifi.models.firewall_policy import FirewallPolicy
 from aiounifi.models.object_oriented_network_config import (
     ObjectOrientedNetworkConfig,
     ObjectOrientedNetworkInternetMode,
@@ -136,9 +136,8 @@ async def async_firewall_policy_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control firewall policy state."""
-    policy = hub.api.firewall_policies[obj_id].raw
-    policy["enabled"] = target
-    await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
+    policy = hub.api.firewall_policies[obj_id]
+    await hub.api.firewall_policies.save(policy, enabled=target)
 
 
 async def async_object_oriented_network_config_control_fn(

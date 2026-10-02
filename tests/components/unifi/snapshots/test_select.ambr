@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_entity_and_device_data[firewall_policy_payload0][select.unifi_network_block_streaming_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'always',
+        'every_day',
+        'every_week',
+        'one_time',
+        'custom',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.unifi_network_block_streaming_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Block streaming schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block streaming schedule',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_mode',
+    'unique_id': 'firewall_policy_schedule_mode-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[firewall_policy_payload0][select.unifi_network_block_streaming_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'always',
+        'every_day',
+        'every_week',
+        'one_time',
+        'custom',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.unifi_network_block_streaming_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'every_day',
+  })
+# ---
