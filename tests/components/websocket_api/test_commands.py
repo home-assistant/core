@@ -41,7 +41,14 @@ from homeassistant.const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -4185,6 +4192,49 @@ async def test_subscribe_entities_batch_survives_one_unserializable_change(
         "code": "unknown_error",
         "message": "Invalid JSON in response",
     }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_sends_a_change_before_the_result_that_caused_it(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A change reaches the client before the result of the command that caused it.
+
+    The flush is scheduled on the loop, so without flushing ahead of anything else
+    the connection sends, a synchronous service call would have its result queued
+    first - reversing the order sent before batching, and letting the client's command
+    resolve before the state change it caused had been applied.
+    """
+
+    @callback
+    def set_state(call: ServiceCall) -> None:
+        """Change a state synchronously, inside the service call."""
+        hass.states.async_set("light.one", "on")
+
+    hass.services.async_register("test_batch", "set_state", set_state)
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "call_service", "domain": "test_batch", "service": "set_state"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "event"
+    assert set(msg["event"]["a"]) == {"light.one"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
 
     await websocket_client.close()
     await hass.async_block_till_done()

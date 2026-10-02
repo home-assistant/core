@@ -409,6 +409,45 @@ def _send_handle_get_states_response(
     )
 
 
+class _BatchingSender:
+    """A connection's sender, flushing its state batches before anything else.
+
+    A flush is scheduled with call_soon, so a handler that changes state and then
+    sends its result - a synchronous service call, say - would otherwise have the
+    result queued first. That reverses the order the client saw before batching and
+    lets its command resolve before the state change it caused has been applied.
+    """
+
+    __slots__ = ("batches", "send")
+
+    def __init__(self, send: Callable[[str | bytes | dict[str, Any]], None]) -> None:
+        """Wrap the connection's own sender."""
+        self.send = send
+        self.batches: list[_StateDiffBatch] = []
+
+    def __call__(self, message: str | bytes | dict[str, Any]) -> None:
+        """Send, after anything this connection has already collected."""
+        for batch in self.batches:
+            batch.async_flush()
+        # Batches send through self.send, so flushing cannot re-enter this.
+        self.send(message)
+
+
+@callback
+def _async_batching_sender(connection: ActiveConnection) -> _BatchingSender:
+    """Return the connection's batching sender, installing it on first use.
+
+    send_message is an instance attribute, so it is replaced once per connection and
+    every later subscription finds the same sender rather than wrapping again, which
+    would grow a chain of them for the life of the connection.
+    """
+    if isinstance(sender := connection.send_message, _BatchingSender):
+        return sender
+    sender = _BatchingSender(connection.send_message)
+    connection.send_message = sender
+    return sender
+
+
 class _StateDiffBatch:
     """Collects the state changes fired in one event loop iteration into one message.
 
@@ -544,7 +583,9 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     msg_id = msg["id"]
     message_id_as_bytes = str(msg_id).encode()
-    batch = _StateDiffBatch(hass.loop, connection.send_message, message_id_as_bytes)
+    registry = _async_batching_sender(connection)
+    batch = _StateDiffBatch(hass.loop, registry.send, message_id_as_bytes)
+    registry.batches.append(batch)
     unsub = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
@@ -561,6 +602,7 @@ def handle_subscribe_entities(
         """Stop listening and drop any batch that has not been sent yet."""
         unsub()
         batch.async_discard()
+        registry.batches.remove(batch)
 
     connection.subscriptions[msg_id] = _unsubscribe
     connection.send_result(msg_id)
