@@ -11,10 +11,6 @@ DEFAULT_PIPELINE_TIMEOUT = 60 * 5  # seconds
 DEFAULT_WAKE_WORD_TIMEOUT = 3  # seconds
 
 CONF_DEBUG_RECORDING_DIR = "debug_recording_dir"
-DEBUG_RECORDINGS_ISSUE_ID = "debug_recordings"
-
-SERVICE_CLEAR_DEBUG_RECORDINGS = "clear_debug_recordings"
-ATTR_DAYS = "days"
 
 DATA_LAST_WAKE_UP = f"{DOMAIN}.last_wake_up"
 WAKE_WORD_COOLDOWN = 2  # seconds

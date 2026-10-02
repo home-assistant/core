@@ -1,14 +1,17 @@
 """Repairs for the Assist pipeline integration."""
 
 import logging
-from pathlib import Path
 from typing import Any, override
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_DEBUG_RECORDING_DIR, DATA_CONFIG
-from .debug_recording import async_check_debug_recordings, delete_debug_recordings
+from .debug_recording import (
+    DATA_DEBUG_RECORDINGS,
+    ISSUE_LEFT_OVER,
+    DebugRecordings,
+    delete_debug_recordings,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 class DebugRecordingsRepairFlow(ConfirmRepairFlow):
     """Delete the debug recordings after the user confirms."""
 
-    def __init__(self, recording_dir: Path) -> None:
+    def __init__(self, debug_recordings: DebugRecordings, issue_id: str) -> None:
         """Initialize the flow."""
-        self._recording_dir = recording_dir
+        self._debug_recordings = debug_recordings
+        self._issue_id = issue_id
 
     @override
     async def async_step_confirm(
@@ -28,23 +32,31 @@ class DebugRecordingsRepairFlow(ConfirmRepairFlow):
         if user_input is None:
             return await super().async_step_confirm()
 
+        debug_recordings = self._debug_recordings
+        if self._issue_id == ISSUE_LEFT_OVER:
+            recording_dirs = debug_recordings.left_over_dirs
+            check = debug_recordings.async_check_left_over
+        else:
+            assert debug_recordings.recording_dir is not None
+            recording_dirs = [debug_recordings.recording_dir]
+            check = debug_recordings.async_check_still_enabled
+
         try:
-            await self.hass.async_add_executor_job(
-                delete_debug_recordings, self._recording_dir
-            )
+            for recording_dir in recording_dirs:
+                await self.hass.async_add_executor_job(
+                    delete_debug_recordings, recording_dir
+                )
         except OSError:
             _LOGGER.exception("Could not delete the debug recordings")
-            # Some recordings may be deleted already.
-            await async_check_debug_recordings(self.hass, self._recording_dir)
             return self.async_abort(reason="delete_failed")
+        finally:
+            # Also after a failure, as some recordings may be deleted already.
+            await check()
         return self.async_create_entry(data={})
 
 
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, Any] | None
 ) -> DebugRecordingsRepairFlow:
-    """Create a fix flow for the only fixable Assist pipeline issue."""
-    # The issue is only created while a debug recording directory is configured.
-    return DebugRecordingsRepairFlow(
-        Path(hass.data[DATA_CONFIG][CONF_DEBUG_RECORDING_DIR])
-    )
+    """Create a fix flow for the debug recording issues."""
+    return DebugRecordingsRepairFlow(hass.data[DATA_DEBUG_RECORDINGS], issue_id)
