@@ -14,6 +14,7 @@ from typing import Literal, cast, override
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
+from aiounifi.interfaces.firewall_policies import FirewallPolicies
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
@@ -25,6 +26,7 @@ from aiounifi.models.device import (
     TypedDeviceUplink,
     TypedDeviceUptimeStatsWanMonitor,
 )
+from aiounifi.models.firewall_policy import FirewallPolicy
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
@@ -68,6 +70,10 @@ from .entity import (
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
+from .switch import (
+    async_firewall_policy_supported_fn,
+    async_unifi_network_device_info_fn,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -333,6 +339,21 @@ def _device_wan_latency_monitor(
             if monitor_target in (monitor.get("target") or ""):
                 return monitor
     return None
+
+
+@callback
+def async_firewall_policy_schedule_status_value_fn(
+    hub: UnifiHub, policy: FirewallPolicy
+) -> str | None:
+    """Calculate whether a firewall policy currently applies.
+
+    The schedule follows the controller's clock, not Home Assistant's.
+    """
+    if not policy.enabled:
+        return "disabled"
+    if (active := policy.is_active(dt_util.now(hub.time_zone))) is None:
+        return None
+    return "active" if active else "inactive"
 
 
 def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
@@ -936,6 +957,21 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         value_fn=partial(async_device_system_stats_value_fn, 1),
         min_update_interval=TELEMETRY_UPDATE_INTERVAL,
         immediate_change=TELEMETRY_IMMEDIATE_CHANGE,
+    ),
+    UnifiSensorEntityDescription[FirewallPolicies, FirewallPolicy](
+        key="Firewall policy schedule status",
+        translation_key="firewall_policy_schedule_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["disabled", "inactive", "active"],
+        api_handler_fn=lambda api: api.firewall_policies,
+        device_info_fn=async_unifi_network_device_info_fn,
+        object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
+        # The state changes with the clock, not only when the policy changes.
+        should_poll=True,
+        supported_fn=async_firewall_policy_supported_fn,
+        translation_placeholders_fn=lambda policy: {"policy_name": policy.name},
+        unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_status-{obj_id}",
+        value_fn=async_firewall_policy_schedule_status_value_fn,
     ),
 )
 
