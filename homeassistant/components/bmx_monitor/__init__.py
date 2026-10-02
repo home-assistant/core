@@ -74,10 +74,6 @@ async def async_setup_entry(
         last_poll: float | None,
     ) -> bool:
         """Return whether this advertisement should trigger a scheduled update."""
-        # Previously this condition prevented the poll callback from running at
-        # all when the BM2 could only be heard by a passive proxy/scanner.  The
-        # updated poll callback can now publish cached advertisement telemetry
-        # in that situation, so hearing the device is enough to proceed.
         return hass.state is CoreState.running and device_data.poll_needed(
             service_info, last_poll
         )

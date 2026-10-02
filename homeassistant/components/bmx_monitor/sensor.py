@@ -47,6 +47,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         translation_key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
     "battery_status": SensorEntityDescription(

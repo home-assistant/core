@@ -27,9 +27,7 @@ rules:
     status: exempt
     comment: This integration does not provide custom triggers.
 
-  entity-event-setup:
-    status: exempt
-    comment: Entities in this integration do not explicitly subscribe to Home Assistant events.
+  entity-event-setup: done
 
   entity-unique-id: done
   has-entity-name: done

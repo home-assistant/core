@@ -124,7 +124,6 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             DEFAULT_RATE_LIMIT,
         )
 
-        # Keep the existing coordinator semantics used by the integration.
         poll_needed = last_poll > rate_limit
 
         _LOGGER.debug(
