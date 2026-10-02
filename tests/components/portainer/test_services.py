@@ -13,24 +13,30 @@ import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.services import (
+    ATTR_ALL,
     ATTR_CONTAINER_DEVICE_ID,
     ATTR_DANGLING,
     ATTR_DATE_UNTIL,
     ATTR_PULL_IMAGE,
     ATTR_TIMEOUT,
+    SERVICE_PRUNE_BUILD_CACHE,
     SERVICE_PRUNE_IMAGES,
     SERVICE_RECREATE_CONTAINER,
     _async_get_device_and_entry,
 )
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
 from .conftest import TEST_CONTAINER_ID, TEST_CONTAINER_NAME, TEST_ENTRY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 TEST_ENDPOINT_ID = 1
 TEST_DEVICE_IDENTIFIER = f"{TEST_ENTRY}_{TEST_ENDPOINT_ID}"
@@ -109,6 +115,111 @@ async def test_service_prune_images(
         until=expected_until,
         dangling=expected_dangling,
     )
+
+
+@pytest.mark.parametrize(
+    ("call_arguments", "expected_all", "expected_until"),
+    [
+        ({}, True, None),
+        ({ATTR_ALL: False}, False, None),
+        ({ATTR_DATE_UNTIL: timedelta(hours=12)}, True, timedelta(hours=12)),
+        (
+            {ATTR_ALL: False, ATTR_DATE_UNTIL: timedelta(hours=12)},
+            False,
+            timedelta(hours=12),
+        ),
+    ],
+    ids=["no optional", "dangling only", "with duration", "dangling with duration"],
+)
+async def test_service_prune_build_cache(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    call_arguments: dict,
+    expected_all: bool,
+    expected_until: timedelta | None,
+) -> None:
+    """Test prune build cache service with the variants."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
+    )
+    assert device is not None
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRUNE_BUILD_CACHE,
+        {ATTR_DEVICE_ID: device.id, **call_arguments},
+        blocking=True,
+    )
+    mock_portainer_client.prune_build_cache.assert_called_once_with(
+        TEST_ENDPOINT_ID,
+        all_cache=expected_all,
+        until=expected_until,
+    )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (PortainerAuthenticationError("auth"), "invalid_auth"),
+        (PortainerConnectionError("conn"), "cannot_connect"),
+        (PortainerTimeoutError("timeout"), "timeout_connect"),
+    ],
+)
+async def test_service_prune_build_cache_portainer_exceptions(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: PortainerAuthenticationError
+    | PortainerConnectionError
+    | PortainerTimeoutError,
+    translation_key: str,
+) -> None:
+    """Test prune build cache service handles Portainer exceptions."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    mock_portainer_client.prune_build_cache.side_effect = exception
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRUNE_BUILD_CACHE,
+            {ATTR_DEVICE_ID: device.id},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    mock_portainer_client.prune_build_cache.assert_called_once()
+
+
+async def test_service_prune_build_cache_requires_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    device_registry: DeviceRegistry,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test prune build cache service is only available to admins."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRUNE_BUILD_CACHE,
+            {ATTR_DEVICE_ID: device.id},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    mock_portainer_client.prune_build_cache.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -239,6 +350,24 @@ async def test_service_validation_errors(
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_not_called()
+
+    with pytest.raises(MultipleInvalid, match="value must be at least"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRUNE_BUILD_CACHE,
+            {ATTR_DEVICE_ID: device.id, ATTR_DATE_UNTIL: timedelta(seconds=30)},
+            blocking=True,
+        )
+    mock_portainer_client.prune_build_cache.assert_not_called()
+
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRUNE_BUILD_CACHE,
+            {ATTR_DEVICE_ID: container.id},
+            blocking=True,
+        )
+    mock_portainer_client.prune_build_cache.assert_not_called()
 
     with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
