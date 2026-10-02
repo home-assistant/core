@@ -1,5 +1,6 @@
 """Test Lastfm config flow."""
 
+import asyncio
 from threading import Event
 from unittest.mock import MagicMock, call, patch
 
@@ -16,7 +17,7 @@ from homeassistant.components.lastfm.const import (
     DOMAIN,
     ERROR_CODE_TOKEN_UNAUTHORIZED,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -528,15 +529,13 @@ async def test_flow_abort_cancels_session_key_polling(
 async def test_flow_abort_after_terminal_polling_error(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
-    """Test aborting the flow before the scheduled advancement task runs."""
+    """Test aborting the flow before terminal polling advances it."""
     with (
         patch("pylast.User", return_value=default_user),
         patch(
             SESSION_KEY_GENERATOR_PATH,
             return_value=MockSessionKeyGenerator(
-                session_key_error=WSError(
-                    "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Token not authorized"
-                )
+                session_key_error=WSError("network", "15", "Token expired")
             ),
         ),
         patch(POLLING_INTERVAL_PATH, 0),
@@ -550,8 +549,25 @@ async def test_flow_abort_after_terminal_polling_error(
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         polling_task = get_session_key_polling_task(hass, result["flow_id"])
 
-        await polling_task
-        hass.config_entries.flow.async_abort(result["flow_id"])
+        release_advancement = asyncio.Event()
+        advancement_task: asyncio.Task[None] | None = None
+        async_configure = hass.config_entries.flow.async_configure
+
+        async def delayed_configure(flow_id: str) -> ConfigFlowResult:
+            nonlocal advancement_task
+            advancement_task = asyncio.current_task()
+            await release_advancement.wait()
+            return await async_configure(flow_id)
+
+        with patch.object(
+            hass.config_entries.flow, "async_configure", side_effect=delayed_configure
+        ):
+            await polling_task
+            assert advancement_task is not None
+            hass.config_entries.flow.async_abort(result["flow_id"])
+            release_advancement.set()
+            await advancement_task
+
         await hass.async_block_till_done()
 
     assert polling_task.exception() is None
