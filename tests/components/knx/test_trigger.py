@@ -10,7 +10,10 @@ from homeassistant.components import automation
 from homeassistant.components.knx import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import async_get_all_descriptions
+from homeassistant.helpers.trigger import (
+    async_get_all_descriptions,
+    async_get_description,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
@@ -44,6 +47,64 @@ async def test_telegram_trigger_description(
         "outgoing",
         "type",
     }
+    assert descriptions["knx.telegram"]["has_dynamic_fields"] is True
+
+
+def _assert_destination_field(
+    description: dict[str, Any] | None, expected_options: list[dict[str, str]]
+) -> None:
+    """Assert the destination field offers the expected group addresses."""
+    assert description is not None
+    assert description["fields"]["destination"] == {
+        "required": True,
+        "default": [],
+        "example": "1/2/3",
+        "selector": {
+            "select": {
+                "mode": "dropdown",
+                "multiple": True,
+                "custom_value": True,
+                "sort": False,
+                "options": expected_options,
+            }
+        },
+    }
+    assert description["fields"]["type"] == {
+        "example": "9.001",
+        "selector": {"text": {"multiline": False, "multiple": False}},
+    }
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_telegram_trigger_dynamic_fields(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    project_data: dict[str, Any],
+) -> None:
+    """Test the destination field offers the group addresses of the project."""
+    await knx.setup_integration()
+
+    description = await async_get_description(hass, "knx.telegram")
+
+    _assert_destination_field(
+        description,
+        [
+            {"value": ga["address"], "label": f"{ga['address']} - {ga['name']}"}
+            for ga in project_data["group_addresses"].values()
+        ],
+    )
+
+
+async def test_telegram_trigger_dynamic_fields_without_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test the destination field has no options without a project."""
+    await knx.setup_integration()
+
+    description = await async_get_description(hass, "knx.telegram")
+
+    _assert_destination_field(description, [])
 
 
 @pytest.mark.parametrize("trigger_style", TRIGGER_STYLES)

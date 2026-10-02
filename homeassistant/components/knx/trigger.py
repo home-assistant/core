@@ -11,7 +11,7 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 
 from homeassistant.const import CONF_OPTIONS, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
@@ -22,7 +22,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import SIGNAL_KNX_TELEGRAM
+from .const import KNX_MODULE_KEY, SIGNAL_KNX_TELEGRAM
 from .schema import ga_validator
 from .telegrams import TelegramDict, decode_telegram_payload
 from .validation import dpt_base_type_validator
@@ -56,6 +56,25 @@ _OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
 _TELEGRAM_TRIGGER_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_OPTIONS, default=dict): _OPTIONS_SCHEMA_DICT}
 )
+
+
+@callback
+def group_address_select_selector(hass: HomeAssistant) -> selector.SelectSelector:
+    """Return a selector listing the group addresses of the loaded project."""
+    project = hass.data[KNX_MODULE_KEY].project
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            mode=selector.SelectSelectorMode.DROPDOWN,
+            multiple=True,
+            custom_value=True,
+            options=[
+                selector.SelectOptionDict(
+                    value=ga.address, label=f"{ga.address} - {ga.name}"
+                )
+                for ga in project.group_addresses.values()
+            ],
+        )
+    )
 
 
 @callback
@@ -147,6 +166,22 @@ class TelegramTrigger(Trigger):
     ) -> ConfigType:
         """Validate config."""
         return cast(ConfigType, _TELEGRAM_TRIGGER_SCHEMA(config))
+
+    @override
+    @classmethod
+    async def async_get_fields_schema(
+        cls, hass: HomeAssistant
+    ) -> probatio.Schema | None:
+        """Offer the project's group addresses for the destination field."""
+        if KNX_MODULE_KEY not in hass.data:
+            return None
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_KNX_DESTINATION): group_address_select_selector(
+                    hass
+                )
+            }
+        )
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
