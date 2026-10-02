@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 from typing import Any, override
 
 from infrared_protocols.commands.gree_ac import (
-    _YAP1F_SWING_POSITIONS,
     MAX_TEMP,
     MIN_TEMP,
+    YAP1F_SWING_POSITIONS,
     GreeAcCommand,
     GreeAcFanSpeed,
     GreeAcFreshAir,
@@ -94,7 +94,7 @@ _LIB_FRESH_AIR_TO_HA: dict[GreeAcFreshAir, str] = {
 FRESH_AIR_OPTIONS = list(_HA_FRESH_AIR_TO_LIB)
 
 VANE_AUTO = "auto"
-VANE_OPTIONS = [VANE_AUTO, *(str(p) for p in _YAP1F_SWING_POSITIONS)]
+VANE_OPTIONS = [VANE_AUTO, *(str(p) for p in YAP1F_SWING_POSITIONS)]
 HORIZONTAL_POSITION_OPTIONS = [
     "off",
     "auto",
@@ -182,7 +182,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
         swing_v_position = restored.get("swing_v_position")
         if swing_v_position is not None and (
             not isinstance(swing_v_position, int)
-            or swing_v_position not in _YAP1F_SWING_POSITIONS
+            or swing_v_position not in YAP1F_SWING_POSITIONS
         ):
             return None
         fresh_air = restored.get("fresh_air", int(GreeAcFreshAir.OFF))
@@ -590,7 +590,7 @@ class GreeAcClimateEntity(
         """
         if not self._is_yap1f:
             raise ValueError("Vane position is only available on the YAP1F model")
-        if position is not None and position not in _YAP1F_SWING_POSITIONS:
+        if position is not None and position not in YAP1F_SWING_POSITIONS:
             raise ValueError(f"Unsupported vane position: {position}")
         async with self._state.command_lock:
             previous_position = self._state.swing_v_position
