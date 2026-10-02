@@ -21,6 +21,7 @@ from opendisplay import (
 from PIL import Image as PILImage, ImageOps
 import probatio
 
+from homeassistant.components import camera, image as image_component
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
@@ -128,6 +129,32 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
     return await hass.async_add_executor_job(_load_image_from_bytes, data)
 
 
+async def _async_get_pil_image(
+    hass: HomeAssistant, image_data: dict[str, Any]
+) -> PILImage.Image:
+    """Return a PIL Image for the selected media."""
+    media_content_id: str = image_data["media_content_id"]
+
+    # Camera and image entities resolve to never-ending MJPEG streams,
+    # so fetch a single snapshot from the entity instead.
+    if media_content_id.startswith("media-source://camera/"):
+        entity_id = media_content_id.removeprefix("media-source://camera/")
+        snapshot = await camera.async_get_image(hass, entity_id)
+        return await hass.async_add_executor_job(
+            _load_image_from_bytes, snapshot.content
+        )
+
+    if media_content_id.startswith("media-source://image/"):
+        entity_id = media_content_id.removeprefix("media-source://image/")
+        img = await image_component.async_get_image(hass, entity_id)
+        return await hass.async_add_executor_job(_load_image_from_bytes, img.content)
+
+    media = await async_resolve_media(hass, media_content_id, None)
+    if media.path is not None:
+        return await hass.async_add_executor_job(_load_image, str(media.path))
+    return await _async_download_image(hass, media.url)
+
+
 async def _async_upload_image(call: ServiceCall) -> None:
     """Handle the upload_image service call."""
     entry = _get_entry_for_device(call)
@@ -166,16 +193,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     entry.runtime_data.upload_task = current
 
     try:
-        media = await async_resolve_media(
-            call.hass, image_data["media_content_id"], None
-        )
-
-        if media.path is not None:
-            pil_image = await call.hass.async_add_executor_job(
-                _load_image, str(media.path)
-            )
-        else:
-            pil_image = await _async_download_image(call.hass, media.url)
+        pil_image = await _async_get_pil_image(call.hass, image_data)
 
         raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
         if raw_key is not None and len(raw_key) != 32:
