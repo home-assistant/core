@@ -72,5 +72,9 @@ def async_set_home_assistant_restart_required(hass: HomeAssistant, domain: str) 
 def async_subscribe(
     hass: HomeAssistant, listener: Callable[[SystemState], None]
 ) -> CALLBACK_TYPE:
-    """Subscribe to changes of the system state."""
+    """Subscribe to changes of the system state.
+
+    The listener must be a callback: it gets the live state, which a listener
+    running in the executor would only read after it changed again.
+    """
     return async_dispatcher_connect(hass, SIGNAL_SYSTEM_STATE_UPDATED, listener)
