@@ -53,6 +53,23 @@
       "terminate_apps": {
         "name": "Terminate apps"
       }
+    },
+    "number": {
+      "brightness": {
+        "name": "Picture brightness"
+      },
+      "color": {
+        "name": "Picture color"
+      },
+      "contrast": {
+        "name": "Picture contrast"
+      },
+      "hue": {
+        "name": "Picture hue"
+      },
+      "sharpness": {
+        "name": "Picture sharpness"
+      }
     }
   },
   "exceptions": {

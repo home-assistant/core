@@ -1,6 +1,7 @@
 """Update coordinator for Bravia TV integration."""
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
@@ -38,10 +39,18 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
-type BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
+type BraviaTVConfigEntry = ConfigEntry[BraviaTVData]
 
 
-def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
+@dataclass
+class BraviaTVData:
+    """Runtime data for the Bravia TV integration."""
+
+    coordinator: BraviaTVCoordinator
+    picture_coordinator: BraviaTVPictureCoordinator
+
+
+def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVDataUpdateCoordinator, **_P](
     func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
     """Catch Bravia errors."""
@@ -85,8 +94,8 @@ def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
     return wrapper
 
 
-class BraviaTVCoordinator(DataUpdateCoordinator[None]):
-    """Representation of a Bravia TV Coordinator."""
+class BraviaTVDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base coordinator for the Bravia TV integration."""
 
     config_entry: BraviaTVConfigEntry
 
@@ -95,14 +104,56 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         config_entry: BraviaTVConfigEntry,
         client: BraviaClient,
+        name: str,
+        update_interval: timedelta,
     ) -> None:
-        """Initialize Bravia TV Client."""
-
+        """Initialize Bravia TV coordinator."""
         self.client = client
         self.pin = config_entry.data[CONF_PIN]
         self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
         self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
         self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.connected = False
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=name,
+            update_interval=update_interval,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=1.0, immediate=False
+            ),
+        )
+
+    async def async_connect(self) -> None:
+        """Connect to the device."""
+        if self.connected:
+            return
+        try:
+            if self.use_psk:
+                await self.client.connect(psk=self.pin)
+            else:
+                await self.client.connect(
+                    pin=self.pin,
+                    clientid=self.client_id,
+                    nickname=self.nickname,
+                )
+            self.connected = True
+        except BraviaAuthError as err:
+            raise ConfigEntryAuthFailed from err
+
+
+class BraviaTVCoordinator(BraviaTVDataUpdateCoordinator[None]):
+    """Representation of a Bravia TV Coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: BraviaTVConfigEntry,
+        client: BraviaClient,
+    ) -> None:
+        """Initialize Bravia TV Client."""
         self.system_info: dict[str, str] = {}
         self.source: str | None = None
         self.source_list: list[str] = []
@@ -119,18 +170,14 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.volume_target: str | None = None
         self.volume_muted = False
         self.is_on = False
-        self.connected = False
         self.skipped_updates = 0
 
         super().__init__(
             hass,
-            _LOGGER,
-            config_entry=config_entry,
+            config_entry,
+            client,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-            request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=1.0, immediate=False
-            ),
         )
 
     def _sources_extend(
@@ -156,19 +203,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
         try:
-            if not self.connected:
-                try:
-                    if self.use_psk:
-                        await self.client.connect(psk=self.pin)
-                    else:
-                        await self.client.connect(
-                            pin=self.pin,
-                            clientid=self.client_id,
-                            nickname=self.nickname,
-                        )
-                    self.connected = True
-                except BraviaAuthError as err:
-                    raise ConfigEntryAuthFailed from err
+            await self.async_connect()
 
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
@@ -412,3 +447,66 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_terminate_apps(self) -> None:
         """Send command to terminate all applications."""
         await self.client.terminate_apps()
+
+
+class BraviaTVPictureCoordinator(
+    BraviaTVDataUpdateCoordinator[dict[str, dict[str, Any]] | None]
+):
+    """Representation of a Bravia TV Picture Coordinator.
+
+    Only polls the picture settings API while at least one
+    picture settings entity is enabled.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: BraviaTVConfigEntry,
+        client: BraviaClient,
+        coordinator: BraviaTVCoordinator,
+    ) -> None:
+        """Initialize the picture settings coordinator."""
+        self._coordinator = coordinator
+
+        super().__init__(
+            hass,
+            config_entry,
+            client,
+            name=f"{DOMAIN}_picture",
+            update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the TV is on."""
+        return self._coordinator.is_on
+
+    def get_setting(self, target: str) -> dict[str, Any] | None:
+        """Return the picture setting for a target, if available."""
+        if self.data is None:
+            return None
+        return self.data.get(target)
+
+    @override
+    async def _async_update_data(self) -> dict[str, dict[str, Any]] | None:
+        """Fetch picture quality settings."""
+        if not self._coordinator.is_on:
+            # Keep the last known settings while the TV is off
+            return self.data
+
+        await self._coordinator.async_connect()
+
+        try:
+            settings = await self.client.get_picture_setting()
+        except BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff:
+            raise
+        except BraviaError:
+            # Not all TVs support the picture settings API
+            _LOGGER.debug("Failed to update picture settings")
+            return self.data
+        return {item["target"]: item for item in settings}
+
+    @catch_braviatv_errors
+    async def async_set_picture_quality(self, target: str, value: str) -> None:
+        """Set a picture quality setting."""
+        await self.client.set_picture_setting(target, value)
