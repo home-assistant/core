@@ -29,6 +29,7 @@ from homeassistant.components.websocket_api.automation import (
     _get_automation_component_lookup_table,
 )
 from homeassistant.components.websocket_api.commands import (
+    _MAX_BATCHED_STATE_CHANGES,
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
     ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
     ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
@@ -4235,6 +4236,82 @@ async def test_subscribe_entities_sends_a_change_before_the_result_that_caused_i
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_sends_a_change_before_an_earlier_event_subscription(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A subscription that started first does not overtake a collected change.
+
+    Subscriptions capture the connection's sender when they start, so one created
+    before this is batching at all would hold a sender that skipped the flush and
+    queue its own copy of the event ahead of the collected change - the reverse of
+    the order it was sent in before batching.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_events"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    events_subscription = msg["id"]
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    entities_subscription = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.one", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == entities_subscription, "the state change should arrive first"
+    assert set(msg["event"]["a"]) == {"light.one"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == events_subscription
+    assert msg["event"]["event_type"] == "state_changed"
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_caps_how_much_one_message_can_carry(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A batch is bounded, so a client that stops reading cannot hold unlimited state.
+
+    A connection is limited by the number of messages waiting for it, not their size,
+    so one unbounded message would weaken that limit by however many entities it
+    happened to carry.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    changes = _MAX_BATCHED_STATE_CHANGES * 2 + 1
+    for index in range(changes):
+        hass.states.async_set(f"light.bulb_{index}", "on")
+
+    seen = 0
+    messages_received = 0
+    while seen < changes:
+        msg = await websocket_client.receive_json()
+        carried = len(msg["event"].get("a", {}))
+        assert carried <= _MAX_BATCHED_STATE_CHANGES, (
+            f"one message carried {carried} changes"
+        )
+        seen += carried
+        messages_received += 1
+
+    assert seen == changes
+    assert messages_received == 3
 
     await websocket_client.close()
     await hass.async_block_till_done()
