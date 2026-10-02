@@ -131,7 +131,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_MONITORED_VARIABLES): probatio.All(
             probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }

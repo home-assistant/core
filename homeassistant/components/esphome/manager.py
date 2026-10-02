@@ -802,9 +802,15 @@ class ESPHomeManager:
         # if it's a broken connection or Z-Wave controller or a not
         # yet provisioned controller.
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
-        assert self.entry_data.device_info is not None
-        self.entry_data.async_create_zwave_js_flow(
-            self.hass, self.entry_data.device_info, zwave_home_id
+        entry_data = self.entry_data
+        assert entry_data.device_info is not None
+        # DeviceInfo is a snapshot from connect time; keep its home ID current.
+        entry_data.device_info = EsphomeDeviceInfo.from_dict(
+            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        )
+        entry_data.async_save_to_store()
+        entry_data.async_create_zwave_js_flow(
+            self.hass, entry_data.device_info, zwave_home_id
         )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
