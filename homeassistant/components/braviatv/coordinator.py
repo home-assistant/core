@@ -142,7 +142,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Extend source map and source list."""
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
-        titles = {item["title"].lower() for item in sources if item.get("title")}
+        listed = {item["title"].lower() for item in sources if item.get("title")}
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
@@ -154,8 +154,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     self.source_list.append(title)
                 # Extra entry so the reported source keeps its generic name.
                 label = item.get("label")
-                listed = titles | {name.lower() for name in self.source_list}
                 if label and label.lower() not in listed:
+                    listed.add(label.lower())
                     self.source_list.append(label)
 
     @override
