@@ -1,7 +1,7 @@
 """Test reconfiguring a ScorpionTrack share."""
 
 from dataclasses import replace
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 from pyscorpiontrack import (
     ScorpionTrackConnectionError,
@@ -40,6 +40,7 @@ async def test_reconfigure_same_share(
     mock_config_entry: MockConfigEntry,
     mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
+    mock_scorpiontrack_client_class: MagicMock,
     entity_registry: er.EntityRegistry,
     share_input: str,
     token: str,
@@ -65,14 +66,10 @@ async def test_reconfigure_same_share(
         == "canonical-token"
     )
 
-    with patch(
-        "homeassistant.components.scorpiontrack.ScorpionTrackClient",
-        return_value=mock_scorpiontrack_client,
-    ) as create_client:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_SHARE_TOKEN: share_input}
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SHARE_TOKEN: share_input}
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -84,7 +81,7 @@ async def test_reconfigure_same_share(
         == original_entities
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    create_client.assert_called_once_with(session=ANY, token=token)
+    mock_scorpiontrack_client_class.assert_called_with(session=ANY, token=token)
     assert mock_scorpiontrack_client.async_get_share.await_count == 3
     speed = hass.states.get("sensor.ab12_cde_speed")
     assert speed is not None
@@ -127,11 +124,12 @@ async def test_reconfigure_rejects_different_share(
 async def test_reconfigure_validation_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
     error: Exception,
     expected_error: str,
 ) -> None:
-    """Keep the reconfigure form and stored data after validation fails."""
+    """Recover from a validation error without losing the stored configuration."""
     mock_config_entry.add_to_hass(hass)
     mock_scorpiontrack_client.async_get_share.side_effect = error
     share_input = "https://app.scorpiontrack.com/shared/location?token=updated-token"
@@ -150,12 +148,26 @@ async def test_reconfigure_validation_error(
     )
     assert mock_config_entry.data == {CONF_SHARE_TOKEN: "canonical-token"}
 
+    mock_scorpiontrack_client.async_get_share.side_effect = None
+    mock_scorpiontrack_client.async_get_share.return_value = replace(
+        mock_share, token="updated-token"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SHARE_TOKEN: share_input}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_SHARE_TOKEN: "updated-token"}
+    assert mock_config_entry.unique_id == "101"
+
 
 async def test_reconfigure_malformed_link(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Reject an empty token before updating the entry."""
+    """Recover from an empty token by submitting a valid token."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -170,3 +182,13 @@ async def test_reconfigure_malformed_link(
         == " "
     )
     assert mock_config_entry.data == {CONF_SHARE_TOKEN: "canonical-token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SHARE_TOKEN: "canonical-token"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_SHARE_TOKEN: "canonical-token"}
+    assert mock_config_entry.unique_id == "101"
