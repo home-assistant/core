@@ -278,27 +278,30 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
     try:
         cnk, description = await _async_resolve_product(data, apb, product_input)
         products = (DraftProduct(product_cnk=cnk, quantity=call.data[ATTR_QUANTITY]),)
-        draft = await data.client.async_get_draft_basket(apb)
-        draft_id: str | None
-        if draft is not None and draft.id is not None:
-            await data.client.async_update_draft_basket(
-                apb, draft.id, products=products
+        async with data.lock:
+            draft = await data.client.async_get_draft_basket(apb)
+            draft_id: str | None
+            if draft is not None and draft.id is not None:
+                await data.client.async_update_draft_basket(
+                    apb, draft.id, products=products
+                )
+                draft_id = draft.id
+            else:
+                draft_id = await data.client.async_save_draft_basket(
+                    apb, products=products
+                )
+            if draft_id is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="order_failed",
+                    translation_placeholders={ATTR_APB: apb},
+                )
+            basket_id = await data.client.async_submit_basket(
+                apb,
+                draft_id,
+                products=products,
+                comment=call.data.get(ATTR_COMMENT),
             )
-            draft_id = draft.id
-        else:
-            draft_id = await data.client.async_save_draft_basket(apb, products=products)
-        if draft_id is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="order_failed",
-                translation_placeholders={ATTR_APB: apb},
-            )
-        basket_id = await data.client.async_submit_basket(
-            apb,
-            draft_id,
-            products=products,
-            comment=call.data.get(ATTR_COMMENT),
-        )
     except FarmadAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="authentication_failed"

@@ -1,5 +1,6 @@
 """Test the Mijn Farmad Apotheek integration."""
 
+import asyncio
 from unittest.mock import MagicMock
 
 from aiofarmad import (
@@ -470,6 +471,53 @@ async def test_order_medication_without_draft_id(
 
     assert exc_info.value.translation_key == "order_failed"
     client.async_submit_basket.assert_not_awaited()
+
+
+async def test_order_medication_serialized(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test concurrent orders do not overlap in the draft handling."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    in_flight = 0
+    max_in_flight = 0
+
+    async def track_save(apb: str, *, products: tuple[DraftProduct, ...]) -> str:
+        """Mark the start of an order transaction."""
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        await asyncio.sleep(0)
+        return API_DRAFT_ID
+
+    async def track_submit(
+        apb: str,
+        draft_id: str,
+        *,
+        products: tuple[DraftProduct, ...],
+        comment: str | None,
+    ) -> str:
+        """Mark the end of an order transaction."""
+        nonlocal in_flight
+        await asyncio.sleep(0)
+        in_flight -= 1
+        return API_BASKET_ID
+
+    client.async_save_draft_basket.side_effect = track_save
+    client.async_submit_basket.side_effect = track_submit
+
+    await asyncio.gather(
+        *(
+            asyncio.create_task(
+                hass.services.async_call(
+                    DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+                )
+            )
+            for _ in range(2)
+        )
+    )
+
+    assert max_in_flight == 1
 
 
 async def test_order_medication_invalid_quantity(

@@ -1,6 +1,7 @@
 """The Mijn Farmad Apotheek integration."""
 
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field
 
 from aiofarmad import FarmadClient, FarmadError
 
@@ -25,12 +26,14 @@ class FarmadData:
     The pharmacies hold the options of the pharmacy fields of the
     actions. The products map the CNK codes of the order history to
     their descriptions, so ordering a known CNK needs no catalog
-    search.
+    search. The lock serializes the draft handling of the order
+    action, so concurrent orders cannot invalidate each other.
     """
 
     client: FarmadClient
     pharmacies: list[dict[str, str]]
     products: dict[str, str]
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 type FarmadConfigEntry = ConfigEntry[FarmadData]
