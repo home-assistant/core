@@ -674,7 +674,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             )
             try:
                 hvac_mode = self._attr_hvac_mode
-                if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
+                if hvac_mode is not None:
                     await self._async_send_state(
                         hvac_mode,
                         int(self._attr_target_temperature or MIN_TEMP),
@@ -683,6 +683,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             except Exception:
                 self._state.timer_hours = previous
                 self._timer_deadline = previous_deadline
+                self._schedule_timer_expiry()
                 raise
             self._schedule_timer_expiry()
             self._state.async_notify_switches()
@@ -813,6 +814,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 )
             self._attr_fan_mode = fan_mode
             self.async_write_ha_state()
+            self._state.async_notify_switches()
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -1002,7 +1004,13 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
     @callback
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Schedule received-state updates behind any in-flight send."""
-        self.hass.async_create_task(self._async_handle_signal(signal))
+        config_entry = self.platform.config_entry
+        assert config_entry is not None
+        config_entry.async_create_background_task(
+            self.hass,
+            self._async_handle_signal(signal),
+            "gree_infrared_received_signal",
+        )
 
     async def _async_handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Update state from a physical remote signal under the command lock."""
