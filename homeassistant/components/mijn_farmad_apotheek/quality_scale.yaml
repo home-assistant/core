@@ -2,7 +2,8 @@ rules:
   action-setup: done
   appropriate-polling:
     status: exempt
-    comment: The integration polls nothing, the action runs on demand.
+    comment: Nothing is fetched on a schedule, the actions run on demand. The
+      iot_class marks every Farmad request as initiated by Home Assistant.
   brands: done
   common-modules: done
   config-flow: done
