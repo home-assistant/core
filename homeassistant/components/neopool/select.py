@@ -59,6 +59,10 @@ from .entity import NeoPoolEntity
 
 PARALLEL_UPDATES = 1
 
+# Timer-period option for a period of 0: the schedule runs once, never repeating.
+# Offered permanently so a timer can always be returned to its non-repeating state.
+_NO_REPEAT = "no_repeat"
+
 type _WriteFn = Callable[["NeoPoolSelect", NeoPoolModbusClient, str], Awaitable[None]]
 type _OptionsFn = Callable[[dict[str, Any]], list[str]]
 type _CurrentOptionFn = Callable[[dict[str, Any]], str | None]
@@ -162,9 +166,12 @@ async def _write_timer_period(
 ) -> None:
     """Update the repeat period of a timer via the library's write_timer."""
     timer_name = entity.entity_description.key.rsplit("_", 1)[0]
-    # options surfaces an off-map device period as a raw-seconds string, so
-    # accept that back as seconds instead of indexing PERIOD_MAP blindly.
-    period_value = PERIOD_MAP.get(option, 0) or int(option)
+    if option == _NO_REPEAT:
+        period_value = 0
+    else:
+        # options surfaces an off-map device period as a raw-seconds string, so
+        # accept that back as seconds instead of indexing PERIOD_MAP blindly.
+        period_value = PERIOD_MAP.get(option, 0) or int(option)
     # write_timer rewrites the whole block, so serialize it per block.
     async with entity.coordinator.timer_write_lock(timer_name):
         await client.write_timer(timer_name, {"period": period_value})
@@ -655,11 +662,14 @@ class NeoPoolSelect(NeoPoolEntity, SelectEntity):
             return options_fn(data)
 
         if desc.select_type == "timer_period":
-            options_list = list(PERIOD_MAP.keys())
+            # no_repeat (period 0) is always offered so a timer can be returned
+            # to its non-repeating state after a repeat period was selected.
+            options_list = [_NO_REPEAT, *PERIOD_MAP.keys()]
             value = data.get(self._key)
-            # Mirror current_option: a device period outside the canonical map
-            # is surfaced as a raw-seconds string so the two stay in sync.
-            if isinstance(value, int) and value not in PERIOD_SECONDS_TO_KEY:
+            # Mirror current_option: a non-zero device period outside the
+            # canonical map is surfaced as a raw-seconds string so the two
+            # stay in sync.
+            if isinstance(value, int) and value and value not in PERIOD_SECONDS_TO_KEY:
                 return [str(value), *options_list]
             return options_list
 
@@ -714,6 +724,8 @@ class NeoPoolSelect(NeoPoolEntity, SelectEntity):
             if value is None:  # pragma: no cover - timer block present once polled
                 return None
             int_value = int(value)
+            if int_value == 0:
+                return _NO_REPEAT
             return PERIOD_SECONDS_TO_KEY.get(int_value, str(int_value))
 
         if desc.select_type == "relay_mode":

@@ -538,6 +538,60 @@ async def test_timer_period_select_calls_set_timer_service(
     assert payload["period"] == 604800
 
 
+async def test_timer_period_no_repeat_writes_zero(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Selecting no_repeat writes a period of 0, returning the timer to run-once."""
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_period")
+    mock_neopool_client.write_timer.reset_mock()
+    await _select_option(hass, entity_id, "no_repeat")
+    timer_name, payload = mock_neopool_client.write_timer.await_args.args
+    assert timer_name == "relay_aux1"
+    assert payload["period"] == 0
+
+
+async def test_timer_period_off_map_value_surfaced_as_raw_seconds(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A non-zero period outside the canonical map shows as a raw-seconds option."""
+    mock_neopool_client.read_all_timers.side_effect = None
+    mock_neopool_client.read_all_timers.return_value = {
+        "relay_aux1": {
+            "enable": 4,
+            "on": 0,
+            "interval": 0,
+            "period": 12345,
+            "countdown": 0,
+            "stop": None,
+        }
+    }
+    await setup_integration(hass, mock_config_entry_timers)
+
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_period")
+    state = hass.states.get(entity_id)
+    assert state.state == "12345"
+    assert "12345" in state.attributes["options"]
+    assert "no_repeat" in state.attributes["options"]
+
+
+async def test_timer_period_zero_reads_as_no_repeat(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A device period of 0 surfaces as no_repeat, which stays selectable."""
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_period")
+    state = hass.states.get(entity_id)
+    assert state.state == "no_repeat"
+    assert "no_repeat" in state.attributes["options"]
+
+
 async def test_timer_period_write_holds_block_lock(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,

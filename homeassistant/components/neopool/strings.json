@@ -305,7 +305,8 @@
           "3_weeks": "3 Weeks",
           "4_days": "4 Days",
           "4_weeks": "4 Weeks",
-          "5_days": "5 Days"
+          "5_days": "5 Days",
+          "no_repeat": "No repeat"
         }
       },
       "relay_light_mode": {
@@ -327,7 +328,8 @@
           "3_weeks": "3 Weeks",
           "4_days": "4 Days",
           "4_weeks": "4 Weeks",
-          "5_days": "5 Days"
+          "5_days": "5 Days",
+          "no_repeat": "No repeat"
         }
       }
     },
