@@ -183,17 +183,21 @@ async def test_switch_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
 ) -> None:
-    """Tests that the turn on/off action starts re-auth flow."""
+    """Tests that the turn on/off action raises an error and starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
     mock_nextdns_client.set_setting.side_effect = InvalidApiKeyError
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for NextDNS, please update your API key",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
