@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -123,6 +124,16 @@ class OmadaSiteController:
                 processed_devices.add(mac)
                 try:
                     await entity_callback(device)
+                except (HomeAssistantError, OmadaClientException) as ex:
+                    # Expected fetch failures, such as a temporarily
+                    # unavailable device, are retried on the next update.
+                    processed_devices.discard(mac)
+                    _LOGGER.debug(
+                        "Failed to register entities for device %s: %s",
+                        device.mac,
+                        ex,
+                    )
+                    continue
                 except Exception:
                     # Release the reservation so registration retries on the
                     # next device update.
