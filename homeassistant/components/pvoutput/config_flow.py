@@ -70,7 +70,8 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                        probatio.Secret(CONF_API_KEY),
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): str,
                     probatio.Required(
                         CONF_SYSTEM_ID, default=user_input.get(CONF_SYSTEM_ID, "")

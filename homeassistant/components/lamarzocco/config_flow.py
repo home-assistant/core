@@ -356,7 +356,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                             ),
                         ),
                         probatio.Required(
-                            CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
+                            probatio.Secret(CONF_PASSWORD),
+                            default=reconfigure_entry.data[CONF_PASSWORD],
                         ): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.PASSWORD,
