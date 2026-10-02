@@ -24,7 +24,7 @@ ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 ATTR_START_HOUR = "start_hour"
 
 SET_PRIMARY_FILTRATION_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
+    probatio.AtLeastOne(ATTR_DURATION, ATTR_START_HOUR),
     cv.make_entity_service_schema(
         {
             probatio.Optional(ATTR_DURATION): probatio.All(

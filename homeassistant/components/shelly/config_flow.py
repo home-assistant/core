@@ -645,7 +645,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if get_info_gen(self.info) in RPC_GENERATIONS:
             schema = {
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
             }
         else:
@@ -654,7 +655,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                 ): str,
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
             }
 
@@ -860,7 +862,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 custom_value=True,
                             )
                         ),
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 suggested_values,
@@ -1290,10 +1292,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
             schema = {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         else:
-            schema = {probatio.Required(CONF_PASSWORD): str}
+            schema = {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
 
         return self.async_show_form(
             step_id="reauth_confirm",
