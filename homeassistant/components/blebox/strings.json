@@ -158,7 +158,7 @@
   },
   "issues": {
     "probe_not_configured": {
-      "description": "The {sensor_name} sensor of {device_name} reports that its probe is not configured, so it provides no readings.\n\nGo to the device settings in the wBox app and configure the probe or sensor.",
+      "description": "The {sensor_name} sensor of {device_name} reports that its probe is not configured, so it provides no readings.\n\nGo to the device settings in the wBox app and configure the probe or sensor. Once configured, the sensor will resume providing readings and this issue will clear automatically.",
       "title": "{device_name}: {sensor_name} probe not configured"
     }
   }
