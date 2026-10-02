@@ -1,5 +1,6 @@
 """Test the Dropbox backup platform."""
 
+import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import replace
 from io import StringIO
@@ -17,6 +18,7 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.components.dropbox.backup import (
+    METADATA_DOWNLOAD_CONCURRENCY,
     DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
     async_register_backup_agents_listener,
@@ -161,7 +163,7 @@ async def test_agents_list_multiple_backups(
     hass_ws_client: WebSocketGenerator,
     mock_dropbox_client: Mock,
 ) -> None:
-    """Test listing several backups, skipping one with invalid metadata."""
+    """Test listing more backups than the concurrent download limit."""
 
     backups = [
         replace(
@@ -169,7 +171,7 @@ async def test_agents_list_multiple_backups(
             backup_id=f"dropbox-backup-{i}",
             name=f"Dropbox backup {i}",
         )
-        for i in range(3)
+        for i in range(10)
     ]
     files = {}
     for backup in backups:
@@ -179,7 +181,15 @@ async def test_agents_list_multiple_backups(
     files["invalid.tar"] = b""
     files["invalid.metadata.json"] = b"not valid json"
 
+    active = peak = 0
+
     async def _download(path: str) -> AsyncIterator[bytes]:
+        nonlocal active, peak
+        active += 1
+        peak = max(peak, active)
+        # Yield so the other downloads can start before this one finishes
+        await asyncio.sleep(0)
+        active -= 1
         yield files[path.removeprefix("/")]
 
     mock_dropbox_client.list_folder = AsyncMock(
@@ -196,7 +206,8 @@ async def test_agents_list_multiple_backups(
     assert sorted(b["backup_id"] for b in response["result"]["backups"]) == [
         backup.backup_id for backup in backups
     ]
-    assert mock_dropbox_client.download_file.call_count == 4
+    assert mock_dropbox_client.download_file.call_count == 11
+    assert peak == METADATA_DOWNLOAD_CONCURRENCY
 
 
 async def test_agents_list_backups_metadata_without_tar(
