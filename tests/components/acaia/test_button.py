@@ -3,9 +3,12 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.acaia.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -14,6 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -62,6 +66,35 @@ async def test_button_presses(
 
         function = getattr(mock_scale, button)
         function.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        AcaiaDeviceNotFound("Device not found"),
+        AcaiaError("Failed to send command"),
+    ],
+)
+async def test_button_press_fails(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test a failed button press raises a translated Home Assistant error."""
+    await setup_integration(hass, mock_config_entry)
+    mock_scale.tare.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.kitchen_lunar_ddeeff_tare"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "button_press_failed"
 
 
 async def test_buttons_unavailable_on_disconnected_scale(
