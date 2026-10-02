@@ -27,14 +27,17 @@ def _cleanup_external_migration_devices(
     device_registry: dr.DeviceRegistry, config_entry_id: str
 ) -> None:
     """Remove external devices used by migration tests."""
-    if existing_old := device_registry.async_get_device_by_identifier(
-        (DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID), config_entry_id
-    ):
-        device_registry.async_remove_device(existing_old.id)
-    if existing_new := device_registry.async_get_device_by_identifier(
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, EXTERNAL_DEVICE_OLD_UNIQUE_ID), config_entry_id
+        )
+        is None
+    )
+    existing_new = device_registry.async_get_device_by_identifier(
         (DOMAIN, EXTERNAL_DEVICE_NEW_UNIQUE_ID), config_entry_id
-    ):
-        device_registry.async_remove_device(existing_new.id)
+    )
+    assert existing_new is not None
+    device_registry.async_remove_device(existing_new.id)
 
 
 @pytest.mark.freeze_time("2025-01-28 21:45:00")

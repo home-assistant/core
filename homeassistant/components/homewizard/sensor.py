@@ -780,7 +780,6 @@ async def async_setup_entry(
         dev_reg = dr.async_get(hass)
         parent_serial = entry.runtime_data.data.device.serial
 
-        # This migration can be removed after 2026.10.0.
         # This cleanup must run at setup because the external device mapping
         # needed for old->new identifier conversion is only available in runtime
         # measurement data.
@@ -820,11 +819,7 @@ def _async_migrate_external_device_identifier(
     if old_device is None:
         return
 
-    if (
-        entry.entry_id not in old_device.config_entries
-        or len(old_device.config_entries) > 1
-        or old_unique_id == parent_serial
-    ):
+    if old_unique_id == parent_serial:
         return
 
     new_device = dev_reg.async_get_device_by_identifier(
@@ -838,10 +833,7 @@ def _async_migrate_external_device_identifier(
         )
         return
 
-    if (
-        entry.entry_id not in new_device.config_entries
-        or old_device.id == new_device.id
-    ):
+    if old_device.id == new_device.id:
         return
 
     _LOGGER.debug(
