@@ -86,6 +86,7 @@ class _StubTool(llm.Tool):
     """Minimal tool with a configurable parameter schema."""
 
     name = "test_tool"
+    integration = "test"
 
     def __init__(self, parameters: probatio.Schema) -> None:
         """Initialize the stub tool."""
@@ -686,6 +687,33 @@ async def test_mcp_tools_list_required_parameters(
     assert tool.inputSchema.get("required") == expected_required
 
 
+@pytest.mark.parametrize(("all_llm_apis", "llm_hass_api"), [(True, [])])
+async def test_mcp_tools_list_all_llm_apis(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test all LLM APIs are exposed, including LLM APIs registered after setup."""
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_StubTool(probatio.Schema({}))],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool_names = {tool.name for tool in result.tools}
+    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "test-api__test_tool" in tool_names
+
+
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
 @pytest.mark.parametrize(
@@ -1189,3 +1217,47 @@ async def test_require_admin_allows_admin(
         headers={"accept": CONTENT_TYPE_JSON},
     )
     assert response.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param("server/discover", id="server_discover"),
+        pytest.param("no/such-method", id="unknown_method"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_unsupported_method_returns_method_not_found(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+) -> None:
+    """Test that unsupported methods return JSON-RPC METHOD_NOT_FOUND without log warnings."""
+    client = await hass_client()
+
+    response = await client.post(
+        STREAMABLE_API,
+        json={
+            "jsonrpc": "2.0",
+            "id": "request-123",
+            "method": method,
+            "params": {
+                "_meta": {
+                    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                }
+            },
+        },
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.OK
+    data = await response.json()
+    assert data == {
+        "jsonrpc": "2.0",
+        "id": "request-123",
+        "error": {
+            "code": -32601,
+            "message": "Method not found",
+            "data": method,
+        },
+    }
+    assert "Failed to validate request" not in caplog.text

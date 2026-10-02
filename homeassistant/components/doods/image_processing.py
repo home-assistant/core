@@ -69,13 +69,13 @@ PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_URL): cv.string,
         probatio.Required(CONF_DETECTOR): cv.string,
         probatio.Required(CONF_TIMEOUT, default=90): cv.positive_int,
-        probatio.Optional(CONF_AUTH_KEY, default=""): cv.string,
+        probatio.Optional(probatio.Secret(CONF_AUTH_KEY), default=""): cv.string,
         probatio.Optional(CONF_FILE_OUT, default=[]): probatio.All(
-            cv.ensure_list, [cv.template]
+            probatio.EnsureList(), [cv.template]
         ),
         probatio.Optional(CONF_CONFIDENCE, default=0.0): probatio.Range(min=0, max=100),
         probatio.Optional(CONF_LABELS, default=[]): probatio.All(
-            cv.ensure_list, [probatio.Any(cv.string, LABEL_SCHEMA)]
+            probatio.EnsureList(), [probatio.Any(cv.string, LABEL_SCHEMA)]
         ),
         probatio.Optional(CONF_AREA): AREA_SCHEMA,
     }

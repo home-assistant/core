@@ -3015,7 +3015,9 @@ async def test_test_condition_template_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": ("must contain at least one of before, after. at 'options'"),
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3298,7 +3300,9 @@ async def test_subscribe_condition_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": ("must contain at least one of before, after. at 'options'"),
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config

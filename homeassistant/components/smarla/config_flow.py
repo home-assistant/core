@@ -15,7 +15,9 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import DOMAIN, HOST
 
-STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str}
+)
 
 
 class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):

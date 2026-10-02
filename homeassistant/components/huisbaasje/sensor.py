@@ -210,6 +210,7 @@ class EnergyFlipSensor(CoordinatorEntity[EnergyFlipUpdateCoordinator], SensorEnt
         self.entity_description = description
         self._source_type = description.key
         self._sensor_type = description.sensor_type
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             f"{DOMAIN}_{user_id}_{description.key}_{description.sensor_type}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
