@@ -632,6 +632,12 @@ class NextDnsSwitch(NextDnsEntity, SwitchEntity):
                 },
             ) from err
 
-        if result:
-            self._attr_is_on = new_state
-            self.async_write_ha_state()
+        if not result:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_setting_error",
+                translation_placeholders={"entity": self.entity_id},
+            )
+
+        self._attr_is_on = new_state
+        self.async_write_ha_state()
