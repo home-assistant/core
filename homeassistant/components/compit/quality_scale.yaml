@@ -38,7 +38,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: Failed writes (False result) are ignored and the state is updated anyway
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

@@ -35,7 +35,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: SteamloopConnectionError is not handled in climate and switch actions
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

@@ -32,7 +32,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: pycync exceptions are not handled in light actions
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo

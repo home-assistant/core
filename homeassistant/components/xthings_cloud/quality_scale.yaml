@@ -39,7 +39,9 @@ rules:
   entity-unavailable:
     status: done
     comment: Offloaded to coordinator.
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: XthingsCloudApiError is not handled in lock, switch and light actions
   reauthentication-flow: todo
   parallel-updates: todo
   test-coverage: todo

@@ -32,7 +32,9 @@ rules:
   unique-config-entry: done
 
   # Silver tier rules
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: Library errors are not handled in select action, and only partially in climate actions
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

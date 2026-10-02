@@ -32,7 +32,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: Error return codes are ignored and httpx errors are not handled in climate actions
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
