@@ -6,7 +6,7 @@ from typing import Any, cast, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import MachineMode, ModelName, WidgetType
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 from pylamarzocco.models import (
     MachineStatus,
     SteamBoilerLevel,
@@ -155,7 +155,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
         """Turn device on."""
         try:
             await self.entity_description.control_fn(self.coordinator.device, True)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_on_error",
@@ -168,7 +168,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
         """Turn device off."""
         try:
             await self.entity_description.control_fn(self.coordinator.device, False)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_error",
@@ -219,7 +219,7 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
         self._schedule_entry.enabled = state
         try:
             await self.coordinator.device.set_wakeup_schedule(self._schedule_entry)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auto_on_off_error",

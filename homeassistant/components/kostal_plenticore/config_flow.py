@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_SERVICE_CODE): str,
     }
 )

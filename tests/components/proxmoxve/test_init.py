@@ -485,7 +485,7 @@ async def test_new_node_registers_device_before_children(
 
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entry_id = mock_config_entry.entry_id
     node_device = device_registry.async_get_device_by_identifier(

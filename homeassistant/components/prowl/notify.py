@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_API_KEY): cv.string}
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
 )
 
 

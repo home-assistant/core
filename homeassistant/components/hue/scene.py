@@ -89,7 +89,7 @@ async def async_setup_entry(
         {
             probatio.Optional(ATTR_DYNAMIC): probatio.Coerce(bool),
             probatio.Optional(ATTR_SPEED): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(ATTR_TRANSITION): probatio.All(
                 probatio.Coerce(float), probatio.Range(min=0, max=3600)

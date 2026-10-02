@@ -244,7 +244,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = probatio.Schema(
             {
                 probatio.Required(CONF_ACCOUNT): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Required(
                     CONF_SERVER,
                     default=default_server,
@@ -855,11 +855,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
                 ): int,
                 probatio.Optional(
-                    CONF_TOKEN,
+                    probatio.Secret(CONF_TOKEN),
                     default=(self.found_device.get(CONF_TOKEN) or ""),
                 ): str,
                 probatio.Optional(
-                    CONF_KEY,
+                    probatio.Secret(CONF_KEY),
                     default=(self.found_device.get(CONF_KEY) or ""),
                 ): str,
             },
