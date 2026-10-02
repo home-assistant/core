@@ -36,7 +36,7 @@
         "default": "mdi:shield-off-outline",
         "state": {
           "active": "mdi:shield-check",
-          "inactive": "mdi:shield-clock-outline"
+          "inactive": "mdi:shield-outline"
         }
       },
       "port_bandwidth_rx": {
