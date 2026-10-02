@@ -357,6 +357,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         config = camera.async_get_webrtc_client_configuration()
         await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
 
+    @override
     async def async_handle_async_webrtc_re_offer(
         self,
         camera: Camera,
@@ -365,8 +366,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         send_message: WebRTCSendMessage,
     ) -> None:
         """Handle the WebRTC offer on renegotiation and return the answer via the provided callback."""
-        self._sessions[session_id] = ws_client = Go2RtcWsClient(
-            self._session, self._url, source=camera.entity_id
+        ws_client = Go2RtcWsClient(
+            self._session, self._url, source=get_camera_identifier(camera)
+        )
+        self._sessions[session_id] = _SessionInfo(
+            ws_client=ws_client,
+            camera=camera,
         )
 
         @callback
