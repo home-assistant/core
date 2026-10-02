@@ -1174,6 +1174,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
+/homeassistant/components/mijn_farmad_apotheek/ @DaanVervacke
+/tests/components/mijn_farmad_apotheek/ @DaanVervacke
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
 /tests/components/mikrotik/ @engrbm87 @chemelli74
 /homeassistant/components/mill/ @danielhiversen

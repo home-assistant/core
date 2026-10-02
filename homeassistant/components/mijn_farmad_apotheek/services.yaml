@@ -1,0 +1,38 @@
+order_medication:
+  fields:
+    product:
+      required: true
+      example: "3093242"
+      selector:
+        select:
+          options: []
+          custom_value: true
+    quantity:
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 1
+          mode: box
+    apb:
+      example: "343602"
+      selector:
+        select:
+          options: []
+          mode: dropdown
+    comment:
+      selector:
+        text:
+search_medication:
+  fields:
+    query:
+      required: true
+      example: "paracetamol"
+      selector:
+        text:
+    apb:
+      example: "343602"
+      selector:
+        select:
+          options: []
+          mode: dropdown

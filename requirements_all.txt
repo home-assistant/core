@@ -262,6 +262,9 @@ aioemonitor==1.0.5
 # homeassistant.components.esphome
 aioesphomeapi==46.6.0
 
+# homeassistant.components.mijn_farmad_apotheek
+aiofarmad==0.5.0
+
 # homeassistant.components.matrix
 # homeassistant.components.slack
 aiofiles==25.1.0
