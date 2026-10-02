@@ -89,6 +89,18 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
     # Needs override to omit is_closed_state, since OpenClosedState is unreliable
+    # uiClass is Awning
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_HORIZONTAL_AWNING_UNO,
+        device_class=CoverDeviceClass.AWNING,
+        current_position_state=OverkizState.CORE_DEPLOYMENT,
+        set_position_command=OverkizCommand.SET_DEPLOYMENT,
+        open_command=OverkizCommand.DEPLOY,
+        close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
+        invert_position=False,
+    ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
     # uiClass is RollerShutter
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_ROLLER_SHUTTER_UNO,

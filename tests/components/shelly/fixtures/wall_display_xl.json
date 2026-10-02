@@ -10,6 +10,13 @@
         "enable": false
       }
     },
+    "motion:0": {
+      "enable": true,
+      "motion_distance": 15,
+      "data_delta": 95,
+      "blind_time": 2,
+      "wake_screen": true
+    },
     "wifi": {
       "sta": {
         "enable": true,
@@ -200,6 +207,10 @@
     "ble": {},
     "cloud": {
       "connected": true
+    },
+    "motion:0": {
+      "id": 0,
+      "motion": true
     },
     "mqtt": {
       "connected": false

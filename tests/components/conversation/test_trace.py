@@ -55,7 +55,7 @@ async def test_converation_trace(
     assert trace_event.get("data") == {
         "intent_name": "HassListAddItem",
         "slots": {
-            "name": "Shopping List",
+            "name": "Shopping list",
             "item": "apples",
         },
     }

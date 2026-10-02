@@ -4,6 +4,8 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 from infrared_protocols.codes.generic.led import (
+    BaseGenericLEDCode,
+    Generic10KeyCode,
     Generic13KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
@@ -47,6 +49,7 @@ def light_only() -> Generator[None]:
 @pytest.mark.parametrize(
     "config_entry",
     [
+        LEDIrDeviceType.GENERIC_10_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -609,6 +612,30 @@ async def test_setup(
             {ATTR_EFFECT: "light_cyan"},
             [Generic44KeyCode.ON, Generic44KeyCode.LIGHT_CYAN],
         ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            SERVICE_TURN_ON,
+            {},
+            [Generic10KeyCode.ON],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            SERVICE_TURN_OFF,
+            {},
+            [Generic10KeyCode.OFF],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "candle"},
+            [Generic10KeyCode.ON, Generic10KeyCode.CANDLE],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "light"},
+            [Generic10KeyCode.ON, Generic10KeyCode.LIGHT],
+        ),
     ],
 )
 @pytest.mark.usefixtures("infrared_codes")
@@ -618,9 +645,7 @@ async def test_light_actions(
     device_type: LEDIrDeviceType,
     service: str,
     service_data: dict[str, str],
-    expected_codes: list[
-        Generic13KeyCode | Generic24KeyCode | Generic40KeyCode | Generic44KeyCode
-    ],
+    expected_codes: list[BaseGenericLEDCode],
 ) -> None:
     """Test light actions."""
     config_entry = MockConfigEntry(

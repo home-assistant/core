@@ -1,9 +1,12 @@
 """Common tests for HomematicIP devices."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import patch
 
 from homematicip.base.enums import EventType
 
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -22,7 +25,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 385
+    assert len(mock_hap.hmip_device_by_entity_id) == 391
 
 
 async def test_hmip_remove_device(
@@ -296,3 +299,123 @@ async def test_hmip_multi_area_device(
     # get the hap
     hap_device = device_registry.async_get(device.via_device_id)
     assert hap_device.name == "Home"
+
+
+async def test_hmip_child_device_links_to_access_point(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test a child device links back to the access point via via_device_id."""
+    entity_id = "light.treppe_ch"
+    entity_name = "Treppe CH"
+    device_model = "HmIP-BSL"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Treppe"]
+    )
+
+    ha_state, _hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+    assert ha_state
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity is not None
+
+    child_device = device_registry.async_get(entity.device_id)
+    assert child_device is not None
+
+    access_point_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_hap.home.id), mock_hap.config_entry.entry_id
+    )
+    assert access_point_device is not None
+
+    assert child_device.via_device_id == access_point_device.id
+
+
+async def test_hmip_unknown_device_type(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory: HomeFactory,
+    unknown_type_device_data: dict[str, Any],
+) -> None:
+    """Test a device whose type the library does not know yet."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Unknown Device"], extra_devices=[unknown_type_device_data]
+    )
+
+    entities = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.unique_id.startswith(unknown_type_device_data["id"])
+    ]
+    assert sorted(entry.unique_id for entry in entities) == [
+        "3014F711000000000UNKNOWN_1_button",
+        "3014F711000000000UNKNOWN_2_button",
+    ]
+
+    device = device_registry.async_get(entities[0].device_id)
+    assert device is not None
+    assert (DOMAIN, unknown_type_device_data["id"]) in device.identifiers
+    assert {entry.device_id for entry in entities} == {device.id}
+
+    for entry in entities:
+        state = hass.states.get(entry.entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
+
+
+def _entity_handlers(handlers: list[Callable[..., Any]], entity_id: str) -> list[Any]:
+    """Return the handlers bound to the entity with the given entity_id."""
+    return [
+        handler
+        for handler in handlers
+        if getattr(getattr(handler, "__self__", None), "entity_id", None) == entity_id
+    ]
+
+
+async def test_hmip_entity_removal_removes_device_callbacks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test removing an entity drops its device handlers and mapping."""
+    entity_id = "switch.schrank"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Schrank"]
+    )
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    assert len(_entity_handlers(hmip_device._on_update, entity_id)) == 1
+    assert len(_entity_handlers(hmip_device._on_remove, entity_id)) == 1
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert _entity_handlers(hmip_device._on_update, entity_id) == []
+    assert _entity_handlers(hmip_device._on_remove, entity_id) == []
+    assert entity_id not in mock_hap.hmip_device_by_entity_id
+
+
+async def test_hmip_entity_id_change_keeps_single_device_callbacks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test an entity_id change re-keys the mapping without duplicate handlers."""
+    entity_id = "switch.schrank"
+    new_entity_id = "switch.renamed"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Schrank"]
+    )
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+
+    # Changing the entity_id removes and re-adds the same entity object.
+    entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    assert entity_id not in mock_hap.hmip_device_by_entity_id
+    assert mock_hap.hmip_device_by_entity_id[new_entity_id] is hmip_device
+    assert len(_entity_handlers(hmip_device._on_update, new_entity_id)) == 1
+    assert len(_entity_handlers(hmip_device._on_remove, new_entity_id)) == 1

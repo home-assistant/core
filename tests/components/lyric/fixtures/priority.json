@@ -1,0 +1,9 @@
+{
+  "deviceId": "LCC-7f86b153-8480-f111-b78f-6045bdb25006",
+  "priorityStatus": "NoHold",
+  "priority": {
+    "priorityType": "WholeHouse",
+    "selectedRooms": [],
+    "rooms": []
+  }
+}

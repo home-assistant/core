@@ -177,6 +177,7 @@ def mock_select() -> AsyncMock:
     channel = AsyncMock(spec=SelectedProgram)
     channel.get_categories.return_value = ["select"]
     channel.get_name.return_value = "select"
+    channel.get_property_key.return_value = "SelectedProgram"
     channel.get_module_address.return_value = 88
     channel.get_channel_number.return_value = 33
     channel.get_module_type_name.return_value = "VMB4RYNO"
@@ -241,8 +242,10 @@ def mock_lightsensor() -> AsyncMock:
     channel = AsyncMock(spec=LightValue)
     channel.get_categories.return_value = ["sensor"]
     channel.get_name.return_value = "LightSensor"
+    channel.get_property_key.return_value = "LightValue"
     channel.get_module_address.return_value = 2
-    channel.get_channel_number.return_value = 4
+    # Properties always report channel number 0 (Property.get_channel_number)
+    channel.get_channel_number.return_value = 0
     channel.get_module_type_name.return_value = "VMB7IN"
     channel.get_module_type.return_value = 8
     channel.get_full_name.return_value = "Input"

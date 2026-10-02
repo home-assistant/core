@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,7 +51,11 @@ class JellyfinClientEntity(JellyfinEntity):
                 model=self.client_name,
                 name=self.device_name,
                 sw_version=self.app_version,
-                via_device=(DOMAIN, coordinator.server_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, coordinator.server_id),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
             )
             self._attr_name = None
         else:

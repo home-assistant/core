@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.watts.const import (
-    DISCOVERY_INTERVAL_MINUTES,
+    DISCOVERY_INTERVAL_SECONDS,
     DOMAIN,
     FAST_POLLING_INTERVAL_SECONDS,
     OAUTH2_TOKEN,
@@ -203,10 +203,16 @@ async def test_dynamic_device_creation(
     """Test new devices are created dynamically."""
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_123")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_456")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_123"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
+    )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_789")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "thermostat_789"), mock_config_entry.entry_id
+        )
         is None
     )
 
@@ -230,12 +236,12 @@ async def test_dynamic_device_creation(
     current_devices = list(mock_watts_client.discover_devices.return_value)
     mock_watts_client.discover_devices.return_value = [*current_devices, new_device]
 
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    new_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_789")}
+    new_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_789"), mock_config_entry.entry_id
     )
     assert new_device_entry is not None
     assert new_device_entry.name == "Kitchen Thermostat"
@@ -254,11 +260,11 @@ async def test_stale_device_removal(
     """Test stale devices are removed dynamically."""
     await setup_integration(hass, mock_config_entry)
 
-    device_123 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_123")}
+    device_123 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_123"), mock_config_entry.entry_id
     )
-    device_456 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
+    device_456 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
     )
     assert device_123 is not None
     assert device_456 is not None
@@ -270,13 +276,13 @@ async def test_stale_device_removal(
         d for d in current_devices if d.device_id != "thermostat_456"
     ]
 
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Verify thermostat_456 has been removed
-    device_456_after_removal = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
+    device_456_after_removal = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
     )
     assert device_456_after_removal is None
 

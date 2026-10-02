@@ -50,7 +50,7 @@ async def test_player_sensor_none_handling(
     assert state.state == "110"
     assert state.attributes["entity_picture"] == "http://localhost/image.png"
 
-    mock_nintendo_client.devices["testdevid"].players = {}
+    mock_nintendo_client.devices["testdevid"].players.remove_player("testplayerid")
     freezer.tick(60)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

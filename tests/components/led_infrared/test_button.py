@@ -4,6 +4,8 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 from infrared_protocols.codes.generic.led import (
+    BaseGenericLEDCode,
+    Generic10KeyCode,
     Generic13KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
@@ -42,6 +44,7 @@ def button_only() -> Generator[None]:
 @pytest.mark.parametrize(
     "config_entry",
     [
+        LEDIrDeviceType.GENERIC_10_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -205,6 +208,36 @@ async def test_setup(
             "slow",
             [Generic44KeyCode.SLOW],
         ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            "brightness_up",
+            [Generic10KeyCode.BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            "brightness_down",
+            [Generic10KeyCode.BRIGHTNESS_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            "timer_2h",
+            [Generic10KeyCode.TIMER_2H],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            "timer_4h",
+            [Generic10KeyCode.TIMER_4H],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            "timer_6h",
+            [Generic10KeyCode.TIMER_6H],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            "timer_8h",
+            [Generic10KeyCode.TIMER_8H],
+        ),
     ],
 )
 @pytest.mark.usefixtures("infrared_codes")
@@ -214,9 +247,7 @@ async def test_button_press(
     entity_registry: er.EntityRegistry,
     device_type: LEDIrDeviceType,
     key: str,
-    expected_codes: list[
-        Generic24KeyCode | Generic13KeyCode | Generic40KeyCode | Generic44KeyCode
-    ],
+    expected_codes: list[BaseGenericLEDCode],
 ) -> None:
     """Test button press action."""
     config_entry = MockConfigEntry(

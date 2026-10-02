@@ -655,6 +655,57 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[binary_sensor.test_reolink_cam_tamper-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_reolink_cam_tamper',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tamper',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Tamper',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tamper',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_tamper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.test_reolink_cam_tamper-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Tamper',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_reolink_cam_tamper',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[binary_sensor.test_reolink_cam_vehicle-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

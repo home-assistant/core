@@ -48,6 +48,7 @@ def firmwareupdate_fixture() -> tuple[blebox_uniapi.update.Update, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My airSensor")
     type(product).model = PropertyMock(return_value="airSensor")
+    type(product).product = PropertyMock(return_value="airSensor")
     return (feature, "update.my_airsensor_firmware")
 
 

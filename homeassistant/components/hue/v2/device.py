@@ -18,7 +18,6 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -49,7 +48,11 @@ async def async_setup_devices(bridge: HueBridge):
                 name=hue_resource.metadata.name,
                 model=hue_resource.type.value.replace("_", " ").title(),
                 manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-                via_device=(DOMAIN, api.config.bridge_device.id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, api.config.bridge_device.id),
+                    config_entry_id=entry.entry_id,
+                ),
                 suggested_area=hue_resource.metadata.name
                 if hue_resource.type == ResourceTypes.ROOM
                 else None,
@@ -68,7 +71,13 @@ async def async_setup_devices(bridge: HueBridge):
         if hue_resource.id == api.config.bridge_device.id:
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
-            params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
+            # The bridge device is always registered first (see sort below), so
+            # its id can be resolved here for the via_device link.
+            params["via_device_id"] = dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, api.config.bridge_device.id),
+                config_entry_id=entry.entry_id,
+            )
         zigbee = dev_controller.get_zigbee_connectivity(hue_resource.id)
         if zigbee and zigbee.mac_address:
             params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}

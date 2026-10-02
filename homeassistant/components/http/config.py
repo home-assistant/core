@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any, Final, TypedDict, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -59,8 +59,8 @@ def default_server_port() -> int:
     if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
         return default
     try:
-        return cast(int, cv.port(env_value))
-    except vol.Invalid:
+        return probatio.Port()(env_value)
+    except probatio.Invalid:
         _LOGGER.warning(
             "Invalid port %r in %s environment variable; falling back to %s",
             env_value,
@@ -135,33 +135,35 @@ def _ip_network_str(value: Any) -> str:
     return str(ip_network(value))
 
 
-HTTP_STORAGE_SCHEMA: Final = vol.Schema(
+HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
     {
         # YAML used to allow base_url (deprecated); strip it on the way in so
         # the stored config never contains it.
-        vol.Remove(CONF_BASE_URL): object,
-        vol.Optional(CONF_SERVER_HOST): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
+        probatio.Remove(CONF_BASE_URL): object,
+        probatio.Optional(CONF_SERVER_HOST): probatio.All(
+            probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
         ),
-        vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Optional(
+            CONF_SERVER_PORT, default=default_server_port
+        ): probatio.Port(),
+        probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+        probatio.Optional(CONF_SSL_KEY): cv.isfile,
+        probatio.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
-        vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-        vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
-            cv.ensure_list, [_ip_network_str]
+        probatio.Optional(CONF_USE_X_FORWARDED_FOR): cv.boolean,
+        probatio.Optional(CONF_TRUSTED_PROXIES): probatio.All(
+            probatio.EnsureList(), [_ip_network_str]
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
-        ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-        vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+        ): probatio.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+        probatio.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+        probatio.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): probatio.In(
             [SSL_INTERMEDIATE, SSL_MODERN]
         ),
-        vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+        probatio.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
     }
 )
 _DEFAULT_CONFIG: Final[ConfData] = ConfData(
@@ -223,6 +225,7 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
                 hass,
                 DOMAIN,
                 "yaml_still_present_after_migration",
+                breaks_in_ha_version="2027.2.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="yaml_still_present_after_migration",
@@ -232,14 +235,17 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
             ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml_import_error")
             ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml")
             ir.async_delete_issue(hass, DOMAIN, "yaml_still_present_after_migration")
+    elif yaml_conf is None:
+        # No YAML config to migrate: the stored config is already the source
+        # of truth. Synthesizing a default config here would stage it as a
+        # pending trial whenever the built-in default differs from stable
+        # (e.g. after the Supervisor default port changed), restarting Home
+        # Assistant to revert the never-promoted trial five minutes later.
+        await store.async_mark_yaml_migration_done()
     else:
         # Migrate YAML to storage and use it directly for this start. The
         # migration function also marks the migration as done so future
         # starts will ignore any remaining YAML.
-        conf_in_yaml = yaml_conf is not None
-        if yaml_conf is None:
-            yaml_conf = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
-
         try:
             await store.async_migrate_yaml(yaml_conf)
         except Exception:
@@ -248,22 +254,22 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
                 hass,
                 DOMAIN,
                 "deprecated_yaml_import_error",
+                breaks_in_ha_version="2027.2.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="deprecated_yaml_import_error",
             )
         else:
             conf = await store.async_activate_config()
-            if conf_in_yaml:
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "deprecated_yaml",
-                    breaks_in_ha_version="2027.6.0",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="deprecated_yaml",
-                )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_yaml",
+                breaks_in_ha_version="2027.2.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+            )
 
     if store.active_config_type is ActiveConfigType.PENDING:
         _LOGGER.info("Using pending HTTP config")
@@ -460,10 +466,23 @@ class HTTPConfigStore:
 
         await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
 
+    async def async_mark_yaml_migration_done(self) -> None:
+        """Mark the YAML migration as done without migrating anything.
+
+        Used when there is no YAML config to migrate; the stored config
+        stays the source of truth.
+        """
+        await self.async_load()
+        self._yaml_migration_done = True
+        await self._async_persist()
+
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
-        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
+        validated_config = cast(
+            ConfData,
+            HTTP_STORAGE_SCHEMA({CONF_SERVER_PORT: SERVER_PORT, **config}),
+        )
         if self._stable_differs_only_by_lost_proxy_masks(validated_config):
             # Releases up to 2026.7.1 dropped the network mask when storing
             # trusted proxies, and the v1->v2 store migration turned those
@@ -654,7 +673,7 @@ class _HTTPStore(Store[_HTTPStoreData]):
             # load step can rely on direct key access.
             try:
                 stable = HTTP_STORAGE_SCHEMA(old_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.warning(
                     "Discarding invalid v1 HTTP config during migration; "
                     "falling back to defaults"

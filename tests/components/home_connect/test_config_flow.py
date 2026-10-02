@@ -498,7 +498,9 @@ async def test_dhcp_flow_complete_device_information(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == set()
 
@@ -510,7 +512,9 @@ async def test_dhcp_flow_complete_device_information(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, dr.format_mac(dhcp_discovery.macaddress))

@@ -33,8 +33,8 @@ async def test_victron_battery_sensor(
     await hass.async_block_till_done()
 
     # Verify system device has no via_device (it IS the gateway)
-    system_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), mock_config_entry.entry_id
     )
     assert system_device is not None
     assert system_device.via_device_id is None
@@ -69,8 +69,8 @@ async def test_victron_battery_sensor(
     assert state.attributes["unit_of_measurement"] == "A"
 
     # Verify device info was registered correctly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
@@ -114,8 +114,8 @@ async def test_victron_enum_sensor(
     assert state.state == "low_power"
 
     # Verify system device has no via_device (it IS the gateway)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), _mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
@@ -197,6 +197,27 @@ async def test_native_unit_of_measurement_with_device_class(
     state = hass.states.get("sensor.battery_dc_bus_current")
     assert state is not None
     assert state.attributes["unit_of_measurement"] == "A"
+
+
+async def test_timestamp_device_class(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test timestamp metrics use the timestamp device class."""
+    victron_hub, _mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/DynamicEss/LastScheduledStart",
+        '{"value": 1756684800}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.victron_venus_dynamic_ess_last_scheduled_start")
+    assert state is not None
+    assert state.state == "2025-09-01T00:00:00+00:00"
+    assert state.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
 
 
 async def test_native_unit_of_measurement_special_unit(

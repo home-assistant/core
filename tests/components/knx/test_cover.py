@@ -10,14 +10,24 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.knx.const import CONF_SYNC_STATE
 from homeassistant.components.knx.schema import CoverSchema
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.components.recorder.history import get_significant_states
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
+from homeassistant.util import dt as dt_util
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, mock_restore_cache
+from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -30,6 +40,7 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
                 CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+                CONF_SYNC_STATE: "init",
             }
         }
     )
@@ -264,15 +275,91 @@ async def test_cover_restore_readable(hass: HomeAssistant, knx: KNXTestKit) -> N
         current_position=0,
         assumed_state=True,
     )
-    # bus reports a different position - the confirmed value overwrites the
-    # restored one and the state is no longer assumed
-    await knx.assert_read("1/0/2", response=(0x00,))
+    # bus confirms position - no longer assumed
+    await knx.assert_read("1/0/2", response=(0xFF,))
+    knx.assert_state(
+        "cover.test",
+        CoverState.CLOSED,
+        current_position=0,
+        assumed_state=None,
+    )
+
+
+async def test_cover_restore_set_same_position(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test moving a restored cover to the position it was restored to."""
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 40}),),
+    )
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+            }
+        }
+    )
+    await knx.assert_no_telegram()
+    # the restored position is only assumed - it doesn't suppress the command
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"position": 40},
+        target={"entity_id": "cover.test"},
+        blocking=True,
+    )
+    await knx.assert_write("1/0/3", (0x99,))
     knx.assert_state(
         "cover.test",
         CoverState.OPEN,
-        current_position=100,
+        current_position=40,
         assumed_state=None,
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_cover_assumed_state_not_recorded(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test `assumed_state` is excluded from recording.
+
+    It toggles when the restored state is confirmed by the bus, which would
+    otherwise write a new attributes row for every entity shortly after startup.
+    """
+    start_time = dt_util.utcnow()
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),),
+    )
+    await knx.setup_integration(
+        {
+            CoverSchema.PLATFORM: {
+                CONF_NAME: "test",
+                CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+            }
+        }
+    )
+    knx.assert_state("cover.test", CoverState.CLOSED, assumed_state=True)
+    await knx.assert_read("1/0/2", response=(0x00,))
+    knx.assert_state("cover.test", CoverState.OPEN, assumed_state=None)
+
+    await async_wait_recording_done(hass)
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, start_time, None, ["cover.test"]
+    )
+    recorded_states = states["cover.test"]
+    assert [state.state for state in recorded_states] == [
+        CoverState.CLOSED,
+        CoverState.OPEN,
+    ]
+    for state in recorded_states:
+        assert ATTR_ASSUMED_STATE not in state.attributes
+        assert ATTR_CURRENT_POSITION in state.attributes
 
 
 @pytest.mark.parametrize(
