@@ -313,6 +313,10 @@ cannot be judged without them. The exception is a newly claimed rule, which is
 verified against the integration as a whole because a PR that claims a rule
 must satisfy it.
 
+A python environment is not available. For rules where running tests or scripts is
+desirable, judge statically from the code and the tests instead. If not sure about the
+veredict, post a comment explaining the uncertainty.
+
 A finding is reportable only when all of the following hold:
 
 - the rule is `done` or `exempt` for that integration;
