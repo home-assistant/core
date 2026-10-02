@@ -538,6 +538,31 @@ async def test_timer_period_select_calls_set_timer_service(
     assert payload["period"] == 604800
 
 
+async def test_timer_period_write_holds_block_lock(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """The period write runs under the block's timer_write_lock.
+
+    write_timer rewrites the whole block, so it must be serialized against the
+    time platform's start/stop writes on the same block.
+    """
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_period")
+    coordinator = mock_config_entry_timers.runtime_data
+
+    locked_during_write = False
+
+    async def _check_lock(_timer: str, _payload: dict) -> None:
+        nonlocal locked_during_write
+        locked_during_write = coordinator.timer_write_lock("relay_aux1").locked()
+
+    mock_neopool_client.write_timer = AsyncMock(side_effect=_check_lock)
+    await _select_option(hass, entity_id, "1_week")
+    assert locked_during_write
+
+
 async def test_relay_mode_select_switches_via_lib_api(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,
@@ -578,6 +603,32 @@ async def test_relay_mode_manual_to_manual_is_noop(
     entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_mode")
     mock_neopool_client.async_set_relay_mode = AsyncMock(return_value={})
     await _select_option(hass, entity_id, "manual")
+    mock_neopool_client.async_set_relay_mode.assert_not_awaited()
+
+
+async def test_relay_mode_selecting_disabled_is_noop(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Selecting the read-only 'disabled' state does not write to the relay."""
+    mock_neopool_client.read_all_timers.side_effect = None
+    mock_neopool_client.read_all_timers.return_value = {
+        "relay_aux1": {
+            "enable": 0,
+            "on": 0,
+            "interval": 0,
+            "period": 0,
+            "countdown": 0,
+            "stop": None,
+        }
+    }
+    await setup_integration(hass, mock_config_entry_timers)
+
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_mode")
+    assert "disabled" in hass.states.get(entity_id).attributes["options"]
+    mock_neopool_client.async_set_relay_mode = AsyncMock(return_value={})
+    await _select_option(hass, entity_id, "disabled")
     mock_neopool_client.async_set_relay_mode.assert_not_awaited()
 
 

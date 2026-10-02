@@ -165,7 +165,9 @@ async def _write_timer_period(
     # options surfaces an off-map device period as a raw-seconds string, so
     # accept that back as seconds instead of indexing PERIOD_MAP blindly.
     period_value = PERIOD_MAP.get(option, 0) or int(option)
-    await client.write_timer(timer_name, {"period": period_value})
+    # write_timer rewrites the whole block, so serialize it per block.
+    async with entity.coordinator.timer_write_lock(timer_name):
+        await client.write_timer(timer_name, {"period": period_value})
     entity.coordinator.request_refresh_with_followup()
 
 
@@ -185,6 +187,9 @@ async def _write_relay_mode(
     entity: NeoPoolSelect, client: NeoPoolModbusClient, option: str
 ) -> None:
     """Switch the relay between automatic (timer-driven) and manual modes."""
+    if option not in ("auto", "manual"):
+        # disabled and auto_linked are read-only states, not writable targets.
+        return
     timer_name = entity.entity_description.key.rsplit("_", 1)[0]
     current = int(entity.coordinator.data.get(f"{timer_name}_enable", 0) or 0)
     if option == "manual" and current in (
