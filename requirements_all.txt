@@ -1635,6 +1635,9 @@ millheater==0.14.1
 # homeassistant.components.minio
 minio==7.1.12
 
+# homeassistant.components.mistral_ai
+mistralai==3.0.0
+
 # homeassistant.components.mitsubishi_comfort
 mitsubishi-comfort==0.6.0
 
