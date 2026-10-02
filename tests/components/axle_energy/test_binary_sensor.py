@@ -106,6 +106,55 @@ async def test_boundaries(
 
 
 @pytest.mark.parametrize(
+    ("before", "boundary", "initial", "expected"),
+    [
+        pytest.param(
+            "2026-09-11T16:59:00Z",
+            "2026-09-11T17:00:00Z",
+            STATE_OFF,
+            STATE_ON,
+            id="start",
+        ),
+        pytest.param(
+            "2026-09-11T17:59:00Z",
+            "2026-09-11T18:00:00Z",
+            STATE_ON,
+            STATE_OFF,
+            id="end",
+        ),
+    ],
+)
+@pytest.mark.parametrize("delay", [0, 30])
+async def test_unchanged_refresh_at_boundary(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    mock_event: GridEvent,
+    freezer: FrozenDateTimeFactory,
+    before: str,
+    boundary: str,
+    initial: str,
+    expected: str,
+    delay: int,
+) -> None:
+    """Keep a due boundary callback when unchanged event data arrives first."""
+    freezer.move_to(before)
+    await setup(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == initial
+    mock_client.get_event.return_value = replace(mock_event)
+    mock_client.get_event.reset_mock()
+
+    freezer.move_to(boundary)
+    freezer.tick(timedelta(seconds=delay))
+    await mock_config_entry.runtime_data.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected
+    mock_client.get_event.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
     "event_factory",
     [
         pytest.param(lambda event: None, id="no-event"),

@@ -24,6 +24,7 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
 
     config_entry: AxleConfigEntry
     _unsub_event_update: CALLBACK_TYPE | None = None
+    _scheduled_event: GridEvent | None = None
 
     def __init__(
         self, hass: HomeAssistant, entry: AxleConfigEntry, client: AxleClient
@@ -45,20 +46,25 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
         if self._unsub_event_update is not None:
             self._unsub_event_update()
             self._unsub_event_update = None
+        self._scheduled_event = None
 
     @callback
     def _schedule_event_update(self) -> None:
         """Schedule the next boundary without an additional API request."""
-        self._cancel_event_update()
         if (
             self._shutdown_requested
             or not self.last_update_success
             or self.data is None
         ):
+            self._cancel_event_update()
             return
+        if self._unsub_event_update is not None and self._scheduled_event == self.data:
+            return
+        self._cancel_event_update()
         now = dt_util.utcnow()
         for boundary in (self.data.start, self.data.end):
             if boundary > now:
+                self._scheduled_event = self.data
                 self._unsub_event_update = async_track_point_in_utc_time(
                     self.hass, self._handle_event_update, boundary
                 )
