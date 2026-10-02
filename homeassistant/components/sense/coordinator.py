@@ -85,7 +85,6 @@ class SenseTrendCoordinator(SenseCoordinator):
             raise ConfigEntryAuthFailed(err) from err
         except SENSE_CONNECT_EXCEPTIONS as err:
             _LOGGER.debug("Unable to import Sense statistics: %s", err)
-            raise UpdateFailed(err) from err
 
     async def async_import_provisional_hour(self) -> None:
         """Import the newest completed hour from its last in-progress reading."""
