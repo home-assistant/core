@@ -214,21 +214,9 @@ class SmokeDetectionSystemEvent(SHCEntity, EventEntity):
     _attr_translation_key = "smoke_detection_system_alarm"
     _attr_event_types = ["alarm_off", "alarm_on", "alarm_muted"]
     _device: SHCSmokeDetectionSystem
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        device: SHCSmokeDetectionSystem,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the smoke detection system alarm event entity."""
-        super().__init__(
-            hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
-        )
-        # Dedup guard: SurveillanceAlarm replays the current state on
-        # unrelated long-poll updates, same as LatestMotion above.
-        self._last_fired_state = ""
+    # Dedup guard: SurveillanceAlarm replays the current state on unrelated
+    # long-poll updates; seeded in async_added_to_hass.
+    _last_fired_state: str
 
     @override
     async def async_added_to_hass(self) -> None:
