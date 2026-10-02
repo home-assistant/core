@@ -47,6 +47,23 @@ async def test_water_heater(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_water_heater_no_temp_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test if a water_heater not created when there is no temperature sensor connected."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_my_pv_client.current_temperature = None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.my_pv_ac_elwa_2")
+    assert state is None
+
+
 async def test_water_heater_unavailable_not_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

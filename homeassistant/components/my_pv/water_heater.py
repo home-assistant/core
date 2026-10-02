@@ -29,8 +29,10 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities = []
 
-    if coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER) and (
-        configuration := coordinator.device.get_setup_configuration("ww1target")
+    if (
+        coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
+        and coordinator.device.current_temperature is not None
+        and (configuration := coordinator.device.get_setup_configuration("ww1target"))
     ):
         entity_description = WaterHeaterEntityDescription(
             key="temp1",
