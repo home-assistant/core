@@ -32,6 +32,13 @@
       "device_uplink_mac": {
         "default": "mdi:ethernet"
       },
+      "firewall_policy_schedule_status": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "active": "mdi:shield-check",
+          "inactive": "mdi:shield-clock-outline"
+        }
+      },
       "port_bandwidth_rx": {
         "default": "mdi:download"
       },

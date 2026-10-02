@@ -36,6 +36,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -200,6 +201,45 @@ WLAN = {
     "x_iapp_key": "01234567891011121314151617181920",
     "x_passphrase": "password",
 }
+
+FIREWALL_POLICY = {
+    "_id": "678ceb9fe3849d293243405c",
+    "action": "BLOCK",
+    "connection_state_type": "ALL",
+    "connection_states": [],
+    "create_allow_respond": False,
+    "description": "",
+    "destination": {
+        "match_opposite_ports": False,
+        "matching_target": "ANY",
+        "port_matching_type": "ANY",
+        "zone_id": "678ccc26e3849d2932432e26",
+    },
+    "enabled": True,
+    "icmp_typename": "ANY",
+    "icmp_v6_typename": "ANY",
+    "index": 10000,
+    "ip_version": "BOTH",
+    "logging": False,
+    "match_ip_sec": False,
+    "match_opposite_protocol": False,
+    "name": "Block streaming",
+    "predefined": False,
+    "protocol": "all",
+    "schedule": {
+        "mode": "EVERY_DAY",
+        "time_range_end": "08:00",
+        "time_range_start": "21:00",
+    },
+    "source": {
+        "match_opposite_ports": False,
+        "matching_target": "ANY",
+        "port_matching_type": "ANY",
+        "zone_id": "678c63bc2d97692f08adcdfa",
+    },
+}
+
+SCHEDULE_STATUS_ENTITY = "sensor.unifi_network_block_streaming_schedule_status"
 
 PDU_DEVICE_1 = {
     "_id": "123456654321abcdef012345",
@@ -2596,3 +2636,107 @@ async def test_device_uplink(
     device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_firewall_policy_schedule_status(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """The status follows the controller's clock across a schedule window.
+
+    The controller is in Europe/Stockholm (UTC+1 in January) and Home Assistant
+    in US/Pacific, so a 21:00 to 08:00 window opens at 20:00 UTC.
+    """
+    freezer.move_to("2026-01-15 19:30:00+00:00")
+    await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
+
+    for now, expected in (
+        ("2026-01-15 20:00:00+00:00", "active"),
+        ("2026-01-16 06:59:00+00:00", "active"),
+        ("2026-01-16 07:00:00+00:00", "inactive"),
+    ):
+        freezer.move_to(now)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == expected, now
+
+
+@pytest.mark.parametrize("time_zone", [None, "Mars/Olympus_Mons"])
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_firewall_policy_schedule_status_time_zone_fallback(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    system_information_payload: list[dict[str, Any]],
+    time_zone: str | None,
+) -> None:
+    """Without a usable controller time zone, Home Assistant's is used.
+
+    20:00 UTC is 21:00 in Stockholm but noon in US/Pacific.
+    """
+    if time_zone is None:
+        del system_information_payload[0]["timezone"]
+    else:
+        system_information_payload[0]["timezone"] = time_zone
+    freezer.move_to("2026-01-15 20:00:00+00:00")
+    await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
+
+
+@pytest.mark.parametrize(
+    ("firewall_policy_payload", "expected"),
+    [
+        ([{**FIREWALL_POLICY, "enabled": False}], "disabled"),
+        ([{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}], "active"),
+        ([{**FIREWALL_POLICY, "schedule": {"mode": "SUNRISE"}}], STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_firewall_policy_schedule_status_by_policy(
+    hass: HomeAssistant, expected: str
+) -> None:
+    """Disabled policies, always-on schedules and unknown modes."""
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == expected
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload",
+    [
+        [{**FIREWALL_POLICY, "predefined": True}],
+        [{**FIREWALL_POLICY, "name": ""}],
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_firewall_policy_schedule_status_unsupported(
+    hass: HomeAssistant,
+) -> None:
+    """Predefined and unnamed policies get no status sensor."""
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload", [[{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}]]
+)
+async def test_firewall_policy_schedule_status_follows_polling(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_requests,
+    firewall_policy_payload: list[dict[str, Any]],
+) -> None:
+    """A policy disabled on the controller shows as disabled after a poll."""
+    await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "active"
+
+    firewall_policy_payload[0]["enabled"] = False
+    aioclient_mock.clear_requests()
+    mock_requests()
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "disabled"
