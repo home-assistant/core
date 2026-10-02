@@ -36,6 +36,21 @@ INPUTS = [
     }
 ]
 
+PICTURE_SETTINGS = [
+    {
+        "target": "brightness",
+        "currentValue": 50,
+        "candidate": [{"min": 0, "max": 100, "step": 1}],
+        "isAvailable": True,
+    },
+    {
+        "target": "pictureMode",
+        "currentValue": "vivid",
+        "candidate": ["vivid", "standard", "cinema"],
+        "isAvailable": True,
+    },
+]
+
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
@@ -70,6 +85,10 @@ async def test_entry_diagnostics(
         patch("pybravia.BraviaClient.get_app_list", return_value=[]),
         patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
         patch("pybravia.BraviaClient.get_command_list", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=PICTURE_SETTINGS,
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
