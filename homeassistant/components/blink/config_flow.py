@@ -119,7 +119,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Optional(probatio.Secret(CONF_PIN)): probatio.All(
-                        str, probatio.Length(min=1)
+                        str, probatio.NonEmpty()
                     )
                 }
             ),
