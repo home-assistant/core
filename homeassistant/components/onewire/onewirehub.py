@@ -6,7 +6,7 @@ import logging
 import os
 
 from aio_ownet.definitions import OWServerCommonPath
-from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
+from aio_ownet.exceptions import OWServerReturnError
 from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.config_entries import ConfigEntry
@@ -181,7 +181,7 @@ async def _get_device_type(
     """Get device model."""
     try:
         device_type = (await owproxy.read(f"{device_path}type")).decode()
-    except OWServerProtocolError as exc:
+    except OWServerReturnError as exc:
         _LOGGER.debug("Unable to read `%stype`: %s", device_path, exc)
         return None
     _LOGGER.debug("read `%stype`: %s", device_path, device_type)
