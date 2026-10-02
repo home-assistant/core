@@ -165,6 +165,9 @@ faust-cchardet>=2.1.18
 # Prevent accidental fallbacks
 websockets>=15.0.1
 
+# Constrain tempora, a transitive dependency of jaraco.abode.
+tempora<5.13
+
 # pysnmplib is no longer maintained and does not work with newer
 # python
 pysnmplib==1000000000.0.0
