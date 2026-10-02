@@ -274,6 +274,26 @@ async def test_thermostat_outdoor(
     assert state.state == "-5.5"
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_pi_cooling_demand(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test PI cooling demand sensor updates."""
+    entity_id = "sensor.mock_thermostat_cooling_demand"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0"
+
+    set_node_attribute(matter_node, 1, 513, 7, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50"
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_pressure_sensor"])
 async def test_pressure_sensor(
     hass: HomeAssistant,
