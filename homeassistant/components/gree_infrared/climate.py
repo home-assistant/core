@@ -46,7 +46,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -62,6 +62,7 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    DOMAIN,
     MODEL_GENERIC,
     MODEL_YAP1F,
 )
@@ -529,9 +530,20 @@ class GreeAcClimateEntity(
         """Send a full-state frame for the given target state."""
         power = hvac_mode is not HVACMode.OFF
         active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
-        await self._send_command(
-            self._build_command(active_hvac_mode, power, temp, fan_mode)
+        command = self._build_command(active_hvac_mode, power, temp, fan_mode)
+        try:
+            await self._send_command(command)
+        except HomeAssistantError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="send_failed"
+            ) from err
+        self._state.timer_hours = command.timer_hours
+        self._timer_deadline = (
+            dt_util.utcnow() + timedelta(hours=command.timer_hours)
+            if command.timer_hours is not None
+            else None
         )
+        self._schedule_timer_expiry()
         if power:
             self._last_active_hvac_mode = hvac_mode
 
@@ -563,14 +575,20 @@ class GreeAcClimateEntity(
         """Set an option flag and send the updated state when active."""
         if option in ("turbo", "light", "health", "xfan"):
             if not self._supports_options:
-                raise ValueError(f"Unsupported Gree option: {option}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="unsupported_option"
+                )
         elif option == "sleep":
             pass
         elif option in ("ifeel", "econo", "absence"):
             if not self._is_yap1f:
-                raise ValueError(f"Unsupported Gree option: {option}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="unsupported_option"
+                )
         else:
-            raise ValueError(f"Unsupported Gree option: {option}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="unsupported_option"
+            )
         async with self._state.command_lock:
             if (
                 option == "sleep"
@@ -581,19 +599,25 @@ class GreeAcClimateEntity(
                     HVACMode.OFF,
                 )
             ):
-                raise HomeAssistantError("Sleep is not available in this HVAC mode")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="sleep_not_available"
+                )
             if (
                 option == "econo"
                 and value
                 and self._attr_hvac_mode is not HVACMode.COOL
             ):
-                raise HomeAssistantError("Econo is only available in cool mode")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="econo_not_available"
+                )
             if (
                 option == "absence"
                 and value
                 and self._attr_hvac_mode is not HVACMode.HEAT
             ):
-                raise HomeAssistantError("Absence is only available in heat mode")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="absence_not_available"
+                )
             previous = getattr(self._state, option)
             setattr(self._state, option, value)
             try:
@@ -612,7 +636,9 @@ class GreeAcClimateEntity(
     async def async_set_fresh_air(self, option: str) -> None:
         """Set the fresh-air intake level and send the updated state."""
         if option not in _HA_FRESH_AIR_TO_LIB:
-            raise ValueError(f"Unsupported fresh-air option: {option}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="unsupported_fresh_air"
+            )
         async with self._state.command_lock:
             previous = self._state.fresh_air
             self._state.fresh_air = int(_HA_FRESH_AIR_TO_LIB[option])
@@ -634,7 +660,9 @@ class GreeAcClimateEntity(
         if timer_hours is not None and (
             not 0.5 <= timer_hours <= 24 or (timer_hours * 2) % 1
         ):
-            raise ValueError(f"Unsupported timer value: {timer_hours}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="unsupported_timer"
+            )
         async with self._state.command_lock:
             previous = self._state.timer_hours
             previous_deadline = self._timer_deadline
@@ -669,9 +697,13 @@ class GreeAcClimateEntity(
         selecting auto returns to sweep control.
         """
         if not self._is_yap1f:
-            raise ValueError("Vane position is only available on the YAP1F model")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="unsupported_vane_model"
+            )
         if position is not None and position not in YAP1F_SWING_POSITIONS:
-            raise ValueError(f"Unsupported vane position: {position}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="unsupported_vane_position"
+            )
         async with self._state.command_lock:
             previous_position = self._state.swing_v_position
             previous_swing_v = self._state.swing_v
@@ -830,7 +862,10 @@ class GreeAcClimateEntity(
     async def async_set_swing_h_position(self, position: int) -> None:
         """Set a fixed horizontal vane position, with zero following sweep."""
         if position not in range(7):
-            raise ValueError(f"Unsupported horizontal vane position: {position}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_horizontal_vane_position",
+            )
         async with self._state.command_lock:
             previous_position = self._state.swing_h_position
             previous_swing = self._state.swing_h
@@ -855,7 +890,10 @@ class GreeAcClimateEntity(
     async def async_set_display_temp(self, display_temp: int) -> None:
         """Select the temperature shown on the unit display."""
         if display_temp not in range(4):
-            raise ValueError(f"Unsupported display temperature: {display_temp}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_display_temperature",
+            )
         await self._async_set_yap1f_field("display_temp", display_temp)
 
     async def async_set_fahrenheit(self, fahrenheit: bool) -> None:
@@ -865,7 +903,9 @@ class GreeAcClimateEntity(
     async def _async_set_yap1f_field(self, key: str, value: Any) -> None:
         """Set and send one YAP1F command field."""
         if not self._is_yap1f:
-            raise ValueError(f"{key} is only available on the YAP1F model")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="unsupported_yap1f_field"
+            )
         async with self._state.command_lock:
             previous = getattr(self._state, key)
             previous_received_fahrenheit_temperature = (

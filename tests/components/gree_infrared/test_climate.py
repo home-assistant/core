@@ -747,6 +747,50 @@ async def test_timer_expiry_updates_number_without_another_command(
     assert hass.states.get(entity_id).state == "0.0"
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_deadline_matches_quantized_duration_after_state_send(
+    mock_config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """A full-state send restarts the local timer at its encoded duration."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    previous_deadline = climate._timer_deadline
+
+    freezer.move_to(freezer() + timedelta(minutes=20))
+    await climate.async_set_fan_mode(FAN_LOW)
+
+    assert climate._timer_deadline == previous_deadline + timedelta(minutes=20)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_state_send_keeps_timer_deadline(
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed full-state send does not change the existing timer deadline."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    freezer.move_to(freezer() + timedelta(minutes=20))
+    previous_deadline = climate._timer_deadline
+
+    with (
+        patch.object(
+            mock_infrared_emitter_entity,
+            "async_send_command",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await climate.async_set_fan_mode(FAN_LOW)
+
+    assert climate._timer_deadline == previous_deadline
+
+
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_expired_restored_timer_starts_off(
@@ -808,10 +852,47 @@ async def test_option_validation_uses_mode_after_waiting_for_command_lock(
         await asyncio.sleep(0)
         release.set()
         await mode_task
-        with pytest.raises(HomeAssistantError, match="only available in cool mode"):
+        with pytest.raises(ServiceValidationError) as err:
             await option_task
+        assert err.value.translation_key == "econo_not_available"
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("option", "mode", "translation_key"),
+    [
+        ("sleep", HVACMode.AUTO, "sleep_not_available"),
+        ("econo", HVACMode.HEAT, "econo_not_available"),
+        ("absence", HVACMode.COOL, "absence_not_available"),
+    ],
+)
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [
+        {
+            CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO],
+            CONF_MODEL: MODEL_YAP1F,
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_option_mode_errors_have_translation_keys(
+    mock_config_entry: MockConfigEntry,
+    option: str,
+    mode: HVACMode,
+    translation_key: str,
+) -> None:
+    """Mode-specific option validation errors identify their translations."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(mode)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await climate.async_set_option(option, True)
+
+    assert err.value.translation_key == translation_key
 
 
 @pytest.mark.parametrize("has_receiver", [True])

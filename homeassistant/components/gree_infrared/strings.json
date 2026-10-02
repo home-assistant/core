@@ -87,6 +87,47 @@
       "xfan": { "name": "X-Fan" }
     }
   },
+  "exceptions": {
+    "absence_not_available": {
+      "message": "Absence is only available in heat mode."
+    },
+    "climate_not_available": {
+      "message": "The Gree climate entity is not available yet."
+    },
+    "econo_not_available": {
+      "message": "Econo is only available in cool mode."
+    },
+    "send_failed": {
+      "message": "Failed to send the infrared command."
+    },
+    "sleep_not_available": {
+      "message": "Sleep is not available in this HVAC mode."
+    },
+    "unsupported_display_temperature": {
+      "message": "Unsupported display temperature."
+    },
+    "unsupported_fresh_air": {
+      "message": "Unsupported fresh-air option."
+    },
+    "unsupported_horizontal_vane_position": {
+      "message": "Unsupported horizontal vane position."
+    },
+    "unsupported_option": {
+      "message": "This option is not supported by the selected model."
+    },
+    "unsupported_timer": {
+      "message": "Unsupported timer value."
+    },
+    "unsupported_vane_model": {
+      "message": "Vane position is only available on the YAP1F model."
+    },
+    "unsupported_vane_position": {
+      "message": "Unsupported vane position."
+    },
+    "unsupported_yap1f_field": {
+      "message": "This setting is only available on the YAP1F model."
+    }
+  },
   "selector": {
     "hvac_modes": {
       "options": {
