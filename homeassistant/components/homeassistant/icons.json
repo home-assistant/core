@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "host_reboot_required": {
+      "condition": "mdi:restart-alert"
+    },
+    "restart_required": {
+      "condition": "mdi:restart-alert"
+    }
+  },
   "services": {
     "check_config": {
       "service": "mdi:receipt-text-check"
@@ -38,6 +46,14 @@
     },
     "update_entity": {
       "service": "mdi:update"
+    }
+  },
+  "triggers": {
+    "host_reboot_required": {
+      "trigger": "mdi:restart-alert"
+    },
+    "restart_required": {
+      "trigger": "mdi:restart-alert"
     }
   }
 }
