@@ -497,6 +497,22 @@ async def test_order_medication_without_draft_id(
     client.async_submit_basket.assert_not_awaited()
 
 
+async def test_order_medication_without_basket_id(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test ordering fails when Farmad returns no basket id."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    client.async_submit_basket.return_value = None
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "order_unconfirmed"
+
+
 async def test_order_medication_serialized(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:

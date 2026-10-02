@@ -49,6 +49,9 @@
     "order_failed": {
       "message": "Ordering at pharmacy {apb} failed."
     },
+    "order_unconfirmed": {
+      "message": "The order at pharmacy {apb} could not be confirmed. Check the Mijn Farmad Apotheek app before retrying to avoid a duplicate order."
+    },
     "search_failed": {
       "message": "Searching at pharmacy {apb} failed."
     },

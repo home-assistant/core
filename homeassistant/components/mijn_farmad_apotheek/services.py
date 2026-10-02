@@ -308,6 +308,12 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
                 products=products,
                 comment=call.data.get(ATTR_COMMENT),
             )
+            if basket_id is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="order_unconfirmed",
+                    translation_placeholders={ATTR_APB: apb},
+                )
     except FarmadAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="authentication_failed"
