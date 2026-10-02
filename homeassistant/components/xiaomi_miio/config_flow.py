@@ -44,7 +44,9 @@ from .typing import XiaomiMiioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SETTINGS = {
-    probatio.Required(CONF_TOKEN): probatio.All(str, probatio.Length(min=32, max=32)),
+    probatio.Required(probatio.Secret(CONF_TOKEN)): probatio.All(
+        str, probatio.Length(min=32, max=32)
+    ),
 }
 DEVICE_CONFIG = probatio.Schema({probatio.Required(CONF_HOST): str}).extend(
     DEVICE_SETTINGS
@@ -55,7 +57,7 @@ DEVICE_MODEL_CONFIG = probatio.Schema(
 DEVICE_CLOUD_CONFIG = probatio.Schema(
     {
         probatio.Optional(CONF_CLOUD_USERNAME): str,
-        probatio.Optional(CONF_CLOUD_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_CLOUD_PASSWORD)): str,
         probatio.Optional(
             CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY
         ): probatio.In(SERVER_COUNTRY_CODES),

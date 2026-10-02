@@ -35,7 +35,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         probatio.Required(CONF_PLATFORM): "webhook",
         probatio.Required(CONF_WEBHOOK_ID): cv.template,
         probatio.Optional(CONF_ALLOWED_METHODS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.All(probatio.Upper, probatio.In(SUPPORTED_METHODS))],
             probatio.Unique(),
         ),

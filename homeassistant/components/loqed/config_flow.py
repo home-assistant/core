@@ -118,7 +118,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show userform to user."""
         user_data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_TOKEN): str,
+                probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
             }
         )
 

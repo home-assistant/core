@@ -37,6 +37,7 @@ class CloudRemoteBinary(BinarySensorEntity):
     _attr_name = "Remote UI"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_should_poll = False
+    # Legacy format, kept as migrating existing unique IDs is not worth the risk
     _attr_unique_id = "cloud-remote-ui-connectivity"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
