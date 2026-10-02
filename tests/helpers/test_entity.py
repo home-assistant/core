@@ -2448,6 +2448,79 @@ async def test_change_entity_id_phases(
     ] == [("test.test", False, None), ("test.test2", True, "test.test2")]
 
 
+class _SuspendingEntity(entity.Entity):
+    """Entity whose async_entity_id_change_finished suspends until resumed."""
+
+    _attr_unique_id = "5678"
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        self.resume = asyncio.Event()
+        self.calls: list[tuple[str, str]] = []
+        self.entity_ids_after_resume: list[str] = []
+
+    async def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Record the change, then wait until resumed."""
+        await super().async_entity_id_change_finished(old_entity_id)
+        self.calls.append((old_entity_id, self.entity_id))
+        await self.resume.wait()
+        self.entity_ids_after_resume.append(self.entity_id)
+
+
+async def test_change_entity_id_again_while_finishing(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an entity_id change while async_entity_id_change_finished awaits."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="a"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _SuspendingEntity()
+    await platform.async_add_entities([ent])
+
+    entity_registry.async_update_entity("test.a", new_entity_id="test.b")
+    # Registry events are not serialized, the second change runs while the first
+    # async_entity_id_change_finished is suspended
+    entity_registry.async_update_entity("test.b", new_entity_id="test.c")
+    ent.resume.set()
+    await hass.async_block_till_done()
+
+    assert ent.calls == [("test.a", "test.b"), ("test.b", "test.c")]
+    assert ent.entity_ids_after_resume == ["test.c", "test.c"]
+    assert hass.states.async_entity_ids() == ["test.c"]
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.c"])
+
+    # The registry update tracker follows the latest entity_id
+    entity_registry.async_update_entity("test.c", new_entity_id="test.d")
+    await hass.async_block_till_done()
+
+    assert ent.calls[-1] == ("test.c", "test.d")
+    assert hass.states.async_entity_ids() == ["test.d"]
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.d"])
+
+
+async def test_remove_while_finishing_entity_id_change(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test removing the entity while async_entity_id_change_finished awaits."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="a"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _SuspendingEntity()
+    await platform.async_add_entities([ent])
+
+    entity_registry.async_update_entity("test.a", new_entity_id="test.b")
+    entity_registry.async_remove("test.b")
+    ent.resume.set()
+    await hass.async_block_till_done()
+
+    assert ent.calls == [("test.a", "test.b")]
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert hass.states.async_entity_ids() == []
+    _assert_entity_bookkeeping(hass, platform, ent, [])
+
+
 async def test_change_entity_id_hook_raises(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
