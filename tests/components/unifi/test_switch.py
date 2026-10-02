@@ -1,7 +1,5 @@
 """UniFi Network switch platform tests."""
 
-import asyncio
-from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
@@ -15,12 +13,8 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from pytest_homeassistant.test_util.aiohttp import (
-    AiohttpClientMocker,
-    AiohttpClientMockResponse,
-)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
-from yarl import URL
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -2259,62 +2253,81 @@ async def test_schedule_needs_a_day(
 
 @pytest.mark.parametrize("firewall_policy_payload", [[WEEKLY_POLICY]])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_schedule_days_simultaneous(
+async def test_schedule_switches_entity_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Validate the schedule switches' registry entries and states."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.SWITCH]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service"),
+    [
+        (DAY_ENTITIES["mon"], SERVICE_TURN_ON),
+        (DAY_ENTITIES["fri"], SERVICE_TURN_OFF),
+        (SCHEDULE_ENTITY + "all_day", SERVICE_TURN_OFF),
+    ],
+)
+@pytest.mark.parametrize("firewall_policy_payload", [[WEEKLY_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
+async def test_schedule_switch_no_change_sends_nothing(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_factory: ConfigEntryFactoryType,
-    mock_requests: Callable[[], None],
+    entity_id: str,
+    service: str,
 ) -> None:
-    """Two day switches turned on at the same moment both take effect."""
-    config_entry = await config_entry_factory()
-    stored = {"policy": deepcopy(WEEKLY_POLICY)}
-    url = (
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/v2/api/site/{config_entry.data[CONF_SITE_ID]}/firewall-policies"
+    """Switching to the state a setting already has doesn't write the policy."""
+    call_count = aioclient_mock.call_count
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
+    assert "put" not in [call[0] for call in aioclient_mock.mock_calls[call_count:]]
 
-    async def get(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
-        return AiohttpClientMockResponse(
-            method,
-            url,
-            json=[deepcopy(stored["policy"])],
-            headers={"content-type": CONTENT_TYPE_JSON},
-        )
 
-    async def put(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
-        body = deepcopy(data)
-        await asyncio.sleep(0.05)
-        stored["policy"] = body
-        return AiohttpClientMockResponse(
-            method, url, json=body, headers={"content-type": CONTENT_TYPE_JSON}
-        )
+@pytest.mark.parametrize(
+    "firewall_policy_payload",
+    [[{**FIREWALL_POLICY, "schedule": {**WEEKLY_SCHEDULE, "repeat_on_days": []}}]],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
+async def test_schedule_day_off_when_none_selected(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Turning off a day that is already off is not an error."""
+    call_count = aioclient_mock.call_count
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: DAY_ENTITIES["sat"]},
+        blocking=True,
+    )
+    assert "put" not in [call[0] for call in aioclient_mock.mock_calls[call_count:]]
 
-    # The first matching mock wins, so register these before the defaults.
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(url, side_effect=get)
-    aioclient_mock.put(f"{url}/{FIREWALL_POLICY['_id']}", side_effect=put)
-    mock_requests()
 
-    await asyncio.gather(
-        hass.services.async_call(
+@pytest.mark.parametrize("firewall_policy_payload", [[WEEKLY_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_schedule_switch_request_failed(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """A rejected request raises and leaves the state unchanged."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: DAY_ENTITIES["fri"]},
             blocking=True,
-        ),
-        hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DAY_ENTITIES["sun"]},
-            blocking=True,
-        ),
-    )
-
-    assert stored["policy"]["schedule"]["repeat_on_days"] == [
-        "mon",
-        "wed",
-        "fri",
-        "sun",
-    ]
-    assert hass.states.get(DAY_ENTITIES["fri"]).state == STATE_ON
-    assert hass.states.get(DAY_ENTITIES["sun"]).state == STATE_ON
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"
+    assert hass.states.get(DAY_ENTITIES["fri"]).state == STATE_OFF

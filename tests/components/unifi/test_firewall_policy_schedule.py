@@ -693,3 +693,123 @@ async def test_rejected_switch_write_leaves_the_policy_unchanged(
     api = config_entry_setup.runtime_data.api
     assert api.firewall_policies[FIREWALL_POLICY["_id"]].enabled is True
     assert hass.states.get(SWITCH).state == "on"
+
+
+DAY_SWITCH = "switch.unifi_network_block_streaming_schedule_{}"
+ALL_DAY_SWITCH = "switch.unifi_network_block_streaming_schedule_all_day"
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload",
+    [
+        [
+            {
+                **FIREWALL_POLICY,
+                "schedule": {
+                    "mode": "EVERY_WEEK",
+                    "repeat_on_days": [],
+                    "time_all_day": False,
+                    "time_range_start": "21:30",
+                    "time_range_end": "08:30",
+                },
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_schedule_days_step_by_step(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[], None],
+    firewall_policy_payload: list[dict[str, Any]],
+) -> None:
+    """Days and all day can be set on a schedule that starts with no days."""
+    config_entry = await config_entry_factory()
+    controller = FakeController(
+        aioclient_mock, mock_requests, config_entry, firewall_policy_payload[0]
+    )
+    for day in ("monday", "tuesday", "sunday"):
+        assert hass.states.get(DAY_SWITCH.format(day)).state == "off"
+
+    await _call(hass, "switch", "turn_on", DAY_SWITCH.format("tuesday"))
+    assert controller.policy["schedule"]["repeat_on_days"] == ["tue"]
+    assert hass.states.get(DAY_SWITCH.format("tuesday")).state == "on"
+    assert hass.states.get(DAY_SWITCH.format("monday")).state == "off"
+
+    await _call(hass, "switch", "turn_on", ALL_DAY_SWITCH)
+    assert controller.policy["schedule"] == {
+        "mode": "EVERY_WEEK",
+        "repeat_on_days": ["tue"],
+        "time_all_day": True,
+    }
+    assert hass.states.get(ALL_DAY_SWITCH).state == "on"
+    assert hass.states.get(START_TIME).state == "unknown"
+
+    await _call(hass, "switch", "turn_off", ALL_DAY_SWITCH)
+    assert controller.policy["schedule"] == {
+        "mode": "EVERY_WEEK",
+        "repeat_on_days": ["tue"],
+        "time_all_day": False,
+        "time_range_start": "09:00",
+        "time_range_end": "12:00",
+    }
+    assert hass.states.get(ALL_DAY_SWITCH).state == "off"
+    assert hass.states.get(START_TIME).state == "09:00:00"
+    assert len(controller.puts) == 3
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload", [[{**FIREWALL_POLICY, "schedule": CUSTOM}]]
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_custom_schedule_day_keeps_dates(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[], None],
+    firewall_policy_payload: list[dict[str, Any]],
+) -> None:
+    """Changing a day in a Custom schedule keeps its date range and times."""
+    config_entry = await config_entry_factory()
+    controller = FakeController(
+        aioclient_mock, mock_requests, config_entry, firewall_policy_payload[0]
+    )
+
+    await _call(hass, "switch", "turn_on", DAY_SWITCH.format("wednesday"))
+
+    assert controller.policy["schedule"] == {
+        **CUSTOM,
+        "repeat_on_days": ["mon", "wed", "fri"],
+    }
+    assert hass.states.get(DAY_SWITCH.format("wednesday")).state == "on"
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload", [[{**FIREWALL_POLICY, "schedule": WEEKLY}]]
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_simultaneous_day_and_time_writes_are_not_lost(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[], None],
+    firewall_policy_payload: list[dict[str, Any]],
+) -> None:
+    """A day switch and a time changed at the same moment both take effect."""
+    config_entry = await config_entry_factory()
+    controller = FakeController(
+        aioclient_mock,
+        mock_requests,
+        config_entry,
+        firewall_policy_payload[0],
+        put_delay=0.05,
+    )
+
+    await asyncio.gather(
+        _call(hass, "switch", "turn_on", DAY_SWITCH.format("friday")),
+        _call(hass, "time", "set_value", START_TIME, time="16:00:00"),
+    )
+
+    assert controller.policy["schedule"]["repeat_on_days"] == ["mon", "wed", "fri"]
+    assert controller.policy["schedule"]["time_range_start"] == "16:00"

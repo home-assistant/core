@@ -152,7 +152,7 @@ async def test_schedule_mode_states(hass: HomeAssistant, expected: str) -> None:
             {
                 "mode": "CUSTOM",
                 "date_start": "2026-01-16",
-                "date_end": "2026-01-16",
+                "date_end": "2026-01-17",
                 "repeat_on_days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
                 "time_all_day": False,
                 "time_range_start": "21:00",

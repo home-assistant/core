@@ -763,3 +763,462 @@
     'state': 'on',
   })
 # ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'firewall_policy-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_all_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_all_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule all day',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule all day',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_all_day',
+    'unique_id': 'firewall_policy_schedule_all_day-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_all_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule all day',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_all_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_friday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_friday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Friday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Friday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_fri',
+    'unique_id': 'firewall_policy_schedule_day_fri-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_friday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Friday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_friday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_monday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_monday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Monday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Monday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_mon',
+    'unique_id': 'firewall_policy_schedule_day_mon-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_monday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Monday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_monday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_saturday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_saturday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Saturday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Saturday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_sat',
+    'unique_id': 'firewall_policy_schedule_day_sat-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_saturday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Saturday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_saturday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_sunday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_sunday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Sunday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Sunday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_sun',
+    'unique_id': 'firewall_policy_schedule_day_sun-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_sunday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Sunday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_sunday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_thursday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_thursday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Thursday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Thursday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_thu',
+    'unique_id': 'firewall_policy_schedule_day_thu-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_thursday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Thursday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_thursday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_tuesday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_tuesday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Tuesday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Tuesday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_tue',
+    'unique_id': 'firewall_policy_schedule_day_tue-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_tuesday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Tuesday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_tuesday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_wednesday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_wednesday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Allow internal to IoT schedule Wednesday',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Allow internal to IoT schedule Wednesday',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firewall_policy_schedule_day_wed',
+    'unique_id': 'firewall_policy_schedule_day_wed-678ceb9fe3849d293243405c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_schedule_switches_entity_data[firewall_policy_payload0][switch.unifi_network_allow_internal_to_iot_schedule_wednesday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Allow internal to IoT schedule Wednesday',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_allow_internal_to_iot_schedule_wednesday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

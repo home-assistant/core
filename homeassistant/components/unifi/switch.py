@@ -62,7 +62,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN
 from .entity import (
     SubscriptionType,
     UnifiEntity,
@@ -169,6 +169,8 @@ async def async_firewall_policy_schedule_all_day_control_fn(
     schedule = policy_schedule(hub.api.firewall_policies[obj_id])
     if schedule_mode(schedule) not in MODES_WITH_DAYS:
         raise_setting_unused()
+    if (schedule.get("time_all_day") is True) == target:
+        return
     await async_save_schedule(hub, obj_id, all_day=target)
 
 
@@ -191,6 +193,8 @@ async def async_firewall_policy_schedule_day_control_fn(
     if schedule_mode(schedule) not in MODES_WITH_DAYS:
         raise_setting_unused()
     days = set(schedule_days(schedule))
+    if (day in days) == target:
+        return
     if target:
         days.add(day)
     else:

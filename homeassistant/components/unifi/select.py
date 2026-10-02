@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import DOMAIN, MODES_WITH_DAYS
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
