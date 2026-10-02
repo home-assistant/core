@@ -685,6 +685,38 @@ async def test_async_remove_twice(hass: HomeAssistant) -> None:
     assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
 
+async def test_async_remove_cancel_concurrent_waiter(hass: HomeAssistant) -> None:
+    """Test cancelling a concurrent remove does not break the in-progress remove."""
+    release = asyncio.Event()
+
+    class MockEntitySlowRemoval(entity.Entity):
+        """Entity that blocks while being removed."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Block until released."""
+            await release.wait()
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntitySlowRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    owner = hass.async_create_task(ent.async_remove())
+    await asyncio.sleep(0)
+    waiter = hass.async_create_task(ent.async_remove())
+    other_waiter = hass.async_create_task(ent.async_remove())
+    await asyncio.sleep(0)
+
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+
+    release.set()
+    await owner
+    await other_waiter
+    assert hass.states.get("test.test") is None
+
+
 async def test_set_context(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
