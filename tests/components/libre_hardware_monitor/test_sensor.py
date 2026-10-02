@@ -24,6 +24,10 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.libre_hardware_monitor.sensor import (
+    STATE_MAX_VALUE,
+    STATE_MIN_VALUE,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -163,7 +167,7 @@ async def test_sensors_are_created(
         ),
         pytest.param(
             SensorType.CONDUCTIVITY,
-            # LHM uses the micro sign, HA normalizes it to the greek mu
+            # LHM sends the micro sign (U+00B5), HA normalizes it to greek mu (U+03BC)
             "\u00b5S/cm",
             SensorDeviceClass.CONDUCTIVITY,
             UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -225,6 +229,58 @@ async def test_sensor_device_class_mapping(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+
+
+async def test_min_max_follow_selected_conductivity_unit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test min and max are converted from the micro sign spelling LHM reports."""
+    sensor_id = "gpu-nvidia-0-conductivity-0"
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(
+            {
+                sensor_id: LibreHardwareMonitorSensorData(
+                    name="Coolant",
+                    value="42.0",
+                    type=SensorType.CONDUCTIVITY,
+                    min="40.0",
+                    max="44.0",
+                    unit="\u00b5S/cm",
+                    device_id="gpu-nvidia-0",
+                    device_name="NVIDIA GeForce RTX 4080 SUPER",
+                    device_type="NVIDIA",
+                    sensor_id=sensor_id,
+                )
+            }
+        ),
+    )
+    await init_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{sensor_id}"
+    )
+    assert entity_id
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        "sensor",
+        {"unit_of_measurement": UnitOfConductivity.MILLISIEMENS_PER_CM},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == (
+        UnitOfConductivity.MILLISIEMENS_PER_CM
+    )
+    assert float(state.state) == pytest.approx(0.042)
+    assert state.attributes[STATE_MIN_VALUE] == pytest.approx(0.04)
+    assert state.attributes[STATE_MAX_VALUE] == pytest.approx(0.044)
 
 
 @pytest.mark.parametrize(

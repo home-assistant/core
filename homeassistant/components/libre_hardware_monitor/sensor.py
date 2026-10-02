@@ -7,6 +7,7 @@ from librehardwaremonitor_api.model import DeviceId, LibreHardwareMonitorSensorD
 from librehardwaremonitor_api.sensor_type import SensorType
 
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS,
     UNIT_CONVERTERS,
     SensorDeviceClass,
     SensorEntity,
@@ -142,7 +143,11 @@ class LibreHardwareMonitorSensor(
 
     def _value_in_state_unit(self, native_value: str | None) -> str | float | None:
         """Convert a native value to the unit the state is converted to."""
-        native_unit = self.native_unit_of_measurement
+        # Conductivity uses micro-sign U+00B5 spelling in its unit which cannot be converted
+        # so we swap it with Greek mu U+03BC to get μS/cm as a valid unit
+        native_unit = AMBIGUOUS_UNITS.get(
+            self.native_unit_of_measurement, self.native_unit_of_measurement
+        )
         unit = self.unit_of_measurement
         if (
             native_value is None
