@@ -1,6 +1,7 @@
 """The tests for the Update component."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
@@ -44,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import system_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -738,6 +740,103 @@ async def test_entity_without_progress_support_raising(
     assert events[1].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert events[1].data.get("new_state").attributes[ATTR_IN_PROGRESS] is False
     assert events[1].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+
+
+def _restart_update_entity(**values: Any) -> MockUpdateEntity:
+    """Return an installable update entity for the restart tests."""
+    return MockUpdateEntity(
+        name="Update",
+        unique_id="update",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=UpdateEntityFeature.INSTALL,
+        **values,
+    )
+
+
+def _restart_update_entity_with_description(
+    post_restart_required: bool,
+) -> MockUpdateEntity:
+    """Return an update entity that sets the flag through its description."""
+    entity = _restart_update_entity()
+    entity.entity_description = UpdateEntityDescription(
+        key="update", post_restart_required=post_restart_required
+    )
+    return entity
+
+
+@pytest.mark.parametrize(
+    ("entity", "restart_sources"),
+    [
+        pytest.param(_restart_update_entity(), set(), id="not_set"),
+        pytest.param(
+            _restart_update_entity(post_restart_required=True),
+            {TEST_DOMAIN},
+            id="attribute",
+        ),
+        pytest.param(
+            _restart_update_entity(post_restart_required=False),
+            set(),
+            id="attribute_false",
+        ),
+        pytest.param(
+            _restart_update_entity_with_description(True),
+            {TEST_DOMAIN},
+            id="description",
+        ),
+        pytest.param(
+            _restart_update_entity_with_description(False),
+            set(),
+            id="description_false",
+        ),
+    ],
+)
+async def test_post_restart_required(
+    hass: HomeAssistant, entity: MockUpdateEntity, restart_sources: set[str]
+) -> None:
+    """Test a finished install flags Home Assistant for a restart."""
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.update"},
+        blocking=True,
+    )
+
+    assert hass.states.get("update.update").attributes[ATTR_INSTALLED_VERSION] == (
+        "1.0.1"
+    )
+    assert (
+        system_state.async_get(hass).home_assistant_restart_sources == restart_sources
+    )
+
+
+async def test_post_restart_required_install_failed(hass: HomeAssistant) -> None:
+    """Test a failed install does not flag Home Assistant for a restart."""
+    setup_test_component_platform(
+        hass, DOMAIN, [_restart_update_entity(post_restart_required=True)]
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.update.UpdateEntity.async_install",
+            side_effect=RuntimeError,
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.update"},
+            blocking=True,
+        )
+
+    assert not system_state.async_get(hass).home_assistant_restart_required
 
 
 async def test_restore_state(
