@@ -89,26 +89,38 @@ async def async_setup_entry(
     """Set up Daikin climate based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     for device in (coordinator.data or {}).values():
+        async_add_entities(
+            _create_climate_entities(device, coordinator), update_before_add=False
+        )
+
+
+def _create_climate_entities(
+    device: Any, coordinator: OnectaDataUpdateCoordinator
+) -> list[DaikinClimate]:
+    """Create climate entities for all independently controllable zones."""
+    entities = []
+    device_model = device.device.device_model
+    for management_point in device.device.management_points_by_type("climateControl"):
         modes: list[str] = []
-        device_model = device.device.device_model
-        embedded_id = ""
-        for management_point in device.device.management_points_by_type(
-            "climateControl"
-        ):
-            embedded_id = management_point.embedded_id
-            if management_point.temperature_control is not None:
-                for operation_mode in (
-                    management_point.temperature_control.value.operation_modes.values()
-                ):
-                    modes.extend(operation_mode.setpoints)
-        # Remove duplicates
+        if management_point.temperature_control is not None:
+            for (
+                operation_mode
+            ) in management_point.temperature_control.value.operation_modes.values():
+                modes.extend(operation_mode.setpoints)
+        # The setpoints may recur across operation modes, but each management
+        # point represents an independently controllable climate zone.
         modes = list(dict.fromkeys(modes))
-        _LOGGER.info("Climate: Device '%s' has modes %s", device_model, modes)
-        for mode in modes:
-            async_add_entities(
-                [DaikinClimate(device, mode, coordinator, embedded_id)],
-                update_before_add=False,
-            )
+        _LOGGER.info(
+            "Climate: Device '%s', management point '%s' has modes %s",
+            device_model,
+            management_point.embedded_id,
+            modes,
+        )
+        entities.extend(
+            DaikinClimate(device, mode, coordinator, management_point.embedded_id)
+            for mode in modes
+        )
+    return entities
 
 
 class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntity):
