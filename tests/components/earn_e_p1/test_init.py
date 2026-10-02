@@ -137,6 +137,35 @@ async def test_unload_entry_keeps_listener_while_other_entry_sets_up(
     mock_listener.stop.assert_not_awaited()
 
 
+async def test_concurrent_setup_starts_listener_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_2: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test entries setting up at the same time share a single listener."""
+    starting = asyncio.Event()
+    resume = asyncio.Event()
+
+    async def blocked_start() -> None:
+        starting.set()
+        await resume.wait()
+
+    mock_listener.start.side_effect = blocked_start
+
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await starting.wait()
+    resume.set()
+    await setup
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry_2.state is ConfigEntryState.LOADED
+    mock_listener.start.assert_awaited_once()
+
+
 async def test_failed_setup_releases_listener(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
 ) -> None:
