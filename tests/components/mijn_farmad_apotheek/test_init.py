@@ -453,39 +453,50 @@ async def test_order_medication_invalid_product(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "translation_key"),
+    ("method", "side_effect", "translation_key"),
     [
         pytest.param(
+            "async_submit_basket",
             FarmadAuthenticationError("mock"),
             "authentication_failed",
             id="authentication",
         ),
         pytest.param(
+            "async_submit_basket",
             FarmadAuthorizationError("mock"),
             "not_authorized",
             id="authorization",
         ),
         pytest.param(
+            "async_submit_basket",
             FarmadCommunicationError("mock"),
             "order_unconfirmed",
             id="communication",
         ),
         pytest.param(
+            "async_submit_basket",
             FarmadTimeoutError("mock"),
             "order_unconfirmed",
             id="timeout",
+        ),
+        pytest.param(
+            "async_get_draft_basket",
+            FarmadCommunicationError("mock"),
+            "order_failed",
+            id="draft-communication",
         ),
     ],
 )
 async def test_order_medication_errors(
     hass: HomeAssistant,
     mock_farmad_client: MagicMock,
+    method: str,
     side_effect: Exception,
     translation_key: str,
 ) -> None:
-    """Test library errors during submit map to translated Home Assistant errors."""
+    """Test library errors during ordering map to translated Home Assistant errors."""
     await init_integration(hass)
-    mock_farmad_client.return_value.async_submit_basket.side_effect = side_effect
+    getattr(mock_farmad_client.return_value, method).side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
