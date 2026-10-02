@@ -104,7 +104,7 @@
         "auth_not_started": "The vehicle could not start the key card request. Wake the vehicle, then select Submit to try again.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "confirm_timeout": "The key was not confirmed on the vehicle's touchscreen in time. Select Submit, tap a key card, then confirm the prompt on the vehicle's touchscreen.",
-        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is within range of a Bluetooth adapter or proxy, then try again.",
         "key_load_failed": "The Bluetooth key file {key_file} could not be loaded. Make sure it is a valid private key and that Home Assistant has permission to read it, then try again.",
         "key_unverified": "The key was added, but the vehicle's reply could not be verified. Select Submit to try again.",
         "pair_denied": "The key was declined on the vehicle's touchscreen. Select Submit and tap a key card to try again.",
