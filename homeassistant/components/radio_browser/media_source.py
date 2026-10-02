@@ -80,10 +80,16 @@ class RadioMediaSource(MediaSource):
                 translation_key="radio_browser_error",
             ) from e
         if not station:
-            raise Unresolvable("Radio station is no longer available")
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="station_not_found",
+            )
 
         if not (mime_type := self._async_get_station_mime_type(station)):
-            raise Unresolvable("Could not determine stream type of radio station")
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="unknown_stream_type",
+            )
 
         # Register "click" with Radio Browser
         await radios.station_click(uuid=station.uuid)
