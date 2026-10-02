@@ -29,18 +29,24 @@ def _canonical_url(url: str) -> str | None:
 
     yarl lowercases the scheme/host and drops default ports, so spelling
     variants (https://FMD.EXAMPLE.COM:443 == https://fmd.example.com)
-    produce one identity. Returns None for input the identity must never
-    carry: URLs with embedded credentials (userinfo would otherwise be
-    persisted in entry, entity, and device registry identifiers) or
-    unparsable/non-absolute URLs.
+    produce one identity. Query strings and fragments are dropped: they
+    are never sent to the server but would otherwise split one server
+    across multiple entry identities. Returns None for input the identity
+    must never carry: non-HTTP(S) schemes, URLs with embedded credentials
+    (userinfo would otherwise be persisted in entry, entity, and device
+    registry identifiers), or unparsable/non-absolute URLs.
     """
     try:
         parsed = URL(url)
     except ValueError:
         return None
-    if not parsed.is_absolute() or parsed.user is not None:
+    if (
+        not parsed.is_absolute()
+        or parsed.scheme not in ("http", "https")
+        or parsed.user is not None
+    ):
         return None
-    return str(parsed).rstrip("/")
+    return str(parsed.with_query(None).with_fragment(None)).rstrip("/")
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:

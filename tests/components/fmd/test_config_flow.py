@@ -148,6 +148,8 @@ async def test_equivalent_url_variants_share_identity(
         ("https://user@fmd.example.com", "invalid_url"),
         ("not a url", "invalid_url"),
         ("fmd.example.com", "invalid_url"),
+        ("ftp://fmd.example.com", "invalid_url"),
+        ("file:///tmp/fmd", "invalid_url"),
     ],
 )
 async def test_invalid_url_rejected(
@@ -173,3 +175,23 @@ async def test_invalid_url_rejected(
     assert result["errors"] == {CONF_URL: error}
     assert not hass.config_entries.async_entries(DOMAIN)
     mock_fmd_client.create.assert_not_called()
+
+
+async def test_url_query_and_fragment_dropped_from_identity(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test query/fragment variants map to the same entry identity."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        dict(USER_INPUT, **{CONF_URL: f"{TEST_URL}/?token=x#section"}),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
