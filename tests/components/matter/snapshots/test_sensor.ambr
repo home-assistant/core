@@ -5291,16 +5291,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.connected_thermostat_ute_3000_heating_demand',
     'has_entity_name': True,
     'hidden_by': None,
@@ -5320,7 +5318,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pi_heating_demand',
-    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-PIHeatingDemand-513-8',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-ThermostatPIHeatingDemand-513-8',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -5328,7 +5326,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Connected Thermostat UTE 3000 Heating demand',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
@@ -25135,7 +25132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pi_cooling_demand',
-    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-PICoolingDemand-513-7',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatPICoolingDemand-513-7',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -25160,16 +25157,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.mock_thermostat_heating_demand',
     'has_entity_name': True,
     'hidden_by': None,
@@ -25189,7 +25184,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pi_heating_demand',
-    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-PIHeatingDemand-513-8',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatPIHeatingDemand-513-8',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -25197,7 +25192,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Heating demand',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
