@@ -1435,6 +1435,63 @@ async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> N
     assert result["reason"] == "no_vehicles"
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_hides_unsupported_vehicles(
+    hass: HomeAssistant, mock_products: AsyncMock, mock_metadata: AsyncMock
+) -> None:
+    """Only vehicles that report no command protocol support are left out."""
+    products = deepcopy(PRODUCTS)
+    metadata = deepcopy(METADATA)
+    vehicle_product = products["response"][0]
+    vehicle_metadata = metadata["vehicles"][VIN]
+    products["response"] = products["response"][1:]
+    metadata["vehicles"] = {}
+    for vin, name, proxy in (
+        ("LRW3F7EK4NC700001", "Supported", True),
+        ("LRW3F7EK4NC700002", "Unsupported", False),
+        ("LRW3F7EK4NC700003", "Unknown", None),
+    ):
+        products["response"].append(
+            {**vehicle_product, "vin": vin, "display_name": name}
+        )
+        metadata["vehicles"][vin] = {**vehicle_metadata, "proxy": proxy}
+    mock_products.return_value = products
+    mock_metadata.return_value = metadata
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    options = result["data_schema"].schema[CONF_VIN].config["options"]
+    assert options == [
+        {"value": "LRW3F7EK4NC700001", "label": "Supported"},
+        {"value": "LRW3F7EK4NC700003", "label": "Unknown"},
+    ]
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_only_unsupported_vehicles(
+    hass: HomeAssistant, mock_metadata: AsyncMock
+) -> None:
+    """The add flow aborts when no account vehicle supports the command protocol."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["proxy"] = False
+    mock_metadata.return_value = metadata
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_vehicles"
+
+
 async def test_subentry_add_flow_no_bluetooth(hass: HomeAssistant) -> None:
     """The add flow aborts immediately when no Bluetooth integration is set up."""
     entry = await _setup_account_entry(hass)
