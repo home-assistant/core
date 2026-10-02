@@ -1,5 +1,7 @@
 """Tests for the Gree Infrared climate platform."""
 
+import asyncio
+
 from typing import Any
 from unittest.mock import patch
 
@@ -542,6 +544,52 @@ async def test_receiver_updates_state_on_cool_signal(
     assert state.state == HVACMode.COOL
     assert state.attributes["fan_mode"] == expected_fan_mode
     assert float(state.attributes["temperature"]) == 24.0
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_waits_for_in_flight_command(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """A received frame updates state only after an outbound send releases the lock."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_send(command: Any) -> None:
+        started.set()
+        await release.wait()
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        send_task = hass.async_create_task(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_HVAC_MODE,
+                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+                blocking=True,
+            )
+        )
+        await started.wait()
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(
+                timings=GreeAcCommand(
+                    mode=GreeAcMode.DRY, temperature=28
+                ).get_raw_timings()
+            )
+        )
+        await asyncio.sleep(0)
+        state = hass.states.get(_CLIMATE_ENTITY_ID)
+        assert state is not None
+        assert state.state == HVACMode.OFF
+
+        release.set()
+        await send_task
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.DRY
 
 
 @pytest.mark.parametrize("has_receiver", [True])

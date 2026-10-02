@@ -1,5 +1,9 @@
 """Tests for the newly wired Gree fields: swing, vane, sleep, ifeel, fresh air, timer."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
+
 from infrared_protocols.commands.gree_ac import (
     GreeAcCommand,
     GreeAcFreshAir,
@@ -21,6 +25,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import ENTRY_ID
 
@@ -294,6 +299,71 @@ async def test_timer_number(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 0}, blocking=True
     )
     assert _last_command(mock_infrared_emitter_entity).timer_hours is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_countdown_sends_remaining_and_expires(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Full-state sends preserve timer deadline and clear an expired timer."""
+    await _turn_on_cool(hass)
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {ATTR_ENTITY_ID: _entity_id(hass, "number", "timer_hours"), "value": 2},
+        blocking=True,
+    )
+    freezer.move_to(freezer() + timedelta(hours=1))
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: _CLIMATE, "temperature": 25},
+        blocking=True,
+    )
+    assert _last_command(mock_infrared_emitter_entity).timer_hours == 1
+
+    freezer.move_to(freezer() + timedelta(hours=1))
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: _CLIMATE, "temperature": 26},
+        blocking=True,
+    )
+    assert _last_command(mock_infrared_emitter_entity).timer_hours is None
+    assert hass.config_entries.async_get_entry(ENTRY_ID).runtime_data.timer_hours is None
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+async def test_timer_deadline_restored_as_remaining_duration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """A persisted absolute timer deadline survives integration restart."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE, HVACMode.OFF, {"temperature": 24, "fan_mode": "auto"}),
+                {
+                    "last_active_hvac_mode": HVACMode.COOL.value,
+                    "timer_hours": 2.0,
+                    "timer_deadline": (dt_util.utcnow() + timedelta(hours=1)).isoformat(),
+                },
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _turn_on_cool(hass)
+    assert _last_command(mock_infrared_emitter_entity).timer_hours == 1
 
 
 @pytest.mark.usefixtures(
