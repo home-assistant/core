@@ -170,7 +170,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(probatio.Secret(CONF_PROVISIONING_KEY)): str,
+                    probatio.Required(CONF_PROVISIONING_KEY): str,
                     probatio.Required(
                         probatio.Secret(CONF_PROVISIONING_SECRET)
                     ): cv.string,
@@ -278,7 +278,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(probatio.Secret(CONF_PROVISIONING_KEY)): str,
+                    probatio.Required(CONF_PROVISIONING_KEY): str,
                     probatio.Required(
                         probatio.Secret(CONF_PROVISIONING_SECRET)
                     ): cv.string,

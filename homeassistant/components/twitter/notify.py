@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
         probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN_SECRET)): cv.string,
-        probatio.Required(probatio.Secret(CONF_CONSUMER_KEY)): cv.string,
+        probatio.Required(CONF_CONSUMER_KEY): cv.string,
         probatio.Required(probatio.Secret(CONF_CONSUMER_SECRET)): cv.string,
         probatio.Optional(CONF_USERNAME): cv.string,
     }
