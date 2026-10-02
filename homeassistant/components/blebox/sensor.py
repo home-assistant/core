@@ -305,7 +305,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
             DOMAIN,
             self._probe_issue_id,
             is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
+            severity=ir.IssueSeverity.ERROR,
             translation_key="probe_not_configured",
             translation_placeholders={
                 "device_name": self._feature.product.name,

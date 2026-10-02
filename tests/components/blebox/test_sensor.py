@@ -221,6 +221,7 @@ async def test_probe_not_configured_issue(
     issue = issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "probe_not_configured"
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
         "device_name": "My tankSensor",
         "sensor_name": "Fill level",
