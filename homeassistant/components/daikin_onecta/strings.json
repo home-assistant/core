@@ -318,8 +318,7 @@
           "low_scan_start": "Low frequency period start time",
           "scan_ignore": "Number of seconds that a data refresh is ignored after a command"
         },
-        "description": "Configure Daikin Onecta Cloud polling",
-        "title": "Daikin Onecta"
+        "description": "Configure Daikin Onecta Cloud polling"
       }
     }
   },
