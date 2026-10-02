@@ -288,7 +288,7 @@ async def ws_handle_get_statistics_during_period(
         probatio.Required("type"): "recorder/statistics_during_period",
         probatio.Required("start_time"): str,
         probatio.Optional("end_time"): str,
-        probatio.Required("statistic_ids"): probatio.All([str], probatio.Length(min=1)),
+        probatio.Required("statistic_ids"): probatio.All([str], probatio.NonEmpty()),
         probatio.Required("period"): probatio.Any(
             "5minute", "hour", "day", "week", "month", "year"
         ),
