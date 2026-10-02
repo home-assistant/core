@@ -116,11 +116,6 @@ class OmadaSiteController:
             if not devices_to_process:
                 return
 
-            current_macs = {
-                dr.format_mac(device.mac)
-                for device in self._devices_coordinator.data.values()
-            }
-
             for device in devices_to_process:
                 mac = dr.format_mac(device.mac)
                 # Reserve the device before awaiting so concurrent
@@ -137,15 +132,24 @@ class OmadaSiteController:
                     )
                     continue
 
-                if mac in self._removed_device_macs and mac not in current_macs:
-                    # The device was removed while its callback was in flight.
-                    # Drop the device entry the callback just recreated.
-                    device_registry = dr.async_get(self._hass)
-                    device_entry = device_registry.async_get_device_by_identifier(
-                        (DOMAIN, device.mac), self._config_entry.entry_id
-                    )
-                    if device_entry is not None:
-                        device_registry.async_remove_device(device_entry.id)
+                if mac not in self._removed_device_macs:
+                    continue
+
+                current_macs = {
+                    dr.format_mac(registered.mac)
+                    for registered in self._devices_coordinator.data.values()
+                }
+                if mac in current_macs:
+                    continue
+
+                # The device was removed while its callback was in flight.
+                # Drop the device entry the callback just recreated.
+                device_registry = dr.async_get(self._hass)
+                device_entry = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device.mac), self._config_entry.entry_id
+                )
+                if device_entry is not None:
+                    device_registry.async_remove_device(device_entry.id)
 
         @callback
         def _handle_devices_update() -> None:

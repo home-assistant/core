@@ -222,6 +222,13 @@ class OmadaDeviceUpdate(
         self._attr_unique_id = f"{device.mac}_firmware"
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Seed the initial state from the coordinator."""
+        await super().async_added_to_hass()
+        if self.coordinator.data and self._mac in self.coordinator.data:
+            self._handle_coordinator_update()
+
+    @override
     def release_notes(self) -> str | None:
         """Get the release notes for the latest update."""
         status = self.coordinator.data[self._mac]
