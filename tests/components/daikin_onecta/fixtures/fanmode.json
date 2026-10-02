@@ -1,0 +1,623 @@
+[
+  {
+    "_id": "13995b32-fc6e-43ed-918e-5d2b01095ccb",
+    "id": "13995b32-fc6e-43ed-918e-5d2b01095ccb",
+    "type": "dx23",
+    "deviceModel": "dx23",
+    "isCloudConnectionUp": {
+      "settable": false,
+      "value": true
+    },
+    "managementPoints": [
+      {
+        "embeddedId": "gateway",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "name": {
+          "settable": false,
+          "maxLength": 32,
+          "value": "Gateway"
+        },
+        "modelInfo": {
+          "settable": false,
+          "value": "BRP069A4x"
+        },
+        "ipAddress": {
+          "settable": false,
+          "value": "192.168.1.2"
+        },
+        "macAddress": {
+          "settable": false,
+          "value": "MANUALLY_REMOVED"
+        },
+        "firmwareVersion": {
+          "settable": false,
+          "value": "4_0_3"
+        },
+        "isFirmwareUpdateSupported": {
+          "settable": false,
+          "value": true
+        }
+      },
+      {
+        "embeddedId": "climateControl",
+        "managementPointType": "climateControl",
+        "managementPointSubType": "mainZone",
+        "managementPointCategory": "primary",
+        "onOffMode": {
+          "settable": true,
+          "values": ["on", "off"],
+          "value": "off"
+        },
+        "name": {
+          "settable": false,
+          "maxLength": 32,
+          "value": "Sala"
+        },
+        "isHolidayModeActive": {
+          "settable": false,
+          "value": false
+        },
+        "isInErrorState": {
+          "settable": false,
+          "value": false
+        },
+        "errorCode": {
+          "settable": false,
+          "value": "00"
+        },
+        "operationMode": {
+          "settable": true,
+          "values": ["auto", "dry", "cooling", "heating", "fanOnly"],
+          "value": "heating"
+        },
+        "temperatureControl": {
+          "ref": "#temperatureControl",
+          "settable": true,
+          "value": {
+            "operationModes": {
+              "auto": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "settable": true,
+                    "value": 25,
+                    "minValue": 18,
+                    "maxValue": 30,
+                    "stepValue": 0.5
+                  }
+                }
+              },
+              "cooling": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "settable": true,
+                    "value": 25,
+                    "minValue": 18,
+                    "maxValue": 32,
+                    "stepValue": 0.5
+                  }
+                }
+              },
+              "heating": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "settable": true,
+                    "value": 25,
+                    "minValue": 10,
+                    "maxValue": 30,
+                    "stepValue": 0.5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sensoryData": {
+          "ref": "#sensoryData",
+          "settable": false,
+          "value": {
+            "roomTemperature": {
+              "settable": false,
+              "value": 21
+            },
+            "outdoorTemperature": {
+              "settable": false,
+              "value": 18
+            }
+          }
+        },
+        "fanControl": {
+          "ref": "#fanControl",
+          "settable": true,
+          "value": {
+            "operationModes": {
+              "auto": {
+                "fanDirection": {
+                  "horizontal": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  },
+                  "vertical": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  }
+                },
+                "fanSpeed": {
+                  "currentMode": {
+                    "settable": true,
+                    "value": "fixed",
+                    "values": ["quiet", "auto", "fixed"]
+                  },
+                  "modes": {
+                    "fixed": {
+                      "value": 3,
+                      "settable": true,
+                      "maxValue": 5,
+                      "minValue": 1,
+                      "stepValue": 1
+                    }
+                  }
+                }
+              },
+              "dry": {
+                "fanDirection": {
+                  "horizontal": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  },
+                  "vertical": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  }
+                },
+                "fanSpeed": {
+                  "currentMode": {
+                    "settable": true,
+                    "value": "auto",
+                    "values": ["auto"]
+                  }
+                }
+              },
+              "cooling": {
+                "fanDirection": {
+                  "horizontal": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  },
+                  "vertical": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  }
+                },
+                "fanSpeed": {
+                  "currentMode": {
+                    "settable": true,
+                    "value": "fixed",
+                    "values": ["quiet", "auto", "fixed"]
+                  },
+                  "modes": {
+                    "fixed": {
+                      "value": 3,
+                      "settable": true,
+                      "maxValue": 5,
+                      "minValue": 1,
+                      "stepValue": 1
+                    }
+                  }
+                }
+              },
+              "heating": {
+                "fanDirection": {
+                  "horizontal": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  },
+                  "vertical": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  }
+                },
+                "fanSpeed": {
+                  "currentMode": {
+                    "settable": true,
+                    "value": "auto",
+                    "values": ["quiet", "auto", "fixed"]
+                  },
+                  "modes": {
+                    "fixed": {
+                      "value": 1,
+                      "settable": true,
+                      "maxValue": 5,
+                      "minValue": 1,
+                      "stepValue": 1
+                    }
+                  }
+                }
+              },
+              "fanOnly": {
+                "fanDirection": {
+                  "horizontal": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  },
+                  "vertical": {
+                    "currentMode": {
+                      "settable": true,
+                      "value": "stop",
+                      "values": ["stop", "swing"]
+                    }
+                  }
+                },
+                "fanSpeed": {
+                  "currentMode": {
+                    "settable": true,
+                    "value": "fixed",
+                    "values": ["quiet", "auto", "fixed"]
+                  },
+                  "modes": {
+                    "fixed": {
+                      "value": 3,
+                      "settable": true,
+                      "maxValue": 5,
+                      "minValue": 1,
+                      "stepValue": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "schedule": {
+          "ref": "#schedule",
+          "settable": true,
+          "value": {
+            "currentMode": {
+              "value": "any",
+              "settable": true,
+              "values": ["any"]
+            },
+            "nextAction": {},
+            "modes": {
+              "any": {
+                "currentSchedule": {
+                  "value": "0",
+                  "settable": true,
+                  "values": ["0", "1", "2"]
+                },
+                "enabled": {
+                  "value": false,
+                  "settable": true
+                },
+                "meta": {
+                  "minIntervalBetweenActions": "00:01:00",
+                  "maxSchedules": 1,
+                  "maxActionsPerActionPeriod": 6,
+                  "consecutiveActionsAllowed": true,
+                  "actionTypes": {
+                    "operationMode": {
+                      "settable": false,
+                      "values": [
+                        "auto",
+                        "dry",
+                        "cooling",
+                        "heating",
+                        "fanOnly",
+                        "off"
+                      ]
+                    },
+                    "roomTemperature": {
+                      "auto": {
+                        "settable": false,
+                        "stepValue": 0.5,
+                        "minValue": 18,
+                        "maxValue": 30
+                      },
+                      "cooling": {
+                        "settable": false,
+                        "stepValue": 0.5,
+                        "minValue": 18,
+                        "maxValue": 32
+                      },
+                      "heating": {
+                        "settable": false,
+                        "stepValue": 0.5,
+                        "minValue": 10,
+                        "maxValue": 30
+                      }
+                    },
+                    "fanSpeed": {
+                      "auto": {
+                        "currentMode": {
+                          "values": ["quiet", "auto", "fixed"],
+                          "settable": false
+                        },
+                        "modes": {
+                          "fixed": {
+                            "settable": false,
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                          }
+                        }
+                      },
+                      "dry": {
+                        "currentMode": {
+                          "values": ["auto"],
+                          "settable": false
+                        }
+                      },
+                      "cooling": {
+                        "currentMode": {
+                          "values": ["quiet", "auto", "fixed"],
+                          "settable": false
+                        },
+                        "modes": {
+                          "fixed": {
+                            "settable": false,
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                          }
+                        }
+                      },
+                      "heating": {
+                        "currentMode": {
+                          "values": ["quiet", "auto", "fixed"],
+                          "settable": false
+                        },
+                        "modes": {
+                          "fixed": {
+                            "settable": false,
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                          }
+                        }
+                      },
+                      "fanOnly": {
+                        "currentMode": {
+                          "values": ["quiet", "auto", "fixed"],
+                          "settable": false
+                        },
+                        "modes": {
+                          "fixed": {
+                            "settable": false,
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "schedules": {
+                  "0": {
+                    "name": {
+                      "settable": false,
+                      "value": "",
+                      "maxLength": 32
+                    },
+                    "meta": {
+                      "isReadOnly": false,
+                      "actionPeriods": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    },
+                    "actions": {
+                      "monday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      },
+                      "tuesday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      },
+                      "wednesday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      },
+                      "thursday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      },
+                      "friday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      },
+                      "saturday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      },
+                      "sunday": {
+                        "00:00:00": {
+                          "operationMode": "off"
+                        }
+                      }
+                    },
+                    "settable": false
+                  },
+                  "1": {
+                    "name": {
+                      "settable": false,
+                      "value": "",
+                      "maxLength": 32
+                    },
+                    "meta": {
+                      "isReadOnly": false,
+                      "actionPeriods": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    },
+                    "actions": {},
+                    "settable": false
+                  },
+                  "2": {
+                    "name": {
+                      "settable": false,
+                      "value": "",
+                      "maxLength": 32
+                    },
+                    "meta": {
+                      "isReadOnly": false,
+                      "actionPeriods": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ]
+                    },
+                    "actions": {},
+                    "settable": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "isPowerfulModeActive": {
+          "settable": false,
+          "value": false
+        },
+        "powerfulMode": {
+          "settable": true,
+          "values": ["on", "off"],
+          "value": "off"
+        },
+        "consumptionData": {
+          "ref": "#consumptionData",
+          "settable": false,
+          "value": {
+            "electrical": {
+              "unit": "kWh",
+              "heating": {
+                "d": [
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0
+                ],
+                "w": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "m": [
+                  2.2, 0.8, 0.4, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 1.2, 0.9, 0, 0.6,
+                  0.3, 0, 0, 0, 0, 0.1, 0, 0, 0
+                ]
+              },
+              "cooling": {
+                "d": [
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0
+                ],
+                "w": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0.1,
+                  0,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "m": [
+                  0, 0, 0, 0.2, 0.5, 1.7, 6.6, 5.7, 1, 0.4, 0.8, 0.1, 0, 0, 0,
+                  0, 0, 2.4, 14.3, 9.4, 0.7, 0.1, 0, 0
+                ]
+              }
+            }
+          }
+        },
+        "holidayMode": {
+          "ref": "#holidayMode",
+          "settable": true,
+          "value": {
+            "enabled": false
+          }
+        }
+      },
+      {
+        "embeddedId": "indoorUnit",
+        "managementPointType": "indoorUnit",
+        "managementPointCategory": "secondary",
+        "name": {
+          "settable": false,
+          "maxLength": 32,
+          "value": "Indoor Unit"
+        },
+        "softwareVersion": {
+          "settable": false,
+          "value": "3.20"
+        }
+      }
+    ],
+    "embeddedId": "53588aa5-df40-42f7-83c2-730952dfd262",
+    "timestamp": "2024-10-21T09:33:53.683Z"
+  }
+]
