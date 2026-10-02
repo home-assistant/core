@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "This shared location is already configured.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_share": "This link belongs to a different shared location. Add it as a new integration entry instead."
     },
     "error": {

@@ -17,6 +17,7 @@ from homeassistant.components.blueprint import (
     schemas as blueprint_schemas,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
@@ -60,6 +61,7 @@ from . import (
     alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    climate as climate_platform,
     cover as cover_platform,
     device_tracker as device_tracker_platform,
     event as event_platform,
@@ -89,6 +91,7 @@ _DEFAULT_NAMES = {
     Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
     Platform.BUTTON: button_platform.DEFAULT_NAME,
     Platform.COVER: cover_platform.DEFAULT_NAME,
+    Platform.CLIMATE: climate_platform.DEFAULT_NAME,
     Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
     Platform.EVENT: event_platform.DEFAULT_NAME,
     Platform.FAN: fan_platform.DEFAULT_NAME,
@@ -241,56 +244,60 @@ CONFIG_SECTION_SCHEMA = probatio.All(
             probatio.Optional(CONF_UNIQUE_ID): cv.string,
             probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             probatio.Optional(ALARM_CONTROL_PANEL_DOMAIN): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [alarm_control_panel_platform.ALARM_CONTROL_PANEL_YAML_SCHEMA],
             ),
             probatio.Optional(BINARY_SENSOR_DOMAIN): probatio.All(
-                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA]
+                probatio.EnsureList(),
+                [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA],
             ),
             probatio.Optional(BUTTON_DOMAIN): probatio.All(
-                cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
+                probatio.EnsureList(), [button_platform.BUTTON_YAML_SCHEMA]
+            ),
+            probatio.Optional(CLIMATE_DOMAIN): probatio.All(
+                probatio.EnsureList(), [climate_platform.CLIMATE_YAML_SCHEMA]
             ),
             probatio.Optional(COVER_DOMAIN): probatio.All(
-                cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+                probatio.EnsureList(), [cover_platform.COVER_YAML_SCHEMA]
             ),
             probatio.Optional(DEVICE_TRACKER_DOMAIN): probatio.All(
-                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
+                probatio.EnsureList(), [device_tracker_platform.TRACKER_YAML_SCHEMA]
             ),
             probatio.Optional(EVENT_DOMAIN): probatio.All(
-                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
+                probatio.EnsureList(), [event_platform.EVENT_YAML_SCHEMA]
             ),
             probatio.Optional(FAN_DOMAIN): probatio.All(
-                cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
+                probatio.EnsureList(), [fan_platform.FAN_YAML_SCHEMA]
             ),
             probatio.Optional(IMAGE_DOMAIN): probatio.All(
-                cv.ensure_list, [image_platform.IMAGE_YAML_SCHEMA]
+                probatio.EnsureList(), [image_platform.IMAGE_YAML_SCHEMA]
             ),
             probatio.Optional(LIGHT_DOMAIN): probatio.All(
-                cv.ensure_list, [light_platform.LIGHT_YAML_SCHEMA]
+                probatio.EnsureList(), [light_platform.LIGHT_YAML_SCHEMA]
             ),
             probatio.Optional(LOCK_DOMAIN): probatio.All(
-                cv.ensure_list, [lock_platform.LOCK_YAML_SCHEMA]
+                probatio.EnsureList(), [lock_platform.LOCK_YAML_SCHEMA]
             ),
             probatio.Optional(NUMBER_DOMAIN): probatio.All(
-                cv.ensure_list, [number_platform.NUMBER_YAML_SCHEMA]
+                probatio.EnsureList(), [number_platform.NUMBER_YAML_SCHEMA]
             ),
             probatio.Optional(SELECT_DOMAIN): probatio.All(
-                cv.ensure_list, [select_platform.SELECT_YAML_SCHEMA]
+                probatio.EnsureList(), [select_platform.SELECT_YAML_SCHEMA]
             ),
             probatio.Optional(SENSOR_DOMAIN): probatio.All(
-                cv.ensure_list, [sensor_platform.SENSOR_YAML_SCHEMA]
+                probatio.EnsureList(), [sensor_platform.SENSOR_YAML_SCHEMA]
             ),
             probatio.Optional(SWITCH_DOMAIN): probatio.All(
-                cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
+                probatio.EnsureList(), [switch_platform.SWITCH_YAML_SCHEMA]
             ),
             probatio.Optional(UPDATE_DOMAIN): probatio.All(
-                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
+                probatio.EnsureList(), [update_platform.UPDATE_YAML_SCHEMA]
             ),
             probatio.Optional(VACUUM_DOMAIN): probatio.All(
-                cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
+                probatio.EnsureList(), [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
             probatio.Optional(WEATHER_DOMAIN): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     probatio.Any(
                         weather_platform.WEATHER_YAML_SCHEMA,
@@ -429,7 +436,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             continue
 
         if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
-            configs.append(cv.ensure_list(config[key]))
+            configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
         return config

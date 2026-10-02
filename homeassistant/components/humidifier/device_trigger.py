@@ -25,8 +25,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import HumidifierEntityStateAttribute
+from .const import DOMAIN, HumidifierEntityStateAttribute
 
 # mypy: disallow-any-generics
 
@@ -40,7 +39,7 @@ CURRENT_TRIGGER_SCHEMA = probatio.All(
             probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 HUMIDIFIER_TRIGGER_SCHEMA = probatio.All(
@@ -53,7 +52,7 @@ HUMIDIFIER_TRIGGER_SCHEMA = probatio.All(
             probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 TRIGGER_SCHEMA = probatio.All(

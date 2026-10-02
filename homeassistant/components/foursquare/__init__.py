@@ -42,8 +42,8 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             {
-                probatio.Required(CONF_ACCESS_TOKEN): cv.string,
-                probatio.Required(CONF_PUSH_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
+                probatio.Required(probatio.Secret(CONF_PUSH_SECRET)): cv.string,
             }
         )
     },
@@ -102,9 +102,7 @@ class FoursquarePushReceiver(HomeAssistantView):
         _LOGGER.debug("Received Foursquare push: %s", data)
 
         if self.push_secret != secret:
-            _LOGGER.error(
-                "Received Foursquare push with invalid push secret: %s", secret
-            )
+            _LOGGER.error("Received Foursquare push with an invalid push secret")
             return self.json_message("Incorrect secret", HTTPStatus.BAD_REQUEST)
 
         request.app[KEY_HASS].bus.async_fire(EVENT_PUSH, data)

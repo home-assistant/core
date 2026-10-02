@@ -49,7 +49,7 @@ DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PATH, default=DEFAULT_PATH): str,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
@@ -144,7 +144,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

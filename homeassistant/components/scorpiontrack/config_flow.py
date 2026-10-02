@@ -110,7 +110,9 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
             data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema({probatio.Required(CONF_SHARE_TOKEN): str}),
+                probatio.Schema(
+                    {probatio.Required(probatio.Secret(CONF_SHARE_TOKEN)): str}
+                ),
                 suggested_values,
             ),
             errors=errors,

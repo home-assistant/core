@@ -17,7 +17,7 @@ from .const import DOMAIN, LOGGER
 SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_PORT, default=6600): int,
     }
 )

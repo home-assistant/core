@@ -10,7 +10,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 import probatio
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.auth.providers.homeassistant import HassAuthProvider
+from homeassistant.auth.providers.homeassistant import HassAuthProvider, InvalidUsername
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
 from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
@@ -199,10 +199,18 @@ class UserOnboardingView(_BaseOnboardingStepView):
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
 
+            # Add the auth before creating the user, as it validates the
+            # username, to avoid leaving an orphaned user behind on failure.
+            try:
+                await provider.async_add_auth(data["username"], data["password"])
+            except InvalidUsername as err:
+                return self.json_message(
+                    str(err), HTTPStatus.BAD_REQUEST, err.translation_key
+                )
+
             user = await hass.auth.async_create_user(
                 data["name"], group_ids=[GROUP_ID_ADMIN]
             )
-            await provider.async_add_auth(data["username"], data["password"])
             credentials = await provider.async_get_or_create_credentials(
                 {"username": data["username"]}
             )

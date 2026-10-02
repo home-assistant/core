@@ -38,7 +38,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_HOST): str,
                     probatio.Required(CONF_PORT, default=3000): probatio.Coerce(int),
                     probatio.Optional(CONF_USERNAME): str,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(CONF_SSL, default=True): bool,
                     probatio.Required(CONF_VERIFY_SSL, default=True): bool,
                 }

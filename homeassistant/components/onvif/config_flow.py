@@ -172,7 +172,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -297,7 +297,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=conf(CONF_USERNAME, "")
                     ): str,
                     probatio.Optional(
-                        CONF_PASSWORD, default=conf(CONF_PASSWORD, "")
+                        probatio.Secret(CONF_PASSWORD), default=conf(CONF_PASSWORD, "")
                     ): str,
                 }
             ),
