@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from copy import deepcopy
+import logging
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -15,6 +16,7 @@ from aiopowerwall import (
     PowerwallFaultError,
 )
 from bleak.exc import BleakError
+from bleak_retry_connector import Allocations
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import probatio
@@ -1232,6 +1234,66 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "scan"
     assert result["errors"] == {"base": "device_not_found"}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_scan_device_not_found_logs_sweep(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """An out-of-range vehicle logs the scanners swept, the missed name and the error."""
+    entry = await _setup_account_entry(hass)
+    proxy = FakeScanner(
+        "AA:BB:CC:00:00:02",
+        "proxy",
+        connectable=True,
+        requested_mode=BluetoothScanningMode.AUTO,
+        current_mode=BluetoothScanningMode.PASSIVE,
+    )
+    unregister_proxy = async_register_scanner(hass, proxy)
+    untracked_proxy = FakeScanner("AA:BB:CC:00:00:04", "untracked", connectable=True)
+    unregister_untracked_proxy = async_register_scanner(hass, untracked_proxy)
+    passive_only = FakeScanner("AA:BB:CC:00:00:03", "passive_only", connectable=False)
+    unregister_passive_only = async_register_scanner(hass, passive_only)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.teslemetry")
+
+    with (
+        patch.object(
+            proxy,
+            "get_allocations",
+            return_value=Allocations("AA:BB:CC:00:00:02", 3, 2, ["11:22:33:44:55:66"]),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(_mock_vehicle()),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    unregister_proxy()
+    unregister_untracked_proxy()
+    unregister_passive_only()
+    assert result["errors"] == {"base": "device_not_found"}
+    for when in ("before", "after"):
+        assert (
+            f"Connectable scanner {when} the active scan: proxy (AA:BB:CC:00:00:02), mode"
+            " BluetoothScanningMode.PASSIVE (requested BluetoothScanningMode.AUTO),"
+            " free/total connection slots 2/3"
+        ) in caplog.text
+        assert (
+            f"Connectable scanner {when} the active scan: untracked (AA:BB:CC:00:00:04),"
+            " mode None (requested None), free/total connection slots unknown"
+        ) in caplog.text
+    assert "the active scan: passive_only" not in caplog.text
+    assert "No connectable advertisement matched Bluetooth name Sdcdcb1a343110fba" in (
+        caplog.text
+    )
+    assert "Bluetooth scan step failed: device_not_found" in caplog.text
 
 
 @pytest.mark.parametrize(

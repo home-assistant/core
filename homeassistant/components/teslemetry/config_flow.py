@@ -298,9 +298,16 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                 # The advertised BLE name is a hash of the VIN; match on its prefix.
                 expected = parent.get_name(self._vin)[:17]
                 if (info := self._async_find_vehicle(expected)) is None:
+                    self._async_log_scanners("before")
                     # The name is only in scan responses, so an active scan may be needed to see it.
                     await async_request_active_scan(self.hass)
-                    if (info := self._async_find_vehicle(expected)) is not None:
+                    self._async_log_scanners("after")
+                    if (info := self._async_find_vehicle(expected)) is None:
+                        LOGGER.debug(
+                            "No connectable advertisement matched Bluetooth name %s",
+                            expected,
+                        )
+                    else:
                         # Ending the active scan drops the vehicle from a local adapter until its next advertisement.
                         heard: asyncio.Future[None] = self.hass.loop.create_future()
 
@@ -351,11 +358,30 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                     else:
                         return await self.async_step_pair()
 
+        if errors:
+            LOGGER.debug("Bluetooth scan step failed: %s", errors["base"])
         return self.async_show_form(
             step_id="scan",
             errors=errors,
             description_placeholders={"vin": self._vin},
         )
+
+    @callback
+    def _async_log_scanners(self, when: str) -> None:
+        """Log the connectable scanners around the active scan."""
+        for scanner in async_current_scanners(self.hass):
+            if not scanner.connectable:
+                continue
+            allocations = scanner.get_allocations()
+            LOGGER.debug(
+                "Connectable scanner %s the active scan: %s, mode %s"
+                " (requested %s), free/total connection slots %s",
+                when,
+                scanner.name,
+                scanner.current_mode,
+                scanner.requested_mode,
+                f"{allocations.free}/{allocations.slots}" if allocations else "unknown",
+            )
 
     @callback
     def _async_find_vehicle(self, name_prefix: str) -> BluetoothServiceInfoBleak | None:
