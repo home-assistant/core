@@ -41,6 +41,7 @@ from .const import (
     API_DEFAULT_RETRY_AFTER,
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_READY,
     DOMAIN,
     FAVORITE_PROGRAMS,
 )
@@ -276,7 +277,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             if context == event_key
         ]
 
-    async def event_listener(self, event_message: EventMessage) -> None:
+    async def event_listener(self, event_message: EventMessage) -> None:  # noqa: C901
         """Match event with listener for event type."""
 
         match event_message.type:
@@ -307,6 +308,30 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         ) in self.global_listeners.values():
                             if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
                                 listener()
+
+                    if (
+                        status_key is StatusKey.BSH_COMMON_OPERATION_STATE
+                        and event.value == BSH_OPERATION_STATE_READY
+                        and (
+                            active_program_event := self.data.events.get(
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                            )
+                        )
+                        and active_program_event.value is None
+                        and (
+                            selected_program_event := self.data.events.get(
+                                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                            )
+                        )
+                        and isinstance(
+                            selected_program := selected_program_event.value, str
+                        )
+                    ):
+                        # When the active program is cleared, refresh options from the selected
+                        # program so the UI doesn't keep showing the completed program's options.
+                        # Wait for READY; earlier requests fail.
+                        await self.update_options(ProgramKey(selected_program))
+
                 self._call_event_listener(event_message)
 
             case EventType.NOTIFY:
@@ -334,40 +359,28 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             program_update_event_value = ProgramKey(event_value)
                         events[event_key] = event
 
-                    if (
-                        event_key
-                        in (
-                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                            EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
-                        )
-                        and (
-                            operation_state_event := events.get(
-                                EventKey.BSH_COMMON_STATUS_OPERATION_STATE
+                        if (
+                            event_key is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                            and (
+                                operation_state_status := self.data.status.get(
+                                    StatusKey.BSH_COMMON_OPERATION_STATE
+                                )
                             )
-                        )
-                        and operation_state_event.value
-                        == "BSH.Common.EnumType.OperationState.Ready"
-                        and (
-                            active_program_event := events.get(
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                            and operation_state_status.value
+                            == BSH_OPERATION_STATE_READY
+                            and event_value is None
+                            and (
+                                selected_program_event := events.get(
+                                    EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                                )
                             )
-                        )
-                        and active_program_event.value is None
-                        and (
-                            selected_program_event := events.get(
-                                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                            and isinstance(
+                                selected_program := selected_program_event.value, str
                             )
-                        )
-                        and isinstance(
-                            selected_program := selected_program_event.value, str
-                        )
-                    ):
-                        # When an appliance finishes the active program, the active program event
-                        # is sent with a null value. If a selected program is still available, use
-                        # it so the UI shows its options instead of the last active program's
-                        # options. Wait until the operation state is ready before requesting the
-                        # program, otherwise the API returns an error.
-                        program_update_event_value = ProgramKey(selected_program)
+                        ):
+                            # Apply the same refresh for clears arriving after READY to get
+                            # the options from the selected program instead of the completed program ones,
+                            program_update_event_value = ProgramKey(selected_program)
 
                 # Process program update after all events to ensure
                 # BSH_COMMON_OPTION_BASE_PROGRAM event is available for

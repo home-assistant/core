@@ -19,6 +19,7 @@ from aiohomeconnect.model import (
     GetSetting,
     HomeAppliance,
     SettingKey,
+    StatusKey,
 )
 from aiohomeconnect.model.error import (
     EventStreamInterruptedError,
@@ -45,6 +46,7 @@ from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_OPERATION_STATE_FINISHED,
+    BSH_OPERATION_STATE_READY,
     BSH_POWER_OFF,
     DOMAIN,
 )
@@ -1007,6 +1009,11 @@ async def test_fetch_base_program_options_when_favorite_program_event(
     )
 
 
+@pytest.mark.parametrize(
+    "reverse",
+    [True, False],
+    ids=["active_program_set_to_null_first", "operation_state_to_ready_first"],
+)
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 async def test_fetch_options_for_selected_program_when_active_program_finishes(
     hass: HomeAssistant,
@@ -1014,6 +1021,7 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
+    reverse: bool,
 ) -> None:
     """Test selected program options are fetched when the active program finishes.
 
@@ -1085,12 +1093,12 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
         [
             EventMessage(
                 appliance_ha_id,
-                EventType.NOTIFY,
+                EventType.STATUS,
                 data=ArrayOfEvents(
                     [
                         Event(
-                            key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
-                            raw_key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE.value,
+                            key=StatusKey.BSH_COMMON_OPERATION_STATE,
+                            raw_key=StatusKey.BSH_COMMON_OPERATION_STATE.value,
                             timestamp=0,
                             level="",
                             handling="",
@@ -1117,50 +1125,49 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
             ],
         )
     )
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.NOTIFY,
-                data=ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=None,
-                        )
-                    ]
-                ),
-            )
-        ]
-    )
+    events = [
+        EventMessage(
+            appliance_ha_id,
+            EventType.NOTIFY,
+            data=ArrayOfEvents(
+                [
+                    Event(
+                        key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                        raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                        timestamp=0,
+                        level="",
+                        handling="",
+                        value=None,
+                    )
+                ]
+            ),
+        ),
+        EventMessage(
+            appliance_ha_id,
+            EventType.STATUS,
+            data=ArrayOfEvents(
+                [
+                    Event(
+                        key=StatusKey.BSH_COMMON_OPERATION_STATE,
+                        raw_key=StatusKey.BSH_COMMON_OPERATION_STATE.value,
+                        timestamp=0,
+                        level="",
+                        handling="",
+                        value=BSH_OPERATION_STATE_READY,
+                    )
+                ]
+            ),
+        ),
+    ]
+    if reverse:
+        events.reverse()
+
+    await client.add_events([events[0]])
     await hass.async_block_till_done()
 
     client.get_available_program.assert_not_awaited()
 
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.NOTIFY,
-                data=ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
-                            raw_key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value="BSH.Common.EnumType.OperationState.Ready",
-                        )
-                    ]
-                ),
-            )
-        ]
-    )
+    await client.add_events([events[1]])
     await hass.async_block_till_done()
 
     client.get_available_program.assert_awaited_once_with(
