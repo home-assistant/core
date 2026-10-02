@@ -52,7 +52,10 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         except FlussDeviceOfflineError:
             return {"internetConnected": False}
         except FlussApiClientError as err:
-            raise UpdateFailed(f"Error fetching Fluss device status: {err}") from err
+            # Best effort: the trigger buttons work without status, and the API can
+            # refuse reads for account-level reasons (e.g. an exhausted quota).
+            LOGGER.warning("Error fetching status for %s: %s", device_id, err)
+            return {}
         return response["status"]
 
     @override
