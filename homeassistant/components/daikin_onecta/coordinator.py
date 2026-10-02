@@ -81,6 +81,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except OnectaConnectionError as err:
                 raise UpdateFailed(CONNECTION_FAILED) from err
 
+            cloud_device_ids = {device.id for device in cloud_devices}
+            for device_id, device in devices.items():
+                if device_id not in cloud_device_ids:
+                    device.mark_unavailable()
+
             for dev_data in cloud_devices:
                 if dev_data.id in devices:
                     devices[dev_data.id].set_device_data(dev_data)
