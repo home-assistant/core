@@ -114,6 +114,7 @@ def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
     Matter server can expose cluster struct attributes either as objects or
     simple dictionaries keyed by the TLV field index. We normalize access by
     first checking dict keys and falling back to attribute lookup.
+    Normalize NullValue to None before field extraction.
     """
     if value is None or value is NullValue:
         return None
@@ -124,9 +125,13 @@ def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
             value = value[index_str]
         else:
             return None
-        return None if value is None or value is NullValue else value
+        if value is None or value is NullValue:
+            return None
+        return value
     result = getattr(value, attr_name, None)
-    return None if result is None or result is NullValue else result
+    if result is None or result is NullValue:
+        return None
+    return result
 
 
 def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass | None:
@@ -472,6 +477,13 @@ class MatterClosure(MatterEntity, CoverEntity):
         self._refresh_closure_panel_subscriptions()
         super()._on_matter_event(event, data)
 
+    @callback
+    @override
+    def _on_featuremap_update(self, event: EventType, data: int | None) -> None:
+        """Refresh panel mappings when capabilities change."""
+        self._refresh_closure_panel_subscriptions()
+        super()._on_featuremap_update(event, data)
+
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the closure."""
@@ -574,7 +586,9 @@ class MatterClosure(MatterEntity, CoverEntity):
                 position = clusters.ClosureControl.Enums.CurrentPositionEnum(position)
             except ValueError:
                 LOGGER.warning("Invalid CurrentPositionEnum value: %s", position)
-                position = None
+                position = (
+                    clusters.ClosureControl.Enums.CurrentPositionEnum.kUnknownEnumValue
+                )
         if isinstance(target_position, int):
             try:
                 target_position = clusters.ClosureControl.Enums.TargetPositionEnum(
@@ -582,13 +596,17 @@ class MatterClosure(MatterEntity, CoverEntity):
                 )
             except ValueError:
                 LOGGER.warning("Invalid TargetPositionEnum value: %s", target_position)
-                target_position = None
+                target_position = (
+                    clusters.ClosureControl.Enums.TargetPositionEnum.kUnknownEnumValue
+                )
         if isinstance(main_state, int):
             try:
                 main_state = clusters.ClosureControl.Enums.MainStateEnum(main_state)
             except ValueError:
                 LOGGER.warning("Invalid MainStateEnum value: %s", main_state)
-                main_state = None
+                main_state = (
+                    clusters.ClosureControl.Enums.MainStateEnum.kUnknownEnumValue
+                )
 
         if position is None:
             self._attr_is_closed = None
