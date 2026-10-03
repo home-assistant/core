@@ -450,7 +450,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             CONF_EFFECT,
             "_attr_effect",
             tcv.item_in_list(
-                self, "_attr_effect", "_attr_effect_list", CONF_EFFECT_LIST
+                self,
+                "_attr_effect",
+                "_attr_effect_list",
+                CONF_EFFECT_LIST,
+                stringify_result=True,
             ),
         )
 

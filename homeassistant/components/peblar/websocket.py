@@ -2,12 +2,12 @@
 
 import asyncio
 
-from peblar import Peblar, PeblarError, PeblarSessionStatus
+from peblar import Peblar, PeblarError, PeblarSessionStatus, SessionState
 
 from homeassistant.core import HomeAssistant, callback
 
 from .const import EVENT_STREAM_RETRY_MAXIMUM, EVENT_STREAM_RETRY_MINIMUM, LOGGER
-from .coordinator import PeblarConfigEntry, PeblarDataUpdateCoordinator
+from .coordinator import PeblarConfigEntry
 
 
 class PeblarSessionListener:
@@ -24,14 +24,13 @@ class PeblarSessionListener:
         hass: HomeAssistant,
         entry: PeblarConfigEntry,
         peblar: Peblar,
-        coordinator: PeblarDataUpdateCoordinator,
     ) -> None:
         """Initialize the listener."""
         self._hass = hass
         self._entry = entry
         self._peblar = peblar
-        self._coordinator = coordinator
         self._retry = EVENT_STREAM_RETRY_MINIMUM
+        self._state: SessionState | None = None
 
     async def async_run(self) -> None:
         """Keep a subscription up for as long as the entry is loaded."""
@@ -68,13 +67,26 @@ class PeblarSessionListener:
 
     @callback
     def _handle_session_status(self, status: PeblarSessionStatus) -> None:
-        """Ask the poll to catch up, now the session has moved on.
+        """Bring the polls forward, now the session has moved on.
 
-        The charger sends the current status right after subscribing, so
-        the first call says nothing new. Refreshing anyway is harmless and
-        cheaper than working out which one that was.
+        Most of what arrives here says nothing new: the charger repeats
+        the status every couple of seconds while it charges, and sends
+        the current one right after subscribing. Acting only on a session
+        that actually moved keeps the meter history, a request many times
+        heavier than the poll beside it, from being fetched for as long as
+        a car is plugged in.
         """
+        if status.state == self._state:
+            return
+
+        self._state = status.state
         LOGGER.debug("Peblar session for %s is %s", self._entry.title, status.state)
-        self._entry.async_create_task(
-            self._hass, self._coordinator.async_request_refresh(), eager_start=False
-        )
+
+        runtime_data = self._entry.runtime_data
+        for coordinator in (
+            runtime_data.data_coordinator,
+            runtime_data.authorization_coordinator,
+        ):
+            self._entry.async_create_task(
+                self._hass, coordinator.async_request_refresh(), eager_start=False
+            )

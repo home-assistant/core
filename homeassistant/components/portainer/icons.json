@@ -136,6 +136,9 @@
     }
   },
   "services": {
+    "prune_build_cache": {
+      "service": "mdi:delete-sweep"
+    },
     "prune_images": {
       "service": "mdi:delete-sweep"
     },

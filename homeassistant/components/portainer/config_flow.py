@@ -32,7 +32,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        probatio.Required(CONF_API_TOKEN): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
@@ -137,7 +137,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_TOKEN): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_TOKEN)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     )
                 }

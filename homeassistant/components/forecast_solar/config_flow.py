@@ -168,12 +168,12 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        CONF_API_KEY,
+                        probatio.Secret(CONF_API_KEY),
                         default=suggested_api_key,
                     )
                     if planes_count > 1
                     else probatio.Optional(
-                        CONF_API_KEY,
+                        probatio.Secret(CONF_API_KEY),
                         description={"suggested_value": suggested_api_key},
                     ): str,
                     probatio.Optional(
