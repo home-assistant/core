@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, override
 
 from demetriek import (
@@ -24,6 +24,24 @@ from .helpers import lametric_exception_handler
 # The SKY reports a time based screensaver mode, but is not known to support
 # scheduling it.
 MODEL_SKY = "sa5"
+
+# Any date will do, it only carries the time arithmetic below.
+TIME_ANCHOR = date(2000, 1, 1)
+
+
+def _shift(value: time, offset: timedelta) -> time:
+    """Shift a time of day by an offset, wrapping around midnight."""
+    return (datetime.combine(TIME_ANCHOR, value) + offset).time()
+
+
+def _utc_offset() -> timedelta:
+    """Return the current offset of the Home Assistant time zone from UTC.
+
+    The device stores the screensaver times in UTC. Converting both ways with
+    the same, current offset makes reading the exact inverse of writing, also
+    around a DST change, where going by today's date would not be.
+    """
+    return dt_util.now().utcoffset() or timedelta()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,17 +126,14 @@ class LaMetricTimeEntity(LaMetricEntity, TimeEntity):
         if (value := self.entity_description.value_fn(self._modes.time_based)) is None:
             return None
 
-        # The device stores screensaver times in UTC.
-        return dt_util.as_local(
-            datetime.combine(dt_util.utcnow().date(), value, tzinfo=UTC)
-        ).time()
+        return _shift(value, _utc_offset())
 
     @lametric_exception_handler
     @override
     async def async_set_value(self, value: time) -> None:
         """Change to new time value."""
         modes = self._modes
-        new_time = dt_util.as_utc(datetime.combine(dt_util.now().date(), value)).time()
+        new_time = _shift(value, -_utc_offset())
         start_time, end_time = self.entity_description.times_fn(
             modes.time_based, new_time
         )

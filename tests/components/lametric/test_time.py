@@ -4,6 +4,7 @@ from datetime import time
 from unittest.mock import MagicMock, call
 
 from demetriek import LaMetricConnectionError, LaMetricError, ScreensaverMode
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -73,6 +74,51 @@ async def test_set_value(
         screensaver_start_time=expected_start,
         screensaver_end_time=expected_end,
     )
+
+
+@pytest.mark.parametrize(
+    ("now", "value", "expected"),
+    [
+        # The evening before the switch to summer time, when the UTC date is
+        # already the next day.
+        ("2026-03-08 07:30:00+00:00", "03:30:00", time(11, 30)),
+        # The day of the switch itself, in the hour that does not exist.
+        ("2026-03-08 20:00:00+00:00", "02:30:00", time(9, 30)),
+    ],
+    ids=["evening_before_switch", "nonexistent_time"],
+)
+async def test_set_value_around_dst(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+    now: str,
+    value: str,
+    expected: time,
+) -> None:
+    """Test a screensaver time reads back as set, also around a DST change."""
+    freezer.move_to(now)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: value},
+        blocking=True,
+    )
+
+    assert mock_lametric.display.call_args.kwargs["screensaver_start_time"] == expected
+
+    time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
+    time_based.start_time = expected
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_START_TIME)
+    assert state
+    assert state.state == value
 
 
 async def test_unknown_times(
