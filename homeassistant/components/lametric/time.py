@@ -1,7 +1,7 @@
 """Support for LaMetric times."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, override
 
@@ -24,6 +24,9 @@ from .helpers import lametric_exception_handler
 # The SKY reports a time based screensaver mode, but is not known to support
 # scheduling it.
 MODEL_SKY = "sa5"
+
+# Both entities write the same pair of start and end time, so one at a time.
+PARALLEL_UPDATES = 1
 
 # Any date will do, it only carries the time arithmetic below.
 TIME_ANCHOR = date(2000, 1, 1)
@@ -141,7 +144,7 @@ class LaMetricTimeEntity(LaMetricEntity, TimeEntity):
         # The device only takes both times at once, so the one left untouched
         # is sent along. A device that never had its times set reports
         # neither; until the other one is set too, it gets the new time.
-        await self.coordinator.lametric.display(
+        display = await self.coordinator.lametric.display(
             screensaver_mode=ScreensaverMode.TIME_BASED,
             screensaver_start_time=new_time if start_time is None else start_time,
             screensaver_end_time=new_time if end_time is None else end_time,
@@ -151,9 +154,14 @@ class LaMetricTimeEntity(LaMetricEntity, TimeEntity):
         # even when asked not to. Switch back to when dark if that was active;
         # the times stay stored.
         if modes.when_dark is not None and modes.when_dark.enabled:
-            await self.coordinator.lametric.display(
+            display = await self.coordinator.lametric.display(
                 screensaver_mode=ScreensaverMode.WHEN_DARK,
                 screensaver_mode_enabled=True,
             )
 
-        await self.coordinator.async_request_refresh()
+        # The device answers with its new state, use that right away. A refresh
+        # requested shortly after the previous one is held back, and the next
+        # write would send a stale time along otherwise.
+        self.coordinator.async_set_updated_data(
+            replace(self.coordinator.data, display=display)
+        )

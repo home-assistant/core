@@ -1,5 +1,6 @@
 """Tests for the LaMetric time platform."""
 
+from dataclasses import replace
 from datetime import time
 from unittest.mock import MagicMock, call
 
@@ -119,6 +120,50 @@ async def test_set_value_around_dst(
     state = hass.states.get(ENTITY_START_TIME)
     assert state
     assert state.state == value
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_values_in_quick_succession(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test setting both times right after each other keeps both.
+
+    A refresh requested shortly after the previous one is held back, so the
+    second write has to use what the device answered to the first.
+    """
+    display = mock_lametric.device.return_value.display
+    assert display.screensaver
+    assert display.screensaver.modes
+    mock_lametric.display.return_value = replace(
+        display,
+        screensaver=replace(
+            display.screensaver,
+            modes=replace(
+                display.screensaver.modes,
+                time_based=replace(
+                    display.screensaver.modes.time_based, start_time=time(4, 0)
+                ),
+            ),
+        ),
+    )
+
+    for entity_id, value in (
+        (ENTITY_START_TIME, "20:00:00"),
+        (ENTITY_END_TIME, "21:00:00"),
+    ):
+        await hass.services.async_call(
+            TIME_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TIME: value},
+            blocking=True,
+        )
+
+    assert mock_lametric.display.call_args == call(
+        screensaver_mode=ScreensaverMode.TIME_BASED,
+        screensaver_start_time=time(4, 0),
+        screensaver_end_time=time(5, 0),
+    )
 
 
 async def test_unknown_times(
