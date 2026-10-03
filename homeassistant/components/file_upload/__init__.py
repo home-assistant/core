@@ -10,7 +10,7 @@ import shutil
 import tempfile
 
 from aiohttp import BodyPartReader, web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -209,7 +209,7 @@ class FileUploadView(HomeAssistantView):
             or file_field_reader.name != "file"
             or (filename := file_field_reader.filename) is None
         ):
-            raise vol.Invalid("Expected a file")
+            raise probatio.Invalid("Expected a file")
 
         try:
             raise_if_invalid_filename(filename)
@@ -241,7 +241,7 @@ class FileUploadView(HomeAssistantView):
 
         return self.json({"file_id": file_id})
 
-    @RequestDataValidator({vol.Required("file_id"): str})
+    @RequestDataValidator({probatio.Required("file_id"): str})
     async def delete(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Delete a file."""
         hass = request.app[KEY_HASS]

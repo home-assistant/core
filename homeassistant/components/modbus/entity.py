@@ -1,9 +1,10 @@
 """Base implementation for all modbus platforms."""
 
 from abc import abstractmethod
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 import copy
-from datetime import datetime, timedelta
+from datetime import datetime
 import struct
 from typing import Any, cast, override
 
@@ -16,13 +17,12 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later
@@ -40,7 +40,6 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
-    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
@@ -63,7 +62,7 @@ from .const import (
     SIGNAL_STOP_ENTITY,
     DataType,
 )
-from .modbus import ModbusHub
+from .modbus import ModbusHub, entity_unit_id
 
 
 class ModbusBaseEntity(Entity):
@@ -80,14 +79,13 @@ class ModbusBaseEntity(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._device_address = conf_slave
-        else:
-            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
+        self._device_address = entity_unit_id(entry)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._cancel_call: Callable[[], None] | None = None
+        self._update_tasks: set[asyncio.Task[None]] = set()
+        self._stopped = False
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -113,40 +111,68 @@ class ModbusBaseEntity(Entity):
             self._cancel_call()
         await self._async_update()
         self.async_write_ha_state()
-        if self._scan_interval > 0:
-            self._cancel_call = async_call_later(
-                self.hass,
-                timedelta(seconds=self._scan_interval),
-                self.async_local_update,
+        if self._scan_interval > 0 and not self._stopped:
+            # an overlapping update scheduled one already, keep a single timer
+            if self._cancel_call:
+                self._cancel_call()
+            self._cancel_call = self._async_call_later(
+                self._scan_interval, self.async_local_update
             )
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove entity from hass."""
-        self.async_disable()
+    @callback
+    def _async_call_later(
+        self, delay: float, action: Callable[[], Coroutine[Any, Any, None]]
+    ) -> CALLBACK_TYPE:
+        """Run an update after a delay, in the background.
+
+        Startup and shutdown wait for foreground tasks, and the first update
+        waits for a device that may never connect.
+        """
+
+        @callback
+        def _run(_now: datetime) -> None:
+            if self._stopped:
+                return
+            task = self.hass.async_create_background_task(
+                action(), f"modbus {self._attr_name} update"
+            )
+            # updates can overlap when an action runs one while a poll is due
+            self._update_tasks.add(task)
+            task.add_done_callback(self._update_tasks.discard)
+
+        return async_call_later(self.hass, delay, _run)
+
+    @callback
+    def _async_cancel_updates(self) -> None:
+        """Cancel the scheduled update and the ones still running."""
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
+        for task in self._update_tasks:
+            task.cancel()
 
     @callback
     def async_disable(self) -> None:
         """Remote stop entity."""
         LOGGER.info(f"hold entity {self._attr_name}")
-        if self._cancel_call:
-            self._cancel_call()
-            self._cancel_call = None
+        # an update started by an action is not tracked, it must not start
+        # polling again when it finishes
+        self._stopped = True
+        self._async_cancel_updates()
         self._attr_available = False
 
-    async def async_await_connection(self, _now: Any) -> None:
+    async def async_await_connection(self) -> None:
         """Wait for first connect."""
         await self._hub.event_connected.wait()
         await self.async_local_update(cancel_pending_update=True)
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        self.async_on_remove(
-            async_call_later(
-                self.hass,
-                self._hub.config_delay + 0.1,
-                self.async_await_connection,
-            )
+        # also runs when the add is aborted after the first update is scheduled,
+        # and a rename removes and re-adds the entity, so it must not stop it
+        self.async_on_remove(self._async_cancel_updates)
+        self._cancel_call = self._async_call_later(
+            self._hub.config_delay + 0.1, self.async_await_connection
         )
         self.async_on_remove(
             async_dispatcher_connect(
@@ -350,8 +376,8 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
             if self._cancel_call:
                 self._cancel_call()
                 self._cancel_call = None
-            self._cancel_call = async_call_later(
-                self.hass, self._verify_delay, self.async_update
+            self._cancel_call = self._async_call_later(
+                self._verify_delay, self.async_update
             )
             return
         await self.async_local_update(cancel_pending_update=True)

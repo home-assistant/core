@@ -1,6 +1,6 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from collections.abc import Callable, Coroutine, Generator, Iterator
+from collections.abc import Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
@@ -14,7 +14,6 @@ from uiprotect import ProtectApiClient
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
-    AiPort,
     Bootstrap,
     Camera,
     Chime,
@@ -24,8 +23,6 @@ from uiprotect.data import (
     ModelType,
     NvrArmMode,
     NvrArmModeStatus,
-    ProtectModelWithId,
-    PublicBootstrap,
     Sensor,
     SmartDetectObjectType,
     StateType,
@@ -56,7 +53,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import _patch_discovery
-from .utils import MockUFPFixture, make_public_camera, public_rtsps_for
+from .utils import (
+    MockUFPFixture,
+    make_public_bootstrap,
+    make_public_camera,
+    public_rtsps_for,
+)
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -148,7 +150,6 @@ def bootstrap_fixture(nvr: NVR):
     data["liveviews"] = []
     data["events"] = []
     data["chimes"] = []
-    data["aiports"] = []
 
     return Bootstrap.from_unifi_dict(**data)
 
@@ -191,48 +192,17 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.get_meta_info = AsyncMock(return_value=meta)
 
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
-    # them in ``update_public()``; the integration reads them synchronously. Start
-    # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
-    # primes the cameras from the private bootstrap.
-    client.public_bootstrap = Mock(spec=PublicBootstrap)
-    client.public_bootstrap.cameras = {}
-    client.public_bootstrap.lights = {}
-    client.public_bootstrap.relays = {}
-    client.public_bootstrap.sirens = {}
-    client.public_bootstrap.fobs = {}
-    client.public_bootstrap.arm_profiles = {}
-    client.public_bootstrap.arm_mode = None
+    # them in ``update_public()``; the integration reads them synchronously. The
+    # ``update_public`` side effect (see ``mock_entry``) primes the cameras from
+    # the private bootstrap; other device families opt in via the
+    # ``setup_public_*`` helpers and default to no paired public object.
+    client.public_bootstrap = make_public_bootstrap()
     client.public_bootstrap.nvr = Mock()
     client.public_bootstrap.nvr.mac = nvr.mac
     client.public_bootstrap.nvr.name = nvr.name
     client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
     client.public_bootstrap.nvr.type = None
-
-    # Cameras and lights resolve to their primed public model (see
-    # ``update_public`` in ``mock_entry`` / ``setup_public_light``); other
-    # device types opt in via the ``setup_public_*`` helpers, so they default
-    # to no paired public object.
-    def _public_bootstrap_get(
-        model: ModelType, obj_id: str
-    ) -> ProtectModelWithId | None:
-        if model is ModelType.CAMERA:
-            return client.public_bootstrap.cameras.get(obj_id)
-        if model is ModelType.LIGHT:
-            return client.public_bootstrap.lights.get(obj_id)
-        return None
-
-    client.public_bootstrap.get = Mock(side_effect=_public_bootstrap_get)
-
-    def _public_all_devices() -> Iterator[Mock]:
-        pb = client.public_bootstrap
-        yield from pb.cameras.values()
-        yield from pb.lights.values()
-        yield from pb.relays.values()
-        yield from pb.sirens.values()
-        yield from pb.fobs.values()
-
-    client.public_bootstrap.all_devices = _public_all_devices
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any
@@ -505,8 +475,11 @@ def sensor_fixture(fixed_now: datetime):
 
     data = load_json_object_fixture("sample_sensor.json", DOMAIN)
     sensor: Sensor = Sensor.from_unifi_dict(**data)
+    # Distinct offsets: these map to different public fields, and equal values
+    # would hide a swapped path. tampering stays unset on purpose, a value there
+    # would flip the tampering binary sensor.
     sensor.motion_detected_at = fixed_now - timedelta(hours=1)
-    sensor.open_status_changed_at = fixed_now - timedelta(hours=1)
+    sensor.open_status_changed_at = fixed_now - timedelta(hours=2)
     sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
     yield sensor
 
@@ -539,19 +512,6 @@ def chime():
     yield Chime.from_unifi_dict(**data)
 
     Chime.model_config["validate_assignment"] = True
-
-
-@pytest.fixture(name="aiport")
-def aiport_fixture():
-    """Mock UniFi Protect AI Port device."""
-
-    # disable pydantic validation so mocking can happen
-    AiPort.model_config["validate_assignment"] = False
-
-    data = load_json_object_fixture("sample_aiport.json", DOMAIN)
-    yield AiPort.from_unifi_dict(**data)
-
-    AiPort.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="fixed_now")
@@ -647,33 +607,11 @@ def mock_ufp_public_only_client() -> Mock:
     nvr.type = "UNVR4"
     nvr.id = "nvr-id"
     nvr.model = ModelType.NVR
-    pb = Mock(spec=PublicBootstrap)
+    # Tests replace whole device maps (``pb.lights = {...}``); the helper reads
+    # them at call time.
+    pb = make_public_bootstrap()
     pb.nvr = nvr
     pb.arm_mode = arm_mode
-    # One map per device family forwarded in public-only mode; tests replace
-    # them, so both helpers below read the attribute at call time.
-    pb.cameras = {}
-    pb.lights = {}
-    pb.fobs = {}
-    device_maps = {
-        ModelType.CAMERA: "cameras",
-        ModelType.LIGHT: "lights",
-        ModelType.FOB: "fobs",
-    }
-
-    def _all_devices(*, include_nvr: bool = False) -> Iterator[Mock]:
-        if include_nvr and pb.nvr is not None:
-            yield pb.nvr
-        for attr in device_maps.values():
-            yield from getattr(pb, attr).values()
-
-    def _get(model: ModelType, obj_id: str) -> Mock | None:
-        if (attr := device_maps.get(model)) is None:
-            return None
-        return getattr(pb, attr).get(obj_id)
-
-    pb.all_devices = _all_devices
-    pb.get = Mock(side_effect=_get)
     client.public_bootstrap = pb
     return client
 

@@ -34,7 +34,7 @@ SWITCHES = [
         available_fn=lambda device: bool(
             device.bluetooth and device.bluetooth.available
         ),
-        has_fn=lambda device: bool(device.bluetooth),
+        has_fn=lambda device: bool(device.bluetooth and device.bluetooth.available),
         is_on_fn=lambda device: bool(device.bluetooth and device.bluetooth.active),
         set_fn=lambda api, active: api.bluetooth(active=active),
     ),

@@ -65,6 +65,11 @@
         "name": "Dismiss current notification"
       }
     },
+    "notify": {
+      "message": {
+        "name": "Message"
+      }
+    },
     "number": {
       "brightness": {
         "name": "Brightness"
@@ -104,6 +109,14 @@
   "exceptions": {
     "screensaver_times_incomplete": {
       "message": "The screensaver start and end time can only be changed together, but the device has no screensaver times configured yet. Set up the time-based screensaver in the LaMetric app first."
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with the LaMetric device"
+    },
+    "invalid_response": {
+      "message": "Invalid response from the LaMetric device"
     }
   },
   "selector": {

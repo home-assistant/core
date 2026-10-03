@@ -1,11 +1,12 @@
 """Config flow for Sofar devices."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
+import probatio
 from sofar_modbus.modern.device import SofarInverter
-import voluptuous as vol
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -23,32 +24,30 @@ from .const import CONF_UNIT_ID, DEFAULT_NAME, DEFAULT_PORT, DEFAULT_UNIT_ID, DO
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
+        probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
 
 
-async def _async_probe(
-    hass: HomeAssistant, host: str, port: int, unit_id: int
-) -> SofarInverter:
+async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
     """Connect to the inverter and read its identity, or raise."""
-    params = ModbusTcpParams(host=host, port=port)
-    async with async_get_temporary_unit(hass, params, unit_id) as unit:
-        device = SofarInverter(unit)
+    params = ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
+    async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
+        device = await SofarInverter.async_detect(unit)
         await device.async_update()
     return device
 
@@ -66,27 +65,15 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            try:
-                device = await _async_probe(
-                    self.hass,
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
-                    user_input[CONF_UNIT_ID],
+            device, errors, description_placeholders = await self._async_validate(
+                user_input
+            )
+            if device is not None:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=device.model or DEFAULT_NAME, data=user_input
                 )
-            except (ModbusError, HomeAssistantError) as err:
-                errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(err)
-            else:
-                assert device.serial_number is not None
-                if not device.inverter_type:
-                    errors["base"] = "unrecognized_inverter"
-                else:
-                    await self.async_set_unique_id(device.serial_number)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=device.model or DEFAULT_NAME,
-                        data=user_input,
-                    )
 
         return self.async_show_form(
             step_id="user",
@@ -103,26 +90,15 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            try:
-                device = await _async_probe(
-                    self.hass,
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
-                    user_input[CONF_UNIT_ID],
+            device, errors, description_placeholders = await self._async_validate(
+                user_input
+            )
+            if device is not None:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
                 )
-            except (ModbusError, HomeAssistantError) as err:
-                errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(err)
-            else:
-                assert device.serial_number is not None
-                if not device.inverter_type:
-                    errors["base"] = "unrecognized_inverter"
-                else:
-                    await self.async_set_unique_id(device.serial_number)
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        reconfigure_entry, data_updates=user_input
-                    )
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -132,3 +108,17 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=description_placeholders,
         )
+
+    async def _async_validate(
+        self, data: dict[str, Any]
+    ) -> tuple[SofarInverter | None, dict[str, str], dict[str, str]]:
+        """Probe the inverter, returning it or the errors to show instead."""
+        try:
+            device = await _async_probe(self.hass, data)
+        except (ModbusError, HomeAssistantError) as err:
+            return None, {"base": "cannot_connect"}, {"error": str(err)}
+
+        if not device.inverter_type:
+            return None, {"base": "unrecognized_inverter"}, {}
+
+        return device, {}, {}

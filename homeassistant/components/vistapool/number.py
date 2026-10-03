@@ -22,7 +22,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN, PATH_HASHIDRO, PATH_HASPH, PATH_HASRX, SIGNAL_NEW_POOL
+from .const import (
+    DOMAIN,
+    GRAMS_PER_HOUR,
+    PATH_HASHIDRO,
+    PATH_HASPH,
+    PATH_HASRX,
+    SIGNAL_NEW_POOL,
+)
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -44,13 +51,12 @@ class VistapoolNumberEntityDescription(NumberEntityDescription):
 
 def _max_electrolysis(coordinator: VistapoolDataUpdateCoordinator) -> float:
     """Read the cell's hardware max, falling back to a safe default."""
+    # The path is typed in the library's coercion map, so an unparsable value
+    # already comes back as None rather than reaching float().
     raw = coordinator.get_value("hidro.maxAllowedValue")
     if raw is None:
         return 50.0
-    try:
-        return float(raw) / 10
-    except TypeError, ValueError:
-        return 50.0
+    return float(raw) / 10
 
 
 NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
@@ -172,7 +178,7 @@ def _build_number_entities(
                     native_min_value=0,
                     native_max_value=50.0,
                     native_step=0.1,
-                    native_unit_of_measurement="g/h",
+                    native_unit_of_measurement=GRAMS_PER_HOUR,
                     value_path="hidro.level",
                     scale=10,
                     max_value_fn=_max_electrolysis,
@@ -231,14 +237,12 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the scaled current value."""
+        # Every number path is typed in the library's coercion map, so an
+        # unparsable value already comes back as None rather than reaching float().
         raw = self.coordinator.get_value(self.entity_description.value_path)
         if raw is None:
             return None
-        try:
-            value = float(raw)
-        except TypeError, ValueError:
-            return None
-        return value / self.entity_description.scale
+        return float(raw) / self.entity_description.scale
 
     @override
     async def async_set_native_value(self, value: float) -> None:

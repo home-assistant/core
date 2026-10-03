@@ -9,9 +9,9 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
@@ -95,7 +95,7 @@ def fake_integration(hass: HomeAssistant):
         f"{DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): DOMAIN}
+                {probatio.Required("domain"): DOMAIN}
             ),
             spec=["ACTION_SCHEMA"],
         ),
@@ -722,9 +722,9 @@ async def test_call_service_schema_validation_error(
     """Test call service command with invalid service data."""
 
     calls = []
-    service_schema = vol.Schema(
+    service_schema = probatio.Schema(
         {
-            vol.Required("message"): str,
+            probatio.Required("message"): str,
         }
     )
 
@@ -3015,7 +3015,9 @@ async def test_test_condition_template_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": ("must contain at least one of before, after. at 'options'"),
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3298,7 +3300,9 @@ async def test_subscribe_condition_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": ("must contain at least one of before, after. at 'options'"),
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3629,13 +3633,13 @@ async def test_validate_config_works(
 @pytest.mark.parametrize(
     ("key", "config", "error"),
     [
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "triggers",
             {"platform": "non_existing", "event_type": "hello"},
             "Invalid trigger 'non_existing' specified",
         ),
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "conditions",
             {
@@ -3658,7 +3662,7 @@ async def test_validate_config_works(
             },
             "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
         ),
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "actions",
             {"non_existing": "domain_test.test_service"},

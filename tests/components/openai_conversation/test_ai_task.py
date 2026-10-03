@@ -1,18 +1,23 @@
 """Test AI Task platform of OpenAI Conversation integration."""
 
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import httpx
 from openai import PermissionDeniedError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.openai_conversation import DOMAIN
 from homeassistant.components.openai_conversation.const import (
+    CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_STORE_RESPONSES,
+    CONF_VERBOSITY,
+    CONF_WEB_SEARCH,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -47,7 +52,12 @@ async def test_generate_data(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         ai_task_entry,
-        data={**ai_task_entry.data, CONF_STORE_RESPONSES: expected_store},
+        data={
+            **ai_task_entry.data,
+            CONF_STORE_RESPONSES: expected_store,
+            CONF_WEB_SEARCH: True,
+            CONF_CODE_INTERPRETER: True,
+        },
     )
     await hass.async_block_till_done()
     assert entity_entry is not None
@@ -69,6 +79,10 @@ async def test_generate_data(
     assert result.data == "The test data"
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
+    assert mock_create_stream.call_args.kwargs["tools"] == [
+        {"type": "web_search", "search_context_size": "medium"},
+        {"type": "code_interpreter", "container": {"type": "auto"}},
+    ]
     assert (
         mock_create_stream.call_args.kwargs["prompt_cache_key"]
         == ai_task_entry.subentry_id
@@ -76,13 +90,39 @@ async def test_generate_data(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "verbosity", "expected_verbosity"),
+    [
+        pytest.param("gpt-4o-mini", "low", None, id="without-verbosity"),
+        pytest.param("gpt-5-mini", "low", "low", id="low-verbosity"),
+        pytest.param("gpt-5-mini", "high", "high", id="high-verbosity"),
+    ],
+)
 async def test_generate_structured_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
-    entity_registry: er.EntityRegistry,
+    model: str,
+    verbosity: str,
+    expected_verbosity: str | None,
 ) -> None:
     """Test AI Task structured data generation."""
+    ai_task_entry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_entry,
+        data={
+            **ai_task_entry.data,
+            CONF_CHAT_MODEL: model,
+            CONF_VERBOSITY: verbosity,
+        },
+    )
+    await hass.async_block_till_done()
+
     # Mock the OpenAI response stream with JSON data
     mock_create_stream.return_value = [
         create_message_item(
@@ -95,9 +135,9 @@ async def test_generate_structured_data(
         task_name="Test Task",
         entity_id="ai_task.openai_ai_task",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -109,6 +149,9 @@ async def test_generate_structured_data(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    text = mock_create_stream.call_args.kwargs["text"]
+    assert text["format"]["strict"] is True
+    assert text.get("verbosity") == expected_verbosity
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -132,9 +175,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id="ai_task.openai_ai_task",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -144,6 +187,56 @@ async def test_generate_invalid_structured_data(
                 },
             ),
         )
+
+
+@pytest.fixture
+def selection_structure() -> probatio.Schema:
+    """A multi-select with optional fields represented as null on the wire."""
+    return probatio.Schema(
+        {
+            probatio.Optional("names"): selector.SelectSelector(
+                {"options": ["a", "b"], "multiple": True}
+            ),
+            probatio.Optional("label"): selector.TextSelector(),
+        }
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "names",
+    [
+        pytest.param(["a", "b"], id="selection"),
+        pytest.param(["a", "a"], id="duplicates"),
+        pytest.param(None, id="omitted"),
+    ],
+)
+async def test_generate_selection(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_create_stream: AsyncMock,
+    selection_structure: probatio.Schema,
+    names: list[str] | None,
+) -> None:
+    """Generate multi-select results while accepting duplicates and optional nulls."""
+    data = {"names": names, "label": None}
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text=json.dumps(data), output_index=0)
+    ]
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Selection",
+        entity_id="ai_task.openai_ai_task",
+        instructions="Select names",
+        structure=selection_structure,
+    )
+    assert result.data == data
+    schema = mock_create_stream.call_args.kwargs["text"]["format"]["schema"]
+    assert "uniqueItems" not in schema["properties"]["names"]
+    assert (
+        "Removed unsupported uniqueItems: true from OpenAI output schema at $.properties.names"
+        in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("mock_init_component")
