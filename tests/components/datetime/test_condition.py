@@ -146,7 +146,12 @@ async def test_datetime_condition_entity_reference(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.freeze_time("2026-07-01T12:00:00+00:00")
-async def test_invalid(hass: HomeAssistant, entity, state, attributes) -> None:
+async def test_invalid(
+    hass: HomeAssistant,
+    entity: str,
+    state: str,
+    attributes: dict[str, str],
+) -> None:
     """Test datetime handling with invalid entities."""
 
     hass.states.async_set(entity, state, attributes=attributes)
@@ -172,7 +177,7 @@ async def test_invalid(hass: HomeAssistant, entity, state, attributes) -> None:
 
 
 @pytest.mark.freeze_time("2026-07-01T12:00:00+00:00")
-async def test_invalid_2(hass: HomeAssistant) -> None:
+async def test_invalid_reference_entity(hass: HomeAssistant) -> None:
     """Test datetime handling with invalid reference entity."""
 
     target_id = "datetime.target"
