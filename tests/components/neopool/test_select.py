@@ -420,9 +420,7 @@ async def test_timer_period_options_and_current_option(
     entity_id = _select_entity_id(hass, mock_config_entry_timers, "relay_aux1_period")
     state = hass.states.get(entity_id)
     assert state is not None
-    # current_option resolves the seconds value back to its key.
     assert state.state == "1_day"
-    # options list is the full PERIOD_MAP.
     assert "1_day" in state.attributes["options"]
     assert "1_week" in state.attributes["options"]
 

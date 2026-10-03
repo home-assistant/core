@@ -220,14 +220,14 @@
       "filtvalve_interval": {
         "name": "Backwash duration",
         "state": {
-          "30s": "30 Seconds",
-          "60s": "60 Seconds",
-          "90s": "90 Seconds",
-          "120s": "120 Seconds",
-          "150s": "150 Seconds",
-          "180s": "180 Seconds",
-          "240s": "240 Seconds",
-          "300s": "300 Seconds"
+          "30s": "30 seconds",
+          "60s": "60 seconds",
+          "90s": "90 seconds",
+          "120s": "120 seconds",
+          "150s": "150 seconds",
+          "180s": "180 seconds",
+          "240s": "240 seconds",
+          "300s": "300 seconds"
         }
       },
       "filtvalve_mode": {
@@ -254,35 +254,35 @@
       "intelligent_filt_min_time": {
         "name": "Intelligent: minimum filtration time",
         "state": {
-          "2h": "2 Hours",
-          "3h": "3 Hours",
-          "4h": "4 Hours",
-          "5h": "5 Hours",
-          "6h": "6 Hours",
-          "7h": "7 Hours",
-          "8h": "8 Hours",
-          "9h": "9 Hours",
-          "10h": "10 Hours",
-          "11h": "11 Hours",
-          "12h": "12 Hours"
+          "2h": "2 hours",
+          "3h": "3 hours",
+          "4h": "4 hours",
+          "5h": "5 hours",
+          "6h": "6 hours",
+          "7h": "7 hours",
+          "8h": "8 hours",
+          "9h": "9 hours",
+          "10h": "10 hours",
+          "11h": "11 hours",
+          "12h": "12 hours"
         }
       },
       "relay_activation_delay": {
         "name": "pH pump activation delay",
         "state": {
-          "10": "10 Seconds",
-          "20": "20 Seconds",
-          "30": "30 Seconds",
-          "40": "40 Seconds",
-          "50": "50 Seconds",
-          "60": "1 Minute",
-          "120": "2 Minutes",
-          "180": "3 Minutes",
-          "300": "5 Minutes",
-          "900": "15 Minutes",
-          "1800": "30 Minutes",
-          "3600": "1 Hour",
-          "10800": "3 Hours"
+          "10": "10 seconds",
+          "20": "20 seconds",
+          "30": "30 seconds",
+          "40": "40 seconds",
+          "50": "50 seconds",
+          "60": "1 minute",
+          "120": "2 minutes",
+          "180": "3 minutes",
+          "300": "5 minutes",
+          "900": "15 minutes",
+          "1800": "30 minutes",
+          "3600": "1 hour",
+          "10800": "3 hours"
         }
       },
       "relay_aux_mode": {
