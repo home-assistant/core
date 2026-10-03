@@ -548,11 +548,23 @@
     "command_send_failed": {
       "message": "Failed to send command: {exception}"
     },
+    "could_not_connect": {
+      "message": "Could not connect"
+    },
+    "migrate_could_not_auth": {
+      "message": "Authentication during migration of the config entry was not successful"
+    },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
     },
     "work_areas_not_supported": {
       "message": "This mower does not support work areas."
+    }
+  },
+  "issues": {
+    "migrate_could_not_auth": {
+      "description": "Please retry authentication.",
+      "title": "The {title} could not authenticate."
     }
   },
   "selector": {

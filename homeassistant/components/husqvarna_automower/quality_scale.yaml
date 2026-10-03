@@ -74,8 +74,8 @@ rules:
     status: exempt
     comment: no configuration possible
   repair-issues:
-    status: exempt
-    comment: no issues available
+    status: done
+    comment: done for migration issues
   stale-devices: done
 
   # Platinum
