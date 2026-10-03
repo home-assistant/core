@@ -257,7 +257,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.COVER:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Inclusive(
                 OPEN_ACTION, CONF_OPEN_AND_CLOSE
             ): selector.ActionSelector(),
@@ -299,7 +300,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             }
 
     if domain == Platform.FAN:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_ON_ACTION): selector.ActionSelector(),
             probatio.Required(CONF_OFF_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
@@ -320,7 +322,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.LIGHT:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_TURN_ON): selector.ActionSelector(),
             probatio.Required(CONF_TURN_OFF): selector.ActionSelector(),
             probatio.Optional(CONF_LEVEL): selector.TemplateSelector(),
@@ -332,7 +335,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.LOCK:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_LOCK): selector.ActionSelector(),
             probatio.Required(CONF_UNLOCK): selector.ActionSelector(),
             probatio.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
@@ -344,7 +348,7 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.NUMBER),
             ),
-            probatio.Required(CONF_STATE): selector.TemplateSelector(),
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(
                 CONF_MIN, default=DEFAULT_MIN_VALUE
             ): selector.NumberSelector(
@@ -367,7 +371,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.SELECT:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_OPTIONS): selector.TemplateSelector(),
             probatio.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
         }
@@ -424,7 +429,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             }
 
     if domain == Platform.VACUUM:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(SERVICE_START): selector.ActionSelector(),
             probatio.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
             probatio.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
