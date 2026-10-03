@@ -78,24 +78,24 @@ async def test_send_notification_entity_service(
         (
             prowlpy.APIError("Internal server error"),
             HomeAssistantError,
-            "Unexpected error when calling Prowl API",
+            "Unexpected error when calling the Prowl API: Internal server error",
         ),
         (
             TimeoutError,
             HomeAssistantError,
-            "Timeout accessing Prowl API",
+            "Timeout accessing the Prowl API",
         ),
         (
             prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}"),
             HomeAssistantError,
-            "Invalid API key for Prowl service",
+            "Invalid API key for the Prowl service",
         ),
         (
             prowlpy.APIError(
                 "Not accepted: Your IP address has exceeded the API limit"
             ),
             HomeAssistantError,
-            "Prowl service reported: exceeded rate limit",
+            "The Prowl service reported that the rate limit was exceeded",
         ),
         (
             SyntaxError(),
@@ -141,24 +141,24 @@ async def test_fail_send_notification_entity_service(
         (
             prowlpy.APIError("Internal server error"),
             HomeAssistantError,
-            "Unexpected error when calling Prowl API",
+            "Unexpected error when calling the Prowl API: Internal server error",
         ),
         (
             TimeoutError,
             HomeAssistantError,
-            "Timeout accessing Prowl API",
+            "Timeout accessing the Prowl API",
         ),
         (
             prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}"),
             HomeAssistantError,
-            "Invalid API key for Prowl service",
+            "Invalid API key for the Prowl service",
         ),
         (
             prowlpy.APIError(
                 "Not accepted: Your IP address has exceeded the API limit"
             ),
             HomeAssistantError,
-            "Prowl service reported: exceeded rate limit",
+            "The Prowl service reported that the rate limit was exceeded",
         ),
         (
             SyntaxError(),
@@ -332,7 +332,7 @@ async def test_prowl_send_message_action_error(
     """Test the prowl.send_message entity action raises on API errors."""
     mock_prowlpy.post.side_effect = TimeoutError
 
-    with pytest.raises(HomeAssistantError, match="Timeout accessing Prowl API"):
+    with pytest.raises(HomeAssistantError, match="Timeout accessing the Prowl API"):
         await hass.services.async_call(
             DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
