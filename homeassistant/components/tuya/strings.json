@@ -275,6 +275,9 @@
       "siren_duration": {
         "name": "Siren duration"
       },
+      "speed": {
+        "name": "[%key:component::sensor::entity_component::speed::name%]"
+      },
       "target_dis_closest": {
         "name": "Closest target distance"
       },

@@ -83,6 +83,9 @@
       "near_detection": {
         "default": "mdi:signal-distance-variant"
       },
+      "speed": {
+        "default": "mdi:speedometer"
+      },
       "temperature": {
         "default": "mdi:thermometer"
       },
