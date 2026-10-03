@@ -474,6 +474,57 @@ async def test_saving_state_with_sqlalchemy_exception(
     assert "SQLAlchemyError error processing task" not in caplog.text
 
 
+@pytest.mark.xfail(
+    reason="Commit retry does not roll back or restore the batch, see issue #170057",
+    strict=True,
+)
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_commit_retry_after_lost_connection(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the commit retry saves the batch after a lost connection.
+
+    `_commit_event_session_or_retry` retries without rolling back, so the retry
+    raises PendingRollbackError. That is an InvalidRequestError, so it escapes the
+    `except (InternalError, OperationalError)` clause and defeats every remaining
+    attempt at once. Rolling back alone is not enough either: the failed commit
+    expunges the uncommitted objects, so a fix must also restore the batch.
+    """
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    session = instance.event_session
+    real_flush = session.flush
+    failed = False
+
+    def _lose_connection_once(*args: Any, **kwargs: Any) -> None:
+        nonlocal failed
+        if not failed:
+            failed = True
+            session.connection().invalidate()
+            raise OperationalError("insert the state", "fake params", "lost connection")
+        real_flush(*args, **kwargs)
+
+    with (
+        patch.object(instance, "db_retry_wait", 0),
+        patch.object(session, "flush", side_effect=_lose_connection_once),
+    ):
+        hass.states.async_set("test.recorder", "on", {"test_attr": 5})
+        await async_wait_recording_done(hass)
+
+    def _fetch_states() -> list[States]:
+        with session_scope(hass=hass, read_only=True) as read_session:
+            return list(read_session.query(States))
+
+    db_states = await instance.async_add_executor_job(_fetch_states)
+    assert len(db_states) == 1
+
+    assert "(retrying in" in caplog.text
+    assert "SQLAlchemyError error processing task" not in caplog.text
+
+
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
