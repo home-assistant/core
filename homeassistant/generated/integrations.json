@@ -1317,12 +1317,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "de_dietrich": {
-      "name": "De Dietrich",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "deako": {
       "name": "Deako",
       "integration_type": "hub",
@@ -1879,6 +1873,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "engie_be": {
+      "name": "ENGIE Belgium",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
       "integration_type": "device",
@@ -1986,12 +1986,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
-    },
-    "etherscan": {
-      "name": "Etherscan",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "eufy": {
       "name": "eufy",
@@ -7316,7 +7310,7 @@
       "name": "Taps Aff",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "cloud_polling"
     },
     "tasmota": {
       "name": "Tasmota",
@@ -8074,6 +8068,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "vitesy": {
+      "name": "Vitesy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "vivotek": {
       "name": "VIVOTEK",

@@ -46,6 +46,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "rpi_power"
     _attr_has_entity_name = True
+    # Legacy format, kept as migrating existing unique IDs is not worth the risk
     _attr_unique_id = "rpi_power"  # only one sensor possible  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     def __init__(self, under_voltage: UnderVoltage) -> None:
