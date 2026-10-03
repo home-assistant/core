@@ -1230,9 +1230,9 @@ async def test_fetch_options_for_selected_program_when_active_program_finishes(
         for program_key in programs_fetched
     ]
     assert hass.states.is_state(active_program_option_entity_id, STATE_UNAVAILABLE)
-    assert not hass.states.is_state(
-        selected_program_option_entity_id, STATE_UNAVAILABLE
-    )
+    selected_program_option_state = hass.states.get(selected_program_option_entity_id)
+    assert selected_program_option_state
+    assert selected_program_option_state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
