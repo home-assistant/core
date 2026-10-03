@@ -18,9 +18,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS
+from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_get_hub
 
 DEFAULT_NAME = "ADS valve"
 
@@ -33,14 +33,14 @@ PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS valve device."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = async_get_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
@@ -48,7 +48,7 @@ def setup_platform(
 
     entity = AdsValve(ads_hub, ads_var, name, device_class)
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsValve(AdsEntity, ValveEntity):
@@ -67,21 +67,26 @@ class AdsValve(AdsEntity, ValveEntity):
         super().__init__(ads_hub, name, ads_var)
         self._attr_device_class = device_class
         self._attr_reports_position = False
-        self._attr_is_closed = True
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
+    @property
+    @override
+    def is_closed(self) -> bool | None:
+        """Return if the valve is closed."""
+        if (state := self._state_dict[STATE_KEY_STATE]) is None:
+            return None
+        return not state
+
     @override
     def open_valve(self, **kwargs) -> None:
         """Open the valve."""
         self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
-        self._attr_is_closed = False
 
     @override
     def close_valve(self, **kwargs) -> None:
         """Close the valve."""
         self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)
-        self._attr_is_closed = True
