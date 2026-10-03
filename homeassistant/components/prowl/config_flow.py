@@ -7,7 +7,7 @@ import probatio
 import prowlpy
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 
 from .const import DOMAIN
 from .helpers import async_verify_key
@@ -46,7 +46,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {probatio.Required(probatio.Secret(CONF_API_KEY)): str},
                 ),
-                user_input or {CONF_NAME: "Prowl"},
+                user_input,
             ),
             errors=errors,
         )
