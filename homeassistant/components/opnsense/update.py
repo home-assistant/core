@@ -63,7 +63,7 @@ class OPNsenseFirmwareUpdate(
             identifiers={(DOMAIN, entry.unique_id)},
             name=entry.title or "OPNsense",
             manufacturer="OPNsense",
-            configuration_url=entry.data[CONF_URL],
+            configuration_url=str(URL(entry.data[CONF_URL]).with_path("/")),
         )
         self._attr_release_url = str(
             URL(entry.data[CONF_URL])
@@ -147,7 +147,11 @@ class OPNsenseFirmwareUpdate(
     @override
     def latest_version(self) -> str | None:
         """Return the latest available firmware version."""
-        if self.coordinator.data.get("status") == "upgrade" and (
+        status = self.coordinator.data.get("status")
+        if status not in ("update", "upgrade"):
+            return self.installed_version
+
+        if status == "upgrade" and (
             major_version := self.coordinator.data.get("upgrade_major_version")
         ):
             return cast(str, major_version)
@@ -155,7 +159,7 @@ class OPNsenseFirmwareUpdate(
         product = self.coordinator.data.get("product", {})
         latest_version = product.get("product_latest")
         if (
-            self.coordinator.data.get("status") == "update"
+            status == "update"
             and latest_version == product.get("product_version")
             and latest_version
         ):

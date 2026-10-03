@@ -8,29 +8,37 @@ from aiopnsense import OPNsenseConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
-    ("latest", "expected_state"),
-    [("25.7.8", "off"), ("25.7.9", "on")],
+    ("latest", "status", "expected_state"),
+    [
+        pytest.param("25.7.8", None, "off", id="no-new-version"),
+        pytest.param("25.7.9", "update", "on", id="installable-update"),
+    ],
 )
 async def test_firmware_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opnsense_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
     latest: str,
+    status: str | None,
     expected_state: str,
 ) -> None:
     """Test the firmware update entity reports available updates."""
     mock_opnsense_client.get_firmware_update_info.return_value["product"][
         "product_latest"
     ] = latest
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = status
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -41,6 +49,11 @@ async def test_firmware_update(
     assert state.attributes["installed_version"] == "25.7.8"
     assert state.attributes["latest_version"] == latest
     mock_opnsense_client.get_firmware_update_info.assert_awaited_once()
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mocked_unique_id"), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.configuration_url == "http://router.lan/"
 
 
 @pytest.mark.parametrize(
@@ -491,6 +504,11 @@ async def test_firmware_install_without_update_status(
     ] = "25.7.9"
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes["latest_version"] == "25.7.8"
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
