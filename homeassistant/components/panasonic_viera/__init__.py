@@ -155,6 +155,10 @@ class Remote:
         self.volume: float = 0
         self.muted: bool = False
         self.playing: bool = True
+        # Input selection relies on the optional PAC service of the TV.
+        # None until probed, an empty list when the TV does not support it.
+        self.source_list: list[str] | None = None
+        self.source: str | None = None
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
@@ -194,6 +198,26 @@ class Remote:
         assert self._control is not None
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
+        self._update_source()
+
+    def _update_source(self) -> None:
+        """Retrieve the available inputs and the current one, if supported."""
+        assert self._control is not None
+        if self.source_list is None:
+            try:
+                self.source_list = self._control.list_inputs()
+            except SOAPError:
+                # The TV does not implement the optional PAC service
+                _LOGGER.debug("Input selection is not supported by the TV")
+                self.source_list = []
+        if self.source_list:
+            self.source = self._control.get_input()
+
+    async def async_select_source(self, source: str) -> None:
+        """Select the input of the TV."""
+        assert self._control is not None
+        await self._handle_errors(self._control.set_input, source)
+        self.source = source
 
     async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""
