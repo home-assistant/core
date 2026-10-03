@@ -45,3 +45,30 @@ archive_package:
       selector:
         config_entry:
           integration: seventeentrack
+
+set_carrier:
+  fields:
+    package_tracking_number:
+      required: true
+      selector:
+        text:
+    first_carrier:
+      required: true
+      example: 190271
+      selector:
+        number:
+          min: 1
+          max: 999999
+          mode: box
+    second_carrier:
+      example: 19251
+      selector:
+        number:
+          min: 0
+          max: 999999
+          mode: box
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: seventeentrack
