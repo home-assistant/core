@@ -5,6 +5,7 @@ from asyncio import Task
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any, cast, override
 
@@ -16,7 +17,7 @@ from pylamarzocco.exceptions import (
     BluetoothConnectionFailed,
     RequestNotSuccessful,
 )
-from pylamarzocco.models import BluetoothShotCounterUpdate, MachineStatus
+from pylamarzocco.models import MachineStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -254,6 +255,15 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Initial setup for Bluetooth coordinator."""
         await self.device.get_model_info_from_bluetooth()
 
+    @property
+    def _machine_can_brew(self) -> bool:
+        """Return whether the machine is out of standby."""
+        machine_status = self.device.dashboard.config.get(WidgetType.CM_MACHINE_STATUS)
+        return (
+            machine_status is not None
+            and cast(MachineStatus, machine_status).mode is not MachineMode.STANDBY
+        )
+
     @callback
     def _async_update_shot_timer(self) -> None:
         """Run the shot timer only while the machine is able to brew."""
@@ -261,11 +271,7 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             self._shot_timer_task is not None and not self._shot_timer_task.done()
         ):
             return
-        machine_status = self.device.dashboard.config.get(WidgetType.CM_MACHINE_STATUS)
-        can_brew = (
-            machine_status is not None
-            and cast(MachineStatus, machine_status).mode is not MachineMode.STANDBY
-        )
+        can_brew = self._machine_can_brew
         if can_brew == self._shot_timer_started:
             return
         self._shot_timer_task = self.config_entry.async_create_background_task(
@@ -275,31 +281,42 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             else self._async_disconnect_shot_timer(),
             "lm_shot_timer_task",
         )
+        self._shot_timer_task.add_done_callback(
+            partial(self._async_shot_timer_task_done, can_brew=can_brew)
+        )
+
+    @callback
+    def _async_shot_timer_task_done(self, task: Task, can_brew: bool) -> None:
+        """Catch up if the machine mode changed while the task was running."""
+        if not task.cancelled() and self._machine_can_brew != can_brew:
+            self._async_update_shot_timer()
+
+    @callback
+    def _async_update_all_listeners(self, _: Any = None) -> None:
+        """Update the entities of both coordinators showing brewing data."""
+        self._config_coordinator.async_update_listeners()
+        self.async_update_listeners()
 
     async def _async_connect_shot_timer(self) -> None:
         """Connect the Bluetooth shot timer."""
-
-        @callback
-        def update_callback(_: BluetoothShotCounterUpdate | None) -> None:
-            self._config_coordinator.async_update_listeners()
-            self.async_update_listeners()
-
         try:
             self._shot_timer_supported = (
                 self._shot_timer_started
-            ) = await self.device.connect_bluetooth_shot_counter(update_callback)
+            ) = await self.device.connect_bluetooth_shot_counter(
+                self._async_update_all_listeners
+            )
         except (BleakError, BluetoothConnectionFailed, TimeoutError) as err:
             _LOGGER.debug("Could not start the shot timer: %s", err)
             return
         if not self._shot_timer_supported:
             _LOGGER.info("Machine does not support the Bluetooth shot timer")
+        self._async_update_all_listeners()
 
     async def _async_disconnect_shot_timer(self) -> None:
         """Disconnect the Bluetooth shot timer while the machine is in standby."""
         await self.device.disconnect_bluetooth_shot_counter()
         self._shot_timer_started = False
-        self._config_coordinator.async_update_listeners()
-        self.async_update_listeners()
+        self._async_update_all_listeners()
 
     @override
     async def _internal_async_update_data(self) -> None:

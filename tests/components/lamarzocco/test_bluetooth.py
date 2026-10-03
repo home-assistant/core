@@ -1,6 +1,8 @@
 """Tests for La Marzocco Bluetooth connection."""
 
+import asyncio
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
@@ -523,13 +525,18 @@ async def test_bluetooth_client_refreshes_ble_device(
         await async_init_integration(hass, mock_config_entry_bluetooth)
 
     ble_device_callback = bt_client_cls.call_args.kwargs["ble_device_callback"]
+
+    # keep the setup device if it's currently not seen
+    mock_ble_device_from_address.return_value = None
+    assert ble_device_callback() is mock_ble_device
+
     new_device = BLEDevice("00:00:00:00:00:00", "proxy", details={"path": "new"})
     mock_ble_device_from_address.return_value = new_device
     assert ble_device_callback() is new_device
 
-    # keep the last known device if it's currently not seen
+    # keep the last seen device, not the setup device
     mock_ble_device_from_address.return_value = None
-    assert ble_device_callback() is mock_ble_device
+    assert ble_device_callback() is new_device
 
 
 async def test_shot_timer_only_connected_outside_standby(
@@ -585,3 +592,68 @@ async def test_shot_timer_follows_bluetooth_mode_offline(
     await hass.async_block_till_done()
 
     mock_lamarzocco.connect_bluetooth_shot_counter.assert_awaited_once()
+
+
+async def test_shot_timer_connect_updates_entities(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+    mock_ble_device_from_address: MagicMock,
+    mock_websocket_terminated: PropertyMock,
+) -> None:
+    """Test brewing entities become available as soon as the shot timer connects."""
+    mock_websocket_terminated.return_value = True
+    finish_connect = asyncio.Event()
+
+    async def slow_connect(*_: Any) -> bool:
+        await finish_connect.wait()
+        mock_lamarzocco.bluetooth_shot_counter_active = True
+        return True
+
+    mock_lamarzocco.connect_bluetooth_shot_counter.side_effect = slow_connect
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+
+    brew_active = f"binary_sensor.{mock_lamarzocco.serial_number}_brewing_active"
+    state = hass.states.get(brew_active)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    finish_connect.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(brew_active)
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_shot_timer_catches_up_on_mode_change_while_connecting(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+    mock_ble_device_from_address: MagicMock,
+) -> None:
+    """Test a standby during a slow connect disconnects once the connect is done."""
+    connecting = asyncio.Event()
+    finish_connect = asyncio.Event()
+
+    async def slow_connect(*_: Any) -> bool:
+        connecting.set()
+        await finish_connect.wait()
+        return True
+
+    mock_lamarzocco.connect_bluetooth_shot_counter.side_effect = slow_connect
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+    await connecting.wait()
+    config_coordinator = mock_config_entry_bluetooth.runtime_data.config_coordinator
+
+    # the machine goes to standby while still connecting
+    machine_status = mock_lamarzocco.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+    machine_status.mode = MachineMode.STANDBY
+    config_coordinator.async_set_updated_data(None)
+    await hass.async_block_till_done(wait_background_tasks=False)
+    mock_lamarzocco.disconnect_bluetooth_shot_counter.assert_not_called()
+
+    finish_connect.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_lamarzocco.disconnect_bluetooth_shot_counter.assert_awaited_once()

@@ -5,6 +5,7 @@ import logging
 import uuid
 
 from aiohttp import ClientSession
+from bleak.backends.device import BLEDevice
 from packaging import version
 from pylamarzocco import (
     LaMarzoccoBluetoothClient,
@@ -103,12 +104,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             mac = entry.data[CONF_MAC]
             if ble_device := async_ble_device_from_address(hass, mac):
                 _LOGGER.info("Setting up lamarzocco with Bluetooth")
+                latest_ble_device: BLEDevice = ble_device
+
+                def ble_device_callback() -> BLEDevice:
+                    """Return the current BLE device, or the last one seen."""
+                    nonlocal latest_ble_device
+                    latest_ble_device = (
+                        async_ble_device_from_address(hass, mac) or latest_ble_device
+                    )
+                    return latest_ble_device
+
                 bluetooth_client = LaMarzoccoBluetoothClient(
                     ble_device=ble_device,
                     ble_token=token,
-                    ble_device_callback=lambda: (
-                        async_ble_device_from_address(hass, mac) or ble_device
-                    ),
+                    ble_device_callback=ble_device_callback,
                 )
 
                 async def disconnect_bluetooth(_: Event) -> None:
