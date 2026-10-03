@@ -1542,7 +1542,6 @@ def _generate_statistics_period_stmt(
                 func.min(Statistics.start_ts).label("period_start_ts")
             )
 
-            # Reduce requested aggregate values inside the database.
             for key, aggregate_columns_for_type in aggregate_columns.items():
                 if key in aggregate_types:
                     query = query.add_columns(*aggregate_columns_for_type)
