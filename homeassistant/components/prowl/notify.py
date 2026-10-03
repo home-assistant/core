@@ -158,3 +158,4 @@ class ProwlNotificationEntity(NotifyEntity):
             PRIORITY_MAP[priority] if priority else 0,
             url,
         )
+        self._async_record_notification()

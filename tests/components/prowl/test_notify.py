@@ -3,12 +3,14 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import prowlpy
 import pytest
 
 from homeassistant.components import notify
 from homeassistant.components.prowl.const import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -272,10 +274,15 @@ async def test_other_exception_send_notification(
 async def test_prowl_send_message_action(
     hass: HomeAssistant,
     mock_prowlpy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     service_data: dict[str, Any],
     expected_send_parameters: dict[str, Any],
 ) -> None:
     """Test the prowl.send_message entity action."""
+    freezer.move_to("2026-10-03T12:00:00+00:00")
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+
     await hass.services.async_call(
         DOMAIN,
         notify.SERVICE_SEND_MESSAGE,
@@ -284,6 +291,8 @@ async def test_prowl_send_message_action(
     )
 
     mock_prowlpy.post.assert_called_once_with(**expected_send_parameters)
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == "2026-10-03T12:00:00+00:00"
 
 
 @pytest.mark.parametrize(
@@ -330,6 +339,9 @@ async def test_prowl_send_message_action_error(
             {"entity_id": ENTITY_ID, notify.ATTR_MESSAGE: "Test Notification"},
             blocking=True,
         )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("configure_prowl_through_yaml", "mock_prowlpy")
