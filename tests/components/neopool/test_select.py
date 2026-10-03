@@ -266,10 +266,20 @@ async def test_filtvalve_mode_manual_to_manual_is_noop(
     mock_neopool_client.async_set_filtvalve_mode.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        (FiltValveMode.AUTO.value, "auto"),
+        (FiltValveMode.ALWAYS_ON.value, "manual"),
+        (FiltValveMode.ALWAYS_OFF.value, "manual"),
+    ],
+)
 async def test_filtvalve_mode_current_option_maps_register(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    raw: int,
+    expected: str,
 ) -> None:
     """current_option reduces the 3 register values to auto / manual.
 
@@ -280,20 +290,15 @@ async def test_filtvalve_mode_current_option_maps_register(
         hass, mock_config_entry_timers, "mbf_par_filtvalve_mode"
     )
 
-    for raw, expected in (
-        (FiltValveMode.AUTO.value, "auto"),
-        (FiltValveMode.ALWAYS_ON.value, "manual"),
-        (FiltValveMode.ALWAYS_OFF.value, "manual"),
-    ):
-        mock_neopool_client.async_read_all.return_value = {
-            **MOCK_POOL_DATA,
-            "MBF_PAR_FILTVALVE_MODE": raw,
-        }
-        await mock_config_entry_timers.runtime_data.async_refresh()
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILTVALVE_MODE": raw,
+    }
+    await mock_config_entry_timers.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
 
 
 async def test_filtvalve_mode_maps_communication_error_to_home_assistant_error(
