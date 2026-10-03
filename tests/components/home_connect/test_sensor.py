@@ -1098,6 +1098,8 @@ async def test_program_key_sensor_not_created_without_programs(
         DOMAIN,
         f"{appliance.ha_id}-{event_key}",
     )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
