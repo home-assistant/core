@@ -405,6 +405,12 @@ async def _async_get_ingredient(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="connection_error",
         ) from err
+    if not result or not result.confidence:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="could_not_parse_ingredient",
+        )
+
     result_dict = asdict(result)
     # Add flag to indicate whether the ingredient has acceptable confidence to
     # be added as an ingredient in the to-do list add_item method.

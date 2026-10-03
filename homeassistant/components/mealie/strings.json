@@ -123,6 +123,9 @@
     "could_not_import_recipe": {
       "message": "Mealie could not import the recipe from the URL."
     },
+    "could_not_parse_ingredient": {
+      "message": "Mealie could not parse the ingredient."
+    },
     "delete_item_error": {
       "message": "An error occurred deleting an item in {shopping_list_name}."
     },
