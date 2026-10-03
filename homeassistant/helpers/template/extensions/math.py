@@ -46,6 +46,12 @@ class MathExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "atan2", self.arc_tangent2, as_global=True, as_filter=True
                 ),
+                TemplateFunction(
+                    "radians", self.radians, as_global=True, as_filter=True
+                ),
+                TemplateFunction(
+                    "degrees", self.degrees, as_global=True, as_filter=True
+                ),
                 # Advanced math functions (as globals and filters)
                 TemplateFunction("log", self.logarithm, as_global=True, as_filter=True),
                 TemplateFunction(
@@ -186,6 +192,26 @@ class MathExtension(BaseTemplateExtension):
         except ValueError, TypeError:
             if default is _SENTINEL:
                 raise_no_default("atan2", args)
+            return default
+
+    @staticmethod
+    def radians(value: Any, default: Any = _SENTINEL) -> Any:
+        """Filter and function to convert degrees to radians."""
+        try:
+            return math.radians(float(value))
+        except ValueError, TypeError:
+            if default is _SENTINEL:
+                raise_no_default("radians", value)
+            return default
+
+    @staticmethod
+    def degrees(value: Any, default: Any = _SENTINEL) -> Any:
+        """Filter and function to convert radians to degrees."""
+        try:
+            return math.degrees(float(value))
+        except ValueError, TypeError:
+            if default is _SENTINEL:
+                raise_no_default("degrees", value)
             return default
 
     @staticmethod
