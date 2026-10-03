@@ -100,8 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     )
 
         if CONF_MAC in entry.data:
-            mac = entry.data[CONF_MAC]
-            if ble_device := async_ble_device_from_address(hass, mac):
+            if ble_device := async_ble_device_from_address(hass, entry.data[CONF_MAC]):
                 _LOGGER.info("Setting up lamarzocco with Bluetooth")
                 bluetooth_client = LaMarzoccoBluetoothClient(
                     ble_device=ble_device,
