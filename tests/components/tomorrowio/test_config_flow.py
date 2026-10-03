@@ -138,7 +138,7 @@ async def test_user_flow_errors(
     errors: dict[str, str],
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test user config flow when Tomorrow.io can't connect."""
+    """Test user config flow errors and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -158,7 +158,6 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
 
-    # recover from errors
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
