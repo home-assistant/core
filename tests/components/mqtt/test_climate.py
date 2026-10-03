@@ -1177,6 +1177,18 @@ async def test_set_hvac_mode_swaps_setpoints_optimistic(
     await common.async_set_hvac_mode(hass, HVACMode.AUTO, ENTITY_CLIMATE)
     assert _setpoints(hass) == (19, None, None)
 
+    # Setpoints reset by a temperature command are parked as well
+    await common.async_set_hvac_mode(hass, HVACMode.HEAT_COOL, ENTITY_CLIMATE)
+    await common.async_set_temperature(
+        hass, target_temp_low=21, target_temp_high=24, entity_id=ENTITY_CLIMATE
+    )
+    await common.async_set_hvac_mode(hass, HVACMode.AUTO, ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=18, entity_id=ENTITY_CLIMATE)
+    assert _setpoints(hass) == (18, None, None)
+
+    await common.async_set_hvac_mode(hass, HVACMode.HEAT_COOL, ENTITY_CLIMATE)
+    assert _setpoints(hass) == (None, 21, 24)
+
 
 @pytest.mark.parametrize(
     ("hass_config", "messages", "expected"),
@@ -1204,7 +1216,7 @@ async def test_set_hvac_mode_swaps_setpoints_optimistic(
                 ),
             ),
             [("temperature-low-state", "18"), ("temperature-high-state", "25")],
-            [(None, 18, 25), (None, 18, 25)],
+            [(21, 18, 25), (None, 18, 25)],
             id="range_from_device",
         ),
         pytest.param(
@@ -1214,7 +1226,7 @@ async def test_set_hvac_mode_swaps_setpoints_optimistic(
                 ({"temperature_state_topic": "temperature-state", **SWAP_MODES},),
             ),
             [("temperature-state", "19")],
-            [(19, None, None), (19, None, None)],
+            [(19, None, None), (19, 21, 21)],
             id="single_from_device",
         ),
         pytest.param(
