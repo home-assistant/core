@@ -112,6 +112,15 @@
     },
     "invalid_response": {
       "message": "Invalid response from the LaMetric device"
+    },
+    "notification_failed": {
+      "message": "Could not send the notification to the LaMetric device: {error}"
+    },
+    "unknown_sound": {
+      "message": "Unknown sound: {sound}"
+    },
+    "update_failed": {
+      "message": "Could not fetch the state of the LaMetric device: {error}"
     }
   },
   "selector": {
