@@ -232,15 +232,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'OFF',
-        'STARTING',
-        'ON',
-        '10-DAY MODE',
-        'CALIBRATION',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -275,20 +267,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Supply Pump State EP14',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'OFF',
-        'STARTING',
-        'ON',
-        '10-DAY MODE',
-        'CALIBRATION',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.supply_pump_state_ep14_43431',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'OFF',
   })
 # ---
 # name: test_entities[Model.SMOS40-data1][sensor.current_outdoor_temperature_bt1_30002-entry]
