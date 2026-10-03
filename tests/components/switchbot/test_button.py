@@ -32,6 +32,7 @@ from . import (
     ART_FRAME_INFO,
     DOMAIN,
     LOCK_ULTRA_SERVICE_INFO,
+    WOMETERTHP_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
 )
 
@@ -86,15 +87,35 @@ async def test_art_frame_button_press(
         mocked_instance.assert_awaited_once()
 
 
-async def test_meter_pro_co2_sync_datetime_button(
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type", "device_class"),
+    [
+        pytest.param(
+            WOMETERTHPC_SERVICE_INFO,
+            "hygrometer_co2",
+            "SwitchbotMeterProCO2",
+            id="meter_pro_co2",
+        ),
+        pytest.param(
+            WOMETERTHP_SERVICE_INFO,
+            "hygrometer_pro",
+            "SwitchbotMeterPro",
+            id="meter_pro",
+        ),
+    ],
+)
+async def test_meter_pro_sync_datetime_button(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    device_class: str,
 ) -> None:
-    """Test pressing the sync datetime button on Meter Pro CO2."""
+    """Test pressing the sync datetime button on Meter Pro and Meter Pro CO2."""
     await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory(sensor_type)
     entry.add_to_hass(hass)
 
     mock_set_datetime = AsyncMock(return_value=True)
@@ -104,7 +125,7 @@ async def test_meter_pro_co2_sync_datetime_button(
 
     with (
         patch(
-            "switchbot.SwitchbotMeterProCO2.set_datetime",
+            f"switchbot.{device_class}.set_datetime",
             mock_set_datetime,
         ),
         patch(
@@ -135,6 +156,23 @@ async def test_meter_pro_co2_sync_datetime_button(
 
 
 @pytest.mark.parametrize(
+    ("service_info", "sensor_type", "device_class"),
+    [
+        pytest.param(
+            WOMETERTHPC_SERVICE_INFO,
+            "hygrometer_co2",
+            "SwitchbotMeterProCO2",
+            id="meter_pro_co2",
+        ),
+        pytest.param(
+            WOMETERTHP_SERVICE_INFO,
+            "hygrometer_pro",
+            "SwitchbotMeterPro",
+            id="meter_pro",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     ("tz", "expected_utc_offset_hours", "expected_utc_offset_minutes"),
     [
         (timezone(timedelta(hours=0, minutes=0)), 0, 0),
@@ -146,18 +184,21 @@ async def test_meter_pro_co2_sync_datetime_button(
         (timezone(timedelta(hours=-5, minutes=-45)), -6, 15),  # -6h + 15m = -5:45
     ],
 )
-async def test_meter_pro_co2_sync_datetime_button_with_timezone(
+async def test_meter_pro_sync_datetime_button_with_timezone(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    device_class: str,
     tz: timezone,
     expected_utc_offset_hours: int,
     expected_utc_offset_minutes: int,
 ) -> None:
     """Test sync datetime button with non-UTC timezone."""
     await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory(sensor_type)
     entry.add_to_hass(hass)
 
     mock_set_datetime = AsyncMock(return_value=True)
@@ -166,7 +207,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
 
     with (
         patch(
-            "switchbot.SwitchbotMeterProCO2.set_datetime",
+            f"switchbot.{device_class}.set_datetime",
             mock_set_datetime,
         ),
         patch(
