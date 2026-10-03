@@ -440,6 +440,9 @@
           "searching_for_satellites": "Searching for satellites"
         }
       },
+      "manufacture_date": {
+        "name": "Manufacture date"
+      },
       "mode": {
         "name": "Mode",
         "state": {
