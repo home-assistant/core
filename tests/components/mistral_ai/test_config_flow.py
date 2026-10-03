@@ -344,6 +344,11 @@ async def test_subentry_recommended_string_llm_api(
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
+    schema = subentry_flow["data_schema"].schema
+    key = next(key for key in schema if key == CONF_LLM_HASS_API)
+    assert key.description
+    assert key.description["suggested_value"] == ["assist"]
+
 
 async def test_subentry_removes_llm_api(
     hass: HomeAssistant,
