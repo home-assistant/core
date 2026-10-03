@@ -98,7 +98,7 @@ def _create_climate_entities(
     device: Any, coordinator: OnectaDataUpdateCoordinator
 ) -> list[DaikinClimate]:
     """Create climate entities for all independently controllable zones."""
-    entities = []
+    entities: list["DaikinClimate"] = []
     device_model = device.device.device_model
     for management_point in device.device.management_points_by_type("climateControl"):
         modes: list[str] = []
