@@ -106,7 +106,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     **host_schema,
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Optional(CONF_PORT, default=DEFAULT_TELNET_PORT): int,
                 }
             ),

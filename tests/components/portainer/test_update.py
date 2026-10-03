@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer, PortainerImageUpdateStatus
 from pyportainer.watcher import PortainerImageWatcherResult
@@ -16,6 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.update import ATTR_INSTALLED_VERSION, ATTR_LATEST_VERSION
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -95,6 +97,7 @@ async def test_update_install(
     [
         (PortainerAuthenticationError("auth"), "invalid_auth_no_details"),
         (PortainerConnectionError("conn"), "cannot_connect_no_details"),
+        (PortainerTimeoutError("timeout"), "timeout_connect_no_details"),
     ],
 )
 async def test_update_install_errors(
@@ -121,6 +124,37 @@ async def test_update_install_errors(
             {"entity_id": ENTITY_ID},
             blocking=True,
         )
+
+
+async def test_update_install_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid API key on install starts a reauth flow."""
+    mock_portainer_client.container_recreate.side_effect = PortainerAuthenticationError(
+        "auth"
+    )
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.parametrize("repo_digests", [None, []], ids=["missing", "empty"])

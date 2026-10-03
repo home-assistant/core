@@ -37,7 +37,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import BroadlinkDevice
-from .const import DOMAIN
+from .const import DOMAIN, DOMAINS_AND_TYPES
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Required(CONF_MAC): mac_address,
             probatio.Optional(CONF_HOST): cv.string,
             probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [SWITCH_SCHEMA],
             ),
         }
@@ -119,7 +119,7 @@ async def async_setup_entry(
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     switches: list[BroadlinkSwitch] = []
 
-    if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
+    if device.api.type in DOMAINS_AND_TYPES[Platform.REMOTE]:
         platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
         platform_data[device.api.mac] = async_add_entities, device
     elif device.api.type == "SP1":

@@ -276,7 +276,7 @@ RFLINK_PLATFORM = {
                 probatio.Required(CONF_SENSOR_TYPE): cv.string,
                 probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                 probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )
@@ -389,14 +389,11 @@ class RflinkSensor(RflinkDevice, SensorEntity):
             ].remove(tmp_entity)
 
         # Register id and aliases
-        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id].append(
-            self.entity_id
-        )
+        lookup = self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]
+        self._async_register_lookup(lookup, self._device_id)
         if self._aliases:
             for _id in self._aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].append(
-                    self.entity_id
-                )
+                self._async_register_lookup(lookup, _id)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_AVAILABILITY, self._availability_callback

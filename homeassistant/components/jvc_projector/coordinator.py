@@ -156,7 +156,9 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                         # Command has dependencies so defer until below
                         deferred_commands.append(command)
                     else:
-                        await self._update_command_state(command, new_state)
+                        await self._update_command_state(
+                            command, new_state, ignore_timeout=True
+                        )
 
                 # Deferred commands should have had dependencies met above
                 for command in deferred_commands:
@@ -167,7 +169,9 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                     elif depend_command in self.state:
                         value = self.state[depend_command]
                     if value and value in depend_values:
-                        await self._update_command_state(command, new_state)
+                        await self._update_command_state(
+                            command, new_state, ignore_timeout=True
+                        )
 
         elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
             new_state[cmd.Signal] = cmd.Signal.NONE
@@ -183,11 +187,20 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         return new_state
 
     async def _update_command_state(
-        self, command: type[Command], new_state: dict[type[Command], str]
+        self,
+        command: type[Command],
+        new_state: dict[type[Command], str],
+        *,
+        ignore_timeout: bool = False,
     ) -> str | None:
         """Update state with the current value of a command."""
         try:
             value = await self.device.get(command)
+        except JvcProjectorTimeoutError:
+            if not ignore_timeout:
+                raise
+            _LOGGER.debug("Command %s timed out; retaining cached value", command.name)
+            return self.state.get(command)
         except JvcProjectorCommandError as err:
             _LOGGER.warning("Command %s failed: %s", command.name, err)
             cached = self.state.get(command)

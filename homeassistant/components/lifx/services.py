@@ -69,7 +69,7 @@ if TYPE_CHECKING:
 LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
     ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
-    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_ZONES: probatio.All(probatio.EnsureList(), [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 }
 
@@ -115,8 +115,13 @@ LIFX_EFFECT_SCHEMA = {
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A brightness of zero would pulse to black
+        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS, probatio.Clamp(min=1)
+        ),
+        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS_PCT, probatio.Clamp(min=1)
+        ),
         probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
@@ -132,9 +137,7 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
                     probatio.All(
                         probatio.Coerce(float), probatio.Range(min=0, max=360)
                     ),
-                    probatio.All(
-                        probatio.Coerce(float), probatio.Range(min=0, max=100)
-                    ),
+                    probatio.All(probatio.Coerce(float), probatio.Percentage()),
                 )
             ),
         ),
@@ -152,11 +155,12 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
         probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A saturation of zero switches the bulb to color temperature mode
         ATTR_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
         ATTR_CHANGE: probatio.All(
@@ -183,7 +187,7 @@ HSBK_SCHEMA = probatio.All(
     probatio.ExactSequence(
         (
             probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
-            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+            probatio.All(probatio.Coerce(float), probatio.Percentage()),
             probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=100)),
             probatio.All(probatio.Coerce(int), probatio.Clamp(min=1500, max=9000)),
         )
@@ -198,7 +202,7 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
@@ -230,7 +234,7 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
             probatio.Coerce(int), probatio.Clamp(min=0, max=255)
         ),
         ATTR_PALETTE: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=1, max=EFFECT_SKY_PALETTE_MAX),
         ),
@@ -247,7 +251,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
