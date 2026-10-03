@@ -17,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
+    set_node_attribute_and_notify,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
@@ -120,6 +121,105 @@ async def test_level_control_config_entities(
         attribute_path=create_attribute_path_from_attribute(
             endpoint_id=1,
             attribute=clusters.LevelControl.Attributes.StartUpCurrentLevel,
+        ),
+        value=None,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
+async def test_power_on_color_temperature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the power-on color temperature number entity."""
+    entity_id = "number.mock_color_temperature_light_power_on_color_temperature"
+    attribute = clusters.ColorControl.Attributes.StartUpColorTemperatureMireds
+
+    # fixture value 65535 is out of range, shown as 0 (keep previous)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0"
+    assert state.attributes["min"] == 0
+    # ColorTempPhysicalMinMireds 153 -> 6535 K
+    assert state.attributes["max"] == 6535
+    assert state.attributes["unit_of_measurement"] == "K"
+
+    # the maximum follows ColorTempPhysicalMinMireds (250 mireds -> 4000 K)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=0x00000300,
+        attribute_id=0x400B,
+        value=250,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["max"] == 4000
+
+    # an invalid 0 falls back to the default maximum
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=0x00000300,
+        attribute_id=0x400B,
+        value=0,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["max"] == 6535
+
+    set_node_attribute(matter_node, 1, 0x00000300, 0x4010, 370)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2702"
+
+    set_node_attribute(matter_node, 1, 0x00000300, 0x4010, None)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0"
+
+    # set a color temperature in Kelvin, written as mireds
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": entity_id, "value": 2700},
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=attribute,
+        ),
+        value=370,
+    )
+
+    matter_client.write_attribute.reset_mock()
+    # 0 maps to null on the wire (keep previous color temperature)
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": entity_id, "value": 0},
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=attribute,
         ),
         value=None,
     )
