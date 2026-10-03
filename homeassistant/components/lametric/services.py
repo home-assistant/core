@@ -129,7 +129,7 @@ async def async_send_notification(
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),
-        priority=NotificationPriority(call.data.get(CONF_PRIORITY)),
+        priority=NotificationPriority(call.data[CONF_PRIORITY]),
         model=Model(
             frames=frames,
             cycles=call.data[CONF_CYCLES],
