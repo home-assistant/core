@@ -27,6 +27,9 @@
     "delete_mealplan": {
       "service": "mdi:food-off"
     },
+    "get_ingredient": {
+      "service": "mdi:food-apple"
+    },
     "get_mealplan": {
       "service": "mdi:food"
     },
