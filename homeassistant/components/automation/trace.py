@@ -7,6 +7,7 @@ from typing import Any, override
 from homeassistant.components.trace import (
     CONF_STORED_TRACES,
     ActionTrace,
+    async_move_trace_to_final_bucket,
     async_store_trace,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -75,3 +76,8 @@ def trace_automation(
     finally:
         if automation_id:
             trace.finished()
+            async_move_trace_to_final_bucket(
+                hass,
+                trace,
+                trace_config[CONF_STORED_TRACES],
+            )
