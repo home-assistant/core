@@ -125,16 +125,25 @@ async def test_sensors_are_created(
         ),
         pytest.param(
             SensorType.DATA,
+            # LHM labels binary gigabytes as GB
             "GB",
             SensorDeviceClass.DATA_SIZE,
-            UnitOfInformation.GIGABYTES,
+            UnitOfInformation.GIBIBYTES,
             id="data",
         ),
         pytest.param(
+            SensorType.DATA,
+            "B",
+            SensorDeviceClass.DATA_SIZE,
+            UnitOfInformation.GIBIBYTES,
+            id="data_bytes",
+        ),
+        pytest.param(
             SensorType.SMALL_DATA,
+            # LHM labels binary megabytes as MB
             "MB",
             SensorDeviceClass.DATA_SIZE,
-            UnitOfInformation.MEGABYTES,
+            UnitOfInformation.MEBIBYTES,
             id="small_data",
         ),
         pytest.param(
