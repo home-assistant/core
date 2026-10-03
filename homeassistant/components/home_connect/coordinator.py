@@ -342,6 +342,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                             program,
                         )
+                        # Notify listeners to discover entities for the refreshed options.
+                        for listener in self._get_listeners_for_event_key(
+                            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                        ):
+                            listener()
 
                 self._call_event_listener(event_message)
 
