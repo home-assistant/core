@@ -150,6 +150,31 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+async def test_reauth_with_update_listener(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Reauth on a loaded entry with an update listener uses async_update_and_abort."""
+
+    async def _listener(*_: object) -> None:
+        """No-op async update listener."""
+
+    mock_config_entry.add_update_listener(_listener)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(VALIDATE_INPUT, new_callable=AsyncMock):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-key"
+
+
 async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
     """Test reauth shows an error when the new key is invalid."""
     hass.config.components.add(DOMAIN)
@@ -209,6 +234,42 @@ async def test_creating_conversation_subentry(
     assert result2["title"] == "My Custom Agent"
 
 
+async def test_creating_conversation_subentry_advanced(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Creating a subentry with custom settings goes through the advanced step."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "My Custom Agent",
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "advanced"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"max_tokens": 100, "temperature": 0.5, "top_p": 0.9},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My Custom Agent"
+
+
 async def test_subentry_not_loaded(hass: HomeAssistant) -> None:
     """Test aborting a subentry flow when the entry is not loaded."""
     entry = MockConfigEntry(
@@ -261,6 +322,58 @@ async def test_subentry_recommended(
     assert options["type"] is FlowResultType.ABORT
     assert options["reason"] == "reconfigure_successful"
     assert subentry.data[CONF_PROMPT] == "Speak like a pirate"
+
+
+async def test_subentry_recommended_string_llm_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """A string llm_hass_api suggestion is normalized to a list."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={CONF_LLM_HASS_API: "assist"},
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+
+async def test_subentry_removes_llm_api(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Unsetting the llm_hass_api removes it from the stored options."""
+    subentry = next(iter(mock_config_entry_with_assist.subentries.values()))
+    assert subentry.data[CONF_LLM_HASS_API] == "assist"
+
+    subentry_flow = await mock_config_entry_with_assist.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+        },
+    )
+    await hass.async_block_till_done()
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {"max_tokens": 100, "temperature": 0.5, "top_p": 0.9},
+    )
+    await hass.async_block_till_done()
+
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert CONF_LLM_HASS_API not in subentry.data
 
 
 async def test_subentry_advanced(
