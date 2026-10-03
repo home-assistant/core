@@ -78,6 +78,7 @@ FLOWS = {
         "aqvify",
         "aranet",
         "arcam_fmj",
+        "arris_tg2492lg",
         "arve",
         "aseko_pool_live",
         "asuswrt",
