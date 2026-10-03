@@ -37,8 +37,6 @@ async def async_setup_entry(
     """Set up firmware updates."""
     controller = config_entry.runtime_data
 
-    devices = controller.devices_coordinator.data
-
     coordinator = OmadaFirmwareUpdateCoordinator(
         hass, config_entry, controller.omada_client, controller.devices_coordinator
     )
@@ -48,9 +46,15 @@ async def async_setup_entry(
             OmadaControllerUpdate(
                 controller.controller_status_coordinator,
                 controller.controller_update_coordinator,
-            ),
-            *(OmadaDeviceUpdate(coordinator, device) for device in devices.values()),
+            )
         ]
+    )
+
+    async def _async_register_device(device: OmadaListDevice) -> None:
+        async_add_entities([OmadaDeviceUpdate(coordinator, device)])
+
+    await controller.async_register_device_entities(
+        lambda device: True, _async_register_device
     )
     await coordinator.async_request_refresh()
 
@@ -216,6 +220,13 @@ class OmadaDeviceUpdate(
         self._omada_client = coordinator.omada_client
 
         self._attr_unique_id = f"{device.mac}_firmware"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Seed the initial state from the coordinator."""
+        await super().async_added_to_hass()
+        if self.coordinator.data and self._mac in self.coordinator.data:
+            self._handle_coordinator_update()
 
     @override
     def release_notes(self) -> str | None:
