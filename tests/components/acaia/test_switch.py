@@ -157,3 +157,23 @@ async def test_switch_available_while_scale_disconnected(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != "unavailable"
+
+
+async def test_turning_on_while_connected_does_not_reconnect(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test turning the switch on while already connected keeps the connection."""
+
+    await setup_integration(hass, mock_config_entry)
+    mock_scale.connect.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_scale.connect.assert_not_called()

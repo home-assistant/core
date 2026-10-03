@@ -20,6 +20,11 @@
         "default": "mdi:scale-balance"
       }
     },
+    "number": {
+      "idle_timeout": {
+        "default": "mdi:timer-sand"
+      }
+    },
     "switch": {
       "keep_connected": {
         "default": "mdi:bluetooth-off",
