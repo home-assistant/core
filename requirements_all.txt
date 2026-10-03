@@ -259,6 +259,9 @@ aioelectricitymaps==1.1.1
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
+# homeassistant.components.engie_be
+aioengiebelgium==0.4.3
+
 # homeassistant.components.esphome
 aioesphomeapi==46.6.0
 
@@ -1527,7 +1530,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.6.4
+lifx-async==7.6.5
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -1591,7 +1594,7 @@ mbddns==0.1.2
 mcp==1.28.1
 
 # homeassistant.components.minecraft_server
-mcstatus==13.1.0
+mcstatus==14.2.0
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1687,7 +1690,7 @@ mutesync==0.0.1
 mvg==1.6.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.8
+my-pv==0.0.10
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -1699,7 +1702,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.9.0
+neopool-modbus==4.10.0
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1
@@ -1849,7 +1852,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.22.1
+opower==0.22.2
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3
@@ -2187,7 +2190,7 @@ pydrawise==2026.9.0
 pydroid-ipcam==3.0.0
 
 # homeassistant.components.droplet
-pydroplet==2.4.0
+pydroplet==2.5.0
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2371,7 +2374,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.4.3
+pylamarzocco==2.5.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2443,7 +2446,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==1.0.2
+pynina==1.0.3
 
 # homeassistant.components.nintendo_parental_controls
 pynintendoauth==1.0.3
@@ -2945,7 +2948,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==0.3.2
+radios==1.0.0
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -3042,7 +3045,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.14.3
+sense-energy==0.15.0
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1

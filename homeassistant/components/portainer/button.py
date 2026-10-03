@@ -31,7 +31,6 @@ from .entity import (
     PortainerEndpointEntity,
     PortainerStackEntity,
 )
-from .util import async_call_portainer
 
 PARALLEL_UPDATES = 1
 
@@ -269,7 +268,7 @@ class PortainerBaseButton(ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        await async_call_portainer(self._async_press_call())
+        await self.coordinator.async_call_portainer(self._async_press_call())
         await self.coordinator.async_request_refresh()
 
 
