@@ -205,6 +205,7 @@ EXCEPTIONS = {
 
 # fmt: off
 TODO: dict[str, AwesomeVersion] = {
+    "tempora": AwesomeVersion("5.13.0"),  # 5.13.0 shipped without license metadata
 }
 # fmt: on
 

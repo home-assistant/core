@@ -905,6 +905,9 @@ earn-e-p1==0.3.0
 # homeassistant.components.easyenergy
 easyenergy==3.0.1
 
+# homeassistant.components.easywave
+easywave-home-control==0.4.0
+
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
 
