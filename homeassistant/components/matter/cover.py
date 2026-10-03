@@ -447,6 +447,15 @@ class MatterClosure(MatterEntity, CoverEntity):
             )
             for panel in self._closure_panels.values()
         }
+        # Also subscribe to FeatureMap changes on child panels to detect capability changes
+        for panel in self._closure_panels.values():
+            current_paths.add(
+                create_attribute_path(
+                    panel.endpoint_id,
+                    clusters.ClosureDimension.Attributes.FeatureMap.cluster_id,
+                    clusters.ClosureDimension.Attributes.FeatureMap.attribute_id,
+                )
+            )
         for path, unsubscribe in list(self._closure_panel_subscriptions.items()):
             if path not in current_paths:
                 unsubscribe()
@@ -629,6 +638,24 @@ class MatterClosure(MatterEntity, CoverEntity):
                 == clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
             ):
                 self._attr_is_closing = True
+            else:
+                # Infer movement direction from child panel target positions
+                for panel in self._closure_panels.values():
+                    panel_state = panel.get_attribute_value(
+                        None, clusters.ClosureDimension.Attributes.CurrentState
+                    )
+                    panel_target = panel.get_attribute_value(
+                        None, clusters.ClosureDimension.Attributes.TargetState
+                    )
+                    current_pos = _extract_struct_field(panel_state, 0, "position")
+                    target_pos = _extract_struct_field(panel_target, 0, "position")
+                    if isinstance(current_pos, int) and isinstance(target_pos, int):
+                        if target_pos < current_pos:
+                            self._attr_is_opening = True
+                            break
+                        if target_pos > current_pos:
+                            self._attr_is_closing = True
+                            break
 
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         # Stop is non-conformant (and rejected) on Instantaneous closures:
