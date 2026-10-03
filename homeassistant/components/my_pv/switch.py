@@ -50,6 +50,7 @@ async def async_setup_entry(
     ):
         entity_description = SwitchEntityDescription(
             key="devmode",
+            device_class=SwitchDeviceClass.SWITCH,
         )
         entities.append(
             MyPVWaterHeaterSwitch(

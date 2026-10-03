@@ -24,7 +24,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'my_pv',
@@ -39,6 +39,7 @@
 # name: test_switch[switch.my_pv_ac_elwa_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-PV AC ELWA 2',
     }),
     'context': <ANY>,
