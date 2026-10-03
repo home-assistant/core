@@ -414,6 +414,38 @@ def _get_statistic_to_display_unit_converter(
     )
 
 
+def _requires_pre_aggregation_unit_conversion(
+    hass: HomeAssistant,
+    statistic_id: str,
+    metadata: StatisticMetaData,
+    requested_units: dict[str, str] | None,
+) -> bool:
+    """Return whether unit conversion must happen before aggregation."""
+    statistic_unit = metadata["unit_of_measurement"]
+    if (
+        converter := _get_unit_converter(metadata["unit_class"], statistic_unit)
+    ) is None:
+        return False
+
+    state_unit = statistic_unit
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+
+    display_unit = (
+        requested_units[converter.UNIT_CLASS]
+        if requested_units and converter.UNIT_CLASS in requested_units
+        else state_unit
+    )
+
+    return (
+        display_unit in converter.VALID_UNITS
+        and display_unit != statistic_unit
+        and converter._are_unit_inverses(  # noqa: SLF001
+            statistic_unit, display_unit
+        )
+    )
+
+
 def _get_display_to_statistic_unit_converter_func(
     unit_class: str | None,
     display_unit: str | None,
@@ -2661,12 +2693,25 @@ def _statistics_during_period_with_session(
     )
     mean_type = next(iter(mean_types), StatisticMeanType.NONE)
 
+    requires_pre_aggregation_conversion = not types.isdisjoint(
+        {"mean", "min", "max"}
+    ) and any(
+        _requires_pre_aggregation_unit_conversion(
+            hass,
+            statistic_id,
+            meta,
+            units,
+        )
+        for statistic_id, (_, meta) in metadata.items()
+    )
+
     supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
     use_period_query = (
         types
         and period in {"day", "week", "month", "year"}
         and types <= supported_types
         and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
+        and not requires_pre_aggregation_conversion
     )
 
     if use_period_query:

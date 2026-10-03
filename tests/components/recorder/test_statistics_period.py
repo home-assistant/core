@@ -16,6 +16,7 @@ from homeassistant.components.recorder.util import (
     execute_stmt_lambda_element,
     session_scope,
 )
+from homeassistant.const import UnitOfEnergyDistance
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -1412,6 +1413,67 @@ async def test_mean_fallback(
         )
     optimized.assert_not_called()
     assert result["test:statistic_1"]
+
+
+async def test_inverse_unit_conversion_uses_row_based_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Convert inverse units before reducing statistics."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "energy_distance",
+            StatisticsMeta.unit_of_measurement: (
+                UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM
+            ),
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=10.0,
+                min=10.0,
+                max=10.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+                min=20.0,
+                max=20.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            {"energy_distance": (UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR)},
+            {"mean", "min", "max"},
+        )
+
+    optimized.assert_not_called()
+
+    row = result["test:statistic_1"][0]
+    assert row["mean"] == pytest.approx(7.5)
+    assert row["min"] == pytest.approx(5.0)
+    assert row["max"] == pytest.approx(10.0)
 
 
 async def test_circular_mean_uses_fast_path(
