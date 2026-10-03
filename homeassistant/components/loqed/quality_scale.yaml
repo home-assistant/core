@@ -42,10 +42,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable:
     status: todo
-    comment: >-
-      Webhook payloads never carry an online/offline signal; that is only
-      present in the one-time status fetch at setup. Needs a loqedAPI/bridge
-      change or a watchdog poll to detect connectivity loss.
+    comment: The integration does not yet expose the library's online state as entity availability.
   integration-owner: done
   log-when-unavailable:
     status: todo
