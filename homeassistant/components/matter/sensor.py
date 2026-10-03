@@ -227,6 +227,10 @@ MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
+_thermostat_suggestion_not_following_reason = (
+    clusters.Thermostat.Bitmaps.ThermostatSuggestionNotFollowingReasonBitmap
+)
+
 
 def matter_epoch_seconds_to_utc(x: int | None) -> datetime | None:
     """Convert Matter epoch seconds (since 2000-01-01) to UTC datetime.
@@ -1312,6 +1316,69 @@ DISCOVERY_SCHEMAS = [
         ),
         # don't discover this entry if the supported state list is empty
         secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSuggestionEffectiveTime",
+            translation_key="thermostat_suggestion_effective_time",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda suggestion: matter_epoch_seconds_to_utc(
+                suggestion.effectiveTime
+            ),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.CurrentThermostatSuggestion,
+        ),
+        device_type=(device_types.Thermostat,),
+        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kThermostatSuggestions,
+        allow_multi=True,  # also used by ThermostatSuggestionExpirationTime
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSuggestionExpirationTime",
+            translation_key="thermostat_suggestion_expiration_time",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda suggestion: matter_epoch_seconds_to_utc(
+                suggestion.expirationTime
+            ),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.CurrentThermostatSuggestion,
+        ),
+        device_type=(device_types.Thermostat,),
+        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kThermostatSuggestions,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSuggestionNotFollowingReason",
+            translation_key="thermostat_suggestion_not_following_reason",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # several reasons can be active at once, so render every set flag
+            # rather than modeling it as a single ENUM. The parsed value is a
+            # plain int for composite (multi-flag) values, so iterate the
+            # bitmap class itself instead of type(bitmap).
+            device_to_ha=lambda bitmap: (
+                ", ".join(
+                    flag.name.removeprefix("k")
+                    for flag in _thermostat_suggestion_not_following_reason
+                    if flag & bitmap
+                )
+                or None
+            ),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.ThermostatSuggestionNotFollowingReason,
+        ),
+        device_type=(device_types.Thermostat,),
+        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kThermostatSuggestions,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

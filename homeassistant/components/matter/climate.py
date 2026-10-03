@@ -304,6 +304,28 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
 
+    async def async_add_thermostat_suggestion(
+        self, preset_handle: str, expiration_in_minutes: int
+    ) -> dict[str, int]:
+        """Add a thermostat suggestion and return its unique id.
+
+        preset_handle is the hex-encoded PresetHandle of an existing
+        preset, as reported in the Presets attribute (see climate presets).
+        """
+        command = clusters.Thermostat.Commands.AddThermostatSuggestion(
+            presetHandle=bytes.fromhex(preset_handle),
+            expirationInMinutes=expiration_in_minutes,
+        )
+        result = await self.send_device_command(command)
+        return {"unique_id": result.uniqueID}
+
+    async def async_remove_thermostat_suggestion(self, unique_id: int) -> None:
+        """Remove a previously added thermostat suggestion."""
+        command = clusters.Thermostat.Commands.RemoveThermostatSuggestion(
+            uniqueID=unique_id
+        )
+        await self.send_device_command(command)
+
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -603,6 +625,9 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.Thermostat.Attributes.ThermostatSuggestions,
+            clusters.Thermostat.Attributes.CurrentThermostatSuggestion,
+            clusters.Thermostat.Attributes.ThermostatSuggestionNotFollowingReason,
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
             clusters.OnOff.Attributes.OnOff,
         ),
