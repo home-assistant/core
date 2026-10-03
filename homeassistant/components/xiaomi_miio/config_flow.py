@@ -123,6 +123,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         self.cloud_password = None
         self.cloud_country = None
         self.cloud_devices: dict[str, dict[str, Any]] = {}
+        self.reauth = False
 
     @staticmethod
     @callback
@@ -141,6 +142,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         self.token = entry_data[CONF_TOKEN]
         self.mac = entry_data[CONF_MAC]
         self.model = entry_data.get(CONF_MODEL)
+        self.reauth = True
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -331,10 +333,12 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        *,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Configure a xiaomi miio device Manually."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             self.token = user_input[CONF_TOKEN]
             if user_input.get(CONF_HOST):
@@ -350,7 +354,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual",
             data_schema=schema,
-            errors=errors,
+            errors=errors or {},
             description_placeholders={
                 "retrieving_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token",
             },
@@ -389,6 +393,9 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         if errors:
+            if self.reauth:
+                # The model is already fixed; only the manual form accepts a new token.
+                return await self.async_step_manual(errors=errors)
             return self.async_show_form(
                 step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
             )

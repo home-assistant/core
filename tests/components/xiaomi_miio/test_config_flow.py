@@ -29,6 +29,7 @@ TEST_CLOUD_USER = "username"
 TEST_CLOUD_PASS = "password"
 TEST_CLOUD_COUNTRY = "cn"
 TEST_TOKEN = "12345678901234567890123456789012"
+TEST_TOKEN2 = "12345678901234567890123456789013"
 TEST_NAME = "Test_Gateway"
 TEST_NAME2 = "Test_Gateway_2"
 TEST_MODEL = const.MODELS_GATEWAY[0]
@@ -1193,7 +1194,7 @@ async def test_config_flow_repeater_missing_mac(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
-    """Test that a wrong token submitted during reauth is rejected."""
+    """Test that a wrong token during reauth can be corrected on the manual form."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=TEST_MAC,
@@ -1210,10 +1211,11 @@ async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
 
     error = DeviceException({})
     error.__cause__ = ChecksumError({})
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
 
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
-        side_effect=error,
+        side_effect=[error, mock_info],
     ):
         result = await config_entry.start_reauth_flow(hass)
 
@@ -1236,6 +1238,20 @@ async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
             {CONF_TOKEN: TEST_TOKEN},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {"base": "wrong_token"}
+        # The failed connect step returns to the manual form, where a new
+        # token can be entered. The host is already known, so only the
+        # token is offered.
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "manual"
+        assert result["errors"] == {"base": "wrong_token"}
+        assert CONF_TOKEN in result["data_schema"].schema
+        assert CONF_HOST not in result["data_schema"].schema
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN2},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_TOKEN] == TEST_TOKEN2
