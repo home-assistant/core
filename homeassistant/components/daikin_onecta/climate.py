@@ -29,11 +29,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN, FANMODE_FIXED
 from .coordinator import OnectaDataUpdateCoordinator
-from .entity_descriptions import (
-    CLIMATE_DESCRIPTIONS,
-    SENSOR_DESCRIPTIONS,
-    SENSOR_MODEL_ATTRIBUTES,
-)
 
 if TYPE_CHECKING:
     from homeassistant.helpers.device_registry import DeviceInfo
@@ -80,6 +75,17 @@ HA_PRESET_TO_DAIKIN = {
     PRESET_ECO: "econoMode",
 }
 
+SENSORY_DATA_MODEL_ATTRIBUTES = {
+    "roomTemperature": "room_temperature",
+    "outdoorTemperature": "outdoor_temperature",
+    "leavingWaterTemperature": "leaving_water_temperature",
+    "tankTemperature": "tank_temperature",
+    "roomHumidity": "room_humidity",
+    "pm1Concentration": "pm1_concentration",
+    "pm25Concentration": "pm25_concentration",
+    "pm10Concentration": "pm10_concentration",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -98,7 +104,7 @@ def _create_climate_entities(
     device: Any, coordinator: OnectaDataUpdateCoordinator
 ) -> list[DaikinClimate]:
     """Create climate entities for all independently controllable zones."""
-    entities: list["DaikinClimate"] = []
+    entities: list[DaikinClimate] = []
     device_model = device.device.device_model
     for management_point in device.device.management_points_by_type("climateControl"):
         modes: list[str] = []
@@ -150,8 +156,9 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             "name": self._device.name,
         }
         self._attr_has_entity_name = True
+        if setpoint == "roomTemperature":
+            self._attr_translation_key = "roomtemperature"
         self._device.fill_gateway_device_info(self._attr_device_info)
-        self.entity_description = CLIMATE_DESCRIPTIONS[setpoint]
         self.update_state()
 
     def update_state(self) -> None:
@@ -287,10 +294,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         cc = self.climate_control()
         if cc is None or cc.sensory_data is None:
             return None
-        description = SENSOR_DESCRIPTIONS.get(setpoint)
-        if description is None:
-            return None
-        attribute = SENSOR_MODEL_ATTRIBUTES.get(description.key)
+        attribute = SENSORY_DATA_MODEL_ATTRIBUTES.get(setpoint)
         return (
             getattr(cc.sensory_data.value, attribute) if attribute is not None else None
         )
