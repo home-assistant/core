@@ -208,7 +208,7 @@ async def test_link_user_rejects_pkce_code(
     info = await async_get_code(
         hass,
         aiohttp_client,
-        code_challenge="E9Melhoa2OwvFrGMTJguCH5rtx647b100_bCcqqqqqq",
+        code_challenge="E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
         code_challenge_method="S256",
     )
     client = info["client"]
