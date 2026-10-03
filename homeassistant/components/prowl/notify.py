@@ -25,6 +25,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import PRIORITY_MAP
+from .issue import async_deprecated_notify_action_call
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
@@ -53,6 +56,39 @@ async def async_setup_entry(
     async_add_entities([prowl])
 
 
+async def _async_post(
+    prowl: prowlpy.AsyncProwl,
+    event: str,
+    description: str,
+    priority: int = 0,
+    url: str | None = None,
+) -> None:
+    """Post a notification to the Prowl API."""
+    try:
+        async with asyncio.timeout(10):
+            await prowl.post(
+                application="Home-Assistant",
+                event=event,
+                description=description,
+                priority=priority,
+                url=url,
+            )
+    except TimeoutError as ex:
+        _LOGGER.error("Timeout accessing Prowl API")
+        raise HomeAssistantError("Timeout accessing Prowl API") from ex
+    except prowlpy.APIError as ex:
+        if str(ex).startswith("Invalid API key"):
+            _LOGGER.error("Invalid API key for Prowl service")
+            raise HomeAssistantError("Invalid API key for Prowl service") from ex
+        if str(ex).startswith("Not accepted"):
+            _LOGGER.error("Prowl returned: exceeded rate limit")
+            raise HomeAssistantError(
+                "Prowl service reported: exceeded rate limit"
+            ) from ex
+        _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
+        raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+
+
 class ProwlNotificationService(BaseNotificationService):
     """Implement the notification service for Prowl.
 
@@ -69,33 +105,16 @@ class ProwlNotificationService(BaseNotificationService):
     @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
-        data = kwargs.get(ATTR_DATA, {})
-        if data is None:
-            data = {}
+        async_deprecated_notify_action_call(self._hass, self._service_name)
 
-        try:
-            async with asyncio.timeout(10):
-                await self._prowl.post(
-                    application="Home-Assistant",
-                    event=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-                    description=message,
-                    priority=data.get("priority", 0),
-                    url=data.get("url"),
-                )
-        except TimeoutError as ex:
-            _LOGGER.error("Timeout accessing Prowl API")
-            raise HomeAssistantError("Timeout accessing Prowl API") from ex
-        except prowlpy.APIError as ex:
-            if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
-                raise HomeAssistantError("Invalid API key for Prowl service") from ex
-            if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
-                raise HomeAssistantError(
-                    "Prowl service reported: exceeded rate limit"
-                ) from ex
-            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
-            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+        data = kwargs.get(ATTR_DATA) or {}
+        await _async_post(
+            self._prowl,
+            kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            message,
+            data.get("priority", 0),
+            data.get("url"),
+        )
 
 
 class ProwlNotificationEntity(NotifyEntity):
@@ -119,28 +138,23 @@ class ProwlNotificationEntity(NotifyEntity):
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send the message."""
+        """Send the message via the notify.send_message action."""
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
-        try:
-            async with asyncio.timeout(10):
-                await self._prowl.post(
-                    application="Home-Assistant",
-                    event=title or ATTR_TITLE_DEFAULT,
-                    description=message,
-                    priority=0,
-                    url=None,
-                )
-        except TimeoutError as ex:
-            _LOGGER.error("Timeout accessing Prowl API")
-            raise HomeAssistantError("Timeout accessing Prowl API") from ex
-        except prowlpy.APIError as ex:
-            if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
-                raise HomeAssistantError("Invalid API key for Prowl service") from ex
-            if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
-                raise HomeAssistantError(
-                    "Prowl service reported: exceeded rate limit"
-                ) from ex
-            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
-            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+        await _async_post(self._prowl, title or ATTR_TITLE_DEFAULT, message)
+
+    async def prowl_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        priority: str | None = None,
+        url: str | None = None,
+    ) -> None:
+        """Send the message via the prowl.send_message action."""
+        _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
+        await _async_post(
+            self._prowl,
+            title or ATTR_TITLE_DEFAULT,
+            message,
+            PRIORITY_MAP[priority] if priority else 0,
+            url,
+        )

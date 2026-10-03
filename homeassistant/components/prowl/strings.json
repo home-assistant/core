@@ -17,5 +17,46 @@
         "description": "Enter the Prowl API key and its name."
       }
     }
+  },
+  "issues": {
+    "deprecated_notify_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nIf Prowl is set up in your `configuration.yaml` file, remove the Prowl notify configuration and [set up the integration]({url}) instead.\n\nThen update your automations and scripts to use the notify entities with the `{new_action_1}` or `{new_action_2}` actions instead.\n\n## Example automation using `{new_action_1}` action:\n\n{example_yaml_1}\n\n## Example automation using `{new_action_2}` action:\n\n{example_yaml_2}",
+      "title": "Detected use of deprecated action {action}"
+    }
+  },
+  "selector": {
+    "priority": {
+      "options": {
+        "emergency": "Emergency",
+        "high": "High",
+        "moderate": "Moderate",
+        "normal": "Normal",
+        "very_low": "Very low"
+      }
+    }
+  },
+  "services": {
+    "send_message": {
+      "description": "Sends a Prowl push notification.",
+      "fields": {
+        "message": {
+          "description": "The message body of the notification.",
+          "name": "Message"
+        },
+        "priority": {
+          "description": "Priority of the notification. Emergency notifications may bypass quiet hours, depending on the settings in the Prowl app.",
+          "name": "Priority"
+        },
+        "title": {
+          "description": "Title (event) of the notification.",
+          "name": "Title"
+        },
+        "url": {
+          "description": "A URL that is opened when the notification is selected in the Prowl app.",
+          "name": "URL"
+        }
+      },
+      "name": "Send message"
+    }
   }
 }
