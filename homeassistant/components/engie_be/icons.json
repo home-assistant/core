@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "epex_tomorrow_available": {
+        "default": "mdi:calendar-clock"
+      }
+    },
     "sensor": {
       "electricity_price_injection": {
         "default": "mdi:cash-plus"
@@ -121,6 +126,30 @@
       "energy_price_offtake_superoffpeak_excl_vat": {
         "default": "mdi:cash-minus"
       },
+      "epex_current_hour": {
+        "default": "mdi:cash-clock"
+      },
+      "epex_current_quarter_hour": {
+        "default": "mdi:cash-clock"
+      },
+      "epex_high_today_hour": {
+        "default": "mdi:cash-multiple"
+      },
+      "epex_high_today_quarter_hour": {
+        "default": "mdi:cash-multiple"
+      },
+      "epex_low_today_hour": {
+        "default": "mdi:cash-minus"
+      },
+      "epex_low_today_quarter_hour": {
+        "default": "mdi:cash-minus"
+      },
+      "epex_next_hour": {
+        "default": "mdi:cash-fast"
+      },
+      "epex_next_quarter_hour": {
+        "default": "mdi:cash-fast"
+      },
       "gas_price_offtake": {
         "default": "mdi:meter-gas"
       },
@@ -151,6 +180,11 @@
       "gas_price_offtake_superoffpeak_excl_vat": {
         "default": "mdi:meter-gas"
       }
+    }
+  },
+  "services": {
+    "get_epex_prices_for_date": {
+      "service": "mdi:cash"
     }
   }
 }

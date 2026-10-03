@@ -1,20 +1,32 @@
 """Sensor platform for the ENGIE Belgium integration."""
 
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
+from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
-from aioengiebelgium import bare_ean
+from aioengiebelgium import EpexGranularity, EpexSlot, bare_ean
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION
 from .coordinator import (
+    BRUSSELS_TIME_ZONE,
+    EngieBeEpexCoordinator,
     EngieBePricesCoordinator,
     EngieBePricesData,
+    epex_slot_covering,
+    epex_slots_for_day,
     normalize_slot_code,
 )
 
@@ -98,6 +110,19 @@ async def async_setup_entry(
         )
     _async_add_new_entities()
 
+    if (epex := runtime_data.epex) is not None:
+        async_add_entities(
+            EngieBeEpexPriceSensor(
+                epex,
+                ban=ban,
+                device_info=household.prices.device_info,
+                description=description,
+            )
+            for ban, household in runtime_data.households.items()
+            if household.is_dynamic
+            for description in _EPEX_SENSORS
+        )
+
 
 class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEntity):
     """Representation of an ENGIE Belgium energy price sensor."""
@@ -164,3 +189,149 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         """Return the current price."""
         slot = self.coordinator.data.slots[self._ean, self._direction, self._slot_code]
         return slot.price_value_excl_vat if self._excl_vat else slot.price_value
+
+
+_EPEX_PRECISION = 4
+
+
+@dataclass(frozen=True, kw_only=True)
+class EngieBeEpexSensorEntityDescription(SensorEntityDescription):
+    """Describes an EPEX day-ahead price sensor entity."""
+
+    granularity: EpexGranularity
+    value_fn: Callable[[EngieBeEpexPriceSensor], float | None]
+    extra_fn: Callable[[EngieBeEpexPriceSensor], dict[str, str] | None]
+
+
+def _epex_slot_value(slot: EpexSlot | None) -> float | None:
+    """Return the EUR/kWh value of a slot."""
+    return None if slot is None else slot.value_eur_per_kwh
+
+
+def _epex_slot_attributes(slot: EpexSlot | None) -> dict[str, str] | None:
+    """Return the start and end of a slot as attributes."""
+    if slot is None:
+        return None
+    return {"start": slot.start.isoformat(), "end": slot.end.isoformat()}
+
+
+_EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
+    EngieBeEpexSensorEntityDescription(
+        key="epex_current_hour",
+        translation_key="epex_current_hour",
+        granularity=EpexGranularity.HOURLY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
+        extra_fn=lambda entity: None,
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_next_hour",
+        translation_key="epex_next_hour",
+        granularity=EpexGranularity.HOURLY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
+        extra_fn=lambda entity: None,
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_low_today_hour",
+        translation_key="epex_low_today_hour",
+        granularity=EpexGranularity.HOURLY,
+        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
+        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(min)),
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_high_today_hour",
+        translation_key="epex_high_today_hour",
+        granularity=EpexGranularity.HOURLY,
+        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
+        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(max)),
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_current_quarter_hour",
+        translation_key="epex_current_quarter_hour",
+        granularity=EpexGranularity.QUARTER_HOURLY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
+        extra_fn=lambda entity: None,
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_next_quarter_hour",
+        translation_key="epex_next_quarter_hour",
+        granularity=EpexGranularity.QUARTER_HOURLY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
+        extra_fn=lambda entity: None,
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_low_today_quarter_hour",
+        translation_key="epex_low_today_quarter_hour",
+        granularity=EpexGranularity.QUARTER_HOURLY,
+        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
+        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(min)),
+    ),
+    EngieBeEpexSensorEntityDescription(
+        key="epex_high_today_quarter_hour",
+        translation_key="epex_high_today_quarter_hour",
+        granularity=EpexGranularity.QUARTER_HOURLY,
+        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
+        extra_fn=lambda entity: _epex_slot_attributes(entity.extreme_slot(max)),
+    ),
+)
+
+
+class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEntity):
+    """EPEX day-ahead price sensor on a dynamic-tariff household device."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = _UNIT
+    _attr_suggested_display_precision = _EPEX_PRECISION
+
+    entity_description: EngieBeEpexSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EngieBeEpexCoordinator,
+        *,
+        ban: str,
+        device_info: DeviceInfo,
+        description: EngieBeEpexSensorEntityDescription,
+    ) -> None:
+        """Initialize the EPEX price sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{ban}_{description.key}"
+
+    def _slots(self) -> tuple[EpexSlot, ...]:
+        """Return the merged slots of this sensor's granularity."""
+        return self.coordinator.data.slots(self.entity_description.granularity)
+
+    def current_slot(self) -> EpexSlot | None:
+        """Return the slot covering the current instant."""
+        return epex_slot_covering(self._slots(), dt_util.utcnow())
+
+    def next_slot(self) -> EpexSlot | None:
+        """Return the slot covering one granularity step from now."""
+        step = timedelta(minutes=self.entity_description.granularity.value)
+        return epex_slot_covering(self._slots(), dt_util.utcnow() + step)
+
+    def extreme_slot(self, choose: Callable[..., EpexSlot]) -> EpexSlot | None:
+        """Return today's cheapest or most expensive slot in Brussels."""
+        today = dt_util.now(BRUSSELS_TIME_ZONE).date()
+        slots = epex_slots_for_day(self._slots(), today)
+        if not slots:
+            return None
+        return choose(slots, key=lambda slot: slot.value_eur_per_kwh)
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the EPEX day-ahead price."""
+        return self.entity_description.value_fn(self)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the slot attributes."""
+        return self.entity_description.extra_fn(self)

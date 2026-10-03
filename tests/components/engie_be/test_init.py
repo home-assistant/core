@@ -6,6 +6,7 @@ from aioengiebelgium import (
     AccountRelation,
     CustomerAccount,
     CustomerAccountRelations,
+    EnergyContractsResponse,
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
     PricesResponse,
@@ -17,7 +18,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import BAN, BAN_2, OFFTAKE_ONLY_EAN, build_prices, build_relations
+from .conftest import (
+    BAN,
+    BAN_2,
+    OFFTAKE_ONLY_EAN,
+    build_contracts,
+    build_prices,
+    build_relations,
+)
 
 from tests.common import MockConfigEntry
 
@@ -344,3 +352,70 @@ async def test_household_is_a_single_service_device(
     assert household_device.identifiers == {(DOMAIN, BAN)}
     assert household_device.entry_type is dr.DeviceEntryType.SERVICE
     assert household_device.via_device_id is None
+
+
+@pytest.mark.parametrize(
+    ("ban", "expected"),
+    [
+        pytest.param(BAN, True, id="dynamic"),
+        pytest.param(BAN_2, False, id="fixed"),
+    ],
+)
+async def test_epex_entities_only_for_dynamic_households(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    ban: str,
+    expected: bool,
+) -> None:
+    """Test EPEX entities appear only on households with a dynamic tariff."""
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations(BAN, BAN_2)
+    )
+
+    def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        return build_contracts(dynamic=queried_ban == BAN)
+
+    mock_engie_client.return_value.async_get_energy_contracts.side_effect = _contracts
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    sensor_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{ban}_epex_current_hour"
+    )
+    assert (sensor_entity_id is not None) is expected
+    binary_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{ban}_epex_tomorrow_available"
+    )
+    assert (binary_entity_id is not None) is expected
+
+
+async def test_contracts_failure_skips_epex_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a contracts fetch failure warns and leaves the household without EPEX entities."""
+    mock_engie_client.return_value.async_get_energy_contracts.side_effect = (
+        EngieBeCommunicationError("boom")
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "Fetching energy contracts for" in caplog.text
+    assert "skipping EPEX entities" in caplog.text
+    assert BAN not in caplog.text
+    assert BAN[-4:] in caplog.text
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
