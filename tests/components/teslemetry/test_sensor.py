@@ -50,6 +50,20 @@ ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
 # or from the event's created_at cannot produce this.
 SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
 
+# Per-tire TPMS warning object as streamed by a Model 3.
+TPMS_NO_WARNINGS = {
+    "frontLeft": False,
+    "frontRight": False,
+    "rearLeft": False,
+    "rearRight": False,
+    "semiMiddleAxleLeft2": False,
+    "semiMiddleAxleRight2": False,
+    "semiRearAxleLeft": False,
+    "semiRearAxleLeft2": False,
+    "semiRearAxleRight": False,
+    "semiRearAxleRight2": False,
+}
+
 
 def _products_with_driver_assist(driver_assist: str) -> dict:
     """Return a products response with the vehicle's driver-assist capability set."""
@@ -458,6 +472,48 @@ async def test_sensors_streaming_tpms_none_clears_state(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("signal", "entity_id"),
+    [
+        pytest.param(
+            Signal.TPMS_HARD_WARNINGS,
+            "sensor.test_tire_pressure_hard_warnings",
+            id="hard",
+        ),
+        pytest.param(
+            Signal.TPMS_SOFT_WARNINGS,
+            "sensor.test_tire_pressure_soft_warnings",
+            id="soft",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_tpms_warnings(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    signal: Signal,
+    entity_id: str,
+) -> None:
+    """Test TPMS warning sensors report how many tires are in warning."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    for warnings, expected_state in (
+        ({**TPMS_NO_WARNINGS, "frontRight": True, "rearLeft": True}, "2"),
+        (TPMS_NO_WARNINGS, "0"),
+        (None, STATE_UNKNOWN),
+    ):
+        mock_add_listener.send(
+            {
+                "vin": vin,
+                "data": {signal: warnings},
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == expected_state
 
 
 @pytest.mark.parametrize(
