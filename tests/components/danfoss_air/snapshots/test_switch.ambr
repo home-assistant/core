@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_switch_state[switch.danfoss_air_automatic_bypass]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Danfoss Air Automatic Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.danfoss_air_automatic_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[switch.danfoss_air_boost]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Danfoss Air Boost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.danfoss_air_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[switch.danfoss_air_bypass]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Danfoss Air Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.danfoss_air_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
