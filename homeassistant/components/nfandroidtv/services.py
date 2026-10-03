@@ -46,7 +46,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
             probatio.Optional(ATTR_POSITION): probatio.In(Notifications.POSITIONS),
             probatio.Optional(ATTR_DURATION): probatio.All(cv.time_period),
-            probatio.Optional(ATTR_INTERACTIVE): probatio.Boolean,
+            probatio.Optional(ATTR_INTERACTIVE): probatio.Boolean(),
             probatio.Optional(ATTR_BGCOLOR): probatio.In(Notifications.BKG_COLORS),
             probatio.Optional(ATTR_FONTSIZE): probatio.In(Notifications.FONTSIZES),
             probatio.Optional(ATTR_TRANSPARENCY): probatio.In(
