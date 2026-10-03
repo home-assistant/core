@@ -81,7 +81,14 @@ async def test_logging_in_coordinator_subsequent_update_data(
     """
     caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
-    coordinator.device_info.update(DeviceInfo(**TEST_DEVICE_INFO))
+    coordinator.device_info.update(
+        DeviceInfo(
+            name=TEST_DEVICE_INFO["name"],
+            model=TEST_DEVICE_INFO["model"],
+            sw_version=TEST_DEVICE_INFO["sw_version"],
+            hw_version=TEST_DEVICE_INFO["hw_version"],
+        )
+    )
 
     await coordinator._async_update_data()
     # check that the name _is not_ missing
