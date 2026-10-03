@@ -993,7 +993,6 @@ async def test_program_key_sensor_states(
     expected_state: str,
 ) -> None:
     """Test that program sensors expose readable names and raw program keys."""
-    """
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
