@@ -803,6 +803,56 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_build_cache-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_environment_prune_build_cache',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prune build cache',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prune build cache',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'build_cache_prune',
+    'unique_id': 'portainer_test_entry_123_1_build_cache_prune',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_build_cache-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune build cache',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_environment_prune_build_cache',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_images-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -848,6 +898,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.my_environment_prune_unused_images',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_unused_networks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_environment_prune_unused_networks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prune unused networks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prune unused networks',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'networks_prune',
+    'unique_id': 'portainer_test_entry_123_1_networks_prune',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_unused_networks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune unused networks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_environment_prune_unused_networks',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
