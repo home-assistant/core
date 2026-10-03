@@ -1,6 +1,7 @@
 """Fixtures for Mistral AI tests."""
 
 from collections.abc import AsyncGenerator, Generator
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -22,9 +23,9 @@ from tests.common import MockConfigEntry
 class FakeModels:
     """Minimal stand-in for the models sub-SDK."""
 
-    def list(self, timeout_ms: int | None = None) -> list:
-        """Return an empty model list."""
-        return []
+    def __init__(self) -> None:
+        """Initialize the fake models SDK."""
+        self.list_async = AsyncMock(return_value=SimpleNamespace(data=[]))
 
 
 class FakeCloudClient:
@@ -103,7 +104,8 @@ async def mock_init_component(
 ) -> AsyncGenerator[None]:
     """Set up the Mistral AI integration with a fake client."""
     with patch(
-        "homeassistant.components.mistral_ai._setup_client",
+        "homeassistant.components.mistral_ai.async_create_client",
+        new_callable=AsyncMock,
         return_value=mock_client,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

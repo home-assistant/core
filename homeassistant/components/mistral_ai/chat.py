@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from typing import Any
 
-from mistralai.client import models as mistral_models
+from mistralai.client import errors, models as mistral_models
 from mistralai.client.models import (
     AssistantMessage,
     CompletionEvent,
@@ -245,6 +245,14 @@ async def handle_chat_log(entity, chat_log: conversation.ChatLog) -> None:
                     ]
                 )
             )
+        except errors.MistralError as err:
+            if err.status_code in (401, 403):
+                # Trigger the reauthentication flow for a revoked/expired key.
+                entity.entry.async_start_reauth(entity.hass)
+            LOGGER.error("Error talking to Mistral: %s", err)
+            raise HomeAssistantError("Error talking to Mistral") from err
+        except HomeAssistantError:
+            raise
         except Exception as err:
             LOGGER.error("Error talking to Mistral: %s", err)
             raise HomeAssistantError("Error talking to Mistral") from err

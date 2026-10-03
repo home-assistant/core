@@ -1,6 +1,7 @@
 """Integration tests for the Mistral AI config entry setup."""
 
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.mistral_ai import DOMAIN
 from homeassistant.components.mistral_ai.const import (
@@ -15,8 +16,8 @@ from tests.common import MockConfigEntry
 
 
 class _FakeModels:
-    def list(self, timeout_ms=None) -> list:
-        return []
+    def __init__(self) -> None:
+        self.list_async = AsyncMock(return_value=SimpleNamespace(data=[]))
 
 
 class _FakeMistral:
@@ -26,7 +27,7 @@ class _FakeMistral:
         self.audio = None
 
     def __getattr__(self, name):
-        # Lazy sub-SDK access used by _setup_client preload.
+        # Lazy sub-SDK access used by create_client preload.
         if name in ("chat", "models", "audio"):
             return self.models
         raise AttributeError(name)
@@ -60,7 +61,8 @@ async def test_config_entry_creates_entities(
 
     with (
         patch(
-            "homeassistant.components.mistral_ai._setup_client",
+            "homeassistant.components.mistral_ai.async_create_client",
+            new_callable=AsyncMock,
             return_value=_FakeMistral(),
         ),
     ):

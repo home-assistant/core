@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from mistralai.client import Mistral
-import mistralai.client.utils.security  # noqa: F401
+from httpx import HTTPError
+from mistralai.client import errors as mistral_errors
 import probatio
 
 from homeassistant.config_entries import (
@@ -31,7 +31,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
-from .api import get_model_ids
+from .api import async_create_client, get_model_ids
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -58,37 +58,35 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-def _validate_api_key(api_key: str) -> None:
-    """Validate the API key by listing models."""
-    client = Mistral(api_key=api_key)
-    _ = client.models
-
-    client.models.list(timeout_ms=10_000)
-
-
 async def _async_fetch_models(
     hass: HomeAssistant, api_key: str, fallback: list[str]
 ) -> list[str]:
-    """Fetch available model IDs, with a fallback."""
+    """Fetch available model IDs, with a fallback.
+
+    The fallback is not cached: a transient failure should be retried on the
+    next visit instead of being pinned until Home Assistant restarts.
+    """
     cache = hass.data.setdefault(DATA_MODELS_CACHE, {})
     if api_key in cache:
         return cache[api_key]
 
     try:
-        models = await hass.async_add_executor_job(
-            get_model_ids, api_key, "completion_chat"
-        )
-    except Exception:  # noqa: BLE001
-        models = []
+        client = await async_create_client(hass, api_key)
+        models = await get_model_ids(client, "completion_chat")
+    except mistral_errors.MistralError, mistral_errors.NoResponseError, HTTPError:
+        return list(fallback)
+
     if not models:
-        models = list(fallback)
+        return list(fallback)
+
     cache[api_key] = models
     return models
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    await hass.async_add_executor_job(_validate_api_key, data[CONF_API_KEY])
+    client = await async_create_client(hass, data[CONF_API_KEY])
+    await client.models.list_async(timeout_ms=10_000)
 
 
 class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -113,12 +111,16 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
                 await validate_input(self.hass, user_input)
-            except Exception as err:  # noqa: BLE001
-                status_code = getattr(err, "status_code", None)
-                if status_code in (401, 403):
+            except mistral_errors.MistralError as err:
+                if err.status_code in (401, 403):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
+            except mistral_errors.NoResponseError, HTTPError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 if self.source == SOURCE_REAUTH:
                     entry = self._get_reauth_entry()

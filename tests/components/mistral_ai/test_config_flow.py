@@ -1,7 +1,9 @@
 """Tests for the Mistral AI config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from httpx import ConnectError, Request, Response
+from mistralai.client import errors
 import pytest
 
 from homeassistant import config_entries
@@ -25,11 +27,13 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+VALIDATE_INPUT = "homeassistant.components.mistral_ai.config_flow.validate_input"
 
-class _FakeError(Exception):
-    def __init__(self, status_code: int) -> None:
-        self.status_code = status_code
-        super().__init__(f"error {status_code}")
+
+def _sdk_error(status_code: int) -> errors.SDKError:
+    """Build an SDKError with the given HTTP status code."""
+    request = Request("GET", "https://api.mistral.ai/v1/models")
+    return errors.SDKError("error", Response(status_code, request=request))
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -41,9 +45,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._validate_api_key",
-    ):
+    with patch(VALIDATE_INPUT, new_callable=AsyncMock):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "test-key"}
         )
@@ -65,10 +67,11 @@ async def test_form(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("error", "message"),
     [
-        (_FakeError(401), "invalid_auth"),
-        (_FakeError(403), "invalid_auth"),
-        (_FakeError(500), "cannot_connect"),
-        (Exception("boom"), "cannot_connect"),
+        (_sdk_error(401), "invalid_auth"),
+        (_sdk_error(403), "invalid_auth"),
+        (_sdk_error(500), "cannot_connect"),
+        (ConnectError("boom"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
     ],
 )
 async def test_form_invalid_auth(
@@ -78,10 +81,7 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._validate_api_key",
-        side_effect=error,
-    ):
+    with patch(VALIDATE_INPUT, new_callable=AsyncMock, side_effect=error):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "test-key"}
         )
@@ -102,7 +102,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with patch("homeassistant.components.mistral_ai.config_flow._validate_api_key"):
+    with patch(VALIDATE_INPUT, new_callable=AsyncMock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "test-key"}
         )
@@ -128,7 +128,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
 
     with (
-        patch("homeassistant.components.mistral_ai.config_flow._validate_api_key"),
+        patch(VALIDATE_INPUT, new_callable=AsyncMock),
         patch(
             "homeassistant.components.mistral_ai.async_setup_entry",
             return_value=True,
@@ -159,8 +159,9 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
 
     result = await entry.start_reauth_flow(hass)
     with patch(
-        "homeassistant.components.mistral_ai.config_flow._validate_api_key",
-        side_effect=_FakeError(401),
+        VALIDATE_INPUT,
+        new_callable=AsyncMock,
+        side_effect=_sdk_error(401),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "bad-key"}
