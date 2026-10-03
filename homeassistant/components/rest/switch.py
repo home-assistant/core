@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         probatio.Optional(CONF_AVAILABILITY): cv.template,
     }

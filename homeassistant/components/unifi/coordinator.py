@@ -3,10 +3,11 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
+from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
 from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from .hub.hub import UnifiHub
 
 POLL_INTERVAL = timedelta(seconds=10)
+IDLE_POLL_INTERVAL = timedelta(minutes=10)
 
 
 class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
@@ -25,6 +27,8 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         self,
         hub: UnifiHub,
         handler: HandlerT,
+        *,
+        disable_polling_on_endpoint_not_found: bool = False,
     ) -> None:
         """Initialize coordinator."""
         supports_websocket = bool(handler.process_messages or handler.remove_messages)
@@ -36,6 +40,10 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             update_interval=None if supports_websocket else POLL_INTERVAL,
         )
         self._handler = handler
+        self._disable_polling_on_endpoint_not_found = (
+            disable_polling_on_endpoint_not_found
+        )
+        self._endpoint_not_found_logged = False
 
         hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
 
@@ -47,7 +55,25 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     @override
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
-        await self._handler.update()
+        try:
+            await self._handler.update()
+        except EndpointNotFound as err:
+            if (
+                self._disable_polling_on_endpoint_not_found
+                and not self._endpoint_not_found_logged
+            ):
+                self._endpoint_not_found_logged = True
+                self.update_interval = None
+                self.logger.warning(
+                    "UniFi %s endpoint is unavailable; disabling polling",
+                    type(self._handler).__name__,
+                )
+            raise UpdateFailed(str(err)) from err
+
+        if self.update_interval is not None:
+            self.update_interval = (
+                POLL_INTERVAL if self._handler.items() else IDLE_POLL_INTERVAL
+            )
 
     @callback
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:

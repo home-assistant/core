@@ -529,7 +529,7 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "must contain at least one of light, dark",
+            "at least one of ['light', 'dark'] is required",
         ),
         (
             {

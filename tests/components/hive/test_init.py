@@ -3,8 +3,16 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.hive.const import DOMAIN
+from homeassistant.components.hive.const import (
+    DOMAIN,
+    SERVICE_BOOST_HEATING_OFF,
+    SERVICE_BOOST_HEATING_ON,
+    SERVICE_BOOST_HOT_WATER,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -244,3 +252,34 @@ async def test_glass_break_device_class(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
+
+
+async def test_all_platforms_forwarded_without_devices(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """All platforms are set up and the entry reloads on a device-less account."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    mock_hive = _make_mock_hive({})
+
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+        # Entity services must not depend on device discovery.
+        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HOT_WATER)
+        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HEATING_ON)
+        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HEATING_OFF)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "Error setting up entry" not in caplog.text
+    assert "Error unloading entry" not in caplog.text
