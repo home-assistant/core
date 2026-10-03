@@ -20,6 +20,7 @@ class StarlineEntity(Entity):
         self._account = account
         self._device = device
         self._key = key
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"starline-{key}-{device.device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = account.device_info(device)
 

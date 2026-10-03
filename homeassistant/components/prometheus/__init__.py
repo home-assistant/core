@@ -53,7 +53,13 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -135,7 +141,7 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
     hass.http.register_view(PrometheusView(config[DOMAIN][CONF_REQUIRES_AUTH]))
 
@@ -169,17 +175,21 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         floor_registry,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
-    hass.bus.listen(
+    hass.bus.async_listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
+    hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
         metrics.handle_entity_registry_updated,
     )
-    hass.bus.listen(
+    hass.bus.async_listen(
         EVENT_DEVICE_REGISTRY_UPDATED,
         metrics.handle_device_registry_updated,
     )
-    hass.bus.listen(EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated)
-    hass.bus.listen(EVENT_FLOOR_REGISTRY_UPDATED, metrics.handle_floor_registry_updated)
+    hass.bus.async_listen(
+        EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated
+    )
+    hass.bus.async_listen(
+        EVENT_FLOOR_REGISTRY_UPDATED, metrics.handle_floor_registry_updated
+    )
 
     for floor in floor_registry.async_list_floors():
         metrics.handle_floor(floor)
@@ -187,7 +197,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for area in area_registry.async_list_areas():
         metrics.handle_area(area)
 
-    for state in hass.states.all():
+    for state in hass.states.async_all():
         if entity_filter(state.entity_id):
             metrics.handle_state(state)
 
@@ -260,6 +270,7 @@ class PrometheusMetrics:
         self.entity_registry = entity_registry
         self.floor_registry = floor_registry
 
+    @callback
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
@@ -327,6 +338,7 @@ class PrometheusMetrics:
             if hasattr(self, handler) and state.state:
                 getattr(self, handler)(state)
 
+    @callback
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
     ) -> None:
@@ -361,6 +373,7 @@ class PrometheusMetrics:
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
 
+    @callback
     def handle_device_registry_updated(
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
@@ -398,6 +411,7 @@ class PrometheusMetrics:
             if area_id is not None:
                 self._add_entity_info(entity_id, area_id)
 
+    @callback
     def handle_area_registry_updated(
         self, event: Event[EventAreaRegistryUpdatedData]
     ) -> None:
@@ -440,6 +454,7 @@ class PrometheusMetrics:
             labels,
         ).set(1.0)
 
+    @callback
     def handle_floor_registry_updated(
         self, event: Event[EventFloorRegistryUpdatedData]
     ) -> None:

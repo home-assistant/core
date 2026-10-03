@@ -47,9 +47,7 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEM
 
 
 SET_TEMPERATURE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(
-        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
-    ),
+    probatio.AtLeastOne(ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW),
     cv.make_entity_service_schema(
         {
             probatio.Exclusive(ATTR_TEMPERATURE, "temperature"): probatio.Coerce(float),

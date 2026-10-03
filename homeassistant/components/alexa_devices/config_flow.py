@@ -18,27 +18,51 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Required(CONF_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
 STEP_RECONFIGURE = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Required(CONF_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
 

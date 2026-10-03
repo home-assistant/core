@@ -62,7 +62,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
     probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
     probatio.Optional(CONF_ICON): cv.icon,
@@ -186,9 +186,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     probatio.Optional(ATTR_TIMESTAMP): probatio.Coerce(float),
                 },
             ),
-            cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
-            ),
+            probatio.AtLeastOne(ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP),
             validate_set_datetime_attrs,
         ),
         "async_set_datetime",
