@@ -632,6 +632,12 @@ Three locations are scanned: class-body `_attr_unique_id` assignments,
 Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
 scanned.
 
+The rule targets new unique ids. Integrations with existing unique ids in
+this format should keep them and disable the check on that line: migrating
+unique ids rewrites the entity registry and is easy to get wrong (for example,
+a downgrade leaves duplicate entities behind), which the cosmetic gain doesn't
+justify.
+
 ### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
 
 In `(domain, platform, unique_id)` the `domain` field is the entity
@@ -656,6 +662,9 @@ are in scope. `entity.py`, `__init__.py` at the integration root, and
 other helper sub-modules are out of scope because the platform
 context is ambiguous there. The three in-class scan locations are
 the same as for `W7425`.
+
+As for `W7425`, the rule targets new unique ids: existing unique ids in
+this format should be kept, with the check disabled on that line.
 
 
 ## `home_assistant_entity_description_defaults` checker
@@ -1042,3 +1051,13 @@ The light provides `color_mode` but no `supported_color_modes`. At runtime
 ("does not set supported color modes") from both `state_attributes` and
 `capability_attributes` whenever `supported_color_modes` is `None`. Set
 `_attr_supported_color_modes` or override the `supported_color_modes` property.
+
+
+## `home_assistant_enforce_config_flow_no_connection_class` checker
+
+Detects config flow classes that set `CONNECTION_CLASS`.
+
+### `W7438`: `home-assistant-config-flow-connection-class`
+
+`CONNECTION_CLASS` is no longer used by Home Assistant and should not be set
+on config flows. Remove the attribute.

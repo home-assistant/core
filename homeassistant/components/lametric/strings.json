@@ -96,6 +96,14 @@
       "bluetooth": {
         "name": "Bluetooth"
       }
+    },
+    "time": {
+      "screensaver_end_time": {
+        "name": "Screensaver end time"
+      },
+      "screensaver_start_time": {
+        "name": "Screensaver start time"
+      }
     }
   },
   "exceptions": {
@@ -104,6 +112,15 @@
     },
     "invalid_response": {
       "message": "Invalid response from the LaMetric device"
+    },
+    "notification_failed": {
+      "message": "Could not send the notification to the LaMetric device: {error}"
+    },
+    "unknown_sound": {
+      "message": "Unknown sound: {sound}"
+    },
+    "update_failed": {
+      "message": "Could not fetch the state of the LaMetric device: {error}"
     }
   },
   "selector": {

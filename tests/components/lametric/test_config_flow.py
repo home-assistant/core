@@ -730,6 +730,37 @@ async def test_dhcp_unknown_device(
     assert result["reason"] == "unknown"
 
 
+async def test_dhcp_entry_without_mac(hass: HomeAssistant) -> None:
+    """Test DHCP discovery skips an entry set up without a MAC.
+
+    A device still connecting to its Wi-Fi does not report its MAC.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_API_KEY: "mock-from-fixture",
+            CONF_MAC: None,
+        },
+        unique_id="SA110405124500W00BS9",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="lametric",
+            ip="127.0.0.42",
+            macaddress="aabbccddeeff",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+    assert entry.data[CONF_HOST] == "127.0.0.2"
+
+
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_cloud_import(
     hass: HomeAssistant,

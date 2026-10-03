@@ -50,7 +50,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         probatio.Optional(CONF_USERNAME): selector.TextSelector(),
-        probatio.Optional(CONF_PASSWORD): selector.TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_SSL, default=False): selector.BooleanSelector(),
@@ -59,7 +59,9 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_SSDP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=""
+        ): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         probatio.Optional(CONF_SSL): selector.BooleanSelector(),
@@ -69,7 +71,9 @@ STEP_SSDP_AUTH_DATA_SCHEMA = probatio.Schema(
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
-        probatio.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=""
+        ): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         probatio.Optional(CONF_SSL): selector.BooleanSelector(),

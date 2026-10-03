@@ -191,7 +191,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
-    "lametric": {"demetriek": {"backoff"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
@@ -199,6 +198,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-linkplay": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
+    "marketplace": {"aiogithubapi": {"backoff"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},
@@ -220,7 +220,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
     "prosegur": {"pyprosegur": {"backoff"}},
-    "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
