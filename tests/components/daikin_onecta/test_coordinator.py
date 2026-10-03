@@ -107,7 +107,7 @@ class TestOnectaDataUpdateCoordinator:
             mock_random.randint.assert_called_once_with(60, 1800)
 
     async def test_rate_limit_uses_update_failed_retry_after(
-        self, coordinator, mock_config_entry
+        self, caplog, coordinator, mock_config_entry
     ):
         """A Daikin rate limit should use the coordinator retry-after mechanism."""
         daikin_api = coordinator.api
@@ -123,6 +123,9 @@ class TestOnectaDataUpdateCoordinator:
 
         assert exc_info.value.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
         assert coordinator.update_interval == initial_interval
+        assert (
+            "Daikin API rate limit reached; retrying after 3060 seconds" in caplog.text
+        )
 
     async def test_connection_error_uses_update_failed(self, coordinator):
         """A connection error should mark the coordinator update as failed."""

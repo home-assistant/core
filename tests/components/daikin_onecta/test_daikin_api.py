@@ -6,13 +6,10 @@ from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimit
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
-from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.daikin_api import DaikinApi
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-EXPECTED_RATE_LIMIT_ISSUES = 2
 
 
 async def test_get_device_details_propagates_connection_error(
@@ -46,28 +43,12 @@ async def test_get_device_details_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Create rate-limit issues and propagate a library rate-limit error."""
+    """Propagate a library rate-limit error to the coordinator."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    api.create_rate_limit_issues = MagicMock()
     api.client.get_gateway_devices = AsyncMock(side_effect=OnectaRateLimitError(60))
 
     with pytest.raises(OnectaRateLimitError):
         await api.get_cloud_device_details()
-
-    api.create_rate_limit_issues.assert_called_once()
-
-
-async def test_get_device_details_updates_rate_limit_issues(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Clear stale rate-limit issues after a successful device request."""
-    api = DaikinApi(hass, config_entry, MagicMock())
-    api.client.get_gateway_devices = AsyncMock(return_value=[])
-    api.update_rate_limit_issues = MagicMock()
-
-    assert await api.get_cloud_device_details() == []
-    api.update_rate_limit_issues.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -90,15 +71,13 @@ async def test_write_success(
     method: str,
     arguments: tuple,
 ) -> None:
-    """Record successful writes and refresh rate-limit issues."""
+    """Record successful writes."""
     api = DaikinApi(hass, config_entry, MagicMock())
     setattr(api.client, method, AsyncMock())
-    api.update_rate_limit_issues = MagicMock()
 
     assert await getattr(api, method)(*arguments)
     getattr(api.client, method).assert_awaited_once()
     assert api.last_patch_call is not None
-    api.update_rate_limit_issues.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -149,38 +128,12 @@ async def test_write_rate_limit(
     method: str,
     arguments: tuple,
 ) -> None:
-    """Create a repair issue and return false for rate-limited writes."""
+    """Return false for rate-limited writes."""
     api = DaikinApi(hass, config_entry, MagicMock())
     setattr(api.client, method, AsyncMock(side_effect=OnectaRateLimitError(60)))
-    api.create_rate_limit_issues = MagicMock()
 
     assert not await getattr(api, method)(*arguments)
-    api.create_rate_limit_issues.assert_called_once()
     assert api.last_patch_call is None
-
-
-async def test_rate_limit_issue_updates(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Create and remove Home Assistant rate-limit repair issues."""
-    api = DaikinApi(hass, config_entry, MagicMock())
-    api.client.rate_limit = RateLimit(minute_remaining=0, day_remaining=0)
-
-    with patch(
-        "homeassistant.components.daikin_onecta.daikin_api.ir.async_create_issue"
-    ) as create_issue:
-        api.create_rate_limit_issues()
-
-    assert create_issue.call_count == EXPECTED_RATE_LIMIT_ISSUES
-
-    api.client.rate_limit = RateLimit(minute_remaining=1, day_remaining=1)
-    with patch(
-        "homeassistant.components.daikin_onecta.daikin_api.ir.async_delete_issue"
-    ) as delete_issue:
-        api.update_rate_limit_issues()
-
-    delete_issue.assert_any_call(hass, DOMAIN, "minute_rate_limit")
-    delete_issue.assert_any_call(hass, DOMAIN, "day_rate_limit")
 
 
 async def test_rate_limits_preserve_unknown_values(
@@ -198,10 +151,3 @@ async def test_rate_limits_preserve_unknown_values(
         "retry_after": None,
         "ratelimit_reset": None,
     }
-
-    with patch(
-        "homeassistant.components.daikin_onecta.daikin_api.ir.async_create_issue"
-    ) as create_issue:
-        api.create_rate_limit_issues()
-
-    create_issue.assert_not_called()

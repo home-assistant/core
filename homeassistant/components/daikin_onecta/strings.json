@@ -297,16 +297,6 @@
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
-  "issues": {
-    "day_rate_limit": {
-      "description": "You have reached your daily rate limit to the Daikin Cloud. Updates will resume automatically after the limit resets.",
-      "title": "The daily rate limit has been reached"
-    },
-    "minute_rate_limit": {
-      "description": "You have reached your minute rate limit to the Daikin Cloud, don't make so many calls to your Daikin devices in one minute.",
-      "title": "The minute rate limit has been reached"
-    }
-  },
   "options": {
     "step": {
       "init": {

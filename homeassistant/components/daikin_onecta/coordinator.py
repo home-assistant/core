@@ -74,6 +74,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             try:
                 cloud_devices = await self.api.get_cloud_device_details()
             except OnectaRateLimitError as err:
+                _LOGGER.warning(
+                    "Daikin API rate limit reached; retrying after %s seconds",
+                    err.retry_after,
+                )
                 raise UpdateFailed(
                     RATE_LIMIT_EXCEEDED,
                     retry_after=err.retry_after,
