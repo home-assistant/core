@@ -64,8 +64,8 @@ rules:
     status: exempt
     comment: No disabled entities implemented
   discovery:
-    status: exempt
-    comment: Nothing to discover
+    status: done
+    comment: The Thermomix is discovered via SSDP/UPnP
   stale-devices:
     status: exempt
     comment: No stale entities possible
@@ -78,7 +78,9 @@ rules:
     comment: No dynamic entities available
   discovery-update-info:
     status: exempt
-    comment: No discoverable entities implemented
+    comment: >-
+      Cookidoo is a cloud account integration; the config entry stores no
+      device connection info that a rediscovery could update.
   repair-issues:
     status: exempt
     comment: No issues/repairs
