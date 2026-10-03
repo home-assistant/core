@@ -5,16 +5,18 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, time
 from typing import TYPE_CHECKING, override
 
-from demetriek import DisplayScreensaverTimeBased, ScreensaverMode
+from demetriek import (
+    DisplayScreensaverModes,
+    DisplayScreensaverTimeBased,
+    ScreensaverMode,
+)
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
@@ -91,19 +93,19 @@ class LaMetricTimeEntity(LaMetricEntity, TimeEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
     @property
-    def _time_based(self) -> DisplayScreensaverTimeBased:
-        """Return the time based screensaver mode of the device."""
+    def _modes(self) -> DisplayScreensaverModes:
+        """Return the screensaver modes of the device."""
         screensaver = self.coordinator.data.display.screensaver
         if TYPE_CHECKING:
             assert screensaver is not None
             assert screensaver.modes is not None
-        return screensaver.modes.time_based
+        return screensaver.modes
 
     @property
     @override
     def native_value(self) -> time | None:
         """Return the time value."""
-        if (value := self.entity_description.value_fn(self._time_based)) is None:
+        if (value := self.entity_description.value_fn(self._modes.time_based)) is None:
             return None
 
         # The device stores screensaver times in UTC.
@@ -115,22 +117,28 @@ class LaMetricTimeEntity(LaMetricEntity, TimeEntity):
     @override
     async def async_set_value(self, value: time) -> None:
         """Change to new time value."""
+        modes = self._modes
+        new_time = dt_util.as_utc(datetime.combine(dt_util.now().date(), value)).time()
         start_time, end_time = self.entity_description.times_fn(
-            self._time_based,
-            dt_util.as_utc(datetime.combine(dt_util.now().date(), value)).time(),
+            modes.time_based, new_time
         )
 
-        # The device rejects a time based write that carries only one of the
-        # times, so the one left untouched has to be sent along.
-        if start_time is None or end_time is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="screensaver_times_incomplete",
-            )
-
+        # The device only takes both times at once, so the one left untouched
+        # is sent along. A device that never had its times set reports
+        # neither; until the other one is set too, it gets the new time.
         await self.coordinator.lametric.display(
             screensaver_mode=ScreensaverMode.TIME_BASED,
-            screensaver_start_time=start_time,
-            screensaver_end_time=end_time,
+            screensaver_start_time=new_time if start_time is None else start_time,
+            screensaver_end_time=new_time if end_time is None else end_time,
         )
+
+        # Writing the times always switches the device to the time based mode,
+        # even when asked not to. Switch back to when dark if that was active;
+        # the times stay stored.
+        if modes.when_dark is not None and modes.when_dark.enabled:
+            await self.coordinator.lametric.display(
+                screensaver_mode=ScreensaverMode.WHEN_DARK,
+                screensaver_mode_enabled=True,
+            )
+
         await self.coordinator.async_request_refresh()
