@@ -31,5 +31,9 @@ async def async_get_config_entry_diagnostics(
                 subentry_id: asdict(park)
                 for subentry_id, park in entry.runtime_data.park_and_ride_coordinator.data.items()
             },
+            "alerts": {
+                subentry_id: [asdict(alert) for alert in alerts]
+                for subentry_id, alerts in entry.runtime_data.alerts_coordinator.data.items()
+            },
         },
     }

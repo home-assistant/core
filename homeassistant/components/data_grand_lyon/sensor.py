@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import override
-from zoneinfo import ZoneInfo
 
 from data_grand_lyon_ha import TclParkAndRide, TclPassage, TclPassageType, VelovStation
 
@@ -22,6 +21,7 @@ from .const import (
     SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
+    TZ_PARIS,
 )
 from .coordinator import DataGrandLyonConfigEntry
 from .entity import (
@@ -32,8 +32,6 @@ from .entity import (
 
 PARALLEL_UPDATES = 0
 
-_TZ_PARIS = ZoneInfo("Europe/Paris")
-
 _DEPARTURE_TYPE_OPTIONS = [t.name.lower() for t in TclPassageType]
 
 
@@ -41,7 +39,7 @@ def _departure_time(departure: TclPassage) -> datetime:
     """Return the departure time, localized to Europe/Paris if naive."""
     dt = departure.heure_passage
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=_TZ_PARIS)
+        return dt.replace(tzinfo=TZ_PARIS)
     return dt
 
 

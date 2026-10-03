@@ -3,7 +3,8 @@
 from types import MappingProxyType
 from unittest.mock import AsyncMock
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectionError, ClientResponseError
+import pytest
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
@@ -47,21 +48,54 @@ async def test_subentry_added_reloads(
     assert hass.states.get("sensor.t1_stop_200_next_departure_1") is not None
 
 
+@pytest.mark.parametrize(
+    ("entry_fixture", "client_method"),
+    [
+        pytest.param("mock_config_entry", "get_tcl_passages", id="passages"),
+        pytest.param("mock_line_config_entry", "get_tcl_alerts", id="alerts"),
+    ],
+)
 async def test_setup_triggers_reauth_on_auth_failure(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
+    request: pytest.FixtureRequest,
+    entry_fixture: str,
+    client_method: str,
 ) -> None:
     """Test that an auth failure during setup triggers a reauth flow."""
-    mock_tcl_client.get_tcl_passages.side_effect = ClientResponseError(
+    getattr(mock_tcl_client, client_method).side_effect = ClientResponseError(
         None, None, status=401
     )
+    config_entry: MockConfigEntry = request.getfixturevalue(entry_fixture)
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert any(flow["context"].get("source") == SOURCE_REAUTH for flow in flows)
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(ClientResponseError(None, None, status=500), id="http_error"),
+        pytest.param(ClientConnectionError("boom"), id="connection_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
+async def test_alerts_fetch_failure_retries_setup(
+    hass: HomeAssistant,
+    mock_line_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    side_effect: Exception,
+) -> None:
+    """Test a failed alerts fetch leaves the entry retrying, not errored."""
+    mock_tcl_client.get_tcl_alerts.side_effect = side_effect
+    mock_line_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_line_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_line_config_entry.state is ConfigEntryState.SETUP_RETRY
