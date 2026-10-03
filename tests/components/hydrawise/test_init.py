@@ -63,10 +63,7 @@ async def test_update_api_error(
 
     assert hass.states.get("binary_sensor.zone_one_watering").state == STATE_UNAVAILABLE
     assert "Unexpected error fetching hydrawise data" not in caplog.text
-    assert (
-        "Error communicating with the Hydrawise API: {'message': 'unavailable'}"
-        in caplog.text
-    )
+    assert "Error communicating with the Hydrawise API" in caplog.text
 
     mock_pydrawise.get_user.side_effect = None
     freezer.tick(MAIN_SCAN_INTERVAL)

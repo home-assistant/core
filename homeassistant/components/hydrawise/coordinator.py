@@ -69,7 +69,6 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
 
