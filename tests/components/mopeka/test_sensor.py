@@ -1,5 +1,7 @@
 """Test the Mopeka sensors."""
 
+import pytest
+
 from homeassistant.components.mopeka.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
@@ -118,6 +120,37 @@ async def test_sensors_good_signal(hass: HomeAssistant) -> None:
     assert tank_sensor_attrs[ATTR_FRIENDLY_NAME] == "Pro Plus EEFF Tank Level"
     assert tank_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
     assert tank_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tank_level_raw_sensor(hass: HomeAssistant) -> None:
+    """Test the raw tank level sensor follows the reading quality gating."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, PRO_UNUSABLE_SIGNAL_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    raw_sensor = hass.states.get("sensor.pro_plus_eeff_tank_level_raw")
+    raw_sensor_attrs = raw_sensor.attributes
+    assert raw_sensor.state == STATE_UNKNOWN
+    assert raw_sensor_attrs[ATTR_FRIENDLY_NAME] == "Pro Plus EEFF Tank level raw"
+    assert raw_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+    assert ATTR_UNIT_OF_MEASUREMENT not in raw_sensor_attrs
+
+    inject_bluetooth_service_info(hass, PRO_GOOD_SIGNAL_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.pro_plus_eeff_tank_level_raw").state == "950"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
