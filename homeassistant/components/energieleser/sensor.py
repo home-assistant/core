@@ -19,7 +19,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONF_HOST,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfEnergy,
@@ -29,13 +28,12 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SW_VERSION, DOMAIN, device_model_name
 from .coordinator import EnergieleserConfigEntry, EnergieleserCoordinator
+from .entity import build_device_info
 
 PARALLEL_UPDATES = 0
 
@@ -343,7 +341,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up energieleser sensors from a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.device_coordinator
     device = coordinator.data
 
     if isinstance(device, StromleserOneDevice):
@@ -386,21 +384,7 @@ class _EnergieleserSensorBase(CoordinatorEntity[EnergieleserCoordinator], Sensor
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
-        host = coordinator.config_entry.data[CONF_HOST]
-        serial_number = None
-        if isinstance(coordinator.data, WaermeleserDevice):
-            # Only wärmeleser devices report a fabrication number; others omit it.
-            serial_number = coordinator.data.fabrication_number
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.device_id)},
-            name=coordinator.device_id,
-            manufacturer="nineti GmbH",
-            model=device_model_name(coordinator.data.device_type),
-            serial_number=serial_number,
-            sw_version=coordinator.config_entry.data.get(CONF_SW_VERSION),
-            configuration_url=f"http://{host}/",
-        )
+        self._attr_device_info = build_device_info(coordinator)
 
 
 class StromleserSensor(_EnergieleserSensorBase):
