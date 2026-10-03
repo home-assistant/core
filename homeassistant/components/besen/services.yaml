@@ -12,3 +12,4 @@ start_charging:
       required: false
       selector:
         duration:
+          enable_second: false

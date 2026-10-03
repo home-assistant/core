@@ -8,11 +8,7 @@ import probatio
 import pytest
 
 from homeassistant.components.besen.const import DOMAIN
-from homeassistant.components.besen.services import (
-    ATTR_DURATION,
-    ATTR_START,
-    SERVICE_START_CHARGING,
-)
+from homeassistant.components.besen.services import BesenService, BesenServiceArgument
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -30,16 +26,27 @@ START_UTC = datetime(2026, 10, 1, 22, 0, tzinfo=UTC)
     ("service_data", "start", "duration_minutes"),
     [
         pytest.param({}, None, None, id="now"),
-        pytest.param({ATTR_START: START}, START_UTC, None, id="scheduled"),
+        pytest.param(
+            {BesenServiceArgument.START: START}, START_UTC, None, id="scheduled"
+        ),
         # A time without an offset is in the Home Assistant time zone.
         pytest.param(
-            {ATTR_START: "2026-10-01 15:00:00"}, START_UTC, None, id="local_time"
+            {BesenServiceArgument.START: "2026-10-01 15:00:00"},
+            START_UTC,
+            None,
+            id="local_time",
         ),
         pytest.param(
-            {ATTR_DURATION: {"hours": 1, "minutes": 30}}, None, 90, id="time_limited"
+            {BesenServiceArgument.DURATION: {"hours": 1, "minutes": 30}},
+            None,
+            90,
+            id="time_limited",
         ),
         pytest.param(
-            {ATTR_START: START, ATTR_DURATION: {"minutes": 45}},
+            {
+                BesenServiceArgument.START: START,
+                BesenServiceArgument.DURATION: {"minutes": 45},
+            },
             START_UTC,
             45,
             id="scheduled_and_time_limited",
@@ -60,7 +67,7 @@ async def test_start_charging(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_CHARGING,
+        BesenService.START_CHARGING,
         {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
@@ -75,6 +82,7 @@ async def test_start_charging(
     [
         pytest.param({"seconds": 59}, id="too_short"),
         pytest.param({"minutes": 65535}, id="too_long"),
+        pytest.param({"minutes": 1, "seconds": 30}, id="not_whole_minutes"),
     ],
 )
 async def test_start_charging_invalid_duration(
@@ -90,8 +98,8 @@ async def test_start_charging_invalid_duration(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGING,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DURATION: duration},
+            BesenService.START_CHARGING,
+            {ATTR_ENTITY_ID: ENTITY_ID, BesenServiceArgument.DURATION: duration},
             blocking=True,
         )
 
@@ -132,8 +140,8 @@ async def test_start_charging_errors(
     with pytest.raises(exception) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGING,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_START: START},
+            BesenService.START_CHARGING,
+            {ATTR_ENTITY_ID: ENTITY_ID, BesenServiceArgument.START: START},
             blocking=True,
         )
 
