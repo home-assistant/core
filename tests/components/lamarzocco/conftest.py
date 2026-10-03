@@ -136,6 +136,8 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         machine_mock.websocket = MagicMock()
         machine_mock.websocket.connected = True
         machine_mock.websocket.disconnect = AsyncMock()
+        machine_mock.bluetooth_shot_counter_active = False
+        machine_mock.connect_bluetooth_shot_counter.return_value = True
         yield machine_mock
 
 

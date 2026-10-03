@@ -55,7 +55,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
+BT_MODEL_PREFIXES = ("MICRA", "MINI", "LINEA", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,12 +96,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     )
 
         if CONF_MAC in entry.data:
-            ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
-            if ble_device:
+            mac = entry.data[CONF_MAC]
+            if ble_device := async_ble_device_from_address(hass, mac):
                 _LOGGER.info("Setting up lamarzocco with Bluetooth")
                 bluetooth_client = LaMarzoccoBluetoothClient(
                     ble_device=ble_device,
                     ble_token=token,
+                    ble_device_callback=lambda: (
+                        async_ble_device_from_address(hass, mac) or ble_device
+                    ),
                 )
 
                 async def disconnect_bluetooth(_: Event) -> None:
@@ -196,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # to fetch only if the others failed
     if bluetooth_client:
         bluetooth_coordinator = LaMarzoccoBluetoothUpdateCoordinator(
-            hass, entry, device
+            hass, entry, device, coordinators.config_coordinator
         )
         await bluetooth_coordinator.async_config_entry_first_refresh()
         coordinators.bluetooth_coordinator = bluetooth_coordinator
