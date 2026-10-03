@@ -16,8 +16,10 @@ from aiopnsense import (
     OPNsenseUnknownFirmware,
 )
 
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -97,6 +99,7 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(hours=1),
             config_entry=entry,
         )
+        self.entry = entry
         self.client = client
 
     @override
@@ -104,10 +107,29 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch firmware status."""
         try:
             firmware_info = await self.client.get_firmware_update_info()
+        except OPNsensePrivilegeMissing:
+            ir.async_create_issue(
+                self.hass,
+                self.entry.domain,
+                f"firmware_privilege_missing_{self.entry.entry_id}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="firmware_privilege_missing",
+                translation_placeholders={
+                    "url": self.entry.data[CONF_URL],
+                },
+            )
+            return {}
         except (OPNsenseConnectionError, OPNsenseTimeoutError) as err:
             raise UpdateFailed(
                 f"Error communicating with OPNsense router: {err}"
             ) from err
         if firmware_info is None:
             raise UpdateFailed("No firmware information returned by OPNsense")
+        ir.async_delete_issue(
+            self.hass,
+            self.entry.domain,
+            f"firmware_privilege_missing_{self.entry.entry_id}",
+        )
         return dict(firmware_info)

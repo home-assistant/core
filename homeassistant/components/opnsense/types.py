@@ -17,7 +17,7 @@ class OPNsenseRuntimeData:
 
     client: OPNsenseClient
     tracker_interfaces: list[str]
-    update_coordinator: OPNsenseFirmwareCoordinator
+    update_coordinator: OPNsenseFirmwareCoordinator | None = None
 
 
 type DeviceDetails = dict[str, Any]

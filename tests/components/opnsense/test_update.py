@@ -4,7 +4,7 @@ from asyncio import Event
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aiopnsense import OPNsenseConnectionError
+from aiopnsense import OPNsenseConnectionError, OPNsensePrivilegeMissing
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -12,7 +12,11 @@ from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -519,6 +523,61 @@ async def test_firmware_install_without_update_status(
         )
 
     mock_opnsense_client.upgrade_firmware.assert_not_awaited()
+
+
+async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Firmware permission errors do not block trackers and clear after recovery."""
+    issue_id = f"firmware_privilege_missing_{mock_config_entry.entry_id}"
+    mock_opnsense_client.get_firmware_update_info.side_effect = (
+        OPNsensePrivilegeMissing("missing System: Firmware privilege")
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert any(
+        entity.domain == "device_tracker"
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    )
+    mock_opnsense_client.get_arp_table.assert_awaited_once()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    mock_opnsense_client.get_firmware_update_info.side_effect = None
+    await mock_config_entry.runtime_data.update_coordinator.async_request_refresh()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_disabled_update_does_not_fetch_firmware_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A disabled firmware update entity does not poll firmware status."""
+    entity_registry.async_get_or_create(
+        "update",
+        DOMAIN,
+        "mocked_unique_id",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_opnsense_client.get_firmware_update_info.assert_not_awaited()
+    mock_opnsense_client.get_arp_table.assert_awaited_once()
 
 
 async def test_firmware_update_unavailable(

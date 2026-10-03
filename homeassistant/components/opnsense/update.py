@@ -12,9 +12,10 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -37,7 +38,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the router firmware update entity."""
-    async_add_entities([OPNsenseFirmwareUpdate(entry)])
+    assert entry.unique_id is not None
+    entity_registry = er.async_get(hass)
+    if (
+        (
+            entity_id := entity_registry.async_get_entity_id(
+                Platform.UPDATE, DOMAIN, entry.unique_id
+            )
+        )
+        and (registry_entry := entity_registry.async_get(entity_id))
+        and (registry_entry.disabled)
+    ):
+        return
+
+    coordinator = OPNsenseFirmwareCoordinator(hass, entry, entry.runtime_data.client)
+    entry.runtime_data.update_coordinator = coordinator
+    await coordinator.async_config_entry_first_refresh()
+    async_add_entities([OPNsenseFirmwareUpdate(coordinator, entry)])
 
 
 class OPNsenseFirmwareUpdate(
@@ -54,9 +71,11 @@ class OPNsenseFirmwareUpdate(
     )
     _attr_translation_key = "firmware"
 
-    def __init__(self, entry: OPNsenseConfigEntry) -> None:
+    def __init__(
+        self, coordinator: OPNsenseFirmwareCoordinator, entry: OPNsenseConfigEntry
+    ) -> None:
         """Initialize the firmware entity."""
-        super().__init__(entry.runtime_data.update_coordinator)
+        super().__init__(coordinator)
         assert entry.unique_id is not None
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
