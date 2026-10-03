@@ -163,6 +163,9 @@ SAMPLE_STRINGS = {
                 "fahrenheit": "Fahrenheit",
             },
         },
+        "constant_value": {
+            "value": "Now",
+        },
         "field_new": {
             "fields": {
                 "field_one": {
