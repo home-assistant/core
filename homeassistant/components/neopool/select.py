@@ -276,6 +276,9 @@ async def _write_filt_mode(
     The library sequences the manual-mode exit (pump off + settle delay)
     before the mode change, so the platform issues a single write.
     """
+    if option == "backwash":
+        # backwash is display-only, so reselecting it is a no-op.
+        return
     await client.async_set_filtration_mode(option)
     value = next(
         (k for k, v in entity.entity_description.options_map.items() if v == option),
