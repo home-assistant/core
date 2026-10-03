@@ -288,7 +288,7 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             self._shot_timer_supported = (
                 self._shot_timer_started
             ) = await self.device.connect_bluetooth_shot_counter(update_callback)
-        except (BleakError, BluetoothConnectionFailed) as err:
+        except (BleakError, BluetoothConnectionFailed, TimeoutError) as err:
             _LOGGER.debug("Could not start the shot timer: %s", err)
             return
         if not self._shot_timer_supported:

@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
+from bleak.exc import BleakError
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import MachineMode, MachineState, ModelName, WidgetType
 from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
@@ -467,18 +468,19 @@ async def test_shot_timer_updates_brew_active(
     assert state.state == "2026-01-01T00:00:00+00:00"
 
 
+@pytest.mark.parametrize(
+    "exception", [BluetoothConnectionFailed(""), BleakError(""), TimeoutError()]
+)
 async def test_shot_timer_retried_after_failure(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
     """Test the shot timer is retried after a connection failure."""
-    mock_lamarzocco.connect_bluetooth_shot_counter.side_effect = [
-        BluetoothConnectionFailed(""),
-        True,
-    ]
+    mock_lamarzocco.connect_bluetooth_shot_counter.side_effect = [exception, True]
     await async_init_integration(hass, mock_config_entry_bluetooth)
     assert mock_lamarzocco.connect_bluetooth_shot_counter.await_count == 1
 
