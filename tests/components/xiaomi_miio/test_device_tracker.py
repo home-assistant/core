@@ -21,12 +21,13 @@ from homeassistant.components.xiaomi_miio.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.issue_registry import IssueRegistry
 
 from . import TEST_MAC
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, async_setup_component
 
 TEST_HOST = "192.168.1.100"
 TEST_TOKEN = "12345678901234567890123456789012"
@@ -617,3 +618,90 @@ async def test_entities_disabled_without_registry_device(
     assert hass.states.get(entity_id) is None
 
     assert entry.runtime_data.device_coordinator.data is not None
+
+
+async def test_legacy_yaml_repeater_creates_config_entry(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
+    """A YAML-configured repeater is imported into a config entry (2027.5)."""
+    mock_repeater = MagicMock()
+    mock_repeater.info = Mock(return_value=get_mock_info())
+    mock_repeater.status = Mock(
+        return_value=get_mock_status(
+            [{"mac": STATION_1_MAC, "ip": STATION_1_IP, "last_time": 12345}]
+        )
+    )
+    with (
+        patch("homeassistant.components.xiaomi_miio.device.Device") as mock_device,
+        patch(
+            "homeassistant.components.xiaomi_miio.WifiRepeater"
+        ) as mock_repeater_class,
+    ):
+        mock_device.return_value.info.return_value = get_mock_info()
+        mock_repeater_class.return_value = mock_repeater
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": [
+                    {
+                        "platform": const.DOMAIN,
+                        CONF_HOST: TEST_HOST,
+                        CONF_TOKEN: TEST_TOKEN,
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(const.DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == config_entries.SOURCE_IMPORT
+    assert entries[0].data == {
+        const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_MODEL: TEST_MODEL,
+        CONF_MAC: TEST_MAC,
+    }
+
+    # A warning issue prompts the user to remove the YAML configuration.
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{const.DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
+    assert issue.translation_placeholders == {
+        "domain": const.DOMAIN,
+        "integration_title": "Xiaomi Home",
+    }
+
+
+async def test_legacy_yaml_repeater_cannot_connect_creates_issue(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
+    """A YAML repeater that cannot be reached surfaces an error issue."""
+    with patch("homeassistant.components.xiaomi_miio.device.Device") as mock_device:
+        mock_device.return_value.info.side_effect = DeviceException({})
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": [
+                    {
+                        "platform": const.DOMAIN,
+                        CONF_HOST: TEST_HOST,
+                        CONF_TOKEN: TEST_TOKEN,
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(const.DOMAIN)
+    issue = issue_registry.async_get_issue(const.DOMAIN, "yaml_import_cannot_connect")
+    assert issue is not None
+    assert issue.translation_placeholders == {"host": TEST_HOST}

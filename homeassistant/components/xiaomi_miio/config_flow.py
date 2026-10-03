@@ -18,6 +18,7 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CO
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CLOUD_COUNTRY,
@@ -357,6 +358,38 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
             description_placeholders={
                 "retrieving_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token",
+            },
+        )
+
+    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
+        """Import a legacy YAML-configured Xiaomi Mi WiFi Repeater 2."""
+        self.host = import_data[CONF_HOST]
+        self.token = import_data[CONF_TOKEN]
+
+        connect_device_class = ConnectXiaomiDevice(self.hass)
+        try:
+            await connect_device_class.async_connect_device(self.host, self.token)
+        except AuthException:
+            return self.async_abort(reason="invalid_auth")
+        except SetupException:
+            return self.async_abort(reason="cannot_connect")
+
+        self.mac = format_mac(connect_device_class.device_info.mac_address)
+
+        await self.async_set_unique_id(self.mac)
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+        return self.async_create_entry(
+            title="Xiaomi Home",
+            data={
+                CONF_FLOW_TYPE: CONF_WIFI_REPEATER,
+                CONF_HOST: self.host,
+                CONF_TOKEN: self.token,
+                CONF_MODEL: MODELS_WIFI_REPEATER[0],
+                CONF_MAC: self.mac,
+                CONF_CLOUD_USERNAME: None,
+                CONF_CLOUD_PASSWORD: None,
+                CONF_CLOUD_COUNTRY: None,
             },
         )
 

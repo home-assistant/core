@@ -4,17 +4,90 @@ import logging
 from typing import override
 
 from miio.wifirepeater import WifiRepeaterStatus
+import probatio
 
-from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
+    ScannerEntity,
+)
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import DOMAIN
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+# Kept so YAML-configured repeaters keep working until the legacy
+# device tracker platforms are removed in 2027.5; setup forwards to a config entry.
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_TOKEN): probatio.All(
+            cv.string, probatio.Length(min=32, max=32)
+        ),
+    }
+)
+
+
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up a legacy YAML-configured repeater by creating a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: config[CONF_HOST],
+            CONF_TOKEN: config[CONF_TOKEN],
+        },
+    )
+
+    if result["type"] is FlowResultType.ABORT and result["reason"] in (
+        "invalid_auth",
+        "cannot_connect",
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"yaml_import_{result['reason']}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=f"yaml_import_{result['reason']}",
+            translation_placeholders={"host": config[CONF_HOST]},
+        )
+        return True
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Xiaomi Home",
+        },
+    )
+    return True
 
 
 async def async_setup_entry(

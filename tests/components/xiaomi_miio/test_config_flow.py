@@ -1301,3 +1301,94 @@ async def test_reauth_device_offline_shows_cannot_connect(hass: HomeAssistant) -
     assert result["step_id"] == "manual"
     assert result["errors"] == {"base": "cannot_connect"}
     assert config_entry.data[CONF_TOKEN] == TEST_TOKEN
+
+
+async def test_import_flow_success(hass: HomeAssistant) -> None:
+    """Import a legacy YAML-configured repeater into a config entry."""
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_MODEL: TEST_REPEATER_MODEL,
+        CONF_MAC: TEST_MAC,
+    }
+
+
+async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
+    """Importing a repeater that already has a config entry aborts."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        title=TEST_REPEATER_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_REPEATER_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Importing a repeater that cannot be reached aborts."""
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_invalid_auth(hass: HomeAssistant) -> None:
+    """Importing a repeater with a wrong token aborts."""
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=error,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_auth"
