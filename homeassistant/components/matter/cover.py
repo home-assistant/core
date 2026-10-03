@@ -1,14 +1,15 @@
 """Matter cover."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 from math import floor
 from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType
-from propcache.api import cached_property
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -28,7 +29,10 @@ from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 if TYPE_CHECKING:
+    from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint
+
+    from .discovery import MatterEntityInfo
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
@@ -111,14 +115,18 @@ def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
     simple dictionaries keyed by the TLV field index. We normalize access by
     first checking dict keys and falling back to attribute lookup.
     """
-    if value is None:
+    if value is None or value is NullValue:
         return None
     if isinstance(value, dict):
         if index in value:
-            return value[index]
-        if (index_str := str(index)) in value:
-            return value[index_str]
-    return getattr(value, attr_name, None)
+            value = value[index]
+        elif (index_str := str(index)) in value:
+            value = value[index_str]
+        else:
+            return None
+        return None if value is None or value is NullValue else value
+    result = getattr(value, attr_name, None)
+    return None if result is None or result is NullValue else result
 
 
 def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass | None:
@@ -388,9 +396,19 @@ class MatterClosure(MatterEntity, CoverEntity):
 
     _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
 
-    @cached_property
+    def __init__(
+        self,
+        matter_client: MatterClient,
+        endpoint: MatterEndpoint,
+        entity_info: MatterEntityInfo,
+    ) -> None:
+        """Initialize the closure entity and its child subscription registry."""
+        super().__init__(matter_client, endpoint, entity_info)
+        self._closure_panel_subscriptions: dict[str, Callable[[], None]] = {}
+
+    @property
     def _closure_panels(self) -> dict[ClosurePanelRole, MatterEndpoint]:
-        """Return the ClosurePanel child endpoints, if any, by functional role."""
+        """Return the currently applicable ClosurePanel child endpoints."""
         node = self._endpoint.node
         panels: dict[ClosurePanelRole, MatterEndpoint] = {}
         for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
@@ -413,26 +431,46 @@ class MatterClosure(MatterEntity, CoverEntity):
                 panels[role] = child
         return panels
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        # Subscribe to the ClosurePanel child endpoints' state:
-        # these live on a different endpoint than the ones already
-        # subscribed to by the base class for `self._endpoint`.
-        for panel in self._closure_panels.values():
-            self._unsubscribes.append(
+    @callback
+    def _refresh_closure_panel_subscriptions(self) -> None:
+        """Refresh subscriptions for currently active panel endpoints."""
+        current_paths = {
+            create_attribute_path(
+                panel.endpoint_id,
+                clusters.ClosureDimension.Attributes.CurrentState.cluster_id,
+                clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+            )
+            for panel in self._closure_panels.values()
+        }
+        for path, unsubscribe in list(self._closure_panel_subscriptions.items()):
+            if path not in current_paths:
+                unsubscribe()
+                del self._closure_panel_subscriptions[path]
+        for path in current_paths:
+            if path in self._closure_panel_subscriptions:
+                continue
+            self._closure_panel_subscriptions[path] = (
                 self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
                     node_filter=self._endpoint.node.node_id,
-                    attr_path_filter=create_attribute_path(
-                        panel.endpoint_id,
-                        clusters.ClosureDimension.Attributes.CurrentState.cluster_id,
-                        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
-                    ),
+                    attr_path_filter=path,
                 )
             )
+            self.async_on_remove(self._closure_panel_subscriptions[path])
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+        self._refresh_closure_panel_subscriptions()
+
+    @callback
+    @override
+    def _on_matter_event(self, event: EventType, data: Any = None) -> None:
+        """Refresh panel subscriptions before updating state."""
+        self._refresh_closure_panel_subscriptions()
+        super()._on_matter_event(event, data)
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -536,6 +574,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 position = clusters.ClosureControl.Enums.CurrentPositionEnum(position)
             except ValueError:
                 LOGGER.warning("Invalid CurrentPositionEnum value: %s", position)
+                position = None
         if isinstance(target_position, int):
             try:
                 target_position = clusters.ClosureControl.Enums.TargetPositionEnum(
@@ -543,11 +582,13 @@ class MatterClosure(MatterEntity, CoverEntity):
                 )
             except ValueError:
                 LOGGER.warning("Invalid TargetPositionEnum value: %s", target_position)
+                target_position = None
         if isinstance(main_state, int):
             try:
                 main_state = clusters.ClosureControl.Enums.MainStateEnum(main_state)
             except ValueError:
                 LOGGER.warning("Invalid MainStateEnum value: %s", main_state)
+                main_state = None
 
         if position is None:
             self._attr_is_closed = None
@@ -588,6 +629,8 @@ class MatterClosure(MatterEntity, CoverEntity):
                 _extract_struct_field(position_state, 0, "position")
             )
             supported_features |= CoverEntityFeature.SET_POSITION
+        else:
+            self._attr_current_cover_position = None
         if tilt := self._closure_panels.get(ClosurePanelRole.TILT):
             tilt_state = tilt.get_attribute_value(
                 None, clusters.ClosureDimension.Attributes.CurrentState
@@ -596,6 +639,8 @@ class MatterClosure(MatterEntity, CoverEntity):
                 _extract_struct_field(tilt_state, 0, "position")
             )
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
+        else:
+            self._attr_current_cover_tilt_position = None
         self._attr_supported_features = supported_features
 
     def _motion_latching_supported(self) -> bool:
@@ -688,20 +733,6 @@ DISCOVERY_SCHEMAS = [
             clusters.ClosureControl.Attributes.OverallTargetState,
         ),
         allow_none_value=True,
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.COVER,
-        entity_description=MatterCoverEntityDescription(
-            key="MatterClosureMotionLatching",
-            name=None,
-        ),
-        entity_class=MatterClosure,
-        required_attributes=(clusters.ClosureControl.Attributes.OverallCurrentState,),
-        optional_attributes=(
-            clusters.ClosureControl.Attributes.MainState,
-            clusters.ClosureControl.Attributes.OverallTargetState,
-        ),
-        allow_none_value=True,
-        featuremap_contains=clusters.ClosureControl.Bitmaps.Feature.kMotionLatching,
+        featuremap_contains=clusters.ClosureControl.Bitmaps.Feature.kPositioning,
     ),
 ]
