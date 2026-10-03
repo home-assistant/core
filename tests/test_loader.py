@@ -1,6 +1,7 @@
 """Test to verify that we can load components."""
 
 import asyncio
+from collections.abc import Callable
 import os
 import pathlib
 import sys
@@ -540,6 +541,32 @@ async def test_get_integration_legacy(hass: HomeAssistant) -> None:
     assert integration.get_component().DOMAIN == "test_embedded"
     assert integration.get_platform("switch") is not None
     assert integration.get_platform_cached("switch") is not None
+
+
+@pytest.mark.parametrize(
+    "create",
+    [
+        pytest.param(lambda path: None, id="missing_domain_dir"),
+        pytest.param(lambda path: path.touch(), id="domain_is_file"),
+        pytest.param(
+            lambda path: (path / "manifest.json").mkdir(parents=True),
+            id="manifest_is_dir",
+        ),
+    ],
+)
+def test_resolve_from_root_skips_unreadable_manifest(
+    hass: HomeAssistant,
+    tmp_path: pathlib.Path,
+    create: Callable[[pathlib.Path], None],
+) -> None:
+    """Test resolving skips a domain without a readable manifest file."""
+    create(tmp_path / "test_domain")
+    root_module = MagicMock(__path__=[str(tmp_path)])
+    root_module.__name__ = "custom_components"
+
+    assert (
+        loader.Integration.resolve_from_root(hass, root_module, "test_domain") is None
+    )
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

@@ -714,11 +714,13 @@ class Integration:
         for base in root_module.__path__:
             manifest_path = pathlib.Path(base) / domain / "manifest.json"
 
-            if not manifest_path.is_file():
+            try:
+                manifest_bytes = manifest_path.read_bytes()
+            except FileNotFoundError, NotADirectoryError, IsADirectoryError:
                 continue
 
             try:
-                manifest = cast(Manifest, json_loads(manifest_path.read_text()))
+                manifest = cast(Manifest, json_loads(manifest_bytes))
             except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
