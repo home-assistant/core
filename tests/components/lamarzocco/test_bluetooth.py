@@ -60,11 +60,11 @@ def build_entity_id(
     return f"{platform}.{serial_number}"
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator updates based on websocket connection state."""
@@ -175,11 +175,11 @@ async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_bluetooth_coordinator_handles_connection_failure(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Bluetooth coordinator handles connection failures gracefully."""
@@ -256,11 +256,11 @@ async def test_bluetooth_coordinator_triggers_entity_updates(
         (ModelName.GS3_AV, GS3_BT_OFFLINE_ENTITIES),
     ],
 )
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_setup_through_bluetooth_only(
     hass: HomeAssistant,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_lamarzocco_bluetooth: MagicMock,
-    mock_ble_device_from_address: MagicMock,
     mock_cloud_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     device_fixture: ModelName,
@@ -321,12 +321,12 @@ async def test_manual_offline_mode_no_bluetooth_device(
     assert mock_config_entry_bluetooth.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_manual_offline_mode(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mock_ble_device_from_address: MagicMock,
 ) -> None:
     """Test manual offline mode updates entities via Bluetooth."""
 
@@ -382,6 +382,7 @@ async def test_manual_offline_mode(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -389,7 +390,6 @@ async def test_bluetooth_is_set_from_discovery(
     mock_cloud_client: MagicMock,
     mock_ble_device: BLEDevice | None,
     has_client: bool,
-    mock_ble_device_from_address: MagicMock,
 ) -> None:
     """Check we can fill a device from discovery info."""
     service_info = get_bluetooth_service_info(
@@ -416,10 +416,10 @@ async def test_bluetooth_is_set_from_discovery(
     assert mock_config_entry.data["token"] == "token"
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_disconnect_on_stop(
     hass: HomeAssistant,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     mock_bluetooth_client: MagicMock,
 ) -> None:
     """Test we close the connection with the La Marzocco when Home Assistant stops."""
@@ -434,11 +434,11 @@ async def test_disconnect_on_stop(
     mock_bluetooth_client.disconnect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_updates_brew_active(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     mock_websocket_terminated: PropertyMock,
 ) -> None:
     """Test shot timer updates are pushed to the brewing entities."""
@@ -473,11 +473,11 @@ async def test_shot_timer_updates_brew_active(
 @pytest.mark.parametrize(
     "exception", [BluetoothConnectionFailed(""), BleakError(""), TimeoutError()]
 )
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_retried_after_failure(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
@@ -493,11 +493,11 @@ async def test_shot_timer_retried_after_failure(
     assert mock_lamarzocco.connect_bluetooth_shot_counter.await_count == 2
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_not_retried_when_unsupported(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the shot timer is not retried if the machine doesn't support it."""
@@ -511,9 +511,9 @@ async def test_shot_timer_not_retried_when_unsupported(
     mock_lamarzocco.connect_bluetooth_shot_counter.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_lamarzocco")
 async def test_bluetooth_client_refreshes_ble_device(
     hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     mock_ble_device_from_address: MagicMock,
     mock_ble_device: BLEDevice,
@@ -539,11 +539,11 @@ async def test_bluetooth_client_refreshes_ble_device(
     assert ble_device_callback() is new_device
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_only_connected_outside_standby(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
 ) -> None:
     """Test the shot timer follows the machine leaving and entering standby."""
     machine_status = mock_lamarzocco.dashboard.config[WidgetType.CM_MACHINE_STATUS]
@@ -572,11 +572,11 @@ async def test_shot_timer_only_connected_outside_standby(
     mock_lamarzocco.disconnect_bluetooth_shot_counter.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_follows_bluetooth_mode_offline(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the shot timer starts once a Bluetooth poll reports the machine on."""
@@ -594,11 +594,11 @@ async def test_shot_timer_follows_bluetooth_mode_offline(
     mock_lamarzocco.connect_bluetooth_shot_counter.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_connect_updates_entities(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
     mock_websocket_terminated: PropertyMock,
 ) -> None:
     """Test brewing entities become available as soon as the shot timer connects."""
@@ -626,11 +626,11 @@ async def test_shot_timer_connect_updates_entities(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_catches_up_on_mode_change_while_connecting(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
-    mock_ble_device_from_address: MagicMock,
 ) -> None:
     """Test a standby during a slow connect disconnects once the connect is done."""
     connecting = asyncio.Event()

@@ -248,12 +248,19 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
-@pytest.mark.parametrize("ble_name", [None, "LINEA_GS012345", "LINEAR_GS012345"])
+@pytest.mark.parametrize(
+    "ble_name",
+    [
+        pytest.param("GS3_GS012345", id="gs3"),
+        pytest.param("LINEA_GS012345", id="linea"),
+        pytest.param("LINEAR_GS012345", id="linear"),
+    ],
+)
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    ble_name: str | None,
+    ble_name: str,
 ) -> None:
     """Testing reconfgure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -265,8 +272,7 @@ async def test_reconfigure_flow(
 
     result = await __do_successful_user_step(hass, result, mock_cloud_client)
     service_info = get_bluetooth_service_info(ModelName.GS3_MP, "GS012345")
-    if ble_name:
-        service_info.name = ble_name
+    service_info.name = ble_name
 
     with (
         patch(
