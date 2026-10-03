@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import hass_nabucasa
 
-from homeassistant.components import conversation, media_player, stt, tts, wake_word
+from homeassistant.components import conversation, stt, tts, wake_word
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -69,10 +69,7 @@ STREAM_RESPONSE_CHARS = 60
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
-    return result.intent.name in (
-        intent.INTENT_GET_STATE,
-        media_player.INTENT_MEDIA_SEARCH_AND_PLAY,
-    )
+    return result.intent.name == intent.INTENT_GET_STATE
 
 
 class _PipelineController(Protocol):
