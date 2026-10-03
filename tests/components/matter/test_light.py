@@ -515,6 +515,91 @@ async def test_light_null_color_temperature(
     assert state.attributes["color_temp_kelvin"] is None
 
 
+@pytest.mark.parametrize("node_fixture", ["extended_color_light"])
+@pytest.mark.parametrize(
+    ("attributes", "expected_supported_color_modes", "expected_color_mode"),
+    [
+        pytest.param(
+            {
+                "1/768/16394": 17,  # HS + color temperature, no XY support
+                "1/768/8": 1,  # Device nevertheless reports XY
+                "1/768/7": 0,  # No usable color temperature value
+            },
+            [ColorMode.COLOR_TEMP, ColorMode.HS],
+            ColorMode.HS,
+            id="fallback-to-hs",
+        ),
+        pytest.param(
+            {
+                "1/768/16394": 24,  # XY + color temperature, no HS support
+                "1/768/8": 0,  # Device nevertheless reports HS
+                "1/768/0": None,
+                "1/768/1": None,
+                "1/768/7": 0,  # No usable color temperature value
+            },
+            [ColorMode.COLOR_TEMP, ColorMode.XY],
+            ColorMode.XY,
+            id="fallback-to-xy",
+        ),
+        pytest.param(
+            {
+                "1/768/16394": 17,  # HS + color temperature, no XY support
+                "1/768/8": 1,  # Device nevertheless reports XY
+                "1/768/0": None,
+                "1/768/1": None,
+                "1/768/7": 284,
+            },
+            [ColorMode.COLOR_TEMP, ColorMode.HS],
+            ColorMode.COLOR_TEMP,
+            id="fallback-to-color-temp",
+        ),
+    ],
+)
+async def test_light_inconsistent_color_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    attributes: dict[str, Any],
+    expected_supported_color_modes: list[ColorMode],
+    expected_color_mode: ColorMode,
+) -> None:
+    """Test fallback for a light reporting an unsupported color mode."""
+    entity_id = "light.mock_extended_color_light"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    assert state.attributes["supported_color_modes"] == expected_supported_color_modes
+    assert state.attributes["color_mode"] == expected_color_mode
+
+
+@pytest.mark.parametrize("node_fixture", ["extended_color_light"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/768/16394": 17,  # HS + color temperature, no XY support
+            "1/768/8": 1,  # Device nevertheless reports XY
+            "1/768/7": 284,  # Both HS and color temperature are usable
+        }
+    ],
+)
+async def test_light_ambiguous_inconsistent_color_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    attributes: dict[str, Any],
+) -> None:
+    """Test no fallback when multiple supported color modes are usable."""
+    entity_id = "light.mock_extended_color_light"
+
+    state = hass.states.get(entity_id)
+
+    # No unique fallback can be selected, so preserve the existing behavior.
+    assert state is None
+
+
 @pytest.mark.parametrize(
     "color_mode",
     [

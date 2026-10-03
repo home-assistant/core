@@ -308,6 +308,75 @@ class MatterLight(MatterEntity, LightEntity):
             )
             return ColorMode.UNKNOWN
 
+        supported_color_modes = self._attr_supported_color_modes or set()
+
+        if ha_color_mode not in supported_color_modes:
+            fallback_color_modes = []
+
+            if (
+                ColorMode.HS in supported_color_modes
+                and self._entity_info.endpoint.has_attribute(
+                    None, clusters.ColorControl.Attributes.CurrentHue
+                )
+                and self._entity_info.endpoint.has_attribute(
+                    None, clusters.ColorControl.Attributes.CurrentSaturation
+                )
+                and self.get_matter_attribute_value(
+                    clusters.ColorControl.Attributes.CurrentHue
+                )
+                is not None
+                and self.get_matter_attribute_value(
+                    clusters.ColorControl.Attributes.CurrentSaturation
+                )
+                is not None
+            ):
+                fallback_color_modes.append(ColorMode.HS)
+
+            if (
+                ColorMode.XY in supported_color_modes
+                and self._entity_info.endpoint.has_attribute(
+                    None, clusters.ColorControl.Attributes.CurrentX
+                )
+                and self._entity_info.endpoint.has_attribute(
+                    None, clusters.ColorControl.Attributes.CurrentY
+                )
+                and self.get_matter_attribute_value(
+                    clusters.ColorControl.Attributes.CurrentX
+                )
+                is not None
+                and self.get_matter_attribute_value(
+                    clusters.ColorControl.Attributes.CurrentY
+                )
+                is not None
+            ):
+                fallback_color_modes.append(ColorMode.XY)
+
+            if (
+                ColorMode.COLOR_TEMP in supported_color_modes
+                and self._entity_info.endpoint.has_attribute(
+                    None, clusters.ColorControl.Attributes.ColorTemperatureMireds
+                )
+                and (
+                    color_temperature := self.get_matter_attribute_value(
+                        clusters.ColorControl.Attributes.ColorTemperatureMireds
+                    )
+                )
+                is not None
+                and color_temperature > 0
+            ):
+                fallback_color_modes.append(ColorMode.COLOR_TEMP)
+
+            if len(fallback_color_modes) == 1:
+                fallback_color_mode = fallback_color_modes[0]
+                LOGGER.debug(
+                    "Matter device %s reported unsupported color mode %s; "
+                    "falling back to %s based on available attributes",
+                    self.entity_id,
+                    ha_color_mode,
+                    fallback_color_mode,
+                )
+                ha_color_mode = fallback_color_mode
+
         LOGGER.debug(
             "Got color mode (%s) for %s",
             ha_color_mode,
