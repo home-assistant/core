@@ -1,0 +1,162 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This stop place is already configured.",
+      "invalid_selection": "The selected stop place could not be confirmed."
+    },
+    "error": {
+      "cannot_connect": "Unable to search Entur right now. Try again later.",
+      "invalid_selection": "The selected stop place is no longer available. Start the search again.",
+      "no_results": "No stop places were found. Try a broader search or another spelling.",
+      "query_too_short": "Enter at least two characters to search for a stop place.",
+      "select_platform": "Select at least one platform, or choose a different platform detail level."
+    },
+    "step": {
+      "confirm": {
+        "data": {},
+        "description": "You selected **{name}** ({display_name}) in {locality}.\n\nTransport modes: {transport_modes}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
+        "title": "Confirm the stop place"
+      },
+      "select_platforms": {
+        "data": {
+          "platform_mode": "Platform detail",
+          "quay_ids": "Platforms",
+          "show_on_map": "Show on map"
+        },
+        "data_description": {
+          "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms.",
+          "show_on_map": "Add latitude and longitude to the created sensor or sensors so they can be used in Home Assistant maps."
+        },
+        "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place. Selecting individual platforms is available when Entur provides platform data.",
+        "title": "Choose platform detail"
+      },
+      "select_routes": {
+        "data": {
+          "line_whitelist": "Routes from Entur",
+          "manual_line_whitelist": "Additional Entur line IDs"
+        },
+        "data_description": {
+          "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
+        },
+        "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
+        "title": "Choose routes for this stop place"
+      },
+      "select_stop": {
+        "data": {
+          "stop_id": "Stop place"
+        },
+        "description": "Choose the stop place that matches your location. The result includes locality and transport modes to help distinguish similarly named stops.",
+        "title": "Select a stop place"
+      },
+      "user": {
+        "data": {
+          "query": "Stop place name"
+        },
+        "data_description": {
+          "query": "Enter at least two characters, for example Oslo S or Nationaltheatret."
+        },
+        "description": "Search by name. Results are stop places, such as stations, terminals, and transport hubs. Individual platforms are intentionally not shown in this step.",
+        "title": "Find an Entur stop place"
+      }
+    }
+  },
+  "config_subentries": {
+    "stop_place": {
+      "abort": {
+        "already_configured": "This stop place is already configured.",
+        "invalid_selection": "The selected stop place could not be confirmed."
+      },
+      "entry_type": "stop place",
+      "error": {
+        "cannot_connect": "Unable to search Entur right now. Try again later.",
+        "invalid_selection": "The selected stop place is no longer available. Start the search again.",
+        "no_results": "No stop places were found. Try a broader search or another spelling.",
+        "query_too_short": "Enter at least two characters to search for a stop place.",
+        "select_platform": "Select at least one platform, or choose a different platform detail level."
+      },
+      "initiate_flow": {
+        "user": "Add a stop place"
+      },
+      "step": {
+        "confirm": {
+          "data": {},
+          "description": "You selected **{name}** ({display_name}) in {locality}.\n\nTransport modes: {transport_modes}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to save this stop place.",
+          "title": "Confirm the stop place"
+        },
+        "reconfigure": {
+          "data": {
+            "reconfigure_action": "Maintenance action"
+          },
+          "description": "Current stop place: **{name}**\n\nRoutes: {routes}\n\nPlatform selection: {platforms}\n\nShown on map: {show_on_map}\n\nLegend: — = all routes, ● = stop place only, ∞ = all active platforms, a number = selected platforms, ✓ = shown on the map.\n\nChoose **Edit this stop place** to add or remove routes, platforms, and the map setting. Choose **Replace stop place** only when the monitored location itself should change. To remove the whole stop place, use its three-dot menu in the integration view.",
+          "title": "Maintain an Entur stop place"
+        },
+        "replace_stop": {
+          "data": {
+            "query": "Stop place name"
+          },
+          "data_description": {
+            "query": "Enter at least two characters, then choose the replacement stop place."
+          },
+          "description": "Search for the replacement stop place by name.",
+          "title": "Replace an Entur stop place"
+        },
+        "select_platforms": {
+          "data": {
+            "platform_mode": "Platform detail",
+            "quay_ids": "Platforms",
+            "show_on_map": "Show on map"
+          },
+          "data_description": {
+            "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms.",
+            "show_on_map": "Add latitude and longitude to the created sensor or sensors so they can be used in Home Assistant maps."
+          },
+          "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place. Selecting individual platforms is available when Entur provides platform data.",
+          "title": "Choose platform detail"
+        },
+        "select_routes": {
+          "data": {
+            "line_whitelist": "Routes from Entur",
+            "manual_line_whitelist": "Additional Entur line IDs"
+          },
+          "data_description": {
+            "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
+          },
+          "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
+          "title": "Choose routes for this stop place"
+        },
+        "select_stop": {
+          "data": {
+            "stop_id": "Stop place"
+          },
+          "description": "Choose the stop place that matches your location. The result includes locality and transport modes to help distinguish similarly named stops.",
+          "title": "Select a stop place"
+        },
+        "user": {
+          "data": {
+            "query": "Stop place name"
+          },
+          "data_description": {
+            "query": "Enter at least two characters, for example Oslo S or Nationaltheatret."
+          },
+          "description": "Search by name. Results are stop places, such as stations, terminals, and transport hubs. Individual platforms are intentionally not shown in this step.",
+          "title": "Add an Entur stop place"
+        }
+      }
+    }
+  },
+  "selector": {
+    "platform_mode": {
+      "options": {
+        "all": "All active platforms",
+        "selected": "Selected platforms",
+        "stop_place": "Stop place only"
+      }
+    },
+    "reconfigure_action": {
+      "options": {
+        "edit": "Edit this stop place",
+        "replace": "Replace stop place"
+      }
+    }
+  }
+}
