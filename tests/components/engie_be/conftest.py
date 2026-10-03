@@ -212,6 +212,37 @@ def build_epex_payload_without_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
+def build_epex_payload_with_gap(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return an hourly payload without the slot covering the frozen afternoon."""
+    payload = build_epex_payload(start, end, granularity)
+    if granularity is not EpexGranularity.HOURLY:
+        return payload
+    gap_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
+        slot_duration=payload.slot_duration,
+    )
+
+
+def build_epex_payload_with_partial_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return one slot for tomorrow windows and a full payload otherwise."""
+    if (
+        start.astimezone(BRUSSELS_TIME_ZONE).date()
+        > dt_util.now(BRUSSELS_TIME_ZONE).date()
+    ):
+        payload = build_epex_payload(start, end, granularity)
+        return EpexPayload(slots=payload.slots[:1], slot_duration=payload.slot_duration)
+    return build_epex_payload(start, end, granularity)
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""

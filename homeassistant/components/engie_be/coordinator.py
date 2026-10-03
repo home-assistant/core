@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from itertools import pairwise
 from typing import TYPE_CHECKING, override
 from zoneinfo import ZoneInfo
 
@@ -230,18 +231,27 @@ def epex_slot_covering(slots: Iterable[EpexSlot], moment: datetime) -> EpexSlot 
     return next((slot for slot in slots if slot.start <= moment < slot.end), None)
 
 
-def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
-    """Return True when both granularities have slots for the given day."""
-    return all(
-        epex_slots_for_day(data.slots(granularity), day)
-        for granularity in EpexGranularity
-    )
-
-
 def epex_window(day: date) -> tuple[datetime, datetime]:
     """Return the Brussels-local start and end of one calendar day."""
     start = datetime.combine(day, time(), tzinfo=BRUSSELS_TIME_ZONE)
     return start, start + timedelta(days=1)
+
+
+def epex_slots_cover_day(slots: Iterable[EpexSlot], day: date) -> bool:
+    """Return True when the slots tile the Brussels calendar day without gaps."""
+    start, end = epex_window(day)
+    day_slots = sorted(epex_slots_for_day(slots, day), key=lambda slot: slot.start)
+    if not day_slots or day_slots[0].start != start or day_slots[-1].end != end:
+        return False
+    return all(slot.end == following.start for slot, following in pairwise(day_slots))
+
+
+def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
+    """Return True when both granularities fully cover the given day."""
+    return all(
+        epex_slots_cover_day(data.slots(granularity), day)
+        for granularity in EpexGranularity
+    )
 
 
 class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
@@ -300,7 +310,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
 
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
-        """Fetch EPEX prices for every missing day of both granularities."""
+        """Fetch EPEX prices for each day and granularity without full coverage."""
         data = self.data if self.data is not None else EngieBeEpexData()
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         tomorrow = today + timedelta(days=1)
@@ -313,14 +323,14 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             for granularity in EpexGranularity
         }
         if all(
-            epex_slots_for_day(slots[granularity], day)
+            epex_slots_cover_day(slots[granularity], day)
             for granularity in EpexGranularity
             for day in (today, tomorrow)
         ):
             return data
         for day, required in ((today, True), (tomorrow, False)):
             for granularity in EpexGranularity:
-                if epex_slots_for_day(slots[granularity], day):
+                if epex_slots_cover_day(slots[granularity], day):
                     continue
                 try:
                     payload = await self.client.async_get_epex_prices(
@@ -334,7 +344,11 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                         ) from err
                     LOGGER.debug("Fetching EPEX prices for %s failed: %s", day, err)
                     continue
-                slots[granularity].extend(payload.slots)
+                slots[granularity] = [
+                    slot
+                    for slot in slots[granularity]
+                    if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() != day
+                ] + list(payload.slots)
         return EngieBeEpexData(
             hourly=tuple(
                 sorted(slots[EpexGranularity.HOURLY], key=lambda slot: slot.start)

@@ -11,7 +11,13 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import BAN, build_epex_payload_without_tomorrow, setup_dynamic_entry
+from .conftest import (
+    BAN,
+    build_epex_payload,
+    build_epex_payload_with_partial_tomorrow,
+    build_epex_payload_without_tomorrow,
+    setup_dynamic_entry,
+)
 
 from tests.common import MockConfigEntry
 
@@ -68,6 +74,41 @@ async def test_tomorrow_prices_not_published(
     current_state = hass.states.get(current_entity_id)
     assert current_state is not None
     assert float(current_state.state) == pytest.approx(0.15)
+
+
+async def test_tomorrow_prices_partial(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    frozen_afternoon: None,
+) -> None:
+    """Test the binary sensor stays off until tomorrow is fully covered."""
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_partial_tomorrow
+    )
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    client = mock_engie_client.return_value
+    call_count = client.async_get_epex_prices.call_count
+    client.async_get_epex_prices.side_effect = build_epex_payload
+    coordinator = mock_config_entry.runtime_data.epex
+    assert coordinator is not None
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert client.async_get_epex_prices.call_count == call_count + 2
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_tomorrow_prices_unavailable_when_fetch_fails(

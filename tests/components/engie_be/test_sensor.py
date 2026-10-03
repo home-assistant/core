@@ -15,8 +15,6 @@ from aioengiebelgium import (
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
     EngieBeError,
-    EpexGranularity,
-    EpexPayload,
     PricePeriod,
     PriceSlot,
     PricesResponse,
@@ -41,7 +39,7 @@ from .conftest import (
     BAN_2,
     OFFTAKE_INJECTION_EAN,
     OFFTAKE_ONLY_EAN,
-    build_epex_payload,
+    build_epex_payload_with_gap,
     build_prices,
     build_relations,
     setup_dynamic_entry,
@@ -1091,23 +1089,9 @@ async def test_epex_sensors_unknown_during_slot_gap(
     frozen_afternoon: None,
 ) -> None:
     """Test the hourly current price reads unknown while its slot is missing."""
-    gap_start = datetime(2026, 10, 3, 14, 0, tzinfo=BRUSSELS_TIME_ZONE)
-
-    def _payload_with_gap(
-        start: datetime,
-        end: datetime,
-        granularity: EpexGranularity = EpexGranularity.HOURLY,
-    ) -> EpexPayload:
-        """Return an hourly payload without the slot covering the gap start."""
-        payload = build_epex_payload(start, end, granularity)
-        if granularity is not EpexGranularity.HOURLY:
-            return payload
-        return EpexPayload(
-            slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
-            slot_duration=payload.slot_duration,
-        )
-
-    mock_engie_client.return_value.async_get_epex_prices.side_effect = _payload_with_gap
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_gap
+    )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
     hourly_current = entity_registry.async_get_entity_id(

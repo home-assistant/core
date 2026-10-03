@@ -24,6 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import (
     BAN,
     build_epex_payload,
+    build_epex_payload_with_gap,
     build_epex_payload_without_tomorrow,
     setup_dynamic_entry,
     setup_entry,
@@ -265,6 +266,40 @@ async def test_empty_payload_keeps_entities_unknown(
     call_count = client.async_get_epex_prices.call_count
     await coordinator.async_refresh()
     assert client.async_get_epex_prices.call_count == call_count + 4
+
+
+async def test_partial_day_is_refetched_and_healed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    frozen_afternoon: None,
+) -> None:
+    """Test an incomplete day is refetched and healed without duplicate slots."""
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_gap
+    )
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+
+    coordinator = _epex_coordinator(mock_config_entry)
+    client = mock_engie_client.return_value
+    hourly_today = epex_slots_for_day(
+        coordinator.data.slots(EpexGranularity.HOURLY), date(2026, 10, 3)
+    )
+    assert len(hourly_today) == 23
+    assert epex_day_available(coordinator.data, date(2026, 10, 3)) is False
+
+    call_count = client.async_get_epex_prices.call_count
+    client.async_get_epex_prices.side_effect = build_epex_payload
+    await coordinator.async_refresh()
+
+    assert client.async_get_epex_prices.call_count == call_count + 1
+    assert _fetched_days(client)[-1] == date(2026, 10, 3)
+    hourly_today = epex_slots_for_day(
+        coordinator.data.slots(EpexGranularity.HOURLY), date(2026, 10, 3)
+    )
+    assert len(hourly_today) == 24
+    assert len({slot.start for slot in hourly_today}) == 24
+    assert epex_day_available(coordinator.data, date(2026, 10, 3)) is True
 
 
 async def test_listener_stops_on_unload(
