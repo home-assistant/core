@@ -6,6 +6,15 @@ if TYPE_CHECKING:
     from .data import PowerConfig
 
 
+def _sanitize_entity_id_part(value: str) -> str:
+    """Make a statistic ID fragment safe for use in an entity ID.
+
+    External statistic IDs have the form ``source:object_id``; colons and
+    dots are not valid in entity IDs, so replace them with underscores.
+    """
+    return value.replace(".", "_").replace(":", "_")
+
+
 def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> str:
     """Generate a unique ID for a power transform sensor."""
     if "stat_rate_inverted" in config:
@@ -26,14 +35,19 @@ def generate_power_sensor_entity_id(source_type: str, config: PowerConfig) -> st
         # Use source sensor name with _inverted suffix
         source = config["stat_rate_inverted"]
         if source.startswith("sensor."):
-            return f"{source}_inverted"
-        return f"sensor.{source.replace('.', '_')}_inverted"
+            sanitized = _sanitize_entity_id_part(source.removeprefix("sensor."))
+            return f"sensor.{sanitized}_inverted"
+        return f"sensor.{_sanitize_entity_id_part(source)}_inverted"
     if "stat_rate_from" in config and "stat_rate_to" in config:
         # Use both sensors in entity ID to ensure uniqueness when multiple
         # combined configs exist. The entity represents net power (from - to),
         # e.g., discharge - charge for battery.
-        from_sensor = config["stat_rate_from"].removeprefix("sensor.")
-        to_sensor = config["stat_rate_to"].removeprefix("sensor.")
+        from_sensor = _sanitize_entity_id_part(
+            config["stat_rate_from"].removeprefix("sensor.")
+        )
+        to_sensor = _sanitize_entity_id_part(
+            config["stat_rate_to"].removeprefix("sensor.")
+        )
         return f"sensor.energy_{source_type}_{from_sensor}_{to_sensor}_net_power"
     # This case is impossible: schema validation (probatio.Inclusive) ensures
     # stat_rate_from and stat_rate_to are always present together
