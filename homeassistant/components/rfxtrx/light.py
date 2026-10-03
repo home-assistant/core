@@ -11,13 +11,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityStateAttribute,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry, get_device_tuple_from_device
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 from .entity import RfxtrxCommandEntity
 
@@ -42,13 +42,14 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
+        device_id = get_device_tuple_from_device(event.device)
         return [
             RfxtrxLight(
                 event.device,
                 device_id,
+                subentry.subentry_id,
                 event=event if auto else None,
             )
         ]
