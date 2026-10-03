@@ -305,7 +305,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle dhcp discovery to update existing entries."""
         mac = format_mac(discovery_info.macaddress)
         for entry in self._async_current_entries():
-            if format_mac(entry.data[CONF_MAC]) == mac:
+            if (entry_mac := entry.data.get(CONF_MAC)) and format_mac(entry_mac) == mac:
                 self.hass.config_entries.async_update_entry(
                     entry,
                     data=entry.data | {CONF_HOST: discovery_info.ip},

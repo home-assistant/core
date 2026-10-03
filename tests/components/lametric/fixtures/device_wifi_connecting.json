@@ -1,0 +1,67 @@
+{
+  "audio": {
+    "volume": 46,
+    "volume_limit": {
+      "max": 100,
+      "min": 0
+    },
+    "volume_range": {
+      "max": 100,
+      "min": 0
+    }
+  },
+  "bluetooth": {
+    "active": false,
+    "address": "AA:BB:CC:DD:EE:FF",
+    "available": true,
+    "discoverable": true,
+    "low_energy": {
+      "active": true,
+      "advertising": true,
+      "connectable": true
+    },
+    "name": "LM1234",
+    "pairable": true
+  },
+  "display": {
+    "brightness": 100,
+    "brightness_limit": {
+      "max": 100,
+      "min": 2
+    },
+    "brightness_mode": "auto",
+    "brightness_range": {
+      "max": 100,
+      "min": 0
+    },
+    "height": 8,
+    "screensaver": {
+      "enabled": true,
+      "modes": {
+        "time_based": {
+          "enabled": false
+        },
+        "when_dark": {
+          "enabled": true
+        }
+      },
+      "widget": "08b8eac21074f8f7e5a29f2855ba8060"
+    },
+    "type": "mixed",
+    "width": 37
+  },
+  "id": "12345",
+  "mode": "manual",
+  "model": "LM 37X8",
+  "name": "Living room",
+  "os_version": "2.3.9",
+  "serial_number": "SA000000000000W00BS9",
+  "wifi": {
+    "address": null,
+    "available": true,
+    "encryption": "WPA",
+    "essid": null,
+    "mode": "dhcp",
+    "strength": 18
+  }
+}
