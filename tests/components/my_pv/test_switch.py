@@ -162,7 +162,7 @@ async def test_switch_turn_on(
     method: str,
     expected_args: tuple,
 ) -> None:
-    """Test setting value."""
+    """Test turn on."""
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
         mock_config_entry.add_to_hass(hass)
 
@@ -202,7 +202,7 @@ async def test_switch_turn_off(
     method: str,
     expected_args: tuple,
 ) -> None:
-    """Test setting value."""
+    """Test turn off."""
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
         mock_config_entry.add_to_hass(hass)
 
@@ -242,7 +242,7 @@ async def test_switch_toggle(
     method: str,
     expected_args: tuple,
 ) -> None:
-    """Test setting value."""
+    """Test toggle."""
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
         mock_config_entry.add_to_hass(hass)
 
@@ -386,7 +386,7 @@ async def test_switch_toggle_raises_error(
     expected_ha_error: type[HomeAssistantError],
     expected_state: str,
 ) -> None:
-    """Test for HomeAssistantError when set_setup_value raises error."""
+    """Test for HomeAssistantError when method raises error."""
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
         mock_config_entry.add_to_hass(hass)
 
