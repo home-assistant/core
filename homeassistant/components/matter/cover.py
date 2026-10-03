@@ -617,7 +617,11 @@ class MatterClosure(MatterEntity, CoverEntity):
                     clusters.ClosureControl.Enums.MainStateEnum.kUnknownEnumValue
                 )
 
-        if position is None:
+        if (
+            position is None
+            or position
+            == clusters.ClosureControl.Enums.CurrentPositionEnum.kUnknownEnumValue
+        ):
             self._attr_is_closed = None
         else:
             self._attr_is_closed = (
