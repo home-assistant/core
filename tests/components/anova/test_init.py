@@ -2,14 +2,22 @@
 
 from unittest.mock import patch
 
-from anova_wifi import AnovaApi
+from anova_wifi import (
+    AnovaApi,
+    APCUpdate,
+    APCUpdateBinary,
+    APCUpdateSensor,
+    APCWifiDevice,
+)
 
 from homeassistant.components.anova.const import DOMAIN
+from homeassistant.components.anova.coordinator import AnovaCoordinator, AnovaData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, create_entry
+from .conftest import DUMMY_ID
 
 from tests.common import MockConfigEntry
 
@@ -60,6 +68,38 @@ async def test_websocket_failure(
     """Test that we successfully handle a websocket failure on setup."""
     entry = await async_init_integration(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_replays_cached_device_state_at_attach(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test a state pushed before attach is replayed onto the coordinator."""
+    entry = create_entry(hass)
+    entry.runtime_data = AnovaData(api_jwt="jwt", coordinators=[], api=anova_api)
+
+    device = APCWifiDevice(
+        cooker_id=DUMMY_ID,
+        type="a5",
+        paired_at="2023-08-12T02:33:20.917716Z",
+        name="Anova Precision Cooker",
+    )
+    update = APCUpdate(
+        sensor=APCUpdateSensor(
+            cook_time=3600,
+            target_temperature=55.5,
+            cook_time_remaining=3600,
+            firmware_version="2.2.0",
+        ),
+        binary_sensor=APCUpdateBinary(cooking=True),
+    )
+    device.last_update = update
+
+    coordinator = AnovaCoordinator(hass, entry, device)
+
+    assert coordinator.data == update
+    assert coordinator.pending_target_temperature == update.sensor.target_temperature
+    assert coordinator.pending_cook_time_seconds == update.sensor.cook_time
 
 
 async def test_migration_removing_devices_in_config_entry(
