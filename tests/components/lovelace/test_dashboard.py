@@ -1,6 +1,9 @@
 """Test the Lovelace initialization."""
 
+import asyncio
 from collections.abc import Generator
+import os
+from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -10,6 +13,7 @@ import pytest
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -360,6 +364,333 @@ async def test_lovelace_from_yaml(
     assert response["result"] == {"hello": "yo3"}
 
     assert len(events) == 2
+
+
+def _write(path: Path, content: str) -> None:
+    """Write a config file, creating parent directories as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+
+async def test_referenced_files_follows_real_includes(tmp_path: Path) -> None:
+    """Test the include graph is resolved from real files."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    scalar = tmp_path / "lovelace" / "enabled.yaml"
+    in_dir = tmp_path / "views" / "power.yaml"
+    hidden = tmp_path / "views" / ".hidden.yaml"
+
+    _write(
+        root,
+        "views:\n  - !include lovelace/garage.yaml\nextra: !include_dir_list views\n",
+    )
+    _write(view, "title: Garage\npanel: !include enabled.yaml\n")
+    _write(scalar, "true\n")
+    _write(in_dir, "title: Power\n")
+    _write(hidden, "title: Hidden\n")
+
+    files = dashboard._referenced_files(str(root))
+
+    assert str(root) in files
+    assert str(view) in files
+    assert str(scalar) in files, "a scalar !include must still be tracked"
+    assert str(in_dir) in files, "!include_dir_list contents must be tracked"
+    assert str(hidden) not in files, "dot files are skipped by the loader"
+
+
+@pytest.fixture
+def yaml_dashboard(
+    hass: HomeAssistant, tmp_path: Path
+) -> Generator[dashboard.LovelaceYAML]:
+    """Return a YAML dashboard backed by a real config directory."""
+    with patch.object(hass.config, "config_dir", str(tmp_path)):
+        yield dashboard.LovelaceYAML(hass, None, {"filename": "ui-lovelace.yaml"})
+
+
+async def test_yaml_dashboard_reloads_when_included_file_changes(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test editing an included file invalidates the cache."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    _write(root, "views:\n  - !include lovelace/garage.yaml\n")
+    _write(view, "title: original\n")
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    root_mtime = root.stat().st_mtime
+    await asyncio.sleep(0.01)
+    _write(view, "title: updated\n")
+    os.utime(view, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "updated"
+
+
+async def test_yaml_dashboard_reloads_when_scalar_include_changes(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a scalar !include is tracked even though it carries no annotation."""
+    root = tmp_path / "ui-lovelace.yaml"
+    flag = tmp_path / "flag.yaml"
+    _write(root, "views: []\npanel: !include flag.yaml\n")
+    _write(flag, "true\n")
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["panel"] is True
+
+    root_mtime = root.stat().st_mtime
+    _write(flag, "false\n")
+    os.utime(flag, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["panel"] is False
+
+
+async def test_yaml_dashboard_reloads_when_file_added_to_include_dir(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a file added to an included directory invalidates the cache."""
+    root = tmp_path / "ui-lovelace.yaml"
+    views = tmp_path / "views"
+    _write(root, "views: !include_dir_list views\n")
+    _write(views / "garage.yaml", "title: Garage\n")
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert len(config["views"]) == 1
+
+    root_mtime = root.stat().st_mtime
+    _write(views / "power.yaml", "title: Power\n")
+    os.utime(views / "power.yaml", (root_mtime + 10, root_mtime + 10))
+    os.utime(views, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert len(config["views"]) == 2
+
+
+@pytest.mark.parametrize("depth", [3, 5, 10])
+async def test_yaml_dashboard_reloads_on_nested_include(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    yaml_dashboard: dashboard.LovelaceYAML,
+    depth: int,
+) -> None:
+    """Test includes are followed through several levels of nesting."""
+    root = tmp_path / "ui-lovelace.yaml"
+
+    # Each level lives one directory deeper and is included by a path relative
+    # to the file that includes it, not to the dashboard file.
+    levels = [
+        tmp_path.joinpath(*[f"level{i}" for i in range(1, n + 1)], f"{n}.yaml")
+        for n in range(1, depth + 1)
+    ]
+
+    _write(root, "views: !include level1/1.yaml\n")
+    for index, path in enumerate(levels[:-1], start=2):
+        _write(path, f"- title: Level\n  sub: !include level{index}/{index}.yaml\n")
+    _write(levels[-1], "value: original\n")
+
+    files = dashboard._referenced_files(str(root))
+    assert {str(root), *(str(path) for path in levels)} <= files
+
+    def deepest(config: dict[str, Any]) -> Any:
+        """Walk down to the innermost included value."""
+        node: Any = config["views"]
+        while isinstance(node, list) or "value" not in node:
+            node = node[0]["sub"] if isinstance(node, list) else node
+        return node["value"]
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert deepest(config) == "original"
+
+    # Touch only the deepest file; the dashboard file is left alone.
+    root_mtime = root.stat().st_mtime
+    _write(levels[-1], "value: updated\n")
+    os.utime(levels[-1], (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert deepest(config) == "updated"
+
+
+async def test_yaml_dashboard_follows_nested_include_dirs(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test directory includes recurse and may themselves contain directory includes."""
+    root = tmp_path / "ui-lovelace.yaml"
+    views = tmp_path / "views"
+    nested_view = views / "sub" / "b.yaml"
+    panel = tmp_path / "panels" / "panel.yaml"
+    items = tmp_path / "panels" / "items"
+
+    _write(root, "views: !include_dir_list views\nextra: !include panels/panel.yaml\n")
+    _write(views / "a.yaml", "title: A\n")
+    _write(nested_view, "title: B\n")
+    # A directory include reached through a file that was itself included.
+    _write(panel, "items: !include_dir_named items\n")
+    _write(items / "d.yaml", "title: D\n")
+
+    files = dashboard._referenced_files(str(root))
+
+    # Directories are tracked so that added files are noticed.
+    assert str(views) in files
+    assert str(views / "sub") in files, "!include_dir_* must recurse into subdirs"
+    assert str(items) in files
+    # ...as are the files themselves, at every level.
+    assert str(views / "a.yaml") in files
+    assert str(nested_view) in files
+    assert str(panel) in files
+    assert str(items / "d.yaml") in files
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["extra"]["items"]["d"]["title"] == "D"
+
+    # Editing a file two directory-includes deep invalidates the cache.
+    root_mtime = root.stat().st_mtime
+    _write(items / "d.yaml", "title: updated\n")
+    os.utime(items / "d.yaml", (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["extra"]["items"]["d"]["title"] == "updated"
+
+    # Adding a file to that nested directory is noticed too.
+    _write(items / "e.yaml", "title: E\n")
+    os.utime(items / "e.yaml", (root_mtime + 20, root_mtime + 20))
+    os.utime(items, (root_mtime + 20, root_mtime + 20))
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["extra"]["items"]["e"]["title"] == "E"
+
+
+async def test_yaml_dashboard_follows_absolute_include(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test an include given as an absolute path is tracked."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+
+    _write(root, f"views:\n  - !include {view}\n")
+    _write(view, "title: original\n")
+
+    assert str(view) in dashboard._referenced_files(str(root))
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    root_mtime = root.stat().st_mtime
+    _write(view, "title: updated\n")
+    os.utime(view, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "updated"
+
+
+async def test_yaml_dashboard_reloads_when_include_dir_created(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test creating a not-yet-existing include directory invalidates the cache."""
+    root = tmp_path / "ui-lovelace.yaml"
+    views = tmp_path / "views"
+    _write(root, "views: !include_dir_list views\n")
+
+    # The directory does not exist yet, so the dashboard loads as empty.
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"] == []
+
+    # Its nearest existing ancestor is tracked in its place.
+    assert str(tmp_path) in dashboard._referenced_files(str(root))
+
+    root_mtime = root.stat().st_mtime
+    _write(views / "garage.yaml", "title: Garage\n")
+    os.utime(views / "garage.yaml", (root_mtime + 10, root_mtime + 10))
+    os.utime(views, (root_mtime + 10, root_mtime + 10))
+    os.utime(tmp_path, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert len(config["views"]) == 1
+
+
+async def test_yaml_dashboard_does_not_mask_edit_made_while_loading(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test an edit made during a load is not masked by the cache timestamp."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    _write(root, "views:\n  - !include lovelace/garage.yaml\n")
+    _write(view, "title: original\n")
+
+    real_load = dashboard.load_yaml_dict
+
+    def load_then_edit(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Simulate the file changing after it is read but before caching."""
+        loaded = real_load(*args, **kwargs)
+        _write(view, "title: updated\n")
+        os.utime(view, (time.time(), time.time()))
+        return loaded
+
+    with patch.object(dashboard, "load_yaml_dict", side_effect=load_then_edit):
+        _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    # The edit landed after the timestamp was taken, so it must be picked up.
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "updated"
+
+
+async def test_yaml_dashboard_normalises_include_paths(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a file reached by different spellings is tracked once."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+
+    # The same file, reached directly and via a parent-relative detour.
+    _write(
+        root,
+        "views:\n"
+        "  - !include lovelace/garage.yaml\n"
+        "  - !include lovelace/../lovelace/garage.yaml\n",
+    )
+    _write(view, "title: original\n")
+
+    files = dashboard._referenced_files(str(root))
+    assert str(view) in files
+    assert not any(".." in path for path in files)
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][1]["title"] == "original"
+
+    root_mtime = root.stat().st_mtime
+    _write(view, "title: updated\n")
+    os.utime(view, (root_mtime + 10, root_mtime + 10))
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][1]["title"] == "updated"
+
+
+async def test_yaml_dashboard_reloads_when_included_file_removed(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a removed included file forces a reload."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    _write(root, "views:\n  - !include lovelace/garage.yaml\n")
+    _write(view, "title: original\n")
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    view.unlink()
+
+    with pytest.raises(HomeAssistantError):
+        yaml_dashboard._load_config(False)
 
 
 async def test_lovelace_from_yaml_creates_repair_issue(
