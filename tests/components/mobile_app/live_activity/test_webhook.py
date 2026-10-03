@@ -7,11 +7,16 @@ from typing import Any
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.const import (
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DOMAIN,
+    EVENT_LIVE_ACTIVITY_DISMISSED,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 
 async def test_webhook_update_live_activity_token(
@@ -171,11 +176,12 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
 
 async def test_webhook_live_activity_dismissed(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that we can dismiss a Live Activity and clean up its token."""
+    """Test dismissing a Live Activity cleans up its token and fires an event."""
     freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
     expires_at = dt_util.utcnow().timestamp() + 3600
@@ -205,6 +211,11 @@ async def test_webhook_live_activity_dismissed(
         },
     }
 
+    [device] = device_registry.async_get_devices(
+        identifiers={(DOMAIN, "mock-device-id")}
+    )
+    events = async_capture_events(hass, EVENT_LIVE_ACTIVITY_DISMISSED)
+
     # Now dismiss it
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -223,14 +234,18 @@ async def test_webhook_live_activity_dismissed(
     # webhook_id key also cleaned up since no activities remain
     assert tokens == {}
 
+    assert len(events) == 1
+    assert events[0].data == {"tag": "washer_cycle", "device_id": device.id}
+
 
 async def test_webhook_live_activity_dismissed_nonexistent_tag(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that dismissing a nonexistent tag does not error."""
+    """Test that dismissing a nonexistent tag does not error and still fires."""
     webhook_id = create_registrations[1]["webhook_id"]
+    events = async_capture_events(hass, EVENT_LIVE_ACTIVITY_DISMISSED)
 
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -244,3 +259,5 @@ async def test_webhook_live_activity_dismissed_nonexistent_tag(
 
     assert resp.status == HTTPStatus.OK
     assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+    assert len(events) == 1
+    assert events[0].data["tag"] == "nonexistent_activity"

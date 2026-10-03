@@ -96,6 +96,8 @@ ATTR_SENSOR_TYPE_SENSOR = "sensor"
 ATTR_SENSOR_UNIQUE_ID = "unique_id"
 ATTR_SENSOR_UOM = "unit_of_measurement"
 
+EVENT_LIVE_ACTIVITY_DISMISSED = f"{DOMAIN}_live_activity_dismissed"
+
 SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
