@@ -18,6 +18,8 @@ from .const import (
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_REGIONS,
+    DEFAULT_AREA_FILTER,
+    DEFAULT_HEADLINE_FILTER,
     DOMAIN,
     LOGGER,
     SCAN_INTERVAL,
@@ -59,10 +61,12 @@ class NINADataUpdateCoordinator(
     ) -> None:
         """Initialize."""
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.headline_filter: str = config_entry.data[CONF_FILTERS][
-            CONF_HEADLINE_FILTER
-        ]
-        self.area_filter: str = config_entry.data[CONF_FILTERS][CONF_AREA_FILTER]
+
+        filters = config_entry.options.get(CONF_FILTERS, {})
+        self.headline_filter: str = filters.get(
+            CONF_HEADLINE_FILTER, DEFAULT_HEADLINE_FILTER
+        )
+        self.area_filter: str = filters.get(CONF_AREA_FILTER, DEFAULT_AREA_FILTER)
 
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:

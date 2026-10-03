@@ -40,12 +40,14 @@
         '095760000000_0',
         '095760000000_1',
       ]),
+      'regions': dict({
+        '095760000000': 'Aach',
+      }),
+    }),
+    'entry_options': dict({
       'filters': dict({
         'area_filter': '.*',
         'headline_filter': '.*corona.*',
-      }),
-      'regions': dict({
-        '095760000000': 'Aach',
       }),
       'slots': 5,
     }),
