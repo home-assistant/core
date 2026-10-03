@@ -1,9 +1,9 @@
 """UniFi entity representation."""
 
 from abc import abstractmethod
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -14,8 +14,10 @@ from aiounifi.interfaces.api_handlers import (
 )
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
+from aiounifi.models.network import Network
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -27,6 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import UnifiDataUpdateCoordinator
+from .errors import controller_error_reason
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -83,6 +86,28 @@ def async_wlan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
         manufacturer=ATTR_MANUFACTURER,
         model="UniFi WLAN",
         name=wlan.name,
+    )
+
+
+@callback
+def async_wan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for WAN network."""
+    network = hub.api.networks[obj_id]
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, network.id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi WAN",
+        name=network.name,
+    )
+
+
+def wan_supported_fn(
+    field_fn: Callable[[Network], Any],
+) -> Callable[[UnifiHub, str], bool]:
+    """Check if network is a WAN reporting the field."""
+    return lambda hub, obj_id: (
+        (network := hub.api.networks[obj_id]).is_wan and field_fn(network) is not None
     )
 
 
@@ -292,6 +317,18 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_update(self) -> None:
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+
+    async def async_control(self, control: Coroutine[Any, Any, Any]) -> None:
+        """Run a control call, explaining why the controller rejected it."""
+        try:
+            await control
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_rejected",
+                translation_placeholders={"reason": controller_error_reason(err)},
+            ) from err
+        await self.async_refresh_after_control()
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""

@@ -78,6 +78,23 @@
         "name": "LED"
       }
     },
+    "number": {
+      "wan_failover_priority": {
+        "name": "Failover priority"
+      },
+      "wan_load_balance_weight": {
+        "name": "Load balance weight"
+      }
+    },
+    "select": {
+      "wan_load_balancing": {
+        "name": "Load balancing",
+        "state": {
+          "failover-only": "Failover only",
+          "weighted": "Weighted"
+        }
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "name": "RX"
@@ -165,6 +182,15 @@
       "wan_latency": {
         "name": "{target} {wan} latency"
       },
+      "wan_status": {
+        "name": "Status",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "no_link": "No link",
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
       "wired_client_link_speed": {
         "name": "Link speed"
       },
@@ -188,6 +214,9 @@
     "action_request_failed": {
       "message": "Failed to send action request to UniFi Network"
     },
+    "action_request_rejected": {
+      "message": "UniFi Network could not apply the action: {reason}"
+    },
     "reconnect_client_device_not_found": {
       "message": "Unable to reconnect client: device not found"
     },
@@ -199,6 +228,24 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "set_wan_failover_order_failed": {
+      "message": "Failed to set WAN failover order in UniFi Network: {reason}"
+    },
+    "wan_failover_priority_conflict": {
+      "message": "UniFi Network rejected the WAN failover order because another WAN already uses one of the requested priorities"
+    },
+    "wan_failover_priority_unsupported": {
+      "message": "The selected WAN does not report a failover priority"
+    },
+    "wan_load_balance_weighted_required": {
+      "message": "At least one WAN must use weighted load balancing"
+    },
+    "wan_network_not_found": {
+      "message": "Device {device_id} is not a UniFi WAN network"
+    },
+    "wan_networks_multiple_hubs": {
+      "message": "All selected WAN networks have to belong to the same UniFi Network site"
     }
   },
   "options": {
@@ -261,6 +308,16 @@
     "remove_clients": {
       "description": "Cleans up clients that have only been associated with the controller for a short period of time.",
       "name": "Remove clients from the UniFi Network"
+    },
+    "set_wan_failover_order": {
+      "description": "Renumbers the failover priority of WAN networks to match the order of the selected devices, the first selected becomes the primary WAN. The failover priority always decides which WAN is active, also for WAN networks set to weighted load balancing, which act as failover primary while they are the only connected member of the load balancing group.",
+      "fields": {
+        "device_id": {
+          "description": "The WAN networks to prioritize, in the wanted failover order.",
+          "name": "WAN networks"
+        }
+      },
+      "name": "Set WAN failover order"
     }
   }
 }

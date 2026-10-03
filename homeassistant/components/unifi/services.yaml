@@ -7,3 +7,14 @@ reconnect_client:
           integration: unifi
 
 remove_clients:
+
+set_wan_failover_order:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          multiple: true
+          filter:
+            - integration: unifi
+              model: UniFi WAN
