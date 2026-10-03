@@ -1,0 +1,14 @@
+start_charging:
+  target:
+    entity:
+      domain: switch
+      integration: besen
+  fields:
+    start:
+      required: false
+      selector:
+        datetime:
+    duration:
+      required: false
+      selector:
+        duration:

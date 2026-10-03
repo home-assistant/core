@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -10,8 +11,9 @@ from besen.exceptions import CommandFailed
 from besen.models import BesenData
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -84,10 +86,24 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         if data.auth_failed:
             self.config_entry.async_start_reauth(self.hass)
 
-    async def async_start_charging(self) -> None:
-        """Start charging."""
+    async def async_start_charging(
+        self, start: datetime | None = None, duration: timedelta | None = None
+    ) -> None:
+        """Start charging, optionally at a later time or for a limited time."""
 
-        await self._async_run_command(self.client.async_start_charging())
+        command = self.client.async_start_charging(
+            start=None if start is None else dt_util.as_utc(start),
+            duration_minutes=(
+                None if duration is None else int(duration.total_seconds() // 60)
+            ),
+        )
+        try:
+            await self._async_run_command(command)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_start",
+            ) from err
 
     async def async_stop_charging(self) -> None:
         """Stop charging."""
