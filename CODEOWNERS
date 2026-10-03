@@ -140,6 +140,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/anthropic/ @Shulyaka
 /tests/components/anthropic/ @Shulyaka
+/homeassistant/components/anylist/ @BookCatKid
+/tests/components/anylist/ @BookCatKid
 /homeassistant/components/aosmith/ @bdr99
 /tests/components/aosmith/ @bdr99
 /homeassistant/components/apache_kafka/ @bachya
