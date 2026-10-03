@@ -742,8 +742,9 @@ class ConfigEntry[_DataT = Any]:
         is scheduled. An actual cancellation is re-raised.
 
         Returns:
-            tuple[_SetupErrorReason, bool]: The error reason and whether a retry was scheduled, in which
-                case the caller must return without setting a state.
+            tuple[_SetupErrorReason, bool]:
+                The error reason and whether a retry was scheduled, in which case
+                the caller must return without setting a state.
         """
         logger = self.logger
 
@@ -981,7 +982,7 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                result = await component.async_setup_entry(hass, self)
+                result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value,assignment]
 
             if not isinstance(result, bool):
                 logger.error(  # type: ignore[unreachable]
@@ -1126,13 +1127,13 @@ class ConfigEntry[_DataT = Any]:
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
         try:
-            result = await component.async_unload_entry(hass, self)
+            result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
             assert isinstance(result, bool)
 
             # Only do side effects if we unloaded the integration
-            if domain_is_integration:
-                if result:
+            if domain_is_integration:  # type: ignore[unreachable]
+                if result:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
                         object.__delattr__(self, "runtime_data")
@@ -1152,7 +1153,7 @@ class ConfigEntry[_DataT = Any]:
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
-        return result
+        return result  # type: ignore[unreachable]
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1280,13 +1281,13 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        result = await component.async_migrate_entry(hass, self)
+        result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
         if not isinstance(result, bool):
-            self.logger.error(  # type: ignore[unreachable]
+            self.logger.error(
                 "%s.async_migrate_entry did not return boolean", self.domain
             )
             return False
-        if result:
+        if result:  # type: ignore[unreachable]
             hass.config_entries._async_schedule_save()  # noqa: SLF001
 
         return result
@@ -1985,6 +1986,21 @@ class ConfigEntriesFlowManager(
         return False
 
     @callback
+    def async_dismiss_discovery_flows(
+        self, init_data_type: type, matcher: Callable[[Any], bool]
+    ) -> None:
+        """Abort discovery flows for a thing that is no longer reachable.
+
+        Flows the user has started interacting with are left alone, because a
+        device often stops answering discovery precisely because it is being
+        paired.
+        """
+        for flow in self.async_progress_by_init_data_type(init_data_type, matcher):
+            if flow["context"].get("dismiss_protected"):
+                continue
+            self.async_abort(flow["flow_id"])
+
+    @callback
     def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
         """Check if an existing matching flow is in progress."""
         if not (flows := self._handler_progress_index.get(flow.handler)):
@@ -2405,8 +2421,22 @@ class ConfigEntries:
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
+        migrated_domains: set[str] = set()
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
+            entry_domain = entry["domain"]
+
+            # A custom integration that a built-in integration took over keeps its
+            # entries, they belong to the built-in domain from now on. Recovery
+            # and safe mode change nothing, they are often the way back to an
+            # older version that still knows the custom integration.
+            if (
+                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(entry_domain))
+                and not self.hass.config.recovery_mode
+                and not self.hass.config.safe_mode
+            ):
+                migrated_domains.add(entry_domain)
+                entry_domain = replacement
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2418,7 +2448,7 @@ class ConfigEntries:
                         for domain, keys in entry["discovery_keys"].items()
                     }
                 ),
-                domain=entry["domain"],
+                domain=entry_domain,
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),
@@ -2434,6 +2464,17 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+
+        if migrated_domains:
+            _LOGGER.info(
+                "Migrated config entries of %s",
+                ", ".join(
+                    f"'{domain}' to '{loader.MIGRATED_CUSTOM_INTEGRATIONS[domain]}'"
+                    for domain in sorted(migrated_domains)
+                ),
+            )
+            self._async_schedule_save()
+
         self.async_update_issues()
 
         if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:
@@ -2525,6 +2566,30 @@ class ConfigEntries:
         return (
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
+
+    async def async_retry_migration(self, entry_id: str) -> None:
+        """Retry migration for a config entry.
+
+        This is only intended for repair flows created to handle
+        non-recoverable migration errors.
+        """
+        entry = self.async_get_known_entry(entry_id)
+        if entry.state is not ConfigEntryState.MIGRATION_ERROR:
+            raise OperationNotAllowed(
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot retry the migration as it is not in the"
+                f" state {ConfigEntryState.MIGRATION_ERROR} but is in the state {entry.state}"
+            )
+        if entry.disabled_by:
+            raise OperationNotAllowed(
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot retry the migration as it is disabled by"
+                f" {entry.disabled_by}. Please enable the config entry and retry."
+            )
+
+        # Config entry was never loaded so we can set state and start setup to try again
+        entry._async_set_state(self.hass, ConfigEntryState.NOT_LOADED, None)  # noqa: SLF001
+        await self.async_setup(entry_id)
 
     async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""

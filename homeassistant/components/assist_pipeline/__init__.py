@@ -23,16 +23,18 @@ from .const import (
     SAMPLES_PER_CHUNK,
 )
 from .error import PipelineNotFound
-from .pipeline import (
+from .models import (
     AudioSettings,
     Pipeline,
     PipelineEvent,
     PipelineEventCallback,
     PipelineEventType,
-    PipelineInput,
-    PipelineRun,
     PipelineStage,
     WakeWordSettings,
+)
+from .pipeline import (
+    PipelineInput,
+    PipelineRun,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,

@@ -38,6 +38,16 @@
                 "deposit_type": "fixed",
                 "monthly_advanced_deposit_amount": 930000000
               }
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000201",
+              "label": "Thuisbatterij",
+              "type": "home_battery_installation",
+              "start_date": "2026-04-09T22:00:00.000000Z",
+              "end_date": null,
+              "meta": {
+                "show_in_contract_screen": true
+              }
             }
           ],
           "features": [

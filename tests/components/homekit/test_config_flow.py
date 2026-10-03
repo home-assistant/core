@@ -401,6 +401,7 @@ async def test_options_flow_devices(
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock(bridge=None, driver=None)
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
         assert await async_setup_component(hass, "homeassistant", {})
         assert await async_setup_component(hass, "demo", {"demo": {}})

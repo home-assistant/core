@@ -3,7 +3,10 @@
   dict({
     'config-entry': dict({
       'data': dict({
+        'AccessoryIP': '**REDACTED**',
+        'AccessoryIPs': '**REDACTED**',
         'AccessoryPairingID': '00:00:00:00:00:00',
+        'AccessoryPort': 51826,
       }),
       'title': 'test',
       'version': 1,
@@ -326,7 +329,10 @@
   dict({
     'config-entry': dict({
       'data': dict({
+        'AccessoryIP': '**REDACTED**',
+        'AccessoryIPs': '**REDACTED**',
         'AccessoryPairingID': '00:00:00:00:00:00',
+        'AccessoryPort': 51826,
       }),
       'title': 'test',
       'version': 1,

@@ -1,9 +1,10 @@
 """Teslemetry Data Coordinator."""
 
-from datetime import timedelta
+from dataclasses import asdict
+from datetime import date, datetime, time, timedelta, tzinfo
 from typing import TYPE_CHECKING, Any, override
 
-from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
+from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
     InsufficientCredits,
@@ -16,15 +17,17 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
+from teslemetry_stream.const import EnergyTotalsEvent
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER
+from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten
 
 RETRY_EXCEPTIONS = (
@@ -45,8 +48,11 @@ def _get_retry_after(e: TeslaFleetError) -> float:
 
 VEHICLE_INTERVAL = timedelta(seconds=60)
 VEHICLE_WAIT = timedelta(minutes=15)
-ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 METADATA_INTERVAL = timedelta(hours=1)
+
+# Start of the day the energy history totals cover. Kept out of
+# ENERGY_HISTORY_FIELDS, which is the list of keys that become sensors.
+PERIOD_START = "_period_start"
 
 # Keys within tariff_content_v2 kept as nested dicts rather than flattened,
 # since entities and calendars read them as whole structures.
@@ -330,7 +336,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
 
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching energy site info from the Teslemetry API."""
+    """Class to manage energy site history totals from the Teslemetry stream.
+
+    The server sums each day's periods itself and publishes cumulative
+    ``energy_totals``; there is no REST poll and no local accumulation.
+    """
 
     config_entry: TeslemetryConfigEntry
 
@@ -338,54 +348,49 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
-        api: EnergySite,
+        site_id: int,
     ) -> None:
-        """Initialize Teslemetry Energy Info coordinator."""
+        """Initialize Teslemetry Energy History coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"Teslemetry Energy History {api.energy_site_id}",
-            update_interval=ENERGY_HISTORY_INTERVAL,
+            name=f"Teslemetry Energy History {site_id}",
         )
-        self.api = api
+        self.site_id = site_id
+        self.time_zone: tzinfo | None = None
         self.data = {}
+
+    async def async_set_time_zone(self, name: str | None) -> None:
+        """Resolve the site's installation timezone."""
+        if not name:
+            return
+        if (zone := await dt_util.async_get_time_zone(name)) is None:
+            LOGGER.warning(
+                "Unknown timezone %s for energy site %s, falling back to the Home Assistant timezone",
+                name,
+                self.site_id,
+            )
+            return
+        self.time_zone = zone
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update energy site data using Teslemetry API."""
-        try:
-            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
-        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
-            raise ConfigEntryAuthFailed from e
-        except RETRY_EXCEPTIONS as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"message": e.message},
-                retry_after=_get_retry_after(e),
-            ) from e
-        except TeslaFleetError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"message": e.message},
-            ) from e
+        """Return the current totals; there is nothing to fetch.
 
-        if not data or not isinstance(data.get("time_series"), list):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_invalid_data",
-            )
+        Only reached through the generic entity update service, which must not
+        fail on a coordinator the stream alone feeds.
+        """
+        return self.data
 
-        # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in data.get("time_series", []):
-            for key in ENERGY_HISTORY_FIELDS:
-                if key in period:
-                    if output[key] is None:
-                        output[key] = period[key]
-                    else:
-                        output[key] += period[key]
-
-        return output
+    def handle_stream_update(self, event: EnergyTotalsEvent) -> None:
+        """Handle an energy_totals document from the stream."""
+        data: dict[str, Any] = asdict(event.totals)
+        # The server finalises a day after the site's local midnight, so a late
+        # event must stay on the day it reports rather than the current one.
+        data[PERIOD_START] = datetime.combine(
+            date.fromisoformat(event.date),
+            time(),
+            tzinfo=self.time_zone or dt_util.get_default_time_zone(),
+        )
+        self.async_set_updated_data(data)
