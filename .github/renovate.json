@@ -47,6 +47,16 @@
     },
     {
       "customType": "regex",
+      "description": "Update zizmor versions in the standalone security workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/zizmor\\.yml$/"],
+      "matchStrings": [
+        "uses: zizmorcore/zizmor-action@[^\\n]+\\n        with:\\n(?:          [^\\n]+\\n)*?          version: (?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "zizmor",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
       "description": "Update go2rtc RECOMMENDED_VERSION in const.py alongside the Dockerfile pin",
       "managerFilePatterns": ["/^homeassistant/components/go2rtc/const\\.py$/"],
       "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
@@ -347,7 +357,11 @@
     },
     {
       "description": "Group zizmor pre-commit hook with its PyPI twin into one PR",
-      "matchPackageNames": ["zizmorcore/zizmor-pre-commit", "zizmor"],
+      "matchPackageNames": [
+        "zizmorcore/zizmor-action",
+        "zizmorcore/zizmor-pre-commit",
+        "zizmor"
+      ],
       "groupName": "zizmor",
       "groupSlug": "zizmor"
     },
