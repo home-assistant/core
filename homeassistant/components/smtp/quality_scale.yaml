@@ -75,7 +75,9 @@ rules:
     status: exempt
     comment: The integration is a service and has no physical devices
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: exempt
+    comment: Notify platform does not support device classes
   entity-disabled-by-default:
     status: exempt
     comment: The integration has no entities that should be disabled
