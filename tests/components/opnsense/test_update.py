@@ -155,12 +155,21 @@ async def test_firmware_release_notes_without_packages(
 
 
 @pytest.mark.parametrize(
-    ("status_reboot", "expected_summary"),
+    ("status_reboot", "status_msg", "expected_summary"),
     [
-        pytest.param("0", "There are 15 updates available.", id="no-reboot"),
         pytest.param(
-            "1", "Reboot required. There are 15 updates available.", id="reboot"
+            "0",
+            "There are 15 updates available.",
+            "There are 15 updates available.",
+            id="no-reboot",
         ),
+        pytest.param(
+            "1",
+            "There are 15 updates available. This update requires a reboot.",
+            "There are 15 updates available. This update requires a reboot.",
+            id="reboot-message-from-opnsense",
+        ),
+        pytest.param("1", None, "Reboot required.", id="reboot-fallback"),
     ],
 )
 async def test_firmware_update_details(
@@ -169,12 +178,13 @@ async def test_firmware_update_details(
     mock_opnsense_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
     status_reboot: str,
+    status_msg: str | None,
     expected_summary: str,
 ) -> None:
     """Show OPNsense update status, reboot requirement, and changelog link."""
     mock_opnsense_client.get_firmware_update_info.return_value.update(
         {
-            "status_msg": "There are 15 updates available.",
+            "status_msg": status_msg,
             "status_reboot": status_reboot,
         }
     )
@@ -278,7 +288,7 @@ async def test_firmware_install_concurrent_calls(
         await install_task
 
 
-@pytest.mark.parametrize("terminal_status", ["done", "reboot", "error"])
+@pytest.mark.parametrize("terminal_status", ["done", "reboot"])
 async def test_firmware_upgrade_finishes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -307,6 +317,43 @@ async def test_firmware_upgrade_finishes(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_opnsense_client.upgrade_status.assert_awaited_once()
+
+
+async def test_firmware_upgrade_retries_error_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test transient firmware errors keep upgrade polling active."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.side_effect = [
+        {"status": "error"},
+        {"status": "done"},
+    ]
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.attributes["in_progress"]
+    mock_opnsense_client.upgrade_status.assert_awaited_once()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert not state.attributes["in_progress"]
+    assert mock_opnsense_client.upgrade_status.await_count == 2
 
 
 async def test_firmware_upgrade_refreshes_after_reboot(
@@ -466,11 +513,21 @@ async def test_firmware_update_unavailable(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    mock_opnsense_client.get_firmware_update_info.return_value = None
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
     mock_opnsense_client.get_firmware_update_info.return_value = {}
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("update.mock_title_firmware").state == STATE_UNAVAILABLE
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
     mock_opnsense_client.get_firmware_update_info.side_effect = OPNsenseConnectionError(
         "connection failed"
@@ -478,4 +535,6 @@ async def test_firmware_update_unavailable(
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("update.mock_title_firmware").state == STATE_UNAVAILABLE
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

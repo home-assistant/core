@@ -4,7 +4,8 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
-from urllib.parse import urljoin
+
+from yarl import URL
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -61,15 +62,17 @@ class OPNsenseFirmwareUpdate(
         """Initialize the firmware entity."""
         super().__init__(coordinator)
         assert entry.unique_id is not None
-        self._attr_unique_id = f"{entry.unique_id}_firmware"
+        self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
             name=entry.title or "OPNsense",
             manufacturer="OPNsense",
             configuration_url=entry.data[CONF_URL],
         )
-        self._attr_release_url = urljoin(
-            entry.data[CONF_URL], "/ui/core/firmware#changelog"
+        self._attr_release_url = str(
+            URL(entry.data[CONF_URL])
+            .with_path("/ui/core/firmware")
+            .with_fragment("changelog")
         )
         self._upgrade_in_progress = False
         self._upgrade_started: datetime | None = None
@@ -106,18 +109,9 @@ class OPNsenseFirmwareUpdate(
         """Track the active firmware upgrade."""
         status = await self.coordinator.client.upgrade_status()
         if (
-            status
-            and status.get("status") == "running"
-            and (
-                self._upgrade_started is not None
-                and now - self._upgrade_started < UPGRADE_TIMEOUT
-            )
-        ):
-            return
-        if (
-            not status
-            and self._upgrade_started is not None
-            and (now - self._upgrade_started < UPGRADE_TIMEOUT)
+            self._upgrade_started is not None
+            and now - self._upgrade_started < UPGRADE_TIMEOUT
+            and (not status or status.get("status") in ("running", "error"))
         ):
             return
 
@@ -178,9 +172,7 @@ class OPNsenseFirmwareUpdate(
         """Return the update status and reboot requirement."""
         status_msg = self.coordinator.data.get("status_msg")
         if self.coordinator.data.get("status_reboot") == "1":
-            return (
-                f"Reboot required. {status_msg}" if status_msg else "Reboot required."
-            )
+            return cast(str, status_msg) if status_msg else "Reboot required."
         return cast(str | None, status_msg)
 
     @override
