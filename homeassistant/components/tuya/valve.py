@@ -28,6 +28,8 @@ from .entity import TuyaEntity, TuyaEntityDescription
 class TuyaValveEntityDescription(TuyaEntityDescription, ValveEntityDescription):
     """Describes a Tuya valve entity."""
 
+    current_position: DPCode | tuple[DPCode, ...] | None = None
+
 
 VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
@@ -35,6 +37,7 @@ VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
             key=DPCode.SWITCH,
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
+            current_position=DPCode.PERCENT_STATE,
         ),
         *(
             TuyaValveEntityDescription(
@@ -67,7 +70,13 @@ async def async_setup_entry(
                 entities.extend(
                     TuyaValveEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (definition := get_default_definition(device, description.key))
+                    if (
+                        definition := get_default_definition(
+                            device,
+                            description.key,
+                            current_position_dpcode=description.current_position,
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -94,6 +103,16 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         """Init TuyaValveEntity."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.control_wrapper
+        self._current_position_wrapper = definition.current_position_wrapper
+        self._attr_reports_position = self._current_position_wrapper is not None
+
+    @property
+    @override
+    def current_valve_position(self) -> int | None:
+        """Return the current position of the valve."""
+        if self._current_position_wrapper is None:
+            return None
+        return self._read_wrapper(self._current_position_wrapper)
 
     @property
     @override
@@ -114,6 +133,12 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         Returns True if the Home Assistant state should be written,
         or False if the state write should be skipped.
         """
+        if self._current_position_wrapper is not None and not (
+            self._current_position_wrapper.skip_update(
+                self.device, updated_status_properties, dp_timestamps
+            )
+        ):
+            return True
         return not self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties, dp_timestamps
         )

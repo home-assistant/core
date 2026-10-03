@@ -621,6 +621,7 @@
 # name: test_platform_setup_and_discovery[valve.smart_water_valve_bv05_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <ValveEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 20,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Water Valve BV05 Valve',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
