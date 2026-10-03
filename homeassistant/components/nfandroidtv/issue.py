@@ -13,7 +13,7 @@ def deprecated_notify_action_call(hass: HomeAssistant, service_name: str) -> Non
         hass,
         DOMAIN,
         f"deprecated_notify_action_{service_name}",
-        breaks_in_ha_version="2027.3.0",
+        breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_notify_action",
