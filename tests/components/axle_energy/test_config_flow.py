@@ -22,12 +22,14 @@ UPDATE_FLOWS = [
         MockConfigEntry.start_reauth_flow,
         "reauth_confirm",
         "reauth_successful",
+        None,
         id="reauth",
     ),
     pytest.param(
         MockConfigEntry.start_reconfigure_flow,
         "reconfigure",
         "reconfigure_successful",
+        {"suggested_value": "test-token"},
         id="reconfigure",
     ),
 ]
@@ -98,7 +100,9 @@ async def test_duplicate(
 
 
 @pytest.mark.parametrize("api_key", ["replacement-token", "test-token"])
-@pytest.mark.parametrize(("start_flow", "step_id", "reason"), UPDATE_FLOWS)
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "reason", "suggested_value"), UPDATE_FLOWS
+)
 async def test_update_api_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -108,6 +112,7 @@ async def test_update_api_key(
     start_flow: Callable[[MockConfigEntry, HomeAssistant], Awaitable[ConfigFlowResult]],
     step_id: str,
     reason: str,
+    suggested_value: dict[str, str] | None,
 ) -> None:
     """Validate and reload the existing feed, including with an unchanged key."""
     mock_client.get_event.return_value = None
@@ -118,6 +123,7 @@ async def test_update_api_key(
     result = await start_flow(mock_config_entry, hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
+    assert next(iter(result["data_schema"].schema)).description == suggested_value
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: api_key}
@@ -141,7 +147,9 @@ async def test_update_api_key(
         (AxleError(), "cannot_retrieve"),
     ],
 )
-@pytest.mark.parametrize(("start_flow", "step_id", "reason"), UPDATE_FLOWS)
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "reason", "suggested_value"), UPDATE_FLOWS
+)
 async def test_update_api_key_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -152,6 +160,7 @@ async def test_update_api_key_errors(
     start_flow: Callable[[MockConfigEntry, HomeAssistant], Awaitable[ConfigFlowResult]],
     step_id: str,
     reason: str,
+    suggested_value: dict[str, str] | None,
 ) -> None:
     """Keep the existing key after a failed replacement and allow a retry."""
     mock_config_entry.add_to_hass(hass)
@@ -167,6 +176,7 @@ async def test_update_api_key_errors(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
+    assert next(iter(result["data_schema"].schema)).description == suggested_value
     assert result["errors"] == {"base": message}
     assert mock_config_entry.data == {CONF_API_KEY: "test-token"}
     mock_setup_entry.assert_not_called()
@@ -185,7 +195,9 @@ async def test_update_api_key_errors(
 
 
 @pytest.mark.parametrize("api_key", ["replacement-token", "test-token"])
-@pytest.mark.parametrize(("start_flow", "step_id", "reason"), UPDATE_FLOWS)
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "reason", "suggested_value"), UPDATE_FLOWS
+)
 async def test_update_api_key_duplicate(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -195,6 +207,7 @@ async def test_update_api_key_duplicate(
     start_flow: Callable[[MockConfigEntry, HomeAssistant], Awaitable[ConfigFlowResult]],
     step_id: str,
     reason: str,
+    suggested_value: dict[str, str] | None,
 ) -> None:
     """Keep the flow open after a duplicate key and allow a retry."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -213,6 +226,7 @@ async def test_update_api_key_duplicate(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
+    assert next(iter(result["data_schema"].schema)).description == suggested_value
     assert result["errors"] == {CONF_API_KEY: "already_configured"}
     assert mock_config_entry.data == {CONF_API_KEY: "test-token"}
     assert other_entry.data == {CONF_API_KEY: "other-token"}

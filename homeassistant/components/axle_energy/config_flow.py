@@ -11,7 +11,12 @@ from aioaxlevpp import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -113,7 +118,9 @@ class AxleConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
         return self.async_show_form(
             step_id=step_id,
-            data_schema=STEP_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_SCHEMA, entry.data if self.source == SOURCE_RECONFIGURE else None
+            ),
             description_placeholders={
                 "token_url": "https://vpp.axle.energy/app/account/home-assistant"
             },
