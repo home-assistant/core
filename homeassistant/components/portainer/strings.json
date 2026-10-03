@@ -262,6 +262,24 @@
     }
   },
   "services": {
+    "prune_build_cache": {
+      "description": "Prunes the build cache on a Portainer endpoint.",
+      "fields": {
+        "all": {
+          "description": "If true (default), prune all unused build cache. If false, only prune dangling build cache.",
+          "name": "All"
+        },
+        "device_id": {
+          "description": "The endpoint to prune the build cache on.",
+          "name": "[%key:component::portainer::services::prune_images::fields::device_id::name%]"
+        },
+        "until": {
+          "description": "Only prune build cache that was last used longer ago than this duration. If not provided, build cache of any age is pruned.",
+          "name": "[%key:component::portainer::services::prune_images::fields::until::name%]"
+        }
+      },
+      "name": "Prune build cache"
+    },
     "prune_images": {
       "description": "Prunes unused images on a Portainer endpoint.",
       "fields": {
