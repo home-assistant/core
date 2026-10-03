@@ -20,7 +20,9 @@ class ScheduleEntityStateAttribute(StrEnum):
     NEXT_EVENT = "next_event"
 
 
+CONF_BLOCKS: Final = "blocks"
 CONF_DATA: Final = "data"
+CONF_DAYS: Final = "days"
 CONF_FRIDAY: Final = "friday"
 CONF_FROM: Final = "from"
 CONF_MONDAY: Final = "monday"

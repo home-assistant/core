@@ -43,7 +43,9 @@ from homeassistant.util import dt as dt_util
 from .const import (  # noqa: F401
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
+    CONF_BLOCKS,
     CONF_DATA,
+    CONF_DAYS,
     CONF_FROM,
     CONF_TO,
     DOMAIN,
@@ -136,6 +138,19 @@ STORAGE_TIME_RANGE_SCHEMA = probatio.Schema(
     }
 )
 
+BLOCK_SCHEMA = probatio.Schema(
+    TIME_RANGE_SCHEMA
+    | {
+        probatio.Optional(
+            CONF_DAYS, default=list(WEEKDAY_TO_CONF.values())
+        ): probatio.All(
+            [probatio.In(CONF_ALL_DAYS)],
+            probatio.Length(min=1),
+            probatio.Unique(),
+        )
+    }
+)
+
 SCHEDULE_SCHEMA: VolDictType = {
     probatio.Optional(day, default=[]): probatio.All(
         probatio.EnsureList(), [TIME_RANGE_SCHEMA], valid_schedule
@@ -152,9 +167,47 @@ STORAGE_SCHEDULE_SCHEMA: VolDictType = {
     for day in CONF_ALL_DAYS
 }
 
+YAML_SCHEDULE_SCHEMA: VolDictType = {
+    probatio.Optional(day): probatio.All(
+        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
+    )
+    for day in CONF_ALL_DAYS
+}
+YAML_SCHEDULE_SCHEMA[probatio.Optional(CONF_BLOCKS)] = [BLOCK_SCHEMA]
+
+
+def normalize_yaml_schedule(config: ConfigType) -> ConfigType:
+    """Expand recurring blocks into the weekday schedule format."""
+    if CONF_BLOCKS not in config:
+        return config
+
+    if CONF_ALL_DAYS.intersection(config):
+        raise probatio.Invalid(
+            f"{CONF_BLOCKS} cannot be combined with weekday schedules"
+        )
+
+    normalized = {key: value for key, value in config.items() if key != CONF_BLOCKS}
+    normalized.update({day: [] for day in CONF_ALL_DAYS})
+
+    for block in config[CONF_BLOCKS]:
+        time_range = {key: value for key, value in block.items() if key != CONF_DAYS}
+        for day in block[CONF_DAYS]:
+            normalized[day].append(time_range.copy())
+
+    return normalized
+
+
 # Validate YAML config
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(probatio.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            probatio.All(
+                BASE_SCHEMA | YAML_SCHEDULE_SCHEMA,
+                normalize_yaml_schedule,
+                BASE_SCHEMA | SCHEDULE_SCHEMA,
+            )
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 # Validate storage config
