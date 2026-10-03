@@ -166,10 +166,7 @@ class OPNsenseFirmwareUpdate(
     @override
     def release_summary(self) -> str | None:
         """Return the update status and reboot requirement."""
-        status_msg = self.coordinator.data.get("status_msg")
-        if self.coordinator.data.get("status_reboot") == "1":
-            return cast(str, status_msg) if status_msg else "Reboot required."
-        return cast(str | None, status_msg)
+        return cast(str | None, self.coordinator.data.get("status_msg"))
 
     @override
     async def async_release_notes(self) -> str | None:

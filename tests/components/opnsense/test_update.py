@@ -165,11 +165,11 @@ async def test_firmware_release_notes_without_packages(
         ),
         pytest.param(
             "1",
-            "There are 15 updates available. This update requires a reboot.",
-            "There are 15 updates available. This update requires a reboot.",
+            "There are 114 updates available, total download size is 319.8MiB. This update requires a reboot.",
+            "There are 114 updates available, total download size is 319.8MiB. This update requires a reboot.",
             id="reboot-message-from-opnsense",
         ),
-        pytest.param("1", None, "Reboot required.", id="reboot-fallback"),
+        pytest.param("1", None, None, id="reboot-fallback"),
     ],
 )
 async def test_firmware_update_details(
@@ -179,7 +179,7 @@ async def test_firmware_update_details(
     hass_ws_client: WebSocketGenerator,
     status_reboot: str,
     status_msg: str | None,
-    expected_summary: str,
+    expected_summary: str | None,
 ) -> None:
     """Show OPNsense update status, reboot requirement, and changelog link."""
     mock_opnsense_client.get_firmware_update_info.return_value.update(
@@ -194,7 +194,7 @@ async def test_firmware_update_details(
 
     state = hass.states.get("update.mock_title_firmware")
     assert state is not None
-    assert state.attributes["release_summary"] == expected_summary
+    assert state.attributes.get("release_summary") == expected_summary
     assert state.attributes["release_url"] == (
         "http://router.lan/ui/core/firmware#changelog"
     )
