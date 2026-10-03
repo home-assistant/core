@@ -224,6 +224,98 @@ async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
         assert isinstance(results[1], hass_auth.InvalidAuth)
 
 
+async def test_race_condition_adding_user(hass: HomeAssistant) -> None:
+    """Test concurrent async_add_auth calls cannot create a duplicate user.
+
+    Two overlapping requests to add the same username (e.g. a
+    double-submitted "add user" request) used to both be able to pass the
+    duplicate-username check before either had saved, leaving two entries
+    for the same normalized username in storage. validate_login checks every
+    matching entry while change_password/change_username/async_remove_auth
+    used to only touch the first one, so a duplicate entry could silently
+    swallow a later password change.
+    """
+    provider = hass_auth.HassAuthProvider(
+        hass, auth_store.AuthStore(hass), {"type": "homeassistant"}
+    )
+    await provider.async_initialize()
+    assert provider.data is not None
+
+    in_progress = 0
+    max_in_progress = 0
+
+    async def mock_executor_job(func, *args):
+        """Simulate two overlapping calls interleaving around the real add_auth."""
+        nonlocal in_progress, max_in_progress
+        in_progress += 1
+        max_in_progress = max(max_in_progress, in_progress)
+        try:
+            await asyncio.sleep(0)
+            return func(*args)
+        finally:
+            in_progress -= 1
+
+    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor_job):
+        results = await asyncio.gather(
+            provider.async_add_auth("test-user", "pass1"),
+            provider.async_add_auth("test-user", "pass2"),
+            return_exceptions=True,
+        )
+
+    # The write lock must have prevented the two calls from overlapping.
+    assert max_in_progress == 1
+    successes = [result for result in results if result is None]
+    failures = [
+        result for result in results if isinstance(result, hass_auth.InvalidUsername)
+    ]
+    assert len(successes) == 1
+    assert len(failures) == 1
+    assert len(provider.data.users) == 1
+
+
+def test_change_password_fixes_duplicate_entries(data: hass_auth.Data) -> None:
+    """Test that changing a password heals a store with duplicate entries.
+
+    Regression test for a duplicate username entry left behind by a past
+    add_auth race condition: validate_login checks every matching entry, so
+    change_password must update every matching entry too, or a stale
+    duplicate could still authenticate with the old password.
+    """
+    data.add_auth("test-user", "old-pass")
+    data.users.append(dict(data.users[0]))
+    assert len(data.users) == 2
+
+    data.change_password("test-user", "new-pass")
+
+    assert len(data.users) == 2
+    data.validate_login("test-user", "new-pass")
+    with pytest.raises(hass_auth.InvalidAuth):
+        data.validate_login("test-user", "old-pass")
+
+
+def test_async_remove_auth_removes_duplicate_entries(data: hass_auth.Data) -> None:
+    """Test that removing a user's auth removes every duplicate entry."""
+    data.add_auth("test-user", "test-pass")
+    data.users.append(dict(data.users[0]))
+    assert len(data.users) == 2
+
+    data.async_remove_auth("test-user")
+
+    assert data.users == []
+
+
+def test_change_username_fixes_duplicate_entries(data: hass_auth.Data) -> None:
+    """Test that changing a username updates every duplicate entry."""
+    data.add_auth("test-user", "test-pass")
+    data.users.append(dict(data.users[0]))
+    assert len(data.users) == 2
+
+    data.change_username("test-user", "new-user")
+
+    assert len(data.users) == 2
+    assert all(user["username"] == "new-user" for user in data.users)
+
+
 def test_change_username(data: hass_auth.Data) -> None:
     """Test changing username."""
     data.add_auth("test-user", "test-pass")
