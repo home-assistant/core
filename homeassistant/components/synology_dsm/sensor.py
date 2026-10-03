@@ -430,15 +430,6 @@ class SynoDSMSensor(
 
     entity_description: SynologyDSMSensorEntityDescription
 
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMSensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM sensor entity."""
-        super().__init__(api, coordinator, description)
-
 
 class SynoDSMUtilSensor(SynoDSMSensor):
     """Representation a Synology Utilisation sensor."""
