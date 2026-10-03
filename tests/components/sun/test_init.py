@@ -182,6 +182,44 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
     assert state.state == sun.STATE_ABOVE_HORIZON
 
 
+@pytest.mark.parametrize(
+    ("offset_seconds", "expected_state"),
+    [
+        pytest.param(-60, sun.STATE_ABOVE_HORIZON, id="before_sunset"),
+        pytest.param(60, sun.STATE_BELOW_HORIZON, id="after_sunset"),
+    ],
+)
+async def test_state_flips_at_geometric_sunset(
+    hass: HomeAssistant, offset_seconds: int, expected_state: str
+) -> None:
+    """Test the above/below-horizon state flips at the geometric sunset.
+
+    A minute after astral sunset (the sun's geometric centre at -0.833 deg) the
+    state must already be below_horizon; the apparent elevation is still ~-0.67
+    deg there, so comparing it to ELEVATION_HORIZON would keep the sun reported up
+    for ~2-3 min too long.
+    """
+    hass.config.latitude = 32.87336
+    hass.config.longitude = -117.22743
+
+    setup = datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC)
+    with freeze_time(setup):
+        await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    next_setting = dt_util.parse_datetime(
+        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_SETTING]
+    )
+    assert next_setting is not None
+
+    probe = next_setting + timedelta(seconds=offset_seconds)
+    with freeze_time(probe):
+        async_fire_time_changed(hass, probe)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity.ENTITY_ID).state == expected_state
+
+
 @pytest.mark.skip
 async def test_state_change_count(hass: HomeAssistant) -> None:
     """Count the number of state change events in a location."""
