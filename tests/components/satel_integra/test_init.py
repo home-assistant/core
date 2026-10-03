@@ -284,3 +284,49 @@ async def test_monitoring_start_error(
     )
     mock_satel.start.assert_awaited_once_with(enable_monitoring=True)
     mock_satel.read_panel_info.assert_not_awaited()
+
+
+async def test_connection_state_logging(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test logging an outage and subsequent recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_satel.add_connection_status_callback.called
+    connection_status_callback = (
+        mock_satel.add_connection_status_callback.call_args.args[0]
+    )
+
+    mock_satel.connected = False
+    connection_status_callback()
+
+    assert "Satel Integra device is unavailable" in caplog.text
+
+    caplog.clear()
+    mock_satel.connected = True
+    connection_status_callback()
+
+    assert "Satel Integra device is back online" in caplog.text
+
+
+async def test_unload_unsubscribes_connection_status(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading unsubscribes from connection status updates."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    unsubscribe = mock_satel.add_connection_status_callback.return_value
+    unsubscribe.assert_not_called()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    unsubscribe.assert_called_once_with()
+    mock_satel.close.assert_awaited_once_with()
