@@ -61,7 +61,7 @@ SERVICE_MESSAGE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_CHART_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_DATA): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
     }
 )
@@ -129,7 +129,7 @@ async def async_send_notification(
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),
-        priority=NotificationPriority(call.data.get(CONF_PRIORITY)),
+        priority=NotificationPriority(call.data[CONF_PRIORITY]),
         model=Model(
             frames=frames,
             cycles=call.data[CONF_CYCLES],

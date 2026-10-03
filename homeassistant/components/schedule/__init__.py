@@ -114,7 +114,7 @@ def serialize_to_time(value: Any) -> Any:
 
 
 BASE_SCHEMA: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_ICON): cv.icon,
 }
 
@@ -138,13 +138,16 @@ STORAGE_TIME_RANGE_SCHEMA = probatio.Schema(
 
 SCHEDULE_SCHEMA: VolDictType = {
     probatio.Optional(day, default=[]): probatio.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
+        probatio.EnsureList(), [TIME_RANGE_SCHEMA], valid_schedule
     )
     for day in CONF_ALL_DAYS
 }
 STORAGE_SCHEDULE_SCHEMA: VolDictType = {
     probatio.Optional(day, default=[]): probatio.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
+        probatio.EnsureList(),
+        [TIME_RANGE_SCHEMA],
+        valid_schedule,
+        [STORAGE_TIME_RANGE_SCHEMA],
     )
     for day in CONF_ALL_DAYS
 }

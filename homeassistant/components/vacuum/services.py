@@ -128,7 +128,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component.async_register_batched_entity_service(
         SERVICE_CLEAN_AREA,
         {
-            probatio.Required("cleaning_area_id"): probatio.All(cv.ensure_list, [str]),
+            probatio.Required("cleaning_area_id"): probatio.All(
+                probatio.EnsureList(), [str]
+            ),
         },
         _async_clean_area,
         [VacuumEntityFeature.CLEAN_AREA],
@@ -155,7 +157,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SEND_COMMAND,
         {
             probatio.Required(ATTR_COMMAND): cv.string,
-            probatio.Optional(ATTR_PARAMS): probatio.Any(dict, cv.ensure_list),
+            probatio.Optional(ATTR_PARAMS): probatio.Any(dict, probatio.EnsureList()),
         },
         "async_send_command",
         [VacuumEntityFeature.SEND_COMMAND],

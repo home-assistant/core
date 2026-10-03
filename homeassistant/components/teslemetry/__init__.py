@@ -807,7 +807,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Run all first refreshes
     await asyncio.gather(
-        *(async_setup_stream(hass, entry, vehicle) for vehicle in vehicles),
+        *(
+            async_setup_stream(hass, entry, vehicle)
+            for vehicle in vehicles
+            if not vehicle.poll
+        ),
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
@@ -867,7 +871,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         if energysites:
             entry.async_on_unload(
                 stream.async_add_connection_listener(
-                    create_handle_energy_stream_connection(energysites)
+                    create_handle_energy_stream_connection(hass, energysites)
                 )
             )
 
@@ -903,6 +907,7 @@ def _setup_subentry_change_reload(
 
 
 def create_handle_energy_stream_connection(
+    hass: HomeAssistant,
     energysites: list[TeslemetryEnergyData],
 ) -> Callable[[bool], None]:
     """Create a stream connection listener for the energy coordinators."""
@@ -914,7 +919,8 @@ def create_handle_energy_stream_connection(
         Each subsequent streamed document restores its coordinator via
         async_set_updated_data, so no reload is required on reconnect.
         """
-        if connected:
+        # Stopping cancels the listen task, which reports a disconnect.
+        if connected or hass.is_stopping:
             return
         error = UpdateFailed(
             translation_domain=DOMAIN,
