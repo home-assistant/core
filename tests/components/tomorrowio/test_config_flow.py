@@ -1,7 +1,8 @@
 """Test the Tomorrow.io config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
@@ -58,7 +59,9 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
 
 
-async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
+async def test_user_flow_minimum_fields_in_zone(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test user config flow with minimum fields."""
     assert await async_setup_component(
         hass,
@@ -90,6 +93,8 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
 
+    assert mock_setup_entry.call_count == 1
+
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
     """Test user config flow with the same unique ID as an existing entry."""
@@ -102,79 +107,74 @@ async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
         unique_id=_get_unique_id(hass, user_input),
         version=2,
     ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        (CantConnectException, {"base": "cannot_connect"}),
+        (InvalidAPIKeyException, {CONF_API_KEY: "invalid_api_key"}),
+        (RateLimitedException, {CONF_API_KEY: "rate_limited"}),
+        (UnknownException, {"base": "unknown"}),
+    ],
+)
+async def test_user_flow_errors(
+    hass: HomeAssistant,
+    side_effect: type[Exception],
+    errors: dict[str, str],
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test user config flow when Tomorrow.io can't connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=CantConnectException,
+        side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
 
+    # recover from errors
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+    )
 
-async def test_user_flow_invalid_api(hass: HomeAssistant) -> None:
-    """Test user config flow when API key is invalid."""
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=InvalidAPIKeyException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
-async def test_user_flow_rate_limited(hass: HomeAssistant) -> None:
-    """Test user config flow when API key is rate limited."""
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=RateLimitedException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {CONF_API_KEY: "rate_limited"}
-
-
-async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
-    """Test user config flow when unknown error occurs."""
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=UnknownException,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_API_KEY: API_KEY,
+        CONF_LOCATION: {
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
+        },
+    }
+    assert mock_setup_entry.call_count == 1
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

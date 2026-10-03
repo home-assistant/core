@@ -1,6 +1,7 @@
 """Configure py.test."""
 
-from unittest.mock import PropertyMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
@@ -8,7 +9,7 @@ from tests.common import load_json_object_fixture
 
 
 @pytest.fixture(name="tomorrowio_config_flow_connect", autouse=True)
-def tomorrowio_config_flow_connect():
+def tomorrowio_config_flow_connect() -> Generator[None]:
     """Mock valid tomorrowio config flow setup."""
     with patch(
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
@@ -18,7 +19,7 @@ def tomorrowio_config_flow_connect():
 
 
 @pytest.fixture(name="tomorrowio_config_entry_update", autouse=True)
-def tomorrowio_config_entry_update_fixture():
+def tomorrowio_config_entry_update_fixture() -> Generator[AsyncMock]:
     """Mock valid tomorrowio config entry setup."""
     with (
         patch(
@@ -37,3 +38,12 @@ def tomorrowio_config_entry_update_fixture():
         mock_max_requests_per_day.return_value = 100
         mock_num_api_requests.return_value = 2
         yield mock_update
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.tomorrowio.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
