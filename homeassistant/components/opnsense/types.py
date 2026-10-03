@@ -1,11 +1,14 @@
 """Types for OPNsense routers."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiopnsense import OPNsenseClient
 
 from homeassistant.config_entries import ConfigEntry
+
+if TYPE_CHECKING:
+    from .coordinator import OPNsenseFirmwareCoordinator
 
 
 @dataclass(slots=True)
@@ -14,6 +17,7 @@ class OPNsenseRuntimeData:
 
     client: OPNsenseClient
     tracker_interfaces: list[str]
+    update_coordinator: OPNsenseFirmwareCoordinator
 
 
 type DeviceDetails = dict[str, Any]

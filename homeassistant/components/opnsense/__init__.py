@@ -22,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .coordinator import OPNsenseFirmwareCoordinator
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -148,12 +149,18 @@ async def async_setup_entry(
                     },
                 )
 
+    update_coordinator = OPNsenseFirmwareCoordinator(hass, config_entry, client)
+
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
         tracker_interfaces=tracker_interfaces,
+        update_coordinator=update_coordinator,
     )
 
+    await update_coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 

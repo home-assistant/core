@@ -37,9 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the router firmware update entity."""
-    coordinator = OPNsenseFirmwareCoordinator(hass, entry, entry.runtime_data.client)
-    await coordinator.async_config_entry_first_refresh()
-    async_add_entities([OPNsenseFirmwareUpdate(coordinator, entry)])
+    async_add_entities([OPNsenseFirmwareUpdate(entry)])
 
 
 class OPNsenseFirmwareUpdate(
@@ -56,11 +54,9 @@ class OPNsenseFirmwareUpdate(
     )
     _attr_translation_key = "firmware"
 
-    def __init__(
-        self, coordinator: OPNsenseFirmwareCoordinator, entry: OPNsenseConfigEntry
-    ) -> None:
+    def __init__(self, entry: OPNsenseConfigEntry) -> None:
         """Initialize the firmware entity."""
-        super().__init__(coordinator)
+        super().__init__(entry.runtime_data.update_coordinator)
         assert entry.unique_id is not None
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
