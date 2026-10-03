@@ -76,7 +76,7 @@ async def test_water_heater_switch_no_temp_sensor(
         await hass.async_block_till_done()
 
     state = hass.states.get("switch.my_pv_ac_elwa_2")
-    assert state.state is STATE_ON
+    assert state.state == STATE_ON
 
 
 async def test_water_heater_switch_temp_sensor(
