@@ -1,5 +1,6 @@
 """Cover platform for Actron Air integration."""
 
+from collections.abc import Callable
 from typing import override
 
 from actron_neo_api import ActronAirZone
@@ -26,12 +27,26 @@ async def async_setup_entry(
     """Set up Actron Air cover entities."""
     system_coordinators = entry.runtime_data.system_coordinators
 
-    async_add_entities(
-        ActronAirZoneDamper(coordinator, zone)
-        for coordinator in system_coordinators.values()
-        for zone in coordinator.data.remote_zone_info
-        if zone.exists
-    )
+    for coordinator in system_coordinators.values():
+
+        def _create_zone_listener(
+            coordinator: ActronAirSystemCoordinator,
+        ) -> Callable[[], None]:
+            added_zone_ids: set[int] = set()
+
+            def _async_add_new_zones() -> None:
+                new_zone_ids, zones = coordinator.get_new_zones(added_zone_ids)
+                added_zone_ids.update(zones)
+                async_add_entities(
+                    ActronAirZoneDamper(coordinator, zones[zone_id])
+                    for zone_id in new_zone_ids
+                )
+
+            return _async_add_new_zones
+
+        add_new_zones = _create_zone_listener(coordinator)
+        entry.async_on_unload(coordinator.async_add_listener(add_new_zones))
+        add_new_zones()
 
 
 class ActronAirZoneDamper(ActronAirZoneEntity, CoverEntity):
