@@ -125,6 +125,86 @@ async def test_aiousbwatcher_discovery(
 
 
 @pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_is_serial_port_present(hass: HomeAssistant) -> None:
+    """A local path is checked on disk, a URL against the scanned ports."""
+    proxy_url = "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT?port_name=uart0"
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    with (
+        patch_scanned_serial_ports(
+            return_value=[
+                SerialDevice(
+                    device=proxy_url,
+                    serial_number=None,
+                    manufacturer=None,
+                    description=None,
+                )
+            ]
+        ) as mock_scan,
+        patch("homeassistant.components.usb.os.path.exists", return_value=True),
+    ):
+        assert await usb.async_is_serial_port_present(hass, "/dev/ttyUSB0")
+        assert len(mock_scan.mock_calls) == 0
+
+        assert await usb.async_is_serial_port_present(hass, proxy_url)
+        assert not await usb.async_is_serial_port_present(
+            hass, proxy_url.replace("uart0", "uart1")
+        )
+
+    with patch("homeassistant.components.usb.os.path.exists", return_value=False):
+        assert not await usb.async_is_serial_port_present(hass, "/dev/ttyUSB0")
+
+
+async def test_notify_serial_ports_changed_with_aiousbwatcher(
+    hass: HomeAssistant,
+) -> None:
+    """A scanner's ports are rescanned even while the udev watcher is running."""
+    new_usb = [{"domain": "test1", "vid": "3039"}]
+    mock_ports: list[USBDevice] = []
+
+    with (
+        patch("sys.platform", "linux"),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch_scanned_serial_ports(return_value=mock_ports),
+        patch("homeassistant.components.usb.AIOUSBWatcher", return_value=MagicMock()),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        mock_ports.append(
+            USBDevice(
+                device=slae_sh_device.device,
+                vid="3039",
+                pid="3039",
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            )
+        )
+
+        # A request is ignored while the watcher reports local changes itself
+        await usb.async_request_scan(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(mock_config_flow.mock_calls) == 0
+
+        usb.async_notify_serial_ports_changed(hass)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=usb.ADD_REMOVE_SCAN_COOLDOWN)
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("force_usb_polling_watcher")
 async def test_polling_discovery(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

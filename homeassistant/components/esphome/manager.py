@@ -23,6 +23,7 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SerialProxyIdentity,
     SupportsResponseType,
     UserService,
     UserServiceArgType,
@@ -34,7 +35,7 @@ import aiohttp
 from awesomeversion import AwesomeVersion
 import probatio
 
-from homeassistant.components import bluetooth, tag, zeroconf
+from homeassistant.components import bluetooth, tag, usb, zeroconf
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
@@ -151,6 +152,9 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# Devices below this never answer the serial proxy identity subscription
+MIN_VERSION_SERIAL_PROXY_IDENTITY = APIVersion(1, 18)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
@@ -777,6 +781,15 @@ class ESPHomeManager:
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
 
+        if (
+            device_info.serial_proxies
+            and api_version >= MIN_VERSION_SERIAL_PROXY_IDENTITY
+        ):
+            # The device answers with one message per port, then one per change
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_serial_proxy_identity(self._async_serial_proxy_identity)
+            )
+
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
@@ -813,6 +826,24 @@ class ESPHomeManager:
             self.hass, entry_data.device_info, zwave_home_id
         )
 
+    @callback
+    def _async_serial_proxy_identity(self, identity: SerialProxyIdentity) -> None:
+        """Record what is behind a serial proxy port, from the snapshot or a hotplug."""
+        identities = self.entry_data.serial_proxy_identities
+        if (
+            identity.instance in identities
+            and identities[identity.instance] == identity
+        ):
+            return
+        identities[identity.instance] = identity
+        self._async_notify_serial_ports_changed()
+
+    @callback
+    def _async_notify_serial_ports_changed(self) -> None:
+        """Have the usb integration rescan, as a udev event would for a local port."""
+        if "usb" in self.hass.config.components:
+            usb.async_notify_serial_ports_changed(self.hass)
+
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
         entry_data = self.entry_data
@@ -825,6 +856,8 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
+        # The device's ports go with it, as a hub being unplugged takes its ports
+        had_serial_proxy_ports = bool(entry_data.serial_proxy_identities)
         entry_data.async_on_disconnect()
         entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
@@ -833,6 +866,8 @@ class ESPHomeManager:
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
             entry_data.async_update_device_state()
+            if had_serial_proxy_ports:
+                self._async_notify_serial_ports_changed()
 
         if Platform.ASSIST_SATELLITE in self.entry_data.loaded_platforms:
             await self.hass.config_entries.async_unload_platforms(

@@ -38,6 +38,7 @@ from .utils import (
     scan_serial_ports,
     usb_device_from_path,
     usb_device_matches_matcher,
+    usb_serial_device_from_port,
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
@@ -58,6 +59,8 @@ __all__ = [
     "USBCallbackMatcher",
     "USBDevice",
     "async_get_serial_port_consumers",
+    "async_is_serial_port_present",
+    "async_notify_serial_ports_changed",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
@@ -65,6 +68,7 @@ __all__ = [
     "scan_serial_ports",
     "usb_device_from_path",
     "usb_device_matches_matcher",
+    "usb_serial_device_from_port",
     "usb_service_info_from_device",
     "usb_unique_id_from_service_info",
 ]
@@ -108,6 +112,24 @@ async def async_scan_serial_ports(
 ) -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return await hass.data[_USB_DATA].async_scan_serial_ports()
+
+
+async def async_is_serial_port_present(hass: HomeAssistant, device_path: str) -> bool:
+    """Return whether a port with this device path is currently present."""
+    if "://" not in device_path:
+        return await hass.async_add_executor_job(os.path.exists, device_path)
+
+    # Ports contributed by a scanner, such as ESPHome serial proxies, are named by URLs
+    return any(
+        port.device == device_path for port in await async_scan_serial_ports(hass)
+    )
+
+
+@hass_callback
+def async_notify_serial_ports_changed(hass: HomeAssistant) -> None:
+    """Rescan after ports a scanner contributes appeared or disappeared."""
+    # Unlike `async_request_scan`, this also rescans while the udev watcher is running
+    hass.data[_USB_DATA].async_delayed_add_remove_scan()
 
 
 @hass_callback
@@ -272,7 +294,7 @@ class USBDiscovery:
 
         @hass_callback
         def _usb_change_callback() -> None:
-            self._async_delayed_add_remove_scan()
+            self.async_delayed_add_remove_scan()
 
         watcher = AIOUSBWatcher()
         watcher.async_register_callback(_usb_change_callback)
@@ -476,7 +498,7 @@ class USBDiscovery:
             await self._async_process_discovered_usb_device(usb_device)
 
     @hass_callback
-    def _async_delayed_add_remove_scan(self) -> None:
+    def async_delayed_add_remove_scan(self) -> None:
         """Request a serial scan after a debouncer delay."""
         if not self._add_remove_debouncer:
             self._add_remove_debouncer = Debouncer(

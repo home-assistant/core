@@ -2,12 +2,15 @@
 
 from dataclasses import dataclass
 import logging
-import os.path
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
-from homeassistant.components.usb import USBDevice, async_register_port_event_callback
+from homeassistant.components.usb import (
+    USBDevice,
+    async_is_serial_port_present,
+    async_register_port_event_callback,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -69,7 +72,7 @@ async def async_setup_entry(
 
     # Postpone loading the config entry if the device is missing
     device_path = entry.data[DEVICE]
-    if not await hass.async_add_executor_job(os.path.exists, device_path):
+    if not await async_is_serial_port_present(hass, device_path):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_disconnected",
