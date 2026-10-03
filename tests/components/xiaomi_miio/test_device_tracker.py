@@ -1,6 +1,7 @@
 """The tests for the xiaomi_miio device_tracker (Xiaomi Mi WiFi Repeater 2)."""
 
 from collections.abc import Generator
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
 from construct.core import ChecksumError
@@ -705,3 +706,27 @@ async def test_legacy_yaml_repeater_cannot_connect_creates_issue(
     issue = issue_registry.async_get_issue(const.DOMAIN, "yaml_import_cannot_connect")
     assert issue is not None
     assert issue.translation_placeholders == {"host": TEST_HOST}
+
+
+async def test_legacy_yaml_repeater_invalid_token_is_redacted(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A YAML validation error must not include the token value."""
+    with caplog.at_level(logging.DEBUG):
+        await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": [
+                    {
+                        "platform": const.DOMAIN,
+                        CONF_HOST: TEST_HOST,
+                        CONF_TOKEN: "notarealtok32chars!",
+                    }
+                ]
+            },
+        )
+
+    assert REDACTED in caplog.text
+    assert "notarealtok32chars!" not in caplog.text
+    assert not hass.config_entries.async_entries(const.DOMAIN)

@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_TOKEN): probatio.All(
+        probatio.Required(probatio.Secret(CONF_TOKEN)): probatio.All(
             cv.string, probatio.Length(min=32, max=32)
         ),
     }
