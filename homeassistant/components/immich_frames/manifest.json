@@ -1,0 +1,13 @@
+{
+  "domain": "immich_frames",
+  "name": "Immich Frames",
+  "codeowners": ["@jtenniswood"],
+  "config_flow": true,
+  "dependencies": ["immich"],
+  "documentation": "https://www.home-assistant.io/integrations/immich_frames",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["aioimmich"],
+  "quality_scale": "bronze",
+  "requirements": ["aioimmich==0.17.0"]
+}
