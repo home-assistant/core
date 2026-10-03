@@ -1,5 +1,13 @@
 {
   "entity": {
+    "number": {
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "timer": {
+        "default": "mdi:timer-outline"
+      }
+    },
     "sensor": {
       "cook_time": {
         "default": "mdi:clock-outline"
@@ -18,6 +26,14 @@
       },
       "water_temperature": {
         "default": "mdi:thermometer"
+      }
+    },
+    "switch": {
+      "cook": {
+        "default": "mdi:pot-steam-outline",
+        "state": {
+          "on": "mdi:pot-steam"
+        }
       }
     }
   }
