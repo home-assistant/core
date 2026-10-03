@@ -35,6 +35,12 @@
         "SYSTYPE": "ra2select*"
       },
       "type": "_lutron._tcp.local."
+    },
+    {
+      "properties": {
+        "SYSTYPE": "athena*"
+      },
+      "type": "_lutron._tcp.local."
     }
   ]
 }
