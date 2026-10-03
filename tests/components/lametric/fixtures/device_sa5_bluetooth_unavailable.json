@@ -29,13 +29,13 @@
   "serial_number": "SA52100000000TBNC",
   "wifi": {
     "active": true,
-    "address": "20:57:9E:00:00:00",
     "available": true,
     "encryption": "WPA",
-    "essid": ".",
     "ip": "192.168.0.2",
     "mode": "dhcp",
     "netmask": "255.255.255.0",
-    "strength": 86
+    "mac": "20:57:9E:00:00:00",
+    "ssid": ".",
+    "rssi": 86
   }
 }

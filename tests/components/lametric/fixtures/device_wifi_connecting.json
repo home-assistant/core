@@ -57,11 +57,11 @@
   "os_version": "2.3.9",
   "serial_number": "SA000000000000W00BS9",
   "wifi": {
-    "address": null,
     "available": true,
     "encryption": "WPA",
-    "essid": null,
     "mode": "dhcp",
-    "strength": 18
+    "mac": null,
+    "ssid": null,
+    "rssi": 18
   }
 }

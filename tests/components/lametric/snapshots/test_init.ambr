@@ -82,6 +82,10 @@
     'config_subentry_id': <ANY>,
     'configuration_url': 'https://192.168.0.2/',
     'connections': set({
+      tuple(
+        'mac',
+        '20:57:9e:00:00:00',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -110,10 +114,14 @@
     'area_id': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
-    'configuration_url': None,
+    'configuration_url': 'https://127.0.0.1/',
     'connections': set({
       tuple(
         'bluetooth',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+      tuple(
+        'mac',
         'aa:bb:cc:dd:ee:ff',
       ),
     }),
