@@ -6,12 +6,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
+from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.velbus import (
     VelbusConfigEntry,
     async_remove_config_entry_device,
 )
-from homeassistant.components.velbus.const import DOMAIN
+from homeassistant.components.velbus.const import CONF_ADVANCED_MODE, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
@@ -131,9 +132,12 @@ async def test_migrate_config_entry(
         patch("shutil.rmtree") as mock_rmtree,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert dict(entry.data) == legacy_config
+        assert dict(entry.data) == {
+            **legacy_config,
+            CONF_ADVANCED_MODE: False,
+        }
         assert entry.version == 3
-        assert entry.minor_version == 2
+        assert entry.minor_version == 3
         mock_rmtree.assert_called_once()
 
 
@@ -161,9 +165,12 @@ async def test_migrate_config_entry_32(
         patch("shutil.rmtree") as mock_rmtree,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert dict(entry.data) == legacy_config
+        assert dict(entry.data) == {
+            **legacy_config,
+            CONF_ADVANCED_MODE: False,
+        }
         assert entry.version == 3
-        assert entry.minor_version == 2
+        assert entry.minor_version == 3
         mock_rmtree.assert_called_once()
 
 
@@ -188,7 +195,31 @@ async def test_migrate_config_entry_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.unique_id == expected
     assert entry.version == 3
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
+    assert entry.data.get(CONF_ADVANCED_MODE) is False
+
+
+async def test_config_panel_requires_advanced_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the Velbus config panel is only available with advanced mode."""
+    await init_integration(hass, config_entry)
+    assert DOMAIN not in hass.data.get(DATA_PANELS, {})
+
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_ADVANCED_MODE: True}
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN in hass.data.get(DATA_PANELS, {})
+
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_ADVANCED_MODE: False}
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN not in hass.data.get(DATA_PANELS, {})
 
 
 async def test_api_call(

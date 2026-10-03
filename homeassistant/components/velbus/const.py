@@ -12,9 +12,11 @@ from homeassistant.components.climate import (
 DOMAIN: Final = "velbus"
 
 CONF_CONFIG_ENTRY: Final = "config_entry"
+CONF_ADVANCED_MODE: Final = "advanced_mode"
 CONF_MEMO_TEXT: Final = "memo_text"
 CONF_TLS: Final = "tls"
 CONF_VLP_FILE: Final = "vlp_file"
+CONF_CHANNEL: Final = "channel"
 
 SERVICE_SCAN: Final = "scan"
 SERVICE_SYNC: Final = "sync_clock"

@@ -3,6 +3,7 @@
   dict({
     'entry': dict({
       'data': dict({
+        'advanced_mode': False,
         'name': 'velbus home',
         'port': '127.0.1.0.1:3788',
       }),
@@ -10,7 +11,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'velbus',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
