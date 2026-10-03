@@ -50,8 +50,14 @@
       }
     },
     "sensor": {
+      "program_next_run": {
+        "name": "{program} next run"
+      },
       "raindelay": {
         "name": "Raindelay"
+      },
+      "zone_run_time": {
+        "name": "{program} run time"
       }
     }
   },
