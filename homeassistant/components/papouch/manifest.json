@@ -1,0 +1,11 @@
+{
+  "domain": "papouch",
+  "name": "Papouch",
+  "codeowners": ["@VladislavLevitskii"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/papouch",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aiopapouch==0.1.10"]
+}
