@@ -572,6 +572,7 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
+        'medium',
         'high',
       ]),
     }),
@@ -612,6 +613,7 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
+        'medium',
         'high',
       ]),
     }),
