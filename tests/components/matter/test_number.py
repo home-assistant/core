@@ -22,6 +22,10 @@ from .common import (
     trigger_subscription_callback,
 )
 
+POWER_ON_COLOR_TEMPERATURE_ENTITY_ID = (
+    "number.mock_color_temperature_light_power_on_color_temperature"
+)
+
 
 @pytest.mark.usefixtures("matter_devices")
 async def test_numbers(
@@ -133,8 +137,7 @@ async def test_power_on_color_temperature(
     matter_node: MatterNode,
 ) -> None:
     """Test the power-on color temperature number entity."""
-    entity_id = "number.mock_color_temperature_light_power_on_color_temperature"
-    attribute = clusters.ColorControl.Attributes.StartUpColorTemperatureMireds
+    entity_id = POWER_ON_COLOR_TEMPERATURE_ENTITY_ID
 
     # fixture value 65535 is out of range, shown as 0 (keep previous)
     state = hass.states.get(entity_id)
@@ -187,11 +190,29 @@ async def test_power_on_color_temperature(
     assert state
     assert state.state == "0"
 
-    # set a color temperature in Kelvin, written as mireds
+
+@pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(2700, 370, id="kelvin_to_mireds"),
+        pytest.param(0, None, id="keep_previous"),
+        # ColorTempPhysicalMaxMireds is 500 in the fixture
+        pytest.param(1000, 500, id="below_physical_range"),
+    ],
+)
+async def test_power_on_color_temperature_set_value(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    value: int,
+    expected: int | None,
+) -> None:
+    """Test setting the power-on color temperature."""
     await hass.services.async_call(
         "number",
         "set_value",
-        {"entity_id": entity_id, "value": 2700},
+        {"entity_id": POWER_ON_COLOR_TEMPERATURE_ENTITY_ID, "value": value},
         blocking=True,
     )
 
@@ -200,28 +221,9 @@ async def test_power_on_color_temperature(
         node_id=matter_node.node_id,
         attribute_path=create_attribute_path_from_attribute(
             endpoint_id=1,
-            attribute=attribute,
+            attribute=clusters.ColorControl.Attributes.StartUpColorTemperatureMireds,
         ),
-        value=370,
-    )
-
-    matter_client.write_attribute.reset_mock()
-    # 0 maps to null on the wire (keep previous color temperature)
-    await hass.services.async_call(
-        "number",
-        "set_value",
-        {"entity_id": entity_id, "value": 0},
-        blocking=True,
-    )
-
-    assert matter_client.write_attribute.call_count == 1
-    assert matter_client.write_attribute.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        attribute_path=create_attribute_path_from_attribute(
-            endpoint_id=1,
-            attribute=attribute,
-        ),
-        value=None,
+        value=expected,
     )
 
 

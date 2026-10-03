@@ -168,6 +168,22 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         self._attr_native_max_value = max_convert(max_value)
 
 
+class MatterStartUpColorTemperatureNumber(MatterRangeNumber):
+    """Matter StartUpColorTemperatureMireds as a Number entity in Kelvin."""
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        send_value = self.entity_description.ha_to_device(value)
+        if send_value is not None:
+            # Devices ignore a start-up value outside their physical range
+            physical_max = self.get_matter_attribute_value(
+                clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+            )
+            send_value = min(send_value, physical_max or MATTER_MAX_MIREDS)
+        await self.write_attribute(value=send_value)
+
+
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
@@ -253,7 +269,7 @@ DISCOVERY_SCHEMAS = [
             native_step=1,
             mode=NumberMode.BOX,
         ),
-        entity_class=MatterRangeNumber,
+        entity_class=MatterStartUpColorTemperatureNumber,
         required_attributes=(
             clusters.ColorControl.Attributes.StartUpColorTemperatureMireds,
             clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds,
