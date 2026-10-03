@@ -123,20 +123,41 @@
       "close_camera": {
         "name": "Privacy mode"
       },
+      "frame_reverse": {
+        "name": "Flip image"
+      },
       "header_detect": {
         "name": "Human detection"
       },
       "light": {
         "name": "Indicator light"
       },
+      "linkage_siren": {
+        "name": "Alarm-linked siren"
+      },
+      "linkage_white_light": {
+        "name": "Alarm-linked white light"
+      },
       "motion_detect": {
         "name": "Motion detection"
+      },
+      "pet_detect": {
+        "name": "Pet detection"
+      },
+      "play_sound": {
+        "name": "Prompt sound"
+      },
+      "smart_track": {
+        "name": "Smart tracking"
       },
       "switch": {
         "name": "Plug switch"
       },
       "white_light": {
         "name": "White light"
+      },
+      "wide_dynamic": {
+        "name": "Wide dynamic range"
       }
     }
   },

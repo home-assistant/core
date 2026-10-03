@@ -1,4 +1,154 @@
 # serializer version: 1
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_alarm_linked_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_alarm_linked_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm-linked siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm-linked siren',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'linkage_siren',
+    'unique_id': 'd1$linkage_siren',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_alarm_linked_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Alarm-linked siren',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_alarm_linked_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_alarm_linked_white_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_alarm_linked_white_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm-linked white light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm-linked white light',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'linkage_white_light',
+    'unique_id': 'd1$linkage_white_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_alarm_linked_white_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Alarm-linked white light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_alarm_linked_white_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_flip_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_flip_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flip image',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flip image',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frame_reverse',
+    'unique_id': 'd1$frame_reverse',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_flip_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Flip image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_flip_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_human_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -150,6 +300,56 @@
     'state': 'off',
   })
 # ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_pet_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_pet_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pet detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pet detection',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pet_detect',
+    'unique_id': 'd1$pet_detect',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_pet_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Pet detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_pet_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_plug_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -195,6 +395,156 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_1_plug_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_prompt_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_prompt_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prompt sound',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prompt sound',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'play_sound',
+    'unique_id': 'd1$play_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_prompt_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Prompt sound',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_prompt_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_smart_tracking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_smart_tracking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smart tracking',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart tracking',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_track',
+    'unique_id': 'd1$smart_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_smart_tracking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Smart tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_smart_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_wide_dynamic_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_1_wide_dynamic_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wide dynamic range',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wide dynamic range',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wide_dynamic',
+    'unique_id': 'd1$wide_dynamic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[imou_mock_devices0-platforms0][switch.device_1_wide_dynamic_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Wide dynamic range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_1_wide_dynamic_range',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
