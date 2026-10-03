@@ -1896,6 +1896,41 @@ async def test_node_status_trigger_from_only_for(
     assert len(service_calls) == expected_calls
 
 
+@pytest.mark.parametrize("behavior", ["each", "first"])
+async def test_node_status_trigger_within_to_statuses(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    behavior: str,
+) -> None:
+    """Test moving between two wanted statuses does not fire the trigger again."""
+    device_ids = [
+        device_registry.async_get_device_by_identifier(
+            get_device_id(client.driver, node), integration.entry_id
+        ).id
+        for node in (lock_schlage_be469, multisensor_6)
+    ]
+    # Neither node starts in a wanted status: the lock is alive and the
+    # battery powered multisensor is asleep
+    await _setup_node_status_automation(
+        hass, device_ids, {"behavior": behavior, "to": ["dead", "awake"]}
+    )
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # The node leaves a wanted status for another one, so it was already
+    # satisfying the trigger and must not fire a second time
+    _node_event(lock_schlage_be469, "wake up")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
 async def test_node_status_trigger_ignores_other_entities(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1941,6 +1976,69 @@ async def test_node_status_trigger_invalid_status(
                 }
             ],
         )
+
+
+@pytest.mark.parametrize("behavior", ["first", "all"])
+async def test_node_status_trigger_group_behavior_needs_status(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    behavior: str,
+) -> None:
+    """Test the group behaviors are rejected without a status filter to count."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    with pytest.raises(probatio.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.node_status",
+                    "options": {"device_id": device.id, "behavior": behavior},
+                }
+            ],
+        )
+
+
+async def test_node_status_trigger_ignores_controller(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a targeted controller does not hold back the all behavior."""
+    lock_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert lock_device
+    # The controller is node 1 and only gets a controller status sensor
+    controller_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]),
+        integration.entry_id,
+    )
+    assert controller_device
+    await _setup_node_status_automation(
+        hass,
+        [lock_device.id, controller_device.id],
+        {"behavior": "all", "to": ["dead"]},
+    )
+
+    _node_event(lock_schlage_be469, "dead")
+    await hass.async_block_till_done()
+
+    # The controller has no node status sensor to watch, so the lock alone
+    # satisfies the behavior
+    assert len(service_calls) == 1
+    assert service_calls[0].data["entity_id"] == async_get_node_status_sensor_entity_id(
+        hass, lock_device.id, entity_registry, device_registry
+    )
 
 
 @pytest.mark.usefixtures("integration")

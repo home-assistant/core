@@ -43,8 +43,29 @@ _OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
     probatio.Optional(CONF_TO): _STATUS_LIST,
 }
 
+
+def _validate_status_filter(options: dict[str, Any]) -> dict[str, Any]:
+    """Validate the group behaviors get a status filter to count.
+
+    The first and all behaviors count the nodes whose status satisfies the
+    trigger, so without a filter every node counts and the group is vacuous.
+    """
+    if options[ATTR_BEHAVIOR] != BEHAVIOR_EACH and not (
+        options.get(CONF_FROM) or options.get(CONF_TO)
+    ):
+        raise probatio.Invalid(
+            f"{ATTR_BEHAVIOR} {options[ATTR_BEHAVIOR]} requires "
+            f"{CONF_FROM} or {CONF_TO}"
+        )
+    return options
+
+
 _TRIGGER_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_OPTIONS, default={}): _OPTIONS_SCHEMA_DICT}
+    {
+        probatio.Required(CONF_OPTIONS, default={}): probatio.All(
+            _OPTIONS_SCHEMA_DICT, _validate_status_filter
+        )
+    }
 )
 
 
@@ -89,7 +110,11 @@ class NodeStatusTrigger(EntityTriggerBase):
 
     @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check the status changed from a wanted status."""
-        return from_state.state != to_state.state and (
-            not self._from_states or from_state.state in self._from_states
+        """Check the status changed from a wanted, not already matching, status."""
+        return (
+            from_state.state != to_state.state
+            # A status already satisfying the trigger must not satisfy it again:
+            # the first and all behaviors count matching states, not changes.
+            and from_state.state not in self._to_states
+            and (not self._from_states or from_state.state in self._from_states)
         )
