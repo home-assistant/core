@@ -16,6 +16,7 @@ from pyheos import (
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -252,6 +253,15 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Abort early when discovery is ignored or host is part of the current system
         if entry and (
             entry.source == SOURCE_IGNORE or hostname in _get_current_hosts(entry)
+        ):
+            return self.async_abort(reason="single_instance_allowed")
+
+        # The host list a discovered device reports is unreliable while players are
+        # rejoining the network, so don't act on it while connected.
+        if (
+            entry
+            and entry.state is ConfigEntryState.LOADED
+            and entry.runtime_data.heos.connection_state is ConnectionState.CONNECTED
         ):
             return self.async_abort(reason="single_instance_allowed")
 
