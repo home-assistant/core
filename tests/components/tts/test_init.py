@@ -4,8 +4,10 @@ import asyncio
 from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import io
+import os
 from pathlib import Path
 import tempfile
+import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import wave
@@ -25,9 +27,10 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.tts import DOMAIN
+from homeassistant.components.tts.const import ATTR_DAYS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -787,6 +790,117 @@ async def test_service_clear_cache(
     ).is_file()
 
 
+def _cache_file_name(key: int) -> str:
+    """Return a file name that matches the TTS cache file pattern."""
+    return f"{key:040x}_en-us_-_tts.test.mp3"
+
+
+OLD_CACHE_FILE = _cache_file_name(1)
+RECENT_CACHE_FILE = _cache_file_name(2)
+DOORBELL_CACHE_FILE = "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
+
+
+def _write_cache_file(path: Path, days_unused: int = 0) -> None:
+    """Write a cache file that was last used days_unused days ago."""
+    path.write_bytes(MOCK_DATA)
+    last_used = time.time() - days_unused * 86400
+    os.utime(path, (last_used, last_used))
+
+
+async def _async_speak_from_cache(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Speak the doorbell message and wait until its audio is loaded."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: "tts.test",
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_service_clear_cache_days(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test clear cache only removes files not used for the given days."""
+    await hass.async_add_executor_job(
+        _write_cache_file, mock_tts_cache_dir / OLD_CACHE_FILE, 31
+    )
+    await hass.async_add_executor_job(
+        _write_cache_file, mock_tts_cache_dir / RECENT_CACHE_FILE, 29
+    )
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts.SERVICE_CLEAR_CACHE,
+        {ATTR_DAYS: 30},
+        blocking=True,
+    )
+
+    assert not (mock_tts_cache_dir / OLD_CACHE_FILE).is_file()
+    assert (mock_tts_cache_dir / RECENT_CACHE_FILE).is_file()
+    assert list(hass.data[tts.DATA_TTS_MANAGER].file_cache.values()) == [
+        RECENT_CACHE_FILE
+    ]
+
+
+async def test_service_clear_cache_days_missing_file(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test clear cache drops files that were already removed from disk."""
+    await hass.async_add_executor_job(
+        _write_cache_file, mock_tts_cache_dir / OLD_CACHE_FILE, 31
+    )
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    await hass.async_add_executor_job((mock_tts_cache_dir / OLD_CACHE_FILE).unlink)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts.SERVICE_CLEAR_CACHE,
+        {ATTR_DAYS: 30},
+        blocking=True,
+    )
+
+    assert hass.data[tts.DATA_TTS_MANAGER].file_cache == {}
+
+
+async def test_service_clear_cache_days_remove_error(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test clear cache keeps files it can't remove."""
+    await hass.async_add_executor_job(
+        _write_cache_file, mock_tts_cache_dir / OLD_CACHE_FILE, 31
+    )
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    with patch(
+        "homeassistant.components.tts.os.remove", side_effect=OSError("No access")
+    ):
+        await hass.services.async_call(
+            tts.DOMAIN,
+            tts.SERVICE_CLEAR_CACHE,
+            {ATTR_DAYS: 30},
+            blocking=True,
+        )
+
+    assert list(hass.data[tts.DATA_TTS_MANAGER].file_cache.values()) == [OLD_CACHE_FILE]
+    assert f"Can't remove cache file '{OLD_CACHE_FILE}': No access" in caplog.text
+
+
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
     [
@@ -1136,6 +1250,54 @@ async def test_setup_cache_dir(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
         await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
+async def test_cache_file_use_updates_access_time(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test playing a message from the file cache marks the file as used."""
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
+    cache_file = mock_tts_cache_dir / DOORBELL_CACHE_FILE
+    await hass.async_add_executor_job(_write_cache_file, cache_file, 31)
+    mtime = (await hass.async_add_executor_job(cache_file.stat)).st_mtime_ns
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    # Mounts with noatime or relatime don't update atime on every read
+    with patch("homeassistant.components.tts.os.utime", wraps=os.utime) as mock_utime:
+        await _async_speak_from_cache(hass, calls)
+
+    mock_utime.assert_called_once()
+    stat = await hass.async_add_executor_job(cache_file.stat)
+    assert stat.st_atime > time.time() - 60
+    assert stat.st_mtime_ns == mtime
+
+
+@pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
+async def test_service_clear_cache_days_keeps_memory_cached(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test clear cache keeps files of messages still in the memory cache."""
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
+    cache_file = mock_tts_cache_dir / DOORBELL_CACHE_FILE
+    await hass.async_add_executor_job(_write_cache_file, cache_file)
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    await _async_speak_from_cache(hass, calls)
+    # Replays from memory don't refresh the file's access time
+    await hass.async_add_executor_job(_write_cache_file, cache_file, 31)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts.SERVICE_CLEAR_CACHE,
+        {ATTR_DAYS: 30},
+        blocking=True,
+    )
+
+    assert cache_file.is_file()
 
 
 class MockProviderEmpty(MockTTSProvider):

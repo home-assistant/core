@@ -1,7 +1,13 @@
 {
   "services": {
     "clear_cache": {
-      "description": "Removes all cached text-to-speech files and purges the memory.",
+      "description": "Removes cached text-to-speech files and purges the memory.",
+      "fields": {
+        "days": {
+          "description": "Only removes files that have not been used for this many days. Leave empty to remove all files.",
+          "name": "Days unused"
+        }
+      },
       "name": "Clear TTS cache"
     },
     "say": {
