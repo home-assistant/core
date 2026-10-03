@@ -13,7 +13,7 @@ from homeassistant.components.engie_be.const import (
     SERVICE_GET_EPEX_PRICES_FOR_DATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import build_epex_payload_without_tomorrow, setup_entry
 
@@ -115,13 +115,14 @@ async def test_get_epex_prices_for_date_connection_error(
     mock_engie_client: MagicMock,
     frozen_afternoon: None,
 ) -> None:
-    """Test the service reports a validation error when the API is unreachable."""
+    """Test the service reports a HomeAssistantError when the API is unreachable."""
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
         EngieBeCommunicationError("boom")
     )
     await setup_entry(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError, match="connection error"):
+    with pytest.raises(HomeAssistantError, match="connection error") as exc_info:
         await _call_service(
             hass, {"config_entry": mock_config_entry.entry_id, "date": "2026-10-03"}
         )
+    assert type(exc_info.value) is HomeAssistantError

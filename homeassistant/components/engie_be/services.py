@@ -14,7 +14,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
@@ -80,7 +80,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_placeholders={"date": asked_date.isoformat()},
             ) from err
         except EngieBeError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
