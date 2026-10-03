@@ -1171,10 +1171,14 @@ def make_entity_numerical_condition_with_unit(
     return CustomCondition
 
 
-DATETIME_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+DATETIME_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Optional("reference"): ChooseSelector(
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): probatio.In(
+                [BEHAVIOR_ANY, BEHAVIOR_ALL]
+            ),
+            probatio.Optional("reference"): ChooseSelector(
                 ChooseSelectorConfig(
                     translation_key="reference",
                     choices={
@@ -1189,8 +1193,8 @@ DATETIME_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
                     },
                 )
             ),
-            vol.Optional("reference_offset"): cv.time_period,
-        }
+            probatio.Optional("reference_offset"): cv.time_period,
+        },
     }
 )
 

@@ -30,4 +30,4 @@ is_before:
       selector:
         duration:
           enable_day: true
-          allow_negative: true
+          mode: offset
