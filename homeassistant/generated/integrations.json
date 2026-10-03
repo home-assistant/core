@@ -7003,6 +7003,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "splunk": {
       "name": "Splunk",
       "integration_type": "service",
