@@ -115,6 +115,7 @@ async def test_device_tracker_with_interfaces_filter(
             "verify_ssl": False,
             "tracker_interfaces": ["WAN"],  # Filter to only WAN interface
         },
+        unique_id="mocked_unique_id",
     )
     mock_config_entry.add_to_hass(hass)
 
