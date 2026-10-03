@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from demetriek import (
+    LaMetricAuthenticationError,
     LaMetricConnectionError,
     LaMetricConnectionTimeoutError,
     LaMetricError,
@@ -927,3 +928,97 @@ async def test_reauth_manual_sky(
 
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound is None
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing the host and API key of a configured device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42", CONF_API_KEY: "new-api-key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.42",
+        CONF_API_KEY: "new-api-key",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+    }
+
+    # Reconfiguring only checks the device, it does not send a notification.
+    assert len(mock_lametric.device.mock_calls) == 1
+    assert len(mock_lametric.notify.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_other_device(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring towards another device is refused."""
+    mock_config_entry.add_to_hass(hass)
+    mock_lametric.device.return_value.serial_number = "SA000000000000000000"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42", CONF_API_KEY: "new-api-key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (LaMetricAuthenticationError, "invalid_auth"),
+        (LaMetricConnectionError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test errors while reconfiguring, and recovering from them."""
+    mock_config_entry.add_to_hass(hass)
+    device = mock_lametric.device.return_value
+    mock_lametric.device.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42", CONF_API_KEY: "new-api-key"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_lametric.device.side_effect = None
+    mock_lametric.device.return_value = device
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.42", CONF_API_KEY: "new-api-key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
