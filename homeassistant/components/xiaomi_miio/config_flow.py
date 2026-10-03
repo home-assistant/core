@@ -374,10 +374,19 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         except SetupException:
             return self.async_abort(reason="cannot_connect")
 
-        self.mac = format_mac(connect_device_class.device_info.mac_address)
+        device_info = connect_device_class.device_info
+        # The YAML platform only supported the WiFi repeater, so anything
+        # else must be added through the UI instead of being imported.
+        if device_info is None or device_info.model != MODELS_WIFI_REPEATER[0]:
+            return self.async_abort(reason="unsupported_model")
+
+        self.mac = format_mac(device_info.mac_address)
 
         await self.async_set_unique_id(self.mac)
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        # Update the host/token in case the user changed them in YAML.
+        self._abort_if_unique_id_configured(
+            {CONF_HOST: self.host, CONF_TOKEN: self.token}
+        )
 
         return self.async_create_entry(
             title="Xiaomi Home",
@@ -411,9 +420,14 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         except AuthException:
             errors["base"] = "wrong_token"
         except SetupException:
-            # During reauth the model is preloaded from the entry, so an
-            # unreachable device must not fall through as a successful connect.
-            if self.reauth or self.model is None:
+            # The generic probe never succeeds for repeaters (repeater
+            # entries are created through the model dropdown), so a failed
+            # probe during repeater reauth is a definitive cannot_connect.
+            # Other models can be configured with the model dropdown even
+            # when the probe fails, so a failed probe is not decisive there.
+            if self.model is None or (
+                self.reauth and self.model == MODELS_WIFI_REPEATER[0]
+            ):
                 errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception in connect Xiaomi device")

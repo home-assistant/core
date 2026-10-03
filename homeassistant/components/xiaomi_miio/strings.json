@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
       "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Home integration.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_model": "The device is not a WiFi repeater and cannot be imported from YAML. Add it through the UI instead."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

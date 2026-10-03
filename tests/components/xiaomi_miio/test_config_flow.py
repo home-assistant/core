@@ -1258,7 +1258,7 @@ async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_device_offline_shows_cannot_connect(hass: HomeAssistant) -> None:
-    """An unreachable device during reauth must not report a successful reauth."""
+    """An unreachable repeater during reauth must not report a successful reauth."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=TEST_MAC,
@@ -1273,8 +1273,8 @@ async def test_reauth_device_offline_shows_cannot_connect(hass: HomeAssistant) -
     )
     config_entry.add_to_hass(hass)
 
-    # A plain DeviceException (no checksum cause) means the device is offline,
-    # not that the token is wrong.
+    # The generic probe can never succeed for a repeater, so a plain
+    # DeviceException is a definitive cannot_connect for this model.
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
         side_effect=DeviceException({}),
@@ -1392,3 +1392,101 @@ async def test_import_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
+
+
+async def test_import_flow_updates_existing_entry(hass: HomeAssistant) -> None:
+    """A YAML import updates the host and token of the existing entry."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        title=TEST_REPEATER_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_REPEATER_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN2},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_TOKEN] == TEST_TOKEN2
+
+
+async def test_import_flow_unsupported_model(hass: HomeAssistant) -> None:
+    """A device that is not a repeater cannot be imported from YAML."""
+    mock_info = get_mock_info(model=const.MODELS_VACUUM[0])
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
+    assert not hass.config_entries.async_entries(const.DOMAIN)
+
+
+async def test_reauth_device_probe_failure_keeps_token_editable(
+    hass: HomeAssistant,
+) -> None:
+    """A failed probe during reauth of a non-repeater does not block reauth."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        title=TEST_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    # The generic probe can fail for devices that are otherwise configured
+    # through the model dropdown; reauth must remain recoverable there.
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["step_id"] == "cloud"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {const.CONF_MANUAL: True}
+        )
+        assert result["step_id"] == "manual"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: TEST_TOKEN}
+        )
+
+    # The flow trusts the preconfigured model and completes the reauth; if
+    # the token is still wrong the coordinator re-triggers reauth on reload.
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_TOKEN] == TEST_TOKEN
