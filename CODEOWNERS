@@ -1810,6 +1810,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/steam_online/ @tr4nt0r @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
+/homeassistant/components/steamvr_base_station/ @g4bri3lDev
+/tests/components/steamvr_base_station/ @g4bri3lDev
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
 /tests/components/stiebel_eltron/ @fucm @ThyMYthOS
 /homeassistant/components/stookwijzer/ @fwestenberg

@@ -7058,11 +7058,22 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "steam_online": {
+    "steam": {
       "name": "Steam",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "steam_online": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Steam"
+        },
+        "steamvr_base_station": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "SteamVR Base Station"
+        }
+      }
     },
     "steamist": {
       "name": "Steamist",

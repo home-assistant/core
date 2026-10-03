@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "This device is not a supported SteamVR Base Station 2.0."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The base station to set up. Its name (LHB-…) is printed on its back."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not reach {name}. Make sure a Bluetooth adapter or proxy is in range."
+    },
+    "device_not_found": {
+      "message": "{name} is not reachable yet: {reason}"
+    }
+  }
+}

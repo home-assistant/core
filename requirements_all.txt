@@ -1532,6 +1532,9 @@ libsoundtouch==0.8
 # homeassistant.components.lifx
 lifx-async==7.6.5
 
+# homeassistant.components.steamvr_base_station
+lighthouse-ble==0.2.0
+
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
 
