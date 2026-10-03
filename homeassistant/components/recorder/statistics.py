@@ -420,7 +420,7 @@ def _requires_pre_aggregation_unit_conversion(
     metadata: StatisticMetaData,
     requested_units: dict[str, str] | None,
 ) -> bool:
-    """Return whether unit conversion must happen before aggregation."""
+    """Return whether unit conversion excludes SQL aggregate reduction."""
     statistic_unit = metadata["unit_of_measurement"]
     if (
         converter := _get_unit_converter(metadata["unit_class"], statistic_unit)
@@ -437,13 +437,7 @@ def _requires_pre_aggregation_unit_conversion(
         else state_unit
     )
 
-    return (
-        display_unit in converter.VALID_UNITS
-        and display_unit != statistic_unit
-        and converter._are_unit_inverses(  # noqa: SLF001
-            statistic_unit, display_unit
-        )
-    )
+    return display_unit in converter.VALID_UNITS and display_unit != statistic_unit
 
 
 def _get_display_to_statistic_unit_converter_func(

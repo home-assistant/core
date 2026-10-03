@@ -10,13 +10,17 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import Recorder, statistics
-from homeassistant.components.recorder.db_schema import Statistics, StatisticsMeta
+from homeassistant.components.recorder.db_schema import (
+    Statistics,
+    StatisticsMeta,
+    StatisticsShortTerm,
+)
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.util import (
     execute_stmt_lambda_element,
     session_scope,
 )
-from homeassistant.const import UnitOfEnergyDistance
+from homeassistant.const import EntityStateAttribute, UnitOfEnergyDistance, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -784,18 +788,6 @@ async def test_reducer_flushes_final_dst_fallback_period(
 @pytest.mark.parametrize("period", ["day", "week", "month", "year"])
 @pytest.mark.parametrize("start_month", [3, 10])
 @pytest.mark.parametrize(
-    ("unit_class", "statistic_unit", "requested_units"),
-    [
-        pytest.param("power", "W", {"power": "kW"}, id="power"),
-        pytest.param(
-            "temperature",
-            "°C",
-            {"temperature": "°F"},
-            id="temperature",
-        ),
-    ],
-)
-@pytest.mark.parametrize(
     "statistic_ids", [None, {"test:statistic_1", "test:statistic_2"}]
 )
 async def test_arithmetic_mean_returns_average_per_period(
@@ -804,9 +796,6 @@ async def test_arithmetic_mean_returns_average_per_period(
     timezone: str,
     period: Literal["day", "week", "month", "year"],
     start_month: int,
-    unit_class: str,
-    statistic_unit: str,
-    requested_units: dict[str, str],
     statistic_ids: set[str] | None,
 ) -> None:
     """Return the arithmetic average for each calendar period."""
@@ -814,8 +803,8 @@ async def test_arithmetic_mean_returns_average_per_period(
     statistics_session.query(StatisticsMeta).update(
         {
             StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
-            StatisticsMeta.unit_class: unit_class,
-            StatisticsMeta.unit_of_measurement: statistic_unit,
+            StatisticsMeta.unit_class: "power",
+            StatisticsMeta.unit_of_measurement: "W",
             StatisticsMeta.has_sum: False,
         }
     )
@@ -859,7 +848,7 @@ async def test_arithmetic_mean_returns_average_per_period(
             end_time,
             statistic_ids,
             period,
-            requested_units,
+            None,
             {"mean"},
         )
 
@@ -872,7 +861,7 @@ async def test_arithmetic_mean_returns_average_per_period(
         end_time,
         statistic_ids,
         period,
-        requested_units,
+        None,
         {"mean"},
     )
 
@@ -956,7 +945,7 @@ async def test_aggregate_statistics_return_reduced_values_per_period(
             start + timedelta(days=10),
             {"test:statistic_1", "test:statistic_2"},
             period,
-            {"temperature": "°F"},
+            None,
             types,
         )
 
@@ -969,7 +958,7 @@ async def test_aggregate_statistics_return_reduced_values_per_period(
         start + timedelta(days=10),
         {"test:statistic_1", "test:statistic_2"},
         period,
-        {"temperature": "°F"},
+        None,
         types,
     )
 
@@ -1259,6 +1248,14 @@ async def test_circular_statistics_without_mean_use_fast_path(
             "power",
             "W",
             StatisticMeanType.ARITHMETIC,
+            "5minute",
+            {"mean"},
+            id="5minute",
+        ),
+        pytest.param(
+            "power",
+            "W",
+            StatisticMeanType.ARITHMETIC,
             "hour",
             {"mean"},
             id="hour",
@@ -1279,10 +1276,10 @@ async def test_mean_fallback(
     unit_class: str,
     unit: str,
     mean_type: StatisticMeanType,
-    period: Literal["hour", "day"],
+    period: Literal["5minute", "hour", "day"],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> None:
-    """Fall back for hourly and unavailable-mean requests."""
+    """Fall back for five-minute, hourly and unavailable-mean requests."""
     statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
         {
             StatisticsMeta.unit_class: unit_class,
@@ -1291,8 +1288,10 @@ async def test_mean_fallback(
         }
     )
     start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+    table = StatisticsShortTerm if period == "5minute" else Statistics
+
     statistics_session.add(
-        Statistics(
+        table(
             metadata_id=1,
             start_ts=start.timestamp(),
             mean=100.0,
@@ -1300,6 +1299,7 @@ async def test_mean_fallback(
             min=50.0,
         )
     )
+
     statistics_session.commit()
     with patch.object(statistics, "_get_statistics_period_rows") as optimized:
         result = statistics._statistics_during_period_with_session(
@@ -1314,6 +1314,204 @@ async def test_mean_fallback(
         )
     optimized.assert_not_called()
     assert result["test:statistic_1"]
+
+
+async def test_same_unit_aggregate_uses_fast_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Use the optimized path when the requested unit requires no conversion."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "power",
+            StatisticsMeta.unit_of_measurement: "W",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=1000.0,
+                min=500.0,
+                max=1500.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=3000.0,
+                min=2500.0,
+                max=3500.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            {"power": "W"},
+            {"mean", "min", "max"},
+        )
+
+    optimized.assert_called_once()
+
+    row = result["test:statistic_1"][0]
+    assert row["mean"] == pytest.approx(2000.0)
+    assert row["min"] == pytest.approx(500.0)
+    assert row["max"] == pytest.approx(3500.0)
+
+
+@pytest.mark.parametrize(
+    "types",
+    [
+        pytest.param({"mean"}, id="mean"),
+        pytest.param({"min"}, id="min"),
+        pytest.param({"max"}, id="max"),
+        pytest.param({"mean", "min", "max"}, id="all-aggregates"),
+        pytest.param({"mean", "sum"}, id="mixed-aggregate-endpoint"),
+    ],
+)
+async def test_unit_converted_aggregates_use_row_based_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+    types: set[Literal["max", "mean", "min", "sum"]],
+) -> None:
+    """Use the row-based path when aggregate statistics require unit conversion."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "power",
+            StatisticsMeta.unit_of_measurement: "W",
+            StatisticsMeta.has_sum: True,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=1000.0,
+                min=500.0,
+                max=1500.0,
+                sum=1000.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=3000.0,
+                min=2500.0,
+                max=3500.0,
+                sum=3000.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            {"power": "kW"},
+            types,
+        )
+
+    optimized.assert_not_called()
+
+    row = result["test:statistic_1"][0]
+    expected = {
+        "mean": 2.0,
+        "min": 0.5,
+        "max": 3.5,
+        "sum": 3.0,
+    }
+
+    for stat_type in types:
+        assert row[stat_type] == pytest.approx(expected[stat_type])
+
+
+async def test_state_unit_converted_aggregate_uses_row_based_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Use the row-based path when the state unit requires conversion."""
+    statistic_id = "sensor.test_statistic"
+
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.statistic_id: statistic_id,
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "power",
+            StatisticsMeta.unit_of_measurement: "W",
+            StatisticsMeta.has_sum: False,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=1000.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=3000.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    hass.states.async_set(
+        statistic_id,
+        "1",
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: "kW"},
+    )
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {statistic_id},
+            "day",
+            None,
+            {"mean"},
+        )
+
+    optimized.assert_not_called()
+    assert result[statistic_id][0]["mean"] == pytest.approx(2.0)
 
 
 async def test_inverse_unit_conversion_uses_row_based_path(
@@ -1356,7 +1554,6 @@ async def test_inverse_unit_conversion_uses_row_based_path(
     with patch.object(
         statistics,
         "_get_statistics_period_rows",
-        wraps=statistics._get_statistics_period_rows,
     ) as optimized:
         result = statistics._statistics_during_period_with_session(
             hass,
@@ -1375,6 +1572,64 @@ async def test_inverse_unit_conversion_uses_row_based_path(
     assert row["mean"] == pytest.approx(7.5)
     assert row["min"] == pytest.approx(5.0)
     assert row["max"] == pytest.approx(10.0)
+
+
+async def test_beaufort_unit_conversion_uses_row_based_path(
+    statistics_session: Session,
+    hass: HomeAssistant,
+) -> None:
+    """Convert Beaufort values before reducing statistics."""
+    statistics_session.query(StatisticsMeta).filter(StatisticsMeta.id == 1).update(
+        {
+            StatisticsMeta.mean_type: StatisticMeanType.ARITHMETIC,
+            StatisticsMeta.unit_class: "speed",
+            StatisticsMeta.unit_of_measurement: UnitOfSpeed.METERS_PER_SECOND,
+        }
+    )
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+
+    statistics_session.add_all(
+        [
+            Statistics(
+                metadata_id=1,
+                start_ts=start.timestamp(),
+                mean=1.0,
+                min=1.0,
+                max=1.0,
+            ),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=10.0,
+                min=10.0,
+                max=10.0,
+            ),
+        ]
+    )
+    statistics_session.commit()
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start + timedelta(days=1),
+            {"test:statistic_1"},
+            "day",
+            {"speed": UnitOfSpeed.BEAUFORT},
+            {"mean", "min", "max"},
+        )
+
+    optimized.assert_not_called()
+
+    row = result["test:statistic_1"][0]
+    assert row["mean"] == pytest.approx(3.0)
+    assert row["min"] == pytest.approx(1.0)
+    assert row["max"] == pytest.approx(5.0)
 
 
 async def test_circular_mean_uses_fast_path(
