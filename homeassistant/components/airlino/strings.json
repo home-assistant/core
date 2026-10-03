@@ -4,11 +4,13 @@
       "already_configured": "Device is already configured",
       "cannot_connect": "Failed to connect",
       "not_airlino": "Discovered device is not a supported AirLino",
-      "unknown": "Unexpected error"
+      "unknown": "Unexpected error",
+      "unsupported_api_version": "AirLino API version 19 or newer is required"
     },
     "error": {
       "cannot_connect": "Failed to connect",
-      "unknown": "Unexpected error"
+      "unknown": "Unexpected error",
+      "unsupported_api_version": "AirLino API version 19 or newer is required"
     },
     "step": {
       "confirm": {
@@ -20,7 +22,11 @@
           "host": "Host",
           "port": "Port"
         },
-        "description": "Set up your AirLino device. The host is the IP address or hostname of the device on your network."
+        "data_description": {
+          "host": "The hostname or IP address of the AirLino.",
+          "port": "The port used to access the HTTP-API. 8989 is the default port."
+        },
+        "description": "Set up your AirLino device."
       }
     }
   },
@@ -41,7 +47,7 @@
       "message": "Media type {media_type} is not supported by AirLino; only URL playback is supported."
     },
     "multiroom_receiver_control": {
-      "message": "This AirLino is part of a multiroom group and follows the master. Only volume control is available; ungroup it to control it directly."
+      "message": "This AirLino is part of a multiroom group and follows the master. Only volume control is available; ungroup it by modifying the group from the master device to control it directly."
     },
     "play_failed": {
       "message": "AirLino failed to play the stream: {error}"

@@ -113,7 +113,9 @@ class AirlinoMediaPlayer(
     ) -> None:
         """Initialize the media player."""
         super().__init__(coordinator)
-        self._attr_unique_id = entry.entry_id
+        assert entry.unique_id is not None
+        self._attr_unique_id = entry.unique_id
+        self._device_name = entry.title
         self._attr_name = None
 
     @override
@@ -133,16 +135,17 @@ class AirlinoMediaPlayer(
         device = self.coordinator.data.get("device") or {}
         return DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            name=device.get("devicename", "AirLino"),
+            name=device.get("devicename") or self._device_name,
             manufacturer="Lintech GmbH",
             model=device.get("model"),
             sw_version=device.get("firmware"),
         )
 
-    def _entity_id_for_entry(self, entry_id: str) -> str | None:
+    def _entity_id_for_entry(self, entry: AirlinoConfigEntry) -> str | None:
         """Return the media player entity id of an AirLino config entry."""
+        assert entry.unique_id is not None
         registry = er.async_get(self.hass)
-        return registry.async_get_entity_id("media_player", DOMAIN, entry_id)
+        return registry.async_get_entity_id("media_player", DOMAIN, entry.unique_id)
 
     def _all_runtimes(self) -> list[tuple[AirlinoConfigEntry, AirlinoRuntimeData]]:
         """Return the config entries and runtime data of all AirLino devices."""
@@ -181,7 +184,7 @@ class AirlinoMediaPlayer(
             is_member = self._receiver_sender_uuid(runtime.coordinator) == sender_uuid
             if not (is_master or is_member):
                 continue
-            entity_id = self._entity_id_for_entry(entry.entry_id)
+            entity_id = self._entity_id_for_entry(entry)
             if entity_id:
                 members.add(entity_id)
         if not members:
@@ -193,7 +196,7 @@ class AirlinoMediaPlayer(
     ) -> AirlinoRuntimeData | None:
         """Return the runtime data of the device behind a media player entity id."""
         for entry, runtime in self._all_runtimes():
-            if self._entity_id_for_entry(entry.entry_id) == entity_id:
+            if self._entity_id_for_entry(entry) == entity_id:
                 return runtime
         return None
 
@@ -212,6 +215,7 @@ class AirlinoMediaPlayer(
                 translation_domain=DOMAIN,
                 translation_key="sender_uuid_missing",
             )
+
         if not (sender_status or {}).get("enabled"):
             await self._async_call(self.coordinator.api.async_enable_sender)
         for entity_id in group_members:
@@ -454,13 +458,13 @@ class AirlinoMediaPlayer(
         self._ensure_not_multiroom_receiver()
         if self.state == MediaPlayerState.PLAYING:
             return
-        await self._async_call(self.coordinator.api.async_playpause)
+        await self._async_call(self.coordinator.api.async_play)
 
     @override
     async def async_media_pause(self) -> None:
-        """Toggle playback (the device only supports playpause)."""
+        """Pause playback when it is currently playing."""
         self._ensure_not_multiroom_receiver()
-        if self.state == MediaPlayerState.PAUSED:
+        if self.state != MediaPlayerState.PLAYING:
             return
         await self._async_call(self.coordinator.api.async_playpause)
 

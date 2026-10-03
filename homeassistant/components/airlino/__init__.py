@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import AirlinoApi
-from .const import DEFAULT_API_VERSION, DEFAULT_PORT
+from .const import DEFAULT_API_VERSION, DEFAULT_PORT, is_supported_api_version
 from .coordinator import AirlinoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +31,17 @@ type AirlinoConfigEntry = ConfigEntry[AirlinoRuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> bool:
     """Set up AirLino from a config entry."""
 
+    api_version = entry.data.get("api_version", DEFAULT_API_VERSION)
+    if not is_supported_api_version(api_version):
+        _LOGGER.error(
+            "Cannot set up AirLino with unsupported API version %s", api_version
+        )
+        return False
+
     api = AirlinoApi(
         host=entry.data["host"],
         port=entry.data.get("port", DEFAULT_PORT),
-        api_version=entry.data.get("api_version", DEFAULT_API_VERSION),
+        api_version=api_version,
         session=async_get_clientsession(hass),
     )
 

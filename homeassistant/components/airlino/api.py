@@ -6,13 +6,34 @@ from typing import Any
 
 import aiohttp
 
-from .const import API_TIMEOUT, DEFAULT_API_VERSION, DEFAULT_PORT, MULTIROOM_GROUP_NAME
+from .const import (
+    API_TIMEOUT,
+    DEFAULT_API_VERSION,
+    DEFAULT_PORT,
+    MULTIROOM_GROUP_NAME,
+    PLAYER_STATE_PAUSED,
+    PLAYER_STATE_PLAYING,
+    PLAYER_STATE_STOPPED,
+    RECEIVER_STATE_DISCONNECTED,
+    RECEIVER_STATE_NOT_PLAYING,
+    RECEIVER_STATE_OFF,
+    RECEIVER_STATE_PLAYING,
+    SONGCAST_MODE_UNICAST,
+    VOLUME_MAX,
+    VOLUME_MIN,
+    VOLUME_STEP,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
 class AirlinoApiError(Exception):
     """Raised when the device returns an error."""
+
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        """Initialize the error."""
+        super().__init__(message)
+        self.status = status
 
 
 class AirlinoApiConnectionError(Exception):
@@ -72,15 +93,22 @@ class AirlinoApi:
                 ) as response:
                     response.raise_for_status()
                     try:
-                        data: dict[str, Any] = await response.json(content_type=None)
+                        data: Any = await response.json(content_type=None)
                     except ValueError as err:
-                        body = await response.text()
+                        raise AirlinoApiError(f"{url} returned invalid JSON") from err
+                    if not isinstance(data, dict):
                         raise AirlinoApiError(
-                            f"{url} returned invalid JSON ({body[:200]!r}): {err}"
-                        ) from err
+                            f"{url} returned invalid response type: "
+                            f"{type(data).__name__}"
+                        )
         except TimeoutError as err:
             raise AirlinoApiConnectionError(
                 f"Timeout while connecting to {url}"
+            ) from err
+        except aiohttp.ClientResponseError as err:
+            raise AirlinoApiError(
+                f"{url} returned HTTP {err.status}: {err.message}",
+                status=err.status,
             ) from err
         except aiohttp.ClientError as err:
             raise AirlinoApiConnectionError(
@@ -104,17 +132,58 @@ class AirlinoApi:
 
     async def async_get_device_info(self) -> dict[str, Any]:
         """Get device information (model, devicename, firmware, hardware)."""
-        return await self._request("device.action", {"action": "info"})
+        data = await self._request("device.action", {"action": "info"})
+        for key in ("model", "devicename", "firmware", "hardware"):
+            value = data.get(key)
+            if value is not None and not isinstance(value, str):
+                raise AirlinoApiError(f"Device info field {key} must be a string")
+        return data
 
     async def async_get_network_info(self) -> dict[str, Any]:
         """Get network information."""
-        return await self._request("network.action", {"action": "info"})
+        data = await self._request("network.action", {"action": "info"})
+        for interface_name in ("eth", "wlan"):
+            interface = data.get(interface_name)
+            if interface is not None and not isinstance(interface, dict):
+                raise AirlinoApiError(
+                    f"Network info field {interface_name} must be an object"
+                )
+            if isinstance(interface, dict):
+                mac = interface.get("mac")
+                if mac is not None and not isinstance(mac, str):
+                    raise AirlinoApiError(
+                        f"Network info field {interface_name}.mac must be a string"
+                    )
+        return data
 
     # Player -----------------------------------------------------------------
 
     async def async_get_player_status(self) -> dict[str, Any]:
         """Get playback state and status information."""
-        return await self._request("player.action", {"action": "status"})
+        data = await self._request("player.action", {"action": "status"})
+        state = data.get("state")
+        if state is not None and (
+            isinstance(state, bool)
+            or not isinstance(state, int)
+            or state
+            not in (
+                PLAYER_STATE_STOPPED,
+                PLAYER_STATE_PLAYING,
+                PLAYER_STATE_PAUSED,
+            )
+        ):
+            raise AirlinoApiError("Player status contains an invalid state")
+        status = data.get("status")
+        if status is not None and not isinstance(status, dict):
+            raise AirlinoApiError("Player status field status must be an object")
+        if isinstance(status, dict):
+            for key in ("station", "track"):
+                value = status.get(key)
+                if value is not None and not isinstance(value, dict):
+                    raise AirlinoApiError(
+                        f"Player status field status.{key} must be an object"
+                    )
+        return data
 
     async def async_play(self) -> None:
         """Start playback."""
@@ -152,35 +221,52 @@ class AirlinoApi:
     # Sound ------------------------------------------------------------------
 
     async def async_get_master_volume(self) -> int:
-        """Get the master volume level (0-255)."""
+        """Get the master volume level."""
         data = await self._request("sound.action", {"action": "getmastervol"})
         volume = data.get("volume")
-        if volume is None:
-            raise AirlinoApiError(f"Missing volume in response: {data}")
-        return int(volume)
+        if isinstance(volume, bool) or not isinstance(volume, (int, str)):
+            raise AirlinoApiError("Response is missing a valid volume")
+        try:
+            parsed_volume = int(volume)
+        except ValueError as err:
+            raise AirlinoApiError("Response contains an invalid volume") from err
+        if not VOLUME_MIN <= parsed_volume <= VOLUME_MAX:
+            raise AirlinoApiError("Response contains an out-of-range volume")
+        return parsed_volume
 
     async def async_set_master_volume(self, volume: int) -> None:
-        """Set the master volume level (0-255)."""
+        """Set the master volume level."""
+        if isinstance(volume, bool) or not VOLUME_MIN <= volume <= VOLUME_MAX:
+            raise AirlinoApiError("Volume must be within the supported range")
         await self._action("sound.action", "setmastervol", volume=volume)
 
-    async def async_volume_up(self, step: int = 10) -> None:
+    async def async_volume_up(self, step: int = VOLUME_STEP) -> None:
         """Increase master volume."""
         current = await self.async_get_master_volume()
-        await self.async_set_master_volume(min(255, current + step))
+        await self.async_set_master_volume(min(VOLUME_MAX, current + step))
 
-    async def async_volume_down(self, step: int = 10) -> None:
+    async def async_volume_down(self, step: int = VOLUME_STEP) -> None:
         """Decrease master volume."""
         current = await self.async_get_master_volume()
-        await self.async_set_master_volume(max(0, current - step))
+        await self.async_set_master_volume(max(VOLUME_MIN, current - step))
 
     # Songcast (multiroom) ---------------------------------------------------
 
     async def async_get_sender_status(self) -> dict[str, Any]:
         """Get the Songcast sender status (enabled, state, uuid, groupname, mode)."""
-        return await self._request("songcast/sender.action", {"action": "status"})
+        data = await self._request("songcast/sender.action", {"action": "status"})
+        enabled = data.get("enabled")
+        if enabled is not None and not isinstance(enabled, (bool, int)):
+            raise AirlinoApiError("Sender status field enabled must be boolean")
+        uuid = data.get("uuid")
+        if uuid is not None and not isinstance(uuid, str):
+            raise AirlinoApiError("Sender status field uuid must be a string")
+        return data
 
     async def async_enable_sender(
-        self, groupname: str = MULTIROOM_GROUP_NAME, mode: int = 0
+        self,
+        groupname: str = MULTIROOM_GROUP_NAME,
+        mode: int = SONGCAST_MODE_UNICAST,
     ) -> dict[str, Any]:
         """Enable the Songcast sender mode (unicast by default)."""
         try:
@@ -209,4 +295,21 @@ class AirlinoApi:
 
     async def async_get_receiver_state(self) -> dict[str, Any]:
         """Get the current state of the Songcast receiver (state, sender UUID)."""
-        return await self._request("songcast/receiver.action", {"action": "state"})
+        data = await self._request("songcast/receiver.action", {"action": "state"})
+        sender = data.get("sender")
+        if sender is not None and not isinstance(sender, str):
+            raise AirlinoApiError("Receiver state field sender must be a string")
+        state = data.get("state")
+        if state is not None and (
+            isinstance(state, bool)
+            or not isinstance(state, int)
+            or state
+            not in (
+                RECEIVER_STATE_OFF,
+                RECEIVER_STATE_NOT_PLAYING,
+                RECEIVER_STATE_PLAYING,
+                RECEIVER_STATE_DISCONNECTED,
+            )
+        ):
+            raise AirlinoApiError("Receiver state field state is invalid")
+        return data

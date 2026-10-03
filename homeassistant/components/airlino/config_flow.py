@@ -14,7 +14,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
-from .const import DEFAULT_API_VERSION, DEFAULT_PORT, DOMAIN, VALID_MODELS
+from .const import (
+    DEFAULT_API_VERSION,
+    DEFAULT_PORT,
+    DOMAIN,
+    MIN_API_VERSION,
+    VALID_MODELS,
+    api_version_number,
+    is_supported_api_version,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,36 +35,55 @@ STEP_USER_DATA_SCHEMA = Schema(
 
 
 async def validate_input(
-    hass: HomeAssistant, data: dict, api_version: str = DEFAULT_API_VERSION
+    hass: HomeAssistant, data: dict, api_version: str | None = None
 ) -> dict:
     """Validate the user input allows us to connect."""
-    api = AirlinoApi(
-        host=data[CONF_HOST],
-        port=data.get("port", DEFAULT_PORT),
-        api_version=api_version,
-        session=async_get_clientsession(hass),
-    )
-    try:
-        device_info = await api.async_get_device_info()
-        network_info = await api.async_get_network_info()
-    except (
-        AirlinoApiConnectionError,
-        AirlinoApiError,
-        aiohttp.ClientError,
-    ) as err:
-        raise CannotConnect from err
+    session = async_get_clientsession(hass)
+    if api_version is None:
+        latest_version = api_version_number(DEFAULT_API_VERSION)
+        minimum_version = api_version_number(MIN_API_VERSION)
+        if latest_version is None or minimum_version is None:
+            raise UnsupportedApiVersion
+        versions = [
+            f"v{version}" for version in range(latest_version, minimum_version - 1, -1)
+        ]
+    else:
+        versions = [api_version]
 
-    # The MAC address is the stable device identifier (DHCP-safe).
-    # Hardware strings look like "LTH-6510CC-02DAA9A6" (MAC suffix).
-    mac = _get_mac(network_info) or device_info.get("hardware")
-    if not mac:
-        raise CannotIdentify
+    for version in versions:
+        if not is_supported_api_version(version):
+            raise UnsupportedApiVersion
+        api = AirlinoApi(
+            host=data[CONF_HOST],
+            port=data.get("port", DEFAULT_PORT),
+            api_version=version,
+            session=session,
+        )
+        try:
+            device_info = await api.async_get_device_info()
+            network_info = await api.async_get_network_info()
+        except AirlinoApiError as err:
+            if api_version is None and err.status in (None, 404):
+                continue
+            if err.status == 404:
+                raise UnsupportedApiVersion from err
+            raise CannotConnect from err
+        except (AirlinoApiConnectionError, aiohttp.ClientError) as err:
+            raise CannotConnect from err
 
-    return {
-        "title": device_info.get("devicename", "AirLino"),
-        "mac": mac,
-        "api_version": api_version,
-    }
+        mac = _get_mac(network_info)
+        if not mac:
+            if api_version is None:
+                continue
+            raise CannotIdentify
+
+        return {
+            "title": device_info.get("devicename", "AirLino"),
+            "mac": mac,
+            "api_version": version,
+        }
+
+    raise UnsupportedApiVersion
 
 
 def _get_mac(network_info: dict) -> str | None:
@@ -107,37 +134,29 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+            except UnsupportedApiVersion:
+                errors["base"] = "unsupported_api_version"
             except CannotConnect, CannotIdentify:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Don't fail on a pending discovery flow for the same device:
-                # the user explicitly wants to add it now, so stale flows are
-                # aborted first.
                 await self.async_set_unique_id(info["mac"], raise_on_progress=False)
-                for (
-                    prog_flow
-                ) in self.hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+                for progress in self.hass.config_entries.flow.async_progress_by_handler(
+                    DOMAIN
+                ):
                     if (
-                        prog_flow["flow_id"] != self.flow_id
-                        and prog_flow["context"].get("unique_id") == info["mac"]
+                        progress["flow_id"] != self.flow_id
+                        and progress["context"].get("unique_id") == info["mac"]
                     ):
-                        self.hass.config_entries.flow.async_abort(prog_flow["flow_id"])
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        "port": user_input["port"],
-                        "api_version": info["api_version"],
-                    },
-                    reload_on_update=True,
-                )
+                        self.hass.config_entries.flow.async_abort(progress["flow_id"])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info["title"],
                     data={
                         CONF_HOST: user_input[CONF_HOST],
-                        "port": user_input["port"],
+                        "port": user_input.get("port", DEFAULT_PORT),
                         "api_version": info["api_version"],
                     },
                 )
@@ -168,12 +187,10 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _txt_str(discovery_info.properties, "api") or DEFAULT_API_VERSION
         )
         _LOGGER.debug(
-            "AirLino discovered via zeroconf: host=%s port=%s api_version=%s "
-            "properties=%s",
+            "AirLino discovered via zeroconf: host=%s port=%s api_version=%s",
             self._host,
             self._port,
             self._api_version,
-            discovery_info.properties,
         )
 
         try:
@@ -182,6 +199,14 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {CONF_HOST: self._host, "port": self._port},
                 api_version=self._api_version,
             )
+        except UnsupportedApiVersion:
+            _LOGGER.debug(
+                "Ignoring discovered AirLino at %s:%s with unsupported API version %s",
+                self._host,
+                self._port,
+                self._api_version,
+            )
+            return self.async_abort(reason="unsupported_api_version")
         except (CannotConnect, CannotIdentify) as err:
             _LOGGER.debug(
                 "Could not connect to or identify discovered AirLino at %s:%s: %r",
@@ -196,18 +221,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(info["mac"])
-        # Existing entry with a new IP: update host/port instead of
-        # creating a duplicate entry.
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self._host,
-                "port": self._port,
-                # Keep the stored API version in sync with the device's
-                # announcement (e.g. after a firmware update).
-                "api_version": self._api_version,
-            },
-            reload_on_update=True,
-        )
+        self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {"name": info["title"]}
         return await self.async_step_confirm()
@@ -230,6 +244,10 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             description_placeholders=self.context.get("title_placeholders", {}),
         )
+
+
+class UnsupportedApiVersion(Exception):
+    """Raised when the device API is too old or unsupported."""
 
 
 class CannotConnect(Exception):
