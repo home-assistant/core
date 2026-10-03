@@ -1,0 +1,13 @@
+{
+  "domain": "kaco_rs485",
+  "name": "KACO RS485",
+  "codeowners": ["@g4bri3lDev"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/kaco_rs485",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["kaco_rs485"],
+  "quality_scale": "silver",
+  "requirements": ["kaco-serial==1.0.2"]
+}
