@@ -1,6 +1,6 @@
 """Tests for the Mistral AI config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -16,7 +16,6 @@ from homeassistant.components.mistral_ai.const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     DEFAULT_CONVERSATION_NAME,
-    MISTRAL_MODELS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
@@ -31,28 +30,6 @@ class _FakeError(Exception):
     def __init__(self, status_code: int) -> None:
         self.status_code = status_code
         super().__init__(f"error {status_code}")
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a loaded config entry with a conversation subentry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Mistral",
-        data={CONF_API_KEY: "test-key"},
-        version=2,
-        state=config_entries.ConfigEntryState.LOADED,
-        subentries_data=[
-            {
-                "subentry_type": "conversation",
-                "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                "title": DEFAULT_CONVERSATION_NAME,
-                "unique_id": None,
-            },
-        ],
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -203,32 +180,24 @@ async def test_supported_subentry_types(hass: HomeAssistant) -> None:
 
 
 async def test_creating_conversation_subentry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
 ) -> None:
     """Test creating a conversation subentry with recommended settings."""
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=MISTRAL_MODELS,
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=MISTRAL_MODELS,
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {"name": "My Custom Agent", CONF_RECOMMENDED: True},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "My Custom Agent", CONF_RECOMMENDED: True},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Custom Agent"
@@ -261,7 +230,9 @@ async def test_subentry_not_loaded(hass: HomeAssistant) -> None:
 
 
 async def test_subentry_recommended(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
 ) -> None:
     """Test reconfiguring a subentry with recommended settings."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -271,20 +242,15 @@ async def test_subentry_recommended(
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=MISTRAL_MODELS,
-    ):
-        options = await hass.config_entries.subentries.async_configure(
-            subentry_flow["flow_id"],
-            {
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: ["assist"],
-            },
-        )
-        await hass.async_block_till_done()
+    options = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_RECOMMENDED: True,
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    await hass.async_block_till_done()
 
     assert options["type"] is FlowResultType.ABORT
     assert options["reason"] == "reconfigure_successful"
@@ -292,7 +258,9 @@ async def test_subentry_recommended(
 
 
 async def test_subentry_advanced(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
 ) -> None:
     """Test the advanced settings step of a conversation subentry."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -300,21 +268,16 @@ async def test_subentry_advanced(
         hass, subentry.subentry_id
     )
 
-    with patch(
-        "homeassistant.components.mistral_ai.config_flow._async_fetch_models",
-        new_callable=AsyncMock,
-        return_value=MISTRAL_MODELS,
-    ):
-        subentry_flow = await hass.config_entries.subentries.async_configure(
-            subentry_flow["flow_id"],
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-            },
-        )
-        await hass.async_block_till_done()
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+        },
+    )
+    await hass.async_block_till_done()
 
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "advanced"
