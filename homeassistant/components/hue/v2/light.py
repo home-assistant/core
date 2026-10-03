@@ -30,17 +30,13 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge, HueConfigEntry
-from ..const import DOMAIN
+from ..const import DOMAIN, FALLBACK_KELVIN, FALLBACK_MAX_MIREDS, FALLBACK_MIN_MIREDS
 from .entity import HueBaseEntity
 from .helpers import (
     normalize_hue_brightness,
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
-
-FALLBACK_MIN_MIREDS = 153  # hue default for most lights
-FALLBACK_MAX_MIREDS = 500  # hue default for most lights
-FALLBACK_KELVIN = 5800  # halfway
 
 # HA 2025.4 replaced the deprecated effect "None" with HA default "off"
 DEPRECATED_EFFECT_NONE = "None"
