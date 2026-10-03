@@ -84,7 +84,6 @@ SWITCHES = [
     StarlinkSwitchEntityDescription(
         key="starlink_positioning_exclusive",
         translation_key="starlink_positioning_exclusive",
-        device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda data: (
             None
