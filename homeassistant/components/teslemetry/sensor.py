@@ -50,7 +50,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
-from .helpers import async_remove_stale_vehicle_entities, listen_active_route
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -566,8 +566,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_active_route_traffic_minutes_delay",
         polling=True,
-        streaming_listener=lambda vehicle, callback: listen_active_route(
-            vehicle, vehicle.listen_RouteTrafficMinutesDelay, callback
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_ActiveRouteTrafficMinutesDelay(callback)
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -577,8 +577,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_active_route_energy_at_arrival",
         polling=True,
-        streaming_listener=lambda vehicle, callback: listen_active_route(
-            vehicle, vehicle.listen_ExpectedEnergyPercentAtTripArrival, callback
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_ActiveRouteExpectedEnergyPercentAtTripArrival(callback)
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,

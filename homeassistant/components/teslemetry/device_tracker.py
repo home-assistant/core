@@ -20,7 +20,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
-from .helpers import listen_active_route
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -48,8 +47,8 @@ DESCRIPTIONS: tuple[TeslemetryDeviceTrackerEntityDescription, ...] = (
     TeslemetryDeviceTrackerEntityDescription(
         key="route",
         polling_prefix="drive_state_active_route",
-        value_listener=lambda vehicle, callback: listen_active_route(
-            vehicle, vehicle.listen_DestinationLocation, callback
+        value_listener=lambda vehicle, callback: (
+            vehicle.listen_ActiveRouteDestinationLocation(callback)
         ),
         streaming_firmware="2024.26",
     ),

@@ -1,7 +1,7 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -11,7 +11,6 @@ from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import EnergySite
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
-from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -36,56 +35,6 @@ def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySit
         TeslemetryEnergySite,
         api.secondary if isinstance(api, EnergySiteRouter) else api,
     )
-
-
-def listen_active_route[T](
-    vehicle: TeslemetryStreamVehicle,
-    listen: Callable[[Callable[[T | None], None]], Callable[[], None]],
-    route_callback: Callable[[T | None], None],
-) -> Callable[[], None]:
-    """Listen for a route field, reporting None while no navigation is active.
-
-    After navigation ends MinutesToArrival goes null, but the car keeps the last
-    trip's destination location, arrival energy and traffic delay. Reports None
-    once MinutesToArrival is null, otherwise the value once both have been seen.
-    """
-    value: T | None = None
-    minutes: float | None = None
-    value_seen = minutes_seen = changed = False
-
-    def _value_callback(new_value: T | None) -> None:
-        nonlocal value, value_seen, changed
-        value, value_seen, changed = new_value, True, True
-
-    def _minutes_callback(new_minutes: float | None) -> None:
-        nonlocal minutes, minutes_seen, changed
-        minutes, minutes_seen, changed = new_minutes, True, True
-
-    def _event_callback(event: dict[str, Any]) -> None:
-        # Registered last, so both fields from one event are applied together
-        # rather than briefly reporting a value from a route that just ended.
-        nonlocal changed
-        if not changed:
-            return
-        changed = False
-        if minutes_seen and minutes is None:
-            route_callback(None)
-        elif minutes_seen and value_seen:
-            route_callback(value)
-
-    unsubs = (
-        listen(_value_callback),
-        vehicle.listen_MinutesToArrival(_minutes_callback),
-        vehicle.stream.async_add_listener(
-            _event_callback, {"vin": vehicle.vin, "data": {}}
-        ),
-    )
-
-    def _unsubscribe() -> None:
-        for unsub in unsubs:
-            unsub()
-
-    return _unsubscribe
 
 
 def create_powerwall_client(
