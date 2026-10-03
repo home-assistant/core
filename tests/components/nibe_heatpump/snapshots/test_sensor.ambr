@@ -232,7 +232,15 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'OFF',
+        'STARTING',
+        'ON',
+        '10-DAY MODE',
+        'CALIBRATION',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -251,7 +259,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Supply Pump State EP14',
     'platform': 'nibe_heatpump',
@@ -266,7 +274,15 @@
 # name: test_entities[Model.F1155-data0][sensor.supply_pump_state_ep14_43431-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Supply Pump State EP14',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'OFF',
+        'STARTING',
+        'ON',
+        '10-DAY MODE',
+        'CALIBRATION',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.supply_pump_state_ep14_43431',
