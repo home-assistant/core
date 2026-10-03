@@ -496,108 +496,23 @@ async def test_period_parameter_budget(statistics_session: Session) -> None:
         assert len(compiled.positiontup or compiled.params) <= 10
 
 
-@pytest.mark.parametrize(
-    ("metadata_ids", "offset", "queries", "expected"),
-    [
-        pytest.param([3], 0, 2, [(3, 20.0)], id="ignore-unselected-future-data"),
-        pytest.param([1], 0, 1, [], id="no-selected-data"),
-        pytest.param([3], 24, 1, [], id="selected-data-before-request"),
-        pytest.param([1, 2, 3], 0, 2, [(3, 20.0)], id="empty-first-sensor-batch"),
-    ],
-)
-async def test_period_query_unbounded_sensor_filter(
+async def test_unbounded_request_uses_row_based_path(
     statistics_session: Session,
-    metadata_ids: list[int],
-    offset: int,
-    queries: int,
-    expected: list[tuple[int, float]],
+    hass: HomeAssistant,
 ) -> None:
-    """Use only selected sensors to determine the end of an unbounded request."""
+    """Use the row-based path for unbounded statistics requests."""
     start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
-    statistics_session.add_all(
-        [
-            Statistics(
-                metadata_id=3,
-                start_ts=(start + timedelta(hours=23)).timestamp(),
-                sum=20.0,
-            ),
-            Statistics(
-                metadata_id=13,
-                start_ts=(start + timedelta(days=1200)).timestamp(),
-                sum=50.0,
-            ),
-        ]
-    )
-    statistics_session.commit()
-    with patch.object(
-        statistics, "execute_stmt_lambda_element", wraps=execute_stmt_lambda_element
-    ) as execute:
-        rows = statistics._get_statistics_period_rows(
-            statistics_session,
-            start + timedelta(hours=offset),
-            None,
-            metadata_ids,
-            statistics.reduce_day_ts_factory()[1],
-            {"sum"},
-            4,
-        )
-    assert execute.call_count == queries
-    assert [(row.metadata_id, row.sum) for row in rows] == expected
-
-
-async def test_period_query_unbounded_clips_to_available_range(
-    statistics_session: Session,
-) -> None:
-    """Clip an unbounded request to the selected statistics' available range."""
-    start = datetime(2020, 1, 1, tzinfo=dt_util.UTC)
-    data_start = start + timedelta(days=1200, hours=12)
-
-    statistics_session.add(
-        Statistics(
-            metadata_id=3,
-            start_ts=data_start.timestamp(),
-            sum=20.0,
-        )
-    )
-    statistics_session.commit()
-
-    with patch.object(
-        statistics,
-        "execute_stmt_lambda_element",
-        wraps=execute_stmt_lambda_element,
-    ) as execute:
-        rows = statistics._get_statistics_period_rows(
-            statistics_session,
-            start,
-            None,
-            [3],
-            statistics.reduce_day_ts_factory()[1],
-            {"sum"},
-            4000,
-        )
-
-    # One MIN/MAX range query and one period query.
-    assert execute.call_count == 2
-    assert [(row.metadata_id, row.sum) for row in rows] == [(3, 20.0)]
-
-
-async def test_period_query_unbounded_clips_to_period_start(
-    statistics_session: Session,
-) -> None:
-    """Clip an unbounded request to the start of the first available period."""
-    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
-    first_statistic = start + timedelta(days=10, hours=12)
 
     statistics_session.add_all(
         [
             Statistics(
-                metadata_id=3,
-                start_ts=first_statistic.timestamp(),
+                metadata_id=1,
+                start_ts=start.timestamp(),
                 sum=10.0,
             ),
             Statistics(
-                metadata_id=3,
-                start_ts=(first_statistic + timedelta(hours=6)).timestamp(),
+                metadata_id=1,
+                start_ts=(start + timedelta(days=10000)).timestamp(),
                 sum=20.0,
             ),
         ]
@@ -606,30 +521,25 @@ async def test_period_query_unbounded_clips_to_period_start(
 
     with patch.object(
         statistics,
-        "_generate_statistics_period_stmt",
-        wraps=statistics._generate_statistics_period_stmt,
-    ) as generate_period_stmt:
-        rows = statistics._get_statistics_period_rows(
+        "_get_statistics_period_rows",
+    ) as optimized:
+        result = statistics._statistics_during_period_with_session(
+            hass,
             statistics_session,
             start,
             None,
-            [3],
-            statistics.reduce_day_ts_factory()[1],
+            {"test:statistic_1"},
+            "day",
+            None,
             {"sum"},
-            4000,
         )
 
-    assert generate_period_stmt.call_count == 1
+    optimized.assert_not_called()
 
-    period_bounds = generate_period_stmt.call_args.args[1]
-    assert period_bounds == (
-        (
-            (start + timedelta(days=10)).timestamp(),
-            (start + timedelta(days=11)).timestamp(),
-        ),
-    )
-
-    assert [(row.metadata_id, row.sum) for row in rows] == [(3, 20.0)]
+    assert [row["sum"] for row in result["test:statistic_1"]] == [
+        10.0,
+        20.0,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -764,13 +674,6 @@ async def test_circular_mean_query_limits(statistics_session: Session) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "end_time",
-    [
-        pytest.param(None, id="unbounded"),
-        pytest.param(datetime(2024, 11, 3, 3, tzinfo=dt_util.UTC), id="bounded"),
-    ],
-)
-@pytest.mark.parametrize(
     "statistic_ids",
     [
         pytest.param(None, id="all-sensors"),
@@ -782,12 +685,12 @@ async def test_endpoint_statistics_return_last_row_per_period(
     timezone: str,
     period: Literal["day", "week", "month", "year"],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
-    end_time: datetime | None,
     statistic_ids: set[str] | None,
 ) -> None:
     """Return the last statistics row for each calendar period."""
     await hass.config.async_set_time_zone(timezone)
     start = datetime(2024, 10, 26, tzinfo=dt_util.UTC)
+    end_time = datetime(2024, 11, 3, 3, tzinfo=dt_util.UTC)
     samples = [
         (-24, 8.0, 8.0),
         (0, 10.0, 10.0),
@@ -895,7 +798,6 @@ async def test_reducer_flushes_final_dst_fallback_period(
 @pytest.mark.parametrize(
     "statistic_ids", [None, {"test:statistic_1", "test:statistic_2"}]
 )
-@pytest.mark.parametrize("bounded", [False, True])
 async def test_arithmetic_mean_returns_average_per_period(
     statistics_session: Session,
     hass: HomeAssistant,
@@ -906,7 +808,6 @@ async def test_arithmetic_mean_returns_average_per_period(
     statistic_unit: str,
     requested_units: dict[str, str],
     statistic_ids: set[str] | None,
-    bounded: bool,
 ) -> None:
     """Return the arithmetic average for each calendar period."""
     await hass.config.async_set_time_zone(timezone)
@@ -944,7 +845,7 @@ async def test_arithmetic_mean_returns_average_per_period(
     )
     statistics_session.commit()
 
-    end_time = {False: None, True: start + timedelta(days=10)}[bounded]
+    end_time = start + timedelta(days=10)
 
     with patch.object(
         statistics,

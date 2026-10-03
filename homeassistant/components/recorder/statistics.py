@@ -1719,7 +1719,7 @@ def _clip_bounded_statistics_range(
     metadata_ids: list[int] | None,
     period_start_end: Callable[[float], tuple[float, float]],
     periods_per_query: int,
-    max_range_ids_per_query: int,
+    max_metadata_ids_per_query: int,
 ) -> tuple[float, float] | None:
     """Clip a long bounded request to the available statistics range."""
     max_periods_without_range_lookup = (
@@ -1738,7 +1738,7 @@ def _clip_bounded_statistics_range(
     last_ts: float | None = None
 
     id_chunks = (
-        chunked_or_all(metadata_ids, max_range_ids_per_query)
+        chunked_or_all(metadata_ids, max_metadata_ids_per_query)
         if metadata_ids
         else (None,)
     )
@@ -1780,36 +1780,10 @@ def _clip_bounded_statistics_range(
     return start_ts, end_ts
 
 
-def _get_unbounded_statistics_range(
-    session: Session,
-    start_ts: float,
-    metadata_ids: list[int] | None,
-    period_start_end: Callable[[float], tuple[float, float]],
-) -> tuple[float, float] | None:
-    """Return the available range for an unbounded statistics request."""
-    available_range = cast(
-        Sequence[Row],
-        execute_stmt_lambda_element(
-            session,
-            _generate_statistics_start_end_stmt(metadata_ids),
-            orm_rows=False,
-        ),
-    )
-    first_ts, last_ts = available_range[0]
-
-    if first_ts is None or last_ts is None or last_ts < start_ts:
-        return None
-
-    return (
-        max(start_ts, period_start_end(first_ts)[0]),
-        period_start_end(last_ts)[1],
-    )
-
-
 def _get_statistics_period_rows(
     session: Session,
     start_time: datetime,
-    end_time: datetime | None,
+    end_time: datetime,
     metadata_ids: list[int] | None,
     period_start_end: Callable[[float], tuple[float, float]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
@@ -1824,63 +1798,40 @@ def _get_statistics_period_rows(
     )
     fixed_binds_per_period = 2 + circular_bind_vars
 
-    max_ids_per_chunk = min(
-        MAX_IDS_FOR_INDEXED_GROUP_BY,
-        max_bind_vars,
-    )
-
-    max_range_ids_per_query = min(
+    max_metadata_ids_per_query = min(
         MAX_IDS_FOR_INDEXED_GROUP_BY,
         max_bind_vars,
     )
 
     id_chunks = (
-        chunked_or_all(metadata_ids, max_ids_per_chunk) if metadata_ids else (None,)
+        chunked_or_all(metadata_ids, max_metadata_ids_per_query)
+        if metadata_ids
+        else (None,)
     )
 
     requested_start_ts = start_time.timestamp()
 
-    bounded_range: tuple[float, float] | None = None
+    periods_per_query = _statistics_periods_per_query(
+        max_bind_vars,
+        fixed_binds_per_period,
+    )
 
-    if end_time is not None:
-        periods_per_query = _statistics_periods_per_query(
-            max_bind_vars,
-            fixed_binds_per_period,
-        )
+    bounded_range = _clip_bounded_statistics_range(
+        session,
+        requested_start_ts,
+        end_time.timestamp(),
+        metadata_ids,
+        period_start_end,
+        periods_per_query,
+        max_metadata_ids_per_query,
+    )
 
-        bounded_range = _clip_bounded_statistics_range(
-            session,
-            requested_start_ts,
-            end_time.timestamp(),
-            metadata_ids,
-            period_start_end,
-            periods_per_query,
-            max_range_ids_per_query,
-        )
+    if bounded_range is None:
+        return []
 
-        if bounded_range is None:
-            return []
+    start_ts, end_ts = bounded_range
 
     for ids in id_chunks:
-        if bounded_range is not None:
-            start_ts, end_ts = bounded_range
-        else:
-            available_range = _get_unbounded_statistics_range(
-                session,
-                requested_start_ts,
-                ids,
-                period_start_end,
-            )
-            if available_range is None:
-                continue
-
-            start_ts, end_ts = available_range
-
-        periods_per_query = _statistics_periods_per_query(
-            max_bind_vars,
-            fixed_binds_per_period,
-        )
-
         for period_bounds in batched(
             _iter_statistics_period_bounds(
                 start_ts,
@@ -2526,7 +2477,7 @@ def _get_mixed_mean_statistics_period_result(
     hass: HomeAssistant,
     session: Session,
     start_time: datetime,
-    end_time: datetime | None,
+    end_time: datetime,
     statistic_ids: set[str] | None,
     metadata: dict[str, tuple[int, StatisticMetaData]],
     period_start_end: Callable[[float], tuple[float, float]],
@@ -2708,6 +2659,7 @@ def _statistics_during_period_with_session(
     supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
     use_period_query = (
         types
+        and end_time is not None
         and period in {"day", "week", "month", "year"}
         and types <= supported_types
         and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
@@ -2715,6 +2667,8 @@ def _statistics_during_period_with_session(
     )
 
     if use_period_query:
+        bounded_end_time = cast(datetime, end_time)
+
         factories = {
             "day": reduce_day_ts_factory,
             "week": reduce_week_ts_factory,
@@ -2728,7 +2682,7 @@ def _statistics_during_period_with_session(
                 hass,
                 session,
                 start_time,
-                end_time,
+                bounded_end_time,
                 statistic_ids,
                 metadata,
                 period_start_end,
@@ -2740,7 +2694,7 @@ def _statistics_during_period_with_session(
             stats = _get_statistics_period_rows(
                 session,
                 start_time,
-                end_time,
+                bounded_end_time,
                 metadata_ids,
                 period_start_end,
                 types,
