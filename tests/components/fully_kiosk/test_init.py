@@ -1,6 +1,5 @@
 """Tests for the Fully Kiosk Browser integration."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 from fullykiosk import FullyKioskError
@@ -19,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_load_unload_config_entry(
@@ -73,11 +72,11 @@ async def _load_config(
         autospec=True,
     ) as client_mock:
         client = client_mock.return_value
-        client.getDeviceInfo.return_value = json.loads(
-            await async_load_fixture(hass, device_info_fixture, DOMAIN)
+        client.getDeviceInfo.return_value = await async_load_json_object_fixture(
+            hass, device_info_fixture, DOMAIN
         )
-        client.getSettings.return_value = json.loads(
-            await async_load_fixture(hass, "listsettings.json", DOMAIN)
+        client.getSettings.return_value = await async_load_json_object_fixture(
+            hass, "listsettings.json", DOMAIN
         )
 
         config_entry.add_to_hass(hass)

@@ -71,6 +71,9 @@
     },
     "invalid_response": {
       "message": "Invalid response from the Modern Forms device"
+    },
+    "sleep_timer_not_supported": {
+      "message": "This fan does not support sleep timers"
     }
   },
   "services": {

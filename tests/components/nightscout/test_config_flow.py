@@ -116,10 +116,16 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
         entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=CONFIG,
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG
+        )
+
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 

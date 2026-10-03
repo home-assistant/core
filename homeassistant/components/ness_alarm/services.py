@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CODE, ATTR_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -13,11 +13,11 @@ from .const import ATTR_OUTPUT_ID, DOMAIN, SERVICE_AUX, SERVICE_PANIC
 if TYPE_CHECKING:
     from . import NessAlarmConfigEntry
 
-SERVICE_SCHEMA_PANIC = vol.Schema({vol.Required(ATTR_CODE): cv.string})
-SERVICE_SCHEMA_AUX = vol.Schema(
+SERVICE_SCHEMA_PANIC = probatio.Schema({probatio.Required(ATTR_CODE): cv.string})
+SERVICE_SCHEMA_AUX = probatio.Schema(
     {
-        vol.Required(ATTR_OUTPUT_ID): cv.positive_int,
-        vol.Optional(ATTR_STATE, default=True): cv.boolean,
+        probatio.Required(ATTR_OUTPUT_ID): cv.positive_int,
+        probatio.Optional(ATTR_STATE, default=True): cv.boolean,
     }
 )
 

@@ -44,6 +44,8 @@ LANGUAGE = "en"
 
 _SENTENCE_END = (".", "!", "?")
 
+_ANAPHORA_PREFIX = "anaphora"
+
 # Widest selector first: "turn them off" after "turn on the kitchen lights" means
 # the kitchen lights, not the one entity that happened to match.
 _TARGET_SCOPES = (
@@ -54,23 +56,39 @@ _TARGET_SCOPES = (
 
 
 @callback
+def async_refers_back(interpretation: Interpretation) -> bool:
+    """Return whether the matcher read the sentence as a follow-up ("it"/"them")."""
+    if (interpretation.rejection_code or "").startswith(_ANAPHORA_PREFIX):
+        return True
+    return any(
+        candidate.anaphor_target is not None
+        for segment in interpretation.segments
+        for candidate in segment.frame_candidates
+    )
+
+
+@callback
 def async_refusal(interpretation: Interpretation) -> str | None:
-    """Return the matcher's wording for a refusal that named a target."""
-    if not interpretation.refusal_target:
+    """Return the matcher's wording for a refusal that explains itself."""
+    if not interpretation.refusal_target and not async_refers_back(interpretation):
         return None
     return interpretation.response
 
 
 def join_speech(parts: Sequence[str]) -> str:
     """Join the answers of one coordinated command into one thing to speak."""
-    # Each response stands alone and starts capitalized, and a coordinated command
-    # can pair an acknowledgement with a whole sentence, so they are run together
-    # as sentences rather than joined into one.
-    sentences = [
-        part if part.endswith(_SENTENCE_END) else f"{part}."
-        for part in (part.strip() for part in parts)
-        if part
-    ]
+    seen: set[str] = set()
+    sentences: list[str] = []
+    for part in (part.strip() for part in parts):
+        if not part:
+            continue
+        sentence = part if part.endswith(_SENTENCE_END) else f"{part}."
+        # A follow-up answers for every target it reached, in the same words.
+        if sentence in seen:
+            continue
+        seen.add(sentence)
+        sentences.append(sentence)
+
     return " ".join(sentences)
 
 

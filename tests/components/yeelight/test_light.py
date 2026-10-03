@@ -30,6 +30,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -40,6 +41,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.yeelight.const import (
@@ -1331,6 +1333,58 @@ async def test_ambilight_effect(hass: HomeAssistant) -> None:
     ambilight_state = hass.states.get(ambilight_entity_id)
     assert ambilight_state.attributes.get(ATTR_EFFECT) is None
     assert ambilight_state.attributes["flowing"] is False
+
+
+async def test_ambilight_without_color_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the ambilight keeps updating while the bulb does not report its mode.
+
+    A ceiling light stops reporting `bg_lmode` while its main light is off.
+    """
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    mocked_bulb = _mocked_bulb()
+    capabilities = {**CAPABILITIES, "model": "ceiling10"}
+    properties = {**PROPERTIES}
+    properties.pop("bg_lmode")
+    mocked_bulb.last_properties = properties
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+    with (
+        _patch_discovery(capabilities=capabilities),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ambilight_entity_id = "light.yeelight_ceiling10_0x15243f_ambilight"
+    state = hass.states.get(ambilight_entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN
+
+    # flash needs the mode, so it is refused instead of raising
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_FLASH: FLASH_LONG},
+        blocking=True,
+    )
+    mocked_bulb.async_start_flow.assert_not_called()
+    assert "Flash supported currently only in RGB mode" in caplog.text
+
+    # the mode is reported again once the main light is back on
+    mocked_bulb.last_properties["bg_lmode"] = "2"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ambilight_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(ambilight_entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
 
 async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> None:

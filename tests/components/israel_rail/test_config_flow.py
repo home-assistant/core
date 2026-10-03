@@ -40,9 +40,15 @@ async def test_flow_fails(hass: HomeAssistant, mock_israelrail: AsyncMock) -> No
     """Test that the user step fails."""
     mock_israelrail.query.side_effect = Exception("error")
     failed_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert failed_result["type"] is FlowResultType.FORM
+    assert failed_result["step_id"] == "user"
+
+    failed_result = await hass.config_entries.flow.async_configure(
+        failed_result["flow_id"],
+        user_input=VALID_CONFIG,
     )
 
     assert failed_result["errors"] == {"base": "unknown"}

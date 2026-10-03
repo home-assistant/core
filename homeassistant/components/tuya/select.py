@@ -1,5 +1,6 @@
 """Support for Tuya select."""
 
+from dataclasses import dataclass
 from typing import override
 
 from tuya_device_handlers.definition.select import (
@@ -16,81 +17,87 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
+
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
-SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
+@dataclass(frozen=True)
+class TuyaSelectEntityDescription(TuyaEntityDescription, SelectEntityDescription):
+    """Describes a Tuya select entity."""
+
+
+SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
     DeviceCategory.BH: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.TEMP_SETTING_QUICK_C,
             entity_category=EntityCategory.CONFIG,
             translation_key="quick_heat_temperature",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.WORK_TYPE,
             entity_category=EntityCategory.CONFIG,
             translation_key="kettle_work_mode",
         ),
     ),
     DeviceCategory.CL: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="curtain_motor_mode",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="curtain_mode",
         ),
     ),
     DeviceCategory.CO2BJ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.CS: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.DEHUMIDITY_SET_ENUM,
             translation_key="target_humidity",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.CWJWQ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.WORK_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="odor_elimination_mode",
         ),
     ),
     DeviceCategory.DGNBJ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.DR: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LEVEL,
             icon="mdi:thermometer-lines",
             translation_key="blanket_level",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LEVEL_1,
             icon="mdi:thermometer-lines",
             translation_key="indexed_blanket_level",
             translation_placeholders={"index": "1"},
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LEVEL_2,
             icon="mdi:thermometer-lines",
             translation_key="indexed_blanket_level",
@@ -98,116 +105,122 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.FS: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.FAN_VERTICAL,
             entity_category=EntityCategory.CONFIG,
             translation_key="vertical_fan_angle",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.FAN_HORIZONTAL,
             entity_category=EntityCategory.CONFIG,
             translation_key="horizontal_fan_angle",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
     ),
     DeviceCategory.JSQ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.SPRAY_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="humidifier_spray_mode",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LEVEL,
             entity_category=EntityCategory.CONFIG,
             translation_key="humidifier_level",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MOODLIGHTING,
             entity_category=EntityCategory.CONFIG,
             translation_key="humidifier_moodlighting",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
     ),
     DeviceCategory.KFJ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.CUP_NUMBER,
             translation_key="cups",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.CONCENTRATION_SET,
             translation_key="concentration",
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MATERIAL,
             translation_key="material",
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MODE,
             translation_key="mode",
         ),
     ),
     DeviceCategory.KG: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
             translation_key="relay_status",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="light_mode",
         ),
     ),
     DeviceCategory.KJ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.QCCDZ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="charger_work_mode",
+        ),
+    ),
     DeviceCategory.QN: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LEVEL,
             translation_key="temperature_level",
         ),
     ),
     DeviceCategory.SD: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.CISTERN,
             entity_category=EntityCategory.CONFIG,
             translation_key="vacuum_cistern",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.COLLECTION_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="vacuum_collection",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="vacuum_mode",
@@ -215,116 +228,116 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
     ),
     DeviceCategory.SFKZQ: (
         # Irrigation will not be run within this set delay period
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.WEATHER_DELAY,
             translation_key="weather_delay",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SGBJ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.ALARM_STATE,
             translation_key="siren_mode",
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.BRIGHT_STATE,
             translation_key="brightness",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SJZ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LEVEL,
             translation_key="desk_level",
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.UP_DOWN,
             translation_key="desk_up_down",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SP: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.IPC_WORK_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="ipc_work_mode",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.DECIBEL_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
             translation_key="decibel_sensitivity",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.RECORD_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="record_mode",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.BASIC_NIGHTVISION,
             entity_category=EntityCategory.CONFIG,
             translation_key="basic_nightvision",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.BASIC_ANTI_FLICKER,
             entity_category=EntityCategory.CONFIG,
             translation_key="basic_anti_flicker",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MOTION_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
             translation_key="motion_sensitivity",
         ),
     ),
     DeviceCategory.SZJQR: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="fingerbot_mode",
         ),
     ),
     DeviceCategory.TDQ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
             translation_key="relay_status",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="light_mode",
         ),
     ),
     DeviceCategory.TGKG: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
             translation_key="relay_status",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
             entity_category=EntityCategory.CONFIG,
             translation_key="light_mode",
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
             translation_key="indexed_led_type",
             translation_placeholders={"index": "1"},
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LED_TYPE_2,
             entity_category=EntityCategory.CONFIG,
             translation_key="indexed_led_type",
             translation_placeholders={"index": "2"},
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LED_TYPE_3,
             entity_category=EntityCategory.CONFIG,
             translation_key="indexed_led_type",
@@ -332,13 +345,13 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.TGQ: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
             translation_key="indexed_led_type",
             translation_placeholders={"index": "1"},
         ),
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.LED_TYPE_2,
             entity_category=EntityCategory.CONFIG,
             translation_key="indexed_led_type",
@@ -346,9 +359,21 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.XNYJCN: (
-        SelectEntityDescription(
+        TuyaSelectEntityDescription(
             key=DPCode.WORK_MODE,
             translation_key="inverter_work_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.ZNJDQ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="relay_status",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            translation_key="light_mode",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -401,7 +426,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: SelectEntityDescription,
+        description: TuyaSelectEntityDescription,
         definition: SelectDefinition,
     ) -> None:
         """Initialize a Tuya select entity."""

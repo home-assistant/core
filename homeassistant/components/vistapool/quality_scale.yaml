@@ -35,11 +35,11 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -60,7 +60,13 @@ rules:
   docs-supported-functions: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-device-class: todo
+  entity-device-class:
+    status: done
+    comment: >-
+      All entities use a device class where Home Assistant offers a matching
+      one. Chlorine, UV and the electrolysis production rate (g/h) have no
+      applicable class; the conductivity reading is reported without a unit,
+      so it cannot be labelled as a conductivity measurement.
   entity-translations: done
   exception-translations: done
   icon-translations: done
@@ -68,9 +74,15 @@ rules:
   repair-issues:
     status: exempt
     comment: No known repair scenarios
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
-  async-dependency: done
+  async-dependency:
+    status: todo
+    comment: >-
+      Commands and Firestore reads are native async, but the real-time
+      listener runs the synchronous google-cloud-firestore client in a
+      thread: AsyncDocumentReference.on_snapshot raises NotImplementedError
+      upstream, so the push subscription cannot be native async today.
   inject-websession: done
   strict-typing: done
