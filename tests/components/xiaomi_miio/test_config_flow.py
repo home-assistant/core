@@ -1255,3 +1255,49 @@ async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_TOKEN] == TEST_TOKEN2
+
+
+async def test_reauth_device_offline_shows_cannot_connect(hass: HomeAssistant) -> None:
+    """An unreachable device during reauth must not report a successful reauth."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        title=TEST_REPEATER_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_REPEATER_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    # A plain DeviceException (no checksum cause) means the device is offline,
+    # not that the token is wrong.
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["step_id"] == "cloud"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {const.CONF_MANUAL: True}
+        )
+        assert result["step_id"] == "manual"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: TEST_TOKEN}
+        )
+
+    # The connect failed with a non-auth error, so reauth must not be
+    # reported as successful and the token must not be saved.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert config_entry.data[CONF_TOKEN] == TEST_TOKEN

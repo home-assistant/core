@@ -378,7 +378,9 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         except AuthException:
             errors["base"] = "wrong_token"
         except SetupException:
-            if self.model is None:
+            # During reauth the model is preloaded from the entry, so an
+            # unreachable device must not fall through as a successful connect.
+            if self.reauth or self.model is None:
                 errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception in connect Xiaomi device")
