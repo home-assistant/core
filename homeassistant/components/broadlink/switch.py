@@ -184,6 +184,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
         self._attr_name = config[CONF_NAME]
+        self._attr_unique_id = f"{device.unique_id}-{config[CONF_NAME]}"
 
     @override
     async def _async_send_packet(self, packet):
