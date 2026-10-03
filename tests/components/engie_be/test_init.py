@@ -393,24 +393,23 @@ async def test_epex_entities_only_for_dynamic_households(
     assert (binary_entity_id is not None) is expected
 
 
-async def test_contracts_failure_skips_epex_entities(
+async def test_contracts_failure_retries_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a contracts fetch failure warns and leaves the household without EPEX entities."""
+    """Test a contracts fetch failure leaves the entry in setup retry."""
     mock_engie_client.return_value.async_get_energy_contracts.side_effect = (
         EngieBeCommunicationError("boom")
     )
     mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Fetching energy contracts for" in caplog.text
-    assert "skipping EPEX entities" in caplog.text
     assert BAN not in caplog.text
     assert BAN[-4:] in caplog.text
     assert (

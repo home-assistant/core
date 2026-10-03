@@ -60,11 +60,14 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool:
         contracts = await client.async_get_energy_contracts(ban)
     except EngieBeError as err:
         LOGGER.warning(
-            "Fetching energy contracts for %s failed, skipping EPEX entities: %s",
+            "Fetching energy contracts for %s failed: %s",
             mask_identifier(ban),
             err,
         )
-        return False
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
     return contracts.is_dynamic()
 
 
