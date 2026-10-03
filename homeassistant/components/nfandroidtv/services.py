@@ -1,7 +1,7 @@
 """Actions for the Notifications for Android TV / Fire TV integration."""
 
 from notifications_android_tv.notifications import Notifications
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -36,16 +36,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SEND_MESSAGE,
         entity_domain=NOTIFY_DOMAIN,
         schema={
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_IMAGE): MediaSelector({"accept": ["image/*", "video/*"]}),
-            vol.Optional(ATTR_ICON): MediaSelector({"accept": ["image/*", "video/*"]}),
-            vol.Optional(ATTR_POSITION): vol.In(Notifications.POSITIONS),
-            vol.Optional(ATTR_DURATION): vol.All(cv.time_period),
-            vol.Optional(ATTR_INTERACTIVE): cv.boolean,
-            vol.Optional(ATTR_BGCOLOR): vol.In(Notifications.BKG_COLORS),
-            vol.Optional(ATTR_FONTSIZE): vol.In(Notifications.FONTSIZES),
-            vol.Optional(ATTR_TRANSPARENCY): vol.In(Notifications.TRANSPARENCIES),
+            probatio.Optional(ATTR_TITLE): cv.string,
+            probatio.Required(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_IMAGE): MediaSelector(
+                {"accept": ["image/*", "video/*"]}
+            ),
+            probatio.Optional(ATTR_ICON): MediaSelector(
+                {"accept": ["image/*", "video/*"]}
+            ),
+            probatio.Optional(ATTR_POSITION): probatio.In(Notifications.POSITIONS),
+            probatio.Optional(ATTR_DURATION): probatio.All(cv.time_period),
+            probatio.Optional(ATTR_INTERACTIVE): probatio.Boolean,
+            probatio.Optional(ATTR_BGCOLOR): probatio.In(Notifications.BKG_COLORS),
+            probatio.Optional(ATTR_FONTSIZE): probatio.In(Notifications.FONTSIZES),
+            probatio.Optional(ATTR_TRANSPARENCY): probatio.In(
+                Notifications.TRANSPARENCIES
+            ),
         },
         func="nfandroidtv_send_message",
     )
