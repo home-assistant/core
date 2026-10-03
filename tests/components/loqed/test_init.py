@@ -259,20 +259,58 @@ async def test_ensure_webhooks_handles_bridge_error_on_cleanup(
     assert "Could not remove stale webhook from LOQED bridge" in caplog.text
 
 
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
 async def test_cannot_connect_to_bridge_will_retry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    error: type[Exception],
 ) -> None:
-    """Test webhook setup in loqed bridge."""
+    """Test setup retries when the bridge cannot be reached to fetch the lock."""
     config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=error):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == (
+        f"Unable to connect to bridge at {config_entry.data['bridge_ip']}"
+    )
+
+
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
+@pytest.mark.parametrize("failing_call", ["getWebhooks", "registerWebhook"])
+async def test_setup_retries_when_bridge_webhook_setup_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    failing_call: str,
+    error: type[Exception],
+) -> None:
+    """Test bridge errors while registering the webhook are converted to a retry."""
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    lock.getWebhooks = AsyncMock(return_value=[])
+    lock.registerWebhook = AsyncMock()
+    setattr(lock, failing_call, AsyncMock(side_effect=error))
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == (
+        f"Unable to connect to bridge at {config_entry.data['bridge_ip']}"
+    )
 
 
 async def test_setup_retry_after_bridge_webhook_failure(
