@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_device[receiver]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'onkyo',
+        '0009B0123456',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': 'TX-NR7100',
+    'name': 'TX-NR7100',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device[zones]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'disabled_by': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onkyo',
+          '0009B0123456_zone2',
+        ),
+      }),
+      'labels': set({
+      }),
+      'name': 'Zone 2',
+      'name_by_user': None,
+      'parent_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'disabled_by': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onkyo',
+          '0009B0123456_zone3',
+        ),
+      }),
+      'labels': set({
+      }),
+      'name': 'Zone 3',
+      'name_by_user': None,
+      'parent_device_id': <ANY>,
+    }),
+  ])
+# ---

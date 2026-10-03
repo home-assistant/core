@@ -30,12 +30,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100',
+    'original_name': None,
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -108,12 +108,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Zone 2',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Zone 2',
+    'original_name': None,
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -126,7 +126,7 @@
 # name: test_entities[media_player.tx_nr7100_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Zone 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 2',
       <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Stereo',
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Stereo',
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Zone 3',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Zone 3',
+    'original_name': None,
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -192,7 +192,7 @@
 # name: test_entities[media_player.tx_nr7100_zone_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 3',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
