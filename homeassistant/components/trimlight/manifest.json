@@ -1,0 +1,12 @@
+{
+  "domain": "trimlight",
+  "name": "Trimlight",
+  "codeowners": ["@spdevpro", "@bsholy"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/trimlight",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aiotrimlight==0.3.1"],
+  "zeroconf": ["_tlight._tcp.local."]
+}
