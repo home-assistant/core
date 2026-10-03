@@ -1,4 +1,232 @@
 # serializer version: 1
+# name: test_service_get_ingredient[high-confidence]
+  dict({
+    'confidence': dict({
+      'acceptable_confidence': True,
+      'average': 1.0,
+      'comment': None,
+      'food': None,
+      'name': None,
+      'quantity': None,
+      'unit': None,
+    }),
+    'ingredient': dict({
+      'display': '1 can acorn squash',
+      'food': dict({
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454134),
+        'description': '',
+        'extras': dict({
+        }),
+        'food_id': '09322430-d24c-4b1a-abb6-22b6ed3a88f5',
+        'households_with_ingredient_food': None,
+        'label': None,
+        'label_id': None,
+        'name': 'acorn squash',
+        'plural_name': None,
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454141),
+      }),
+      'is_food': None,
+      'note': '',
+      'original_text': None,
+      'quantity': 1.0,
+      'reference_id': '',
+      'referenced_recipe': None,
+      'title': 'acorn squash',
+      'unit': dict({
+        'abbreviation': '',
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464122),
+        'description': '',
+        'extras': dict({
+        }),
+        'fraction': True,
+        'name': 'can',
+        'plural_abbreviation': '',
+        'plural_name': None,
+        'standard_quantity': None,
+        'standard_unit': None,
+        'unit_id': '7bf539d4-fc78-48bc-b48e-c35ccccec34a',
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464124),
+        'use_abbreviation': False,
+      }),
+    }),
+    'input': '1 can acorn squash',
+  })
+# ---
+# name: test_service_get_ingredient[low-confidence]
+  dict({
+    'confidence': dict({
+      'acceptable_confidence': False,
+      'average': 0.979,
+      'comment': None,
+      'food': None,
+      'name': None,
+      'quantity': None,
+      'unit': None,
+    }),
+    'ingredient': dict({
+      'display': '1 can acorn squash',
+      'food': dict({
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454134),
+        'description': '',
+        'extras': dict({
+        }),
+        'food_id': '09322430-d24c-4b1a-abb6-22b6ed3a88f5',
+        'households_with_ingredient_food': None,
+        'label': None,
+        'label_id': None,
+        'name': 'acorn squash',
+        'plural_name': None,
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454141),
+      }),
+      'is_food': None,
+      'note': '',
+      'original_text': None,
+      'quantity': 1.0,
+      'reference_id': '',
+      'referenced_recipe': None,
+      'title': 'acorn squash',
+      'unit': dict({
+        'abbreviation': '',
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464122),
+        'description': '',
+        'extras': dict({
+        }),
+        'fraction': True,
+        'name': 'can',
+        'plural_abbreviation': '',
+        'plural_name': None,
+        'standard_quantity': None,
+        'standard_unit': None,
+        'unit_id': '7bf539d4-fc78-48bc-b48e-c35ccccec34a',
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464124),
+        'use_abbreviation': False,
+      }),
+    }),
+    'input': '1 can acorn squash',
+  })
+# ---
+# name: test_service_get_ingredient[threshold-confidence]
+  dict({
+    'confidence': dict({
+      'acceptable_confidence': True,
+      'average': 0.98,
+      'comment': None,
+      'food': None,
+      'name': None,
+      'quantity': None,
+      'unit': None,
+    }),
+    'ingredient': dict({
+      'display': '1 can acorn squash',
+      'food': dict({
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454134),
+        'description': '',
+        'extras': dict({
+        }),
+        'food_id': '09322430-d24c-4b1a-abb6-22b6ed3a88f5',
+        'households_with_ingredient_food': None,
+        'label': None,
+        'label_id': None,
+        'name': 'acorn squash',
+        'plural_name': None,
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454141),
+      }),
+      'is_food': None,
+      'note': '',
+      'original_text': None,
+      'quantity': 1.0,
+      'reference_id': '',
+      'referenced_recipe': None,
+      'title': 'acorn squash',
+      'unit': dict({
+        'abbreviation': '',
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464122),
+        'description': '',
+        'extras': dict({
+        }),
+        'fraction': True,
+        'name': 'can',
+        'plural_abbreviation': '',
+        'plural_name': None,
+        'standard_quantity': None,
+        'standard_unit': None,
+        'unit_id': '7bf539d4-fc78-48bc-b48e-c35ccccec34a',
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464124),
+        'use_abbreviation': False,
+      }),
+    }),
+    'input': '1 can acorn squash',
+  })
+# ---
+# name: test_service_get_ingredient[zero-confidence]
+  dict({
+    'confidence': dict({
+      'acceptable_confidence': False,
+      'average': 0.0,
+      'comment': None,
+      'food': None,
+      'name': None,
+      'quantity': None,
+      'unit': None,
+    }),
+    'ingredient': dict({
+      'display': '1 can acorn squash',
+      'food': dict({
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454134),
+        'description': '',
+        'extras': dict({
+        }),
+        'food_id': '09322430-d24c-4b1a-abb6-22b6ed3a88f5',
+        'households_with_ingredient_food': None,
+        'label': None,
+        'label_id': None,
+        'name': 'acorn squash',
+        'plural_name': None,
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 4, 454141),
+      }),
+      'is_food': None,
+      'note': '',
+      'original_text': None,
+      'quantity': 1.0,
+      'reference_id': '',
+      'referenced_recipe': None,
+      'title': 'acorn squash',
+      'unit': dict({
+        'abbreviation': '',
+        'aliases': list([
+        ]),
+        'created_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464122),
+        'description': '',
+        'extras': dict({
+        }),
+        'fraction': True,
+        'name': 'can',
+        'plural_abbreviation': '',
+        'plural_name': None,
+        'standard_quantity': None,
+        'standard_unit': None,
+        'unit_id': '7bf539d4-fc78-48bc-b48e-c35ccccec34a',
+        'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464124),
+        'use_abbreviation': False,
+      }),
+    }),
+    'input': '1 can acorn squash',
+  })
+# ---
 # name: test_service_get_recipes[service_data0]
   dict({
     'recipes': dict({

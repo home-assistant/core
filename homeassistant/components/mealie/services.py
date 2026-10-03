@@ -7,6 +7,7 @@ from aiomealie import (
     MealieNotFoundError,
     MealieValidationError,
     MealplanEntryType,
+    RegisteredParser,
 )
 from awesomeversion import AwesomeVersion
 import probatio
@@ -28,6 +29,7 @@ from .const import (
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_INGREDIENT,
     ATTR_MEALPLAN_ID,
     ATTR_NOTE_TEXT,
     ATTR_NOTE_TITLE,
@@ -36,7 +38,10 @@ from .const import (
     ATTR_SEARCH_TERMS,
     ATTR_START_DATE,
     ATTR_URL,
+    CONF_PARSER,
+    DEFAULT_PARSER,
     DOMAIN,
+    MINIMUM_PARSER_CONFIDENCE,
 )
 from .coordinator import MealieConfigEntry
 
@@ -144,6 +149,13 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
             probatio.Optional(ATTR_NOTE_TEXT): str,
         }
     ),
+)
+SERVICE_GET_INGREDIENT = "get_ingredient"
+SERVICE_GET_INGREDIENT_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_INGREDIENT): str,
+    }
 )
 
 
@@ -377,6 +389,31 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
     return None
 
 
+async def _async_get_ingredient(call: ServiceCall) -> ServiceResponse:
+    """Get an ingredient using the parser."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    ingredient = call.data[ATTR_INGREDIENT]
+    client = entry.runtime_data.client
+    parser = RegisteredParser(entry.options.get(CONF_PARSER, DEFAULT_PARSER))
+
+    try:
+        result = await client.parse_ingredient(ingredient, parser)
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    result_dict = asdict(result)
+    # Add flag to indicate whether the ingredient has acceptable confidence to
+    # be added as an ingredient in the to-do list add_item method.
+    result_dict["confidence"]["acceptable_confidence"] = (
+        result.confidence.average or 0.0
+    ) >= MINIMUM_PARSER_CONFIDENCE
+    return result_dict
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mealie integration."""
@@ -435,6 +472,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_update_mealplan,
         schema=SERVICE_UPDATE_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_INGREDIENT,
+        _async_get_ingredient,
+        schema=SERVICE_GET_INGREDIENT_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
     service.async_register_platform_entity_service(
         hass,
