@@ -76,6 +76,7 @@ from .helper import (
 )
 from .img_util import (
     TurboJPEGSingleton,  # noqa: F401
+    async_ensure_turbojpeg,
     scale_jpeg_camera_image,
 )
 from .prefs import (
@@ -173,6 +174,7 @@ async def _async_get_image(
                 ):
                     assert width is not None
                     assert height is not None
+                    await async_ensure_turbojpeg(camera.hass)
                     return Image(
                         content_type, scale_jpeg_camera_image(image, width, height)
                     )

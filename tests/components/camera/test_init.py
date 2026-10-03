@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from http import HTTPStatus
 import io
+import threading
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 from aiohttp import hdrs
@@ -17,6 +18,7 @@ from homeassistant.components.camera.const import (
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera.img_util import TurboJPEGSingleton
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -128,6 +130,55 @@ async def test_get_image_from_camera_with_width_height_scaled(
     assert mock_camera.called
     assert image.content_type == "image/jpg"
     assert image.content == EMPTY_8_6_JPEG
+
+
+async def test_turbojpeg_not_created_at_setup(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """TurboJPEG is not created when the camera component is set up."""
+    monkeypatch.setattr(TurboJPEGSingleton, "_TurboJPEGSingleton__instance", None)
+    with patch("turbojpeg.TurboJPEG") as mock_turbojpeg_class:
+        await async_setup_component(hass, "camera", {"camera": {"platform": "demo"}})
+        await hass.async_block_till_done()
+
+    mock_turbojpeg_class.assert_not_called()
+    assert not TurboJPEGSingleton.created()
+
+
+@pytest.mark.usefixtures("image_mock_url")
+async def test_scaled_image_creates_turbojpeg_in_executor(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The first scaled image creates TurboJPEG off the event loop, once."""
+    monkeypatch.setattr(TurboJPEGSingleton, "_TurboJPEGSingleton__instance", None)
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    created_in_threads: list[int] = []
+
+    def _create_turbojpeg() -> Mock:
+        created_in_threads.append(threading.get_ident())
+        return turbo_jpeg
+
+    with (
+        patch("turbojpeg.TurboJPEG", side_effect=_create_turbojpeg),
+        patch(
+            "homeassistant.components.demo.camera.Path.read_bytes",
+            autospec=True,
+            return_value=b"Valid jpeg",
+        ),
+    ):
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera", width=4, height=3
+        )
+        second = await camera.async_get_image(
+            hass, "camera.demo_camera", width=4, height=3
+        )
+
+    assert image.content == EMPTY_8_6_JPEG
+    assert second.content == EMPTY_8_6_JPEG
+    assert len(created_in_threads) == 1
+    assert created_in_threads[0] != hass.loop_thread_id
 
 
 @pytest.mark.usefixtures("image_mock_url")

@@ -9,8 +9,9 @@ import datetime
 from http import HTTPStatus
 import io
 import pathlib
+import threading
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import aiohttp
 import av
@@ -1512,6 +1513,58 @@ async def test_camera_image_resize(
     assert browse.title == "Front: Recent Events"
     assert not browse.thumbnail
     assert len(browse.children) == 1
+
+
+async def test_camera_image_resize_creates_turbojpeg_in_executor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    auth,
+    hass_client: ClientSessionGenerator,
+    subscriber,
+    setup_platform,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The first thumbnail creates TurboJPEG off the event loop."""
+    monkeypatch.setattr(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton."
+        "_TurboJPEGSingleton__instance",
+        None,
+    )
+    await setup_platform()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    assert device
+    received_events = async_capture_events(hass, NEST_EVENT)
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+    await subscriber.async_receive_event(
+        create_event(EVENT_SESSION_ID, EVENT_ID, PERSON_EVENT, timestamp=dt_util.now())
+    )
+    await hass.async_block_till_done()
+    assert len(received_events) == 1
+    event_identifier = received_events[0].data["nest_event_id"]
+
+    created_in_threads: list[int] = []
+    turbo_jpeg = Mock()
+    turbo_jpeg.decode_header.side_effect = OSError
+
+    def _create_turbojpeg() -> Mock:
+        created_in_threads.append(threading.get_ident())
+        return turbo_jpeg
+
+    client = await hass_client()
+    with patch("turbojpeg.TurboJPEG", side_effect=_create_turbojpeg):
+        response = await client.get(
+            f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
+        )
+    assert response.status == HTTPStatus.OK
+    assert await response.read() == IMAGE_BYTES_FROM_EVENT
+    assert len(created_in_threads) == 1
+    assert created_in_threads[0] != hass.loop_thread_id
 
 
 async def test_event_media_attachment(
