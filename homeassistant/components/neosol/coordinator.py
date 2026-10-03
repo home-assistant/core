@@ -14,8 +14,8 @@ from .const import DOMAIN, LOGGER
 type NeosolConfigEntry = ConfigEntry[NeosolCoordinator]
 
 # The dongle only transmits, so the channel table is the one thing to read back. The
-# poll is a liveness check: it tells an unplugged dongle, or a channel it no longer
-# exposes, but it does not add shutters paired after the setup.
+# poll is a liveness check: it detects an unplugged dongle, or a channel the dongle
+# no longer exposes, but it does not add shutters paired after the setup.
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
