@@ -2520,3 +2520,195 @@
     'state': '2021-01-01T01:00:00+00:00',
   })
 # ---
+# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_1_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'no_link',
+        'offline',
+        'online',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.internet_1_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_status',
+    'unique_id': 'wan_status-600c0f0000000000000000a1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_1_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internet 1 Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'no_link',
+        'offline',
+        'online',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.internet_1_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_2_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'no_link',
+        'offline',
+        'online',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.internet_2_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_status',
+    'unique_id': 'wan_status-600c0f0000000000000000a2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_2_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internet 2 Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'no_link',
+        'offline',
+        'online',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.internet_2_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_link',
+  })
+# ---
+# name: test_wan_status_entity[device_payload0-network_payload0][sensor.unifi_5g_a_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'no_link',
+        'offline',
+        'online',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.unifi_5g_a_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_status',
+    'unique_id': 'wan_status-600c0f0000000000000000a3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_wan_status_entity[device_payload0-network_payload0][sensor.unifi_5g_a_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi 5G A Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'no_link',
+        'offline',
+        'online',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.unifi_5g_a_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---

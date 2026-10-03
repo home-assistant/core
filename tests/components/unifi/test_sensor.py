@@ -33,17 +33,19 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    WAN_NETWORKS,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
@@ -2436,3 +2438,169 @@ async def test_device_uplink(
     device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
+
+
+# Gateway WAN data as reported by a UDM Pro Max with WAN2 configured but unplugged
+WAN_GATEWAY = {
+    "board_rev": 3,
+    "device_id": "mock-gateway",
+    "last_wan_interfaces": {
+        "WAN": {"alive": True, "ip": "192.168.1.91"},
+        "WAN3": {"alive": True, "ip": "192.0.0.2"},
+    },
+    "last_wan_status": {"WAN": "online", "WAN3": "online"},
+    "mac": "00:00:00:00:02:01",
+    "model": "UDMPROMAX",
+    "name": "Gateway",
+    "state": 1,
+    "type": "udm",
+    "version": "4.3.6",
+    "wan1": {
+        "enable": True,
+        "ifname": "eth8",
+        "ip": "192.168.1.91",
+        "type": "ethernet",
+        "up": True,
+    },
+    "wan3": {
+        "enable": None,
+        "ifname": "gre1",
+        "ip": "192.0.0.2",
+        "type": "wireless_5g",
+        "up": True,
+    },
+}
+WAN_STATUS_ENTITY_ID = "sensor.internet_1_status"
+WAN_STATUS_ENTITY_IDS = (
+    WAN_STATUS_ENTITY_ID,
+    "sensor.internet_2_status",
+    "sensor.unifi_5g_a_status",
+)
+
+
+@pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
+@pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
+async def test_wan_status_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Verify every WAN network gets a status sensor, also when unplugged."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.SENSOR]):
+        await config_entry_factory()
+
+    assert [
+        hass.states.get(entity_id).state for entity_id in WAN_STATUS_ENTITY_IDS
+    ] == ["online", "no_link", "online"]
+    for entity_id in WAN_STATUS_ENTITY_IDS:
+        assert entity_registry.async_get(entity_id) == snapshot(
+            name=f"{entity_id}-entry"
+        )
+        assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+
+@pytest.mark.parametrize(
+    ("network_payload", "device_payload", "expected_state"),
+    [
+        pytest.param(
+            [{**WAN_NETWORKS[0], "wan_type": "disabled"}],
+            [WAN_GATEWAY],
+            "disabled",
+            id="disabled",
+        ),
+        pytest.param(
+            [WAN_NETWORKS[0]],
+            [{key: value for key, value in WAN_GATEWAY.items() if key != "wan1"}],
+            "no_link",
+            id="no_link_interface_absent",
+        ),
+        pytest.param(
+            [WAN_NETWORKS[0]],
+            [{**WAN_GATEWAY, "wan1": {**WAN_GATEWAY["wan1"], "up": False}}],
+            "no_link",
+            id="no_link_interface_down",
+        ),
+        pytest.param(
+            [WAN_NETWORKS[0]],
+            [{**WAN_GATEWAY, "last_wan_status": {"WAN3": "online"}}],
+            "offline",
+            id="offline_status_absent",
+        ),
+        pytest.param(
+            [WAN_NETWORKS[0]],
+            [{**WAN_GATEWAY, "last_wan_status": {"WAN": "offline"}}],
+            "offline",
+            id="offline_status_not_online",
+        ),
+        pytest.param([WAN_NETWORKS[0]], [WAN_GATEWAY], "online", id="online"),
+        pytest.param([WAN_NETWORKS[0]], [], STATE_UNKNOWN, id="no_gateway"),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_status(hass: HomeAssistant, expected_state: str) -> None:
+    """Verify the WAN status is derived from the network and the gateway."""
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == expected_state
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_status_gateway_update(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
+    """Verify a gateway update changes the WAN status."""
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "online"
+
+    gateway = deepcopy(WAN_GATEWAY)
+    gateway["last_wan_status"]["WAN"] = "offline"
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "offline"
+
+    gateway["wan1"]["up"] = False
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "no_link"
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_status_network_update(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
+    """Verify a networkconf update changes the WAN status."""
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "online"
+
+    network = {**WAN_NETWORKS[0], "wan_type": "disabled"}
+    mock_websocket_message(message=MessageKey.NETWORK_CONF_UPDATED, data=network)
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "disabled"
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_status_not_written_without_change(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
+    """Verify device updates not changing the WAN status do not write state."""
+    written_entity_ids: list[str] = []
+
+    @callback
+    def track_state_reported(event: Event[EventStateReportedData]) -> None:
+        written_entity_ids.append(event.data["entity_id"])
+
+    @callback
+    def filter_wan_status(event_data: EventStateReportedData) -> bool:
+        return event_data["entity_id"] == WAN_STATUS_ENTITY_ID
+
+    hass.bus.async_listen(EVENT_STATE_REPORTED, track_state_reported, filter_wan_status)
+
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**WAN_GATEWAY, "uptime": 1234}
+    )
+    await hass.async_block_till_done()
+
+    assert written_entity_ids == []

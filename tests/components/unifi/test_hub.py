@@ -50,6 +50,8 @@ async def test_hub_setup(
             Platform.DEVICE_TRACKER,
             Platform.IMAGE,
             Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
             Platform.UPDATE,
@@ -73,8 +75,10 @@ async def test_coordinators_preserve_handler_update_sources(
 
     clients_coordinator = loader.get_data_update_coordinator(api.clients)
     devices_coordinator = loader.get_data_update_coordinator(api.devices)
+    networks_coordinator = loader.get_data_update_coordinator(api.networks)
     assert clients_coordinator.update_interval is None
     assert devices_coordinator.update_interval is None
+    assert networks_coordinator.update_interval is None
 
     assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
     assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
