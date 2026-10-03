@@ -183,8 +183,10 @@ async def transform_stream(
                         args = (
                             json.loads(entry["arguments"]) if entry["arguments"] else {}
                         )
-                    except json.JSONDecodeError:
-                        args = {}
+                    except json.JSONDecodeError as err:
+                        raise HomeAssistantError(
+                            f"Unexpected tool argument response: {err}"
+                        ) from err
                     tool_inputs.append(
                         llm.ToolInput(
                             id=entry["id"],

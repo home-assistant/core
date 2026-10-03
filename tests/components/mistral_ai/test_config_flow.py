@@ -134,6 +134,67 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth updates the existing entry instead of creating a new one."""
+    hass.config.components.add(DOMAIN)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mistral",
+        data={CONF_API_KEY: "test-key"},
+        version=2,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch("homeassistant.components.mistral_ai.config_flow._validate_api_key"),
+        patch(
+            "homeassistant.components.mistral_ai.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "new-key"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauth shows an error when the new key is invalid."""
+    hass.config.components.add(DOMAIN)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mistral",
+        data={CONF_API_KEY: "test-key"},
+        version=2,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    with patch(
+        "homeassistant.components.mistral_ai.config_flow._validate_api_key",
+        side_effect=_FakeError(401),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "bad-key"}
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {"base": "invalid_auth"}
+    assert entry.data[CONF_API_KEY] == "test-key"
+
+
 async def test_supported_subentry_types(hass: HomeAssistant) -> None:
     """Test the supported subentry types match the conversation service."""
     types = MistralAIConfigFlow.async_get_supported_subentry_types(None)

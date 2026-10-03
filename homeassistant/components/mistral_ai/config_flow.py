@@ -9,6 +9,7 @@ import mistralai.client.utils.security  # noqa: F401
 import probatio
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -52,7 +53,7 @@ DATA_MODELS_CACHE = "mistral_ai_models_cache"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -100,6 +101,12 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        return await self._async_step_api_key(user_input)
+
+    async def _async_step_api_key(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Handle an API key form."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -113,6 +120,15 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
             else:
+                if self.source == SOURCE_REAUTH:
+                    entry = self._get_reauth_entry()
+                    if entry.update_listeners:
+                        return self.async_update_and_abort(
+                            entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                        )
+                    return self.async_update_reload_and_abort(
+                        entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                    )
                 return self.async_create_entry(
                     title="Mistral",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
@@ -127,7 +143,7 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="user" if self.source != SOURCE_REAUTH else "reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
@@ -142,12 +158,7 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reauth confirmation step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
-        return await self.async_step_user(user_input)
+        return await self._async_step_api_key(user_input)
 
     @classmethod
     @callback
