@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "on_off": {
+        "default": "mdi:light-switch"
+      }
+    }
+  }
+}

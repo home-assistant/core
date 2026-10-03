@@ -1,0 +1,59 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect DRIQON",
+        "description": "Sign in with your DRIQON account.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate DRIQON",
+        "description": "Enter the password for {email} to renew Home Assistant access.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure DRIQON",
+        "description": "Reconnect your DRIQON account. Your password is checked but not saved.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the DRIQON cloud API.",
+      "invalid_auth": "The email or password was rejected by Firebase.",
+      "invalid_api_key": "The integration Firebase configuration was rejected.",
+      "rate_limited": "Too many requests. Wait a little and try again.",
+      "account_mismatch": "These credentials belong to a different DRIQON account."
+    },
+    "abort": {
+      "already_configured": "This DRIQON account is already configured.",
+      "reconfigure_successful": "DRIQON was reconfigured.",
+      "reauth_unsuccessful": "Could not identify the DRIQON account to reauthenticate."
+    }
+  },
+  "entity": {
+    "switch": {
+      "on_off": {
+        "name": "Power"
+      }
+    }
+  },
+  "exceptions": {
+    "device_unavailable": {
+      "message": "This DRIQON device is no longer available."
+    },
+    "control_not_allowed": {
+      "message": "Your DRIQON account does not have permission to control this device."
+    },
+    "command_failed": {
+      "message": "DRIQON could not send the command. Check the integration and device connection."
+    }
+  }
+}

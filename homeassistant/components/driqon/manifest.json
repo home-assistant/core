@@ -1,0 +1,12 @@
+{
+  "domain": "driqon",
+  "name": "DRIQON",
+  "homeassistant": "2025.7.0",
+  "version": "1.2.0",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/DRIQON/DRIQON-BACKEND-1/blob/main/custom_components/driqon/README.md",
+  "issue_tracker": "https://github.com/DRIQON/DRIQON-BACKEND-1/issues",
+  "iot_class": "cloud_polling",
+  "requirements": []
+}
