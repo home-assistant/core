@@ -1,16 +1,26 @@
 """Tests for the EARN-E P1 Meter integration setup."""
 
-from unittest.mock import AsyncMock, MagicMock
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MAC
+from homeassistant.config_entries import ConfigEntries, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import DOMAIN, MOCK_MAC, MOCK_SERIAL, trigger_callback
+from .conftest import (
+    CONF_SERIAL,
+    DOMAIN,
+    MOCK_HOST,
+    MOCK_HOST_2,
+    MOCK_MAC,
+    MOCK_SERIAL,
+    MOCK_SERIAL_2,
+    trigger_callback,
+)
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +64,152 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_listener.unregister.assert_called()
     mock_listener.stop.assert_awaited()
+
+
+async def test_unload_entry_keeps_listener_for_remaining_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_2: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test the shared listener survives until the last entry is unloaded."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry_2.state is ConfigEntryState.LOADED
+    mock_listener.start.assert_awaited_once()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_listener.stop.assert_not_awaited()
+
+    await hass.config_entries.async_unload(mock_config_entry_2.entry_id)
+    await hass.async_block_till_done()
+
+    mock_listener.stop.assert_awaited_once()
+
+
+async def test_unload_entry_keeps_listener_while_other_entry_sets_up(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+) -> None:
+    """Test unloading an entry leaves a listener another setup already claimed."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_SERIAL_2,
+    )
+    second_entry.add_to_hass(hass)
+
+    forwarding = asyncio.Event()
+    resume = asyncio.Event()
+    forward_entry_setups = ConfigEntries.async_forward_entry_setups
+
+    async def blocked_forward_entry_setups(
+        self: ConfigEntries, entry: MockConfigEntry, platforms: list[Platform]
+    ) -> None:
+        forwarding.set()
+        await resume.wait()
+        await forward_entry_setups(self, entry, platforms)
+
+    with patch.object(
+        ConfigEntries, "async_forward_entry_setups", blocked_forward_entry_setups
+    ):
+        setup = hass.async_create_task(
+            hass.config_entries.async_setup(second_entry.entry_id)
+        )
+        await forwarding.wait()
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+        mock_listener.stop.assert_not_awaited()
+
+        resume.set()
+        await setup
+
+    await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.LOADED
+    mock_listener.stop.assert_not_awaited()
+
+
+async def test_concurrent_setup_starts_listener_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_2: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test entries setting up at the same time share a single listener."""
+    starting = asyncio.Event()
+    resume = asyncio.Event()
+
+    async def blocked_start() -> None:
+        starting.set()
+        await resume.wait()
+
+    mock_listener.start.side_effect = blocked_start
+
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await starting.wait()
+    resume.set()
+    await setup
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry_2.state is ConfigEntryState.LOADED
+    mock_listener.start.assert_awaited_once()
+
+
+async def test_failed_setup_releases_listener(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+) -> None:
+    """Test a setup that fails after starting the listener stops it again."""
+    with patch.object(
+        ConfigEntries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("boom"),
+        autospec=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_listener.unregister.assert_called_once_with(MOCK_HOST)
+    mock_listener.stop.assert_awaited_once()
+
+
+async def test_failed_setup_unregisters_while_listener_kept(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+) -> None:
+    """Test a failed setup unregisters its host when another entry keeps the listener."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_SERIAL_2,
+    )
+    second_entry.add_to_hass(hass)
+
+    with patch.object(
+        ConfigEntries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("boom"),
+        autospec=True,
+    ):
+        await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_listener.unregister.assert_called_once_with(MOCK_HOST_2)
+    mock_listener.stop.assert_not_awaited()
 
 
 async def test_device_info(
