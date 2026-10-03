@@ -97,9 +97,7 @@ def load_migration_jwt_fixture() -> str:
     """Load migration JWT fixture data (has email for legacy migration)."""
     token = load_fixture("migration_jwt", DOMAIN).strip()
     header, payload, signature = token.split(".")
-    signature_bytes = base64.urlsafe_b64decode(
-        signature + "=" * (-len(signature) % 4)
-    )
+    signature_bytes = base64.urlsafe_b64decode(signature + "=" * (-len(signature) % 4))
     canonical_signature = (
         base64.urlsafe_b64encode(signature_bytes).rstrip(b"=").decode()
     )
