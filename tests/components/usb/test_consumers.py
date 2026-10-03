@@ -97,6 +97,11 @@ async def _async_get_serial_ports(
         pytest.param({"usb_path": TTY_USB0}, {}, id="usb_path"),
         pytest.param({}, {"usb_path": TTY_USB0}, id="usb_path_in_options"),
         pytest.param({"serial_port": TTY_USB0}, {}, id="serial_port"),
+        pytest.param(
+            {},
+            {"serial_port": {"port_name": TTY_USB0}},
+            id="nested_serial_port_name_in_options",
+        ),
         pytest.param({"device": TTY_USB0_BY_ID}, {}, id="by_id_symlink"),
         pytest.param({"device": TTY_USB0}, {"device": TTY_USB0}, id="data_and_options"),
     ],
