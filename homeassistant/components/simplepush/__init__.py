@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DOMAIN
+from .const import CONF_ENTRY, DATA_HASS_CONFIG, DOMAIN
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             Platform.NOTIFY,
             DOMAIN,
-            dict(entry.data),
+            {**entry.data, CONF_ENTRY: entry},
             hass.data[DATA_HASS_CONFIG],
         )
     )

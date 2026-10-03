@@ -4,10 +4,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "topic_not_joined": "Your account doesn't hold the topic of this entry. Open the Simplepush app once so it imports the device key of the old app as a topic, then try again."
     },
     "step": {
-      "user": {
+      "app": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::simplepush::config::step::reconfigure::data_description::api_token%]"
+        }
+      },
+      "legacy": {
         "data": {
           "device_key": "The device key of your device",
           "event": "The event for the events.",
@@ -15,15 +26,39 @@
           "password": "The password of the encryption used by your device",
           "salt": "The salt used by your device."
         }
+      },
+      "reconfigure": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "Find it in the Simplepush app under Settings > API Token."
+        },
+        "description": "Enter an API token for {name}. An entry of the old Simplepush app moves to the current app: the device key of the old app becomes a topic there, and notifications are sent to that topic. The encryption password of the old app isn't used anymore."
+      },
+      "user": {
+        "menu_options": {
+          "app": "Simplepush app (API token)",
+          "legacy": "Old Simplepush app (device key)"
+        }
       }
     }
   },
   "exceptions": {
+    "invalid_api_token": {
+      "message": "Simplepush rejected the API token. Reconfigure the entry with a new API token."
+    },
+    "invalid_links": {
+      "message": "The links must be a URL or a list of URLs."
+    },
     "send_message_failed": {
       "message": "Failed to send the Simplepush notification."
     },
     "title_or_message_too_long": {
       "message": "The notification title or message is too long."
+    },
+    "topic_not_joined": {
+      "message": "Your Simplepush account doesn't hold the topic of this entry."
     }
   }
 }
