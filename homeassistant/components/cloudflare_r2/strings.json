@@ -4,12 +4,43 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "bucket_not_found": "Bucket does not exist. Check the bucket name and endpoint URL.",
       "cannot_connect": "[%key:component::cloudflare_r2::exceptions::cannot_connect::message%]",
       "invalid_bucket_name": "[%key:component::cloudflare_r2::exceptions::invalid_bucket_name::message%]",
       "invalid_credentials": "[%key:component::cloudflare_r2::exceptions::invalid_credentials::message%]",
-      "invalid_endpoint_url": "[%key:component::cloudflare_r2::exceptions::invalid_endpoint_url::message%]"
+      "invalid_endpoint_url": "[%key:component::cloudflare_r2::exceptions::invalid_endpoint_url::message%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_key_id": "[%key:component::cloudflare_r2::config::step::user::data::access_key_id%]",
+          "secret_access_key": "[%key:component::cloudflare_r2::config::step::user::data::secret_access_key%]"
+        },
+        "data_description": {
+          "access_key_id": "[%key:component::cloudflare_r2::config::step::user::data_description::access_key_id%]",
+          "secret_access_key": "[%key:component::cloudflare_r2::config::step::user::data_description::secret_access_key%]"
+        },
+        "description": "The credentials for bucket {name} are no longer valid. Enter a new access key ID and secret access key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "access_key_id": "[%key:component::cloudflare_r2::config::step::user::data::access_key_id%]",
+          "bucket": "[%key:component::cloudflare_r2::config::step::user::data::bucket%]",
+          "endpoint_url": "[%key:component::cloudflare_r2::config::step::user::data::endpoint_url%]",
+          "prefix": "[%key:component::cloudflare_r2::config::step::user::data::prefix%]",
+          "secret_access_key": "[%key:component::cloudflare_r2::config::step::user::data::secret_access_key%]"
+        },
+        "data_description": {
+          "access_key_id": "[%key:component::cloudflare_r2::config::step::user::data_description::access_key_id%]",
+          "bucket": "[%key:component::cloudflare_r2::config::step::user::data_description::bucket%]",
+          "endpoint_url": "[%key:component::cloudflare_r2::config::step::user::data_description::endpoint_url%]",
+          "prefix": "[%key:component::cloudflare_r2::config::step::user::data_description::prefix%]",
+          "secret_access_key": "[%key:component::cloudflare_r2::config::step::user::data_description::secret_access_key%]"
+        },
+        "title": "Reconfigure Cloudflare R2 bucket"
+      },
       "user": {
         "data": {
           "access_key_id": "Access key ID",
@@ -30,6 +61,9 @@
     }
   },
   "exceptions": {
+    "bucket_not_found": {
+      "message": "Bucket {bucket} does not exist. Reconfigure the integration to use an existing bucket."
+    },
     "cannot_connect": {
       "message": "Cannot connect to endpoint"
     },

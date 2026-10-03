@@ -9,7 +9,7 @@ from botocore.exceptions import (
 )
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -37,6 +37,10 @@ async def test_load_unload_config_entry(
     [
         (
             ParamValidationError(report="Invalid bucket name"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            ParamValidationError(report="Unknown parameter"),
             ConfigEntryState.SETUP_ERROR,
         ),
         (ValueError(), ConfigEntryState.SETUP_ERROR),
@@ -73,6 +77,30 @@ async def test_setup_entry_head_bucket_error(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_client.__aexit__.assert_awaited_once()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("code", ["404", "NoSuchBucket"])
+async def test_setup_entry_bucket_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    code: str,
+) -> None:
+    """Test a missing bucket is a hard error and does not start reauth."""
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={"Error": {"Code": code}},
+        operation_name="head_bucket",
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "bucket_not_found"
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_setup_entry_warms_loader_caches(
