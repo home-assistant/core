@@ -1,7 +1,7 @@
 """UniFi Protect Integration services."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 import logging
 from typing import Any, cast
 
@@ -268,9 +268,7 @@ def _async_get_ptz_camera(call: ServiceCall) -> Camera:
     return camera
 
 
-async def _async_ptz_command(
-    func: Callable[..., Coroutine[Any, Any, Any]], **kwargs: Any
-) -> Any:
+async def _async_ptz_command(func: Callable[..., Awaitable[Any]], **kwargs: Any) -> Any:
     """Execute a PTZ command with error handling."""
     try:
         return await func(**kwargs)
@@ -288,14 +286,18 @@ async def ptz_goto_preset(call: ServiceCall) -> None:
     preset_name: str = call.data[ATTR_PRESET]
 
     if preset_name.lower() == "home":
-        await _async_ptz_command(camera.ptz_goto_preset_public, slot=-1)
+        await _async_ptz_command(
+            camera.api.ptz_goto_preset_public, camera_id=camera.id, slot=-1
+        )
         return
 
     presets = await _async_ptz_command(camera.get_ptz_presets)
 
     for preset in presets:
         if preset.name == preset_name:
-            await _async_ptz_command(camera.ptz_goto_preset_public, slot=preset.slot)
+            await _async_ptz_command(
+                camera.api.ptz_goto_preset_public, camera_id=camera.id, slot=preset.slot
+            )
             return
 
     raise ServiceValidationError(

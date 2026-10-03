@@ -880,16 +880,14 @@ async def test_select_ptz_patrol_start(
 
     entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert entity_id is not None
-    with patch_ufp_method(
-        ptz_camera, "ptz_patrol_start_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
-            blocking=True,
-        )
-        mock_method.assert_called_once_with(slot=0)
+    ufp.api.ptz_patrol_start_public = AsyncMock()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
+        blocking=True,
+    )
+    ufp.api.ptz_patrol_start_public.assert_called_once_with(ptz_camera.id, slot=0)
 
 
 async def test_select_ptz_patrol_stop(
@@ -902,16 +900,14 @@ async def test_select_ptz_patrol_stop(
 
     entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert entity_id is not None
-    with patch_ufp_method(
-        ptz_camera, "ptz_patrol_stop_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "stop"},
-            blocking=True,
-        )
-        mock_method.assert_called_once()
+    ufp.api.ptz_patrol_stop_public = AsyncMock()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "stop"},
+        blocking=True,
+    )
+    ufp.api.ptz_patrol_stop_public.assert_called_once_with(ptz_camera.id)
 
 
 async def test_select_ptz_patrol_active_state(

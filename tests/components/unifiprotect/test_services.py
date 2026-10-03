@@ -418,16 +418,16 @@ async def test_ptz_goto_preset(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with patch_ufp_method(
-        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
-            blocking=True,
-        )
-        mock_method.assert_called_once_with(slot=0)
+    ufp.api.ptz_goto_preset_public = AsyncMock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PTZ_GOTO_PRESET,
+        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+        blocking=True,
+    )
+    ufp.api.ptz_goto_preset_public.assert_called_once_with(
+        camera_id=ptz_camera.id, slot=0
+    )
 
 
 async def test_ptz_goto_preset_home(
@@ -444,16 +444,16 @@ async def test_ptz_goto_preset_home(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with patch_ufp_method(
-        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
-            blocking=True,
-        )
-        mock_method.assert_called_once_with(slot=-1)
+    ufp.api.ptz_goto_preset_public = AsyncMock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PTZ_GOTO_PRESET,
+        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+        blocking=True,
+    )
+    ufp.api.ptz_goto_preset_public.assert_called_once_with(
+        camera_id=ptz_camera.id, slot=-1
+    )
 
 
 async def test_ptz_goto_preset_not_found(
@@ -527,13 +527,13 @@ async def test_ptz_goto_preset_client_error(
         )
 
 
-async def test_ptz_goto_preset_public_client_error(
+async def test_ptz_goto_preset_command_client_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     ptz_camera: Camera,
 ) -> None:
-    """Test ptz_goto_preset service when ptz_goto_preset_public raises ClientError."""
+    """Test ptz_goto_preset service when the goto command raises ClientError."""
     ptz_camera.get_ptz_presets.return_value = _make_presets()
     ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
@@ -542,15 +542,10 @@ async def test_ptz_goto_preset_public_client_error(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with (
-        patch_ufp_method(
-            ptz_camera,
-            "ptz_goto_preset_public",
-            new_callable=AsyncMock,
-            side_effect=ClientError("Connection failed"),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
+    ufp.api.ptz_goto_preset_public = AsyncMock(
+        side_effect=ClientError("Connection failed")
+    )
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,
@@ -573,15 +568,10 @@ async def test_ptz_goto_home_preset_client_error(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with (
-        patch_ufp_method(
-            ptz_camera,
-            "ptz_goto_preset_public",
-            new_callable=AsyncMock,
-            side_effect=ClientError("Connection failed"),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
+    ufp.api.ptz_goto_preset_public = AsyncMock(
+        side_effect=ClientError("Connection failed")
+    )
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,

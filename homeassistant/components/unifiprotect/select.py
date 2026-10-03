@@ -215,10 +215,9 @@ async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
 async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
     """Start or stop PTZ patrol."""
     if patrol_slot == PTZ_PATROL_STOP:
-        await obj.ptz_patrol_stop_public()
+        await obj.api.ptz_patrol_stop_public(obj.id)
     else:
-        slot = int(patrol_slot)
-        await obj.ptz_patrol_start_public(slot=slot)
+        await obj.api.ptz_patrol_start_public(obj.id, slot=int(patrol_slot))
 
 
 _HDR_MODE_MAP = {
