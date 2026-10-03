@@ -104,8 +104,17 @@
     "auth_error": {
       "message": "Authentication failed: {error}"
     },
+    "minute_forecast_error": {
+      "message": "Error fetching minute forecast: {error}"
+    },
     "update_error": {
       "message": "Error fetching weather data: {error}"
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "description": "Retrieves the precipitation forecast (nowcast) for up to 6 hours, in 2- or 15-minute segments depending on the location. Unlike the cached forecasts, every call makes a live request to the Google Weather API and counts toward your quota.",
+      "name": "Get minute forecast"
     }
   }
 }
