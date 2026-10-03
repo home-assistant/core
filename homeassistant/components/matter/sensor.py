@@ -1349,6 +1349,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.PIHeatingDemand,),
+        device_type=(device_types.Thermostat,),
         featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kHeating,
     ),
     MatterDiscoverySchema(
