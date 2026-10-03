@@ -49,10 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      The integration does not fetch data and the entry contains mostly sensitive information
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The integration cannot be discovered
