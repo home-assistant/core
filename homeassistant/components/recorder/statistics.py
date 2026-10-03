@@ -1493,6 +1493,18 @@ def _generate_statistics_period_stmt(
     """Select reduced statistics for each calendar period."""
     queries = []
 
+    metadata_ids_param = (
+        bindparam(
+            "metadata_ids",
+            value=metadata_ids,
+            type_=Statistics.metadata_id.type,
+            expanding=True,
+            literal_execute=True,
+        )
+        if metadata_ids
+        else None
+    )
+
     aggregate_types = types & {"mean", "min", "max"}
     endpoint_types = types & {"sum", "state", "last_reset"}
 
@@ -1540,8 +1552,8 @@ def _generate_statistics_period_stmt(
             Statistics.start_ts < upper,
         )
 
-        if metadata_ids:
-            query = query.where(Statistics.metadata_id.in_(metadata_ids))
+        if metadata_ids_param is not None:
+            query = query.where(Statistics.metadata_id.in_(metadata_ids_param))
 
         queries.append(query.group_by(Statistics.metadata_id))
 
@@ -1638,12 +1650,11 @@ def _iter_statistics_period_bounds(
 def _statistics_periods_per_query(
     max_bind_vars: int,
     fixed_binds_per_period: int,
-    metadata_id_count: int,
 ) -> int:
     """Return the maximum number of periods per query."""
     return min(
         MAX_STATISTICS_PERIODS_PER_QUERY,
-        max_bind_vars // (fixed_binds_per_period + metadata_id_count),
+        max_bind_vars // fixed_binds_per_period,
     )
 
 
@@ -1777,7 +1788,7 @@ def _get_statistics_period_rows(
 
     max_ids_per_chunk = min(
         MAX_IDS_FOR_INDEXED_GROUP_BY,
-        max_bind_vars - fixed_binds_per_period,
+        max_bind_vars,
     )
 
     max_range_ids_per_query = min(
@@ -1794,11 +1805,9 @@ def _get_statistics_period_rows(
     bounded_range: tuple[float, float] | None = None
 
     if end_time is not None:
-        id_count_for_limit = (
-            min(len(metadata_ids), max_ids_per_chunk) if metadata_ids else 0
-        )
         periods_per_query = _statistics_periods_per_query(
-            max_bind_vars, fixed_binds_per_period, id_count_for_limit
+            max_bind_vars,
+            fixed_binds_per_period,
         )
 
         bounded_range = _clip_bounded_statistics_range(
@@ -1832,7 +1841,6 @@ def _get_statistics_period_rows(
         periods_per_query = _statistics_periods_per_query(
             max_bind_vars,
             fixed_binds_per_period,
-            len(ids or ()),
         )
 
         for period_bounds in batched(

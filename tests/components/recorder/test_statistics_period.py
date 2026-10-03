@@ -66,6 +66,28 @@ def _unoptimized_statistics(
     )
 
 
+def test_period_statement_metadata_ids_do_not_use_driver_binds(
+    statistics_session: Session,
+) -> None:
+    """Do not count metadata ids against the driver bind parameter budget."""
+    stmt = statistics._generate_statistics_period_stmt(
+        [1, 2, 3],
+        (
+            (0.0, 86400.0),
+            (86400.0, 172800.0),
+        ),
+        {"mean"},
+        StatisticMeanType.ARITHMETIC,
+    )
+
+    compiled = stmt.compile(
+        dialect=statistics_session.get_bind().dialect,
+        compile_kwargs={"render_postcompile": True},
+    )
+
+    assert len(compiled.positiontup or compiled.params) == 4
+
+
 @pytest.mark.parametrize(
     ("metadata_ids", "bounds", "types", "same_key"),
     [
@@ -230,7 +252,7 @@ async def test_endpoint_cached_statement_parameters(
     second = execute_stmt_lambda_element(
         statistics_session,
         statistics._generate_statistics_period_stmt(
-            [2], ((86400.0, 172800.0),), {"sum"}
+            [2, 3], ((86400.0, 172800.0),), {"sum"}
         ),
         orm_rows=False,
     )
@@ -461,7 +483,7 @@ async def test_period_parameter_budget(statistics_session: Session) -> None:
             {"sum"},
             10,
         )
-    assert execute.call_count == 12
+    assert execute.call_count == 2
     assert [(row.metadata_id, row.sum) for row in rows] == [
         (metadata_id, float(day)) for metadata_id in range(1, 14) for day in range(5)
     ]
@@ -479,7 +501,7 @@ async def test_period_parameter_budget(statistics_session: Session) -> None:
         pytest.param([3], 0, 2, [(3, 20.0)], id="ignore-unselected-future-data"),
         pytest.param([1], 0, 1, [], id="no-selected-data"),
         pytest.param([3], 24, 1, [], id="selected-data-before-request"),
-        pytest.param([1, 2, 3], 0, 3, [(3, 20.0)], id="empty-first-sensor-batch"),
+        pytest.param([1, 2, 3], 0, 2, [(3, 20.0)], id="empty-first-sensor-batch"),
     ],
 )
 async def test_period_query_unbounded_sensor_filter(
@@ -613,8 +635,8 @@ async def test_period_query_unbounded_clips_to_period_start(
     ("days", "budget", "queries"),
     [
         (401, 4000, 2),
-        (5, 4, 6),
-        (5, 3, 11),
+        (5, 4, 4),
+        (5, 3, 6),
     ],
 )
 async def test_arithmetic_mean_query_limits(
@@ -699,7 +721,7 @@ async def test_circular_mean_query_limits(statistics_session: Session) -> None:
             StatisticMeanType.CIRCULAR,
         )
 
-    assert execute.call_count == 7
+    assert execute.call_count == 4
     assert [(row.metadata_id, row.start_ts, row.mean) for row in rows] == [
         (
             metadata_id,
