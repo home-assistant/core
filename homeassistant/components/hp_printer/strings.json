@@ -1,0 +1,118 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "missing_serial_number": "The printer did not report a serial number."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your HP printer."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "black_level": {
+        "name": "Black level"
+      },
+      "black_pages_remaining": {
+        "name": "Black pages remaining"
+      },
+      "color_pages": {
+        "name": "Printed color pages"
+      },
+      "copied_pages": {
+        "name": "Copied pages"
+      },
+      "cyan_level": {
+        "name": "Cyan level"
+      },
+      "cyan_pages_remaining": {
+        "name": "Cyan pages remaining"
+      },
+      "duplex_sheets": {
+        "name": "Printed double-sided sheets"
+      },
+      "faxed_pages": {
+        "name": "Faxed pages"
+      },
+      "jams": {
+        "name": "Paper jams"
+      },
+      "magenta_level": {
+        "name": "Magenta level"
+      },
+      "magenta_pages_remaining": {
+        "name": "Magenta pages remaining"
+      },
+      "mispicks": {
+        "name": "Paper mispicks"
+      },
+      "monochrome_pages": {
+        "name": "Printed black and white pages"
+      },
+      "scanned_adf_pages": {
+        "name": "Scanned pages from document feeder"
+      },
+      "scanned_duplex_sheets": {
+        "name": "Scanned double-sided sheets"
+      },
+      "scanned_flatbed_pages": {
+        "name": "Scanned pages from glass"
+      },
+      "scanned_pages": {
+        "name": "Scanned pages"
+      },
+      "scanner_jams": {
+        "name": "Scanner jams"
+      },
+      "scanner_mispicks": {
+        "name": "Scanner mispicks"
+      },
+      "simplex_sheets": {
+        "name": "Printed single-sided sheets"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "cancel_job": "Canceling job",
+          "copying": "Copying",
+          "in_power_save": "Power save",
+          "off": "[%key:common::state::off%]",
+          "processing": "Printing",
+          "ready": "Ready",
+          "scan_processing": "Scanning",
+          "tray_empty": "Paper tray empty"
+        }
+      },
+      "total_pages": {
+        "name": "Printed pages"
+      },
+      "tri_color_level": {
+        "name": "Tri-color level"
+      },
+      "tri_color_pages_remaining": {
+        "name": "Tri-color pages remaining"
+      },
+      "yellow_level": {
+        "name": "Yellow level"
+      },
+      "yellow_pages_remaining": {
+        "name": "Yellow pages remaining"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error communicating with the HP printer at {host}."
+    }
+  }
+}

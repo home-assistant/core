@@ -1,0 +1,12 @@
+{
+  "domain": "hp_printer",
+  "name": "HP Printer",
+  "codeowners": ["@chemelli74"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hp_printer",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["aiohpprinter"],
+  "quality_scale": "bronze",
+  "requirements": ["aiohpprinter==1.0.0"]
+}
