@@ -1209,7 +1209,14 @@ def _reduce_statistics(
         mean_values: list[tuple[float, float]] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
-        fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
+        # Ensure the fake entry is outside the final local calendar period,
+        # including across DST fall-back.
+        fake_entry: StatisticsRow = {
+            "start": max(
+                stat_list[-1]["start"] + period_seconds,
+                period_start_end(stat_list[-1]["start"])[1],
+            )
+        }
 
         # Loop over the hourly statistics + a fake entry to end the period
         for statistic in chain(stat_list, (fake_entry,)):

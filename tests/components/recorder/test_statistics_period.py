@@ -842,6 +842,40 @@ async def test_endpoint_statistics_return_last_row_per_period(
     assert actual == expected
 
 
+async def test_reducer_flushes_final_dst_fallback_period(
+    hass: HomeAssistant,
+) -> None:
+    """Flush the final aggregate period across DST fall-back."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+
+    timezone = dt_util.get_default_time_zone()
+    start = datetime(2025, 10, 26, tzinfo=timezone)
+    end = datetime(2025, 10, 27, tzinfo=timezone)
+
+    stats: dict[str, list[statistics.StatisticsRow]] = {
+        "test:statistic_1": [
+            {
+                "start": start.timestamp(),
+                "min": 10.0,
+            }
+        ]
+    }
+
+    result = statistics._reduce_statistics_per_day(
+        stats,
+        {"min"},
+        {},
+    )
+
+    assert result["test:statistic_1"] == [
+        {
+            "start": start.timestamp(),
+            "end": end.timestamp(),
+            "min": 10.0,
+        }
+    ]
+
+
 @pytest.mark.parametrize("timezone", ["UTC", "Europe/Amsterdam", "America/Havana"])
 @pytest.mark.parametrize("period", ["day", "week", "month", "year"])
 @pytest.mark.parametrize("start_month", [3, 10])
