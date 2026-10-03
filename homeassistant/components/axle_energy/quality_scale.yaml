@@ -67,8 +67,12 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: The only setting is the API key, which is handled by reauthentication.
+  repair-issues:
+    status: exempt
+    comment: Authentication failures are handled by reauthentication. There are no other known repair conditions.
   stale-devices:
     status: exempt
     comment: The API exposes one household event feed, not a list of devices.
