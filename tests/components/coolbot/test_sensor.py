@@ -1,0 +1,131 @@
+"""Sensor entities: values and availability."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+from unittest.mock import AsyncMock
+
+from homeassistant.components.coolbot.const import UPDATE_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from . import setup_integration
+from .conftest import make_device
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    # Assert wire values as-is rather than through metric conversion.
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert await setup_integration(hass, entry)
+
+
+async def _tick(hass: HomeAssistant) -> None:
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
+    )
+    await hass.async_block_till_done()
+
+
+async def test_sensor_values(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Each description surfaces the right field from the device."""
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.walk_in_cooler_room_temperature").state == "38.5"
+    assert hass.states.get("sensor.walk_in_cooler_fin_temperature").state == "30.2"
+    assert hass.states.get("sensor.walk_in_cooler_set_point").state == "40.0"
+    assert hass.states.get("sensor.walk_in_cooler_hardware_status").state == "OK"
+
+
+async def test_wifi_signal_is_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The diagnostic signal sensor registers but stays disabled."""
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.walk_in_cooler_wi_fi_signal") is None
+    entry = entity_registry.async_get_entity_id(
+        "sensor", "coolbot", "coolbot_aabbccddeeff_wifi_signal"
+    )
+    assert entry is not None  # registered, just not enabled
+
+
+async def test_unprovisioned_slots_create_no_entities(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Empty device slots must not publish believable-looking temperatures."""
+    mock_client.async_get_devices.return_value = [
+        make_device(),
+        make_device(
+            unique_id="coolbot_10_1",
+            name="Empty slot",
+            is_provisioned=False,
+            mac_address=None,
+        ),
+    ]
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.walk_in_cooler_room_temperature") is not None
+    assert hass.states.get("sensor.empty_slot_room_temperature") is None
+
+
+async def test_replayed_snapshot_is_not_trusted_at_startup(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Before any live push, every reading is unavailable.
+
+    The server replays a cached snapshot on connect that can be minutes old,
+    so publishing it as current would defeat the whole freshness check.
+    """
+    mock_client.async_get_devices.return_value = [make_device(last_data_at=None)]
+    await _setup(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.walk_in_cooler_room_temperature").state == "unavailable"
+    )
+    assert hass.states.get("sensor.walk_in_cooler_set_point").state == "unavailable"
+
+
+async def test_stale_readings_go_unavailable(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Every reading of a cooler that stopped pushing goes unavailable."""
+    await _setup(hass, mock_config_entry)
+    assert hass.states.get("sensor.walk_in_cooler_room_temperature").state == "38.5"
+
+    mock_client.async_get_devices.return_value = [
+        make_device(
+            last_data_at=dt_util.utcnow() - timedelta(minutes=10), status="OFFLINE"
+        )
+    ]
+    await _tick(hass)
+
+    # The cloud would keep serving 38.5 forever; reporting it would be a lie.
+    assert (
+        hass.states.get("sensor.walk_in_cooler_room_temperature").state == "unavailable"
+    )
+    assert hass.states.get("sensor.walk_in_cooler_set_point").state == "unavailable"
+
+
+async def test_entities_survive_a_device_missing_from_one_refresh(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A device absent from one refresh goes unavailable, not deleted."""
+    await _setup(hass, mock_config_entry)
+
+    mock_client.async_get_devices.return_value = [
+        make_device(unique_id="coolbot_other", name="Other")
+    ]
+    await _tick(hass)
+
+    state = hass.states.get("sensor.walk_in_cooler_room_temperature")
+    assert state is not None
+    assert state.state == "unavailable"
