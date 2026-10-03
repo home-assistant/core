@@ -24,6 +24,7 @@ from .const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
     TIME_TYPES,
@@ -31,6 +32,7 @@ from .const import (
     TRANSIT_PREFS,
     TRANSPORT_TYPES,
     TRAVEL_MODES_WITHOUT_TRANSIT,
+    TRAVEL_PREFS,
     UNITS,
     UNITS_METRIC,
 )
@@ -79,6 +81,15 @@ TRANSIT_ROUTING_PREFERENCE_SELECTOR = SelectSelector(
     )
 )
 
+TRAVEL_ROUTING_PREFERENCE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=TRAVEL_PREFS,
+        sort=True,
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_TRAVEL_ROUTING_PREFERENCE,
+    )
+)
+
 UNITS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=UNITS,
@@ -120,6 +131,9 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
             )
         ),
         probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
+        probatio.Optional(
+            CONF_TRAVEL_ROUTING_PREFERENCE
+        ): TRAVEL_ROUTING_PREFERENCE_SELECTOR,
         probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
         probatio.Optional(CONF_DEPARTURE_TIME): TimeSelector(),
     }
