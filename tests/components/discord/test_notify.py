@@ -1,12 +1,22 @@
 """Test Discord notify."""
 
 import logging
+from unittest.mock import AsyncMock, Mock, patch
 
+import nextcord
 import pytest
 
 from homeassistant.components.discord.notify import DiscordNotificationService
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import CONTENT, MESSAGE, URL_ATTACHMENT
+from . import TARGET_NAME, create_entry, setup_integration
+from .conftest import CONTENT, MESSAGE, TARGET, URL_ATTACHMENT
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -95,3 +105,82 @@ async def test_get_file_from_url_with_large_attachment_no_header(
     assert discord_aiohttp_mock.call_count == 1
     assert "Attachment too large (Stream reports" in caplog.text
     assert result is None
+
+
+async def test_notify_entity_send_message(hass: HomeAssistant) -> None:
+    """Test sending a message through the notify entity."""
+    entry = create_entry(hass, with_subentry=True)
+    await setup_integration(hass, entry)
+
+    channel = Mock()
+    channel.send = AsyncMock()
+
+    with (
+        patch("homeassistant.components.discord.notify.nextcord.Client.login"),
+        patch(
+            "homeassistant.components.discord.notify.nextcord.Client.fetch_channel",
+            new=AsyncMock(return_value=channel),
+        ),
+        patch("homeassistant.components.discord.notify.nextcord.Client.close"),
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
+            blocking=True,
+        )
+
+    channel.send.assert_awaited_once_with(MESSAGE)
+
+
+async def test_notify_entity_target_not_found(hass: HomeAssistant) -> None:
+    """Test the notify entity raises an error for an unknown target."""
+    entry = create_entry(hass, with_subentry=True)
+    await setup_integration(hass, entry)
+
+    not_found = nextcord.NotFound(Mock(status=404), "")
+
+    with (
+        patch("homeassistant.components.discord.notify.nextcord.Client.login"),
+        patch(
+            "homeassistant.components.discord.notify.nextcord.Client.fetch_channel",
+            new=AsyncMock(side_effect=not_found),
+        ),
+        patch(
+            "homeassistant.components.discord.notify.nextcord.Client.fetch_user",
+            new=AsyncMock(side_effect=not_found),
+        ),
+        patch("homeassistant.components.discord.notify.nextcord.Client.close"),
+        pytest.raises(HomeAssistantError, match=f"Target not found for ID: {TARGET}"),
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
+            blocking=True,
+        )
+
+
+async def test_notify_entity_communication_error(hass: HomeAssistant) -> None:
+    """Test the notify entity raises an error when sending fails."""
+    entry = create_entry(hass, with_subentry=True)
+    await setup_integration(hass, entry)
+
+    channel = Mock()
+    channel.send = AsyncMock(side_effect=nextcord.HTTPException(Mock(status=400), ""))
+
+    with (
+        patch("homeassistant.components.discord.notify.nextcord.Client.login"),
+        patch(
+            "homeassistant.components.discord.notify.nextcord.Client.fetch_channel",
+            new=AsyncMock(return_value=channel),
+        ),
+        patch("homeassistant.components.discord.notify.nextcord.Client.close"),
+        pytest.raises(HomeAssistantError, match="Error sending message to Discord"),
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
+            blocking=True,
+        )
