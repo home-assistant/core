@@ -1,7 +1,10 @@
 """Test the backups for OneDrive."""
 
+import asyncio
 from collections.abc import AsyncGenerator
+from dataclasses import replace
 from io import StringIO
+from json import dumps
 from unittest.mock import Mock, patch
 
 from onedrive_personal_sdk.exceptions import (
@@ -14,6 +17,7 @@ import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.onedrive.backup import (
+    METADATA_DOWNLOAD_CONCURRENCY,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.onedrive.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -116,6 +120,49 @@ async def test_agents_list_backups_with_download_failure(
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == []
+
+
+async def test_agents_list_backups_downloads_metadata_concurrently(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onedrive_client: MagicMock,
+    mock_backup_file: File,
+    mock_metadata_file: File,
+) -> None:
+    """Test metadata files are downloaded concurrently, up to the limit."""
+    backup_ids = [f"backup_{i}" for i in range(METADATA_DOWNLOAD_CONCURRENCY + 2)]
+    mock_onedrive_client.list_drive_items.return_value = [
+        file
+        for backup_id in backup_ids
+        for file in (
+            replace(mock_backup_file, id=f"{backup_id}_tar", name=f"{backup_id}.tar"),
+            replace(
+                mock_metadata_file, id=backup_id, name=f"{backup_id}.metadata.json"
+            ),
+        )
+    ]
+    in_flight = max_in_flight = 0
+
+    async def download_drive_item(item_id: str) -> Mock:
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        await asyncio.sleep(0)
+        in_flight -= 1
+        metadata = dumps({**BACKUP_METADATA, "backup_id": item_id})
+        return Mock(read=AsyncMock(return_value=metadata.encode()))
+
+    mock_onedrive_client.download_drive_item.side_effect = download_drive_item
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert {backup["backup_id"] for backup in response["result"]["backups"]} == set(
+        backup_ids
+    )
+    assert max_in_flight == METADATA_DOWNLOAD_CONCURRENCY
 
 
 async def test_agents_get_backup(
