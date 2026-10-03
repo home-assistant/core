@@ -992,14 +992,7 @@ async def test_program_key_sensor_states(
     raw_value: str,
     expected_state: str,
 ) -> None:
-    """Test the program sensors format the raw program key into a readable name.
-
-    Regardless of whether the program is known to aiohomeconnect or not, only
-    the last segment of the key is used, except for keys ending in a number -
-    such as favorites, reported as an opaque "Favorite.NNN" key - where the
-    segment before it is kept too, since the number alone would not be
-    descriptive. Acronyms and dimensions are kept as one word. The raw value
-    is always exposed as-is via the raw_value attribute.
+    """Test that program sensors expose readable names and raw program keys."""
     """
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
