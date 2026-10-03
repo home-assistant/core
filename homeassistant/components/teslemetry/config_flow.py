@@ -356,8 +356,6 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                     else:
                         return await self.async_step_pair()
 
-        if errors:
-            LOGGER.debug("Bluetooth scan step failed: %s", errors["base"])
         return self.async_show_form(
             step_id="scan",
             errors=errors,

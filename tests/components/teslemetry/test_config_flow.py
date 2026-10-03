@@ -1210,40 +1210,18 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
+async def test_subentry_scan_device_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """The scan step re-shows the form with an error when no device is found."""
     entry = await _setup_account_entry(hass)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.teslemetry")
 
     with (
         patch(
             "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[],
         ),
-        patch(
-            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
-            return_value=MagicMock(),
-        ),
-    ):
-        result = await _start_pairing_at_scan(hass, entry)
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scan"
-    assert result["errors"] == {"base": "device_not_found"}
-    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
-
-
-@pytest.mark.usefixtures("enable_bluetooth")
-async def test_subentry_scan_device_not_found_logs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """An out-of-range vehicle logs the missed name and the error."""
-    entry = await _setup_account_entry(hass)
-    caplog.set_level(logging.DEBUG, logger="homeassistant.components.teslemetry")
-
-    with (
         patch(
             "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
         ),
@@ -1257,11 +1235,13 @@ async def test_subentry_scan_device_not_found_logs(
             result["flow_id"], {}
         )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
     assert result["errors"] == {"base": "device_not_found"}
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert "No connectable advertisement matched Bluetooth name Sdcdcb1a343110fba" in (
         caplog.text
     )
-    assert "Bluetooth scan step failed: device_not_found" in caplog.text
 
 
 @pytest.mark.parametrize(
