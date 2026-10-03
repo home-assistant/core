@@ -7,10 +7,15 @@ from mistralai.client import errors
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.mistral_ai import DOMAIN
+from homeassistant.components.mistral_ai import (
+    DOMAIN,
+    config_flow as config_flow_module,
+)
 from homeassistant.components.mistral_ai.config_flow import (
     MistralAIConfigFlow,
     MistralConversationSubentryFlowHandler,
+    _async_fetch_models,
+    validate_input,
 )
 from homeassistant.components.mistral_ai.const import (
     CONF_CHAT_MODEL,
@@ -298,3 +303,70 @@ async def test_subentry_advanced(
     assert subentry.data["max_tokens"] == 100
     assert subentry.data["temperature"] == 0.5
     assert subentry.data["top_p"] == 0.9
+
+
+async def test_async_fetch_models_success(hass: HomeAssistant) -> None:
+    """Fetched model IDs are cached by API key."""
+    with (
+        patch(
+            "homeassistant.components.mistral_ai.config_flow.async_create_client",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.mistral_ai.config_flow.get_model_ids",
+            new_callable=AsyncMock,
+            return_value=["mistral-small-latest"],
+        ),
+    ):
+        models = await _async_fetch_models(hass, "key", ["fallback"])
+        assert models == ["mistral-small-latest"]
+        # Second call is served from cache without re-fetching.
+        models2 = await _async_fetch_models(hass, "key", ["fallback"])
+        assert models2 == ["mistral-small-latest"]
+
+
+async def test_async_fetch_models_fallback_not_cached(hass: HomeAssistant) -> None:
+    """A transient failure returns the fallback without caching it."""
+    with patch(
+        "homeassistant.components.mistral_ai.config_flow.async_create_client",
+        new_callable=AsyncMock,
+        side_effect=ConnectError("boom"),
+    ):
+        models = await _async_fetch_models(hass, "key", ["fallback"])
+        assert models == ["fallback"]
+
+    assert "key" not in hass.data[config_flow_module.DATA_MODELS_CACHE]
+
+
+async def test_async_fetch_models_empty_result_uses_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """An empty model list falls back and is not cached."""
+    with (
+        patch(
+            "homeassistant.components.mistral_ai.config_flow.async_create_client",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.mistral_ai.config_flow.get_model_ids",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+    ):
+        models = await _async_fetch_models(hass, "empty-key", ["fallback"])
+        assert models == ["fallback"]
+
+    assert "empty-key" not in hass.data[config_flow_module.DATA_MODELS_CACHE]
+
+
+async def test_validate_input(hass: HomeAssistant) -> None:
+    """validate_input lists models with the shared async client."""
+    client = AsyncMock()
+    with patch(
+        "homeassistant.components.mistral_ai.config_flow.async_create_client",
+        new_callable=AsyncMock,
+        return_value=client,
+    ):
+        await validate_input(hass, {CONF_API_KEY: "test-key"})
+
+    client.models.list_async.assert_awaited_once_with(timeout_ms=10_000)

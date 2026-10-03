@@ -1,6 +1,7 @@
 """Tests for the chat conversation helpers."""
 
 import json
+from types import SimpleNamespace
 
 from mistralai.client.models import (
     CompletionChunk,
@@ -12,13 +13,16 @@ from mistralai.client.models import (
     ToolCall,
 )
 from mistralai.client.types import UNSET
+import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.mistral_ai.chat import (
     _extract_text,
     convert_content_to_messages,
+    handle_chat_log,
     transform_stream,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 
@@ -49,6 +53,16 @@ def test_extract_text_chunk_dicts() -> None:
     assert _extract_text(chunks) == "Hello world"
 
 
+def test_extract_text_list_of_strings() -> None:
+    """List of plain strings."""
+    assert _extract_text(["Hello", " world"]) == "Hello world"
+
+
+def test_extract_text_unknown_object() -> None:
+    """A non-text object falls back to str()."""
+    assert _extract_text(42) == "42"
+
+
 def test_convert_system_and_user() -> None:
     """System and user messages."""
     content = [
@@ -73,6 +87,12 @@ def test_convert_assistant_with_tool_calls() -> None:
     assert json.loads(messages[0].tool_calls[0].function.arguments) == {"name": "light"}
 
 
+def test_convert_assistant_without_content_is_skipped() -> None:
+    """Assistant content without text or tool calls yields no message."""
+    content = [conversation.AssistantContent(agent_id="a")]
+    assert convert_content_to_messages(content) == []
+
+
 def test_convert_tool_result() -> None:
     """Tool result message."""
     content = [
@@ -87,6 +107,12 @@ def test_convert_tool_result() -> None:
     assert messages[0].role == "tool"
     assert messages[0].tool_call_id == "tc1"
     assert json.loads(messages[0].content) == {"success": True}
+
+
+def test_convert_unexpected_content_raises() -> None:
+    """An unsupported content type raises TypeError."""
+    with pytest.raises(TypeError, match="Unexpected content type"):
+        convert_content_to_messages([object()])  # type: ignore[list-item]
 
 
 def _event(role=None, content=None, tool_calls=None, finish=None):
@@ -130,6 +156,12 @@ async def test_transform_stream_text() -> None:
     ]
 
 
+async def test_transform_stream_ignores_non_completion_event() -> None:
+    """Events that are not CompletionEvent are skipped."""
+    result = await _collect(_Stream([object()]))
+    assert result == []
+
+
 async def test_transform_stream_tool_calls() -> None:
     """Fragmented tool calls are aggregated by index."""
     events = [
@@ -159,3 +191,83 @@ async def test_transform_stream_tool_calls() -> None:
     assert tool_input.tool_name == "HassTurnOn"
     assert tool_input.tool_args == {"name": "light"}
     assert tool_input.id == "tc1"
+
+
+async def test_transform_stream_tool_call_without_role() -> None:
+    """A tool call without a preceding role delta emits the assistant role."""
+    events = [
+        _event(
+            tool_calls=[
+                ToolCall(
+                    id="tc1",
+                    index=0,
+                    function=FunctionCall(
+                        name="HassTurnOn", arguments='{"name": "light"}'
+                    ),
+                )
+            ],
+        ),
+        _event(finish="tool_calls"),
+    ]
+    result = await _collect(_Stream(events))
+    assert result[0] == {"role": "assistant"}
+    tool_calls_result = [d for d in result if "tool_calls" in d]
+    assert tool_calls_result[0]["tool_calls"][0].tool_args == {"name": "light"}
+
+
+async def test_transform_stream_text_without_role() -> None:
+    """A text delta with no preceding role delta emits the assistant role."""
+    events = [_event(content="Hello")]
+    result = await _collect(_Stream(events))
+    assert result == [{"role": "assistant"}, {"content": "Hello"}]
+
+
+async def test_handle_chat_log_requires_system_message() -> None:
+    """handle_chat_log rejects a chat log that does not start with a system message."""
+    entity = SimpleNamespace(
+        subentry=SimpleNamespace(data={}),
+        entry=SimpleNamespace(runtime_data=None),
+        entity_id="conversation.test",
+        hass=None,
+    )
+    chat_log = SimpleNamespace(content=[conversation.UserContent(content="hi")])
+
+    with pytest.raises(TypeError, match="must be a system message"):
+        await handle_chat_log(entity, chat_log)
+
+
+async def test_transform_stream_malformed_tool_arguments() -> None:
+    """Malformed tool-call JSON raises instead of silently altering arguments."""
+    events = [
+        _event(
+            tool_calls=[
+                ToolCall(
+                    id="tc1",
+                    index=0,
+                    function=FunctionCall(name="HassTurnOn", arguments="{not json"),
+                )
+            ],
+        ),
+        _event(finish="tool_calls"),
+    ]
+    with pytest.raises(HomeAssistantError, match="Unexpected tool argument response"):
+        await _collect(_Stream(events))
+
+
+async def test_transform_stream_empty_tool_arguments() -> None:
+    """A tool call without arguments uses an empty dict."""
+    events = [
+        _event(
+            tool_calls=[
+                ToolCall(
+                    id="tc1",
+                    index=0,
+                    function=FunctionCall(name="HassTurnOn", arguments=""),
+                )
+            ],
+        ),
+        _event(finish="tool_calls"),
+    ]
+    result = await _collect(_Stream(events))
+    tool_calls_result = [d for d in result if "tool_calls" in d]
+    assert tool_calls_result[0]["tool_calls"][0].tool_args == {}

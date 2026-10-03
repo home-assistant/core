@@ -23,11 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MistralAIConfigEntry) ->
     try:
         client = await async_create_client(hass, entry.data[CONF_API_KEY])
         await client.models.list_async(timeout_ms=10_000)
+    except (errors.NoResponseError, HTTPError) as err:
+        raise ConfigEntryNotReady(err) from err
     except errors.MistralError as err:
         if err.status_code in (401, 403):
             raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady(err) from err
-    except (errors.NoResponseError, HTTPError) as err:
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client

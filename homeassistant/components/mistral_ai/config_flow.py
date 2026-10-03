@@ -111,13 +111,13 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
                 await validate_input(self.hass, user_input)
+            except mistral_errors.NoResponseError, HTTPError:
+                errors["base"] = "cannot_connect"
             except mistral_errors.MistralError as err:
                 if err.status_code in (401, 403):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
-            except mistral_errors.NoResponseError, HTTPError:
-                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

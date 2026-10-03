@@ -167,6 +167,36 @@ async def test_stream_error(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_malformed_tool_arguments_abort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client,
+) -> None:
+    """Malformed tool JSON aborts the response instead of altering arguments."""
+    mock_client.chat.stream_async.return_value = _Stream(
+        [
+            _event(
+                role="assistant",
+                tool_calls=[
+                    ToolCall(
+                        id="tc1",
+                        index=0,
+                        function=FunctionCall(name="test_tool", arguments="{not json"),
+                    )
+                ],
+            ),
+            _event(finish="tool_calls"),
+        ]
+    )
+
+    result = await conversation.async_converse(
+        hass, "call the tool", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_stream_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
