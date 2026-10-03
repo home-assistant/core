@@ -31,6 +31,7 @@ from .const import (
     CONF_LEGACY_SERVICE_NAME,
     CONF_SETUP,
     DATA_LEGACY_SETUPS,
+    DOMAIN,
     PRIORITY_MAP,
 )
 from .issue import async_deprecated_notify_action_call
@@ -100,16 +101,22 @@ async def _async_post(
                 url=url,
             )
     except TimeoutError as ex:
-        raise HomeAssistantError("Timeout accessing Prowl API") from ex
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="api_timeout"
+        ) from ex
     except prowlpy.APIError as ex:
         if str(ex).startswith("Invalid API key"):
-            raise HomeAssistantError("Invalid API key for Prowl service") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="invalid_api_key"
+            ) from ex
         if str(ex).startswith("Not accepted"):
             raise HomeAssistantError(
-                "Prowl service reported: exceeded rate limit"
+                translation_domain=DOMAIN, translation_key="rate_limit_exceeded"
             ) from ex
         raise HomeAssistantError(
-            f"Unexpected error when calling Prowl API: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+            translation_placeholders={"error": str(ex)},
         ) from ex
 
 
