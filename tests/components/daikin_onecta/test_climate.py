@@ -101,12 +101,6 @@ async def test_setup_creates_entities_per_management_point(
             return_value=coordinator,
         ),
         patch(
-            "homeassistant.components.daikin_onecta.migrate_legacy_subdevice_identifiers"
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.migrate_legacy_entity_unique_ids"
-        ),
-        patch(
             "homeassistant.components.daikin_onecta.climate.DaikinClimate",
             TestClimateEntity,
         ),
