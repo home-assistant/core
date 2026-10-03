@@ -269,6 +269,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
+        self.last_fetched_program: tuple[EventKey, ProgramKey] | None = None
 
     def _get_listeners_for_event_key(self, event_key: EventKey) -> list[CALLBACK_TYPE]:
         return [
@@ -285,17 +286,18 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 statuses = self.data.status
                 for event in event_message.data.items:
                     status_key = StatusKey(event.key)
+                    status_value = event.value
                     if status_key in statuses:
-                        statuses[status_key].value = event.value
+                        statuses[status_key].value = status_value
                     else:
                         statuses[status_key] = Status(
                             key=status_key,
                             raw_key=status_key.value,
-                            value=event.value,
+                            value=status_value,
                         )
                     if (
                         status_key == StatusKey.BSH_COMMON_OPERATION_STATE
-                        and event.value == BSH_OPERATION_STATE_PAUSE
+                        and status_value == BSH_OPERATION_STATE_PAUSE
                         and CommandKey.BSH_COMMON_RESUME_PROGRAM
                         not in (commands := self.data.commands)
                     ):
@@ -311,7 +313,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
                     if (
                         status_key is StatusKey.BSH_COMMON_OPERATION_STATE
-                        and event.value == BSH_OPERATION_STATE_READY
+                        and status_value == BSH_OPERATION_STATE_READY
                         and (
                             active_program_event := self.data.events.get(
                                 EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
@@ -326,11 +328,20 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         and isinstance(
                             selected_program := selected_program_event.value, str
                         )
+                        and self.last_fetched_program
+                        != (
+                            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                            program := ProgramKey(selected_program),
+                        )
                     ):
                         # When the active program is cleared, refresh options from the selected
                         # program so the UI doesn't keep showing the completed program's options.
                         # Wait for READY; earlier requests fail.
-                        await self.update_options(ProgramKey(selected_program))
+                        await self.update_options(program)
+                        self.last_fetched_program = (
+                            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                            program,
+                        )
 
                 self._call_event_listener(event_message)
 
@@ -356,11 +367,16 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                         ) and isinstance(event_value, str):
-                            program_update_event_value = ProgramKey(event_value)
+                            program_update_event_value = (
+                                event_key,
+                                ProgramKey(event_value),
+                            )
+
                         events[event_key] = event
 
                         if (
                             event_key is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                            and event_value is None
                             and (
                                 operation_state_status := self.data.status.get(
                                     StatusKey.BSH_COMMON_OPERATION_STATE
@@ -368,7 +384,6 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             )
                             and operation_state_status.value
                             == BSH_OPERATION_STATE_READY
-                            and event_value is None
                             and (
                                 selected_program_event := events.get(
                                     EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
@@ -380,13 +395,22 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         ):
                             # Apply the same refresh for clears arriving after READY to get
                             # the options from the selected program instead of the completed program ones,
-                            program_update_event_value = ProgramKey(selected_program)
+                            program_update_event_value = (
+                                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                                ProgramKey(selected_program),
+                            )
 
                 # Process program update after all events to ensure
                 # BSH_COMMON_OPTION_BASE_PROGRAM event is available for
-                # favorite program resolution
-                if program_update_event_value:
-                    await self.update_options(program_update_event_value)
+                # favorite program resolution.
+                # Also avoid redundant program fetches if the
+                # program hasn't changed since the last fetch.
+                if (
+                    program_update_event_value
+                    and self.last_fetched_program != program_update_event_value
+                ):
+                    await self.update_options(program_update_event_value[1])
+                    self.last_fetched_program = program_update_event_value
                 self._call_event_listener(event_message)
 
             case EventType.EVENT:
