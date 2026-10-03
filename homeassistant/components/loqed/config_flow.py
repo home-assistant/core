@@ -54,7 +54,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except aiohttp.ClientError as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.error("HTTP Connection error to loqed API")
                 raise CannotConnect from err
 
@@ -88,7 +88,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         except StopIteration as err:
             raise InvalidAuth from err
-        except aiohttp.ClientError as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("HTTP Connection error to loqed lock")
             raise CannotConnect from err
 
@@ -144,7 +144,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except aiohttp.ClientError:
+            except TimeoutError, aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
                 self._locks = lock_data["data"]
