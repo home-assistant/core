@@ -130,7 +130,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_URL): str,
-                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,

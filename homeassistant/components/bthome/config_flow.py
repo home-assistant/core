@@ -15,6 +15,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .const import DOMAIN
 
@@ -174,7 +175,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_get_encryption_key()
 
         # Otherwise there wasn't actually encryption so abort
-        return self.async_abort(reason="reauth_successful")
+        return self.async_abort(
+            reason="reauth_successful", translation_domain=HOMEASSISTANT_DOMAIN
+        )
 
     def _async_get_or_create_entry(
         self, bindkey: str | None = None

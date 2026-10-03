@@ -76,6 +76,7 @@ async def search_item_ids_fixture(
         config_entry=config_entry,
         device_id=device.id,
         disabled_by=er.RegistryEntryDisabler.USER,
+        original_name="Disabled area override",
     )
     entity_registry.async_update_entity(
         disabled_area_override_entity.entity_id, area_id=area.id

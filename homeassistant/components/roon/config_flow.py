@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required("host"): cv.string,
-        probatio.Required("port", default=9330): cv.port,
+        probatio.Required("port", default=9330): probatio.Port(),
     }
 )
 

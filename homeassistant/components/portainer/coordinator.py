@@ -2,13 +2,13 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import override
+from typing import Any, override
 
 from pyportainer import (
     DockerContainerState,
@@ -40,7 +40,7 @@ from yarl import URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -192,6 +192,27 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             ) from err
         except PortainerTimeoutError as err:
             raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+
+    async def async_call_portainer(self, coroutine: Awaitable[Any]) -> None:
+        """Await a Portainer call, mapping library errors to HomeAssistantError."""
+        try:
+            await coroutine
+        except PortainerAuthenticationError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err

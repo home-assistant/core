@@ -194,6 +194,7 @@
         '4358': 0,
       }),
     }),
+    'read_error': None,
     'readings_components': list([
       'state',
       'grid',
