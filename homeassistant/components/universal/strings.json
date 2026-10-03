@@ -1,4 +1,186 @@
 {
+  "config": {
+    "step": {
+      "advanced": {
+        "data": {
+          "active_child_template": "Active child template",
+          "browse_media_entity": "Browse media entity",
+          "device_class": "Device class",
+          "state_template": "State template"
+        },
+        "data_description": {
+          "active_child_template": "A template that returns the entity ID of the child to treat as active, or `None` to use the default behavior (the first child that is on).",
+          "browse_media_entity": "Media player entity to use when browsing media, if different from the active child.",
+          "device_class": "The type of device this entity represents.",
+          "state_template": "A template used to render the state of this player. Useful when the state should depend on entities that are not themselves media players, like switches or input booleans."
+        },
+        "description": "Optional advanced overrides for this player.",
+        "title": "Advanced options"
+      },
+      "attributes": {
+        "data": {
+          "is_volume_muted": "Muted",
+          "sound_mode": "Sound mode",
+          "sound_mode_list": "Sound mode list",
+          "source": "Source",
+          "source_list": "Source list",
+          "state": "State",
+          "volume_level": "Volume level"
+        },
+        "data_description": {
+          "is_volume_muted": "Entity used to override whether the player is reported as muted.",
+          "sound_mode": "Entity used to override the currently selected sound mode.",
+          "sound_mode_list": "Entity used to override the list of available sound modes.",
+          "source": "Entity used to override the currently selected source.",
+          "source_list": "Entity used to override the list of available sources.",
+          "state": "Entity used to override the reported state, taking precedence over the active child's state.",
+          "volume_level": "Entity used to override the reported volume level."
+        },
+        "description": "Override specific attributes using another entity's state. Use the format `entity_id|attribute` to use a specific attribute (for example, `media_player.receiver|volume_level`), or just `entity_id` to use its state (for example, `switch.tv_power`). Leave a field blank to use the active child's value.",
+        "title": "Attribute overrides"
+      },
+      "commands": {
+        "data": {
+          "media_next_track": "Next track",
+          "media_pause": "Pause",
+          "media_play": "Play",
+          "media_previous_track": "Previous track",
+          "media_stop": "Stop",
+          "select_sound_mode": "Select sound mode",
+          "select_source": "Select source",
+          "turn_off": "Turn off",
+          "turn_on": "Turn on",
+          "volume_down": "Volume down",
+          "volume_mute": "Volume mute",
+          "volume_set": "Volume set",
+          "volume_up": "Volume up"
+        },
+        "data_description": {
+          "media_next_track": "Action to run when skipping to the next track.",
+          "media_pause": "Action to run when playback is paused.",
+          "media_play": "Action to run when playback is started.",
+          "media_previous_track": "Action to run when skipping to the previous track.",
+          "media_stop": "Action to run when playback is stopped.",
+          "select_sound_mode": "Action to run when a sound mode is selected. Receives variable `sound_mode`.",
+          "select_source": "Action to run when a source is selected. Receives variable `source`.",
+          "turn_off": "Action to run when the player is turned off.",
+          "turn_on": "Action to run when the player is turned on (e.g. power on an AV receiver or run a script).",
+          "volume_down": "Action to run when volume down is pressed.",
+          "volume_mute": "Action to run when muting or unmuting. Receives variable `is_volume_muted` (boolean).",
+          "volume_set": "Action to run when the volume is set to a specific level. Receives variable `volume_level`.",
+          "volume_up": "Action to run when volume up is pressed (e.g. route to a dedicated amplifier)."
+        },
+        "description": "Map each media command to an action on a specific device. Leave empty to delegate the command to the active child player.",
+        "title": "Command routing"
+      },
+      "user": {
+        "data": {
+          "children": "Child media players",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "children": "Media player entities whose state and playback commands this player will aggregate."
+        },
+        "description": "Combine one or more media players into a single media player entity.",
+        "title": "Universal media player"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "advanced": {
+        "data": {
+          "active_child_template": "[%key:component::universal::config::step::advanced::data::active_child_template%]",
+          "browse_media_entity": "[%key:component::universal::config::step::advanced::data::browse_media_entity%]",
+          "device_class": "[%key:component::universal::config::step::advanced::data::device_class%]",
+          "state_template": "[%key:component::universal::config::step::advanced::data::state_template%]"
+        },
+        "data_description": {
+          "active_child_template": "[%key:component::universal::config::step::advanced::data_description::active_child_template%]",
+          "browse_media_entity": "[%key:component::universal::config::step::advanced::data_description::browse_media_entity%]",
+          "device_class": "[%key:component::universal::config::step::advanced::data_description::device_class%]",
+          "state_template": "[%key:component::universal::config::step::advanced::data_description::state_template%]"
+        },
+        "description": "[%key:component::universal::config::step::advanced::description%]",
+        "title": "[%key:component::universal::config::step::advanced::title%]"
+      },
+      "attributes": {
+        "data": {
+          "is_volume_muted": "[%key:component::universal::config::step::attributes::data::is_volume_muted%]",
+          "sound_mode": "[%key:component::universal::config::step::attributes::data::sound_mode%]",
+          "sound_mode_list": "[%key:component::universal::config::step::attributes::data::sound_mode_list%]",
+          "source": "[%key:component::universal::config::step::attributes::data::source%]",
+          "source_list": "[%key:component::universal::config::step::attributes::data::source_list%]",
+          "state": "[%key:component::universal::config::step::attributes::data::state%]",
+          "volume_level": "[%key:component::universal::config::step::attributes::data::volume_level%]"
+        },
+        "data_description": {
+          "is_volume_muted": "[%key:component::universal::config::step::attributes::data_description::is_volume_muted%]",
+          "sound_mode": "[%key:component::universal::config::step::attributes::data_description::sound_mode%]",
+          "sound_mode_list": "[%key:component::universal::config::step::attributes::data_description::sound_mode_list%]",
+          "source": "[%key:component::universal::config::step::attributes::data_description::source%]",
+          "source_list": "[%key:component::universal::config::step::attributes::data_description::source_list%]",
+          "state": "[%key:component::universal::config::step::attributes::data_description::state%]",
+          "volume_level": "[%key:component::universal::config::step::attributes::data_description::volume_level%]"
+        },
+        "description": "[%key:component::universal::config::step::attributes::description%]",
+        "title": "[%key:component::universal::config::step::attributes::title%]"
+      },
+      "commands": {
+        "data": {
+          "media_next_track": "[%key:component::universal::config::step::commands::data::media_next_track%]",
+          "media_pause": "[%key:component::universal::config::step::commands::data::media_pause%]",
+          "media_play": "[%key:component::universal::config::step::commands::data::media_play%]",
+          "media_previous_track": "[%key:component::universal::config::step::commands::data::media_previous_track%]",
+          "media_stop": "[%key:component::universal::config::step::commands::data::media_stop%]",
+          "select_sound_mode": "[%key:component::universal::config::step::commands::data::select_sound_mode%]",
+          "select_source": "[%key:component::universal::config::step::commands::data::select_source%]",
+          "turn_off": "[%key:component::universal::config::step::commands::data::turn_off%]",
+          "turn_on": "[%key:component::universal::config::step::commands::data::turn_on%]",
+          "volume_down": "[%key:component::universal::config::step::commands::data::volume_down%]",
+          "volume_mute": "[%key:component::universal::config::step::commands::data::volume_mute%]",
+          "volume_set": "[%key:component::universal::config::step::commands::data::volume_set%]",
+          "volume_up": "[%key:component::universal::config::step::commands::data::volume_up%]"
+        },
+        "data_description": {
+          "media_next_track": "[%key:component::universal::config::step::commands::data_description::media_next_track%]",
+          "media_pause": "[%key:component::universal::config::step::commands::data_description::media_pause%]",
+          "media_play": "[%key:component::universal::config::step::commands::data_description::media_play%]",
+          "media_previous_track": "[%key:component::universal::config::step::commands::data_description::media_previous_track%]",
+          "media_stop": "[%key:component::universal::config::step::commands::data_description::media_stop%]",
+          "select_sound_mode": "[%key:component::universal::config::step::commands::data_description::select_sound_mode%]",
+          "select_source": "[%key:component::universal::config::step::commands::data_description::select_source%]",
+          "turn_off": "[%key:component::universal::config::step::commands::data_description::turn_off%]",
+          "turn_on": "[%key:component::universal::config::step::commands::data_description::turn_on%]",
+          "volume_down": "[%key:component::universal::config::step::commands::data_description::volume_down%]",
+          "volume_mute": "[%key:component::universal::config::step::commands::data_description::volume_mute%]",
+          "volume_set": "[%key:component::universal::config::step::commands::data_description::volume_set%]",
+          "volume_up": "[%key:component::universal::config::step::commands::data_description::volume_up%]"
+        },
+        "description": "[%key:component::universal::config::step::commands::description%]",
+        "title": "[%key:component::universal::config::step::commands::title%]"
+      },
+      "init": {
+        "data": {
+          "children": "[%key:component::universal::config::step::user::data::children%]"
+        },
+        "data_description": {
+          "children": "[%key:component::universal::config::step::user::data_description::children%]"
+        },
+        "title": "Universal media player"
+      }
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "projector": "Projector",
+        "receiver": "Receiver",
+        "speaker": "Speaker",
+        "tv": "TV"
+      }
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads universal media players from the YAML-configuration.",
