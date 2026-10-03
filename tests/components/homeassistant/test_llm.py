@@ -105,6 +105,21 @@ async def test_get_live_context_tool(hass: HomeAssistant) -> None:
     assert "Kitchen Light" in response.data["result"]
 
 
+async def test_get_exposed_entities_includes_light_color_temperature(
+    hass: HomeAssistant,
+) -> None:
+    """Test that exposed lights include their color temperature."""
+    hass.states.async_set(
+        ENTITY_ID,
+        "on",
+        {"friendly_name": "Kitchen Light", "color_temp_kelvin": 2700},
+    )
+
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+
+    assert exposed[ENTITY_ID]["attributes"]["color_temp_kelvin"] == "2700"
+
+
 async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
     """Test that async_get_exposed_entities converts timestamp states to local time."""
     # Set the timezone to something other than UTC to ensure conversion is tested
