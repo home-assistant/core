@@ -435,6 +435,20 @@ async def test_unload_entry_fails(
     assert not await hass.config_entries.async_unload(integration.entry_id)
 
 
+async def test_unload_entry_keeps_webhook_when_platforms_fail_to_unload(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test the bridge webhook stays registered when the entry stays loaded."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(integration.entry_id)
+
+    lock.deleteWebhook.assert_not_called()
+    assert integration.state is ConfigEntryState.FAILED_UNLOAD
+
+
 @pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
 async def test_unload_entry_with_unreachable_bridge(
     hass: HomeAssistant,
