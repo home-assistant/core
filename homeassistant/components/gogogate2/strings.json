@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_not_configured": "The ismartgate local API is not configured. Complete the device setup before adding it to Home Assistant.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "flow_title": "{device} ({ip_address})",

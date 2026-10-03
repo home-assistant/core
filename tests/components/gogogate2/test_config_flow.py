@@ -104,6 +104,32 @@ async def test_auth_fail(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@patch("homeassistant.components.gogogate2.common.ISmartGateApi")
+async def test_ismartgate_device_not_configured(
+    ismartgateapi_mock: MagicMock, hass: HomeAssistant
+) -> None:
+    """Test an ismartgate with an unconfigured local API."""
+    api: ISmartGateApi = MagicMock(spec=ISmartGateApi)
+    ismartgateapi_mock.return_value = api
+    api.async_info.side_effect = ApiError(23, "Error: device not configured")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE: DEVICE_TYPE_ISMARTGATE,
+            CONF_IP_ADDRESS: "127.0.0.2",
+            CONF_USERNAME: "user0",
+            CONF_PASSWORD: "password0",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "device_not_configured"}
+
+
 async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None:
     """Test that we abort from homekit if gogogate2 is already setup."""
 
