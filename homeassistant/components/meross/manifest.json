@@ -1,0 +1,32 @@
+{
+  "domain": "meross",
+  "name": "Meross",
+  "after_dependencies": ["bluetooth"],
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_data_uuid": "0000be30-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "service_data_uuid": "0000be30-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": true,
+      "service_uuid": "99e7be30-0001-4c6b-98a2-70fcb3471a72"
+    },
+    {
+      "connectable": true,
+      "local_name": "Meross-*"
+    }
+  ],
+  "codeowners": ["@ashionky"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/meross",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["meross_ble"],
+  "quality_scale": "bronze",
+  "requirements": ["meross-ble==0.2.2"]
+}
