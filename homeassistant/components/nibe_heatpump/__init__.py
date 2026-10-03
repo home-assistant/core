@@ -107,7 +107,9 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Trigger a refresh again now that all platforms have registered
-    hass.async_create_task(coordinator.async_refresh())
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "NIBE initial refresh"
+    )
     return True
 
 
