@@ -199,6 +199,28 @@ async def test_create_entry_user_with_pick_lock(
     mock_lock.getWebhooks.assert_awaited()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiohttp.ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
+async def test_zeroconf_cannot_connect(
+    hass: HomeAssistant, exception: type[Exception]
+) -> None:
+    """Test zeroconf discovery aborts when the bridge cannot be reached."""
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock_details", side_effect=exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test zeroconf aborts when the bridge is already configured."""
     MockConfigEntry(

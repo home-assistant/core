@@ -103,7 +103,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         apiclient = loqed.APIClient(session, f"http://{host}")
         api = loqed.LoqedAPI(apiclient)
-        lock_data = await api.async_get_lock_details()
+        try:
+            lock_data = await api.async_get_lock_details()
+        except TimeoutError, aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already exists
         await self.async_set_unique_id(lock_data["bridge_mac_wifi"])
