@@ -55,15 +55,13 @@ async def test_switch(
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
         mock_config_entry.add_to_hass(hass)
 
-        mock_my_pv_client.current_temperature = None
-
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_water_heater_switch(
+async def test_water_heater_switch_no_temp_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
@@ -79,6 +77,24 @@ async def test_water_heater_switch(
 
     state = hass.states.get("switch.my_pv_ac_elwa_2")
     assert state.state is STATE_ON
+
+
+async def test_water_heater_switch_temp_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test that no switch for the water heater is created when there is a temperature sensor installed."""
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
+        mock_config_entry.add_to_hass(hass)
+
+        mock_my_pv_client.current_temperature = 30
+
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("switch.my_pv_ac_elwa_2")
+    assert state is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
