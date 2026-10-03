@@ -1345,7 +1345,7 @@ DISCOVERY_SCHEMAS = [
             key="ThermostatPIHeatingDemand",
             translation_key="pi_heating_demand",
             native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.PIHeatingDemand,),
