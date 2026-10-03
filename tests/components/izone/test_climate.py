@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.izone.climate import (
     ATTR_AIRFLOW,
+    ATTR_CONTROL_ZONE_SOURCE,
     IZONE_SERVICE_AIRFLOW_MAX,
     IZONE_SERVICE_AIRFLOW_MIN,
 )
@@ -90,19 +91,15 @@ async def test_zone_device_linked_to_controller(
     assert zone_device.via_device_id == controller_device.id
 
 
-@pytest.mark.parametrize(
-    "mock_controller",
-    [create_mock_controller(ras_mode="RAS", zones_total=1)],
-)
-async def test_set_controller_temperature_ras(
+async def test_set_controller_temperature_when_controller_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
-    mock_zones: list[Mock],
 ) -> None:
-    """RAS-mode controller accepts target temperature commands."""
-    mock_controller.zones = mock_zones
+    """Controller accepts target temperature commands when it owns the unit target."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -203,19 +200,15 @@ async def test_set_zone_mode(
     zone.set_mode.assert_awaited_once_with(Zone.Mode.CLOSE)
 
 
-@pytest.mark.parametrize(
-    "mock_controller",
-    [create_mock_controller(ras_mode="RAS")],
-)
-async def test_target_temperature_feature_ras_mode(
+async def test_target_temperature_when_controller_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
-    mock_zones: list[Mock],
 ) -> None:
-    """TARGET_TEMPERATURE is enabled in RAS mode."""
-    mock_controller.zones = mock_zones
+    """TARGET_TEMPERATURE is enabled when the controller owns the unit target."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
@@ -226,27 +219,37 @@ async def test_target_temperature_feature_ras_mode(
     ) == ClimateEntityFeature.TARGET_TEMPERATURE
 
 
-@pytest.mark.parametrize(
-    ("mock_controller", "mock_zones"),
-    [
-        (
-            create_mock_controller(zone_ctrl=1, zones_total=2),
-            [
-                create_mock_zone(index=0, name="Living Room", temp_current=22.5),
-                create_mock_zone(index=1, name="Bedroom", temp_current=None),
-            ],
-        )
-    ],
-)
-async def test_target_temperature_when_zone_missing_sensor(
+async def test_target_temperature_when_zone_owns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
     mock_zones: list[Mock],
 ) -> None:
-    """TARGET_TEMPERATURE is enabled when any zone lacks a temperature sensor."""
-    mock_controller.zones = mock_zones
+    """TARGET_TEMPERATURE stays off when a zone owns the unit target."""
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = mock_zones[0].temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert (
+        entity.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == 0
+
+
+async def test_target_temperature_feature_follows_live_ownership(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """TARGET_TEMPERATURE tracks ownership changes after setup."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
@@ -255,6 +258,197 @@ async def test_target_temperature_when_zone_missing_sensor(
         entity.attributes["supported_features"]
         & ClimateEntityFeature.TARGET_TEMPERATURE
     ) == ClimateEntityFeature.TARGET_TEMPERATURE
+
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = mock_zones[0].temp_setpoint
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert (
+        entity.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == 0
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == ZONE_ENTITY
+
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert (
+        entity.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == ClimateEntityFeature.TARGET_TEMPERATURE
+    assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+
+
+async def test_control_zone_extra_attributes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+) -> None:
+    """Legacy extras report the active zone; source points at its climate entity."""
+    mock_controller.zone_ctrl = 0
+    mock_zones[0].name = "Kitchen"
+    mock_zones[0].temp_current = 19.4
+    mock_zones[0].temp_setpoint = 22.5
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = 22.5
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes["control_zone"] == 0
+    assert entity.attributes["control_zone_name"] == "Kitchen"
+    assert entity.attributes["control_zone_setpoint"] == 22.5
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.kitchen"
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 19.4
+    # TARGET_TEMPERATURE feature is off; target is only on the legacy extra.
+    assert ATTR_TEMPERATURE not in entity.attributes
+
+
+async def test_control_zone_source_controller_owner(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+) -> None:
+    """Source is omitted when the controller owns control; current uses return air."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    mock_controller.temp_return = 21.0
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
+    assert entity.attributes[ATTR_TEMPERATURE] == 24.0
+
+
+async def test_control_zone_source_unmatched_owner(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+) -> None:
+    """Source is omitted when no owner matches."""
+    mock_controller.control_setpoint_owner = None
+    mock_controller.control_setpoint = None
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+
+
+async def test_control_zone_source_follows_entity_id_rename(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Source tracks the zone climate entity_id after a rename."""
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = mock_zones[0].temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == ZONE_ENTITY
+
+    entity_registry.async_update_entity(
+        ZONE_ENTITY, new_entity_id="climate.renamed_zone"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.renamed_zone"
+
+
+async def test_control_zone_source_follows_library_zone_owner(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+) -> None:
+    """Source maps the library zone owner even when a CONST sibling has no temp."""
+    kitchen = create_mock_zone(index=0, name="Kitchen", temp_current=19.4)
+    mock_controller.zones_total = 2
+    mock_controller.zones = [
+        kitchen,
+        create_mock_zone(
+            index=1,
+            name="Bypass",
+            temp_current=None,
+            zone_type=Zone.Type.CONST,
+        ),
+    ]
+    mock_controller.control_setpoint_owner = kitchen
+    mock_controller.control_setpoint = kitchen.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.kitchen"
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 19.4
+
+
+async def test_const_control_zone_current_temperature_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """CONST CtrlZone is unexpected: current unknown, source still set, log once."""
+    bypass = create_mock_zone(
+        index=1,
+        name="Bypass",
+        temp_current=None,
+        zone_type=Zone.Type.CONST,
+    )
+    mock_controller.zones_total = 2
+    mock_controller.zones = [
+        create_mock_zone(index=0, name="Kitchen", temp_current=19.4),
+        bypass,
+    ]
+    mock_controller.zone_ctrl = 1
+    mock_controller.control_setpoint_owner = bypass
+    mock_controller.control_setpoint = None
+    mock_controller.temp_return = 22.0
+
+    with caplog.at_level(logging.ERROR):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.bypass"
+    assert entity.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
+    assert "Unexpected iZone control zone" in caplog.text
+    assert "attach diagnostics" in caplog.text
+    assert caplog.text.count("Unexpected iZone control zone") == 1
+
+    # Property reads again without re-logging.
+    climate = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY)
+    assert climate is not None
+    with caplog.at_level(logging.ERROR):
+        assert climate.current_temperature is None
+    assert caplog.text.count("Unexpected iZone control zone") == 1
 
 
 @pytest.mark.usefixtures("init_integration")
