@@ -13,7 +13,7 @@ from aiohttp.web_exceptions import (
     HTTPNotFound,
     HTTPUnsupportedMediaType,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -425,8 +425,8 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
 @websocket_api.websocket_command(
     {
         "type": "stt/engine/list",
-        vol.Optional("language"): str,
-        vol.Optional("country"): str,
+        probatio.Optional("language"): str,
+        probatio.Optional("country"): str,
     }
 )
 @callback

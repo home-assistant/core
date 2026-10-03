@@ -157,6 +157,12 @@
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]",
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
             }
+          },
+          "speed": {
+            "state": {
+              "normal": "Normal",
+              "silent": "Silent"
+            }
           }
         }
       },

@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
@@ -25,17 +25,19 @@ from .utils import get_device_entry_gen
 
 SERVICE_GET_KVS_VALUE = "get_kvs_value"
 SERVICE_SET_KVS_VALUE = "set_kvs_value"
-SERVICE_GET_KVS_VALUE_SCHEMA = vol.Schema(
+SERVICE_GET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_KEY): str,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_KEY): str,
     }
 )
-SERVICE_SET_KVS_VALUE_SCHEMA = vol.Schema(
+SERVICE_SET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): vol.Any(str, int, float, bool, dict, list, None),
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_KEY): str,
+        probatio.Required(ATTR_VALUE): probatio.Any(
+            str, int, float, bool, dict, list, None
+        ),
     }
 )
 

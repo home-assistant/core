@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from homematicip.base.functionalChannels import FunctionalChannel
-from homematicip.device import Device
+from homematicip.device import BaseDevice
 from homematicip.group import Group
 
 from homeassistant.const import ATTR_ID
@@ -133,7 +133,7 @@ class HomematicipGenericEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
-        if isinstance(self._device, Device):
+        if isinstance(self._device, BaseDevice):
             device_id = str(self._device.id)
             home_id = str(self._device.homeId)
 
@@ -152,7 +152,7 @@ class HomematicipGenericEntity(Entity):
                     # Serial numbers of Homematic IP device
                     (DOMAIN, device_id)
                 },
-                manufacturer=self._device.oem,
+                manufacturer=getattr(self._device, "oem", None),
                 model=self._device.modelType,
                 name=device_name,
                 sw_version=self._device.firmwareVersion,
@@ -171,6 +171,12 @@ class HomematicipGenericEntity(Entity):
         self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
         self._device.on_update(self._async_device_changed)
         self._device.on_remove(self._async_device_removed)
+        self.async_on_remove(
+            lambda: self._device.remove_callback(self._async_device_changed)
+        )
+        self.async_on_remove(
+            lambda: self._device.remove_callback(self._async_device_removed)
+        )
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
@@ -189,24 +195,16 @@ class HomematicipGenericEntity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
+        self._hap.hmip_device_by_entity_id.pop(self.entity_id, None)
 
         # Only go further if the device/entity should be removed from registries
         # due to a removal of the HmIP device.
-
         if self.hmip_device_removed:
-            try:
-                del self._hap.hmip_device_by_entity_id[self.entity_id]
-                self.async_remove_from_registries()
-            except KeyError as err:
-                _LOGGER.debug("Error removing HMIP device from registry: %s", err)
+            self.async_remove_from_registries()
 
     @callback
     def async_remove_from_registries(self) -> None:
         """Remove entity/device from registry."""
-        # Remove callback from device.
-        self._device.remove_callback(self._async_device_changed)
-        self._device.remove_callback(self._async_device_removed)
-
         if not self.registry_entry:
             return
 
@@ -325,13 +323,14 @@ class HomematicipGenericEntity(Entity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return not self._device.unreach
+        # BaseDevice, the fallback for an unknown device type, has no unreach.
+        return not getattr(self._device, "unreach", False)
 
     @property
     @override
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if not isinstance(self._device, Device):
+        if not isinstance(self._device, BaseDevice):
             return f"{self._device.id}_{self._feature_id}"
         channel_index = self.get_channel_index()
         return f"{self._device.id}_{channel_index}_{self._feature_id}"
@@ -352,7 +351,7 @@ class HomematicipGenericEntity(Entity):
         """Return the state attributes of the generic entity."""
         state_attr = {}
 
-        if isinstance(self._device, Device):
+        if isinstance(self._device, BaseDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
                 if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
@@ -372,8 +371,7 @@ class HomematicipGenericEntity(Entity):
         """Return the FunctionalChannel for the device.
 
         Resolution priority:
-        1. For multi-channel entities with a real index, find
-           channel by index match.
+        1. With a real index, find channel by index match.
         2. For multi-channel entities without a real index, use
            the provided channel position.
         3. For non multi-channel entities with >1 channels, use
@@ -388,20 +386,20 @@ class HomematicipGenericEntity(Entity):
                 " has no functionalChannels"
             )
 
+        # Prefer real index mapping when provided to avoid ordering issues.
+        if self._channel_real_index is not None:
+            for channel in functional_channels:
+                if channel.index == self._channel_real_index:
+                    return channel
+            raise ValueError(
+                f"Real channel index"
+                f" {self._channel_real_index}"
+                " not found for device"
+                f" {getattr(self._device, 'id', 'unknown')}"
+            )
+
         # Multi-channel handling
         if self._is_multi_channel:
-            # Prefer real index mapping when provided to avoid
-            # ordering issues.
-            if self._channel_real_index is not None:
-                for channel in functional_channels:
-                    if channel.index == self._channel_real_index:
-                        return channel
-                raise ValueError(
-                    f"Real channel index"
-                    f" {self._channel_real_index}"
-                    " not found for device"
-                    f" {getattr(self._device, 'id', 'unknown')}"
-                )
             # Fallback: positional channel (already sorted as strings upstream).
             if self._channel is not None and 0 <= self._channel < len(
                 functional_channels

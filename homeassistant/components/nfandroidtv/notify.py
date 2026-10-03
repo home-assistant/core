@@ -6,9 +6,9 @@ import logging
 from typing import Any, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-import voluptuous as vol
 
 from homeassistant.components import camera, image
 from homeassistant.components.media_source import async_resolve_media
@@ -255,7 +255,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if ATTR_INTERRUPT in data:
                 try:
                     interrupt = cv.boolean(data.get(ATTR_INTERRUPT))
-                except vol.Invalid as err:
+                except probatio.Invalid as err:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="invalid_interrupt",
