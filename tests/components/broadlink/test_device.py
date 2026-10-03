@@ -75,10 +75,7 @@ async def test_device_setup_authentication_error(hass: HomeAssistant) -> None:
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
-    assert mock_init.mock_calls[0][2]["data"] == {
-        "name": device.name,
-        **device.get_entry_data(),
-    }
+    assert mock_init.mock_calls[0][2]["data"] == device.get_entry_data()
 
 
 async def test_device_setup_network_timeout(hass: HomeAssistant) -> None:
@@ -230,10 +227,7 @@ async def test_device_setup_update_authentication_error(hass: HomeAssistant) -> 
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
-    assert mock_init.mock_calls[0][2]["data"] == {
-        "name": device.name,
-        **device.get_entry_data(),
-    }
+    assert mock_init.mock_calls[0][2]["data"] == device.get_entry_data()
 
 
 async def test_device_setup_update_broadlink_exception(hass: HomeAssistant) -> None:

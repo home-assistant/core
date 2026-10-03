@@ -743,10 +743,11 @@ async def test_flow_reauth_works(hass: HomeAssistant) -> None:
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
 
-    with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
+    with patch(DEVICE_FACTORY, return_value=mock_api) as mock_gendevice:
+        result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reset"
+    assert mock_gendevice.call_args.kwargs["name"] == mock_entry.title
 
     mock_api = device.get_mock_api()
 
@@ -775,7 +776,7 @@ async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
+        result = await mock_entry.start_reauth_flow(hass)
 
     device.mac = get_device("Office").mac
     mock_api = device.get_mock_api()
@@ -806,7 +807,7 @@ async def test_flow_reauth_valid_host(hass: HomeAssistant) -> None:
     mock_api.auth.side_effect = blke.AuthenticationError()
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
+        result = await mock_entry.start_reauth_flow(hass)
 
     device.host = "192.168.1.128"
     mock_api = device.get_mock_api()
