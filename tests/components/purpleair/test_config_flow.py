@@ -153,7 +153,6 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     # Test errors that can arise when checking the API key:
-    # with patch.object(mock_aiopurpleair, "async_check_api_key", check_api_key_mock):
     mock_aiopurpleair.async_check_api_key.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
