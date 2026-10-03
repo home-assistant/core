@@ -191,6 +191,7 @@ EXCEPTIONS = {
     "kiwiki-client",  # https://github.com/c7h/kiwiki_client/pull/6
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
+    "mistralai",  # Apache-2.0 in repo, not declared in PyPI metadata
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
