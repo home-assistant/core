@@ -163,13 +163,13 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_zeroconf_flow(
+async def test_zeroconf_flow_uses_oauth_discovery(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials,
 ) -> None:
-    """Test zeroconf flow."""
+    """Test zeroconf flow uses the OAuth discovery confirmation step."""
     assert await async_setup_component(hass, "daikin_onecta", {})
 
     await async_import_client_credential(
@@ -181,6 +181,10 @@ async def test_zeroconf_flow(
         context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
+    assert result["type"] == "form"
+    assert result["step_id"] == "oauth_discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     state = oauth_state(result)
 
     assert result["url"] == (

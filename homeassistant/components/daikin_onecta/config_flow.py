@@ -17,7 +17,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     TimeSelector,
 )
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN
 
@@ -150,15 +149,3 @@ class FlowHandler(
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Options callback for Daikin Onecta."""
         return OptionsFlowHandler(config_entry)
-
-    @override
-    async def async_step_zeroconf(
-        self, _discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle a discovered Daikin device via mDNS."""
-        _LOGGER.info("Daikin device discovered via mDNS")
-
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_user()

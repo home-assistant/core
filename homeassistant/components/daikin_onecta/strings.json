@@ -22,6 +22,9 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Daikin device on your network. Press **Submit** to continue setting up Daikin Onecta."
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
