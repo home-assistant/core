@@ -27,6 +27,8 @@ from tests.typing import WebSocketGenerator
         "extra_attrs",
     ),
     [
+        ("automation", "on", "on", {}, {}, {"all": False}, {}),
+        ("automation", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("button", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
@@ -139,6 +141,7 @@ async def test_config_flow(
 @pytest.mark.parametrize(
     ("group_type", "extra_input"),
     [
+        ("automation", {}),
         ("binary_sensor", {"all": False}),
         ("button", {}),
         ("cover", {}),
@@ -208,6 +211,7 @@ async def test_config_flow_hides_members(
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options", "options_options"),
     [
+        ("automation", "on", {"all": False}, {}),
         ("binary_sensor", "on", {"all": False}, {}),
         ("button", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("cover", "open", {}, {}),
@@ -319,6 +323,8 @@ async def test_options(
 @pytest.mark.parametrize(
     ("group_type", "extra_options", "extra_options_after"),
     [
+        ("automation", {"all": False}, {"all": False}),
+        ("automation", {"all": True}, {"all": False}),
         ("light", {"all": False}, {"all": False}),
         ("light", {"all": True}, {"all": False}),
         ("switch", {"all": False}, {"all": False}),
@@ -391,6 +397,7 @@ async def test_all_options(
 @pytest.mark.parametrize(
     ("group_type", "extra_input"),
     [
+        ("automation", {}),
         ("binary_sensor", {"all": False}),
         ("button", {}),
         ("cover", {}),
@@ -490,6 +497,7 @@ VALVE_ATTRS = [{"supported_features": 0}, {"is_closed": False}]
 @pytest.mark.parametrize(
     ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
     [
+        ("automation", {}, ["on", "off"], "on", [{}, {}]),
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
         ("button", {}, ["", ""], "unknown", [{}, {}]),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
@@ -602,6 +610,7 @@ async def test_config_flow_preview(
         "extra_attributes",
     ),
     [
+        ("automation", {}, {}, ["on", "off"], "on", [{}, {}]),
         ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
         ("button", {}, {}, ["", ""], "unknown", [{}, {}]),
         ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
