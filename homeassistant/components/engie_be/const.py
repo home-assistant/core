@@ -17,5 +17,7 @@ USER_MANAGEMENT_URL = (
     "https://www.engie.be/nl/energiedesk/usermanagement/manage-access/"
 )
 
+CONTRACTS_RETRY_INTERVAL = timedelta(minutes=5)
+
 PRICES_SCAN_INTERVAL = timedelta(hours=1)
 EPEX_SCAN_INTERVAL = timedelta(hours=1)

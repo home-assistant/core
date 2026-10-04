@@ -1,5 +1,7 @@
 """Test the ENGIE Belgium integration setup."""
 
+from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from aioengiebelgium import (
@@ -11,9 +13,10 @@ from aioengiebelgium import (
     EngieBeCommunicationError,
     PricesResponse,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.engie_be.const import DOMAIN
+from homeassistant.components.engie_be.const import CONTRACTS_RETRY_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -27,7 +30,7 @@ from .conftest import (
     build_relations,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_engie_client")
@@ -393,28 +396,204 @@ async def test_epex_entities_only_for_dynamic_households(
     assert (binary_entity_id is not None) is expected
 
 
-async def test_contracts_failure_retries_setup(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
+        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
+    ],
+)
+async def test_contracts_failure_loads_without_epex(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    side_effect: Exception,
 ) -> None:
-    """Test a contracts fetch failure leaves the entry in setup retry."""
-    mock_engie_client.return_value.async_get_energy_contracts.side_effect = (
-        EngieBeCommunicationError("boom")
-    )
+    """Test a contracts fetch failure loads the entry with price sensors but no EPEX entities."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.engie_be")
+    mock_engie_client.return_value.async_get_energy_contracts.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "Tariff lookup failed" in caplog.text
     assert "Fetching energy contracts for" in caplog.text
     assert BAN not in caplog.text
     assert BAN[-4:] in caplog.text
     assert (
         entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+
+async def test_contracts_retry_adds_epex_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    frozen_afternoon: None,
+) -> None:
+    """Test a successful classification retry adds the EPEX entities."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def _dynamic_contracts(_ban: str) -> EnergyContractsResponse:
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _dynamic_contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert client.async_get_energy_contracts.call_count == 2
+    sensor_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    )
+    assert sensor_entity_id is not None
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(0.15)
+    assert (
+        entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+        )
+        is not None
+    )
+
+
+async def test_contracts_failure_keeps_retrying(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a classification retry that fails again schedules the next one."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert client.async_get_energy_contracts.call_count == 1
+
+    for _ in range(2):
+        freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert client.async_get_energy_contracts.call_count == 3
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+
+async def test_contracts_retry_resolving_fixed_shuts_down_epex(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a pending household that resolves to fixed releases the EPEX coordinator."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.runtime_data.epex is not None
+
+    client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.runtime_data.epex is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is not None
+    )
+
+
+async def test_pending_household_does_not_release_epex_of_dynamic_household(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retry that resolves the last pending household to fixed keeps the EPEX coordinator."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+
+    def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == BAN_2:
+            raise EngieBeCommunicationError("boom")
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+        )
+        is None
+    )
+
+    def _fixed_contracts(_queried_ban: str) -> EnergyContractsResponse:
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _fixed_contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.runtime_data.epex is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
         )
         is None
     )
