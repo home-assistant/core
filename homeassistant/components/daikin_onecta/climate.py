@@ -49,15 +49,6 @@ HOMEKIT_FIXED_FAN_MODE_ALIASES = {
     FAN_HIGH: "5",
 }
 
-HA_HVAC_TO_DAIKIN = {
-    HVACMode.FAN_ONLY: "fanOnly",
-    HVACMode.DRY: "dry",
-    HVACMode.COOL: "cooling",
-    HVACMode.HEAT: "heating",
-    HVACMode.HEAT_COOL: "auto",
-    HVACMode.OFF: "off",
-}
-
 DAIKIN_HVAC_TO_HA = {
     "fanOnly": HVACMode.FAN_ONLY,
     "dry": HVACMode.DRY,
@@ -469,7 +460,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                         )
                         self._raise_command_failed("set the temperature")
 
-    def get_hvac_mode(self):
+    def get_hvac_mode(self) -> HVACMode | None:
         """Return current HVAC mode."""
         mode = HVACMode.OFF
         operationmode = self.operation_mode()
@@ -484,7 +475,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 self._setpoint,
                 mode,
             )
-        return DAIKIN_HVAC_TO_HA.get(mode, HVACMode.HEAT_COOL)
+        return DAIKIN_HVAC_TO_HA.get(mode)
 
     def get_hvac_modes(self):
         """Return the list of available HVAC modes."""
@@ -493,14 +484,35 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         if operationmode is not None:
             if operationmode.settable:
                 for mode in operationmode.values or []:
-                    ha_mode = DAIKIN_HVAC_TO_HA[mode]
-                    if ha_mode not in modes:
+                    ha_mode = DAIKIN_HVAC_TO_HA.get(mode)
+                    if ha_mode is not None and ha_mode not in modes:
                         modes.append(ha_mode)
             currentmode = operationmode.value
-            ha_currentmode = DAIKIN_HVAC_TO_HA[currentmode]
-            if ha_currentmode not in modes:
+            ha_currentmode = DAIKIN_HVAC_TO_HA.get(currentmode)
+            if ha_currentmode is not None and ha_currentmode not in modes:
                 modes.append(ha_currentmode)
         return modes
+
+    def _native_hvac_mode(self, hvac_mode: HVACMode) -> str | None:
+        """Return an advertised native mode for a requested HVAC mode."""
+        operation_mode = self.operation_mode()
+        if operation_mode is None:
+            return None
+
+        if DAIKIN_HVAC_TO_HA.get(operation_mode.value) == hvac_mode:
+            return operation_mode.value
+
+        if not operation_mode.settable:
+            return None
+
+        return next(
+            (
+                mode
+                for mode in operation_mode.values or []
+                if DAIKIN_HVAC_TO_HA.get(mode) == hvac_mode
+            ),
+            None,
+        )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -513,14 +525,11 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
         # First determine the new settings for onOffMode/operationMode
         on_off_mode = None
-        operation_mode = None
         if hvac_mode == HVACMode.OFF:
             if self.hvac_mode != HVACMode.OFF:
                 on_off_mode = "off"
-        else:
-            if self.hvac_mode == HVACMode.OFF:
-                on_off_mode = "on"
-            operation_mode = HA_HVAC_TO_DAIKIN[hvac_mode]
+        elif self.hvac_mode == HVACMode.OFF:
+            on_off_mode = "on"
 
         cc = self.climate_control()
 
@@ -543,8 +552,11 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 self.update_state()
                 self.coordinator.async_update_listeners()
 
-        # Only set the operationMode when it has changed, also prevents setting it when
-        # it is readOnly
+        operation_mode = (
+            self._native_hvac_mode(hvac_mode) if hvac_mode != HVACMode.OFF else None
+        )
+
+        # Only set the advertised operationMode when it has changed.
         if (
             operation_mode is not None
             and cc.operation_mode is not None

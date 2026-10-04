@@ -102,7 +102,9 @@ async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     coordinator = MagicMock()
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value="off"),
-        operation_mode=SimpleNamespace(value="cooling"),
+        operation_mode=SimpleNamespace(
+            value="cooling", settable=True, values=["cooling", "heating"]
+        ),
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -129,11 +131,15 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     coordinator = MagicMock()
     previous_management_point = SimpleNamespace(
         on_off_mode=SimpleNamespace(value="off"),
-        operation_mode=SimpleNamespace(value="heating"),
+        operation_mode=SimpleNamespace(
+            value="heating", settable=True, values=["heating", "cooling"]
+        ),
     )
     current_management_point = SimpleNamespace(
         on_off_mode=SimpleNamespace(value="off"),
-        operation_mode=SimpleNamespace(value="heating"),
+        operation_mode=SimpleNamespace(
+            value="heating", settable=True, values=["heating", "cooling"]
+        ),
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -142,6 +148,7 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     entity.climate_control = MagicMock(
         side_effect=[
             previous_management_point,
+            current_management_point,
             current_management_point,
             current_management_point,
         ]
@@ -155,6 +162,85 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     assert current_management_point.on_off_mode.value == "on"
     assert current_management_point.operation_mode.value == "cooling"
     assert coordinator.async_update_listeners.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("native_mode", "hvac_mode"),
+    [("heatingDay", HVACMode.HEAT), ("auto", HVACMode.HEAT_COOL)],
+)
+async def test_set_hvac_mode_preserves_matching_native_mode(
+    native_mode: str, hvac_mode: HVACMode
+) -> None:
+    """Keep the current native mode when it already maps to the requested mode."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock()
+    operation_mode = SimpleNamespace(
+        value=native_mode, settable=True, values=[native_mode]
+    )
+    climate_control = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value="on"), operation_mode=operation_mode
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_attr_hvac_mode", hvac_mode)
+    entity.climate_control = MagicMock(return_value=climate_control)
+
+    await entity.async_set_hvac_mode(hvac_mode)
+
+    assert entity.get_hvac_modes() == [HVACMode.OFF, hvac_mode]
+    device.patch.assert_not_awaited()
+
+
+async def test_set_hvac_mode_uses_advertised_native_mode() -> None:
+    """Use an advertised native mode instead of a generic Daikin value."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock(return_value=True)
+    coordinator = MagicMock()
+    operation_mode = SimpleNamespace(
+        value="cooling", settable=True, values=["cooling", "heatingNight"]
+    )
+    climate_control = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value="on"), operation_mode=operation_mode
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_attr_hvac_mode", HVACMode.COOL)
+    entity.coordinator = coordinator
+    entity.climate_control = MagicMock(return_value=climate_control)
+    entity.update_state = MagicMock()
+
+    await entity.async_set_hvac_mode(HVACMode.HEAT)
+
+    device.patch.assert_awaited_once_with(
+        "device", "zone", "operationMode", "", "heatingNight"
+    )
+    assert operation_mode.value == "heatingNight"
+
+
+async def test_set_hvac_mode_ignores_unknown_native_mode() -> None:
+    """Do not expose or overwrite a native mode without a HA equivalent."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock()
+    operation_mode = SimpleNamespace(
+        value="vendorMode", settable=True, values=["vendorMode"]
+    )
+    climate_control = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value="on"), operation_mode=operation_mode
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_setpoint", "roomTemperature")
+    object.__setattr__(entity, "_attr_hvac_mode", None)
+    entity.climate_control = MagicMock(return_value=climate_control)
+
+    await entity.async_set_hvac_mode(HVACMode.HEAT)
+
+    assert entity.get_hvac_mode() is None
+    assert entity.get_hvac_modes() == [HVACMode.OFF]
+    device.patch.assert_not_awaited()
 
 
 async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
