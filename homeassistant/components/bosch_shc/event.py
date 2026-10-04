@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMotionDetector, SHCMotionDetector2, SHCSmokeDetector
+from boschshcpy import (
+    SHCMotionDetector,
+    SHCMotionDetector2,
+    SHCSmokeDetectionSystem,
+    SHCSmokeDetector,
+)
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
@@ -56,6 +61,16 @@ async def async_setup_entry(
         )
         for smoke_detector in session.device_helper.smoke_detectors
     )
+
+    if smoke_detection_system := session.device_helper.smoke_detection_system:
+        entities.append(
+            SmokeDetectionSystemEvent(
+                hass=hass,
+                device=smoke_detection_system,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+            )
+        )
 
     async_add_entities(entities)
 
@@ -189,4 +204,48 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
             ATTR_NAME: self._device.name,
         }
         self._trigger_event(alarm_state, event_attributes)
+        self.async_write_ha_state()
+
+
+class SmokeDetectionSystemEvent(SHCEntity, EventEntity):
+    """Representation of a SHC smoke detection system alarm event."""
+
+    _attr_name = None
+    _attr_translation_key = "smoke_detection_system_alarm"
+    _attr_event_types = ["alarm_off", "alarm_on", "alarm_muted"]
+    _device: SHCSmokeDetectionSystem
+    # Dedup guard: SurveillanceAlarm replays the current state on unrelated
+    # long-poll updates; seeded in async_added_to_hass.
+    _last_fired_state: str
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to SHC events."""
+        await super().async_added_to_hass()
+        self._last_fired_state = self._device.alarm.name.lower()
+        for service in self._device.device_services:
+            if service.id == "SurveillanceAlarm":
+                service.register_event(self._device.id, self._event_callback)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister the SurveillanceAlarm event callback."""
+        await super().async_will_remove_from_hass()
+        # register_event() has no public unsubscribe counterpart.
+        for service in self._device.device_services:
+            if service.id == "SurveillanceAlarm":
+                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+
+    def _event_callback(self) -> None:
+        """Handle a SurveillanceAlarm update from the SHC polling thread."""
+        alarm_state = self._device.alarm.name.lower()
+        if alarm_state == self._last_fired_state:
+            return
+        self._last_fired_state = alarm_state
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, alarm_state)
+
+    @callback
+    def _dispatch_event(self, alarm_state: str) -> None:
+        """Trigger the event and write state on the event loop."""
+        self._trigger_event(alarm_state)
         self.async_write_ha_state()

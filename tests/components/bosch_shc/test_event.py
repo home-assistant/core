@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from boschshcpy import AlarmService
+from boschshcpy import AlarmService, SurveillanceAlarmService
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -11,6 +11,7 @@ from .conftest import (
     motion_detector2_device,
     motion_detector_device,
     setup_integration,
+    smoke_detection_system_device,
     smoke_detector_device,
 )
 
@@ -297,6 +298,161 @@ async def test_smoke_detector_unregisters_callback_on_unload(
     """Unloading the entity removes its Alarm callback registration."""
     await setup_integration(hass, mock_config_entry)
     device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+    assert device.id in alarm_service._event_callbacks
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device.id not in alarm_service._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detection_system": smoke_detection_system_device()}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_detection_system_no_alarm_yet(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Smoke Detection System's event entity has no state before an alarm event fires."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("event.smoke_detection_system")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("device_buckets", "new_alarm", "event_type"),
+    [
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_OFF
+                )
+            },
+            SurveillanceAlarmService.State.ALARM_ON,
+            "alarm_on",
+            id="alarm_on",
+        ),
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_ON
+                )
+            },
+            SurveillanceAlarmService.State.ALARM_MUTED,
+            "alarm_muted",
+            id="alarm_muted",
+        ),
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_ON
+                )
+            },
+            SurveillanceAlarmService.State.ALARM_OFF,
+            "alarm_off",
+            id="alarm_off",
+        ),
+    ],
+    indirect=["device_buckets"],
+)
+async def test_smoke_detection_system_fires_on_new_state(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    new_alarm: SurveillanceAlarmService.State,
+    event_type: str,
+) -> None:
+    """A SurveillanceAlarm push updates the event entity's state and attributes."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detection_system
+    alarm_service = device.device_services[0]
+
+    device.alarm = new_alarm
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.smoke_detection_system")
+    assert state is not None
+    assert state.state != "unknown"
+    assert state.attributes["event_type"] == event_type
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detection_system": smoke_detection_system_device()}],
+    indirect=True,
+)
+async def test_smoke_detection_system_dedup_guard(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A phantom replay of the same alarm state does not refire the event."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detection_system
+    alarm_service = device.device_services[0]
+
+    device.alarm = SurveillanceAlarmService.State.ALARM_ON
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    first_state = hass.states.get("event.smoke_detection_system")
+    assert first_state is not None
+
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    second_state = hass.states.get("event.smoke_detection_system")
+    assert second_state is not None
+    assert second_state.last_changed == first_state.last_changed
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smoke_detection_system": smoke_detection_system_device(
+                alarm=SurveillanceAlarmService.State.ALARM_ON
+            )
+        }
+    ],
+    indirect=True,
+)
+async def test_smoke_detection_system_no_replay_on_startup(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pre-existing alarm state is not replayed as a new event on startup."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detection_system
+    alarm_service = device.device_services[0]
+
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.smoke_detection_system")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detection_system": smoke_detection_system_device()}],
+    indirect=True,
+)
+async def test_smoke_detection_system_unregisters_callback_on_unload(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading the entity removes its SurveillanceAlarm callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detection_system
     alarm_service = device.device_services[0]
     assert device.id in alarm_service._event_callbacks
 
