@@ -178,11 +178,22 @@ class ElectraAPI:
                     logger.debug("Discovered A/C device %s", electra_ac.name)
                     ac_list.append(electra_ac)
                 else:
-                    logger.debug("Discovered non AC device %s", ac)
+                    logger.debug(
+                        "Discovered non-AC device of type %s",
+                        ac.get("deviceTypeName"),
+                    )
 
-            async with TaskGroup() as tg:
-                for ac in ac_list:
-                    tg.create_task(self.get_last_telemtry(ac))
+            try:
+                async with TaskGroup() as tg:
+                    for ac in ac_list:
+                        tg.create_task(self.get_last_telemtry(ac))
+            except ExceptionGroup as exg:
+                # TaskGroup wraps task failures in an ExceptionGroup; surface
+                # the underlying API error so callers can catch ElectraApiError.
+                for exc in exg.exceptions:
+                    if isinstance(exc, ElectraApiError):
+                        raise exc from exg
+                raise
 
             for ac in ac_list:
                 ac.update_features()
