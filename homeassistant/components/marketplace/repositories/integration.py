@@ -245,13 +245,13 @@ class IntegrationRepository(Repository):
     @override
     async def async_post_uninstall(self) -> None:
         """Run post uninstall steps."""
-        if self.data.domain:
-            async_invalidate_translations(self.marketplace.hass, {self.data.domain})
         # Code this run loaded keeps running until a restart, and so does
         # an integration only set up from YAML
         loaded = self._known_to_the_loader()
         if self.data.config_flow:
             await self.reload_custom_components()
+        if self.data.domain:
+            async_invalidate_translations(self.marketplace.hass, {self.data.domain})
         self.pending_restart = loaded or not self.data.config_flow
 
         if self.pending_restart:
