@@ -453,7 +453,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                         if setpointdict is not None:
                             setpointdict.value = value
                             self._attr_target_temperature = value
-                            self.async_write_ha_state()
+                            self.coordinator.async_update_listeners()
                     else:
                         _LOGGER.warning(
                             "Device '%s' problem setting temperature to '%s'",
@@ -559,7 +559,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             # When switching hvac mode it could be that we can set min/max/target/etc
             # which we couldn't set with a previous hvac mode
             self.update_state()
-            self.async_write_ha_state()
+            self.coordinator.async_update_listeners()
 
     def get_fan_mode(self):
         """Return the active fan mode."""
@@ -663,7 +663,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
         if result:
             self._attr_fan_mode = requested_fan_mode
-            self.async_write_ha_state()
+            self.coordinator.async_update_listeners()
 
     def __get_swing_mode(self, direction):
         """Return current swing mode for an axis."""
@@ -741,7 +741,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
             if res is True:
                 self._attr_swing_mode = swing_mode
-                self.async_write_ha_state()
+                self.coordinator.async_update_listeners()
         else:
             _LOGGER.debug(
                 "Device '%s' request to set vertical swing mode '%s' ignored already set",
@@ -758,7 +758,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
             if res is True:
                 self._attr_swing_horizontal_mode = swing_horizontal_mode
-                self.async_write_ha_state()
+                self.coordinator.async_update_listeners()
         else:
             _LOGGER.debug(
                 "Device '%s' request to set horizontal swing mode '%s' ignored already set",
@@ -794,6 +794,12 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             _LOGGER.warning(
                 "Device '%s' problem setting %s to off", self._device.name, daikin_mode
             )
+        else:
+            preset = self.preset_characteristic(daikin_mode)
+            if preset_mode == PRESET_AWAY and preset is not None:
+                preset.value.enabled = False
+            elif preset is not None:
+                preset.value = "off"
         return result
 
     async def _async_enable_preset_mode(self, preset_mode) -> bool:
@@ -820,6 +826,12 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             _LOGGER.warning(
                 "Device '%s' problem setting %s to on", self._device.name, daikin_mode
             )
+        else:
+            preset = self.preset_characteristic(daikin_mode)
+            if preset_mode == PRESET_AWAY and preset is not None:
+                preset.value.enabled = True
+            elif preset is not None:
+                preset.value = "on"
         return turned_on and result
 
     @override
@@ -838,7 +850,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
         if result is True:
             self._attr_preset_mode = preset_mode
-            self.async_write_ha_state()
+            self.coordinator.async_update_listeners()
 
     def get_preset_modes(self):
         """Return supported preset modes."""
@@ -868,7 +880,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             else:
                 cc.on_off_mode.value = "on"
                 self._attr_hvac_mode = self.get_hvac_mode()
-                self.async_write_ha_state()
+                self.coordinator.async_update_listeners()
         else:
             _LOGGER.debug(
                 "Device '%s' request to turn on ignored because device is already on",
@@ -892,7 +904,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             else:
                 cc.on_off_mode.value = "off"
                 self._attr_hvac_mode = self.get_hvac_mode()
-                self.async_write_ha_state()
+                self.coordinator.async_update_listeners()
         else:
             _LOGGER.debug(
                 "Device '%s' request to turn off ignored because device is already off",

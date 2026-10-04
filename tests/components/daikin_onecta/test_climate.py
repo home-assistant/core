@@ -31,23 +31,24 @@ def test_climate_availability(
     assert entity.available is expected
 
 
-async def test_set_temperature_updates_cached_setpoint() -> None:
-    """Update the cached setpoint after a successful cloud write."""
+async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
+    """Update the cached setpoint and notify sibling climates after a write."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
+    coordinator = MagicMock()
     device.patch = AsyncMock(return_value=True)
     setpoint = MagicMock(value=20)
     object.__setattr__(entity, "_device", device)
+    entity.coordinator = coordinator
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_setpoint", "roomTemperature")
     object.__setattr__(entity, "_attr_target_temperature", 20)
     entity.operation_mode = MagicMock(return_value=MagicMock(value="heating"))
     entity.setpoint = MagicMock(return_value=setpoint)
-    entity.async_write_ha_state = MagicMock()
-
     await entity.async_set_temperature(temperature=21)
 
     assert setpoint.value == 21
+    coordinator.async_update_listeners.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
