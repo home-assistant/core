@@ -1,0 +1,27 @@
+set_demand_control:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: daikin
+    en_demand:
+      required: true
+      selector:
+        boolean:
+    max_pow:
+      default: 100
+      selector:
+        number:
+          min: 40
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    mode:
+      default: "manual"
+      selector:
+        select:
+          translation_key: "demand_control_mode"
+          options:
+            - "manual"
+            - "auto"

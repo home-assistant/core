@@ -62,6 +62,8 @@ def zone_device() -> Generator[ZoneDevice]:
     device.support_energy_consumption = False
     device.support_humidity = False
     device.support_compressor_frequency = False
+    device.support_demand_control = False
+    device.get_demand_control = MagicMock(return_value={})
     device.compressor_frequency = 0
     device.inside_temperature = 21.0
     device.outside_temperature = 13.0
