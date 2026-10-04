@@ -1,0 +1,130 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your De Lijn open data API key."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your De Lijn open data API key."
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your De Lijn open data API key."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "stop": {
+      "abort": {
+        "already_configured": "This stop is already configured.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Stop",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "invalid_stop": "Unknown stop number.",
+        "no_results": "No stops found matching that search.",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add stop"
+      },
+      "step": {
+        "confirm": {
+          "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}\n\nIf no departures are listed above, none may be expected right now, or they could not be loaded — you can still add the stop.\n\n[Show location on a map]({map_url})\n[View this stop on delijn.be]({delijn_url})",
+          "menu_options": {
+            "create_entry": "Add this stop",
+            "pick": "Back to search results",
+            "user": "Search again"
+          },
+          "title": "Confirm your stop"
+        },
+        "pick": {
+          "data": {
+            "stop": "Stop"
+          },
+          "data_description": {
+            "stop": "The stop to monitor."
+          }
+        },
+        "reconfigure": {
+          "data": {
+            "number_of_departures": "Number of departures"
+          },
+          "data_description": {
+            "number_of_departures": "How many upcoming departures to keep as sensor attributes."
+          },
+          "description": "Stop {stop_number}"
+        },
+        "user": {
+          "data": {
+            "location": "Search near a location",
+            "stop": "Stop"
+          },
+          "data_description": {
+            "location": "Pick a location on the map to find nearby stops. Leave both fields empty to find stops near your Home Assistant location.",
+            "stop": "A De Lijn stop number, or part of a stop name to search for. Leave empty to search near a location instead."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_departure": {
+        "name": "Next departure"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "The De Lijn API key is no longer valid"
+    },
+    "update_error": {
+      "message": "Error communicating with the De Lijn API: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nWhile importing your configuration for stop {stop_id}, Home Assistant could not reach the De Lijn API. This will be retried automatically on the next restart. Remove the existing YAML configuration and set the integration up via the UI once the import succeeds.",
+      "title": "{integration_title} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nWhile importing your configuration for stop {stop_id}, the De Lijn API rejected the configured API key. Check the API key in your YAML configuration and restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "{integration_title} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_invalid_stop": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nStop {stop_id} from your YAML configuration no longer exists in De Lijn's data. Remove it from the `next_departure` list in your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "{integration_title} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nAn unexpected error occurred while importing your configuration for stop {stop_id}. Check the Home Assistant logs for details, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "{integration_title} YAML configuration deprecated"
+    }
+  }
+}
