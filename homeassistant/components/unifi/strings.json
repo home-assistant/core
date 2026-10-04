@@ -257,6 +257,7 @@
             "data": {
               "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients",
               "allow_uptime_sensors": "Uptime sensors for network clients",
+          "allow_wan_networks": "WAN network devices",
               "client_source": "Create entities from network clients",
               "detection_time": "Time in seconds from last seen until considered away",
               "dpi_restrictions": "Allow control of DPI restriction groups",
@@ -268,6 +269,7 @@
             "data_description": {
               "allow_bandwidth_sensors": "Create bandwidth usage sensors for network clients.",
               "allow_uptime_sensors": "Create uptime sensors for network clients.",
+          "allow_wan_networks": "Create a device per WAN network, with its status and load balancing and failover settings.",
               "client_source": "Select which network clients to create entities from.",
               "detection_time": "Number of seconds since last seen before a client is considered away.",
               "dpi_restrictions": "Enable switches to control DPI restriction groups.",

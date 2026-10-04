@@ -12,7 +12,11 @@ import orjson
 import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_ALLOW_WAN_NETWORKS,
+    CONF_SITE_ID,
+    DOMAIN,
+)
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import (
     CONF_HOST,
@@ -81,6 +85,7 @@ WAN_NETWORKS = [
         "wan_type": "dhcp",
     },
 ]
+WAN_ENABLED_OPTIONS = {CONF_ALLOW_WAN_NETWORKS: True}
 
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 

@@ -45,6 +45,7 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    WAN_ENABLED_OPTIONS,
     WAN_NETWORKS,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
@@ -2478,6 +2479,7 @@ WAN_STATUS_ENTITY_IDS = (
 )
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
 async def test_wan_status_entity(
@@ -2500,6 +2502,7 @@ async def test_wan_status_entity(
         assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize(
     ("network_payload", "device_payload", "expected_state"),
     [
@@ -2543,6 +2546,7 @@ async def test_wan_status(hass: HomeAssistant, expected_state: str) -> None:
     assert hass.states.get(WAN_STATUS_ENTITY_ID).state == expected_state
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 @pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -2564,6 +2568,7 @@ async def test_wan_status_gateway_update(
     assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "no_link"
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 @pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -2579,6 +2584,7 @@ async def test_wan_status_network_update(
     assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "disabled"
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 @pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -2606,6 +2612,7 @@ async def test_wan_status_not_written_without_change(
     assert written_entity_ids == []
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_wan_status_gateway_added(
@@ -2619,6 +2626,7 @@ async def test_wan_status_gateway_added(
     assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "online"
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 @pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
 async def test_wan_status_gateway_removed(

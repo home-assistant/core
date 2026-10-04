@@ -11,17 +11,23 @@ from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
 import pytest
 
-from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_ALLOW_WAN_NETWORKS,
+    CONF_BLOCK_CLIENT,
+    DOMAIN,
+)
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    WAN_ENABLED_OPTIONS,
+    WAN_NETWORKS,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
@@ -545,3 +551,89 @@ async def test_get_unifi_api_fails_to_connect(
         pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, config_entry_data)
+
+
+WAN_ENTITY_IDS = [
+    "number.internet_1_failover_priority",
+    "number.internet_1_load_balance_weight",
+    "select.internet_1_load_balancing",
+    "sensor.internet_1_status",
+]
+
+
+def _networkconf_requests(aioclient_mock: AiohttpClientMocker) -> int:
+    """Count networkconf requests."""
+    return sum(
+        str(call[1]).endswith("/rest/networkconf") for call in aioclient_mock.mock_calls
+    )
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize(
+    ("config_entry_options", "expected_entity_ids", "expected_requests"),
+    [
+        pytest.param({}, [], 0, id="disabled_by_default"),
+        pytest.param(WAN_ENABLED_OPTIONS, WAN_ENTITY_IDS, 1, id="enabled"),
+    ],
+)
+async def test_wan_networks_option(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: MockConfigEntry,
+    expected_entity_ids: list[str],
+    expected_requests: int,
+) -> None:
+    """Verify WAN network devices and entities are only created when enabled."""
+    assert (
+        sorted(
+            entity_id
+            for entity_id in hass.states.async_entity_ids()
+            if entity_id.startswith(("number.", "select.", "sensor.internet_1"))
+        )
+        == expected_entity_ids
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, WAN_NETWORKS[0]["_id"]), config_entry_setup.entry_id
+        )
+        is not None
+    ) is bool(expected_entity_ids)
+    assert _networkconf_requests(aioclient_mock) == expected_requests
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+async def test_wan_networks_option_toggle(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify toggling the WAN network option adds and removes entities."""
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_ALLOW_WAN_NETWORKS: True}
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
+    assert _networkconf_requests(aioclient_mock) == 1
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_ALLOW_WAN_NETWORKS: False}
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+    assert all(
+        entity_registry.async_get(entity_id) is None for entity_id in WAN_ENTITY_IDS
+    )
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_ALLOW_WAN_NETWORKS: True}
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
+    assert _networkconf_requests(aioclient_mock) == 1

@@ -18,7 +18,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import WAN_NETWORKS, ConfigEntryFactoryType, WebsocketMessageMock
+from .conftest import (
+    WAN_ENABLED_OPTIONS,
+    WAN_NETWORKS,
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -26,6 +31,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 LOAD_BALANCING_ENTITY_ID = "select.internet_1_load_balancing"
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 async def test_entity_and_device_data(
     hass: HomeAssistant,
@@ -39,6 +45,7 @@ async def test_entity_and_device_data(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize(
     "site_payload",
@@ -50,6 +57,7 @@ async def test_no_entities_without_admin(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids(SELECT_DOMAIN)) == 0
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize(
     "network_payload",
     [
@@ -64,6 +72,7 @@ async def test_unsupported_network(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids(SELECT_DOMAIN)) == 0
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize("option", ["weighted", "failover-only"])
 async def test_select_load_balancing(
@@ -97,6 +106,7 @@ async def test_select_load_balancing(
     assert aioclient_mock.mock_calls[0][2] == expected_call
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_websocket_update(
@@ -113,6 +123,7 @@ async def test_websocket_update(
     assert hass.states.get(LOAD_BALANCING_ENTITY_ID).state == "weighted"
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize(
     ("error_message", "expected_translation_key", "expected_placeholders"),

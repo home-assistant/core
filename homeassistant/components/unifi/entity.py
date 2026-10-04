@@ -104,6 +104,12 @@ def async_wan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
+@callback
+def async_wan_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if WAN network devices and entities are enabled."""
+    return hub.config.option_allow_wan_networks
+
+
 def wan_supported_fn(
     field_fn: Callable[[Network], Any],
 ) -> Callable[[UnifiHub, str], bool]:

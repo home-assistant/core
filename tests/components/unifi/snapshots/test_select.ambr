@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_and_device_data[network_payload0][select.internet_1_load_balancing-entry]
+# name: test_entity_and_device_data[network_payload0-config_entry_options0][select.internet_1_load_balancing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[network_payload0][select.internet_1_load_balancing-state]
+# name: test_entity_and_device_data[network_payload0-config_entry_options0][select.internet_1_load_balancing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internet 1 Load balancing',

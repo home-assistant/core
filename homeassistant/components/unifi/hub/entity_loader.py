@@ -90,19 +90,38 @@ class UnifiEntityLoader:
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
 
+        self._wan_networks_loaded = False
+
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
+        self._wan_networks_loaded = self.hub.config.option_allow_wan_networks
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
                 [
                     coordinator.async_refresh
-                    for coordinator in self._data_coordinators.values()
+                    for handler_id, coordinator in self._data_coordinators.items()
+                    if handler_id != id(self.hub.api.networks)
+                    or self._wan_networks_loaded
                 ]
             ),
         )
+        self.hub.config.entry.async_on_unload(
+            async_dispatcher_connect(
+                self.hub.hass,
+                self.hub.signal_options_update,
+                self._async_load_wan_networks,
+            )
+        )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
+
+    async def _async_load_wan_networks(self) -> None:
+        """Fetch WAN networks once enabled, the handler then adds their entities."""
+        if self._wan_networks_loaded or not self.hub.config.option_allow_wan_networks:
+            return
+        self._wan_networks_loaded = True
+        await self._data_coordinators[id(self.hub.api.networks)].async_refresh()
 
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]

@@ -91,7 +91,7 @@ async def async_remove_config_entry_device(
         # This integration does not create child devices.
         return False
     hub = config_entry.runtime_data
-    if any(
+    if hub.config.option_allow_wan_networks and any(
         domain == DOMAIN and identifier in hub.api.networks
         for domain, identifier in device_entry.identifiers
     ):

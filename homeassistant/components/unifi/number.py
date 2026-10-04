@@ -28,6 +28,7 @@ from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
+    async_wan_allowed_fn,
     async_wan_device_info_fn,
     wan_supported_fn,
 )
@@ -80,6 +81,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=MAX_FAILOVER_PRIORITY,
         native_step=1,
+        allowed_fn=async_wan_allowed_fn,
         api_handler_fn=lambda api: api.networks,
         control_fn=async_wan_failover_priority_control_fn,
         device_info_fn=async_wan_device_info_fn,
@@ -96,6 +98,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=MAX_LOAD_BALANCE_WEIGHT,
         native_step=1,
+        allowed_fn=async_wan_allowed_fn,
         api_handler_fn=lambda api: api.networks,
         control_fn=lambda hub, obj_id, value: hub.api.networks.save(
             hub.api.networks[obj_id], wan_load_balance_weight=int(value)

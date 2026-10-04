@@ -41,6 +41,7 @@ from . import UnifiConfigEntry
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_ALLOW_WAN_NETWORKS,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
@@ -408,6 +409,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                 probatio.Optional(
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
+                                ): bool,
+                                probatio.Optional(
+                                    CONF_ALLOW_WAN_NETWORKS,
+                                    default=self.hub.config.option_allow_wan_networks,
                                 ): bool,
                             }
                         ),

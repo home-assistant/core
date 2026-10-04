@@ -24,6 +24,7 @@ from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
+    async_wan_allowed_fn,
     async_wan_device_info_fn,
     wan_supported_fn,
 )
@@ -73,6 +74,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSelectEntityDescription, ...] = (
         # which WAN is active, so a weighted WAN is the primary while it is the only
         # member online.
         options=["failover-only", "weighted"],
+        allowed_fn=async_wan_allowed_fn,
         api_handler_fn=lambda api: api.networks,
         control_fn=async_wan_load_balance_type_control_fn,
         current_option_fn=lambda hub, network: network.wan_load_balance_type,

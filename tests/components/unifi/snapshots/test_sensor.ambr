@@ -2520,7 +2520,7 @@
     'state': '2021-01-01T01:00:00+00:00',
   })
 # ---
-# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_1_status-entry]
+# name: test_wan_status_entity[device_payload0-network_payload0-config_entry_options0][sensor.internet_1_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2564,7 +2564,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_1_status-state]
+# name: test_wan_status_entity[device_payload0-network_payload0-config_entry_options0][sensor.internet_1_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -2584,7 +2584,7 @@
     'state': 'online',
   })
 # ---
-# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_2_status-entry]
+# name: test_wan_status_entity[device_payload0-network_payload0-config_entry_options0][sensor.internet_2_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2628,7 +2628,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_wan_status_entity[device_payload0-network_payload0][sensor.internet_2_status-state]
+# name: test_wan_status_entity[device_payload0-network_payload0-config_entry_options0][sensor.internet_2_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -2648,7 +2648,7 @@
     'state': 'no_link',
   })
 # ---
-# name: test_wan_status_entity[device_payload0-network_payload0][sensor.unifi_5g_a_status-entry]
+# name: test_wan_status_entity[device_payload0-network_payload0-config_entry_options0][sensor.unifi_5g_a_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2692,7 +2692,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_wan_status_entity[device_payload0-network_payload0][sensor.unifi_5g_a_status-state]
+# name: test_wan_status_entity[device_payload0-network_payload0-config_entry_options0][sensor.unifi_5g_a_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',

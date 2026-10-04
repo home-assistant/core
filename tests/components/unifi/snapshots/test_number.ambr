@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_and_device_data[network_payload0][number.internet_1_failover_priority-entry]
+# name: test_entity_and_device_data[network_payload0-config_entry_options0][number.internet_1_failover_priority-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[network_payload0][number.internet_1_failover_priority-state]
+# name: test_entity_and_device_data[network_payload0-config_entry_options0][number.internet_1_failover_priority-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internet 1 Failover priority',
@@ -58,7 +58,7 @@
     'state': '1',
   })
 # ---
-# name: test_entity_and_device_data[network_payload0][number.internet_1_load_balance_weight-entry]
+# name: test_entity_and_device_data[network_payload0-config_entry_options0][number.internet_1_load_balance_weight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -100,7 +100,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[network_payload0][number.internet_1_load_balance_weight-state]
+# name: test_entity_and_device_data[network_payload0-config_entry_options0][number.internet_1_load_balance_weight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internet 1 Load balance weight',

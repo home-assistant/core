@@ -23,6 +23,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import (
     DEFAULT_HOST,
     DEFAULT_SITE,
+    WAN_ENABLED_OPTIONS,
     WAN_NETWORKS,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
@@ -35,6 +36,7 @@ FAILOVER_PRIORITY_ENTITY_ID = "number.internet_1_failover_priority"
 LOAD_BALANCE_WEIGHT_ENTITY_ID = "number.internet_1_load_balance_weight"
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
 async def test_entity_and_device_data(
     hass: HomeAssistant,
@@ -48,6 +50,7 @@ async def test_entity_and_device_data(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize(
     "site_payload",
@@ -59,6 +62,7 @@ async def test_no_entities_without_admin(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize(
     ("network_payload", "expected_entities"),
     [
@@ -74,6 +78,7 @@ async def test_unsupported_network(hass: HomeAssistant, expected_entities: int) 
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == expected_entities
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize(
     ("entity_id", "field", "value"),
@@ -115,6 +120,7 @@ async def test_set_value(
     assert aioclient_mock.mock_calls[0][2] == expected_call
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_websocket_update(
@@ -145,6 +151,7 @@ def controller_error(msg: str) -> dict[str, Any]:
     }
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize(
     ("entity_id", "response", "expected_translation_key", "expected_placeholders"),
