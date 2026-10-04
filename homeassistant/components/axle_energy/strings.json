@@ -19,6 +19,15 @@
         },
         "description": "Your Axle API key is no longer accepted. Open the [Home Assistant page in your Axle account]({token_url}) and copy your Home Assistant token. If **Generate Token** is available, select it first. Enter the token in **API key**. If the token is still rejected, contact Axle support."
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::axle_energy::config::step::user::data_description::api_key%]"
+        },
+        "description": "[%key:component::axle_energy::config::step::user::description%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
