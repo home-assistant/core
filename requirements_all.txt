@@ -203,7 +203,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.11.0
+aioaquarite==0.13.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -215,7 +215,7 @@ aioasuswrt==1.5.4
 aioautomower==3.0.0
 
 # homeassistant.components.axle_energy
-aioaxlevpp==0.1.1
+aioaxlevpp==0.2.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -481,7 +481,7 @@ aiovitesy==1.3.0
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.2
+aiovodafone==3.3.5
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -629,7 +629,7 @@ autoskope_client==1.4.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==17.0.1
+av==19.0.0
 
 # homeassistant.components.avea
 avea==1.8.0
@@ -728,7 +728,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.13
+boschshcpy==0.6.15
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -849,7 +849,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.4.1
+demetriek==2.0.0
 
 # homeassistant.components.denon_rs232
 denon-rs232==4.2.3
@@ -1852,7 +1852,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.22.1
+opower==0.22.2
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3
@@ -2150,9 +2150,6 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.6
 
-# homeassistant.components.radio_browser
-pycountry==24.6.1
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2160,7 +2157,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.19.1
+pydaikin==2.20.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==1.0.0
@@ -2184,7 +2181,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.9.0
+pydrawise==2026.9.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2374,7 +2371,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.4.3
+pylamarzocco==2.5.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2948,7 +2945,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==1.0.0
+radios==2.0.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -3240,7 +3237,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==1.0.2
+teslemetry-stream==1.2.0
 
 # homeassistant.components.tessie
 tessie-api==0.1.3
@@ -3330,7 +3327,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==17.7.0
+uiprotect==23.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
