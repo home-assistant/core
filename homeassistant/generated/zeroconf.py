@@ -684,6 +684,21 @@ ZEROCONF = {
             "name": "slide*",
         },
         {
+            "domain": "sma_modbus",
+            "name": "website for sma-inverter: sma*",
+        },
+        {
+            "domain": "sma_modbus",
+            "name": "website for sma-product: sma*",
+        },
+        {
+            "domain": "sma_modbus",
+            "name": "website on sma*",
+            "properties": {
+                "path": "/legal_notices.txt",
+            },
+        },
+        {
             "domain": "synology_dsm",
             "properties": {
                 "vendor": "synology*",
