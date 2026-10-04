@@ -68,6 +68,7 @@ ATTR_SPEED = "speed"
 ATTR_ALTITUDE = "altitude"
 ATTR_COURSE = "course"
 ATTR_VERTICAL_ACCURACY = "vertical_accuracy"
+ATTR_LOCATION_TIME = "location_time"
 
 ATTR_WEBHOOK_DATA = "data"
 ATTR_WEBHOOK_ENCRYPTED = "encrypted"
