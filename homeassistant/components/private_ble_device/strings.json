@@ -1,7 +1,11 @@
 {
   "config": {
     "abort": {
-      "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to track Private BLE Devices."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to track Private BLE Devices.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unload_failed": "The device could not be unloaded, so its IRK was not changed. Restart Home Assistant and try again."
     },
     "error": {
       "irk_not_found": "The provided IRK does not match any BLE devices that Home Assistant can see.",
@@ -9,6 +13,15 @@
     },
     "flow_title": "{name}",
     "step": {
+      "reconfigure": {
+        "data": {
+          "irk": "[%key:component::private_ble_device::config::step::user::data::irk%]"
+        },
+        "data_description": {
+          "irk": "The new IRK of the device, for example after it was reset. Its entities keep their entity IDs and history."
+        },
+        "description": "What is the new IRK (Identity Resolving Key) of this device?"
+      },
       "user": {
         "data": {
           "irk": "IRK"
