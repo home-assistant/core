@@ -92,6 +92,10 @@ class RemainingTimeTimestampWrapper(DPCodeIntegerWrapper[datetime]):
         )
         self._end_time: datetime | None = None
         self._initialized = False
+        self._reset_stable_end_time()
+
+    def _reset_stable_end_time(self) -> None:
+        """Reset the variance filter, so a new countdown starts fresh."""
         self._stable_end_time = ignore_variance(
             lambda value: value, timedelta(minutes=1)
         )
@@ -103,6 +107,7 @@ class RemainingTimeTimestampWrapper(DPCodeIntegerWrapper[datetime]):
             or (remaining := self._read_dpcode_value(device)) is None
             or remaining <= 0
         ):
+            self._reset_stable_end_time()
             return None
         return self._stable_end_time(
             dt_util.utcnow() + timedelta(**{self._time_unit: remaining})

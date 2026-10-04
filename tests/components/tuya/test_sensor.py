@@ -276,6 +276,15 @@ async def test_countdown_end_sensor(
     assert state is not None
     assert state.state == "unknown"
 
+    # A new timer is started shortly after: the previous end time is not reused
+    freezer.tick(timedelta(seconds=30))
+    await notification_helper.async_send_device_update(
+        mock_device, {"countdown_left": 240}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2024-01-01T16:02:30+00:00"
+
 
 @pytest.mark.parametrize(
     (
