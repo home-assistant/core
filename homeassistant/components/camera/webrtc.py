@@ -338,6 +338,11 @@ async def ws_webrtc_re_offer(
     """
     offer = msg["offer"]
     session_id = msg["session_id"]
+    # The re-offer takes over ownership of the session from the subscription of
+    # the previous offer, which the client drops once this one is established.
+    connection.subscriptions[msg["id"]] = partial(
+        camera.close_webrtc_session, session_id
+    )
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 

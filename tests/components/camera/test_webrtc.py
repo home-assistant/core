@@ -386,6 +386,80 @@ async def _test_websocket_webrtc_offer_webrtc_provider(
         mock_async_close_session.assert_called_once_with(session_id)
 
 
+@pytest.mark.usefixtures("mock_stream_source", "mock_camera")
+async def test_websocket_webrtc_re_offer_closes_session_on_unsubscribe(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test a re-offer takes over closing the session from the previous offer."""
+    client = await hass_ws_client(hass)
+    with patch.object(
+        register_test_provider, "async_close_session", autospec=True
+    ) as mock_async_close_session:
+        await client.send_json_auto_id(
+            {
+                "type": "camera/webrtc/offer",
+                "entity_id": "camera.demo_camera",
+                "offer": WEBRTC_OFFER,
+            }
+        )
+        response = await client.receive_json()
+        assert response["type"] == TYPE_RESULT
+        assert response["success"]
+        offer_subscription_id = response["id"]
+
+        response = await client.receive_json()
+        assert response["event"]["type"] == "session"
+        session_id = response["event"]["session_id"]
+
+        response = await client.receive_json()
+        assert response["event"] == {"type": "answer", "answer": "answer"}
+
+        # The client drops the previous subscription before sending the re-offer
+        await client.send_json_auto_id(
+            {
+                "type": "unsubscribe_events",
+                "subscription": offer_subscription_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        mock_async_close_session.assert_called_once_with(session_id)
+        mock_async_close_session.reset_mock()
+
+        await client.send_json_auto_id(
+            {
+                "type": "camera/webrtc/re_offer",
+                "entity_id": "camera.demo_camera",
+                "offer": WEBRTC_OFFER,
+                "session_id": session_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["type"] == TYPE_RESULT
+        assert response["success"]
+        re_offer_subscription_id = response["id"]
+
+        response = await client.receive_json()
+        assert response["id"] == re_offer_subscription_id
+        assert response["event"] == {"type": "session", "session_id": session_id}
+
+        response = await client.receive_json()
+        assert response["event"] == {"type": "answer", "answer": "answer"}
+
+        # The re-offer subscription owns the session from here on
+        await client.send_json_auto_id(
+            {
+                "type": "unsubscribe_events",
+                "subscription": re_offer_subscription_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        mock_async_close_session.assert_called_once_with(session_id)
+
+
 async def test_websocket_webrtc_offer_invalid_entity(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
