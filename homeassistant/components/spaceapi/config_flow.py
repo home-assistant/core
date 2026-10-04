@@ -130,13 +130,18 @@ def _form_schema(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
         probatio.Required(
-            CONF_EMAIL, default=defaults.get(CONF_EMAIL, "")
-        ): TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL)),
-        probatio.Required(
             CONF_STATE_ENTITY_ID,
             default=defaults.get(CONF_STATE_ENTITY_ID, ""),
         ): EntitySelector(EntitySelectorConfig(domain="binary_sensor")),
     }
+    email_field = (
+        probatio.Required(CONF_EMAIL, default=defaults.get(CONF_EMAIL, ""))
+        if version == SPACEAPI_VERSION_15
+        else probatio.Optional(CONF_EMAIL, default=defaults[CONF_EMAIL])
+        if CONF_EMAIL in defaults
+        else probatio.Optional(CONF_EMAIL)
+    )
+    schema[email_field] = TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL))
 
     if version == SPACEAPI_VERSION:
         schema[
@@ -281,10 +286,12 @@ def _build_config(
     """Build stored SpaceAPI data from form input."""
     existing = existing or {}
     optional = user_input[CONF_OPTIONAL]
-    contact: dict[str, Any] = {
+    contact = {
+        **existing.get(CONF_CONTACT, {}),
         **optional.get(CONF_CONTACT_DETAILS, {}),
-        CONF_EMAIL: user_input[CONF_EMAIL],
     }
+    if CONF_EMAIL in user_input:
+        contact[CONF_EMAIL] = user_input[CONF_EMAIL]
     state = {
         CONF_ENTITY_ID: user_input[CONF_STATE_ENTITY_ID],
         **{

@@ -115,6 +115,29 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_invalid_config_can_be_corrected(hass: HomeAssistant) -> None:
+    """Test the flow can recover from invalid configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_VERSION: SPACEAPI_VERSION}
+    )
+    invalid_input = USER_INPUT | {CONF_ISSUE_REPORT_CHANNELS: []}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=invalid_input
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "configure"
+    assert result["errors"]["base"] == "invalid_config"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"][CONF_ISSUE_REPORT_CHANNELS] == ["email"]
+
+
 async def test_import_yaml(hass: HomeAssistant, issue_registry: IssueRegistry) -> None:
     """Test existing YAML configuration is imported into a config entry."""
     yaml_config = {
@@ -261,3 +284,13 @@ async def test_v15_requires_spacefed_fields(hass: HomeAssistant) -> None:
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "spacefed_required"
+
+    corrected_input = USER_INPUT | {
+        "optional": {"spacefed": {"spacenet": True, "spacesaml": False}},
+    }
+    corrected_input.pop(CONF_ISSUE_REPORT_CHANNELS)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=corrected_input
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"]["spacefed"] == {"spacenet": True, "spacesaml": False}
