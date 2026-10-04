@@ -1,7 +1,7 @@
 """The motionEye integration."""
 
 from collections.abc import Callable
-import contextlib
+from datetime import timedelta
 from http import HTTPStatus
 import json
 import logging
@@ -14,7 +14,6 @@ from motioneye_client.client import (
     MotionEyeClient,
     MotionEyeClientError,
     MotionEyeClientInvalidAuthError,
-    MotionEyeClientPathError,
 )
 from motioneye_client.const import (
     KEY_CAMERAS,
@@ -34,6 +33,7 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_source import URI_SCHEME
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -47,13 +47,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -79,9 +80,15 @@ from .const import (
     WEB_HOOK_SENTINEL_VALUE,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
+from .media_source import (
+    MotionEyeMediaProxyView,
+    _build_media_proxy_path,
+    split_motioneye_device_identifier,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def create_motioneye_client(
@@ -97,20 +104,6 @@ def get_motioneye_device_identifier(
 ) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
     return (DOMAIN, f"{config_entry_id}_{camera_id}")
-
-
-def split_motioneye_device_identifier(
-    identifier: tuple[str, str],
-) -> tuple[str, str, int] | None:
-    """Get the identifiers for a motionEye device."""
-    if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
-        return None
-    config_id, camera_id_str = identifier[1].split("_", 1)
-    try:
-        camera_id = int(camera_id_str)
-    except ValueError:
-        return None
-    return (DOMAIN, config_id, camera_id)
 
 
 def get_camera_from_cameras(
@@ -270,6 +263,12 @@ def _add_camera(
         SIGNAL_CAMERA_ADD.format(entry.entry_id),
         camera,
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the motionEye integration."""
+    hass.http.register_view(MotionEyeMediaProxyView(hass))
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
@@ -475,23 +474,23 @@ def _get_media_event_data(
             f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
         ),
     }
-    url = get_media_url(
-        client,
+    proxy_path = _build_media_proxy_path(
+        config_entry_id,
         camera_id,
+        kind,
         file_path,
-        kind == "images",
+        preview=False,
     )
-    if url:
-        output[EVENT_FILE_URL] = url
+
+    try:
+        base_url = get_url(hass)
+    except NoURLAvailableError:
+        return output
+
+    output[EVENT_FILE_URL] = base_url + async_sign_path(
+        hass,
+        proxy_path,
+        timedelta(minutes=5),
+        use_content_user=True,
+    )
     return output
-
-
-def get_media_url(
-    client: MotionEyeClient, camera_id: int, path: str, image: bool
-) -> str | None:
-    """Get the URL for a motionEye media item."""
-    with contextlib.suppress(MotionEyeClientPathError):
-        if image:
-            return client.get_image_url(camera_id, path)
-        return client.get_movie_url(camera_id, path)
-    return None

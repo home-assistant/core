@@ -1,8 +1,10 @@
 """Test the motionEye camera web hooks."""
 
+from contextlib import asynccontextmanager
 import copy
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock, call, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 from motioneye_client.const import (
     KEY_CAMERAS,
@@ -16,6 +18,7 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 import pytest
+from yarl import URL
 
 from homeassistant.components.motioneye.const import (
     ATTR_EVENT_TYPE,
@@ -399,9 +402,6 @@ async def test_event_media_data(
 
     events = async_capture_events(hass, f"{DOMAIN}.{EVENT_FILE_STORED}")
 
-    client.get_movie_url = Mock(return_value="http://movie-url")
-    client.get_image_url = Mock(return_value="http://image-url")
-
     # Test: Movie storage.
     client.is_file_type_image = Mock(return_value=False)
     resp = await hass_client.post(
@@ -415,12 +415,49 @@ async def test_event_media_data(
     )
     assert resp.status == HTTPStatus.OK
     assert len(events) == 1
-    assert events[-1].data["file_url"] == "http://movie-url"
+    assert (
+        events[-1]
+        .data["file_url"]
+        .startswith(
+            f"https://internal.url/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/"
+            f"{TEST_CAMERA_ID}/movies/0/"
+        )
+    )
+    assert "?authSig=" in events[-1].data["file_url"]
     assert (
         events[-1].data["media_content_id"]
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/one"
     )
-    assert client.get_movie_url.call_args == call(TEST_CAMERA_ID, "/dir/one")
+
+    # Verify the signed event file URL works without loading the media source.
+    class MockStreamContent:
+        async def iter_chunked(self, size: int):
+            yield b"movie"
+
+    @asynccontextmanager
+    async def media_stream(*args, **kwargs):
+        yield SimpleNamespace(
+            status=HTTPStatus.OK,
+            headers={"Content-Type": "video/mp4"},
+            content=MockStreamContent(),
+        )
+
+    stream_mock = MagicMock(side_effect=media_stream)
+    client.async_get_media_stream = stream_mock
+
+    file_url = URL(events[-1].data["file_url"])
+    response = await hass_client.get(file_url.path_qs)
+
+    assert response.status == HTTPStatus.OK
+    assert response.content_type == "video/mp4"
+    assert await response.read() == b"movie"
+    stream_mock.assert_called_once_with(
+        TEST_CAMERA_ID,
+        "/dir/one",
+        image=False,
+        preview=False,
+        range_header=None,
+    )
 
     # Test: Image storage.
     client.is_file_type_image = Mock(return_value=True)
@@ -435,12 +472,42 @@ async def test_event_media_data(
     )
     assert resp.status == HTTPStatus.OK
     assert len(events) == 2
-    assert events[-1].data["file_url"] == "http://image-url"
+    assert (
+        events[-1]
+        .data["file_url"]
+        .startswith(
+            f"https://internal.url/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/"
+            f"{TEST_CAMERA_ID}/images/0/"
+        )
+    )
+    assert "?authSig=" in events[-1].data["file_url"]
     assert (
         events[-1].data["media_content_id"]
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/dir/two"
     )
-    assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/dir/two")
+
+    # Test: No Home Assistant URL available.
+    client.is_file_type_image = Mock(return_value=False)
+    with patch(
+        "homeassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
+    ):
+        resp = await hass_client.post(
+            URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
+            json={
+                ATTR_DEVICE_ID: device.id,
+                ATTR_EVENT_TYPE: EVENT_FILE_STORED,
+                "file_path": f"/var/lib/motioneye/{TEST_CAMERA_NAME}/dir/no-url",
+                "file_type": "8",
+            },
+        )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(events) == 3
+    assert "file_url" not in events[-1].data
+    assert (
+        events[-1].data["media_content_id"]
+        == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/no-url"
+    )
 
     # Test: Invalid file type.
     resp = await hass_client.post(
@@ -453,7 +520,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 3
+    assert len(events) == 4
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -468,7 +535,26 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 4
+    assert len(events) == 5
+    assert "file_url" not in events[-1].data
+    assert "media_content_id" not in events[-1].data
+
+    # Test: File path cannot be compared with the root directory.
+    with patch(
+        "homeassistant.components.motioneye.os.path.commonpath", side_effect=ValueError
+    ):
+        resp = await hass_client.post(
+            URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
+            json={
+                ATTR_DEVICE_ID: device.id,
+                ATTR_EVENT_TYPE: EVENT_FILE_STORED,
+                "file_path": f"/var/lib/motioneye/{TEST_CAMERA_NAME}/dir/four",
+                "file_type": "8",
+            },
+        )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(events) == 6
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -488,7 +574,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 5
+    assert len(events) == 7
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -509,7 +595,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 6
+    assert len(events) == 8
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -527,6 +613,6 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 7
+    assert len(events) == 9
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
