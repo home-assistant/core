@@ -331,6 +331,29 @@ async def test_verisure_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_flow_password_too_long(
+    hass: HomeAssistant,
+    mock_verisure_config_flow: MagicMock,
+) -> None:
+    """Test a too long password gives a specific error when login fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError("Login failed")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "a" * 31,
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "user"
+    assert result2.get("errors") == {"base": "invalid_auth_password_too_long"}
+
+
 async def test_dhcp(hass: HomeAssistant) -> None:
     """Test that DHCP discovery works."""
     result = await hass.config_entries.flow.async_init(
@@ -537,6 +560,30 @@ async def test_reauth_flow_errors(
     assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 2
     assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_flow_password_too_long(
+    hass: HomeAssistant,
+    mock_verisure_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a too long password gives a specific error when reauth login fails."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError("Login failed")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "a" * 31,
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_confirm"
+    assert result2.get("errors") == {"base": "invalid_auth_password_too_long"}
 
 
 async def test_user_flow_mfa_rate_limited(

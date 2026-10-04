@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
+    MAX_PASSWORD_LENGTH,
 )
 from .coordinator import VerisureConfigEntry
 
@@ -90,7 +91,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_mfa()
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
-                    errors["base"] = "invalid_auth"
+                    if len(self.password) > MAX_PASSWORD_LENGTH:
+                        errors["base"] = "invalid_auth_password_too_long"
+                    else:
+                        errors["base"] = "invalid_auth"
             except VerisureRateLimitError as ex:
                 LOGGER.debug("Verisure rate limited during login, %s", ex)
                 errors["base"] = "mfa_rate_limited"
@@ -233,7 +237,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_reauth_mfa()
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
-                    errors["base"] = "invalid_auth"
+                    if len(self.password) > MAX_PASSWORD_LENGTH:
+                        errors["base"] = "invalid_auth_password_too_long"
+                    else:
+                        errors["base"] = "invalid_auth"
             except VerisureRateLimitError as ex:
                 LOGGER.debug("Verisure rate limited during reauth login, %s", ex)
                 errors["base"] = "mfa_rate_limited"
