@@ -180,6 +180,7 @@ def camera_eyes_device(
     device_id: str = "hdm:Cameras:eyes-1",
     name: str = "Camera Eyes",
     cameralight: CameraLightService.State = CameraLightService.State.OFF,
+    cameranotification: CameraNotificationService.State = CameraNotificationService.State.DISABLED,
 ) -> SHCCameraEyes:
     """Build a minimal device double for the camera_eyes bucket."""
     device = create_autospec(SHCCameraEyes, instance=True, spec_set=True)
@@ -193,6 +194,7 @@ def camera_eyes_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.cameralight = cameralight
+    device.cameranotification = cameranotification
     return device
 
 
