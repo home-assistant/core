@@ -50,7 +50,7 @@ async def async_setup_entry(
         SERVICE_TRANSITION_ON,
         {
             probatio.Optional(ATTR_VOLUME): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(
                 ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION

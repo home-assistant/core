@@ -7,6 +7,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,6 +30,7 @@ async def async_setup_entry(
     if config and config.get("type") == "boolean":
         entity_description = SwitchEntityDescription(
             key="bstmode",
+            entity_category=EntityCategory.CONFIG,
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="bstmode",
         )

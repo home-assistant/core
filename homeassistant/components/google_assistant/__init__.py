@@ -51,7 +51,7 @@ ENTITY_SCHEMA = probatio.Schema(
 
 GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     {
-        probatio.Required(CONF_PRIVATE_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_PRIVATE_KEY)): cv.string,
         probatio.Required(CONF_CLIENT_EMAIL): cv.string,
     },
     extra=probatio.ALLOW_EXTRA,
@@ -78,7 +78,7 @@ GOOGLE_ASSISTANT_SCHEMA = probatio.All(
             ): probatio.EnsureList(),
             probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
-            probatio.Optional(CONF_SECURE_DEVICES_PIN): str,
+            probatio.Optional(probatio.Secret(CONF_SECURE_DEVICES_PIN)): str,
             probatio.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             probatio.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options

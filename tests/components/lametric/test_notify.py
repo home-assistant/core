@@ -30,7 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -122,15 +122,35 @@ async def test_notification_options(
     assert frame.text == "The secret of getting ahead is getting started"
 
 
+async def test_notification_unknown_sound(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test an unknown sound is refused, naming the sound."""
+    with pytest.raises(ServiceValidationError, match="Unknown sound: nope"):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            NOTIFY_SERVICE,
+            {
+                ATTR_MESSAGE: "Silence is golden",
+                ATTR_DATA: {"sound": "nope"},
+            },
+            blocking=True,
+        )
+
+    mock_lametric.notify.assert_not_called()
+
+
 async def test_notification_error(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric notification error."""
-    mock_lametric.notify.side_effect = LaMetricError
+    mock_lametric.notify.side_effect = LaMetricError("Fail to validate")
 
     with pytest.raises(
-        HomeAssistantError, match="Could not send LaMetric notification"
+        HomeAssistantError,
+        match="Could not send the notification to the LaMetric device: Fail to validate",
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
