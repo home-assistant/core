@@ -166,12 +166,14 @@ class SmartHomeView(HomeAssistantView):
         message: dict[str, Any] = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            endpoint_id: str | None = (
+            endpoint_id = (
                 message.get(API_DIRECTIVE, {}).get(API_ENDPOINT, {}).get("endpointId")
             )
             _LOGGER.debug(
                 "Received Alexa Smart Home request for entity %s: %s",
-                endpoint_id.replace("#", ".") if endpoint_id else None,
+                endpoint_id.replace("#", ".")
+                if isinstance(endpoint_id, str)
+                else endpoint_id,
                 async_redact_auth_data(message),
             )
 
