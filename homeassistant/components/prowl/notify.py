@@ -40,7 +40,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> ProwlNotificationService | None:
+) -> ProwlNotificationService:
     """Get the Prowl notification service."""
     if discovery_info is None:
         result = await hass.config_entries.flow.async_init(
@@ -51,10 +51,11 @@ async def async_get_service(
             and result["reason"] == "already_configured"
         ):
             async_create_yaml_deprecated_issue(hass)
-            # The config entry sets up the legacy service through discovery
-            return None
-        async_create_import_error_issue(hass, config.get(CONF_NAME), result["reason"])
-        # Keep the YAML legacy service working until the import succeeds
+        else:
+            async_create_import_error_issue(
+                hass, config.get(CONF_NAME), result["reason"]
+            )
+        # YAML keeps providing the legacy service while it is present
         return ProwlNotificationService(
             hass, config[CONF_API_KEY], get_async_client(hass)
         )
