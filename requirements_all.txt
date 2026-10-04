@@ -2283,6 +2283,9 @@ pygtfs==0.1.11
 # homeassistant.components.hvv_departures
 pygti==1.1.1
 
+# homeassistant.components.hase_iq
+pyhaseiq==0.2.0
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 
