@@ -85,8 +85,12 @@ async def async_setup_entry(
         opts={"verify_ssl": config_entry.data[CONF_VERIFY_SSL]},
     )
     tracker_interfaces = config_entry.data.get(CONF_TRACKER_INTERFACES, [])
+    firmware_privilege_missing = False
     try:
-        await client.validate()
+        try:
+            await client.validate()
+        except OPNsensePrivilegeMissing:
+            firmware_privilege_missing = True
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
     except OPNsenseUnknownFirmware as err:
@@ -157,6 +161,7 @@ async def async_setup_entry(
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
         tracker_interfaces=tracker_interfaces,
+        firmware_privilege_missing=firmware_privilege_missing,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

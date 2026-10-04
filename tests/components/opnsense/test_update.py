@@ -12,6 +12,7 @@ from homeassistant.components.opnsense.const import (
     DOMAIN,
     get_firmware_privilege_issue_id,
 )
+from homeassistant.components.update import DATA_COMPONENT
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -20,6 +21,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -349,6 +351,7 @@ async def test_firmware_upgrade_retries_error_status(
     mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
     mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
     mock_opnsense_client.upgrade_status.side_effect = [
+        OPNsenseConnectionError("router is rebooting"),
         {"status": "error"},
         {"status": "done"},
     ]
@@ -372,8 +375,57 @@ async def test_firmware_upgrade_retries_error_status(
     await hass.async_block_till_done()
     state = hass.states.get("update.mock_title_firmware")
     assert state is not None
-    assert not state.attributes["in_progress"]
+    assert state.attributes["in_progress"]
     assert mock_opnsense_client.upgrade_status.await_count == 2
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert not state.attributes["in_progress"]
+    assert mock_opnsense_client.upgrade_status.await_count == 3
+
+
+async def test_firmware_upgrade_status_polls_do_not_overlap(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+) -> None:
+    """Status polling skips a tick while the previous request is in flight."""
+    status_started = Event()
+    status_response = Event()
+
+    async def wait_for_status() -> dict[str, str]:
+        status_started.set()
+        await status_response.wait()
+        return {"status": "running"}
+
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.side_effect = wait_for_status
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+
+    update_entity = hass.data[DATA_COMPONENT].get_entity("update.mock_title_firmware")
+    assert update_entity is not None
+    poll_task = hass.async_create_task(
+        update_entity._async_poll_upgrade_status(
+            dt_util.utcnow(), generation=update_entity._upgrade_status_generation
+        )
+    )
+    await status_started.wait()
+    await update_entity._async_poll_upgrade_status(
+        dt_util.utcnow(), generation=update_entity._upgrade_status_generation
+    )
+    mock_opnsense_client.upgrade_status.assert_awaited_once()
+
+    status_response.set()
+    await poll_task
 
 
 async def test_firmware_upgrade_refreshes_after_reboot(
@@ -449,6 +501,7 @@ async def test_firmware_upgrade_times_out(
     await hass.async_block_till_done()
 
     assert not hass.states.get("update.mock_title_firmware").attributes["in_progress"]
+    mock_opnsense_client.upgrade_status.assert_not_awaited()
 
 
 async def test_firmware_upgrade_unload(
@@ -562,9 +615,10 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
 ) -> None:
     """Firmware permission errors do not block trackers and clear after recovery."""
     issue_id = get_firmware_privilege_issue_id(mock_config_entry.entry_id)
-    mock_opnsense_client.get_firmware_update_info.side_effect = (
-        OPNsensePrivilegeMissing("missing System: Firmware privilege")
+    mock_opnsense_client.validate.side_effect = OPNsensePrivilegeMissing(
+        "missing System: Firmware privilege"
     )
+    mock_opnsense_client.get_firmware_update_info.return_value = {}
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -581,7 +635,10 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
     mock_opnsense_client.get_arp_table.assert_awaited_once()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    mock_opnsense_client.get_firmware_update_info.side_effect = None
+    mock_opnsense_client.validate.side_effect = None
+    mock_opnsense_client.get_firmware_update_info.return_value = {
+        "product": {"product_version": "25.7.8", "product_latest": "25.7.8"}
+    }
     await mock_config_entry.runtime_data.update_coordinator.async_request_refresh()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 

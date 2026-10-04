@@ -18,6 +18,7 @@ class OPNsenseRuntimeData:
     client: OPNsenseClient
     tracker_interfaces: list[str]
     update_coordinator: OPNsenseFirmwareCoordinator | None = None
+    firmware_privilege_missing: bool = False
 
 
 type DeviceDetails = dict[str, Any]

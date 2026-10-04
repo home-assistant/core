@@ -2,9 +2,11 @@
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any, cast, override
 
+from aiopnsense import OPNsenseConnectionError, OPNsenseTimeoutError
 from yarl import URL
 
 from homeassistant.components.update import (
@@ -94,6 +96,8 @@ class OPNsenseFirmwareUpdate(
         self._unsub_upgrade_status: Callable[[], None] | None = None
         self._unsub_post_upgrade_refresh: Callable[[], None] | None = None
         self._post_upgrade_refresh_retried = False
+        self._upgrade_status_generation = 0
+        self._upgrade_status_polling = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -103,6 +107,7 @@ class OPNsenseFirmwareUpdate(
 
     def _stop_upgrade_tracking(self) -> None:
         """Stop polling firmware upgrade status."""
+        self._upgrade_status_generation += 1
         if self._unsub_upgrade_status is not None:
             self._unsub_upgrade_status()
             self._unsub_upgrade_status = None
@@ -131,13 +136,41 @@ class OPNsenseFirmwareUpdate(
         """Return whether the router is still upgrading."""
         return self._upgrade_in_progress
 
-    async def _async_poll_upgrade_status(self, now: datetime) -> None:
+    async def _async_poll_upgrade_status(
+        self, now: datetime, *, generation: int
+    ) -> None:
         """Track the active firmware upgrade."""
-        status = await self.coordinator.client.upgrade_status()
         if (
-            self._upgrade_started is not None
-            and now - self._upgrade_started < UPGRADE_TIMEOUT
-            and (not status or status.get("status") in ("running", "error"))
+            generation != self._upgrade_status_generation
+            or self._upgrade_started is None
+        ):
+            return
+
+        upgrade_started = self._upgrade_started
+        if now - upgrade_started >= UPGRADE_TIMEOUT:
+            status = None
+        elif self._upgrade_status_polling:
+            return
+        else:
+            self._upgrade_status_polling = True
+            try:
+                status = await self.coordinator.client.upgrade_status()
+            except (OPNsenseConnectionError, OPNsenseTimeoutError) as err:
+                if dt_util.utcnow() - upgrade_started < UPGRADE_TIMEOUT:
+                    _LOGGER.debug("Unable to poll OPNsense upgrade status: %s", err)
+                    return
+                status = None
+            finally:
+                self._upgrade_status_polling = False
+
+            if (
+                generation != self._upgrade_status_generation
+                or self._upgrade_started is None
+            ):
+                return
+
+        if dt_util.utcnow() - upgrade_started < UPGRADE_TIMEOUT and (
+            not status or status.get("status") in ("running", "error")
         ):
             return
 
@@ -255,8 +288,12 @@ class OPNsenseFirmwareUpdate(
                     self.async_write_ha_state()
             if response and response.get("status") == "ok":
                 self._upgrade_started = dt_util.utcnow()
+                self._upgrade_status_generation += 1
+                generation = self._upgrade_status_generation
                 self._unsub_upgrade_status = async_track_time_interval(
-                    self.hass, self._async_poll_upgrade_status, UPGRADE_STATUS_INTERVAL
+                    self.hass,
+                    partial(self._async_poll_upgrade_status, generation=generation),
+                    UPGRADE_STATUS_INTERVAL,
                 )
                 self.async_write_ha_state()
                 return

@@ -108,18 +108,8 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             firmware_info = await self.client.get_firmware_update_info()
         except OPNsensePrivilegeMissing:
-            ir.async_create_issue(
-                self.hass,
-                self.entry.domain,
-                get_firmware_privilege_issue_id(self.entry.entry_id),
-                is_fixable=False,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="firmware_privilege_missing",
-                translation_placeholders={
-                    "url": self.entry.data[CONF_URL],
-                },
-            )
+            self.entry.runtime_data.firmware_privilege_missing = True
+            self._create_firmware_privilege_issue()
             return {}
         except (OPNsenseConnectionError, OPNsenseTimeoutError) as err:
             raise UpdateFailed(
@@ -127,9 +117,26 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         if firmware_info is None:
             raise UpdateFailed("No firmware information returned by OPNsense")
+        if not firmware_info and self.entry.runtime_data.firmware_privilege_missing:
+            self._create_firmware_privilege_issue()
+            return {}
+        self.entry.runtime_data.firmware_privilege_missing = False
         ir.async_delete_issue(
             self.hass,
             self.entry.domain,
             get_firmware_privilege_issue_id(self.entry.entry_id),
         )
         return dict(firmware_info)
+
+    def _create_firmware_privilege_issue(self) -> None:
+        """Create a repair when the API user lacks firmware privileges."""
+        ir.async_create_issue(
+            self.hass,
+            self.entry.domain,
+            get_firmware_privilege_issue_id(self.entry.entry_id),
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="firmware_privilege_missing",
+            translation_placeholders={"url": self.entry.data[CONF_URL]},
+        )
