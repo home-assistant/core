@@ -321,8 +321,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload SpaceAPI config entry data."""
-    if hass.data.get(DATA_SPACEAPI) == entry.data:
-        hass.data.pop(DATA_SPACEAPI)
+hass.data.pop(DATA_SPACEAPI, None)
     return True
 
 

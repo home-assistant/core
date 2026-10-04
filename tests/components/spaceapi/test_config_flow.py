@@ -193,8 +193,10 @@ async def test_v15_removes_deprecated_fields(
     } | {
         "optional": {
             "address": "Somewhere",
+            "contact_details": old_config["optional"]["contact_details"],
             "icon_open": "https://example.com/open.png",
             "icon_closed": "https://example.com/closed.png",
+            "spacefed": old_config["optional"]["spacefed"],
         },
     }
     result = await hass.config_entries.flow.async_configure(

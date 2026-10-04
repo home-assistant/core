@@ -66,7 +66,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
@@ -754,6 +754,15 @@ def _mock_ble_parent(vehicle: AsyncMock) -> MagicMock:
     return parent
 
 
+def _link_calls(vehicle: AsyncMock) -> list[str]:
+    """Return the vehicle calls that open, use or close the BLE link, in order."""
+    return [
+        name
+        for name, _, _ in vehicle.mock_calls
+        if name in {"connect", "handshakeVehicleSecurity", "pair", "disconnect"}
+    ]
+
+
 async def _setup_account_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Set up an account entry with no vehicle subentry."""
     entry = mock_config_entry()
@@ -905,6 +914,12 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "instructions"
+        # The link is not held while the form waits on the user.
+        assert _link_calls(vehicle) == [
+            "connect",
+            "handshakeVehicleSecurity",
+            "disconnect",
+        ]
 
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
@@ -921,7 +936,16 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert len(subentries) == 1
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
-    vehicle.pair.assert_awaited_once()
+    # pair() and the follow-up handshake each reconnect on demand and disconnect after.
+    assert _link_calls(vehicle) == [
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+        "pair",
+        "disconnect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+    ]
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -1079,8 +1103,15 @@ async def test_subentry_authorize_failure(
     assert result["step_id"] == "instructions"
     assert result["errors"] == {"base": expected}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
-    # pair() is a single bounded op; it is never re-sent.
-    vehicle.pair.assert_awaited_once()
+    # pair() is a single bounded op; it is never re-sent, and its link is dropped
+    # before the form is re-shown.
+    assert _link_calls(vehicle) == [
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+        "pair",
+        "disconnect",
+    ]
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -1111,7 +1142,13 @@ async def test_subentry_authorize_unexpected_error_disconnects(
         with pytest.raises(ValueError, match="boom"):
             await hass.config_entries.subentries.async_configure(result["flow_id"], {})
 
-    vehicle.disconnect.assert_awaited_once()
+    assert _link_calls(vehicle) == [
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+        "pair",
+        "disconnect",
+    ]
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
@@ -1178,8 +1215,18 @@ async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> 
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert len(subentries) == 1
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
-    assert vehicle.pair.await_count == 2
-    vehicle.disconnect.assert_awaited_once()
+    # The retry runs on a new link: the failed attempt disconnected first.
+    assert _link_calls(vehicle) == [
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+        "pair",
+        "disconnect",
+        "pair",
+        "disconnect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1229,8 +1276,16 @@ async def test_subentry_handshake_error_recovers(
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert len(subentries) == 1
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
-    # Both the failed and successful attempts disconnected; the disconnect error is swallowed.
-    assert vehicle.disconnect.await_count == 2
+    # The retry connects afresh after the failed attempt disconnected; the disconnect
+    # error is swallowed.
+    assert _link_calls(vehicle) == [
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+    ]
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -1272,8 +1327,65 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert cancelled.is_set()
-    vehicle.disconnect.assert_awaited_once()
+    # The cancelled pair task owns the disconnect, so async_remove must not add a second one.
+    assert _link_calls(vehicle) == [
+        "connect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+        "pair",
+        "disconnect",
+    ]
     # An abandoned pairing never creates a subentry.
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_abandoned_during_connect_disconnects(
+    hass: HomeAssistant,
+) -> None:
+    """Closing the dialog while connect is in flight still drops the link it opens."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    connecting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _connect() -> None:
+        connecting.set()
+        await release.wait()
+
+    vehicle.connect = AsyncMock(side_effect=_connect)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        flow_id = result["flow_id"]
+        configure = hass.async_create_task(
+            hass.config_entries.subentries.async_configure(flow_id, {})
+        )
+        await connecting.wait()
+
+        hass.config_entries.subentries.async_abort(flow_id)
+        release.set()
+        with pytest.raises(UnknownFlow):
+            await configure
+        await hass.async_block_till_done()
+
+    # The abort's disconnect ran before connect finished, so the step itself must
+    # close the link that connect then opened.
+    assert _link_calls(vehicle) == [
+        "connect",
+        "disconnect",
+        "handshakeVehicleSecurity",
+        "disconnect",
+    ]
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
@@ -1432,6 +1544,9 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    schema = result["data_schema"].schema
+    assert next(iter(schema)) == CONF_VIN
+    assert schema[CONF_VIN].container == {VIN: "Test"}
 
     # async_schedule_reload is left unpatched so the real reload runs here with the
     # committed BLE address; keep the setup-time Bluetooth mocks active so it neither
