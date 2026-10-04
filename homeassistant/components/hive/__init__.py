@@ -30,10 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     hive_config = dict(entry.data)
     hive = Hive(web_session)
 
+    # Keep using the user configured interval. For new setups
+    # a custom interval cannot be configured and defaults to 120s
     hive_config["options"] = {}
     hive_config["options"].update(
         {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
     )
+
     entry.runtime_data = hive
 
     try:
