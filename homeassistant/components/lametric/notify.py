@@ -12,6 +12,7 @@ from demetriek import (
     NotificationSound,
     Simple,
     Sound,
+    SoundURL,
 )
 
 from homeassistant.components.notify import (
@@ -26,10 +27,22 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.enum import try_parse_enum
 
-from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND, DOMAIN
+from .const import (
+    CONF_CYCLES,
+    CONF_ICON_TYPE,
+    CONF_PRIORITY,
+    CONF_SOUND,
+    CONF_SOUND_URL,
+    DOMAIN,
+)
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
-from .helpers import has_audio, lametric_exception_handler
+from .helpers import (
+    async_resolve_sound_url,
+    has_audio,
+    lametric_exception_handler,
+    media_content_id,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -95,7 +108,7 @@ class LaMetricNotificationService(BaseNotificationService):
         if not (data := kwargs.get(ATTR_DATA)):
             data = {}
 
-        sound = None
+        builtin_sound: Sound | None = None
         if CONF_SOUND in data:
             snd: AlarmSound | NotificationSound | None
             if (snd := try_parse_enum(AlarmSound, data[CONF_SOUND])) is None and (
@@ -106,7 +119,17 @@ class LaMetricNotificationService(BaseNotificationService):
                     translation_key="unknown_sound",
                     translation_placeholders={"sound": str(data[CONF_SOUND])},
                 )
-            sound = Sound(sound=snd, category=None)
+            builtin_sound = Sound(sound=snd, category=None)
+
+        # A built-in sound given as well plays when the URL cannot be fetched.
+        sound: Sound | SoundURL | None = builtin_sound
+        if CONF_SOUND_URL in data:
+            sound = SoundURL(
+                url=await async_resolve_sound_url(
+                    self.hass, media_content_id(data[CONF_SOUND_URL])
+                ),
+                fallback=builtin_sound,
+            )
 
         # Leave the sound out for a device that cannot play it, rather than have
         # it refuse the whole notification.

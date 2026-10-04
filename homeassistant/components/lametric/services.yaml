@@ -64,6 +64,12 @@ chart:
             - "wind"
             - "wind_short"
           translation_key: sound
+    sound_url: &sound_url
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/mpeg
     cycles: &cycles
       required: false
       default: 1
@@ -106,6 +112,7 @@ message:
       selector:
         text:
     sound: *sound
+    sound_url: *sound_url
     cycles: *cycles
     icon_type: *icon_type
     priority: *priority
