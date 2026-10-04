@@ -137,22 +137,45 @@ NETWORK_URL = (
 )
 
 
+def controller_error(msg: str) -> dict[str, Any]:
+    """Return a controller error response with the message code."""
+    return {
+        "json": {"meta": {"rc": "error", "msg": msg}, "data": []},
+        "headers": {"content-type": CONTENT_TYPE_JSON},
+    }
+
+
 @pytest.mark.parametrize("network_payload", [WAN_NETWORKS])
 @pytest.mark.parametrize(
-    ("response", "expected_reason"),
+    ("entity_id", "response", "expected_translation_key", "expected_placeholders"),
     [
         pytest.param(
-            {
-                "json": {"meta": {"rc": "error", "msg": "api.err.Unknown"}, "data": []},
-                "headers": {"content-type": CONTENT_TYPE_JSON},
-            },
-            "api.err.Unknown",
+            FAILOVER_PRIORITY_ENTITY_ID,
+            controller_error("api.err.Unknown"),
+            "action_request_rejected",
+            {"reason": "api.err.Unknown"},
             id="controller_error",
         ),
         pytest.param(
+            FAILOVER_PRIORITY_ENTITY_ID,
             {"status": HTTPStatus.BAD_GATEWAY},
-            f"Call {NETWORK_URL} received 502 bad gateway",
+            "action_request_rejected",
+            {"reason": f"Call {NETWORK_URL} received 502 bad gateway"},
             id="transport_error",
+        ),
+        pytest.param(
+            FAILOVER_PRIORITY_ENTITY_ID,
+            controller_error("api.err.WanFailOverPriorityAlreadyExists"),
+            "wan_failover_priority_conflict",
+            None,
+            id="duplicate_failover_priority",
+        ),
+        pytest.param(
+            LOAD_BALANCE_WEIGHT_ENTITY_ID,
+            controller_error("api.err.WanFailOverPriorityAlreadyExists"),
+            "action_request_rejected",
+            {"reason": "api.err.WanFailOverPriorityAlreadyExists"},
+            id="duplicate_failover_priority_on_weight",
         ),
     ],
 )
@@ -160,10 +183,12 @@ NETWORK_URL = (
 async def test_set_value_request_failed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    entity_id: str,
     response: dict[str, Any],
-    expected_reason: str,
+    expected_translation_key: str,
+    expected_placeholders: dict[str, str] | None,
 ) -> None:
-    """Verify a failing request raises a translated error with the reason."""
+    """Verify a failing request raises a translated error."""
     aioclient_mock.clear_requests()
     aioclient_mock.put(NETWORK_URL, **response)
 
@@ -171,8 +196,8 @@ async def test_set_value_request_failed(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: FAILOVER_PRIORITY_ENTITY_ID, ATTR_VALUE: 2},
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 2},
             blocking=True,
         )
-    assert exc_info.value.translation_key == "action_request_rejected"
-    assert exc_info.value.translation_placeholders == {"reason": expected_reason}
+    assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_placeholders == expected_placeholders

@@ -7,6 +7,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, override
 
+import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.networks import Networks
 from aiounifi.models.api import ApiItem
@@ -19,15 +20,18 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
+from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_wan_device_info_fn,
     wan_supported_fn,
 )
+from .errors import controller_error_reason
 from .hub import UnifiHub
 
 PARALLEL_UPDATES = 1
@@ -36,6 +40,25 @@ PARALLEL_UPDATES = 1
 # duplicates itself, so the range is kept generous instead of second guessing it.
 MAX_FAILOVER_PRIORITY = 10
 MAX_LOAD_BALANCE_WEIGHT = 99
+
+ERROR_DUPLICATE_FAILOVER_PRIORITY = "api.err.WanFailOverPriorityAlreadyExists"
+
+
+async def async_wan_failover_priority_control_fn(
+    hub: UnifiHub, obj_id: str, value: float
+) -> None:
+    """Control failover priority of WAN network."""
+    try:
+        await hub.api.networks.save(
+            hub.api.networks[obj_id], wan_failover_priority=int(value)
+        )
+    except aiounifi.AiounifiException as err:
+        if controller_error_reason(err) == ERROR_DUPLICATE_FAILOVER_PRIORITY:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="wan_failover_priority_conflict",
+            ) from err
+        raise
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,9 +81,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiNumberEntityDescription, ...] = (
         native_max_value=MAX_FAILOVER_PRIORITY,
         native_step=1,
         api_handler_fn=lambda api: api.networks,
-        control_fn=lambda hub, obj_id, value: hub.api.networks.save(
-            hub.api.networks[obj_id], wan_failover_priority=int(value)
-        ),
+        control_fn=async_wan_failover_priority_control_fn,
         device_info_fn=async_wan_device_info_fn,
         object_fn=lambda api, obj_id: api.networks[obj_id],
         supported_fn=wan_supported_fn(lambda network: network.wan_failover_priority),

@@ -230,7 +230,7 @@
       "message": "Failed to remove clients from UniFi Network"
     },
     "wan_failover_priority_conflict": {
-      "message": "UniFi Network rejected the WAN failover order because another WAN already uses one of the requested priorities"
+      "message": "Another WAN already uses this failover priority. Move that WAN to an unused priority first, then try again"
     },
     "wan_load_balance_weighted_required": {
       "message": "At least one WAN must use weighted load balancing"
