@@ -22,6 +22,9 @@
   },
   "entity": {
     "sensor": {
+      "glucose_reading_time": {
+        "name": "Glucose reading time"
+      },
       "glucose_trend": {
         "name": "Glucose trend",
         "state": {
