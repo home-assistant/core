@@ -4,11 +4,11 @@ import asyncio
 import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
-from dataclasses import dataclass, replace
+from dataclasses import replace
 import datetime
 import mimetypes
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -55,6 +55,7 @@ from .const import (
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
+    ERROR_GETTING_RESPONSE,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -67,16 +68,13 @@ from .const import (
     RECOMMENDED_TOP_P,
     TIMEOUT_MILLIS,
 )
+from .helpers import ContentDetails, PartDetails
 
 if TYPE_CHECKING:
     from . import GoogleGenerativeAIConfigEntry
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
-
-ERROR_GETTING_RESPONSE = (
-    "Sorry, I had a problem getting a response from Google Generative AI."
-)
 
 
 SUPPORTED_SCHEMA_KEYS = {
@@ -290,30 +288,6 @@ def _create_google_tool_response_content(
         role="user",
         parts=_create_google_tool_response_parts(content),
     )
-
-
-@dataclass(slots=True)
-class PartDetails:
-    """Additional data for a content part."""
-
-    part_type: Literal["text", "thought", "function_call"]
-    """The part type for which this data is relevant for."""
-
-    index: int
-    """Start position or number of the tool."""
-
-    length: int = 0
-    """Length of the relevant data."""
-
-    thought_signature: str | None = None
-    """Base64 encoded thought signature, if available."""
-
-
-@dataclass(slots=True)
-class ContentDetails:
-    """Native data for AssistantContent."""
-
-    part_details: list[PartDetails]
 
 
 def _convert_content(
