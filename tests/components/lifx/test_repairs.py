@@ -74,3 +74,23 @@ async def test_removing_entry_deletes_invalid_serial_issue(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_invalid_serial_fix_flow_entry_already_removed(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test confirming the repair after the entry was deleted by hand."""
+    assert await async_setup_component(hass, "repairs", {})
+    entry = await _setup_malformed_entry(hass)
+    issue_id = f"invalid_serial_{entry.entry_id}"
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert data["step_id"] == "confirm"
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+
+    assert data["type"] == "create_entry"

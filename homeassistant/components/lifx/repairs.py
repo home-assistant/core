@@ -18,7 +18,11 @@ class InvalidSerialRepairFlow(ConfirmRepairFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Remove the entry once the user confirms."""
-        if user_input is not None:
+        # The entry may have been deleted by hand while this flow was open
+        if (
+            user_input is not None
+            and self.hass.config_entries.async_get_entry(self.entry_id) is not None
+        ):
             await self.hass.config_entries.async_remove(self.entry_id)
         return await super().async_step_confirm(user_input)
 
