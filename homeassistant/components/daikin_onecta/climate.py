@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -47,6 +48,13 @@ HOMEKIT_FIXED_FAN_MODE_ALIASES = {
     FAN_MIDDLE: "2",
     FAN_MEDIUM: "3",
     FAN_HIGH: "5",
+}
+
+CLIMATE_ENTITY_DESCRIPTIONS = {
+    "roomTemperature": ClimateEntityDescription(
+        key="room_temperature",
+        translation_key="roomtemperature",
+    ),
 }
 
 DAIKIN_HVAC_TO_HA = {
@@ -148,8 +156,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             "name": self._device.name,
         }
         self._attr_has_entity_name = True
-        if setpoint == "roomTemperature":
-            self._attr_translation_key = "roomtemperature"
+        if entity_description := CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint):
+            self.entity_description = entity_description
         self._device.fill_gateway_device_info(self._attr_device_info)
         self.update_state()
 
