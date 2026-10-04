@@ -12,33 +12,57 @@ from aioamazondevices.exceptions import (
     CannotRetrieveData,
 )
 from aioamazondevices.structures import AmazonSaveDataConfig
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
-STEP_RECONFIGURE = vol.Schema(
+STEP_RECONFIGURE = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Required(CONF_CODE): TextSelector(
+            TextSelectorConfig(autocomplete="one-time-code")
+        ),
     }
 )
 

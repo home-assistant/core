@@ -2,9 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+import probatio
 import pytest
 from switchbot_api import SwitchBotAPI
-import voluptuous as vol
 
 from homeassistant.components.switchbot_cloud.const import (
     AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
@@ -74,7 +74,7 @@ async def test_upload_image_no_device_id_raises(
 ) -> None:
     """Test service raises when no device_id is provided."""
     await _setup(hass, mock_list_devices, mock_get_status)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,

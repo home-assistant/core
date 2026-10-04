@@ -82,6 +82,9 @@
       "sleep_schedule": {
         "name": "Sleep schedule"
       },
+      "starlink_positioning_exclusive": {
+        "name": "Use Starlink positioning exclusively"
+      },
       "stowed": {
         "name": "Stowed"
       }

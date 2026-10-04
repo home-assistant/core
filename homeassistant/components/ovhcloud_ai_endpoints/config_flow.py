@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -31,7 +31,9 @@ from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -74,9 +76,9 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -197,9 +199,9 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         ]
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": existing.get(
@@ -208,7 +210,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                         default=selected_apis,
                     ): SelectSelector(
@@ -254,16 +256,16 @@ class ConversationFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_MODEL): SelectSelector(
+                    probatio.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             mode=SelectSelectorMode.DROPDOWN,
                             sort=True,
                         ),
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PROMPT,
                         description={
                             "suggested_value": self.options.get(
@@ -272,7 +274,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                             )
                         },
                     ): TemplateSelector(),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LLM_HASS_API,
                         default=self.options.get(
                             CONF_LLM_HASS_API,

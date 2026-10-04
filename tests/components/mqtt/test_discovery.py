@@ -26,7 +26,7 @@ from homeassistant.components.mqtt.discovery import (
     MQTTDiscoveryPayload,
     async_start,
 )
-from homeassistant.components.mqtt.entity import async_removed_from_device
+from homeassistant.components.mqtt.entity import MqttEntity, async_removed_from_device
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.mqtt.schemas import (
     DEVICE_DISCOVERY_SCHEMA,
@@ -1701,6 +1701,66 @@ async def test_rapid_reconfigure(
     assert events[2].data["new_state"].attributes["friendly_name"] == "Wine"
 
 
+async def test_discovery_update_queued_until_initial_state(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test a queued discovery update is applied only after the initial state exists.
+
+    The discovery is acknowledged caller-side, after async_add_entities returns,
+    so an update queued for the same discovery hash while the entity add is still
+    in progress must not drain into an entity that has no state yet.
+    """
+    await mqtt_mock_entry()
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    add_started = asyncio.Event()
+    allow_add = asyncio.Event()
+    original_async_added_to_hass = MqttEntity.async_added_to_hass
+
+    async def _blocked_async_added_to_hass(self: MqttEntity) -> None:
+        add_started.set()
+        await allow_add.wait()
+        await original_async_added_to_hass(self)
+
+    with patch.object(MqttEntity, "async_added_to_hass", _blocked_async_added_to_hass):
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/binary_sensor/bla/config",
+            '{ "name": "Beer", "state_topic": "test-topic" }',
+        )
+        # Wait until the first entity add is blocked before its state is written
+        await add_started.wait()
+
+        # A second payload for the same discovery hash is queued while the add
+        # is still in progress
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/binary_sensor/bla/config",
+            '{ "name": "Milk", "state_topic": "test-topic" }',
+        )
+
+        # The initial state does not exist yet and the queued update is not applied
+        assert hass.states.get("binary_sensor.beer") is None
+        assert not events
+
+        allow_add.set()
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Milk"
+
+    # The initial state was written first, then the queued update was applied
+    assert len(events) == 2
+    assert events[0].data["entity_id"] == "binary_sensor.beer"
+    assert events[0].data["old_state"] is None
+    assert events[0].data["new_state"].attributes["friendly_name"] == "Beer"
+    assert events[1].data["entity_id"] == "binary_sensor.beer"
+    assert events[1].data["old_state"].attributes["friendly_name"] == "Beer"
+    assert events[1].data["new_state"].attributes["friendly_name"] == "Milk"
+
+
 async def test_duplicate_removal(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -2108,7 +2168,7 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
     assert mqtt_device_entry is not None
-    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert mqtt_device_entry.config_entry_id == mqtt_config_entry.entry_id
     assert (
         _get_device_for_config_entry(
             device_registry,
@@ -2137,7 +2197,7 @@ async def test_cleanup_device_multiple_config_entries(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entry_id == config_entry.entry_id
     assert entity_entry is None
 
     # Verify state is removed
@@ -2233,7 +2293,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
     assert mqtt_device_entry is not None
-    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert mqtt_device_entry.config_entry_id == mqtt_config_entry.entry_id
     assert (
         _get_device_for_config_entry(
             device_registry,
@@ -2262,7 +2322,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entry_id == config_entry.entry_id
     assert entity_entry is None
 
     # Verify state is removed
@@ -3040,6 +3100,49 @@ async def test_clean_up_registry_monitoring(
     # The monitoring should be cleared
     await help_test_unload_config_entry(hass)
     assert len(hooks) == 0
+
+
+async def test_registry_hook_installed_when_readd_after_rename_aborts(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the registry cleanup hook is installed when an aborted re-add follows a rename.
+
+    Renaming an entity_id makes core remove and re-add the same entity object.
+    _added_to_hass is set on a successful add and must be reset on every add
+    attempt, otherwise an aborted re-add would see the stale value and skip
+    installing the registry hook while the registry entry still exists, leaking
+    the retained discovery topic when the entity is later removed.
+    """
+    await mqtt_mock_entry()
+    hooks: dict = hass.data["mqtt"].discovery_registry_hooks
+    config = {
+        "name": "milk",
+        "state_topic": "test-topic",
+        "unique_id": "very_unique",
+    }
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.milk") is not None
+    assert len(hooks) == 0
+
+    async def _raise_on_readd(self: MqttEntity) -> None:
+        raise ValueError("Simulated re-add failure")
+
+    # Renaming the entity_id triggers a remove and re-add of the same object;
+    # the patched hook aborts the re-add.
+    with patch.object(MqttEntity, "async_added_to_hass", _raise_on_readd):
+        entity_registry.async_update_entity(
+            "sensor.milk", new_entity_id="sensor.renamed_milk"
+        )
+        await hass.async_block_till_done()
+
+    # The registry entry survives the aborted re-add, so its retained discovery
+    # topic must be monitored for cleanup.
+    assert entity_registry.async_get("sensor.renamed_milk") is not None
+    assert len(hooks) == 1
+    assert ("sensor", "bla") in hooks
 
 
 async def test_unique_id_collission_has_priority(

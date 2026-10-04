@@ -3,6 +3,9 @@
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
 from pylint_home_assistant.checkers.class_module import HassEnforceClassModule
+from pylint_home_assistant.checkers.config_flow.no_connection_class import (
+    HassEnforceConfigFlowNoConnectionClassChecker,
+)
 from pylint_home_assistant.checkers.config_flow.no_name import (
     HassEnforceConfigFlowNoNameChecker,
 )
@@ -105,6 +108,17 @@ def enforce_serial_port_selector_usb_checker_fixture(
     """Fixture to provide a serial_port_selector usb dependency checker."""
     clear_caches()
     checker = HassEnforceSerialPortSelectorUsbChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="enforce_config_flow_no_connection_class_checker")
+def enforce_config_flow_no_connection_class_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a config_flow_no_connection_class checker."""
+    clear_caches()
+    checker = HassEnforceConfigFlowNoConnectionClassChecker(linter)
     checker.module = "homeassistant.components.pylint_test"
     return checker
 

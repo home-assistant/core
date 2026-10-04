@@ -692,6 +692,8 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfEnergy.MEGA_CALORIE, 0.011622222, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.GIGA_CALORIE, 10000, UnitOfEnergy.MEGA_CALORIE),
         (10, UnitOfEnergy.GIGA_CALORIE, 11.622222, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_WATT_HOUR, 0.3412956, UnitOfEnergy.THERM),
+        (10, UnitOfEnergy.THERM, 293.001111, UnitOfEnergy.KILO_WATT_HOUR),
     ],
     EnergyDistanceConverter: [
         (

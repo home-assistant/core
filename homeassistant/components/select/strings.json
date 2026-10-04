@@ -50,6 +50,9 @@
     }
   },
   "exceptions": {
+    "no_options": {
+      "message": "Entity {entity_id} has no options to select from."
+    },
     "not_valid_option": {
       "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
     }

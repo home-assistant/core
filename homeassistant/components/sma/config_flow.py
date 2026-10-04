@@ -1,17 +1,18 @@
 """Config flow for the sma integration."""
 
 from collections.abc import Mapping
+import dataclasses
 import logging
+import re
 from typing import Any, override
 
-import attrs
+import probatio
 from pysma import (
     SmaAuthenticationException,
     SmaConnectionException,
     SmaReadException,
     SMAWebConnect,
 )
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -38,16 +39,19 @@ from .const import CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Example hostnames: sma3015638141, sma3015598606-2856
+HOSTNAME_SERIAL = re.compile(r"^sma-?(\d+)(?:-|$)", re.IGNORECASE)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -57,12 +61,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = vol.Schema(
+STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -93,10 +97,12 @@ async def validate_input(
 
     # new_session raises SmaAuthenticationException on failure
     await sma.new_session()
-    device_info = await sma.device_info()
-    await sma.close_session()
+    try:
+        device_info = await sma.device_info()
+    finally:
+        await sma.close_session()
 
-    return attrs.asdict(device_info)
+    return dataclasses.asdict(device_info)
 
 
 class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -108,11 +114,11 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._data: dict[str, Any] = {
-            CONF_HOST: vol.UNDEFINED,
+            CONF_HOST: probatio.UNDEFINED,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
             CONF_GROUP: GROUPS[0],
-            CONF_PASSWORD: vol.UNDEFINED,
+            CONF_PASSWORD: probatio.UNDEFINED,
         }
         self._discovery_data: dict[str, Any] = {}
 
@@ -243,9 +249,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -274,31 +280,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_MAC],
         )
 
-        existing_entries_with_host = [
-            entry
-            for entry in self._async_current_entries(include_ignore=False)
-            if entry.data.get(CONF_HOST) == self._data[CONF_HOST]
-            and not entry.data.get(CONF_MAC)
-        ]
-
-        # If we have an existing entry with the same host but no MAC address,
-        # we update the entry with the MAC address and reload it.
-        if existing_entries_with_host:
-            entry = existing_entries_with_host[0]
-            self.async_update_reload_and_abort(
-                entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
-            )
-
-        # Finally, check if the hostname
-        # (which represents the SMA serial number) is unique
-        serial_number = discovery_info.hostname.lower()
-        # Example hostname: sma12345678-01
-        # Remove 'sma' prefix and strip everything after the dash (including the dash)
-        if serial_number.startswith("sma"):
-            serial_number = serial_number.removeprefix("sma")
-        serial_number = serial_number.split("-", 1)[0]
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
+        if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
+            return self.async_abort(reason="not_supported")
+        await self.async_set_unique_id(match.group(1))
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._data[CONF_HOST], CONF_MAC: self._data[CONF_MAC]}
+        )
 
         return await self.async_step_discovery_confirm()
 

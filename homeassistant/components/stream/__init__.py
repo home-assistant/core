@@ -25,7 +25,7 @@ import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final, cast
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
@@ -153,7 +153,7 @@ def _convert_stream_options(
     pyav_options: dict[str, str] = {}
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         raise HomeAssistantError(f"Invalid stream options: {exc}") from exc
 
     if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
@@ -213,23 +213,23 @@ def create_stream(
     return stream
 
 
-DOMAIN_SCHEMA = vol.Schema(
+DOMAIN_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LL_HLS, default=True): cv.boolean,
-        vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
-            cv.positive_float, vol.Range(min=2, max=10)
+        probatio.Optional(CONF_LL_HLS, default=True): cv.boolean,
+        probatio.Optional(CONF_SEGMENT_DURATION, default=6): probatio.All(
+            cv.positive_float, probatio.Range(min=2, max=10)
         ),
-        vol.Optional(CONF_PART_DURATION, default=1): vol.All(
-            cv.positive_float, vol.Range(min=0.2, max=1.5)
+        probatio.Optional(CONF_PART_DURATION, default=1): probatio.All(
+            cv.positive_float, probatio.Range(min=0.2, max=1.5)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: DOMAIN_SCHEMA,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -625,10 +625,10 @@ def _should_retry() -> bool:
     return True
 
 
-STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
+STREAM_OPTIONS_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
-        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
-        vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        probatio.Optional(CONF_RTSP_TRANSPORT): probatio.In(RTSP_TRANSPORTS),
+        probatio.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
+        probatio.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
     }
 )
