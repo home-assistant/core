@@ -690,7 +690,7 @@ async def test_reconfigure(hass: HomeAssistant, ics_content: str) -> None:
 
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
     assert get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == (
         CALENDER_URL
     )
@@ -744,7 +744,7 @@ async def test_reconfigure_errors(
         result["flow_id"], {CONF_URL: NEW_CALENDAR_URL, CONF_VERIFY_SSL: True}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
     assert get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == (
         NEW_CALENDAR_URL
@@ -786,6 +786,26 @@ async def test_reconfigure_duplicate_url(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_URL] == CALENDER_URL
+
+
+@respx.mock
+async def test_reconfigure_same_url(
+    hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
+) -> None:
+    """Test reconfigure can keep the URL and change only SSL verification."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    await setup_integration(hass, config_entry)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: CALENDER_URL, CONF_VERIFY_SSL: False}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_URL] == CALENDER_URL
+    assert config_entry.data[CONF_VERIFY_SSL] is False
 
 
 @respx.mock

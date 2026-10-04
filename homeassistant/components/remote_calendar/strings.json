@@ -25,17 +25,6 @@
         },
         "description": "The calendar requires authentication."
       },
-      "reconfigure": {
-        "data": {
-          "url": "[%key:component::remote_calendar::config::step::user::data::url%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "url": "[%key:component::remote_calendar::config::step::user::data_description::url%]",
-          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
-        },
-        "description": "Update the URL of the remote calendar."
-      },
       "user": {
         "data": {
           "calendar_name": "Calendar name",
@@ -47,7 +36,7 @@
           "url": "The URL of the remote calendar.",
           "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
         },
-        "description": "Please choose a name for the calendar to be imported"
+        "description": "Enter the details of the remote calendar."
       }
     }
   },

@@ -9,6 +9,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -54,48 +55,41 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.data: dict[str, Any] = {}
 
-    @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-        self._async_abort_entries_match(
-            {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
-        )
-        user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
-        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-        return await self._async_validate_calendar(
-            "user", STEP_USER_DATA_SCHEMA, user_input
-        )
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the calendar URL."""
-        entry = self._get_reconfigure_entry()
+        return await self.async_step_user()
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step, also used to reconfigure the calendar URL."""
+        entry: ConfigEntry | None = None
+        data_schema = STEP_USER_DATA_SCHEMA
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            data_schema = STEP_RECONFIGURE_DATA_SCHEMA
         if user_input is None:
             return self.async_show_form(
-                step_id="reconfigure",
+                step_id="user",
                 data_schema=self.add_suggested_values_to_schema(
-                    STEP_RECONFIGURE_DATA_SCHEMA, entry.data
+                    data_schema, entry.data if entry else {}
                 ),
             )
-        user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
-        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-        return await self._async_validate_calendar(
-            "reconfigure",
-            STEP_RECONFIGURE_DATA_SCHEMA,
-            {CONF_CALENDAR_NAME: entry.data[CONF_CALENDAR_NAME], **user_input},
-        )
 
-    async def _async_validate_calendar(
-        self, step_id: str, data_schema: probatio.Schema, user_input: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Fetch and parse the calendar, then finish or ask for credentials."""
+        user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
+        if entry:
+            user_input[CONF_CALENDAR_NAME] = entry.data[CONF_CALENDAR_NAME]
+            if user_input[CONF_URL] != entry.data[CONF_URL]:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+        else:
+            self._async_abort_entries_match(
+                {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
+            )
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
         errors: dict[str, str] = {}
         client = get_async_client(self.hass, verify_ssl=user_input[CONF_VERIFY_SSL])
         try:
@@ -127,7 +121,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self._async_finish(user_input)
 
         return self.async_show_form(
-            step_id=step_id,
+            step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
         )
