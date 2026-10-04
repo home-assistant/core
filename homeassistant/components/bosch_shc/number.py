@@ -59,10 +59,10 @@ def _power_threshold_set_value_fn(
     device.power_threshold = value
 
 
-async def _enter_duration_set_value_fn(
+def _enter_duration_set_value_fn(
     device: SHCSmartPlug | SHCSmartPlugCompact, value: float
 ) -> None:
-    await device.async_set_enter_duration_seconds(round(value))
+    device.enter_duration_seconds = round(value)
 
 
 IMPULSE_LENGTH = "impulse_length"

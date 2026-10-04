@@ -309,7 +309,7 @@ async def test_smart_plug_enter_duration_set_value(
         {ATTR_ENTITY_ID: ENTER_DURATION_ENTITY_ID, ATTR_VALUE: 300},
         blocking=True,
     )
-    device.async_set_enter_duration_seconds.assert_awaited_once_with(300)
+    assert device.enter_duration_seconds == 300
 
 
 @pytest.mark.parametrize(
