@@ -52,7 +52,7 @@ from homeassistant.components.marketplace.repositories.plugin import PluginRepos
 from homeassistant.components.marketplace.repositories.theme import ThemeRepository
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.loader import IntegrationNotLoaded
 
 from . import (
@@ -65,7 +65,12 @@ from . import (
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import WebSocketGenerator
 
@@ -1146,6 +1151,7 @@ async def test_update_repository(
     assert repository.data.installed_version == category_test_data["version_update"]
 
 
+@pytest.mark.usefixtures("disable_translations_once")
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_uninstall_repository(
     hass: HomeAssistant,
@@ -1171,6 +1177,9 @@ async def test_uninstall_repository(
 
     assert _installed_files(config_dir)
 
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
@@ -1180,6 +1189,9 @@ async def test_uninstall_repository(
     assert repository.data.installed is False
     assert marketplace.repositories.list_installed == []
     assert _installed_files(config_dir) == []
+    assert bool(
+        translation.async_get_cached_translations(hass, "en", "title", "example")
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
 
 
 @pytest.mark.parametrize("github_token", [None])

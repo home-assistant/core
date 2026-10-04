@@ -871,3 +871,89 @@ async def test_english_cache_populated_for_partial_batch_overlap(
     assert translation.async_get_cached_translations(
         hass, "de", "issues", "comp_b"
     ) == {"component.comp_b.issues.detached.title": "B abgetrennt"}
+
+
+@pytest.mark.parametrize("language", ["en", "de"])
+@pytest.mark.parametrize("category", ["title", "entity_component"])
+async def test_invalidate_translations(
+    hass: HomeAssistant, language: str, category: str
+) -> None:
+    """Invalidation removes all categories and languages only for the domain."""
+    for locale in ("en", "de"):
+        await translation.async_get_translations(
+            hass, locale, "title", {"sensor", "light"}
+        )
+    unrelated = translation.async_get_cached_translations(
+        hass, language, category, "light"
+    )
+    original = translation.async_get_cached_translations(
+        hass, language, category, "sensor"
+    )
+    assert original
+    assert unrelated
+
+    translation.async_invalidate_translations(hass, {"sensor"})
+
+    assert (
+        translation.async_get_cached_translations(hass, language, category, "sensor")
+        == {}
+    )
+    assert (
+        translation.async_get_cached_translations(hass, language, category, "light")
+        == unrelated
+    )
+    assert (
+        await translation.async_get_translations(hass, language, category, {"sensor"})
+        == original
+    )
+
+
+async def test_invalidate_translations_during_load(hass: HomeAssistant) -> None:
+    """An older load cannot restore invalidated strings or English fallbacks."""
+    started = asyncio.Event()
+    resume = asyncio.Event()
+
+    async def load_stale(*args: Any) -> dict[str, dict[str, Any]]:
+        started.set()
+        await resume.wait()
+        return {
+            "en": {"sensor": {"title": "Old"}, "light": {"title": "Light"}},
+            "de": {"sensor": {"title": "Alt"}, "light": {"title": "Licht"}},
+        }
+
+    with patch(
+        "homeassistant.helpers.translation._async_get_component_strings",
+        side_effect=load_stale,
+    ) as load:
+        task = hass.async_create_task(
+            translation.async_get_translations(hass, "de", "title", {"sensor", "light"})
+        )
+        await started.wait()
+        translation.async_invalidate_translations(hass, {"sensor"})
+        load.side_effect = None
+        load.return_value = {
+            "en": {"sensor": {"title": "New"}},
+            "de": {"sensor": {"title": "Neu"}},
+        }
+        resume.set()
+        assert await task == {
+            "component.sensor.title": "Neu",
+            "component.light.title": "Licht",
+        }
+        assert load.await_count == 2
+        assert load.call_args.args[2] == {"sensor"}
+
+    assert translation.async_get_cached_translations(hass, "en", "title", "sensor") == {
+        "component.sensor.title": "New"
+    }
+    assert translation.async_get_cached_translations(hass, "en", "title", "light") == {
+        "component.light.title": "Light"
+    }
+
+
+async def test_invalidate_translations_before_first_load(hass: HomeAssistant) -> None:
+    """Invalidating an empty cache leaves subsequent loading functional."""
+    translation.async_invalidate_translations(hass, {"sensor"})
+    assert await translation.async_get_translations(
+        hass, "en", "title", {"sensor"}
+    ) == {"component.sensor.title": "Sensor"}
