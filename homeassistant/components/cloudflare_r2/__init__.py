@@ -50,7 +50,7 @@ async def _async_create_client(data: dict) -> S3Client:
     ).__aenter__()
     try:
         await client.head_bucket(Bucket=data[CONF_BUCKET])
-    except Exception:
+    except BaseException:
         await client.__aexit__(None, None, None)
         raise
     return client
