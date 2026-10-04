@@ -507,11 +507,18 @@ async def get_lock_users(
         if user_data is not None:
             users.append(user_data)
 
-        # Move to next user index
+        # Move to next user index. nextUserIndex is only meaningful for an
+        # occupied slot: it is null at the end of a conformant table, but some
+        # locks also return null for an unoccupied index, which stops the walk
+        # early and hides the users above it. Advance past an empty slot
+        # instead of trusting the index it advertised.
         next_index = _get_attr(get_user_response, "nextUserIndex")
-        if next_index is None or next_index <= current_index:
+        if user_data is None:
+            current_index += 1
+        elif next_index is None or next_index <= current_index:
             break
-        current_index = next_index
+        else:
+            current_index = next_index
 
     return GetLockUsersResult(
         max_users=max_users,
