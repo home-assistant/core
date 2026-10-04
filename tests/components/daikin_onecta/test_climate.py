@@ -43,16 +43,28 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("last_update_success", "device_available", "expected"),
-    [(True, True, True), (False, True, False), (True, False, False)],
+    ("last_update_success", "device_available", "management_point_exists", "expected"),
+    [
+        (True, True, True, True),
+        (False, True, True, False),
+        (True, False, True, False),
+        (True, True, False, False),
+    ],
 )
 def test_climate_availability(
-    last_update_success: bool, device_available: bool, expected: bool
+    last_update_success: bool,
+    device_available: bool,
+    management_point_exists: bool,
+    expected: bool,
 ) -> None:
-    """Climate entities require a successful update and an available device."""
+    """Climate entities require a successful update and present management point."""
     entity = object.__new__(DaikinClimate)
     entity.coordinator = MagicMock(last_update_success=last_update_success)
     entity._device = MagicMock(available=device_available)
+    entity._device.management_point.return_value = (
+        MagicMock() if management_point_exists else None
+    )
+    entity._embedded_id = "zone"
 
     assert entity.available is expected
 

@@ -190,7 +190,11 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     @override
     def available(self) -> bool:
         """Return whether the source device is available."""
-        return super().available and self._device.available
+        return (
+            super().available
+            and self._device.available
+            and self.climate_control() is not None
+        )
 
     def climate_control(self):
         """Return the typed climate-control management point."""
