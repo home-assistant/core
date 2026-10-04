@@ -1,0 +1,11 @@
+{
+  "calls": [
+    {
+      "type": "voip",
+      "direction": "incoming",
+      "number": "023456 XXXX",
+      "length": -1,
+      "date": 1774309693
+    }
+  ]
+}

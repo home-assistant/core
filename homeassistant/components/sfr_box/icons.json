@@ -7,6 +7,11 @@
           "on": "mdi:phone-in-talk"
         }
       }
+    },
+    "event": {
+      "voip_callhistorylist": {
+        "default": "mdi:phone-incoming-outgoing"
+      }
     }
   }
 }
