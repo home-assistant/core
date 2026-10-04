@@ -3,6 +3,7 @@
   "name": "Sense",
   "codeowners": ["@kbickar"],
   "config_flow": true,
+  "dependencies": ["recorder"],
   "dhcp": [
     {
       "hostname": "sense-*",

@@ -1,6 +1,7 @@
 """Support for monitoring a Sense energy sensor."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from functools import partial
 import logging
 
@@ -17,13 +18,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_utc_time_change
 
 from .const import (
     ACTIVE_UPDATE_RATE,
     DOMAIN,
+    PROVISIONAL_IMPORT_MINUTE,
     SENSE_CONNECT_EXCEPTIONS,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_WEBSOCKET_EXCEPTIONS,
+    TREND_UPDATE_MINUTES,
 )
 from .coordinator import SenseRealtimeCoordinator, SenseTrendCoordinator
 
@@ -98,6 +102,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
     realtime_coordinator = SenseRealtimeCoordinator(hass, entry, gateway)
+
+    async def _async_refresh_trends(now: datetime) -> None:
+        await trends_coordinator.async_refresh()
+
+    entry.async_on_unload(
+        async_track_utc_time_change(
+            hass, _async_refresh_trends, minute=TREND_UPDATE_MINUTES, second=0
+        )
+    )
+
+    async def _async_import_provisional_hour(now: datetime) -> None:
+        await trends_coordinator.async_import_provisional_hour()
+
+    entry.async_on_unload(
+        async_track_utc_time_change(
+            hass,
+            _async_import_provisional_hour,
+            minute=PROVISIONAL_IMPORT_MINUTE,
+            second=0,
+        )
+    )
 
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
