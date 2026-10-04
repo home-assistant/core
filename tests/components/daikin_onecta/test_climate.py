@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
+    PRESET_COMFORT,
     PRESET_ECO,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -181,6 +182,48 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
 
     assert fan_speed.current_mode.value == FANMODE_FIXED
     assert fan_speed.modes[FANMODE_FIXED].value == 1
+    coordinator.async_update_listeners.assert_called_once_with()
+
+
+async def test_set_preset_mode_stops_after_failed_disable() -> None:
+    """Do not enable a replacement preset when disabling the old one fails."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(name="Device")
+    coordinator = MagicMock()
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_attr_preset_mode", PRESET_BOOST)
+    entity.coordinator = coordinator
+    entity.update_state = MagicMock()
+    entity._async_disable_preset_mode = AsyncMock(return_value=False)
+    entity._async_enable_preset_mode = AsyncMock()
+
+    with pytest.raises(HomeAssistantError, match="Failed to set the preset mode"):
+        await entity.async_set_preset_mode(PRESET_COMFORT)
+
+    entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
+    entity._async_enable_preset_mode.assert_not_awaited()
+    entity.update_state.assert_not_called()
+    coordinator.async_update_listeners.assert_not_called()
+
+
+async def test_set_preset_mode_publishes_successful_disable() -> None:
+    """Publish a successful preset disable before a replacement fails."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(name="Device")
+    coordinator = MagicMock()
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_attr_preset_mode", PRESET_BOOST)
+    entity.coordinator = coordinator
+    entity.update_state = MagicMock()
+    entity._async_disable_preset_mode = AsyncMock(return_value=True)
+    entity._async_enable_preset_mode = AsyncMock(return_value=False)
+
+    with pytest.raises(HomeAssistantError, match="Failed to set the preset mode"):
+        await entity.async_set_preset_mode(PRESET_COMFORT)
+
+    entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
+    entity._async_enable_preset_mode.assert_awaited_once_with(PRESET_COMFORT)
+    entity.update_state.assert_called_once_with()
     coordinator.async_update_listeners.assert_called_once_with()
 
 

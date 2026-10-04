@@ -876,19 +876,17 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         _LOGGER.debug(
             "Device '%s' request set preset mode %s", self._device.name, preset_mode
         )
-        result = True
-
         if self.preset_mode != PRESET_NONE:
-            result &= await self._async_disable_preset_mode(self.preset_mode)
+            if not await self._async_disable_preset_mode(self.preset_mode):
+                self._raise_command_failed("set the preset mode")
+            self.update_state()
+            self.coordinator.async_update_listeners()
 
         if preset_mode != PRESET_NONE:
-            result &= await self._async_enable_preset_mode(preset_mode)
-
-        if result is True:
-            self._attr_preset_mode = preset_mode
+            if not await self._async_enable_preset_mode(preset_mode):
+                self._raise_command_failed("set the preset mode")
+            self.update_state()
             self.coordinator.async_update_listeners()
-        else:
-            self._raise_command_failed("set the preset mode")
 
     def get_preset_modes(self):
         """Return supported preset modes."""
