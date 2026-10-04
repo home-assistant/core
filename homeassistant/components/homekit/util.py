@@ -59,11 +59,13 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from .const import (
     AUDIO_CODEC_COPY,
     AUDIO_CODEC_OPUS,
+    CONF_ADAPTIVE_LIGHTING,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FLOOR_RGB_COLOR,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -77,9 +79,12 @@ from .const import (
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_MAX_COLOR_TEMP_KELVIN,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
+    CONF_MIN_COLOR_TEMP_KELVIN,
+    CONF_RGB_BELOW_KELVIN,
     CONF_STREAM_ADDRESS,
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
@@ -90,6 +95,7 @@ from .const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
     CONF_VIDEO_PROFILE_NAMES,
+    CONF_WARM_RGB_COLOR,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -149,6 +155,16 @@ VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 BASIC_INFO_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ADAPTIVE_LIGHTING): cv.boolean,
+        probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
+        probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
+        probatio.Inclusive(CONF_RGB_BELOW_KELVIN, "warm_rgb"): cv.positive_int,
+        probatio.Inclusive(CONF_WARM_RGB_COLOR, "warm_rgb"): probatio.All(
+            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
+        ),
+        probatio.Optional(CONF_FLOOR_RGB_COLOR): probatio.All(
+            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
+        ),
         probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         probatio.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
             BINARY_SENSOR_DOMAIN
