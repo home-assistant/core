@@ -203,7 +203,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.11.0
+aioaquarite==0.13.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -629,7 +629,7 @@ autoskope_client==1.4.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==17.0.1
+av==19.0.0
 
 # homeassistant.components.avea
 avea==1.8.0
@@ -852,7 +852,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.4.1
+demetriek==2.0.0
 
 # homeassistant.components.denon_rs232
 denon-rs232==4.2.3
@@ -2163,7 +2163,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.19.1
+pydaikin==2.20.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==1.0.0
@@ -3243,7 +3243,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==1.0.2
+teslemetry-stream==1.2.0
 
 # homeassistant.components.tessie
 tessie-api==0.1.3

@@ -10,15 +10,26 @@ from pyportainer.exceptions import (
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer, PortainerImageUpdateStatus
+from pyportainer.models.portainer import PortainerSystemVersion
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.update import ATTR_INSTALLED_VERSION, ATTR_LATEST_VERSION
+from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
+    ATTR_RELEASE_URL,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -30,10 +41,12 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
+    load_json_value_fixture,
     snapshot_platform,
 )
 
 ENTITY_ID = "update.funny_chatelet_image_update_available"
+SERVER_UPDATE_ENTITY_ID = "update.portainer_test_update"
 CONTAINER_IMAGE = "docker.io/library/ubuntu:latest"
 INSTALLED_DIGEST = (
     "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb"
@@ -360,3 +373,40 @@ async def test_update_recreated_container_check_fails(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_server_update_up_to_date(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Portainer update when no newer version is available."""
+    mock_portainer_client.portainer_system_version.return_value = (
+        PortainerSystemVersion.from_dict(
+            load_json_value_fixture("portainer_system_version_up_to_date.json", DOMAIN)
+        )
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(SERVER_UPDATE_ENTITY_ID))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "2.45.1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2.45.1"
+    assert state.attributes[ATTR_RELEASE_URL] is None
+
+
+async def test_server_update_unavailable(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Portainer update is unavailable when the version can't be fetched."""
+    mock_portainer_client.portainer_system_version.side_effect = (
+        PortainerConnectionError("conn")
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(SERVER_UPDATE_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE

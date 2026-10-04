@@ -520,6 +520,13 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.MJJ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.MSP: (
         TuyaSwitchEntityDescription(
             key=DPCode.AUTO_CLEAN,
