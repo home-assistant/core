@@ -4530,7 +4530,7 @@ async def test_update_log_config(
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert "error" in msg and "must contain at least one of" in msg["error"]["message"]
+    assert "error" in msg and "at least one of" in msg["error"]["message"]
 
     # Test error if we set logToFile to True without providing filename
     await ws_client.send_json(
@@ -5525,7 +5525,7 @@ async def test_subscribe_controller_statistics(
         "nak": 0,
         "can": 0,
         "timeout_ack": 0,
-        "timout_response": 0,
+        "timeout_response": 0,
         "timeout_callback": 0,
     }
 
@@ -5560,7 +5560,7 @@ async def test_subscribe_controller_statistics(
         "nak": 1,
         "can": 1,
         "timeout_ack": 1,
-        "timout_response": 1,
+        "timeout_response": 1,
         "timeout_callback": 1,
     }
 

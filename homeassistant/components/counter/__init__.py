@@ -50,7 +50,7 @@ STORAGE_VERSION = 1
 STORAGE_FIELDS: VolDictType = {
     probatio.Optional(CONF_ICON): cv.icon,
     probatio.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): probatio.Coerce(int),
-    probatio.Required(CONF_NAME): probatio.All(cv.string, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(cv.string, probatio.NonEmpty()),
     probatio.Optional(CONF_MAXIMUM, default=None): probatio.Any(
         None, probatio.Coerce(int)
     ),

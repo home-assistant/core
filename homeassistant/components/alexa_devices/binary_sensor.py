@@ -127,6 +127,7 @@ async def async_setup_entry(
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)

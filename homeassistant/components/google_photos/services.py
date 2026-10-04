@@ -29,7 +29,9 @@ UPLOAD_SERVICE = "upload"
 UPLOAD_SERVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(CONF_FILENAME): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_FILENAME): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Required(CONF_ALBUM): cv.string,
     }
 )

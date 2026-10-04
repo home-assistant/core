@@ -1,0 +1,89 @@
+{
+  "xuid": "2533274913657542",
+  "titles": [
+    {
+      "titleId": "1739947436",
+      "pfn": "Microsoft.MinecraftUWP_8wekyb3d8bbwe",
+      "bingId": "8ff0c8c4-2b7f-4e2e-9ab9-2cd9ac0d1b4b",
+      "serviceConfigId": "4fc10100-5f7a-4470-899b-280835760c07",
+      "windowsPhoneProductId": null,
+      "name": "Minecraft",
+      "type": "Game",
+      "devices": ["XboxOne", "XboxSeries", "Win32", "Android", "iOS"],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.50293.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.98b3c9d5-1f3d-4d1e-9fdd-c1c1e7d0bd57",
+      "mediaItemType": "XboxOneGame",
+      "modernTitleId": "1739947436",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 57,
+        "totalAchievements": 121,
+        "currentGamerscore": 1105,
+        "totalGamerscore": 2500,
+        "progressPercentage": 44.0,
+        "sourceVersion": 2
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.50293.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.98b3c9d5-1f3d-4d1e-9fdd-c1c1e7d0bd57",
+          "type": "BoxArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.11144.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.6a2c9c4f-1a34-4a3f-9a2e-0f3a5a07a6bd",
+          "type": "Logo",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.27886.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.5a9d2a8e-64f2-4f9a-9a2b-9d2a7f18e3c1",
+          "type": "TitledHeroArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.63217.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.3d8e6b5c-7c1a-42f9-84d6-0f9f4a1c2b77",
+          "type": "Poster",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.19442.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.c47a1d09-52b7-4d0e-9a7f-2e5b1a6d8f34",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.38014.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.0b6e9f21-4a3c-4b8d-bc57-7a1e9d3f6c20",
+          "type": "Screenshot",
+          "caption": ""
+        }
+      ],
+      "titleHistory": null,
+      "titleRecord": null,
+      "detail": {
+        "attributes": [],
+        "availabilities": [
+          {
+            "Actions": ["Details", "Purchase", "Browse"],
+            "AvailabilityId": "9NBLGGH537B3",
+            "Platforms": ["Xbox"],
+            "SkuId": "0010",
+            "ProductId": "9NBLGGH537B3"
+          }
+        ],
+        "capabilities": [],
+        "description": "Explore infinite worlds and build everything from the simplest of homes to the grandest of castles. Play in creative mode with unlimited resources or mine deep into the world in survival mode, crafting weapons and armor to fend off dangerous mobs.",
+        "developerName": "Mojang Studios",
+        "genres": ["Action & adventure", "Family & kids"],
+        "minAge": 7,
+        "publisherName": "Xbox Game Studios",
+        "releaseDate": "2017-09-19T07:00:00Z",
+        "shortDescription": "Explore infinite worlds and build everything from the simplest of homes to the grandest of castles.",
+        "vuiDisplayName": "Minecraft",
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": [],
+      "contentBoards": null,
+      "xboxLiveTier": "Full"
+    }
+  ]
+}

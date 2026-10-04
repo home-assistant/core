@@ -53,7 +53,7 @@ _SLOT_SCHEMA = probatio.Schema(
 
 
 _WEEKLY_SCHEDULE_FIELDS: Final[dict[probatio.Marker, Any]] = {
-    probatio.Optional(slot_attr): probatio.All(cv.ensure_list, [_SLOT_SCHEMA])
+    probatio.Optional(slot_attr): probatio.All(probatio.EnsureList(), [_SLOT_SCHEMA])
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
 

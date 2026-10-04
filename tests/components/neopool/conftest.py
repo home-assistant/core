@@ -118,10 +118,18 @@ def _timer_block(enable: int = 4) -> dict[str, Any]:
 
 
 MOCK_TIMER_BLOCKS: dict[str, dict[str, Any]] = {
+    "filtration1": _timer_block(),
+    "filtration2": _timer_block(),
+    "filtration3": _timer_block(),
     "relay_aux1": _timer_block(),
+    "relay_aux1b": _timer_block(),
     "relay_aux2": _timer_block(),
+    "relay_aux2b": _timer_block(),
     "relay_aux3": _timer_block(),
+    "relay_aux3b": _timer_block(),
     "relay_aux4": _timer_block(),
+    "relay_aux4b": _timer_block(),
+    "relay_light": _timer_block(),
 }
 
 
@@ -201,6 +209,31 @@ def mock_config_entry_switch() -> MockConfigEntry:
         },
         options={
             CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_timers() -> MockConfigEntry:
+    """Return a config entry with the aux and light timer options enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_LIGHT: True,
             CONF_USE_AUX1: True,
             CONF_USE_AUX2: True,
             CONF_USE_AUX3: True,
@@ -311,6 +344,8 @@ def mock_neopool_client() -> Generator[MagicMock]:
         mock_client.async_set_bitmask_flag = AsyncMock(return_value={})
         mock_client.async_start_backwash = AsyncMock(return_value=None)
         mock_client.async_stop_backwash = AsyncMock(return_value=None)
+        mock_client.async_read_register = AsyncMock(return_value=[0])
+        mock_client.async_sync_device_time = AsyncMock(return_value={"value": 1})
         mock_client.close = AsyncMock()
         yield mock_client
 

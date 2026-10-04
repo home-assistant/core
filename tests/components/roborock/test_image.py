@@ -13,6 +13,7 @@ from roborock.data import CombinedMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -46,8 +47,8 @@ async def test_floorplan_image(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
-    assert len(hass.states.async_all("image")) == 5
-
+    assert len(hass.states.async_all("image")) == 6
+    assert hass.states.get("image.roborock_q7_map") is not None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     # Load the image on demand
     client = await hass_client()
@@ -132,7 +133,7 @@ async def test_map_status_change(
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test floor plan map image is correctly updated on status change."""
-    assert len(hass.states.async_all("image")) == 5
+    assert len(hass.states.async_all("image")) == 6
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     client = await hass_client()
@@ -182,6 +183,7 @@ async def test_map_status_change(
                 "image.roborock_s7_2_upstairs",
                 "image.roborock_s7_maxv_downstairs",
                 "image.roborock_s7_maxv_upstairs",
+                "image.roborock_q7_map",
                 "image.roborock_q10_s5_map",
             },
         ),
@@ -190,6 +192,7 @@ async def test_map_status_change(
             {
                 "image.roborock_s7_2_downstairs",
                 "image.roborock_s7_2_upstairs",
+                "image.roborock_q7_map",
                 # Expect default names based on map flags
                 "image.roborock_s7_maxv_map_0",
                 "image.roborock_s7_maxv_map_1",
@@ -276,6 +279,37 @@ async def test_q10_map_image(
     assert await resp.read() == b"\x89PNG-q10-new"
 
 
+async def test_q7_map_image_push_update(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the Q7 map image is updated from a push notification."""
+    entity_id = "image.roborock_q7_map"
+    assert hass.states.get(entity_id) is not None
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7"
+
+    q7_devices = [
+        device for device in fake_devices if device.b01_q7_properties is not None
+    ]
+    assert len(q7_devices) == 1
+    map_content = q7_devices[0].b01_q7_properties.map_content
+    map_content.image_content = b"\x89PNG-q7-new"
+
+    # Simulate a map-content update from the device.
+    map_content.add_update_listener.call_args.args[0]()
+    await hass.async_block_till_done()
+
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7-new"
+
+
 async def test_map_load_delayed(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
@@ -358,3 +392,84 @@ async def test_map_load_delayed(
     # Assert first map entity is removed, second still exists
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+
+
+async def test_q7_map_image_coordinator_update(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Q7 map image is updated by the coordinator."""
+    entity_id = "image.roborock_q7_map"
+    assert hass.states.get(entity_id) is not None
+
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+    map_content_trait = api.map_content
+
+    api.map.refresh.assert_awaited()
+
+    map_content_trait.image_content = b"\x89PNG-q7"
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The initial image is served via the proxy
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7"
+
+    # A coordinator tick that does not change image_content must not update the entity
+    state = hass.states.get(entity_id)
+    assert state is not None
+    last_updated = state.state
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == last_updated
+
+    map_content_trait.image_content = b"\x89PNG-q7-new"
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != last_updated
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7-new"
+
+    # Setting image_content to None keeps the last cached image
+    map_content_trait.image_content = None
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7-new"
+
+
+async def test_q7_map_initial_fetch_exception(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test Q7 map initial fetch handles RoborockException gracefully."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.roborock")
+    assert fake_q7_vacuum.b01_q7_properties is not None
+
+    fake_q7_vacuum.b01_q7_properties.map.refresh.side_effect = RoborockException("boom")
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("image.roborock_q7_map") is not None
+    assert "Initial Q7 map fetch failed (will retry on next poll)" in caplog.text

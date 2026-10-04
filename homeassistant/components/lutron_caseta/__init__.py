@@ -79,7 +79,7 @@ DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(CONF_HOST): cv.string,
