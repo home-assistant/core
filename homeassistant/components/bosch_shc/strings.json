@@ -144,6 +144,9 @@
       "camera_light": {
         "name": "Camera light"
       },
+      "camera_notification": {
+        "name": "Notifications"
+      },
       "child_lock": {
         "name": "Child lock"
       },

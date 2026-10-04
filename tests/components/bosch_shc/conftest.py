@@ -12,10 +12,12 @@ from boschshcpy import (
     CameraAmbientLightService,
     CameraFrontLightService,
     CameraLightService,
+    CameraNotificationService,
     PowerSwitchService,
     PrivacyModeService,
     RoutingService,
     SHCBatteryDevice,
+    SHCCamera360,
     SHCCameraEyes,
     SHCCameraOutdoorGen2,
     SHCLightSwitchBSM,
@@ -190,6 +192,28 @@ def camera_eyes_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.cameralight = cameralight
+    return device
+
+
+def camera_360_device(
+    device_id: str = "hdm:Cameras:360-1",
+    name: str = "Camera 360",
+    privacymode: PrivacyModeService.State = PrivacyModeService.State.ENABLED,
+    cameranotification: CameraNotificationService.State = CameraNotificationService.State.DISABLED,
+) -> SHCCamera360:
+    """Build a minimal device double for the camera_360 bucket."""
+    device = create_autospec(SHCCamera360, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "CAMERA_360"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.privacymode = privacymode
+    device.cameranotification = cameranotification
     return device
 
 
