@@ -41,7 +41,7 @@ from .pipeline import (
     async_setup_pipeline_store,
     async_update_pipeline,
 )
-from .select import AssistPipelineSelect, VadSensitivitySelect
+from .select import AssistPipelineSelect, VadSensitivitySelect, indexed_select_key
 from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
 
@@ -66,6 +66,7 @@ __all__ = (
     "async_get_pipelines",
     "async_pipeline_from_audio_stream",
     "async_update_pipeline",
+    "indexed_select_key",
 )
 
 CONFIG_SCHEMA = probatio.Schema(

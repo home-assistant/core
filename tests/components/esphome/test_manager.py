@@ -38,6 +38,7 @@ from aioesphomeapi import (
     UserService,
     UserServiceArg,
     UserServiceArgType,
+    VoiceAssistantFeature,
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
     build_device_unique_id,
@@ -77,6 +78,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.data_entry_flow import FlowResultType
@@ -90,7 +92,11 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -2472,6 +2478,87 @@ async def test_assist_in_progress_issue_deleted(
         )
         is None
     )
+
+
+async def test_assist_satellite_removed_when_a_voice_assistant_goes_away(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the satellite goes when a device stops offering a voice assistant."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-assist_satellite"
+    assert entity_registry.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+    )
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        is None
+    )
+
+
+async def test_assist_satellite_restored_when_a_voice_assistant_returns(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the satellite comes back when a device offers a voice assistant again.
+
+    It needs no device info subscription of its own, unlike the selects: the
+    platform is unloaded on every disconnect and forwarded again on the connect
+    that finds the flags, so removing the registry entry does not strand it.
+    """
+    flags = VoiceAssistantFeature.VOICE_ASSISTANT
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"voice_assistant_feature_flags": flags},
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-assist_satellite"
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+    )
+    assert entity_id is not None
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        is None
+    )
+    assert Platform.ASSIST_SATELLITE not in device.entry.runtime_data.loaded_platforms
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": flags}
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        == entity_id
+    )
+    # A registry row is not an entity: the re-added satellite has to be live
+    assert hass.states.get(entity_id) is not None
 
 
 async def test_sub_device_creation(
