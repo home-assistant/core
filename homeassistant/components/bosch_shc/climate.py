@@ -8,6 +8,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     PRESET_BOOST,
     PRESET_ECO,
+    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -15,9 +16,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
@@ -130,9 +133,9 @@ class ClimateControl(SHCEntity, ClimateEntity):
         hvac_mode = self.hvac_mode
         if hvac_mode == HVACMode.OFF:
             return HVACAction.OFF
-        if hvac_mode == HVACMode.COOL:
-            return HVACAction.COOLING
-        return HVACAction.HEATING if self._device.has_demand else HVACAction.IDLE
+        if not self._device.has_demand:
+            return HVACAction.IDLE
+        return HVACAction.COOLING if hvac_mode == HVACMode.COOL else HVACAction.HEATING
 
     @property
     @override
@@ -142,7 +145,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
             return PRESET_BOOST
         if self._device.supports_eco and self._device.low:
             return PRESET_ECO
-        return None
+        return PRESET_NONE
 
     @property
     @override
@@ -153,12 +156,18 @@ class ClimateControl(SHCEntity, ClimateEntity):
             presets.append(PRESET_BOOST)
         if self._device.supports_eco:
             presets.append(PRESET_ECO)
-        return presets or None
+        return [PRESET_NONE, *presets] if presets else None
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            if hvac_mode not in self.hvac_modes:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_hvac_mode",
+                    translation_placeholders={"hvac_mode": hvac_mode},
+                )
             self.set_hvac_mode(hvac_mode)
             if hvac_mode == HVACMode.OFF:
                 return
@@ -197,13 +206,15 @@ class ClimateControl(SHCEntity, ClimateEntity):
     @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the override preset."""
-        if preset_mode == PRESET_BOOST:
-            self._device.boost_mode = True
-            return
-
         if self._device.supports_boost_mode and self._device.boost_mode:
             self._device.boost_mode = False
-        self._device.low = True
+        if self._device.supports_eco and self._device.low:
+            self._device.low = False
+
+        if preset_mode == PRESET_BOOST:
+            self._device.boost_mode = True
+        elif preset_mode == PRESET_ECO:
+            self._device.low = True
 
     @override
     def turn_on(self) -> None:
