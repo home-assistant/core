@@ -4,7 +4,7 @@ from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from demetriek import CloudDevice, Device
+from demetriek import AuthChallenge, CloudDevice, Device
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -65,6 +65,31 @@ def mock_lametric_cloud() -> Generator[MagicMock]:
             for cloud_device in load_json_array_fixture("cloud_devices.json", DOMAIN)
         ]
         yield lametric
+
+
+@pytest.fixture
+def mock_lametric_local_auth() -> Generator[MagicMock]:
+    """Return a mocked LaMetric local auth client.
+
+    It answers like a real device: the challenge is in progress at first,
+    and resolved once the button on the device is pressed.
+    """
+    with (
+        patch(
+            "homeassistant.components.lametric.config_flow.LaMetricLocalAuth",
+            autospec=True,
+        ) as local_auth_mock,
+        patch("homeassistant.components.lametric.config_flow.BUTTON_POLL_INTERVAL", 0),
+    ):
+        local_auth = local_auth_mock.return_value
+        local_auth.request_challenge.return_value = AuthChallenge(
+            challenge_id="mock-challenge", duration=60, state="in-progress"
+        )
+        local_auth.challenge.return_value = AuthChallenge(
+            challenge_id="mock-challenge", duration=60, state="resolved"
+        )
+        local_auth.api_key.return_value = "mock-local-api-key"
+        yield local_auth
 
 
 @pytest.fixture
