@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
@@ -58,6 +58,12 @@ PARALLEL_UPDATES = 0
 # Tesla only reports the self-driving/mileage-since-reset fields (258-259) on HW4
 # vehicles, identified by this driver-assist capability in the vehicle config.
 DRIVER_ASSIST_HW4 = "TeslaAP4"
+
+
+def _tires_in_warning(warnings: dict[str, Any] | None) -> int | None:
+    """Count the tires flagged in a per-tire TPMS warning field."""
+    return None if warnings is None else sum(bool(v) for v in warnings.values())
+
 
 BMS_STATES = {
     "Standby": "standby",
@@ -1430,7 +1436,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="tpms_hard_warnings",
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsHardWarnings(
-            callback
+            lambda value: callback(_tires_in_warning(value))
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1438,7 +1444,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="tpms_soft_warnings",
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsSoftWarnings(
-            callback
+            lambda value: callback(_tires_in_warning(value))
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
