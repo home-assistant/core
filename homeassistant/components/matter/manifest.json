@@ -2,12 +2,21 @@
   "domain": "matter",
   "name": "Matter",
   "after_dependencies": ["bluetooth", "hassio"],
+  "bluetooth": [
+    {
+      "service_data_uuid": "0000fff6-0000-1000-8000-00805f9b34fb"
+    }
+  ],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/matter",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": ["matter-python-client==1.4.0", "matter-ble-proxy==0.7.1"],
+  "requirements": [
+    "bluetooth-data-tools==1.29.24",
+    "matter-python-client==1.4.0",
+    "matter-ble-proxy==0.7.1"
+  ],
   "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]
 }
