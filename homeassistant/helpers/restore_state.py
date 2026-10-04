@@ -6,13 +6,13 @@ import logging
 from typing import Any, Self, cast, override
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
-from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
+from homeassistant.core import Event, HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
-from . import start
+from . import entity_registry as er, start
 from .entity import Entity
 from .event import async_track_time_interval
 from .json import JSONEncoder
@@ -125,6 +125,9 @@ class RestoreStateData:
         )
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
+        # Entities which stored their state on removal but may still be in
+        # the state machine until the removal completes
+        self._removing: set[str] = set()
 
     def set_load_empty(self) -> None:
         """Set the store to load empty and become read-only."""
@@ -140,6 +143,37 @@ class RestoreStateData:
             self.async_setup_dump()
 
         start.async_at_start(self.hass, hass_start)
+
+        self.hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_entity_registry_updated,
+            event_filter=_entity_id_changed_filter,
+        )
+
+    @callback
+    def _async_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Move the stored state of an entity which is not loaded."""
+        data = event.data
+        assert data["action"] == "update" and "old_entity_id" in data
+        old_entity_id = data["old_entity_id"]
+        # Loaded entities move their stored state when they are added again
+        if old_entity_id in self.entities or self._is_removing(old_entity_id):
+            return
+        # A loaded entity may already have moved its stored state to the new id
+        if old_entity_id not in self.last_states:
+            return
+        self.async_restore_entity_id_changed(old_entity_id, data["entity_id"])
+
+    @callback
+    def _is_removing(self, entity_id: str) -> bool:
+        """Return if the entity is being removed and its state is still live."""
+        return (
+            entity_id in self._removing
+            and (state := self.hass.states.get(entity_id)) is not None
+            and not state.attributes.get(EntityStateAttribute.RESTORED)
+        )
 
     async def async_load(self) -> None:
         """Load the instance of this data helper."""
@@ -206,9 +240,13 @@ class RestoreStateData:
         for entity_id, stored_state in self.last_states.items():
             # Don't save old states that have entities in the current run
             # They are either registered and already part of stored_states,
-            # or no longer care about restoring.
+            # or no longer care about restoring. Entities which are being
+            # removed are no longer registered but need their stored state.
             if entity_id in current_states_by_entity_id:
-                continue
+                if entity_id not in self._removing:
+                    continue
+            else:
+                self._removing.discard(entity_id)
 
             # Don't save old states that have expired
             if stored_state.last_seen < expiration_time:
@@ -270,6 +308,7 @@ class RestoreStateData:
     @callback
     def async_restore_entity_added(self, entity: RestoreEntity) -> None:
         """Store this entity's state when hass is shutdown."""
+        self._removing.discard(entity.entity_id)
         self.entities[entity.entity_id] = entity
 
     @callback
@@ -291,6 +330,7 @@ class RestoreStateData:
             self.last_states[entity_id] = StoredState(
                 state, extra_data, dt_util.utcnow()
             )
+            self._removing.add(entity_id)
 
         del self.entities[entity_id]
 
@@ -299,6 +339,7 @@ class RestoreStateData:
         self, old_entity_id: str, new_entity_id: str
     ) -> None:
         """Move the stored state of an entity whose entity_id has changed."""
+        self._removing.discard(old_entity_id)
         if (stored_state := self.last_states.pop(old_entity_id, None)) is None:
             # Never restore another entity's leftover state under the new id
             self.last_states.pop(new_entity_id, None)
@@ -316,6 +357,12 @@ class RestoreStateData:
             validate_entity_id=False,
         )
         self.last_states[new_entity_id] = stored_state
+
+
+@callback
+def _entity_id_changed_filter(event_data: er.EventEntityRegistryUpdatedData) -> bool:
+    """Filter entity registry updates changing the entity_id."""
+    return event_data["action"] == "update" and "old_entity_id" in event_data
 
 
 class RestoreEntity(Entity):
@@ -340,9 +387,18 @@ class RestoreEntity(Entity):
             extra_data = None
         else:
             state = self.hass.states.get(self.entity_id)
-        async_get(self.hass).async_restore_entity_removed(
-            self.entity_id, state, extra_data
-        )
+        data = async_get(self.hass)
+        data.async_restore_entity_removed(self.entity_id, state, extra_data)
+        # An entity disabled while changing entity_id is not added again under
+        # the new entity_id, so the entity_id change hook does not run
+        if (
+            (registry_entry := self.registry_entry) is not None
+            and registry_entry.disabled
+            and registry_entry.entity_id != self.entity_id
+        ):
+            data.async_restore_entity_id_changed(
+                self.entity_id, registry_entry.entity_id
+            )
         await super().async_internal_will_remove_from_hass()
 
     @callback
