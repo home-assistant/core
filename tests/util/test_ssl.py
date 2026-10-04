@@ -1,17 +1,39 @@
 """Test Home Assistant ssl utility functions."""
 
+import ssl
+
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
     SSL_ALPN_HTTP11_HTTP2,
     SSL_ALPN_NONE,
+    SSL_CIPHER_LISTS,
     SSLCipherList,
+    SSLProfile,
     client_context,
     client_context_no_verify,
     create_client_context,
     create_no_verify_ssl_context,
     get_default_context,
     get_default_no_verify_context,
+    server_context,
 )
+
+# Required by every profile; the TLS 1.3 suites come from the OpenSSL
+# defaults, which the system config may extend with other AEAD suites.
+_TLS13_CIPHERS = {
+    "TLS_AES_128_GCM_SHA256",
+    "TLS_AES_256_GCM_SHA384",
+    "TLS_CHACHA20_POLY1305_SHA256",
+}
+
+
+def _tls13_ciphers(context: ssl.SSLContext) -> set[str]:
+    return {c["name"] for c in context.get_ciphers() if c["protocol"] == "TLSv1.3"}
+
+
+def _legacy_ciphers(context: ssl.SSLContext) -> list[str]:
+    """Return the ciphers below TLS 1.3, the ones set_ciphers() controls."""
+    return [c["name"] for c in context.get_ciphers() if c["protocol"] != "TLSv1.3"]
 
 
 def test_ssl_context_caching() -> None:
@@ -188,3 +210,55 @@ def test_client_context_default_no_alpn() -> None:
 
     assert default_ctx is not http1_ctx
     assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
+
+
+def test_server_context_modern_v6() -> None:
+    """The v6.0 modern profile is TLS 1.3 only and lets the client pick the cipher."""
+    context = server_context(SSLProfile.MODERN_V6)
+    assert context.minimum_version == ssl.TLSVersion.TLSv1_3
+    assert context.options & ssl.OP_NO_COMPRESSION
+    assert not context.options & ssl.OP_CIPHER_SERVER_PREFERENCE
+    assert _tls13_ciphers(context) >= _TLS13_CIPHERS
+
+
+def test_server_context_intermediate_v6() -> None:
+    """The v6.0 intermediate profile allows TLS 1.2 with its AEAD ECDHE suites."""
+    context = server_context(SSLProfile.INTERMEDIATE_V6)
+    assert context.minimum_version == ssl.TLSVersion.TLSv1_2
+    assert context.options & ssl.OP_NO_COMPRESSION
+    assert not context.options & ssl.OP_CIPHER_SERVER_PREFERENCE
+    assert _tls13_ciphers(context) >= _TLS13_CIPHERS
+
+    expected = [
+        "ECDHE-ECDSA-AES128-GCM-SHA256",
+        "ECDHE-RSA-AES128-GCM-SHA256",
+        "ECDHE-ECDSA-AES256-GCM-SHA384",
+        "ECDHE-RSA-AES256-GCM-SHA384",
+        "ECDHE-ECDSA-CHACHA20-POLY1305",
+        "ECDHE-RSA-CHACHA20-POLY1305",
+    ]
+    # The system OpenSSL policy may disable some of the suites, never add any.
+    ciphers = _legacy_ciphers(context)
+    assert ciphers
+    assert ciphers == [cipher for cipher in expected if cipher in ciphers]
+
+
+def test_server_context_v4_profiles() -> None:
+    """The v4 profiles keep the settings existing installs connect with."""
+    modern = server_context(SSLProfile.MODERN_V4)
+    assert modern.minimum_version == ssl.TLSVersion.TLSv1_2
+    assert modern.options & ssl.OP_NO_COMPRESSION
+    assert modern.options & ssl.OP_CIPHER_SERVER_PREFERENCE
+    assert _tls13_ciphers(modern) >= _TLS13_CIPHERS
+    assert set(_legacy_ciphers(modern)) <= set(
+        SSL_CIPHER_LISTS[SSLProfile.MODERN_V4].split(":")
+    )
+
+    intermediate = server_context(SSLProfile.INTERMEDIATE_V4)
+    assert intermediate.options & ssl.OP_NO_SSLv3
+    assert intermediate.options & ssl.OP_NO_COMPRESSION
+    assert intermediate.options & ssl.OP_CIPHER_SERVER_PREFERENCE
+    assert _tls13_ciphers(intermediate) >= _TLS13_CIPHERS
+    assert set(_legacy_ciphers(intermediate)) <= set(
+        SSL_CIPHER_LISTS[SSLProfile.INTERMEDIATE_V4].split(":")
+    )

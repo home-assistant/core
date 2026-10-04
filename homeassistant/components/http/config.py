@@ -19,6 +19,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ssl import SSLProfile
 
 from .const import (
     CONF_BASE_URL,
@@ -35,13 +36,14 @@ from .const import (
     CONF_USE_X_FORWARDED_FOR,
     CONF_USE_X_FRAME_OPTIONS,
     DEFAULT_CORS,
+    DEFAULT_SSL_PROFILE,
     DOMAIN,
     ENV_SETUP_PORT,
     ENV_SUPERVISOR,
     NO_LOGIN_ATTEMPT_THRESHOLD,
-    SSL_INTERMEDIATE,
-    SSL_MODERN,
+    SSL_PROFILE_UPGRADES,
     SUPERVISOR_DEFAULT_PORT,
+    UNVERSIONED_SSL_PROFILES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +74,7 @@ def default_server_port() -> int:
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 2
-STORAGE_MINOR_VERSION: Final = 2
+STORAGE_MINOR_VERSION: Final = 3
 
 KEY_STABLE: Final = "stable"
 KEY_PENDING: Final = "pending"
@@ -160,8 +162,8 @@ HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): probatio.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
         probatio.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        probatio.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): probatio.In(
-            [SSL_INTERMEDIATE, SSL_MODERN]
+        probatio.Optional(CONF_SSL_PROFILE, default=DEFAULT_SSL_PROFILE): probatio.In(
+            list(SSLProfile)
         ),
         probatio.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
     }
@@ -178,6 +180,22 @@ _META_KEYS: Final = (
     HTTP_CONFIG_ERROR,
     HTTP_CONFIG_ERROR_MESSAGE,
 )
+
+
+def _migrate_ssl_profile(config: dict[str, Any]) -> None:
+    """Replace an unversioned SSL profile name with a versioned profile in place.
+
+    The unversioned names (YAML and storage before 2.3) stood for the v4
+    profiles. A config with a certificate keeps that profile so the upgrade
+    changes nothing for connecting clients; without a certificate the profile
+    is not in use, so the config moves to the current profile right away.
+    """
+    name: str | None = config.get(CONF_SSL_PROFILE)
+    if name is None or (profile := UNVERSIONED_SSL_PROFILES.get(name)) is None:
+        return
+    if CONF_SSL_CERTIFICATE not in config:
+        profile = SSL_PROFILE_UPGRADES[profile]
+    config[CONF_SSL_PROFILE] = profile
 
 
 def _strip_meta(config: ConfData) -> ConfData:
@@ -479,10 +497,9 @@ class HTTPConfigStore:
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
-        validated_config = cast(
-            ConfData,
-            HTTP_STORAGE_SCHEMA({CONF_SERVER_PORT: SERVER_PORT, **config}),
-        )
+        yaml_config: dict[str, Any] = {CONF_SERVER_PORT: SERVER_PORT, **config}
+        _migrate_ssl_profile(yaml_config)
+        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(yaml_config))
         if self._stable_differs_only_by_lost_proxy_masks(validated_config):
             # Releases up to 2026.7.1 dropped the network mask when storing
             # trusted proxies, and the v1->v2 store migration turned those
@@ -671,6 +688,7 @@ class _HTTPStore(Store[_HTTPStoreData]):
             # Run the v1 payload through the storage schema so the v2 ``stable``
             # slot is well-formed (all keys present, values normalised) and the
             # load step can rely on direct key access.
+            _migrate_ssl_profile(old_data)
             try:
                 stable = HTTP_STORAGE_SCHEMA(old_data)
             except probatio.Invalid:
@@ -699,4 +717,9 @@ class _HTTPStore(Store[_HTTPStoreData]):
                     HTTP_CONFIG_ERROR: None,
                     HTTP_CONFIG_ERROR_MESSAGE: None,
                 }
+        if old_minor_version < 3:
+            # 2.3 versioned the SSL profiles
+            _migrate_ssl_profile(old_data[KEY_STABLE])
+            if old_data[KEY_PENDING] is not None:
+                _migrate_ssl_profile(old_data[KEY_PENDING])
         return old_data

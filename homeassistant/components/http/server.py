@@ -40,6 +40,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.setup import async_when_setup
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
+from homeassistant.util.ssl import SSLProfile
 
 from .auth import async_setup_auth
 from .ban import setup_bans
@@ -53,7 +54,6 @@ from .const import (
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     ENV_SUPERVISOR,
-    SSL_INTERMEDIATE,
     is_supervisor_unix_socket_request,
 )
 from .cors import setup_cors
@@ -400,10 +400,7 @@ class HomeAssistantHTTP:
         context: ssl.SSLContext | None = None
         assert self.ssl_certificate is not None
         try:
-            if self.ssl_profile == SSL_INTERMEDIATE:
-                context = ssl_util.server_context_intermediate()
-            else:
-                context = ssl_util.server_context_modern()
+            context = ssl_util.server_context(SSLProfile(self.ssl_profile))
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
             if not self.hass.config.recovery_mode:
@@ -455,7 +452,7 @@ class HomeAssistantHTTP:
 
     def _create_emergency_ssl_context(self) -> ssl.SSLContext:
         """Create an emergency ssl certificate so we can still startup."""
-        context = ssl_util.server_context_modern()
+        context = ssl_util.server_context(SSLProfile(self.ssl_profile))
         host: str
         try:
             host = cast(str, URL(get_url(self.hass, prefer_external=True)).host)

@@ -6,6 +6,7 @@ from aiohttp.web import Request
 
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS  # noqa: F401
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ssl import SSLProfile
 
 if TYPE_CHECKING:
     from homeassistant.auth.models import User
@@ -35,8 +36,29 @@ CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
 
+# Profile names of the deprecated YAML config and of storage before version
+# 2.3. They predate the versioned profiles and name the v4 ones.
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
+UNVERSIONED_SSL_PROFILES: Final = {
+    SSL_MODERN: SSLProfile.MODERN_V4,
+    SSL_INTERMEDIATE: SSLProfile.INTERMEDIATE_V4,
+}
+# Superseded profiles and the current profile to upgrade them to. A server
+# running a superseded profile gets a repair offering the upgrade.
+SSL_PROFILE_UPGRADES: Final = {
+    SSLProfile.MODERN_V4: SSLProfile.MODERN_V6,
+    SSLProfile.INTERMEDIATE_V4: SSLProfile.INTERMEDIATE_V6,
+}
+DEFAULT_SSL_PROFILE: Final = SSLProfile.MODERN_V6
+
+ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"
+# Repair translation key per upgrade target; each text describes which
+# clients that upgrade leaves behind.
+ISSUE_SSL_PROFILE_OUTDATED_TRANSLATION_KEYS: Final = {
+    SSLProfile.MODERN_V6: "ssl_profile_outdated_modern_v6",
+    SSLProfile.INTERMEDIATE_V6: "ssl_profile_outdated_intermediate_v6",
+}
 
 ENV_SETUP_PORT: Final = "SETUP_PORT"
 ENV_SUPERVISOR: Final = "SUPERVISOR"
