@@ -34,6 +34,7 @@ from .conftest import (
     BRUSSELS_TIME_ZONE,
     OFFTAKE_ONLY_EAN,
     build_contracts,
+    build_epex_payload,
     build_prices,
     build_relations,
     setup_dynamic_entry,
@@ -882,17 +883,17 @@ async def test_epex_refresh_skips_covered_days(
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
-async def test_epex_today_fetch_failure_does_not_block_setup(
+async def test_epex_setup_failure_recovers_on_next_poll(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failing EPEX fetch loads the entry with unavailable EPEX sensors."""
-    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
-        EngieBeCommunicationError("boom")
-    )
+    """Test a failing EPEX fetch at setup leaves the sensors unavailable until the next poll."""
+    client = mock_engie_client.return_value
+    client.async_get_epex_prices.side_effect = EngieBeCommunicationError("boom")
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -905,6 +906,13 @@ async def test_epex_today_fetch_failure_does_not_block_setup(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+    client.async_get_epex_prices.side_effect = build_epex_payload
+    freezer.tick(EPEX_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.16)
 
 
 async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
