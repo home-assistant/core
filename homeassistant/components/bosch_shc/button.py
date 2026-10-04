@@ -8,6 +8,7 @@ from boschshcpy import SHCSmokeDetector
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,6 +28,7 @@ class SHCButtonEntityDescription[_DeviceT: SHCDevice](ButtonEntityDescription):
 SMOKE_TEST_DESCRIPTION = SHCButtonEntityDescription[SHCSmokeDetector](
     key="smoke_test",
     translation_key="smoke_test",
+    entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.smoketest_requested(),
 )
 
