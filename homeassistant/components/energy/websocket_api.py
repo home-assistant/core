@@ -3,7 +3,6 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
 import functools
 from itertools import chain
 from typing import Any, cast
@@ -270,16 +269,24 @@ async def ws_get_fossil_energy_consumption(
     statistic_ids = set(msg["energy_statistic_ids"])
     statistic_ids.add(msg["co2_statistic_id"])
 
+    # One clock snapshot for both synthesis and the open-hour CO₂ skip so an
+    # hour rollover during the executor job cannot desync them.
+    now = dt_util.utcnow()
+    current_hour_start_ts = now.replace(minute=0, second=0, microsecond=0).timestamp()
+
     # Fetch energy + CO2 statistics
     statistics = await recorder.get_instance(hass).async_add_executor_job(
-        recorder.statistics.statistics_during_period,
-        hass,
-        start_time,
-        end_time,
-        statistic_ids,
-        "hour",
-        {"energy": UnitOfEnergy.KILO_WATT_HOUR},
-        {"mean", "change"},
+        functools.partial(
+            recorder.statistics.statistics_during_period,
+            hass,
+            start_time,
+            end_time,
+            statistic_ids,
+            "hour",
+            {"energy": UnitOfEnergy.KILO_WATT_HOUR},
+            {"mean", "change"},
+            now=now,
+        )
     )
 
     def _combine_change_statistics(
@@ -302,7 +309,6 @@ async def ws_get_fossil_energy_consumption(
         stat_list: list[dict[str, Any]],
         same_period: Callable[[float, float], bool],
         period_start_end: Callable[[float], tuple[float, float]],
-        period: timedelta,
     ) -> list[dict[str, Any]]:
         """Reduce hourly deltas to daily or monthly deltas."""
         result: list[dict[str, Any]] = []
@@ -310,7 +316,7 @@ async def ws_get_fossil_energy_consumption(
         if not stat_list:
             return result
         prev_stat: dict[str, Any] = stat_list[0]
-        fake_stat = {"start": stat_list[-1]["start"] + period.total_seconds()}
+        fake_stat = {"start": period_start_end(stat_list[-1]["start"])[1]}
 
         # Loop over the hourly deltas + a fake entry to end the period
         for statistic in chain(stat_list, (fake_stat,)):
@@ -338,14 +344,21 @@ async def ws_get_fossil_energy_consumption(
         {
             period["start"]: period["mean"]
             for period in statistics.get(msg["co2_statistic_id"], {})
+            if period.get("mean") is not None
         },
     )
 
-    # Calculate amount of fossil based energy, assume 100% fossil if missing
-    fossil_energy = [
-        {"start": start, "delta": delta * indexed_co2_statistics.get(start, 100) / 100}
-        for start, delta in merged_energy_statistics.items()
-    ]
+    # Calculate amount of fossil based energy. Historical hours missing CO₂ still
+    # assume 100% fossil, but skip the unfinished current hour when energy change
+    # has no matching mean (partial-hour synthesis does not invent CO₂ means).
+    fossil_energy: list[dict[str, Any]] = []
+    for start, delta in merged_energy_statistics.items():
+        co2_percentage = indexed_co2_statistics.get(start)
+        if co2_percentage is None:
+            if start == current_hour_start_ts:
+                continue
+            co2_percentage = 100
+        fossil_energy.append({"start": start, "delta": delta * co2_percentage / 100})
 
     if msg["period"] == "hour":
         reduced_fossil_energy = [
@@ -362,7 +375,6 @@ async def ws_get_fossil_energy_consumption(
             fossil_energy,
             _same_day_ts,
             _day_start_end_ts,
-            timedelta(days=1),
         )
     else:
         (
@@ -373,7 +385,6 @@ async def ws_get_fossil_energy_consumption(
             fossil_energy,
             _same_month_ts,
             _month_start_end_ts,
-            timedelta(days=1),
         )
 
     result = {period["start"]: period["delta"] for period in reduced_fossil_energy}

@@ -1,5 +1,6 @@
 """Test the Energy websocket API."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
@@ -7,8 +8,14 @@ import pytest
 
 from homeassistant.components.energy import DOMAIN, data, is_configured
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import StatisticMeanType
-from homeassistant.components.recorder.statistics import async_add_external_statistics
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    async_import_statistics,
+    get_metadata,
+)
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1179,6 +1186,112 @@ async def test_fossil_energy_consumption_check_missing_hour(
         hour3.isoformat(),
         hour4.isoformat(),
     ]
+
+
+@pytest.mark.freeze_time("2024-03-15 14:17:00+00:00")
+async def test_fossil_energy_consumption_skips_open_hour_without_co2(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Open-hour energy without a CO₂ mean must not default to 100% fossil."""
+    await hass.config.async_set_time_zone("UTC")
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    hour_12 = dt_util.as_utc(dt_util.parse_datetime("2024-03-15 12:00:00+00:00"))
+    hour_13 = dt_util.as_utc(dt_util.parse_datetime("2024-03-15 13:00:00+00:00"))
+    hour_14 = dt_util.as_utc(dt_util.parse_datetime("2024-03-15 14:00:00+00:00"))
+    day_start = dt_util.as_utc(dt_util.parse_datetime("2024-03-15 00:00:00+00:00"))
+    day_end = dt_util.as_utc(dt_util.parse_datetime("2024-03-16 00:00:00+00:00"))
+
+    energy_id = "sensor.total_energy_import"
+    co2_id = "sensor.fossil_percentage"
+
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": True,
+            "mean_type": StatisticMeanType.NONE,
+            "name": "Total imported energy",
+            "source": "recorder",
+            "statistic_id": energy_id,
+            "unit_class": "energy",
+            "unit_of_measurement": "kWh",
+        },
+        (
+            {
+                "start": hour_12,
+                "last_reset": None,
+                "state": 10.0,
+                "sum": 10.0,
+            },
+            {
+                "start": hour_13,
+                "last_reset": None,
+                "state": 20.0,
+                "sum": 20.0,
+            },
+        ),
+    )
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": "Fossil percentage",
+            "source": "recorder",
+            "statistic_id": co2_id,
+            "unit_class": None,
+            "unit_of_measurement": "%",
+        },
+        (
+            {"start": hour_12, "mean": 50.0, "min": 50.0, "max": 50.0},
+            {"start": hour_13, "mean": 20.0, "min": 20.0, "max": 20.0},
+        ),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata_id = get_metadata(hass, statistic_ids={energy_id})[energy_id][0]
+    with session_scope(hass=hass) as session:
+        for minutes, state, sum_ in (
+            (0, 25.0, 25.0),
+            (5, 30.0, 30.0),
+            (10, 35.0, 35.0),
+        ):
+            session.add(
+                StatisticsShortTerm.from_stats(
+                    metadata_id,
+                    {
+                        "start": hour_14 + timedelta(minutes=minutes),
+                        "last_reset": None,
+                        "state": state,
+                        "sum": sum_,
+                    },
+                )
+            )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "energy/fossil_energy_consumption",
+            "start_time": day_start.isoformat(),
+            "end_time": day_end.isoformat(),
+            "energy_statistic_ids": [energy_id],
+            "co2_statistic_id": co2_id,
+            "period": "hour",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # hour_12 change 10 * 50% = 5; hour_13 change 10 * 20% = 2.
+    # Open hour_14 has energy change but no CO₂ mean — omit, do not use 100%.
+    assert response["result"] == {
+        hour_12.isoformat(): pytest.approx(5.0),
+        hour_13.isoformat(): pytest.approx(2.0),
+    }
+    assert hour_14.isoformat() not in response["result"]
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
