@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
 
+from homeassistant.components.cloud import CloudNotConnected
 from homeassistant.components.lock import LockState
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -258,20 +259,58 @@ async def test_ensure_webhooks_handles_bridge_error_on_cleanup(
     assert "Could not remove stale webhook from LOQED bridge" in caplog.text
 
 
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
 async def test_cannot_connect_to_bridge_will_retry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    error: type[Exception],
 ) -> None:
-    """Test webhook setup in loqed bridge."""
+    """Test setup retries when the bridge cannot be reached to fetch the lock."""
     config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=error):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == (
+        f"Unable to connect to bridge at {config_entry.data['bridge_ip']}"
+    )
+
+
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
+@pytest.mark.parametrize("failing_call", ["getWebhooks", "registerWebhook"])
+async def test_setup_retries_when_bridge_webhook_setup_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    failing_call: str,
+    error: type[Exception],
+) -> None:
+    """Test bridge errors while registering the webhook are converted to a retry."""
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    lock.getWebhooks = AsyncMock(return_value=[])
+    lock.registerWebhook = AsyncMock()
+    setattr(lock, failing_call, AsyncMock(side_effect=error))
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == (
+        f"Unable to connect to bridge at {config_entry.data['bridge_ip']}"
+    )
 
 
 async def test_setup_retry_after_bridge_webhook_failure(
@@ -347,6 +386,36 @@ async def test_setup_cloudhook_in_bridge(
     lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
 
 
+async def test_setup_retries_when_cloudhook_unavailable(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test setup retries when Nabu Casa reports a subscription but is disconnected."""
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            side_effect=CloudNotConnected,
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == "Unable to create Home Assistant Cloud webhook"
+
+
 async def test_setup_cloudhook_from_entry_in_bridge(
     hass: HomeAssistant, cloud_config_entry: MockConfigEntry, lock: loqed.Lock
 ) -> None:
@@ -402,6 +471,20 @@ async def test_unload_entry_fails(
     lock.deleteWebhook = AsyncMock(side_effect=Exception)
 
     assert not await hass.config_entries.async_unload(integration.entry_id)
+
+
+async def test_unload_entry_keeps_webhook_when_platforms_fail_to_unload(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test the bridge webhook stays registered when the entry stays loaded."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(integration.entry_id)
+
+    lock.deleteWebhook.assert_not_called()
+    assert integration.state is ConfigEntryState.FAILED_UNLOAD
 
 
 @pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])

@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import aiohttp
 from loqedAPI import loqed
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.loqed.const import DOMAIN
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import async_load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_TOKEN = "eyadiuyfasiuasf"
@@ -198,15 +199,86 @@ async def test_create_entry_user_with_pick_lock(
     mock_lock.getWebhooks.assert_awaited()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiohttp.ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
+async def test_zeroconf_cannot_connect(
+    hass: HomeAssistant, exception: type[Exception]
+) -> None:
+    """Test zeroconf discovery aborts when the bridge cannot be reached."""
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock_details", side_effect=exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf_data,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
+    """Test zeroconf aborts when the bridge is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="***REDACTED***",
+        data={"bridge_ip": "192.168.12.34"},
+    ).add_to_hass(hass)
+
+    result = await _async_init_zeroconf_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_already_configured(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
+) -> None:
+    """Test the user flow aborts when the lock is already configured."""
+    MockConfigEntry(domain=DOMAIN, unique_id="aabbccddeeff").add_to_hass(hass)
+
+    result = await _async_init_user_flow(hass)
+
+    mock_lock = Mock(spec=loqed.Lock, id="Foo")
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
+    )
+
+    with patch_lock_creation_flow(all_locks_response, mock_lock, TEST_WEBHOOK_ID):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: TEST_API_TOKEN},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiohttp.ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    exception: type[Exception],
 ) -> None:
     """Test we handle cannot connect error."""
     result = await _async_init_user_flow(hass)
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        side_effect=aiohttp.ClientError,
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -312,8 +384,16 @@ async def test_invalid_auth_when_lock_not_found(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiohttp.ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_cannot_connect_zeroconf_cloud_api_error(
     hass: HomeAssistant,
+    exception: type[Exception],
 ) -> None:
     """Test we handle a cloud API error during zeroconf validate_input."""
     result = await _async_init_zeroconf_flow(hass)
@@ -323,7 +403,7 @@ async def test_cannot_connect_zeroconf_cloud_api_error(
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
-        side_effect=aiohttp.ClientError,
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -335,8 +415,17 @@ async def test_cannot_connect_zeroconf_cloud_api_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiohttp.ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_cannot_connect_when_lock_not_reachable(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    exception: type[Exception],
 ) -> None:
     """Test we handle a situation where the lock is not reachable."""
     result = await _async_init_user_flow(hass)
@@ -350,9 +439,7 @@ async def test_cannot_connect_when_lock_not_reachable(
             "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
             return_value=all_locks_response,
         ),
-        patch(
-            "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
-        ),
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=exception),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

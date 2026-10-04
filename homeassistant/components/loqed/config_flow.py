@@ -54,7 +54,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except aiohttp.ClientError as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.error("HTTP Connection error to loqed API")
                 raise CannotConnect from err
 
@@ -88,7 +88,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         except StopIteration as err:
             raise InvalidAuth from err
-        except aiohttp.ClientError as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("HTTP Connection error to loqed lock")
             raise CannotConnect from err
 
@@ -103,7 +103,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         apiclient = loqed.APIClient(session, f"http://{host}")
         api = loqed.LoqedAPI(apiclient)
-        lock_data = await api.async_get_lock_details()
+        try:
+            lock_data = await api.async_get_lock_details()
+        except TimeoutError, aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already exists
         await self.async_set_unique_id(lock_data["bridge_mac_wifi"])
@@ -144,7 +147,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except aiohttp.ClientError:
+            except TimeoutError, aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
                 self._locks = lock_data["data"]
@@ -204,8 +207,6 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle lock selection when multiple locks are available."""
         if user_input is not None:
-            if self._api_token is None:
-                return await self.async_step_user()
             return await self.async_step_user(
                 {**user_input, CONF_API_TOKEN: self._api_token}
             )
