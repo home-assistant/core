@@ -126,3 +126,33 @@ async def test_get_epex_prices_for_date_connection_error(
             hass, {"config_entry": mock_config_entry.entry_id, "date": "2026-10-03"}
         )
     assert type(exc_info.value) is HomeAssistantError
+
+
+async def test_get_epex_prices_for_date_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    frozen_afternoon: None,
+) -> None:
+    """Test the service rejects a config entry that is not loaded."""
+    await setup_entry(hass, mock_config_entry)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _call_service(
+            hass, {"config_entry": mock_config_entry.entry_id, "date": "2026-10-03"}
+        )
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_epex_prices_for_date_unknown_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    frozen_afternoon: None,
+) -> None:
+    """Test the service rejects a config entry that does not exist."""
+    await setup_entry(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _call_service(hass, {"config_entry": "unknown", "date": "2026-10-03"})
+    assert exc_info.value.translation_key == "service_config_entry_not_found"
