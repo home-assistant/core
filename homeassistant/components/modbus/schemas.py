@@ -254,10 +254,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                     ]
                 ),
                 probatio.Optional(CONF_STATE_OFF): probatio.All(
-                    cv.ensure_list, [cv.positive_int]
+                    probatio.EnsureList(), [cv.positive_int]
                 ),
                 probatio.Optional(CONF_STATE_ON): probatio.All(
-                    cv.ensure_list, [cv.positive_int]
+                    probatio.EnsureList(), [cv.positive_int]
                 ),
                 probatio.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
@@ -502,18 +502,24 @@ MODBUS_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_DELAY, default=0): cv.positive_int,
         probatio.Optional(CONF_MSG_WAIT): cv.positive_int,
         probatio.Optional(CONF_BINARY_SENSORS): probatio.All(
-            cv.ensure_list, [BINARY_SENSOR_SCHEMA]
+            probatio.EnsureList(), [BINARY_SENSOR_SCHEMA]
         ),
         probatio.Optional(CONF_CLIMATES): probatio.All(
-            cv.ensure_list, [probatio.All(CLIMATE_SCHEMA, struct_validator)]
+            probatio.EnsureList(), [probatio.All(CLIMATE_SCHEMA, struct_validator)]
         ),
-        probatio.Optional(CONF_COVERS): probatio.All(cv.ensure_list, [COVERS_SCHEMA]),
-        probatio.Optional(CONF_LIGHTS): probatio.All(cv.ensure_list, [LIGHT_SCHEMA]),
+        probatio.Optional(CONF_COVERS): probatio.All(
+            probatio.EnsureList(), [COVERS_SCHEMA]
+        ),
+        probatio.Optional(CONF_LIGHTS): probatio.All(
+            probatio.EnsureList(), [LIGHT_SCHEMA]
+        ),
         probatio.Optional(CONF_SENSORS): probatio.All(
-            cv.ensure_list, [probatio.All(SENSOR_SCHEMA, struct_validator)]
+            probatio.EnsureList(), [probatio.All(SENSOR_SCHEMA, struct_validator)]
         ),
-        probatio.Optional(CONF_SWITCHES): probatio.All(cv.ensure_list, [SWITCH_SCHEMA]),
-        probatio.Optional(CONF_FANS): probatio.All(cv.ensure_list, [FAN_SCHEMA]),
+        probatio.Optional(CONF_SWITCHES): probatio.All(
+            probatio.EnsureList(), [SWITCH_SCHEMA]
+        ),
+        probatio.Optional(CONF_FANS): probatio.All(probatio.EnsureList(), [FAN_SCHEMA]),
     },
     extra=probatio.ALLOW_EXTRA,
 )
@@ -533,7 +539,7 @@ SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
 ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_TYPE): probatio.Any(TCP, UDP, RTUOVERTCP),
     }
 )
@@ -541,7 +547,7 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],

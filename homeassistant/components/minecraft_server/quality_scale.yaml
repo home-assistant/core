@@ -74,13 +74,13 @@ rules:
     comment: |
       No discovery possible. Users can use the (local or public) hostname instead of an IP address,
       if static IP addresses cannot be configured.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: A minecraft server can only have one device.

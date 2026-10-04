@@ -508,7 +508,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self.setup_template(
             CONF_FAN_MODE,
             "_attr_fan_mode",
-            tcv.item_in_list(self, CONF_FAN_MODE, "_attr_fan_modes", CONF_FAN_MODES),
+            tcv.item_in_list(
+                self,
+                CONF_FAN_MODE,
+                "_attr_fan_modes",
+                CONF_FAN_MODES,
+                stringify_result=True,
+            ),
         )
         self.add_assumed_attribute("_attr_fan_mode", CONF_FAN_MODE, SET_FAN_MODE_ACTION)
 
@@ -521,7 +527,11 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             CONF_SWING_MODE,
             "_attr_swing_mode",
             tcv.item_in_list(
-                self, CONF_SWING_MODE, "_attr_swing_modes", CONF_SWING_MODES
+                self,
+                CONF_SWING_MODE,
+                "_attr_swing_modes",
+                CONF_SWING_MODES,
+                stringify_result=True,
             ),
         )
         self.add_assumed_attribute(
@@ -541,6 +551,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 CONF_SWING_HORIZONTAL_MODE,
                 "_attr_swing_horizontal_modes",
                 CONF_SWING_HORIZONTAL_MODES,
+                stringify_result=True,
             ),
         )
         self.add_assumed_attribute(
@@ -562,6 +573,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 CONF_PRESET_MODE,
                 "_attr_preset_modes",
                 CONF_PRESET_MODES,
+                stringify_result=True,
             ),
         )
         self.add_assumed_attribute(

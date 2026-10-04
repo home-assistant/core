@@ -3991,6 +3991,7 @@ def test_zero_noise_psk_is_not_the_probe_key() -> None:
 async def test_zwave_proxy_request_home_id_change(
     hass: HomeAssistant,
     mock_client: APIClient,
+    hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test Z-Wave proxy request handler with HOME_ID_CHANGE request."""
@@ -4076,6 +4077,54 @@ async def test_zwave_proxy_request_home_id_change(
         assert call_args[0][1] == "zwave_js"
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
+
+    assert entry.runtime_data.device_info.zwave_home_id == zwave_home_id
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["device_info"]["zwave_home_id"] == zwave_home_id
+
+
+async def test_zwave_home_id_change_saved_after_reconnect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a home ID change replaces the pending connect-time save."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"zwave_proxy_feature_flags": 1},
+    )
+    storage_key = f"{DOMAIN}.{device.entry.entry_id}"
+    zwave_home_id = 3551671779
+
+    async def report_home_id() -> None:
+        callback = mock_client.subscribe_zwave_proxy_request.call_args[0][0]
+        callback(
+            ZWaveProxyRequest(
+                type=ZWaveProxyRequestType.HOME_ID_CHANGE,
+                data=zwave_home_id.to_bytes(4, byteorder="big"),
+            )
+        )
+        freezer.tick(SAVE_DELAY + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    with patch("homeassistant.helpers.discovery_flow.async_create_flow"):
+        await report_home_id()
+        stored = hass_storage[storage_key]["data"]
+        assert stored["device_info"]["zwave_home_id"] == zwave_home_id
+
+        # The device reconnects with home ID 0, so the connect-time save holds 0
+        await device.mock_disconnect(expected_disconnect=False)
+        await device.mock_connect()
+        await report_home_id()
+
+    # Equal to the store, so only replacing the pending save can write it
+    assert hass_storage[storage_key]["data"] == stored
 
 
 async def test_no_zwave_proxy_subscribe_without_feature_flags(

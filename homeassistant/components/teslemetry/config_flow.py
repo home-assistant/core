@@ -18,12 +18,18 @@ from tesla_fleet_api.const import (
 from tesla_fleet_api.exceptions import (
     BluetoothTimeout,
     BluetoothTransportError,
+    EnergyGatewayUnreachable,
     InvalidToken,
     NotOnWhitelistFault,
     PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
+    WhitelistOperationCouldNotStartLocalEntityAuth,
+    WhitelistOperationLocalEntityAuthFailedCancelled,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
+    WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
@@ -77,6 +83,10 @@ from .helpers import (
     cloud_energy_site,
 )
 from .models import TeslemetryEnergyData
+
+
+class PowerwallSetupError(Exception):
+    """Signal a recoverable energy-site setup failure for the form to retry."""
 
 
 class PowerwallLookupError(Exception):
@@ -226,6 +236,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self._vehicle: VehicleBluetooth | None = None
         self._pair_task: asyncio.Task[None] | None = None
         self._pair_error: dict[str, str] = {}
+        self._key_added = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -335,7 +346,10 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
             return self.async_show_form(
                 step_id="scan",
-                errors={"base": "cannot_connect"},
+                # The key is already on the vehicle; say so rather than prompt a re-pair.
+                errors={
+                    "base": "key_unverified" if self._key_added else "cannot_connect"
+                },
                 description_placeholders={"vin": self._vin or ""},
             )
         if TYPE_CHECKING:
@@ -394,6 +408,27 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_progress_done(next_step_id="instructions")
         except WhitelistOperationAttemptingToAddExistingKey as err:
             LOGGER.debug("Virtual key is already on the whitelist: %s", err)
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap as err:
+            LOGGER.debug(
+                "No key card was tapped before the vehicle stopped waiting: %s", err
+            )
+            self._pair_error = {"base": "tap_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck as err:
+            LOGGER.debug("Key was not confirmed on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "confirm_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except (
+            WhitelistOperationLocalEntityAuthFailedUIDenied,
+            WhitelistOperationLocalEntityAuthFailedCancelled,
+        ) as err:
+            LOGGER.debug("Key was declined on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "pair_denied"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationCouldNotStartLocalEntityAuth as err:
+            LOGGER.debug("Vehicle could not start the key card request: %s", err)
+            self._pair_error = {"base": "auth_not_started"}
+            return self.async_show_progress_done(next_step_id="instructions")
         except TeslaFleetError as err:
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
@@ -402,6 +437,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # async_remove() only runs if the flow is still tracked when this step raises.
             await self._async_disconnect()
             raise
+        self._key_added = True
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_disconnect(self) -> None:
@@ -468,13 +504,18 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 reason="all_sites_added" if local_control_sites else "no_powerwall"
             )
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            if abort := await self._prepare_energy_site(energy_data):
-                return abort
-            return await self._async_begin_pairing()
+            try:
+                await self._prepare_energy_site(energy_data)
+                return await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                errors["base"] = "powerwall_unreachable"
+            except PowerwallSetupError:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -488,6 +529,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                     )
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_reconfigure(
@@ -509,14 +551,19 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        if abort := await self._prepare_energy_site(energy_data):
-            return abort
-        return await self._async_begin_pairing()
+        try:
+            await self._prepare_energy_site(energy_data)
+            return await self._async_begin_pairing()
+        except EnergyGatewayUnreachable:
+            return self.async_abort(reason="powerwall_unreachable")
+        except PowerwallSetupError:
+            return self.async_abort(reason="cannot_connect")
 
-    async def _prepare_energy_site(
-        self, energy_data: TeslemetryEnergyData
-    ) -> SubentryFlowResult | None:
-        """Discover the gateway address and load the integration's RSA key."""
+    async def _prepare_energy_site(self, energy_data: TeslemetryEnergyData) -> None:
+        """Discover the gateway address and load the integration's RSA key.
+
+        Raises PowerwallSetupError if the RSA key cannot be loaded.
+        """
         energy_site = cast(TeslemetryEnergySite | EnergySiteRouter, energy_data.api)
         self._energy_site = energy_site
 
@@ -540,17 +587,16 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             )
         except (OSError, ValueError, PrivateKeyError) as err:
             LOGGER.debug("RSA key load failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
-        return None
 
     async def _async_begin_pairing(self) -> SubentryFlowResult:
         """Resume or begin key pairing based on the key's state on the gateway."""
         try:
             client = await self._find_authorized_client()
-        except PowerwallLookupError:
-            return self.async_abort(reason="cannot_connect")
+        except PowerwallLookupError as err:
+            raise PowerwallSetupError from err
         if client is not None:
             # Key already registered; do not re-register a pending one (it would reset).
             if client.state == AuthorizedClientState.VERIFIED:
@@ -560,7 +606,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if client.state != AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
                 # Unrecognized state is unusable; treat it as a lookup failure.
                 LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
-                return self.async_abort(reason="cannot_connect")
+                raise PowerwallSetupError
             # Re-registering resets the expired window (no duplicate); fall through.
 
         if TYPE_CHECKING:
@@ -576,9 +622,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
+        except EnergyGatewayUnreachable:
+            raise
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
 
         return await self.async_step_pair()
 
@@ -593,11 +641,25 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         if self._approval_expired:
             # The user saw the expired-window notice and submitted to try again.
+            try:
+                result = await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "powerwall_unreachable"}
+                )
+            except PowerwallSetupError:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "cannot_connect"}
+                )
             self._approval_expired = False
-            return await self._async_begin_pairing()
+            return result
 
         try:
             client = await self._find_authorized_client()
+        except EnergyGatewayUnreachable:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "powerwall_unreachable"}
+            )
         except PowerwallLookupError:
             return self.async_show_form(
                 step_id="pair", errors={"base": "cannot_connect"}
@@ -625,6 +687,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
+        except EnergyGatewayUnreachable:
+            # Unwrapped so callers can report an unreachable gateway as retryable.
+            raise
         except (ClientError, TeslaFleetError) as err:
             # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)
@@ -687,7 +752,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                         CONF_HOST,
                         default=self._default_gateway_host() or probatio.UNDEFINED,
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
