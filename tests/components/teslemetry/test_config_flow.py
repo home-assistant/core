@@ -1327,13 +1327,12 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert cancelled.is_set()
-    # The cancelled pair task drops its link; async_remove disconnecting again is a no-op.
+    # The cancelled pair task owns the disconnect, so async_remove must not add a second one.
     assert _link_calls(vehicle) == [
         "connect",
         "handshakeVehicleSecurity",
         "disconnect",
         "pair",
-        "disconnect",
         "disconnect",
     ]
     # An abandoned pairing never creates a subentry.

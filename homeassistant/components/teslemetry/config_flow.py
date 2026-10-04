@@ -459,9 +459,10 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     @override
     def async_remove(self) -> None:
         """Release resources if the flow is abandoned mid-pairing."""
-        if self._pair_task is not None and not self._pair_task.done():
+        # The pair task disconnects when it ends, so only disconnect here without one.
+        if self._pair_task is not None:
             self._pair_task.cancel()
-        if self._vehicle is not None:
+        elif self._vehicle is not None:
             self.hass.async_create_task(self._async_disconnect())
 
 
