@@ -1,5 +1,6 @@
 """UniFi Network sensor platform tests."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -50,6 +51,7 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 WIRED_CLIENT = {
     "hostname": "Wired client",
@@ -441,6 +443,27 @@ UPS_DEVICE_2.update(
 )
 UPS_DEVICE_2["vbms_table"]["battpool"].pop("device_input_voltage")
 UPS_DEVICE_2["vbms_table"]["battpool"]["device_bypass_voltage"] = 121.7
+
+UPS_BATTERY_POOL_SENSORS = {
+    "batteryLevel": "battery_level",
+    "timeToRemain": "battery_runtime",
+    "device_total_power_output": "output_power",
+    "device_output_current": "output_current",
+    "device_output_voltage": "output_voltage",
+    "device_input_voltage": "input_voltage",
+    "device_bypass_voltage": "bypass_voltage",
+    "device_total_power_factor": "output_power_factor",
+}
+
+UPS_BATTERY_POOL_FIELDS = [
+    pytest.param([device], device_name, field, sensor, id=f"{device['model']}-{field}")
+    for device, device_name in (
+        (UPS_DEVICE_1, "dummy_ups_2u_pro"),
+        (UPS_DEVICE_2, "dummy_ups_2u"),
+    )
+    for field, sensor in UPS_BATTERY_POOL_SENSORS.items()
+    if field in device["vbms_table"]["battpool"]
+]
 
 
 @pytest.mark.parametrize(
@@ -1109,9 +1132,18 @@ async def test_outlet_power_reading_extended_caps(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.parametrize(
+    "missing_telemetry",
+    [
+        pytest.param({}, id="missing-table"),
+        pytest.param({"vbms_table": {}}, id="missing-pool"),
+        pytest.param({"vbms_table": {"battpool": {}}}, id="empty-pool"),
+        pytest.param({"vbms_table": {"battpool": None}}, id="null-pool"),
+    ],
+)
 async def test_ups_battery_pool_sensors(
     hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
@@ -1120,6 +1152,7 @@ async def test_ups_battery_pool_sensors(
     voltage_value: str,
     missing_voltage_sensor: str,
     metered_outlets: tuple[int, ...],
+    missing_telemetry: dict[str, Any],
 ) -> None:
     """Test UPS battery pool telemetry sensors."""
     assert {
@@ -1139,6 +1172,10 @@ async def test_ups_battery_pool_sensors(
         hass.states.get(f"sensor.{device_name}_{voltage_sensor}").state == voltage_value
     )
     assert hass.states.get(f"sensor.{device_name}_{missing_voltage_sensor}") is None
+    assert (
+        entity_registry.async_get(f"sensor.{device_name}_{missing_voltage_sensor}")
+        is None
+    )
     power_factor = hass.states.get(f"sensor.{device_name}_output_power_factor")
     assert power_factor is not None
     assert power_factor.state == "0.98"
@@ -1152,12 +1189,131 @@ async def test_ups_battery_pool_sensors(
 
     assert hass.states.get(f"sensor.{device_name}_battery_level").state == "95"
 
-    updated_device_data["vbms_table"].pop("battpool")
+    expected_states = {
+        f"sensor.{device_name}_{UPS_BATTERY_POOL_SENSORS[field]}": str(value)
+        for field, value in device_payload[0]["vbms_table"]["battpool"].items()
+    }
+    registry_entries = {
+        entity_id: entity_registry.async_update_entity(
+            entity_id, name=f"Custom {entity_id}", icon="mdi:battery"
+        )
+        for entity_id in expected_states
+    }
+    updated_device_data.pop("vbms_table")
+    updated_device_data.update(missing_telemetry)
     mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"sensor.{device_name}_battery_level") is None
-    assert entity_registry.async_get(f"sensor.{device_name}_battery_level") is None
+    for entity_id, registry_entry in registry_entries.items():
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
+    await hass.async_block_till_done()
+
+    for entity_id, expected_state in expected_states.items():
+        assert hass.states.get(entity_id).state == expected_state
+        assert entity_registry.async_get(entity_id) == registry_entries[entity_id]
+
+    config_entry_setup.runtime_data.api.devices.remove_item(device_payload[0])
+    await hass.async_block_till_done()
+
+    for entity_id in expected_states:
+        assert hass.states.get(entity_id) is None
+        assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "device_name", "field", "sensor"), UPS_BATTERY_POOL_FIELDS
+)
+async def test_ups_battery_pool_readings(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    field: str,
+    sensor: str,
+) -> None:
+    """Test initial zero readings and recovery from missing or null fields."""
+    original_device = deepcopy(device_payload[0])
+    device_payload[0] = deepcopy(original_device)
+    device_payload[0]["vbms_table"]["battpool"][field] = 0
+    await config_entry_factory()
+
+    entity_id = f"sensor.{device_name}_{sensor}"
+    assert hass.states.get(entity_id).state == "0"
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+
+    original_pool = original_device["vbms_table"]["battpool"]
+    missing_field_pool = deepcopy(original_pool)
+    missing_field_pool.pop(field)
+    for pool, expected_state in (
+        (missing_field_pool, STATE_UNAVAILABLE),
+        (original_pool, str(original_pool[field])),
+        ({**original_pool, field: None}, STATE_UNAVAILABLE),
+        ({**original_pool, field: 0}, "0"),
+    ):
+        updated_device_data = deepcopy(original_device)
+        updated_device_data["vbms_table"]["battpool"] = pool
+        mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(entity_id).state == expected_state
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "device_name", "field", "sensor"), UPS_BATTERY_POOL_FIELDS
+)
+@pytest.mark.parametrize(
+    "initial_readings",
+    [pytest.param((), id="missing"), pytest.param((None,), id="null")],
+)
+async def test_ups_battery_pool_late_field(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_requests: Callable[[], None],
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    field: str,
+    sensor: str,
+    initial_readings: tuple[None, ...],
+) -> None:
+    """Test unsupported initial fields need a reload for later discovery."""
+    original_device = deepcopy(device_payload[0])
+    device_payload[0] = deepcopy(original_device)
+    pool = device_payload[0]["vbms_table"]["battpool"]
+    pool.pop(field)
+    for value in initial_readings:
+        pool[field] = value
+    config_entry = await config_entry_factory()
+
+    entity_id = f"sensor.{device_name}_{sensor}"
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=original_device)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+
+    device_payload[0] = original_device
+    aioclient_mock.clear_requests()
+    mock_requests()
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == str(
+        original_device["vbms_table"]["battpool"][field]
+    )
+    assert entity_registry.async_get(entity_id) is not None
 
 
 @pytest.mark.parametrize(
