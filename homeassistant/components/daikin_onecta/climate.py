@@ -77,15 +77,9 @@ HA_PRESET_TO_DAIKIN = {
     PRESET_ECO: "econoMode",
 }
 
-SENSORY_DATA_MODEL_ATTRIBUTES = {
+_SENSORY_DATA_MODEL_ATTRIBUTES = {
     "roomTemperature": "room_temperature",
-    "outdoorTemperature": "outdoor_temperature",
     "leavingWaterTemperature": "leaving_water_temperature",
-    "tankTemperature": "tank_temperature",
-    "roomHumidity": "room_humidity",
-    "pm1Concentration": "pm1_concentration",
-    "pm25Concentration": "pm25_concentration",
-    "pm10Concentration": "pm10_concentration",
 }
 
 
@@ -305,12 +299,12 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             return None
         return mode_setpoints.setpoints.get(self._setpoint)
 
-    def sensory_data(self, setpoint):
+    def _sensory_data_for_setpoint(self, setpoint: str):
         """Return a sensory characteristic by Daikin API name."""
         cc = self.climate_control()
         if cc is None or cc.sensory_data is None:
             return None
-        attribute = SENSORY_DATA_MODEL_ATTRIBUTES.get(setpoint)
+        attribute = _SENSORY_DATA_MODEL_ATTRIBUTES.get(setpoint)
         return (
             getattr(cc.sensory_data.value, attribute) if attribute is not None else None
         )
@@ -358,7 +352,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     def get_current_temperature(self):
         """Return the current temperature for this setpoint."""
         current_temp = None
-        sensory_data = self.sensory_data(self._setpoint)
+        sensory_data = self._sensory_data_for_setpoint(self._setpoint)
         # Check if there is a sensoryData which is for the same setpoint, if so, return that
         if sensory_data is not None:
             current_temp = sensory_data.value
@@ -366,7 +360,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             # There is no sensoryData with the same name as the setpoint we are using, see
             # if we are using leavingWaterOffset, at that moment see if we have a
             # leavingWaterTemperature temperature
-            lwsensor = self.sensory_data("leavingWaterTemperature")
+            lwsensor = self._sensory_data_for_setpoint("leavingWaterTemperature")
             if self._setpoint == "leavingWaterOffset" and lwsensor is not None:
                 current_temp = lwsensor.value
         _LOGGER.debug(
