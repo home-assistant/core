@@ -1,5 +1,6 @@
 """Support for Flo Water Monitor sensors."""
 
+from datetime import datetime
 from typing import override
 
 from homeassistant.components.sensor import (
@@ -11,11 +12,13 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import FloConfigEntry
 from .entity import FloEntity
@@ -42,6 +45,11 @@ async def async_setup_entry(
             entities.extend(
                 [
                     FloDailyUsageSensor(device),
+                    FloLastEventUsageSensor(device),
+                    FloLastEventFixtureSensor(device),
+                    FloLastEventDurationSensor(device),
+                    FloLastEventStartSensor(device),
+                    FloLastEventEndSensor(device),
                     FloSystemModeSensor(device),
                     FloCurrentFlowRateSensor(device),
                     FloTemperatureSensor(device, True),
@@ -70,6 +78,109 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
         if self._device.consumption_today is None:
             return None
         return round(self._device.consumption_today, 1)
+
+
+class FloLastEventUsageSensor(FloEntity, SensorEntity):
+    """Monitors the most recent Flo Detect water-flow event."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "last_event_usage"
+
+    def __init__(self, device):
+        """Initialize the last event usage sensor."""
+        super().__init__("last_event_usage", device)
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return gallons consumed in the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None or event.get("totalGal") is None:
+            return None
+        return round(event["totalGal"], 1)
+
+
+class FloLastEventFixtureSensor(FloEntity, SensorEntity):
+    """Monitors the fixture type of the most recent Flo Detect event."""
+
+    _attr_translation_key = "last_event_fixture"
+
+    def __init__(self, device):
+        """Initialize the last event fixture sensor."""
+        super().__init__("last_event_fixture", device)
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the fixture type of the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None:
+            return None
+        predicted = event.get("predicted") or {}
+        return predicted.get("displayText")
+
+
+class FloLastEventDurationSensor(FloEntity, SensorEntity):
+    """Monitors the duration of the most recent Flo Detect event."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "last_event_duration"
+
+    def __init__(self, device):
+        """Initialize the last event duration sensor."""
+        super().__init__("last_event_duration", device)
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the duration of the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None or event.get("duration") is None:
+            return None
+        return event["duration"]
+
+
+class FloLastEventStartSensor(FloEntity, SensorEntity):
+    """Monitors the start time of the most recent Flo Detect event."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "last_event_start"
+
+    def __init__(self, device):
+        """Initialize the last event start sensor."""
+        super().__init__("last_event_start", device)
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the start time of the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None or (start_at := event.get("startAt")) is None:
+            return None
+        return dt_util.parse_datetime(start_at)
+
+
+class FloLastEventEndSensor(FloEntity, SensorEntity):
+    """Monitors the end time of the most recent Flo Detect event."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "last_event_end"
+
+    def __init__(self, device):
+        """Initialize the last event end sensor."""
+        super().__init__("last_event_end", device)
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the end time of the last water-flow event."""
+        event = self._device.last_water_event
+        if event is None or (end_at := event.get("endAt")) is None:
+            return None
+        return dt_util.parse_datetime(end_at)
 
 
 class FloSystemModeSensor(FloEntity, SensorEntity):
