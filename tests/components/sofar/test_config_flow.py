@@ -431,8 +431,22 @@ def _serial_entry() -> MockConfigEntry:
     )
 
 
+@pytest.mark.parametrize(
+    ("setup_error", "setup_state"),
+    [
+        pytest.param(None, ConfigEntryState.LOADED, id="loaded"),
+        pytest.param(
+            ModbusTimeoutError("stuck"),
+            ConfigEntryState.SETUP_RETRY,
+            id="setup_retry",
+        ),
+    ],
+)
 async def test_reconfigure_new_line_settings(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    setup_error: Exception | None,
+    setup_state: ConfigEntryState,
 ) -> None:
     """Test new line settings take the entry off the bus before probing."""
     entry = _serial_entry()
@@ -448,9 +462,12 @@ async def test_reconfigure_new_line_settings(
         states.append(entry.state)
         yield mock_connection.for_unit(unit_id)
 
+    mock_connection.for_unit(1).fail_requests(setup_error)
     with _patch_unit(mock_connection):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
+        assert entry.state is setup_state
+        mock_connection.for_unit(1).fail_requests(None)
 
         result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
         with patch(
@@ -495,3 +512,30 @@ async def test_reconfigure_new_line_settings_cannot_connect(
     # Setting the entry back up hits the same dead device, so it
     # lands in retry rather than staying unloaded.
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reconfigure_new_line_settings_wrong_device(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test a different inverter on the new settings restores the entry."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+
+    other_conn = MockModbusConnection()
+    seed_pv_inverter(other_conn.for_unit(1), serial=_UNMODELED_SERIAL)
+
+    with _patch_unit(mock_connection):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+        with _patch_temporary_unit(other_conn):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+            )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.state is ConfigEntryState.LOADED
