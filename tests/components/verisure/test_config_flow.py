@@ -591,9 +591,9 @@ async def test_user_flow_invalid_auth_password_length(
         pytest.param("a" * 31, "invalid_auth_password_too_long", id="over_limit"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_invalid_auth_password_length(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_verisure_config_flow: MagicMock,
     mock_config_entry: MockConfigEntry,
     password: str,
@@ -624,6 +624,11 @@ async def test_reauth_flow_invalid_auth_password_length(
 
     assert result3.get("type") is FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "SuperS3cr3t!",
+    }
 
 
 async def test_user_flow_mfa_rate_limited(
