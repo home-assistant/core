@@ -428,13 +428,17 @@ async def test_select_update_doorbell_message(
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "DO NOT DISTURB"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "DO NOT DISTURB"
 
     public = make_public_camera(doorbell, lcd_message=None)
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "Default Message (Welcome)"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Default Message (Welcome)"
 
 
 async def test_select_set_option_light_motion(

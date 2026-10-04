@@ -169,10 +169,6 @@ def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
 
-def _get_doorbell_current(obj: PublicDeviceModel) -> str | None:
-    return cast(PublicCamera, obj).lcd_message_text
-
-
 async def _set_light_mode(obj: PublicLight, mode: str) -> None:
     lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
     await obj.set_light_mode(
@@ -267,7 +263,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_public_value_fn=_get_doorbell_current,
+        ufp_public_value="lcd_message_text",
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
         ufp_perm=PermRequired.WRITE,

@@ -47,9 +47,6 @@ async def test_text_camera_setup(
 ) -> None:
     """Test text entity setup for camera devices."""
 
-    doorbell.lcd_message = LCDMessage(
-        type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
-    )
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
@@ -64,7 +61,7 @@ async def test_text_camera_setup(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "Test"
+    assert state.state == "Welcome"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -123,7 +120,7 @@ async def test_text_camera_reads_public(
     lcd_message: PublicLcdMessage | None,
     expected: str,
 ) -> None:
-    """Test the doorbell text reads the public LCD message."""
+    """Test the doorbell text reads the public LCD message, not the private one."""
 
     doorbell.lcd_message = LCDMessage(
         type=DoorbellMessageType.CUSTOM_MESSAGE, text="Private"
@@ -134,10 +131,14 @@ async def test_text_camera_reads_public(
     _, entity_id = await ids_from_device_description(
         hass, Platform.TEXT, doorbell, CAMERA[0]
     )
-    assert hass.states.get(entity_id).state == "Private"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Welcome"
 
     public = make_public_camera(doorbell, lcd_message=lcd_message)
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == expected
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected
