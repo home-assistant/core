@@ -4162,3 +4162,42 @@ async def test_upload_progress_debounced(
     ]
     assert len(remote_events) == 3
     assert remote_events[2].uploaded_bytes == remote_events[2].total_bytes
+
+
+async def test_retention_days_applied_after_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    generate_backup_id: MagicMock,
+) -> None:
+    """Test retention by days is applied when a backup completes.
+
+    The scheduled delete only fires a day after the config is loaded, so an
+    instance that is restarted more often than that never reaches it and keeps
+    expired backups forever. Retention by copies has always been applied here.
+    """
+    # Both carry our instance id, so they count as automatic, and both are dated
+    # 1970, so any retention period has passed. The newest of the two is kept
+    # unconditionally, the way async_delete_filtered_backups always keeps one.
+    backup_1 = replace(TEST_BACKUP_ABC123, backup_id="backup1")
+    backup_2 = replace(TEST_BACKUP_ABC123, backup_id="backup2")
+    mock_agents = await setup_backup_integration(
+        hass,
+        remote_agents=["test.remote"],
+        backups={"test.remote": [backup_1, backup_2]},
+    )
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/config/update", "retention": {"copies": None, "days": 1}}
+    )
+    assert (await ws_client.receive_json())["success"]
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": ["test.remote"]}
+        )
+        assert (await ws_client.receive_json())["success"]
+        await hass.async_block_till_done()
+
+    # The clock never moved a day, so the scheduled delete has not fired.
+    assert mock_agents["test.remote"].async_delete_backup.call_count == 1
