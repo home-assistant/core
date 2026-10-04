@@ -2,8 +2,9 @@
 
 from typing import Final
 
+from pyrail.models import StationDetails
+
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 
 DOMAIN: Final = "nmbs"
 
@@ -15,17 +16,21 @@ CONF_STATION_LIVE = "station_live"
 CONF_EXCLUDE_VIAS = "exclude_vias"
 
 
-def find_station_by_name(hass: HomeAssistant, station_name: str):
+def find_station_by_name(
+    stations: list[StationDetails], station_name: str
+) -> StationDetails | None:
     """Find given station_name in the station list."""
     return next(
-        (s for s in hass.data[DOMAIN] if station_name in (s.standard_name, s.name)),
+        (s for s in stations if station_name in (s.standard_name, s.name)),
         None,
     )
 
 
-def find_station(hass: HomeAssistant, station_name: str):
+def find_station(
+    stations: list[StationDetails], station_name: str
+) -> StationDetails | None:
     """Find given station_id in the station list."""
     return next(
-        (s for s in hass.data[DOMAIN] if station_name in s.id),
+        (s for s in stations if station_name in s.id),
         None,
     )
