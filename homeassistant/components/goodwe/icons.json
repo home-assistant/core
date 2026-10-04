@@ -17,6 +17,20 @@
       "operation_mode": {
         "default": "mdi:solar-power"
       }
+    },
+    "switch": {
+      "backup_supply": {
+        "default": "mdi:battery-sync"
+      },
+      "dod_holding": {
+        "default": "mdi:battery-lock"
+      },
+      "fast_charging": {
+        "default": "mdi:battery-charging-high"
+      },
+      "load_control_switch": {
+        "default": "mdi:electric-switch"
+      }
     }
   }
 }

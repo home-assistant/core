@@ -43,6 +43,20 @@
           "peak_shaving": "Peak shaving mode"
         }
       }
+    },
+    "switch": {
+      "backup_supply": {
+        "name": "Backup supply"
+      },
+      "dod_holding": {
+        "name": "Depth of discharge holding"
+      },
+      "fast_charging": {
+        "name": "Fast charging"
+      },
+      "load_control_switch": {
+        "name": "Load control"
+      }
     }
   }
 }
