@@ -22,6 +22,7 @@ from .const import (
     SAMPLE_WIDTH,
     SAMPLES_PER_CHUNK,
 )
+from .debug_recording import async_setup_debug_recordings
 from .error import PipelineNotFound
 from .models import (
     AudioSettings,
@@ -89,6 +90,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
+    async_setup_debug_recordings(hass)
 
     return True
 
