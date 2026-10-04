@@ -28,18 +28,19 @@ if TYPE_CHECKING:
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_GRANULARITY = "granularity"
 
+GRANULARITIES = {
+    "hourly": EpexGranularity.HOURLY,
+    "quarter_hourly": EpexGranularity.QUARTER_HOURLY,
+}
+
 SERVICE_GET_EPEX_PRICES_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
         probatio.Required(ATTR_DATE): cv.date,
-        probatio.Optional(ATTR_GRANULARITY, default=EpexGranularity.HOURLY.name): (
-            probatio.All(
-                cv.string,
-                probatio.Upper,
-                probatio.In([granularity.name for granularity in EpexGranularity]),
-            )
+        probatio.Optional(ATTR_GRANULARITY, default="hourly"): probatio.In(
+            GRANULARITIES
         ),
     }
 )
@@ -66,7 +67,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
         )
         asked_date: date = call.data[ATTR_DATE]
-        granularity = EpexGranularity[call.data[ATTR_GRANULARITY]]
+        granularity = GRANULARITIES[call.data[ATTR_GRANULARITY]]
         _validate_date(asked_date)
         start, end = epex_window(asked_date)
         try:

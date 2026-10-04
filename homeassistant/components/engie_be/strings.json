@@ -411,6 +411,12 @@
     }
   },
   "selector": {
+    "granularity": {
+      "options": {
+        "hourly": "Hourly",
+        "quarter_hourly": "Quarter-hourly"
+      }
+    },
     "mfa_method": {
       "options": {
         "email": "Email",

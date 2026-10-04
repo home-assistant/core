@@ -10,9 +10,11 @@ get_epex_prices_for_date:
       selector:
         date:
     granularity:
+      default: "hourly"
       selector:
         select:
           options:
-            - "HOURLY"
-            - "QUARTER_HOURLY"
+            - "hourly"
+            - "quarter_hourly"
           mode: dropdown
+          translation_key: granularity

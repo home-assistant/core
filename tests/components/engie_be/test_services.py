@@ -67,7 +67,7 @@ async def test_get_epex_prices_for_date_quarter_hourly(
         {
             "config_entry": mock_config_entry.entry_id,
             "date": "2026-10-03",
-            "granularity": "QUARTER_HOURLY",
+            "granularity": "quarter_hourly",
         },
     )
     slots = response["slots"]
