@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import LOGGER
+from .const import LOGGER, MATTER_MAX_MIREDS
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -45,15 +45,6 @@ COLOR_MODE_MAP = {
     _CC_COLOR_MODE.kCurrentXAndCurrentY: ColorMode.XY,
     _CC_COLOR_MODE.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
-
-# Maximum Mireds value per the Matter spec is 65279
-# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin,
-# so this corresponds to a minimum color temperature of ~15.3K
-# Which is shown in UI as 15 Kelvin due to rounding.
-# But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
-# and causes Invoke error, so cap values over maximum when sending
-MATTER_MAX_MIREDS = 65279
-
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
