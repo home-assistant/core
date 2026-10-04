@@ -100,21 +100,26 @@
       },
       "entry_type": "Local vehicle",
       "error": {
+        "auth_not_started": "The vehicle could not start the key card request. Wake the vehicle, then select Submit to try again.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "confirm_timeout": "The key was not confirmed on the vehicle's touchscreen in time. Select Submit, tap a key card, then confirm the prompt on the vehicle's touchscreen.",
         "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "key_unverified": "The key was added, but the vehicle's reply could not be verified. Select Submit to try again.",
+        "pair_denied": "The key was declined on the vehicle's touchscreen. Select Submit and tap a key card to try again.",
         "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
-        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
+        "tap_timeout": "The key card was not tapped in time. Select Submit and tap a key card within 30 seconds.",
+        "timeout": "Timed out waiting for the vehicle to add the key. Select Submit and tap a key card on the center console card reader."
       },
       "initiate_flow": {
         "user": "Add local vehicle"
       },
       "progress": {
-        "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
+        "pair": "Tap a key card on the center console card reader now. The vehicle stops waiting after about 30 seconds."
       },
       "step": {
         "instructions": {
-          "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to approve Home Assistant's virtual key. This only needs to be done once.",
-          "title": "Approve the virtual key"
+          "description": "Vehicle {vin} does not have Home Assistant's Bluetooth key on its key list. This is expected the first time, and happens again if the key was removed from the vehicle. To add it, select **Submit**, then tap a key card on the center console card reader within about 30 seconds. The vehicle's touchscreen shows a prompt while it waits for the card.",
+          "title": "Add Home Assistant's key to the vehicle"
         },
         "scan": {
           "description": "Home Assistant will look for vehicle {vin} over Bluetooth. Make sure the vehicle is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue.",

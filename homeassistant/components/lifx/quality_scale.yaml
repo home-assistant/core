@@ -10,16 +10,14 @@ rules:
   docs-actions: done
   docs-conditions:
     status: exempt
-    comment: This integration does not provide any conditions.
+    comment: The integration does not provide conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-triggers:
     status: exempt
-    comment: This integration does not provide any triggers.
-  entity-event-setup:
-    status: exempt
-    comment: local_polling; entities rely solely on CoordinatorEntity's built-in lifecycle, no manual event subscriptions.
+    comment: The integration does not provide triggers.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -32,7 +30,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: This integration does not provide an options flow.
+    comment: The integration has no options flow.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -40,18 +38,14 @@ rules:
   parallel-updates: done
   reauthentication-flow:
     status: exempt
-    comment: A local Modbus link has no authentication that can expire or be invalidated.
+    comment: LIFX devices are controlled over the local network without credentials.
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: Modbus devices have no discovery protocol to update connection info from.
-  discovery:
-    status: exempt
-    comment: Modbus devices are not announced over any discoverable protocol.
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -59,22 +53,31 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Each device owns a config entry, so a newly discovered device starts a
+      discovery flow rather than adding entities to an existing entry.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations:
+    status: done
+    comment: |
+      The buttons carry a device class instead of a translation key, which
+      ButtonEntity resolves to a name the same way.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
+  repair-issues: done
+  stale-devices:
     status: exempt
-    comment: This integration has no user-actionable issues to repair.
-  stale-devices: done
+    comment: |
+      Each device owns a config entry, so removing the entry removes the device.
 
   # Platinum
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: This integration communicates over Modbus, not HTTP.
+    comment: The integration talks to devices over UDP and creates no HTTP session.
   strict-typing: done
