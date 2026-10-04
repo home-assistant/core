@@ -211,7 +211,6 @@ class AuthStore:
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
         expire_at: float | None = None,
         credential: models.Credentials | None = None,
-        *,
         resource: str | None = None,
     ) -> models.RefreshToken:
         """Create a new token for a user."""

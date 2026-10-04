@@ -459,7 +459,6 @@ class AuthManager:
         token_type: str | None = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
         credential: models.Credentials | None = None,
-        *,
         resource: str | None = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
