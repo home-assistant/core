@@ -32,7 +32,7 @@
       "message": "Your draft basket at pharmacy {apb} still has products. Submit or clear the draft in the Mijn Farmad Apotheek app and try again."
     },
     "invalid_product": {
-      "message": "{product} is not a CNK code of seven digits. Use the search_medication action to find the CNK code of a product."
+      "message": "{product} is not a CNK code of seven digits. Use the 'Search medication' action to find the CNK code of a product."
     },
     "multiple_pharmacies": {
       "message": "Your account is linked to several pharmacies: {pharmacies}. Pass the apb number of the pharmacy to use."
