@@ -373,7 +373,7 @@ async def ws_get_fossil_energy_consumption(
             fossil_energy,
             _same_month_ts,
             _month_start_end_ts,
-            timedelta(days=1),
+            timedelta(days=31),
         )
 
     result = {period["start"]: period["delta"] for period in reduced_fossil_energy}
