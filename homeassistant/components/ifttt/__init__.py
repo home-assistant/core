@@ -50,7 +50,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN): probatio.Schema(
             {
-                probatio.Required(CONF_KEY): probatio.Any(
+                probatio.Required(probatio.Secret(CONF_KEY)): probatio.Any(
                     {cv.string: cv.string}, cv.string
                 )
             }

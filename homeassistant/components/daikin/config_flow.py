@@ -39,7 +39,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_HOST, default=self.host): str,
                 probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
-                probatio.Optional(CONF_PASSWORD): str,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 

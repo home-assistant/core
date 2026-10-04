@@ -1869,15 +1869,53 @@ def test_attribute_selector_schema(
             (None, {}, {"seconds": -1}),
         ),
         (
+            {"mode": "positive"},
+            ({"seconds": 10},),
+            (None, {}, {"seconds": -1}),
+        ),
+        (
             {"allow_negative": True},
             ({"seconds": 10}, {"seconds": -1}),
             (None, {}),
         ),
+        (
+            {"mode": "signed"},
+            ({"seconds": 10}, {"seconds": -1}, {"hours": -1, "minutes": -30}),
+            (None, {}),
+        ),
+        (
+            {"mode": "offset", "enable_day": True},
+            (
+                {"seconds": 10},
+                {"hours": -1, "minutes": -30},
+                {"days": 0, "hours": 0, "minutes": 0, "seconds": 0},
+            ),
+            (None, {}),
+        ),
     ],
 )
-def test_duration_selector_schema(schema, valid_selections, invalid_selections) -> None:
+def test_duration_selector_schema(
+    schema: dict[str, Any],
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
     """Test duration selector."""
     _test_selector("duration", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {"mode": "sideways"},
+        {"mode": "positive", "allow_negative": True},
+        {"mode": "signed", "allow_negative": False},
+        {"mode": "offset", "allow_negative": False},
+    ],
+)
+def test_duration_selector_invalid_config(schema: dict[str, Any]) -> None:
+    """Test duration selector rejects an unknown mode or a conflicting alias."""
+    with pytest.raises(probatio.Invalid):
+        selector.validate_selector({"duration": schema})
 
 
 @pytest.mark.parametrize(

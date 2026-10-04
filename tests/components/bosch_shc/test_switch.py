@@ -8,6 +8,7 @@ from boschshcpy import (
     CameraAmbientLightService,
     CameraFrontLightService,
     CameraLightService,
+    CameraNotificationService,
     PrivacyModeService,
     SilentModeService,
     ThermostatService,
@@ -25,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
+    camera_360_device,
     camera_eyes_device,
     camera_outdoor_gen2_device,
     light_switch_bsm_device,
@@ -1047,6 +1049,50 @@ async def test_camera_eyes_cameralight(
         blocking=True,
     )
     assert device.cameralight is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_360": [
+                camera_360_device(
+                    cameranotification=CameraNotificationService.State.ENABLED
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_360_notification(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Camera 360's notifications are exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_360[0]
+
+    state = hass.states.get("switch.camera_360_notifications")
+    assert state is not None
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.camera_360_notifications"},
+        blocking=True,
+    )
+    assert device.cameranotification is False
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.camera_360_notifications"},
+        blocking=True,
+    )
+    assert device.cameranotification is True
 
 
 @pytest.mark.parametrize(

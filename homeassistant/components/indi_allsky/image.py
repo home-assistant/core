@@ -31,7 +31,7 @@ class IndiAllSkyImageEntityDescription(ImageEntityDescription):
     """Class describing INDI Allsky image entities."""
 
     media_fn: Callable[[IndiAllSkyData], MediaData | None]
-    fallback_filename: str
+    image_filename: str
 
 
 IMAGE_DESCRIPTIONS: tuple[IndiAllSkyImageEntityDescription, ...] = (
@@ -39,13 +39,13 @@ IMAGE_DESCRIPTIONS: tuple[IndiAllSkyImageEntityDescription, ...] = (
         key="latest_keogram",
         translation_key="latest_keogram",
         media_fn=lambda data: data.latest_keogram,
-        fallback_filename="latestkeogram",
+        image_filename="latestkeogram",
     ),
     IndiAllSkyImageEntityDescription(
         key="latest_startrail",
         translation_key="latest_startrail",
         media_fn=lambda data: data.latest_startrail,
-        fallback_filename="lateststartrail",
+        image_filename="lateststartrail",
     ),
 )
 
@@ -97,20 +97,19 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
     @override
     async def async_image(self) -> bytes | None:
         """Return bytes of the image."""
-        media = self.entity_description.media_fn(self.coordinator.data)
-        filename = (
-            media.filename
-            if (media and media.filename)
-            else self.entity_description.fallback_filename
-        )
         try:
-            image_bytes = await self.coordinator.client.fetch_image(filename)
+            image_bytes = await self.coordinator.client.fetch_image(
+                self.entity_description.image_filename
+            )
         except IndiAllSkyError:
             return None
         else:
             if content_type := infer_image_type(image_bytes):
                 self._attr_content_type = content_type
-            if media is None and self._last_fetched is None:
+            if (
+                self.entity_description.media_fn(self.coordinator.data) is None
+                and self._last_fetched is None
+            ):
                 self._last_fetched = dt_util.utcnow()
                 self.async_write_ha_state()
             return image_bytes

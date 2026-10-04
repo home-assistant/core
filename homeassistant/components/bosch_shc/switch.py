@@ -9,6 +9,7 @@ from boschshcpy import (
     CameraAmbientLightService,
     CameraFrontLightService,
     CameraLightService,
+    CameraNotificationService,
     PowerSwitchService,
     PrivacyModeService,
     SHCShutterContact2,
@@ -86,6 +87,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         on_key="privacymode",
         on_value=PrivacyModeService.State.DISABLED,
+        should_poll=True,
+    ),
+    "camera360_notification": SHCSwitchEntityDescription(
+        key="camera360_notification",
+        translation_key="camera_notification",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="cameranotification",
+        on_value=CameraNotificationService.State.ENABLED,
         should_poll=True,
     ),
     "cameraoutdoorgen2": SHCSwitchEntityDescription(
@@ -332,6 +342,18 @@ async def async_setup_entry(
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["camera360"],
+        )
+        for switch in session.device_helper.camera_360
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["camera360_notification"],
+            unique_id_suffix="camera360_notification",
         )
         for switch in session.device_helper.camera_360
     )

@@ -294,6 +294,29 @@ class RestoreStateData:
 
         del self.entities[entity_id]
 
+    @callback
+    def async_restore_entity_id_changed(
+        self, old_entity_id: str, new_entity_id: str
+    ) -> None:
+        """Move the stored state of an entity whose entity_id has changed."""
+        if (stored_state := self.last_states.pop(old_entity_id, None)) is None:
+            # Never restore another entity's leftover state under the new id
+            self.last_states.pop(new_entity_id, None)
+            return
+        state = stored_state.state
+        # The store is keyed by State.entity_id when loaded
+        stored_state.state = State(
+            new_entity_id,
+            state.state,
+            state.attributes,
+            last_changed=state.last_changed,
+            last_reported=state.last_reported,
+            last_updated=state.last_updated,
+            context=state.context,
+            validate_entity_id=False,
+        )
+        self.last_states[new_entity_id] = stored_state
+
 
 class RestoreEntity(Entity):
     """Mixin class for restoring previous entity state."""
@@ -321,6 +344,15 @@ class RestoreEntity(Entity):
             self.entity_id, state, extra_data
         )
         await super().async_internal_will_remove_from_hass()
+
+    @callback
+    @override
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the stored state to the new entity_id."""
+        super().async_internal_entity_id_changed(old_entity_id)
+        async_get(self.hass).async_restore_entity_id_changed(
+            old_entity_id, self.entity_id
+        )
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:
