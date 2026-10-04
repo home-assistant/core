@@ -79,7 +79,9 @@ from homeassistant.helpers.trigger import (
     StatelessEntityTriggerBase,
     Trigger,
     TriggerActionRunner,
+    TriggerActionType,
     TriggerConfig,
+    TriggerInfo,
     TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
     async_initialize_triggers,
@@ -956,6 +958,76 @@ async def test_platform_multiple_triggers(
         await async_initialize_triggers(
             hass, config_3, action_method, "test", "", log_cb
         )
+
+
+async def test_platform_legacy_and_new_style_triggers(hass: HomeAssistant) -> None:
+    """Test a platform providing a legacy trigger next to new-style triggers."""
+
+    class MockTrigger(Trigger):
+        """Mock new-style trigger."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+        async def async_attach_runner(
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
+        ) -> CALLBACK_TYPE:
+            """Attach a trigger."""
+            run_action({"extra": "new_style"}, "new-style desc")
+            return lambda: None
+
+    class MockTriggerPlatform:
+        """Mock platform with both kinds of triggers."""
+
+        TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend({"option": str})
+
+        @staticmethod
+        async def async_attach_trigger(
+            hass: HomeAssistant,
+            config: ConfigType,
+            action: TriggerActionType,
+            trigger_info: TriggerInfo,
+        ) -> CALLBACK_TYPE:
+            """Attach the legacy trigger."""
+            hass.async_run_job(action, {"trigger": {"extra": "legacy"}})
+            return lambda: None
+
+        @staticmethod
+        async def async_get_triggers(
+            hass: HomeAssistant,
+        ) -> dict[str, type[Trigger]]:
+            """Return the new-style triggers."""
+            return {"new_style": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", MockTriggerPlatform())
+
+    legacy_config = [{"platform": "test", "option": "value"}]
+    new_style_config = [{"platform": "test.new_style"}]
+    assert await async_validate_trigger_config(hass, legacy_config) == legacy_config
+    assert (
+        await async_validate_trigger_config(hass, new_style_config) == new_style_config
+    )
+    assert hass.data[TRIGGERS] == {"test": "test", "test.new_style": "test"}
+
+    action_calls: list[str] = []
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        action_calls.append(run_variables["trigger"]["extra"])
+
+    log_cb = MagicMock()
+    await async_initialize_triggers(hass, legacy_config, action, "test", "", log_cb)
+    await async_initialize_triggers(hass, new_style_config, action, "test", "", log_cb)
+    await hass.async_block_till_done()
+
+    assert action_calls == ["legacy", "new_style"]
 
 
 async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
