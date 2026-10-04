@@ -16,9 +16,6 @@ CONF_LOCK_DEFAULT_CODE = "lock_default_code"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_LOCK_CODE_DIGITS = 4
 
-# Verisure My Pages truncates passwords longer than this.
-MAX_PASSWORD_LENGTH = 30
-
 # vsure cookies are valid for ~15 minutes; refresh before expiry.
 COOKIE_REFRESH_INTERVAL = timedelta(minutes=10)
 
