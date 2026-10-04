@@ -84,6 +84,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
+    wifi_networks: dict[int, dict[str, Any]]
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -179,6 +180,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
+        self._wifi_network_indexes: set[int] = set()
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -299,6 +301,30 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return unregister_entity_updates
 
+    async def async_register_wifi_network(self, index: int) -> Callable[[], None]:
+        """Register a Wi-Fi network to be updated by coordinator."""
+
+        def unregister_wifi_network() -> None:
+            """Unregister a Wi-Fi network from coordinator updates."""
+            self._wifi_network_indexes.discard(index)
+            self.data["wifi_networks"].pop(index, None)
+
+        self._wifi_network_indexes.add(index)
+        self.data["wifi_networks"][index] = await self.hass.async_add_executor_job(
+            self._get_wifi_network, index
+        )
+        return unregister_wifi_network
+
+    def _get_wifi_network(self, index: int) -> dict[str, Any]:
+        """Get a Wi-Fi network configuration."""
+        return self.connection.call_action(f"WLANConfiguration{index}", "GetInfo")
+
+    def _wifi_networks_update(self) -> dict[int, dict[str, Any]]:
+        """Update registered Wi-Fi networks."""
+        return {
+            index: self._get_wifi_network(index) for index in self._wifi_network_indexes
+        }
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -316,6 +342,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
+            "wifi_networks": {},
         }
         self.connection.clear_cache()
         try:
@@ -332,6 +359,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_data[
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
+
+            entity_data["wifi_networks"] = await self.hass.async_add_executor_job(
+                self._wifi_networks_update
+            )
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
