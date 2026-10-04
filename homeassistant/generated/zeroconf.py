@@ -452,11 +452,11 @@ ZEROCONF = {
     "_daikin._tcp.local.": [
         {
             "domain": "daikin_onecta",
-            "name": "altherma",
+            "name": "altherma._daikin._tcp.local.",
         },
         {
             "domain": "daikin_onecta",
-            "name": "ndj",
+            "name": "ndj._daikin._tcp.local.",
         },
     ],
     "_deako._tcp.local.": [
@@ -587,11 +587,11 @@ ZEROCONF = {
     "_https._tcp.local.": [
         {
             "domain": "daikin_onecta",
-            "name": "altherma4-*",
+            "name": "altherma4-*._https._tcp.local.",
         },
         {
             "domain": "daikin_onecta",
-            "name": "homehub",
+            "name": "homehub._https._tcp.local.",
         },
     ],
     "_http._tcp.local.": [

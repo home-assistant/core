@@ -12,19 +12,19 @@
   "requirements": ["daikin-onecta==0.3.0"],
   "zeroconf": [
     {
-      "name": "altherma4-*",
+      "name": "altherma4-*._https._tcp.local.",
       "type": "_https._tcp.local."
     },
     {
-      "name": "homehub",
+      "name": "homehub._https._tcp.local.",
       "type": "_https._tcp.local."
     },
     {
-      "name": "altherma",
+      "name": "altherma._daikin._tcp.local.",
       "type": "_daikin._tcp.local."
     },
     {
-      "name": "ndj",
+      "name": "ndj._daikin._tcp.local.",
       "type": "_daikin._tcp.local."
     }
   ]
