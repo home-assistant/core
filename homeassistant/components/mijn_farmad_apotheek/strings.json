@@ -72,7 +72,7 @@
           "name": "Comment"
         },
         "product": {
-          "description": "The CNK code of the product to order. Use the search_medication action to find the CNK code of a product.",
+          "description": "The CNK code of the product to order. Use the 'Search medication' action to find the CNK code of a product.",
           "name": "Product"
         },
         "quantity": {
