@@ -1,0 +1,197 @@
+"""Test the FMD config flow."""
+
+from unittest.mock import MagicMock, patch
+
+from fmd_api import AuthenticationError, FmdApiException
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.fmd.const import DOMAIN
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_URL
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from . import TEST_ID, TEST_PASSWORD, TEST_URL
+
+from tests.common import MockConfigEntry
+
+USER_INPUT = {CONF_URL: TEST_URL, CONF_ID: TEST_ID, CONF_PASSWORD: TEST_PASSWORD}
+
+
+async def test_form(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we get the form and can create an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_ID
+    assert result["data"][CONF_URL] == TEST_URL
+    assert result["data"][CONF_ID] == TEST_ID
+    assert "artifacts" in result["data"]
+    assert "password" not in result["data"]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (AuthenticationError("nope"), "invalid_auth"),
+        (FmdApiException("boom"), "cannot_connect"),
+        (Exception("surprise"), "unknown"),
+    ],
+)
+async def test_form_errors_then_success(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test errors are shown, then the flow recovers to CREATE_ENTRY."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.fmd.config_flow.FmdClient.create",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort if the account is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_trailing_slash_url_canonicalized_in_entry_data(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test a trailing-slash URL is stored canonically.
+
+    The entity/device identity derives from the stored URL, so it must
+    match the canonical entry unique_id exactly.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(USER_INPUT, **{CONF_URL: f"{TEST_URL}/"})
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_entries()[0]
+    assert entry.unique_id == f"{TEST_URL}/{TEST_ID}"
+    assert entry.data[CONF_URL] == TEST_URL
+
+
+async def test_equivalent_url_variants_share_identity(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test scheme/host case and default-port variants are one entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        dict(USER_INPUT, **{CONF_URL: "HTTPS://FMD.Example.Com:443/"}),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("url", "error"),
+    [
+        ("https://user:secret@fmd.example.com", "invalid_url"),
+        ("https://user@fmd.example.com", "invalid_url"),
+        ("not a url", "invalid_url"),
+        ("fmd.example.com", "invalid_url"),
+        ("ftp://fmd.example.com", "invalid_url"),
+        ("file:///tmp/fmd", "invalid_url"),
+    ],
+)
+async def test_invalid_url_rejected(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    url: str,
+    error: str,
+) -> None:
+    """Test credential-bearing and non-absolute URLs are rejected.
+
+    The URL becomes the config-entry unique_id and the entity/device
+    registry identity, so userinfo or junk must never reach storage.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(USER_INPUT, **{CONF_URL: url})
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: error}
+    assert not hass.config_entries.async_entries(DOMAIN)
+    mock_fmd_client.create.assert_not_called()
+
+
+async def test_url_query_and_fragment_dropped_from_identity(
+    hass: HomeAssistant,
+    mock_fmd_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test query/fragment variants map to the same entry identity."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        dict(USER_INPUT, **{CONF_URL: f"{TEST_URL}/?token=x#section"}),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

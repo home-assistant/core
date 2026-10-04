@@ -2258,6 +2258,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "fmd": {
+      "name": "FMD",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "folder": {
       "name": "Folder",
       "integration_type": "hub",
