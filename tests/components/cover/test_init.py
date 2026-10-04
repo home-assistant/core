@@ -121,6 +121,14 @@ async def test_services(
     assert is_closing(hass, ent5, 100)
 
 
+def test_motorized_furniture_device_classes() -> None:
+    """Test the device classes for motorized furniture are available."""
+    assert cover.CoverDeviceClass.SOFA == "sofa"
+    assert cover.CoverDeviceClass.DESK == "desk"
+    assert "sofa" in cover.DEVICE_CLASSES
+    assert "desk" in cover.DEVICE_CLASSES
+
+
 def call_service(hass: HomeAssistant, service: str, ent: Entity) -> ServiceResponse:
     """Call any service on entity."""
     return hass.services.async_call(
