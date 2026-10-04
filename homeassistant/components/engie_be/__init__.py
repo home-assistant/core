@@ -7,13 +7,13 @@ from datetime import datetime
 
 from aioengiebelgium import EngieBeClient, EngieBeError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
@@ -143,6 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         households=households,
     )
 
+    cancel_retry: Callable[[], None] | None = None
+
     async def _retry_classification(_now: datetime) -> None:
         """Classify the households whose tariff lookup failed at setup."""
         pending = [
@@ -151,6 +153,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         results = await asyncio.gather(
             *(_async_is_dynamic(client, ban) for ban in pending)
         )
+        if entry.state is not ConfigEntryState.LOADED:
+            return
         for ban, is_dynamic in zip(pending, results, strict=True):
             households[ban].is_dynamic = is_dynamic
         if any(is_dynamic for is_dynamic in results):
@@ -159,10 +163,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
             for notify in entry.runtime_data.epex_ready_callbacks:
                 notify()
         if any(household.is_dynamic is None for household in households.values()):
-            entry.async_on_unload(
-                async_call_later(hass, CONTRACTS_RETRY_INTERVAL, _retry_classification)
-            )
             return
+        if cancel_retry is not None:
+            cancel_retry()
         if not any(household.is_dynamic for household in households.values()):
             if (epex := entry.runtime_data.epex) is not None:
                 await epex.async_shutdown()
@@ -170,9 +173,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
 
     if any(household.is_dynamic is None for household in households.values()):
         LOGGER.warning("Tariff lookup failed, EPEX entities wait for a retry")
-        entry.async_on_unload(
-            async_call_later(hass, CONTRACTS_RETRY_INTERVAL, _retry_classification)
+        cancel_retry = async_track_time_interval(
+            hass, _retry_classification, CONTRACTS_RETRY_INTERVAL
         )
+        entry.async_on_unload(cancel_retry)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

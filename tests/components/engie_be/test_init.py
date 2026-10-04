@@ -1,5 +1,6 @@
 """Test the ENGIE Belgium integration setup."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock
@@ -566,6 +567,130 @@ async def test_contracts_failure_keeps_retrying(
 
     assert client.async_get_energy_contracts.call_count == 3
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+
+async def test_contracts_retry_only_queries_pending_households(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test each retry queries only the households whose tariff is still unknown."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+
+    def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == BAN_2:
+            raise EngieBeCommunicationError("boom")
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    client.async_get_energy_contracts.reset_mock()
+
+    for _ in range(3):
+        freezer.tick(CONTRACTS_RETRY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        call.args[0] for call in client.async_get_energy_contracts.call_args_list
+    ] == [BAN_2, BAN_2, BAN_2]
+
+
+async def test_contracts_retry_stops_once_classified(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the retries stop once every household has a known tariff."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
+    for _ in range(3):
+        freezer.tick(CONTRACTS_RETRY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert client.async_get_energy_contracts.call_count == 2
+
+
+async def test_contracts_retry_stops_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading the entry stops the tariff retries."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for _ in range(3):
+        freezer.tick(CONTRACTS_RETRY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert client.async_get_energy_contracts.call_count == 1
+
+
+async def test_contracts_retry_in_flight_during_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    frozen_afternoon: None,
+) -> None:
+    """Test a retry that finishes after unload adds no entities and stops retrying."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    release = asyncio.Event()
+
+    async def _slow_dynamic_contracts(_ban: str) -> EnergyContractsResponse:
+        await release.wait()
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _slow_dynamic_contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert client.async_get_energy_contracts.call_count == 2
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for _ in range(3):
+        freezer.tick(CONTRACTS_RETRY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert client.async_get_energy_contracts.call_count == 2
     assert (
         entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{BAN}_epex_current_hour"
