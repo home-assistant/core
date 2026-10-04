@@ -5,9 +5,11 @@ from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
+from construct.core import ChecksumError
 from miio import DeviceException
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -361,6 +363,55 @@ async def test_xiaomi_exceptions(
 
     assert_availability(False)
     assert mock_mirobo_is_on.status.call_count == 1
+
+
+async def test_vacuum_checksum_error_starts_reauth(
+    hass: HomeAssistant, mock_mirobo_is_on: MagicMock
+) -> None:
+    """A checksum error on a vacuum refresh starts the reauth flow."""
+    await setup_component(hass, "test_vacuum_checksum")
+
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+    mock_mirobo_is_on.status = MagicMock(side_effect=error)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.device_coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    in_progress = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert len(in_progress) == 1
+
+
+async def test_vacuum_checksum_error_on_retry_starts_reauth(
+    hass: HomeAssistant, mock_mirobo_is_on: MagicMock
+) -> None:
+    """A checksum error on the vacuum retry starts the reauth flow."""
+    await setup_component(hass, "test_vacuum_checksum_retry")
+
+    retry_error = DeviceException({})
+    retry_error.code = -9999
+    checksum_error = DeviceException({})
+    checksum_error.__cause__ = ChecksumError({})
+    mock_mirobo_is_on.status = MagicMock(side_effect=[retry_error, checksum_error])
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.device_coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    assert mock_mirobo_is_on.status.call_count == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    in_progress = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert len(in_progress) == 1
 
 
 async def test_xiaomi_vacuum_services(

@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
       "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Home integration.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_model": "The device is not a WiFi repeater and cannot be imported from YAML. Add it through the UI instead."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -312,6 +313,16 @@
       "ptc": {
         "name": "Auxiliary heat"
       }
+    }
+  },
+  "issues": {
+    "yaml_import_cannot_connect": {
+      "description": "The YAML configuration for Xiaomi Home at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
+      "title": "YAML configuration import failed: cannot connect"
+    },
+    "yaml_import_invalid_auth": {
+      "description": "The YAML configuration for Xiaomi Home at `{host}` could not be imported because the credentials are invalid.\n\nPlease update your `configuration.yaml` with valid credentials and restart Home Assistant.",
+      "title": "YAML configuration import failed: invalid authentication"
     }
   },
   "options": {
