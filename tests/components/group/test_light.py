@@ -24,10 +24,12 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
+    SERVICE_STOP_TRANSITION,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -1261,6 +1263,12 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 40
 
+    # LightEntityFeature.STOP_TRANSITION = 64
+    hass.states.async_set("light.test2", STATE_OFF, {ATTR_SUPPORTED_FEATURES: 64})
+    await hass.async_block_till_done()
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 104
+
 
 @pytest.mark.parametrize("supported_color_modes", [ColorMode.HS, ColorMode.RGB])
 async def test_service_calls(
@@ -1457,6 +1465,59 @@ async def test_service_call_effect(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
+
+
+class MockStopTransitionLight(MockLight):
+    """Mock light that supports stopping transitions."""
+
+    supported_features = LightEntityFeature.STOP_TRANSITION
+
+    def __init__(self, name: str, state: str) -> None:
+        """Initialize the mock light."""
+        super().__init__(name, state)
+        self.stop_transition_calls = 0
+
+    async def async_stop_transition(self) -> None:
+        """Stop the transition."""
+        self.stop_transition_calls += 1
+
+
+async def test_stop_transition_service_call(hass: HomeAssistant) -> None:
+    """Test stop_transition is only forwarded to members supporting it."""
+    supporting_light = MockStopTransitionLight("bed_light", STATE_ON)
+    other_light = MockLight("ceiling_lights", STATE_ON)
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [supporting_light, other_light])
+
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.bed_light", "light.ceiling_lights"],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get("light.light_group")
+    assert (
+        group_state.attributes[ATTR_SUPPORTED_FEATURES]
+        == LightEntityFeature.STOP_TRANSITION
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_STOP_TRANSITION,
+        {ATTR_ENTITY_ID: "light.light_group"},
+        blocking=True,
+    )
+    assert supporting_light.stop_transition_calls == 1
 
 
 async def test_invalid_service_calls(hass: HomeAssistant) -> None:

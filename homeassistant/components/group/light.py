@@ -21,6 +21,7 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     ATTR_XY_COLOR,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    SERVICE_STOP_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityCapabilityAttribute,
@@ -68,7 +69,10 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+    LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
+    | LightEntityFeature.TRANSITION
+    | LightEntityFeature.STOP_TRANSITION
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,6 +168,7 @@ class LightGroup(GroupEntity, LightEntity):
 
         self._attr_color_mode = ColorMode.UNKNOWN
         self._attr_supported_color_modes = {ColorMode.ONOFF}
+        self._stop_transition_entity_ids: set[str] = set()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -199,6 +204,17 @@ class LightGroup(GroupEntity, LightEntity):
             context=self._context,
         )
 
+    @override
+    async def async_stop_transition(self) -> None:
+        """Forward the stop_transition command to supporting lights in the group."""
+        await self.hass.services.async_call(
+            light.DOMAIN,
+            SERVICE_STOP_TRANSITION,
+            {ATTR_ENTITY_ID: list(self._stop_transition_entity_ids)},
+            blocking=True,
+            context=self._context,
+        )
+
     @callback
     @override
     def async_update_group_state(self) -> None:
@@ -211,6 +227,12 @@ class LightGroup(GroupEntity, LightEntity):
             if (state := self.hass.states.get(entity_id)) is not None
         ]
         on_states = [state for state in states if state.state == STATE_ON]
+        self._stop_transition_entity_ids = {
+            state.entity_id
+            for state in states
+            if state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+            & LightEntityFeature.STOP_TRANSITION
+        }
 
         valid_state = self.mode(
             state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states

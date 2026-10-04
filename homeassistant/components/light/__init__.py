@@ -65,6 +65,7 @@ from .const import (  # noqa: F401
     LIGHT_TURN_OFF_SCHEMA,
     LIGHT_TURN_ON_SCHEMA,
     SCAN_INTERVAL,
+    SERVICE_STOP_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
     VALID_BRIGHTNESS_STEP,
@@ -690,3 +691,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         params = process_turn_off_params(self.hass, self, kwargs)
         await self.async_turn_off(**filter_turn_off_params(self, params))
+
+    def stop_transition(self) -> None:
+        """Stop an in-progress transition, keeping the light at its current state."""
+        raise NotImplementedError
+
+    async def async_stop_transition(self) -> None:
+        """Stop an in-progress transition, keeping the light at its current state."""
+        await self.hass.async_add_executor_job(self.stop_transition)

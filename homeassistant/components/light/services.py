@@ -16,6 +16,8 @@ from .const import (
     DATA_COMPONENT,
     LIGHT_TURN_OFF_SCHEMA,
     LIGHT_TURN_ON_SCHEMA,
+    SERVICE_STOP_TRANSITION,
+    LightEntityFeature,
 )
 from .helper import (
     filter_turn_off_params,
@@ -99,4 +101,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             partial(_preprocess_data, hass),
         ),
         _async_handle_toggle_service,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_STOP_TRANSITION,
+        None,
+        "async_stop_transition",
+        [LightEntityFeature.STOP_TRANSITION],
     )
