@@ -1,6 +1,8 @@
 """Test trigger template entity."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
+import logging
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,7 +20,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import condition, template
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
@@ -193,6 +196,115 @@ async def test_script_variables_from_coordinator(
     assert state.attributes["a"] == 1
     assert state.attributes["b"] == 2
     assert state.attributes["c"] == 1
+
+
+async def test_entity_variables_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test variable errors propagate with the failing variable and entity."""
+    caplog.set_level(logging.ERROR)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "template": {
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "sensor": {
+                    "name": "Variable error",
+                    "variables": {"broken": "{{ none + 1 }}"},
+                    "state": "{{ broken }}",
+                },
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.variable_error")
+    assert state
+    exc_info = caplog.records[0].exc_info
+    assert exc_info is not None
+    error_message = str(exc_info[1])
+    assert "broken" in error_message
+    assert state.entity_id in error_message
+
+
+@pytest.mark.parametrize(
+    ("script_config", "handle_trigger"),
+    [
+        pytest.param(
+            {}, TriggerUpdateCoordinator._handle_triggered, id="without-actions"
+        ),
+        pytest.param(
+            {"actions": [{"event": "action_event"}]},
+            TriggerUpdateCoordinator._handle_triggered_with_script,
+            id="with-actions",
+        ),
+    ],
+)
+async def test_section_variables_error(
+    hass: HomeAssistant,
+    script_config: dict[str, list[dict[str, str]]],
+    handle_trigger: Callable[
+        [TriggerUpdateCoordinator, dict[str, object]], Awaitable[None]
+    ],
+) -> None:
+    """Test section variable errors identify a registered entity from the block."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "template": {
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "variables": {"broken": "{{ none + 1 }}"},
+                "sensor": [
+                    {"name": "First variable error", "state": "{{ broken }}"},
+                    {"name": "Second variable error", "state": "{{ broken }}"},
+                ],
+                **script_config,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    first_state = hass.states.get("sensor.first_variable_error")
+    second_state = hass.states.get("sensor.second_variable_error")
+    assert first_state
+    assert second_state
+
+    coordinator = hass.data[DATA_COORDINATORS][0]
+    with pytest.raises(TemplateError) as exc_info:
+        await handle_trigger(coordinator, {})
+    error_message = str(exc_info.value)
+    assert "broken" in error_message
+    assert first_state.entity_id in error_message
+
+    await hass.data["sensor"].async_remove_entity(first_state.entity_id)
+
+    with pytest.raises(TemplateError) as exc_info:
+        await handle_trigger(coordinator, {})
+    error_message = str(exc_info.value)
+    assert "broken" in error_message
+    assert second_state.entity_id in error_message
+
+
+async def test_section_variables_error_before_entity_setup(hass: HomeAssistant) -> None:
+    """Test errors identify the variable before any entity has registered."""
+    coordinator = TriggerUpdateCoordinator(
+        hass,
+        {"variables": cv.SCRIPT_VARIABLES_SCHEMA({"broken": "{{ none + 1 }}"})},
+    )
+    with pytest.raises(TemplateError) as exc_info:
+        await coordinator._handle_triggered({})
+    assert "broken" in str(exc_info.value)
 
 
 async def test_default_entity_id(hass: HomeAssistant) -> None:
