@@ -297,10 +297,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 for identifier in device.identifiers
             ):
                 continue
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=self.config_entry.entry_id,
-            )
+            device_registry.async_remove_device(device.id)
 
     def _on_ws_connect(self) -> None:
         """Handle WebSocket connection established."""

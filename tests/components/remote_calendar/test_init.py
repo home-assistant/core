@@ -26,7 +26,7 @@ async def test_load_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
 ) -> None:
     """Test loading and unloading a config entry."""
-    respx.get(CALENDER_URL).mock(
+    route = respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
             text=ics_content,
@@ -34,6 +34,8 @@ async def test_load_unload(
     )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
+    # the calendar is downloaded and parsed once for the whole setup
+    assert route.call_count == 1
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -85,6 +87,7 @@ async def test_update_failed(
 async def test_calendar_parse_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test CalendarParseError using respx."""
     respx.get(CALENDER_URL).mock(
@@ -92,6 +95,7 @@ async def test_calendar_parse_error(
     )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert "The remote calendar feed contains invalid data:" in caplog.text
 
 
 @respx.mock

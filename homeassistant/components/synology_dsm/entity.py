@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -158,6 +159,10 @@ class SynologyDSMDeviceEntity(
             manufacturer=self._device_manufacturer,
             model=self._device_model,
             sw_version=self._device_firmware,
-            via_device=(DOMAIN, information.serial),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, information.serial),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             configuration_url=self._api.config_url,
         )

@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfInformation,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
@@ -195,7 +196,12 @@ class RpcBluTrvSensor(RpcSensor):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
@@ -1228,7 +1234,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "rssi": RpcSensorDescription(
@@ -1259,7 +1265,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "battery": RpcSensorDescription(
@@ -1726,6 +1732,18 @@ RPC_SENSORS: Final = {
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
+    ),
+    "storage_fs_free": RpcSensorDescription(
+        key="storage",
+        sub_key="fs_free",
+        translation_key="storage_free_space",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: not status[key]["present"],
     ),
 }
 

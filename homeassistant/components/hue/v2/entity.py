@@ -21,8 +21,12 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light import Light
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
+    from aiohue.v2.models.room import Room
+    from aiohue.v2.models.zone import Zone
 
-    type HueResource = Light | DevicePower | GroupedLight | LightLevel | Motion
+    type HueResource = (
+        Light | DevicePower | GroupedLight | LightLevel | Motion | Room | Zone
+    )
 
 
 RESOURCE_TYPE_NAMES = {

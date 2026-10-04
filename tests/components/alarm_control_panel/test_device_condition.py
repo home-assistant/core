@@ -80,7 +80,7 @@ async def test_get_conditions(
     )
     if set_state:
         hass.states.async_set(
-            "alarm_control_panel.test_5678",
+            entity_entry.entity_id,
             "attributes",
             {"supported_features": features_state},
         )

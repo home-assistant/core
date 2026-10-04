@@ -36,7 +36,7 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result.get("type") is FlowResultType.ABORT

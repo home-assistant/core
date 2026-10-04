@@ -3,9 +3,9 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -89,7 +89,7 @@ class DynaliteCover(DynaliteBase, CoverEntity):
     @override
     def initialize_state(self, state):
         """Initialize the state from cache."""
-        target_level = state.attributes.get(ATTR_CURRENT_POSITION)
+        target_level = state.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
         if target_level is not None:
             self._device.init_level(target_level)
 

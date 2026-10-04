@@ -45,7 +45,15 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     """Test user initialized flow with duplicate server."""
     create_entry(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -57,7 +65,15 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     with patch_config_flow_yeti(await create_mocked_yeti()) as yetimock:
         yetimock.side_effect = exceptions.ConnectError
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -69,7 +85,15 @@ async def test_flow_user_invalid_host(hass: HomeAssistant) -> None:
     with patch_config_flow_yeti(await create_mocked_yeti()) as yetimock:
         yetimock.side_effect = exceptions.InvalidHost
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -81,7 +105,15 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     with patch_config_flow_yeti(await create_mocked_yeti()) as yetimock:
         yetimock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"

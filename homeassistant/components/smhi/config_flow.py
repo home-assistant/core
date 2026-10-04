@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pysmhi import SmhiForecastException, SMHIPointForecast
-import voluptuous as vol
 
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -69,8 +69,12 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_LOCATION, default=home_location
+                    ): LocationSelector()
+                }
             ),
             errors=errors,
         )
@@ -102,8 +106,8 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
 
                 device_reg = dr.async_get(self.hass)
-                if device := device_reg.async_get_device(
-                    identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
+                if device := device_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{old_lat}, {old_lon}"), reconfigure_entry.entry_id
                 ):
                     device_reg.async_update_device(
                         device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}
@@ -117,7 +121,7 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "wrong_location"
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()}),
+            probatio.Schema({probatio.Required(CONF_LOCATION): LocationSelector()}),
             reconfigure_entry.data,
         )
         return self.async_show_form(

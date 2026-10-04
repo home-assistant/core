@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from ..bridge import HueBridge, HueConfigEntry
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+    {probatio.Required(CONF_TYPE): str, probatio.Required(CONF_SUBTYPE): str}
 )
 
 
@@ -155,7 +155,9 @@ async def async_attach_trigger(
 
     hue_event = _get_hue_event_from_device_id(hass, device_entry.id)
     if hue_event is None:
-        raise InvalidDeviceAutomationConfig
+        raise InvalidDeviceAutomationConfig(
+            f"Device {device_entry.id} is not available on the Hue bridge"
+        )
 
     trigger_key: tuple[str, str] = (config[CONF_TYPE], config[CONF_SUBTYPE])
 

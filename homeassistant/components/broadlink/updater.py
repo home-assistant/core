@@ -32,6 +32,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
         "MP1S": BroadlinkMP1SUpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
+        "RM5PLUS": BroadlinkRMUpdateManager,
         "RMMINI": BroadlinkRMUpdateManager,
         "RMMINIB": BroadlinkRMUpdateManager,
         "RMPRO": BroadlinkRMUpdateManager,
@@ -90,6 +91,11 @@ class BroadlinkUpdateManager(ABC, Generic[_ApiT]):  # noqa: UP046
                     self.device.api.model,
                     self.device.api.host[0],
                 )
+                if not self.coordinator.last_update_success:
+                    # When the previous refresh already failed, the coordinator
+                    # will skip listener notification, so notify explicitly to
+                    # ensure entities flip to unavailable on this transition.
+                    self.coordinator.async_update_listeners()
             raise UpdateFailed(err) from err
 
         if self.available is False:

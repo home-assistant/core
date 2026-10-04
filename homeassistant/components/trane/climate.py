@@ -55,7 +55,7 @@ async def async_setup_entry(
     """Set up Trane Local climate entities."""
     conn = config_entry.runtime_data
     async_add_entities(
-        TraneClimateEntity(conn, config_entry.entry_id, zone_id)
+        TraneClimateEntity(hass, conn, config_entry.entry_id, zone_id)
         for zone_id in conn.state.zones
     )
 
@@ -76,9 +76,15 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_target_temperature_step = 1.0
 
-    def __init__(self, conn: ThermostatConnection, entry_id: str, zone_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        conn: ThermostatConnection,
+        entry_id: str,
+        zone_id: str,
+    ) -> None:
         """Initialize the climate entity."""
-        super().__init__(conn, entry_id, zone_id, "zone")
+        super().__init__(hass, conn, entry_id, zone_id, "zone")
         modes: list[HVACMode] = []
         for zone_mode in conn.state.supported_modes:
             ha_mode = ZONE_MODE_TO_HA.get(zone_mode)

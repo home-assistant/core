@@ -24,6 +24,7 @@ from .coordinator import LiebherrConfigEntry, LiebherrCoordinator, LiebherrData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.COVER,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -44,11 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Invalid API key") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
     except LiebherrConnectionError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     # Create a coordinator for each device (may be empty if no devices)
     data = LiebherrData(client=client)
@@ -72,6 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     entry.runtime_data = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Start SSE push streams for the initial devices
+    for coordinator in data.coordinators.values():
+        coordinator.async_start_stream()
 
     # Schedule periodic scan for new devices
     async def _async_scan_for_new_devices(_now: datetime) -> None:
@@ -97,14 +106,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                 if identifier[0] == DOMAIN
             }
             if device_ids - current_device_ids:
-                # Shut down coordinator if one exists
                 for device_id in device_ids:
                     if coordinator := data.coordinators.pop(device_id, None):
                         await coordinator.async_shutdown()
-                device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
+                device_registry.async_remove_device(device_entry.id)
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
@@ -122,6 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                     continue
                 data.coordinators[device.device_id] = coordinator
                 new_coordinators.append(coordinator)
+                coordinator.async_start_stream()
 
         if new_coordinators:
             async_dispatcher_send(

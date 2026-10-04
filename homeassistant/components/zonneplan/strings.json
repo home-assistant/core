@@ -1,0 +1,161 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The one-time password was validated for a different Zonneplan account than the one configured."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limited": "Too many requests to the Zonneplan API. Wait a minute and try again.",
+      "timeout_connect": "Timeout while communicating with the Zonneplan API",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "otp": {
+        "data": {
+          "otp": "One-time password"
+        },
+        "data_description": {
+          "otp": "Enter the one-time password mailed to {email}."
+        },
+        "description": "Within a few minutes, you will receive an email with a one-time password. Enter the password below to complete the login process."
+      },
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "[%key:component::zonneplan::config::step::user::data_description::email%]"
+        },
+        "description": "The stored credentials for {email} are no longer valid. Confirm your email address to receive a new one-time password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "[%key:component::zonneplan::config::step::user::data_description::email%]"
+        },
+        "description": "Reconfigure the {email} account. Confirm your email address to receive a new one-time password."
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "email": "Email address for your Zonneplan account."
+        },
+        "description": "Log in to Zonneplan with the email address associated with your account. You will be receiving a one-time password via email to complete the login process."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "backup_power_active": {
+        "name": "Backup power active"
+      },
+      "dynamic_load_balancing_overload_active": {
+        "name": "Load balancing overload"
+      },
+      "electricity_price_low": {
+        "name": "Electricity price low"
+      },
+      "grid_congestion_active": {
+        "name": "Grid congestion"
+      },
+      "home_optimization_active": {
+        "name": "Home optimization active"
+      }
+    },
+    "sensor": {
+      "current_electricity_price": {
+        "name": "Current electricity price"
+      },
+      "current_electricity_tariff_group": {
+        "name": "Current electricity tariff group",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "normal": "Normal"
+        }
+      },
+      "current_sustainability_score": {
+        "name": "Current sustainability score"
+      },
+      "electricity_cost_this_month": {
+        "name": "Electricity cost this month"
+      },
+      "electricity_delivered_this_month": {
+        "name": "Electricity used this month"
+      },
+      "electricity_price_low_today_end_time": {
+        "name": "Electricity price low today end time"
+      },
+      "electricity_price_low_today_start_time": {
+        "name": "Electricity price low today start time"
+      },
+      "electricity_price_low_tomorrow_end_time": {
+        "name": "Electricity price low tomorrow end time"
+      },
+      "electricity_price_low_tomorrow_start_time": {
+        "name": "Electricity price low tomorrow start time"
+      },
+      "electricity_prices_tomorrow_status": {
+        "name": "Electricity prices tomorrow status",
+        "state": {
+          "available": "Available",
+          "incoming": "Incoming"
+        }
+      },
+      "electricity_produced_this_month": {
+        "name": "Electricity returned this month"
+      },
+      "gas_cost_this_month": {
+        "name": "Gas cost this month"
+      },
+      "gas_delivered_this_month": {
+        "name": "Gas used this month"
+      },
+      "gas_price_today": {
+        "name": "Gas price daily"
+      },
+      "highest_electricity_price_today": {
+        "name": "Highest electricity price today"
+      },
+      "highest_electricity_price_tomorrow": {
+        "name": "Highest electricity price tomorrow"
+      },
+      "lowest_electricity_price_today": {
+        "name": "Lowest electricity price today"
+      },
+      "lowest_electricity_price_tomorrow": {
+        "name": "Lowest electricity price tomorrow"
+      },
+      "next_hour_electricity_price": {
+        "name": "Next hour electricity price"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the Zonneplan API"
+    },
+    "battery_not_found": {
+      "message": "The Zonneplan API returned no data for the home battery"
+    },
+    "cannot_connect": {
+      "message": "Error communicating with the Zonneplan API"
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying to authenticate"
+    },
+    "rate_limited": {
+      "message": "The Zonneplan API rate limit was reached"
+    },
+    "timeout_connect": {
+      "message": "Timeout while communicating with the Zonneplan API"
+    }
+  }
+}

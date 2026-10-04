@@ -3,7 +3,9 @@
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.lock import LockEntity
@@ -40,7 +42,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -50,7 +52,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -63,7 +65,7 @@ async def async_setup_entry(
 class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
     """Base vehicle lock entity for Teslemetry."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:
@@ -140,7 +142,7 @@ class TeslemetryStreamingVehicleLockEntity(
 class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
     """Base cable Lock entity for Teslemetry."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:

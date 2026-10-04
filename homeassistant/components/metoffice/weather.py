@@ -1,12 +1,13 @@
 """Support for UK Met Office weather service."""
 
-from datetime import datetime
 from typing import Any, cast, override
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -30,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import get_device_info
 from .const import (
@@ -115,8 +117,12 @@ def _populate_forecast_data(
     weather_code = get_mapped_attribute(ATTR_FORECAST_CONDITION)
     if weather_code is not None:
         forecast[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
+    forecast[ATTR_FORECAST_HUMIDITY] = get_mapped_attribute(ATTR_FORECAST_HUMIDITY)
     forecast[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_mapped_attribute(
         ATTR_FORECAST_NATIVE_APPARENT_TEMP
+    )
+    forecast[ATTR_FORECAST_NATIVE_DEW_POINT] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_DEW_POINT
     )
     forecast[ATTR_FORECAST_NATIVE_PRESSURE] = get_mapped_attribute(
         ATTR_FORECAST_NATIVE_PRESSURE
@@ -211,6 +217,14 @@ class MetOfficeWeather(
 
     @property
     @override
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "feelsLikeTemperature")
+        return float(value) if value is not None else None
+
+    @property
+    @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
         weather_now = self.coordinator.data.now()
@@ -259,6 +273,14 @@ class MetOfficeWeather(
 
     @property
     @override
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "windGustSpeed10m")
+        return float(value) if value is not None else None
+
+    @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         weather_now = self.coordinator.data.now()
@@ -274,9 +296,9 @@ class MetOfficeWeather(
             self.forecast_coordinators["daily"],
         )
         timesteps = coordinator.data.timesteps
-        start_datetime = datetime.now(  # pylint: disable=home-assistant-enforce-now
-            tz=timesteps[0]["time"].tzinfo
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_datetime = dt_util.now(time_zone=timesteps[0]["time"].tzinfo).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         return [
             _build_daily_forecast_data(timestep)
             for timestep in timesteps
@@ -293,9 +315,9 @@ class MetOfficeWeather(
         )
 
         timesteps = coordinator.data.timesteps
-        start_datetime = datetime.now(  # pylint: disable=home-assistant-enforce-now
-            tz=timesteps[0]["time"].tzinfo
-        ).replace(minute=0, second=0, microsecond=0)
+        start_datetime = dt_util.now(time_zone=timesteps[0]["time"].tzinfo).replace(
+            minute=0, second=0, microsecond=0
+        )
         return [
             _build_hourly_forecast_data(timestep)
             for timestep in timesteps
@@ -311,9 +333,9 @@ class MetOfficeWeather(
             self.forecast_coordinators["twice_daily"],
         )
         timesteps = coordinator.data.timesteps
-        start_datetime = datetime.now(  # pylint: disable=home-assistant-enforce-now
-            tz=timesteps[0]["time"].tzinfo
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_datetime = dt_util.now(time_zone=timesteps[0]["time"].tzinfo).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         return [
             _build_twice_daily_forecast_data(timestep)
             for timestep in timesteps
