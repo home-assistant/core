@@ -271,7 +271,6 @@ class ElectraClimateEntity(ClimateEntity):
         self._attr_fan_mode = FAN_ELECTRA_TO_HASS[
             self._electra_ac_device.get_fan_speed()
         ]
-        # The library already normalizes the x256 I_RAT/I_CALC_AT telemetry.
         self._attr_current_temperature = (
             self._electra_ac_device.get_sensor_temperature()
         )
