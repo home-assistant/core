@@ -9847,7 +9847,7 @@
           'current_gamerscore': 1105,
           'progress_percentage': 44.0,
           'source_version': 2,
-          'total_achievements': 121,
+          'total_achievements': 0,
           'total_gamerscore': 2500,
         }),
         'alternate_title_ids': list([
