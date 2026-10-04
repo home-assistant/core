@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -46,6 +46,7 @@ async def test_bluetooth_connected(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Bluetooth connected binary sensor follows the connection."""
     await async_init_integration(hass, mock_config_entry_bluetooth)
@@ -62,6 +63,21 @@ async def test_bluetooth_connected(
     connection_callback(False)
     await hass.async_block_till_done()
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    # a failing Bluetooth poll doesn't hide the known connection state
+    mock_lamarzocco.websocket.connected = False
+    mock_lamarzocco.get_dashboard_from_bluetooth.side_effect = (
+        BluetoothConnectionFailed("")
+    )
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # entities relying on Bluetooth updates are unavailable now
+    assert (state := hass.states.get("binary_sensor.gs012345_water_tank_empty"))
+    assert state.state == STATE_UNAVAILABLE
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
