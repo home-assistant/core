@@ -1,10 +1,12 @@
 """The WeatherflowCloud integration."""
 
 import asyncio
+from contextlib import suppress
 
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
 from websockets.exceptions import WebSocketException
+from websockets.protocol import State as WebSocketState
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -72,10 +74,23 @@ async def async_setup_entry(
 
     async def _async_disconnect_websocket() -> None:
         """Disconnect the WeatherFlow websocket."""
-        await websocket_api.stop_all_listeners()
-        await websocket_api.close()
+        websocket = websocket_api.websocket
+        try:
+            with suppress(WebSocketException):
+                await websocket_api.close()
+        finally:
+            if WeatherFlowWebsocketAPI._shared_websocket is websocket:  # noqa: SLF001
+                WeatherFlowWebsocketAPI._shared_websocket = None  # noqa: SLF001
 
     # Connect once because both websocket coordinators share this API instance.
+    shared_websocket = WeatherFlowWebsocketAPI._shared_websocket  # noqa: SLF001
+    if (
+        shared_websocket is not None
+        and shared_websocket.state is not WebSocketState.OPEN
+    ):
+        # weatherflow4py does not clear a closed shared socket.
+        WeatherFlowWebsocketAPI._shared_websocket = None  # noqa: SLF001
+
     try:
         await websocket_api.connect(client_context())
     except (OSError, WebSocketException) as err:
