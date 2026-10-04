@@ -8,7 +8,10 @@ from aiopnsense import OPNsenseConnectionError, OPNsensePrivilegeMissing
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.components.opnsense.const import (
+    DOMAIN,
+    get_firmware_privilege_issue_id,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -379,8 +382,19 @@ async def test_firmware_upgrade_refreshes_after_reboot(
     mock_opnsense_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the firmware update info refreshes after OPNsense restarts."""
-    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    """Retry firmware info once if OPNsense is still restarting."""
+    mock_opnsense_client.get_firmware_update_info.side_effect = [
+        {
+            "status": "update",
+            "product": {"product_version": "25.7.8", "product_latest": "25.7.8"},
+        },
+        OPNsenseConnectionError("router is rebooting"),
+        OPNsenseConnectionError("router is still rebooting"),
+        {
+            "status": "update",
+            "product": {"product_version": "25.7.8", "product_latest": "25.7.9"},
+        },
+    ]
     mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
     mock_opnsense_client.upgrade_status.return_value = {"status": "reboot"}
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -398,6 +412,20 @@ async def test_firmware_upgrade_refreshes_after_reboot(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_opnsense_client.get_firmware_update_info.await_count == 3
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_opnsense_client.get_firmware_update_info.await_count == 4
+    assert (
+        hass.states.get("update.mock_title_firmware").attributes["latest_version"]
+        == "25.7.9"
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_opnsense_client.get_firmware_update_info.await_count == 4
 
 
 async def test_firmware_upgrade_times_out(
@@ -533,7 +561,7 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Firmware permission errors do not block trackers and clear after recovery."""
-    issue_id = f"firmware_privilege_missing_{mock_config_entry.entry_id}"
+    issue_id = get_firmware_privilege_issue_id(mock_config_entry.entry_id)
     mock_opnsense_client.get_firmware_update_info.side_effect = (
         OPNsensePrivilegeMissing("missing System: Firmware privilege")
     )
@@ -555,6 +583,25 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
 
     mock_opnsense_client.get_firmware_update_info.side_effect = None
     await mock_config_entry.runtime_data.update_coordinator.async_request_refresh()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_firmware_privilege_missing_issue_cleared_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Clear the persistent privilege issue when the config entry unloads."""
+    issue_id = get_firmware_privilege_issue_id(mock_config_entry.entry_id)
+    mock_opnsense_client.get_firmware_update_info.side_effect = (
+        OPNsensePrivilegeMissing("missing System: Firmware privilege")
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 

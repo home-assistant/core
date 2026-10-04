@@ -17,11 +17,17 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACES,
+    DOMAIN,
+    get_firmware_privilege_issue_id,
+)
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -162,4 +168,12 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: OPNsenseConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
+
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        get_firmware_privilege_issue_id(config_entry.entry_id),
+    )
+    return True

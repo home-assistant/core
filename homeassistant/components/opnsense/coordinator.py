@@ -23,7 +23,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL
+from .const import SCAN_INTERVAL, get_firmware_privilege_issue_id
 from .types import DeviceDetails, DeviceDetailsByMAC, OPNsenseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ir.async_create_issue(
                 self.hass,
                 self.entry.domain,
-                f"firmware_privilege_missing_{self.entry.entry_id}",
+                get_firmware_privilege_issue_id(self.entry.entry_id),
                 is_fixable=False,
                 is_persistent=True,
                 severity=ir.IssueSeverity.WARNING,
@@ -130,6 +130,6 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ir.async_delete_issue(
             self.hass,
             self.entry.domain,
-            f"firmware_privilege_missing_{self.entry.entry_id}",
+            get_firmware_privilege_issue_id(self.entry.entry_id),
         )
         return dict(firmware_info)

@@ -93,6 +93,7 @@ class OPNsenseFirmwareUpdate(
         self._upgrade_started: datetime | None = None
         self._unsub_upgrade_status: Callable[[], None] | None = None
         self._unsub_post_upgrade_refresh: Callable[[], None] | None = None
+        self._post_upgrade_refresh_retried = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -113,6 +114,16 @@ class OPNsenseFirmwareUpdate(
         """Refresh firmware information after OPNsense restarts."""
         self._unsub_post_upgrade_refresh = None
         await self.coordinator.async_request_refresh()
+        if (
+            not self.coordinator.last_update_success
+            and not self._post_upgrade_refresh_retried
+        ):
+            self._post_upgrade_refresh_retried = True
+            self._unsub_post_upgrade_refresh = async_call_later(
+                self.hass,
+                POST_UPGRADE_REFRESH_DELAY,
+                self._async_refresh_after_upgrade,
+            )
 
     @property
     @override
@@ -135,6 +146,7 @@ class OPNsenseFirmwareUpdate(
         self._upgrade_started = None
         self.async_write_ha_state()
         if status and status.get("status") in ("done", "reboot"):
+            self._post_upgrade_refresh_retried = False
             await self.coordinator.async_request_refresh()
             self._unsub_post_upgrade_refresh = async_call_later(
                 self.hass,
