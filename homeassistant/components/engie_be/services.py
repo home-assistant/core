@@ -1,6 +1,6 @@
 """Services for the ENGIE Belgium integration."""
 
-from datetime import date, timedelta
+from datetime import UTC, date, timedelta
 from typing import TYPE_CHECKING
 
 from aioengiebelgium import EngieBeEpexNotPublishedError, EngieBeError, EpexGranularity
@@ -87,8 +87,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         return {
             "slots": [
                 {
-                    "start": slot.start.isoformat(),
-                    "end": slot.end.isoformat(),
+                    "start": slot.start.astimezone(UTC).isoformat(),
+                    "end": slot.end.astimezone(UTC).isoformat(),
                     "value": slot.value_eur_per_kwh,
                 }
                 for slot in payload.slots

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 import dataclasses
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock
 
 from aioengiebelgium import (
@@ -1058,11 +1058,11 @@ async def test_epex_sensors_for_dynamic_household(
     assert low_state is not None
     assert (
         low_state.attributes["start"]
-        == datetime(2026, 10, 2, 22, 0, tzinfo=UTC).isoformat()
+        == datetime(2026, 10, 3, 0, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
     )
     assert (
         low_state.attributes["end"]
-        == datetime(2026, 10, 2, 23, 0, tzinfo=UTC).isoformat()
+        == datetime(2026, 10, 3, 1, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
     )
 
     high_quarter_state = hass.states.get(
@@ -1073,11 +1073,11 @@ async def test_epex_sensors_for_dynamic_household(
     assert high_quarter_state is not None
     assert (
         high_quarter_state.attributes["start"]
-        == datetime(2026, 10, 3, 21, 45, tzinfo=UTC).isoformat()
+        == datetime(2026, 10, 3, 23, 45, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
     )
     assert (
         high_quarter_state.attributes["end"]
-        == datetime(2026, 10, 3, 22, 0, tzinfo=UTC).isoformat()
+        == datetime(2026, 10, 4, 0, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
     )
 
 

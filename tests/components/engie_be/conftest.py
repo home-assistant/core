@@ -1,7 +1,7 @@
 """Common fixtures for the ENGIE Belgium tests."""
 
 from collections.abc import Generator
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioengiebelgium import (
@@ -175,12 +175,18 @@ def build_contracts(*, dynamic: bool = False) -> EnergyContractsResponse:
     )
 
 
+def _api_timestamp(moment: datetime) -> datetime:
+    """Return a timestamp carrying the fixed Brussels offset the API would send."""
+    wall = BRUSSELS_TIME_ZONE.fromutc(moment.replace(tzinfo=BRUSSELS_TIME_ZONE))
+    return wall.replace(tzinfo=timezone(wall.utcoffset()))
+
+
 def build_epex_payload(
     start: datetime,
     end: datetime,
     granularity: EpexGranularity = EpexGranularity.HOURLY,
 ) -> EpexPayload:
-    """Build an EPEX payload of UTC slots covering the window with rising values."""
+    """Build an EPEX payload of Brussels-offset slots covering the window with rising values."""
     step = timedelta(minutes=granularity.value)
     slots: list[EpexSlot] = []
     moment = start.astimezone(UTC)
@@ -189,8 +195,8 @@ def build_epex_payload(
         local = moment.astimezone(BRUSSELS_TIME_ZONE)
         slots.append(
             EpexSlot(
-                start=moment,
-                end=moment + step,
+                start=_api_timestamp(moment),
+                end=_api_timestamp(moment + step),
                 value_eur_per_kwh=round((local.hour + 1 + local.minute / 60) / 100, 6),
             )
         )
