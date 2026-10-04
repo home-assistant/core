@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-import re
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.climate import (
@@ -51,9 +50,30 @@ HOMEKIT_FIXED_FAN_MODE_ALIASES = {
 }
 
 CLIMATE_ENTITY_DESCRIPTIONS = {
+    "calculatedLeavingWaterTemperature": ClimateEntityDescription(
+        key="calculated_leaving_water_temperature",
+        translation_key="calculated_leaving_water_temperature",
+        has_entity_name=True,
+    ),
+    "domesticHotWaterTemperature": ClimateEntityDescription(
+        key="domestic_hot_water_temperature",
+        translation_key="domestic_hot_water_temperature",
+        has_entity_name=True,
+    ),
+    "leavingWaterOffset": ClimateEntityDescription(
+        key="leaving_water_offset",
+        translation_key="leaving_water_offset",
+        has_entity_name=True,
+    ),
+    "leavingWaterTemperature": ClimateEntityDescription(
+        key="leaving_water_temperature",
+        translation_key="leaving_water_temperature",
+        has_entity_name=True,
+    ),
     "roomTemperature": ClimateEntityDescription(
         key="room_temperature",
         translation_key="roomtemperature",
+        has_entity_name=True,
     ),
 }
 
@@ -149,9 +169,15 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             "identifiers": {(DOMAIN, self._device.id)},
             "name": self._device.name,
         }
-        self._attr_has_entity_name = True
-        if entity_description := CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint):
-            self.entity_description = entity_description
+        self.entity_description = CLIMATE_ENTITY_DESCRIPTIONS.get(
+            setpoint,
+            ClimateEntityDescription(
+                key=setpoint,
+                translation_key="setpoint",
+                translation_placeholders={"setpoint": setpoint},
+                has_entity_name=True,
+            ),
+        )
         self._device.fill_gateway_device_info(self._attr_device_info)
         self._update_state()
 
@@ -178,7 +204,11 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
     def _raise_command_failed(self, command: str) -> None:
         """Raise an error when Daikin rejects a command."""
-        raise HomeAssistantError(f"Failed to {command} for {self._device.name}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_failed",
+            translation_placeholders={"command": command, "device": self._device.name},
+        )
 
     @callback
     @override
@@ -340,14 +370,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             )
 
         return supported_features
-
-    @property
-    @override
-    def name(self) -> str | None:
-        """Return the readable setpoint name."""
-        myname = self._setpoint[0].upper() + self._setpoint[1:]
-        readable = re.findall("[A-Z][^A-Z]*", myname)
-        return f"{' '.join(readable)}"
 
     def _get_current_temperature(self):
         """Return the current temperature for this setpoint."""

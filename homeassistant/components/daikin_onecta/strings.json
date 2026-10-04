@@ -42,7 +42,20 @@
   },
   "entity": {
     "climate": {
+      "calculated_leaving_water_temperature": {
+        "name": "Calculated Leaving Water Temperature"
+      },
+      "domestic_hot_water_temperature": {
+        "name": "Domestic Hot Water Temperature"
+      },
+      "leaving_water_offset": {
+        "name": "Leaving Water Offset"
+      },
+      "leaving_water_temperature": {
+        "name": "Leaving Water Temperature"
+      },
       "roomtemperature": {
+        "name": "Room Temperature",
         "state_attributes": {
           "fan_mode": {
             "state": {
@@ -69,12 +82,24 @@
             }
           }
         }
+      },
+      "setpoint": {
+        "name": "Setpoint {setpoint}"
       }
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "Failed to {command} for {device}"
+    },
+    "connection_failed": {
+      "message": "Unable to connect to the Daikin API"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "rate_limit_exceeded": {
+      "message": "Daikin API rate limit exceeded"
     }
   },
   "options": {

@@ -45,7 +45,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
-        'translation_key': None,
+        'translation_key': 'leaving_water_offset',
         'unique_id': 'eb618890-5f42-496a-a34f-bae6e49260c2_climateControlMainZone_leavingWaterOffset',
         'unit_of_measurement': None,
       }),

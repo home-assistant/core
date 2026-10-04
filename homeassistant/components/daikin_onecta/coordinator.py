@@ -17,8 +17,6 @@ from .daikin_api import DaikinApi
 from .device import DaikinOnectaDevice
 
 _LOGGER = logging.getLogger(__name__)
-RATE_LIMIT_EXCEEDED = "Daikin API rate limit exceeded"
-CONNECTION_FAILED = "Unable to connect to the Daikin API"
 
 
 class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDevice]]):
@@ -81,11 +79,15 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     err.retry_after,
                 )
                 raise UpdateFailed(
-                    RATE_LIMIT_EXCEEDED,
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limit_exceeded",
                     retry_after=err.retry_after,
                 ) from err
             except OnectaConnectionError as err:
-                raise UpdateFailed(CONNECTION_FAILED) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="connection_failed",
+                ) from err
 
             if cloud_devices is None:
                 self.update_interval = timedelta(seconds=scan_ignore_value)

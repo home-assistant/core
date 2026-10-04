@@ -60,8 +60,8 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: No current climate entity is noisy or less commonly used.
-  entity-translations: todo
-  exception-translations: todo
+  entity-translations: done
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: The integration does not use custom entity icons.

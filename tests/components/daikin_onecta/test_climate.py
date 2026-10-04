@@ -142,8 +142,10 @@ async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     entity._climate_control = MagicMock(return_value=climate_control)
     entity._update_state = MagicMock()
 
-    with pytest.raises(HomeAssistantError, match="Failed to set the HVAC mode"):
+    with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_hvac_mode(HVACMode.HEAT)
+
+    assert err.value.translation_key == "command_failed"
 
     assert climate_control.on_off_mode.value == "on"
     assert climate_control.operation_mode.value == "cooling"
@@ -292,8 +294,10 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     entity._resolve_homekit_fan_mode_alias = MagicMock(return_value="3")
     entity._get_fan_mode = MagicMock(return_value="1")
 
-    with pytest.raises(HomeAssistantError, match="Failed to set the fan mode"):
+    with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_fan_mode("3")
+
+    assert err.value.translation_key == "command_failed"
 
     assert fan_speed.current_mode.value == FANMODE_FIXED
     assert fan_speed.modes[FANMODE_FIXED].value == 1
@@ -430,8 +434,10 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
     entity._async_disable_preset_mode = AsyncMock(return_value=False)
     entity._async_enable_preset_mode = AsyncMock()
 
-    with pytest.raises(HomeAssistantError, match="Failed to set the preset mode"):
+    with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_preset_mode(PRESET_COMFORT)
+
+    assert err.value.translation_key == "command_failed"
 
     entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
     entity._async_enable_preset_mode.assert_not_awaited()
@@ -451,8 +457,10 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
     entity._async_disable_preset_mode = AsyncMock(return_value=True)
     entity._async_enable_preset_mode = AsyncMock(return_value=False)
 
-    with pytest.raises(HomeAssistantError, match="Failed to set the preset mode"):
+    with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_preset_mode(PRESET_COMFORT)
+
+    assert err.value.translation_key == "command_failed"
 
     entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
     entity._async_enable_preset_mode.assert_awaited_once_with(PRESET_COMFORT)

@@ -193,6 +193,7 @@ class TestOnectaDataUpdateCoordinator:
             await coordinator._async_update_data_from_cloud()
 
         assert exc_info.value.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
+        assert exc_info.value.translation_key == "rate_limit_exceeded"
         assert coordinator.update_interval == initial_interval
         assert (
             "Daikin API rate limit reached; retrying after 3060 seconds" in caplog.text
@@ -231,12 +232,11 @@ class TestOnectaDataUpdateCoordinator:
             )
         )
 
-        with pytest.raises(
-            UpdateFailed, match="Unable to connect to the Daikin API"
-        ) as exc_info:
+        with pytest.raises(UpdateFailed) as exc_info:
             await coordinator._async_update_data_from_cloud()
 
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
+        assert exc_info.value.translation_key == "connection_failed"
 
     async def test_missing_cloud_device_is_marked_unavailable(self, coordinator):
         """Mark cached gateways unavailable when the cloud no longer returns them."""
