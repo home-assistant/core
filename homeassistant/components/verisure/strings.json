@@ -5,7 +5,7 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_auth_password_too_long": "Invalid authentication. Verisure may not accept passwords longer than 30 characters. If yours is longer, try changing it to 30 characters or fewer.",
+      "invalid_auth_password_too_long": "Invalid authentication. Verisure may not accept passwords longer than 30 characters. Try changing yours to 30 characters or fewer.",
       "mfa_rate_limited": "Too many login attempts. Wait before trying again.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_mfa": "Unknown error occurred during MFA setup"
