@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_climate_entities[offlinedevice][offlinedevice]
+  dict({
+    'climate.studio_room_temperature': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+            'auto',
+            'quiet',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+          ]),
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.OFF: 'off'>,
+            <HVACMode.HEAT: 'heat'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'away',
+            'boost',
+            'none',
+          ]),
+          <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
+            'stop',
+            'swing',
+          ]),
+          <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+            'stop',
+            'swing',
+            'windnice',
+          ]),
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
+        'device_class': None,
+        'device_id': <ANY>,
+        'disabled_by': None,
+        'domain': 'climate',
+        'entity_category': None,
+        'entity_id': 'climate.studio_room_temperature',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Room Temperature',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Room Temperature',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': <ClimateEntityFeature: 952>,
+        'translation_key': 'roomtemperature',
+        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_roomTemperature',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+            'auto',
+            'quiet',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+          ]),
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Room Temperature',
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.OFF: 'off'>,
+            <HVACMode.HEAT: 'heat'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'away',
+            'boost',
+            'none',
+          ]),
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 952>,
+          <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
+            'stop',
+            'swing',
+          ]),
+          <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+            'stop',
+            'swing',
+            'windnice',
+          ]),
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+        }),
+        'context': <ANY>,
+        'entity_id': 'climate.studio_room_temperature',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'unavailable',
+      }),
+    }),
+  })
+# ---

@@ -1,0 +1,123 @@
+# serializer version: 1
+# name: test_climate_entities[ururu][ururu]
+  dict({
+    'climate.daikinap95800_room_temperature': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+            'auto',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+          ]),
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.OFF: 'off'>,
+            <HVACMode.HEAT_COOL: 'heat_cool'>,
+            <HVACMode.DRY: 'dry'>,
+            <HVACMode.COOL: 'cool'>,
+            <HVACMode.HEAT: 'heat'>,
+            <HVACMode.FAN_ONLY: 'fan_only'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'away',
+            'none',
+          ]),
+          <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
+            'stop',
+            'swing',
+          ]),
+          <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+            'stop',
+            'swing',
+          ]),
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
+        'device_class': None,
+        'device_id': <ANY>,
+        'disabled_by': None,
+        'domain': 'climate',
+        'entity_category': None,
+        'entity_id': 'climate.daikinap95800_room_temperature',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Room Temperature',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Room Temperature',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': <ClimateEntityFeature: 953>,
+        'translation_key': 'roomtemperature',
+        'unique_id': '95c2f177-dd7a-4bdc-ad48-1a7f47f34a01_climateControl_roomTemperature',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23,
+          <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+          <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+            'auto',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+          ]),
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DaikinAP95800 Room Temperature',
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.OFF: 'off'>,
+            <HVACMode.HEAT_COOL: 'heat_cool'>,
+            <HVACMode.DRY: 'dry'>,
+            <HVACMode.COOL: 'cool'>,
+            <HVACMode.HEAT: 'heat'>,
+            <HVACMode.FAN_ONLY: 'fan_only'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+          <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'away',
+            'none',
+          ]),
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
+          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
+          <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
+            'stop',
+            'swing',
+          ]),
+          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'stop',
+          <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+            'stop',
+            'swing',
+          ]),
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+          <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20,
+        }),
+        'context': <ANY>,
+        'entity_id': 'climate.daikinap95800_room_temperature',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'heat',
+      }),
+    }),
+  })
+# ---
