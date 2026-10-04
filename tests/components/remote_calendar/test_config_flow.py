@@ -704,6 +704,7 @@ async def test_reconfigure(hass: HomeAssistant, ics_content: str) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.data == {
         CONF_CALENDAR_NAME: CALENDAR_NAME,
         CONF_URL: NEW_CALENDAR_URL,
@@ -758,6 +759,7 @@ async def test_reconfigure_errors(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.data[CONF_URL] == NEW_CALENDAR_URL
 
 
@@ -786,6 +788,7 @@ async def test_reconfigure_duplicate_url(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_URL] == CALENDER_URL
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
 @respx.mock
@@ -804,13 +807,14 @@ async def test_reconfigure_same_url(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.data[CONF_URL] == CALENDER_URL
     assert config_entry.data[CONF_VERIFY_SSL] is False
 
 
 @respx.mock
 async def test_reconfigure_basic_auth(hass: HomeAssistant, ics_content: str) -> None:
-    """Test reconfigure asks for credentials when the new URL requires them."""
+    """Test reconfigure asks for credentials the new URL needs, retrying rejected ones."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=CALENDAR_NAME,
@@ -842,6 +846,13 @@ async def test_reconfigure_basic_auth(hass: HomeAssistant, ics_content: str) -> 
         "user"
     )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "user2", CONF_PASSWORD: "wrong"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": "invalid_auth"}
+
     respx.get(NEW_CALENDAR_URL).mock(
         return_value=Response(status_code=200, text=ics_content)
     )
@@ -850,6 +861,7 @@ async def test_reconfigure_basic_auth(hass: HomeAssistant, ics_content: str) -> 
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.data == {
         CONF_CALENDAR_NAME: CALENDAR_NAME,
         CONF_URL: NEW_CALENDAR_URL,
