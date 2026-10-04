@@ -32,7 +32,7 @@ class BatteryMessage(TypedDict):
 
 
 class StateReachedMessage(TypedDict):
-    """Properties in a battery update message."""
+    """Properties in a state changed message."""
 
     requested_state: str
     requested_state_numeric: int
@@ -43,7 +43,7 @@ class StateReachedMessage(TypedDict):
 
 
 class TransitionMessage(TypedDict):
-    """Properties in a battery update message."""
+    """Properties in a state transition message."""
 
     go_to_state: str
     go_to_state_numeric: int
@@ -114,6 +114,10 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         if "error" in event_data:
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return None
+
+        # loqedAPI does not map this event to a bolt state.
+        if event_data.get("event_type") == "MOTOR_STALL":
+            await self.lock.updateState("motor_stall")
 
         self.async_update_listeners()
         return None
