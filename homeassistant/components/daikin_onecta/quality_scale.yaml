@@ -51,14 +51,28 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-category:
+    status: exempt
+    comment: All current climate entities are primary entities.
+  entity-device-class:
+    status: exempt
+    comment: Climate entities do not support entity device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: No current climate entity is noisy or less commonly used.
   entity-translations: todo
   exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
+  icon-translations:
+    status: exempt
+    comment: The integration does not use custom entity icons.
+  reconfiguration-flow:
+    status: exempt
+    comment: >-
+      OAuth credentials are the only config-entry data and are handled by
+      reauthentication.
+  repair-issues:
+    status: exempt
+    comment: The integration has no user-actionable repair cases.
   stale-devices: todo
   async-dependency: done
   inject-websession: done
