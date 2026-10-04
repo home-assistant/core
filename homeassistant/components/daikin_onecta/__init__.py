@@ -3,7 +3,6 @@
 import logging
 
 import aiohttp
-import jwt
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -77,34 +76,3 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     coordinator.update_settings(config_entry)
     await coordinator.async_request_refresh()
     coordinator.async_update_listeners()
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.info(
-        "Migration from version %s.%s", config_entry.version, config_entry.minor_version
-    )
-
-    if config_entry.version == 1:
-        match config_entry.minor_version:
-            case 1:
-                try:
-                    unique_id = jwt.decode(
-                        config_entry.data["token"]["access_token"],
-                        options={"verify_signature": False},
-                    )["sub"]
-                except jwt.DecodeError, KeyError:
-                    _LOGGER.exception("Failed to decode JWT during migration")
-                    return False
-                hass.config_entries.async_update_entry(
-                    config_entry,
-                    minor_version=2,
-                    unique_id=unique_id,
-                )
-
-    _LOGGER.info(
-        "Migration to version %s.%s successful",
-        config_entry.version,
-        config_entry.minor_version,
-    )
-    return True

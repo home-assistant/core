@@ -31,7 +31,6 @@ from tests.typing import ClientSessionGenerator
 TEST_CLIENT_ID = "test-client-id"
 TEST_CLIENT_SECRET = "test-client-secret"
 HTTP_OK = 200
-CURRENT_MINOR_VERSION = 2
 
 
 def oauth_state(result: dict[str, str]) -> str:
@@ -99,23 +98,6 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-
-
-async def test_config_entry_unique_id_migration(
-    hass: HomeAssistant,
-    config_entry_v1_1: MockConfigEntry,
-) -> None:
-    """Test that old config entries use the unique id obtained from the JWT subject."""
-    config_entry_v1_1.add_to_hass(hass)
-
-    assert config_entry_v1_1.unique_id != "1234567890"
-    assert config_entry_v1_1.minor_version == 1
-
-    await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_v1_1.unique_id == "1234567890"
-    assert config_entry_v1_1.minor_version == CURRENT_MINOR_VERSION
 
 
 async def test_options_flow_homekit_fan_mode_aliases_default(
