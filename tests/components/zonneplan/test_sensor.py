@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.components.zonneplan import Platform
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,10 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import MOCK_ACCOUNT
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+BATTERY_STATE_ENTITY_ID = "sensor.thuisbatterij_battery_state"
+INVERTER_STATE_ENTITY_ID = "sensor.thuisbatterij_inverter_state"
+EARNED_TODAY_ENTITY_ID = "sensor.thuisbatterij_earned_today"
 
 
 @pytest.fixture(autouse=True)
@@ -131,3 +136,48 @@ async def test_usage_sensor_unknown_until_data_arrives(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "battery_state",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param("Standby", id="unknown_value"),
+    ],
+)
+async def test_battery_state_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    battery_state: str | None,
+) -> None:
+    """Test the battery and inverter states are unknown for a missing or new value."""
+    battery = mock_zonneplan_client.async_get_battery.return_value.battery
+    assert battery is not None
+    battery.contract.meta["battery_state"] = battery_state
+    battery.contract.meta["inverter_state"] = battery_state
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for entity_id in (BATTERY_STATE_ENTITY_ID, INVERTER_STATE_ENTITY_ID):
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNKNOWN
+
+
+async def test_battery_earned_today_without_measurement_groups(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test earned today has no last reset when the API returns no day window."""
+    mock_zonneplan_client.async_get_battery.return_value.measurement_groups = []
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(EARNED_TODAY_ENTITY_ID))
+    assert state.state == "0.5000000"
+    assert ATTR_LAST_RESET not in state.attributes

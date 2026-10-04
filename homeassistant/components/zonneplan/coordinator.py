@@ -3,7 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -57,6 +57,14 @@ class ZonneplanData:
     gas_prices: ConsumerPrices | None = None
     electricity_usage: ElectricityChart | None = None
     gas_usage: GasChart | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class ZonneplanBatteryData:
+    """Data of a Zonneplan home battery."""
+
+    battery: Battery
+    day_start: datetime | None
 
 
 def _connection(account: Account, market_segment: str) -> Connection | None:
@@ -200,7 +208,9 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
         )
 
 
-class ZonneplanBatteryCoordinator(ZonneplanBaseCoordinator[dict[str, Battery]]):
+class ZonneplanBatteryCoordinator(
+    ZonneplanBaseCoordinator[dict[str, ZonneplanBatteryData]]
+):
     """Coordinator to manage fetching the Zonneplan home batteries."""
 
     def __init__(
@@ -215,7 +225,7 @@ class ZonneplanBatteryCoordinator(ZonneplanBaseCoordinator[dict[str, Battery]]):
         self.connection_uuids = connection_uuids
 
     @override
-    async def _async_fetch(self) -> dict[str, Battery]:
+    async def _async_fetch(self) -> dict[str, ZonneplanBatteryData]:
         """Fetch the state of every battery, keyed by contract UUID."""
         installations = await asyncio.gather(
             *(
@@ -223,7 +233,7 @@ class ZonneplanBatteryCoordinator(ZonneplanBaseCoordinator[dict[str, Battery]]):
                 for contract_uuid, connection_uuid in self.connection_uuids.items()
             )
         )
-        batteries: dict[str, Battery] = {}
+        batteries: dict[str, ZonneplanBatteryData] = {}
         for contract_uuid, installation in zip(
             self.connection_uuids, installations, strict=True
         ):
@@ -232,5 +242,12 @@ class ZonneplanBatteryCoordinator(ZonneplanBaseCoordinator[dict[str, Battery]]):
                     translation_domain=DOMAIN,
                     translation_key="battery_not_found",
                 )
-            batteries[contract_uuid] = battery
+            batteries[contract_uuid] = ZonneplanBatteryData(
+                battery=battery,
+                day_start=(
+                    installation.measurement_groups[0].date
+                    if installation.measurement_groups
+                    else None
+                ),
+            )
         return batteries
