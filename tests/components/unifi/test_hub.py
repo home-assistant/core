@@ -8,6 +8,7 @@ from unittest.mock import patch
 import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.networks import Networks
 from aiounifi.models.message import MessageKey
 import pytest
 
@@ -637,3 +638,40 @@ async def test_wan_networks_option_toggle(
 
     assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
     assert _networkconf_requests(aioclient_mock) == 1
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
+async def test_wan_networks_fetch_retried_on_reconnect(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Verify a failed WAN network fetch is retried once the controller reconnects."""
+    with patch.object(Networks, "update", side_effect=aiounifi.AiounifiException):
+        await config_entry_factory()
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+
+    await mock_websocket_state.disconnect()
+    await mock_websocket_state.reconnect()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
+
+
+@pytest.mark.parametrize(
+    "network_payload", [[{**WAN_NETWORKS[0], "purpose": "corporate"}]]
+)
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_network_reconfigured_as_wan(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
+    """Verify a network reconfigured into a WAN gets its entities without a reload."""
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+
+    mock_websocket_message(
+        message=MessageKey.NETWORK_CONF_UPDATED, data=WAN_NETWORKS[0]
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)

@@ -94,34 +94,45 @@ class UnifiEntityLoader:
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
-        self._wan_networks_loaded = self.hub.config.option_track_wan_networks
+        load_wan_networks = self.hub.config.option_track_wan_networks
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
                 [
                     coordinator.async_refresh
                     for handler_id, coordinator in self._data_coordinators.items()
-                    if handler_id != id(self.hub.api.networks)
-                    or self._wan_networks_loaded
+                    if handler_id != id(self.hub.api.networks) or load_wan_networks
                 ]
             ),
         )
-        self.hub.config.entry.async_on_unload(
-            async_dispatcher_connect(
-                self.hub.hass,
-                self.hub.signal_options_update,
-                self._async_load_wan_networks,
-            )
+        self._wan_networks_loaded = (
+            load_wan_networks
+            and self._data_coordinators[id(self.hub.api.networks)].last_update_success
         )
+        for signal in (self.hub.signal_options_update, self.hub.signal_reachable):
+            self.hub.config.entry.async_on_unload(
+                async_dispatcher_connect(
+                    self.hub.hass, signal, self._async_load_wan_networks
+                )
+            )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
     async def _async_load_wan_networks(self) -> None:
-        """Fetch WAN networks once enabled, the handler then adds their entities."""
-        if self._wan_networks_loaded or not self.hub.config.option_track_wan_networks:
+        """Fetch WAN networks once enabled, the handler then adds their entities.
+
+        Only websocket messages keep the handler current afterwards, so a failed
+        fetch is retried on the next options update or reconnect.
+        """
+        if (
+            self._wan_networks_loaded
+            or not self.hub.config.option_track_wan_networks
+            or not self.hub.available
+        ):
             return
-        self._wan_networks_loaded = True
-        await self._data_coordinators[id(self.hub.api.networks)].async_refresh()
+        coordinator = self._data_coordinators[id(self.hub.api.networks)]
+        await coordinator.async_refresh()
+        self._wan_networks_loaded = coordinator.last_update_success
 
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]
@@ -293,6 +304,11 @@ class UnifiEntityLoader:
                 )
 
         for description in descriptions:
-            description.api_handler_fn(self.hub.api).subscribe(
-                partial(create_unifi_entity, description), ItemEvent.ADDED
+            handler = description.api_handler_fn(self.hub.api)
+            # A network can be reconfigured into a WAN after it was added.
+            handler.subscribe(
+                partial(create_unifi_entity, description),
+                (ItemEvent.ADDED, ItemEvent.CHANGED)
+                if handler is self.hub.api.networks
+                else ItemEvent.ADDED,
             )
