@@ -17,6 +17,13 @@ from tests.common import MockConfigEntry
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
+POLLING_OPTIONS = {
+    "low_scan_interval": 47,
+    "high_scan_interval": 13,
+    "high_scan_start": "08:00:00",
+    "low_scan_start": "20:00:00",
+    "scan_ignore": 42,
+}
 
 
 @pytest.fixture
@@ -27,26 +34,20 @@ def mock_hass():
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock a config entry."""
-    return MockConfigEntry(domain=DOMAIN, title="daikin_onecta", unique_id="12345")
+    """Return a config entry with non-default polling options."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="daikin_onecta",
+        unique_id="12345",
+        options=POLLING_OPTIONS,
+    )
 
 
 @pytest.fixture
 def coordinator(mock_hass, mock_config_entry):
-    """Return a coordinator with test options."""
-    config_entry = mock_config_entry
-    config_entry.add_to_hass(mock_hass)
-    options = {
-        "low_scan_interval": 30,  # minutes
-        "high_scan_interval": 10,  # minutes
-        "high_scan_start": "07:00:00",
-        "low_scan_start": "22:00:00",
-    }
-    mock_hass.config_entries.async_update_entry(
-        config_entry,
-        data={**config_entry.data, **options},
-    )
-    return OnectaDataUpdateCoordinator(mock_hass, config_entry, MagicMock())
+    """Return a coordinator using the configured polling options."""
+    mock_config_entry.add_to_hass(mock_hass)
+    return OnectaDataUpdateCoordinator(mock_hass, mock_config_entry, MagicMock())
 
 
 class TestOnectaDataUpdateCoordinator:
@@ -77,7 +78,7 @@ class TestOnectaDataUpdateCoordinator:
         """High scan interval should apply during high-frequency window."""
         mock_now.return_value = datetime(2023, 1, 1, 10, 0, 0)
 
-        expected = timedelta(minutes=10)
+        expected = timedelta(minutes=13)
         result = coordinator.determine_update_interval(mock_hass)
         assert result == expected
 
@@ -87,7 +88,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_now.return_value = datetime(2023, 1, 1, 23, 0, 0)
 
         with patch.object(coordinator, "in_between", side_effect=[False, False]):
-            expected = timedelta(minutes=30)
+            expected = timedelta(minutes=47)
             result = coordinator.determine_update_interval(mock_hass)
             assert result == expected
 
@@ -104,7 +105,7 @@ class TestOnectaDataUpdateCoordinator:
             expected = timedelta(seconds=120)
             result = coordinator.determine_update_interval(mock_hass)
             assert result == expected
-            mock_random.randint.assert_called_once_with(60, 1800)
+            mock_random.randint.assert_called_once_with(60, 2820)
 
     async def test_rate_limit_uses_update_failed_retry_after(
         self, caplog, coordinator, mock_config_entry
@@ -134,9 +135,9 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator.async_update_data() == {}
         coordinator.api.get_cloud_device_details.assert_awaited_once_with(
-            cooldown=timedelta(seconds=30)
+            cooldown=timedelta(seconds=42)
         )
-        assert coordinator.update_interval == timedelta(seconds=30)
+        assert coordinator.update_interval == timedelta(seconds=42)
 
     async def test_connection_error_uses_update_failed(self, coordinator):
         """A connection error should mark the coordinator update as failed."""
