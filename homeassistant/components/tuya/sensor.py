@@ -1,6 +1,7 @@
 """Support for Tuya sensors."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import override
 
 from tuya_device_handlers.definition.sensor import (
@@ -9,6 +10,7 @@ from tuya_device_handlers.definition.sensor import (
 )
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
     DPCodeTypeInformationWrapper,
 )
 from tuya_device_handlers.device_wrapper.sensor import (
@@ -33,6 +35,7 @@ from tuya_device_handlers.device_wrapper.sensor import (
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
 )
+from tuya_device_handlers.type_information import IntegerTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import (
@@ -56,6 +59,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
+from homeassistant.util.variance import ignore_variance
 
 from .const import (
     DEVICE_CLASS_UNITS,
@@ -67,6 +72,71 @@ from .const import (
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_device_temp_unit_convert
+
+
+class RemainingTimeTimestampWrapper(DPCodeIntegerWrapper[datetime]):
+    """Expose a remaining time DP as the timestamp at which it will end.
+
+    The end time is only recalculated when the device reports a new value,
+    and small variations are ignored, so the state does not tick.
+    """
+
+    _UNITS = {"s": "seconds", "min": "minutes", "h": "hours"}
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init RemainingTimeTimestampWrapper."""
+        super().__init__(dpcode, type_information)
+        self.native_unit = None
+        self._time_unit = (
+            self._UNITS.get(type_information.unit) if type_information.unit else None
+        )
+        self._end_time: datetime | None = None
+        self._initialized = False
+        self._reset_stable_end_time()
+
+    def _reset_stable_end_time(self) -> None:
+        """Reset the variance filter, so a new countdown starts fresh."""
+        self._stable_end_time = ignore_variance(
+            lambda value: value, timedelta(minutes=1)
+        )
+
+    def _calculate_end_time(self, device: CustomerDevice) -> datetime | None:
+        """Calculate the end time from the remaining time reported."""
+        if (
+            self._time_unit is None
+            or (remaining := self._read_dpcode_value(device)) is None
+            or remaining <= 0
+        ):
+            self._reset_stable_end_time()
+            return None
+        return self._stable_end_time(
+            dt_util.utcnow() + timedelta(**{self._time_unit: remaining})
+        )
+
+    @override
+    def skip_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None = None,
+    ) -> bool:
+        """Recalculate the end time, and skip if it did not change."""
+        if super().skip_update(device, updated_status_properties, dp_timestamps):
+            return True
+        end_time = self._calculate_end_time(device)
+        if self._initialized and end_time == self._end_time:
+            return True
+        self._end_time = end_time
+        self._initialized = True
+        return False
+
+    @override
+    def read_device_status(self, device: CustomerDevice) -> datetime | None:
+        """Return the end time."""
+        if not self._initialized:
+            self._end_time = self._calculate_end_time(device)
+            self._initialized = True
+        return self._end_time
 
 
 @dataclass(frozen=True)
@@ -959,6 +1029,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     DeviceCategory.MC: BATTERY_SENSORS,
     DeviceCategory.MCS: BATTERY_SENSORS,
+    DeviceCategory.MJJ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            translation_key="countdown_end",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            wrapper_class=(RemainingTimeTimestampWrapper,),
+        ),
+    ),
     DeviceCategory.MSP: (
         TuyaSensorEntityDescription(
             key=DPCode.CAT_WEIGHT,
@@ -1974,9 +2052,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
-        if (
-            device_class := self.entity_description.device_class
-        ) is SensorDeviceClass.ENUM:
+        if (device_class := self.entity_description.device_class) in (
+            SensorDeviceClass.ENUM,
+            SensorDeviceClass.TIMESTAMP,
+        ):
             self._attr_native_unit_of_measurement = None
             return
         if (
