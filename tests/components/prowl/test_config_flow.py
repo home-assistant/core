@@ -1,12 +1,13 @@
 """Test Prowl config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 import prowlpy
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAME, DOMAIN
+from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAMES, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -151,7 +152,7 @@ async def test_flow_import(
     assert result["title"] == expected_title
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY,
-        CONF_LEGACY_SERVICE_NAME: expected_legacy_service_name,
+        CONF_LEGACY_SERVICE_NAMES: [expected_legacy_service_name],
     }
 
 
@@ -190,14 +191,32 @@ async def test_flow_import_failure(
     assert result["reason"] == expected_reason
 
 
+@pytest.mark.parametrize(
+    ("entry_data", "expected_names"),
+    [
+        pytest.param(CONF_INPUT, ["prowl"], id="set_up_in_ui"),
+        pytest.param(
+            {**CONF_INPUT, CONF_LEGACY_SERVICE_NAMES: [None, "other"]},
+            [None, "other", "prowl"],
+            id="other_yaml_names",
+        ),
+    ],
+)
 async def test_flow_import_existing_entry(
-    hass: HomeAssistant, mock_prowlpy: AsyncMock
+    hass: HomeAssistant,
+    mock_prowlpy: AsyncMock,
+    entry_data: dict[str, Any],
+    expected_names: list[str | None],
 ) -> None:
-    """Test importing YAML for an API key that was set up in the UI."""
+    """Test importing YAML for an API key that already has an entry."""
     MockConfigEntry(
         domain=DOMAIN, title="Other", data={CONF_API_KEY: OTHER_API_KEY}
     ).add_to_hass(hass)
-    entry = MockConfigEntry(domain=DOMAIN, title="Prowl", data=CONF_INPUT)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Prowl",
+        data=entry_data,
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -208,7 +227,10 @@ async def test_flow_import_existing_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == {CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAME: "prowl"}
+    assert entry.data == {
+        CONF_API_KEY: TEST_API_KEY,
+        CONF_LEGACY_SERVICE_NAMES: expected_names,
+    }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
@@ -219,7 +241,7 @@ async def test_flow_import_already_imported(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="prowl",
-        data={CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAME: "prowl"},
+        data={CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAMES: [None, "prowl"]},
     )
     entry.add_to_hass(hass)
 
@@ -232,3 +254,30 @@ async def test_flow_import_already_imported(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_prowlpy.verify_key.assert_not_called()
+
+
+async def test_flow_import_entry_created_during_validation(
+    hass: HomeAssistant, mock_prowlpy: AsyncMock
+) -> None:
+    """Test a concurrent import that creates the entry while validating the key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="first",
+        data={CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAMES: ["first"]},
+    )
+
+    async def _add_entry() -> None:
+        entry.add_to_hass(hass)
+
+    mock_prowlpy.verify_key.side_effect = _add_entry
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={CONF_API_KEY: TEST_API_KEY, CONF_NAME: "second"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_LEGACY_SERVICE_NAMES] == ["first", "second"]
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1

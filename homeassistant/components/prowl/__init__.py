@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME, DOMAIN, PLATFORMS
+from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAMES, DOMAIN, PLATFORMS
 from .helpers import async_verify_key
 from .issue import async_create_yaml_deprecated_issue
 
@@ -22,20 +22,23 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
-DATA_YAML_CONFIGURED: HassKey[bool] = HassKey(f"{DOMAIN}_yaml_configured")
+DATA_YAML_API_KEYS: HassKey[set[str]] = HassKey(f"{DOMAIN}_yaml_api_keys")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Prowl component."""
-    hass.data[DATA_YAML_CONFIGURED] = any(
-        platform == DOMAIN for platform, _ in config_per_platform(config, NOTIFY_DOMAIN)
-    )
+    hass.data[DATA_YAML_API_KEYS] = {
+        p_config[CONF_API_KEY]
+        for platform, p_config in config_per_platform(config, NOTIFY_DOMAIN)
+        if platform == DOMAIN and CONF_API_KEY in p_config
+    }
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Prowl service."""
-    if hass.data[DATA_YAML_CONFIGURED]:
+    yaml_api_keys = hass.data[DATA_YAML_API_KEYS]
+    if yaml_api_keys:
         async_create_yaml_deprecated_issue(hass)
 
     try:
@@ -50,17 +53,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady("Prowl API rate limit exceeded") from ex
         raise ConfigEntryError(f"Failed to validate Prowl API key ({ex})") from ex
 
-    if CONF_LEGACY_SERVICE_NAME in entry.data:
-        # Not awaited: the notify setup may be waiting on the YAML import of this entry
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass,
-                Platform.NOTIFY,
-                DOMAIN,
-                {CONF_NAME: entry.data[CONF_LEGACY_SERVICE_NAME], CONF_ENTRY: entry},
-                {},
+    # While YAML for this API key is present, YAML sets up the legacy services
+    if entry.data[CONF_API_KEY] not in yaml_api_keys:
+        for name in entry.data.get(CONF_LEGACY_SERVICE_NAMES, []):
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.NOTIFY,
+                    DOMAIN,
+                    {CONF_NAME: name, CONF_ENTRY: entry},
+                    {},
+                )
             )
-        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

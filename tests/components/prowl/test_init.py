@@ -7,7 +7,7 @@ import prowlpy
 import pytest
 
 from homeassistant.components import notify
-from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAME, DOMAIN
+from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAMES, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -97,7 +97,10 @@ async def test_yaml_import(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.data == {CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAME: DOMAIN}
+    assert entry.data == {
+        CONF_API_KEY: TEST_API_KEY,
+        CONF_LEGACY_SERVICE_NAMES: [DOMAIN],
+    }
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -108,9 +111,10 @@ async def test_yaml_import(
     )
     mock_prowlpy.post.assert_called_once()
 
+    # YAML provides the legacy service while it is present, not the entry
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
@@ -136,7 +140,7 @@ async def test_yaml_import_existing_config_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_prowlpy_config_entry.state is ConfigEntryState.LOADED
-    assert mock_prowlpy_config_entry.data[CONF_LEGACY_SERVICE_NAME] == DOMAIN
+    assert mock_prowlpy_config_entry.data[CONF_LEGACY_SERVICE_NAMES] == [DOMAIN]
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.states.get(ENTITY_ID) is not None
 
@@ -245,3 +249,53 @@ async def test_config_entry_setup_yaml_deprecation_issue(
         )
         is not None
     ) is issue_expected
+
+
+async def test_legacy_services_from_config_entry(
+    hass: HomeAssistant,
+    mock_prowlpy: AsyncMock,
+) -> None:
+    """Test an imported entry sets up the legacy actions after YAML is removed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="prowl",
+        data={CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAMES: [DOMAIN, None]},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_NOTIFY)
+    await hass.services.async_call(
+        notify.DOMAIN, DOMAIN, {notify.ATTR_MESSAGE: "Test"}, blocking=True
+    )
+    mock_prowlpy.post.assert_called_once()
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert not hass.services.has_service(notify.DOMAIN, notify.SERVICE_NOTIFY)
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_yaml_import_multiple_names(hass: HomeAssistant) -> None:
+    """Test several YAML notifiers with the same API key keep their actions."""
+    await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {
+            notify.DOMAIN: [
+                {CONF_PLATFORM: DOMAIN, CONF_API_KEY: TEST_API_KEY, CONF_NAME: "one"},
+                {CONF_PLATFORM: DOMAIN, CONF_API_KEY: TEST_API_KEY, CONF_NAME: "two"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert sorted(entries[0].data[CONF_LEGACY_SERVICE_NAMES]) == ["one", "two"]
+    assert hass.services.has_service(notify.DOMAIN, "one")
+    assert hass.services.has_service(notify.DOMAIN, "two")

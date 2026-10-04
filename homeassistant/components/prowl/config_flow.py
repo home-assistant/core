@@ -8,8 +8,9 @@ import prowlpy
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import callback
 
-from .const import CONF_LEGACY_SERVICE_NAME, DOMAIN
+from .const import CONF_LEGACY_SERVICE_NAMES, DOMAIN
 from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,25 +55,40 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a YAML notify platform configuration."""
         api_key = import_data[CONF_API_KEY]
-        legacy_data = {CONF_LEGACY_SERVICE_NAME: import_data.get(CONF_NAME)}
+        name = import_data.get(CONF_NAME)
 
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_API_KEY] != api_key:
-                continue
-            if CONF_LEGACY_SERVICE_NAME in entry.data:
-                return self.async_abort(reason="already_configured")
-            # Keep the legacy notify service for the YAML config on the existing entry
-            return self.async_update_reload_and_abort(
-                entry, data_updates=legacy_data, reason="already_configured"
-            )
+        if result := self._async_add_legacy_service_name(api_key, name):
+            return result
 
         if errors := await self._validate_api_key(api_key):
             return self.async_abort(reason=errors["base"])
 
+        # Another import for this API key may have created the entry meanwhile
+        if result := self._async_add_legacy_service_name(api_key, name):
+            return result
+
         return self.async_create_entry(
-            title=import_data.get(CONF_NAME) or "Prowl",
-            data={CONF_API_KEY: api_key, **legacy_data},
+            title=name or "Prowl",
+            data={CONF_API_KEY: api_key, CONF_LEGACY_SERVICE_NAMES: [name]},
         )
+
+    @callback
+    def _async_add_legacy_service_name(
+        self, api_key: str, name: str | None
+    ) -> ConfigFlowResult | None:
+        """Add a YAML legacy service name to the entry with the same API key."""
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_API_KEY] != api_key:
+                continue
+            names: list[str | None] = entry.data.get(CONF_LEGACY_SERVICE_NAMES, [])
+            if name in names:
+                return self.async_abort(reason="already_configured")
+            return self.async_update_and_abort(
+                entry,
+                data_updates={CONF_LEGACY_SERVICE_NAMES: [*names, name]},
+                reason="already_configured",
+            )
+        return None
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the provided API key."""
