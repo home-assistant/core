@@ -2150,9 +2150,6 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.6
 
-# homeassistant.components.radio_browser
-pycountry==24.6.1
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2948,7 +2945,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==1.0.0
+radios==2.0.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
