@@ -1,0 +1,13 @@
+{
+  "domain": "bosch_shc_camera",
+  "name": "Bosch Smart Home Camera",
+  "codeowners": ["@mosandlt"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/bosch_shc_camera",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["bosch-shc-camera-client==0.5.10"],
+  "single_config_entry": true
+}
