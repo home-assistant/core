@@ -109,7 +109,8 @@ class AlexaDirective:
         Will raise AlexaInvalidEndpointError if the endpoint in the request is
         malformed or nonexistent.
         """
-        _endpoint_id: str = self._directive[API_ENDPOINT]["endpointId"]
+        # A malformed request can contain a non-string endpointId
+        _endpoint_id = str(self._directive[API_ENDPOINT]["endpointId"])
         self.entity_id = _endpoint_id.replace("#", ".")
 
         entity: State | None = hass.states.get(self.entity_id)
