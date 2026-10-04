@@ -13,7 +13,11 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
+from pyportainer.models.portainer import (
+    Endpoint,
+    PortainerSystemStatus,
+    PortainerSystemVersion,
+)
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
@@ -122,6 +126,9 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         ]
         client.portainer_system_status.return_value = PortainerSystemStatus.from_dict(
             load_json_value_fixture("portainer_system_status.json", DOMAIN)
+        )
+        client.portainer_system_version.return_value = PortainerSystemVersion.from_dict(
+            load_json_value_fixture("portainer_system_version.json", DOMAIN)
         )
         client.get_volumes.return_value = [
             DockerVolume.from_dict(volume)
