@@ -115,6 +115,18 @@
     }
   },
   "selector": {
+    "battery_type": {
+      "options": {
+        "agm": "AGM",
+        "automatic": "Automatic (via BM2)",
+        "custom": "Custom",
+        "deepcycle": "Deep-cycle",
+        "itech120x": "iTechworld 120X (LiFePO4)",
+        "leadacid": "Lead-acid",
+        "lifepo4": "LiFePO4",
+        "lithiumion": "Lithium-ion"
+      }
+    },
     "rate_selector": {
       "options": {
         "always": "Always limit sensor updates",

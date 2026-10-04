@@ -93,24 +93,13 @@ def test_poll_schedule(
 
 
 @pytest.mark.parametrize(
-    ("option", "battery"),
-    [
-        ("Automatic (via BM2)", Battery.automatic),
-        ("AGM", Battery.agm),
-        ("Deep-cycle", Battery.deepcycle),
-        ("Lead-acid", Battery.leadacid),
-        ("LiFePO4", Battery.lifepo4),
-        ("LifePO4", Battery.lifepo4),
-        ("Lithium-ion", Battery.lithiumion),
-        ("iTechworld 120X (LiFePO4)", Battery.itech120x),
-        ("itech120x", Battery.itech120x),
-    ],
+    "battery", [battery for battery in Battery if battery is not Battery.custom]
 )
-def test_chemistry_selection(
-    device: BMxBluetoothDeviceData, option: str, battery: Battery
-) -> None:
-    """Known options select the intended chemistry."""
-    device.entry = MockConfigEntry(domain=DOMAIN, options={CONF_BATTERY_TYPE: option})
+def test_chemistry_selection(device: BMxBluetoothDeviceData, battery: Battery) -> None:
+    """Stored identifiers select profiles without relying on display labels."""
+    device.entry = MockConfigEntry(
+        domain=DOMAIN, options={CONF_BATTERY_TYPE: battery.value}
+    )
     assert device._battery_profile() is BATTERY_PROFILES[battery]
 
 
@@ -119,7 +108,7 @@ def test_custom_chemistry_is_independent(device: BMxBluetoothDeviceData) -> None
     device.entry = MockConfigEntry(
         domain=DOMAIN,
         options={
-            CONF_BATTERY_TYPE: "Custom",
+            CONF_BATTERY_TYPE: Battery.custom.value,
             CONF_CUSTOM_BATTERY_CHEMISTRY: "Test chemistry",
             CONF_CUSTOM_NUMPY_VOLTS: [11.0, 11.5, 12.3, 12.8],
             CONF_CUSTOM_CRITICAL_VOLTAGE: 11.0,
@@ -178,7 +167,7 @@ def test_partial_reading_preserves_unavailable_fields(
 def test_chemistry_adjusts_reading(device: BMxBluetoothDeviceData) -> None:
     """Configured chemistry replaces the raw percentage and missing status."""
     device.entry = MockConfigEntry(
-        domain=DOMAIN, options={CONF_BATTERY_TYPE: "Lead-acid"}
+        domain=DOMAIN, options={CONF_BATTERY_TYPE: Battery.leadacid.value}
     )
     with patch.object(device, "update_sensor") as publish:
         device._apply_reading(BM2Reading(12.06, 99, None, "advertisement"))
@@ -212,7 +201,9 @@ async def test_poll_publishes_protocol_reading(
 
 def test_custom_profile_defaults(device: BMxBluetoothDeviceData) -> None:
     """An entry without explicit custom thresholds uses the form defaults."""
-    device.entry = MockConfigEntry(domain=DOMAIN, options={CONF_BATTERY_TYPE: "Custom"})
+    device.entry = MockConfigEntry(
+        domain=DOMAIN, options={CONF_BATTERY_TYPE: Battery.custom.value}
+    )
     profile = device._battery_profile()
     assert profile.battery_chemistry == "Custom battery"
     assert profile.volts_to_percent == (12.06, 12.2, 12.3, 12.7)

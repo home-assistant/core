@@ -8,6 +8,7 @@ from bluetooth_data_tools import short_address
 from bluetooth_sensor_state_data import BluetoothData
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
 from bmx_ble.battery import (
+    Battery,
     BatteryProfile,
     custom_battery_profile,
     get_battery_profile,
@@ -136,8 +137,8 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
     def _battery_profile(self) -> BatteryProfile:
         """Map entry options to a library battery profile."""
         options = self.entry.options
-        chemistry = options.get(CONF_BATTERY_TYPE, DEFAULT_BATTERY_TYPE)
-        if chemistry != "Custom":
+        chemistry = Battery(options.get(CONF_BATTERY_TYPE, DEFAULT_BATTERY_TYPE))
+        if chemistry is not Battery.custom:
             return get_battery_profile(chemistry)
 
         # Keep accepting the historical derived lookup key. New profiles use

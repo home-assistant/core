@@ -719,7 +719,7 @@ bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.24
 
 # homeassistant.components.bmx_monitor
-bmx-ble==0.2.0
+bmx-ble==0.3.0
 
 # homeassistant.components.bond
 bond-async==0.2.1

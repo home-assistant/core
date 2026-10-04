@@ -1,9 +1,11 @@
 """Constants for the BM2 battery monitor integration."""
 
+from bmx_ble.battery import Battery
+
 DOMAIN = "bmx_monitor"
 
 CONF_BATTERY_TYPE = "battery_type"
-DEFAULT_BATTERY_TYPE = "Automatic (via BM2)"
+DEFAULT_BATTERY_TYPE = Battery.automatic.value
 CONF_RATE_LIMIT_MODE = "rate_limit_mode"
 DEFAULT_RATE_LIMIT_MODE = "never"
 CONF_RATE_LIMIT = "rate_limit"
@@ -37,12 +39,12 @@ RATE_LIMIT_MODES = [
 ]
 
 BATTERY_TYPES = [
-    "Automatic (via BM2)",
-    "AGM",
-    "Deep-cycle",
-    "Lead-acid",
-    "LiFePO4",
-    "iTechworld 120X (LiFePO4)",
-    "Lithium-ion",
-    "Custom",
+    Battery.automatic.value,
+    Battery.agm.value,
+    Battery.deepcycle.value,
+    Battery.leadacid.value,
+    Battery.lifepo4.value,
+    Battery.itech120x.value,
+    Battery.lithiumion.value,
+    Battery.custom.value,
 ]

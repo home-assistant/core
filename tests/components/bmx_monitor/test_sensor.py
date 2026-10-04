@@ -5,6 +5,7 @@ from time import monotonic
 from unittest.mock import MagicMock, patch
 
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
+from bmx_ble.battery import Battery
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sensor_state_data import DeviceKey, SensorUpdate
@@ -82,7 +83,10 @@ async def test_sensors(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=ADDRESS,
-        options={CONF_BATTERY_TYPE: "Lead-acid", CONF_RATE_LIMIT_MODE: "never"},
+        options={
+            CONF_BATTERY_TYPE: Battery.leadacid.value,
+            CONF_RATE_LIMIT_MODE: "never",
+        },
     )
     entry.add_to_hass(hass)
     await async_setup_with_default_adapter(hass)

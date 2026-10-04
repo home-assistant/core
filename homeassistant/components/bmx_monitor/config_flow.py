@@ -17,7 +17,7 @@ import logging
 from typing import Any, override
 
 from bluetooth_data_tools import short_address
-from bmx_ble.battery import BatteryConfigurationError, custom_battery_profile
+from bmx_ble.battery import Battery, BatteryConfigurationError, custom_battery_profile
 import probatio
 
 from homeassistant.components.bluetooth import (
@@ -32,7 +32,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    selector,
+)
 
 from .const import (
     BATTERY_TYPES,
@@ -73,6 +77,16 @@ class DiscoveredDevice:
 
     title: str
     discovery_info: BluetoothServiceInfoBleak
+
+
+def battery_type_selector() -> SelectSelector:
+    """Select a stable battery identifier with translated labels."""
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=BATTERY_TYPES,
+            translation_key=CONF_BATTERY_TYPE,
+        )
+    )
 
 
 def custom_battery_schema(
@@ -141,7 +155,7 @@ def process_custom_battery_input(
 
     errors: dict[str, str] = {}
 
-    user_input[CONF_BATTERY_TYPE] = "Custom"
+    user_input[CONF_BATTERY_TYPE] = Battery.custom.value
     try:
         profile = custom_battery_profile(
             battery_chemistry=user_input[CONF_CUSTOM_BATTERY_CHEMISTRY],
@@ -240,7 +254,7 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
             options = {CONF_BATTERY_TYPE: self._user_input[CONF_BATTERY_TYPE]}
             del self._user_input[CONF_BATTERY_TYPE]
 
-            if options[CONF_BATTERY_TYPE] == "Custom":
+            if options[CONF_BATTERY_TYPE] == Battery.custom.value:
                 self._user_input[CONF_ADDRESS] = self._discovery_info.address
                 return await self.async_step_custom_battery_details()
 
@@ -256,7 +270,7 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_BATTERY_TYPE,
                     default=DEFAULT_BATTERY_TYPE,
-                ): probatio.In(BATTERY_TYPES)
+                ): battery_type_selector()
             }
         )
 
@@ -287,7 +301,7 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_BATTERY_TYPE,
                     DEFAULT_BATTERY_TYPE,
                 ),
-            ): probatio.In(BATTERY_TYPES),
+            ): battery_type_selector(),
         }
 
         if CONF_ADDRESS in defaults:
@@ -335,7 +349,7 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
                     options = {CONF_BATTERY_TYPE: self._user_input[CONF_BATTERY_TYPE]}
                     del self._user_input[CONF_BATTERY_TYPE]
 
-                    if options[CONF_BATTERY_TYPE] == "Custom":
+                    if options[CONF_BATTERY_TYPE] == Battery.custom.value:
                         return await self.async_step_custom_battery_details()
 
                     return self.async_create_entry(
@@ -426,7 +440,7 @@ class BMxOptionsFlow(OptionsFlowWithReload):
         if user_input is not None:
             self._user_input = user_input
 
-            if self._user_input[CONF_BATTERY_TYPE] == "Custom":
+            if self._user_input[CONF_BATTERY_TYPE] == Battery.custom.value:
                 return await self.async_step_custom_battery_details()
 
             return self.async_create_entry(data=self._user_input)
@@ -438,7 +452,7 @@ class BMxOptionsFlow(OptionsFlowWithReload):
                     default=self.config_entry.options.get(
                         CONF_BATTERY_TYPE, DEFAULT_BATTERY_TYPE
                     ),
-                ): probatio.In(BATTERY_TYPES),
+                ): battery_type_selector(),
                 probatio.Required(
                     CONF_RATE_LIMIT_MODE,
                     default=self.config_entry.options.get(

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
 from bmx_ble import BM2Generation
+from bmx_ble.battery import Battery
 import probatio
 import pytest
 
@@ -41,6 +42,8 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import SelectSelector
+from homeassistant.helpers.translation import async_get_translations
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import (
@@ -139,11 +142,14 @@ async def _discovery_form(
         )
 
 
+@pytest.mark.parametrize(
+    "battery", [battery for battery in Battery if battery is not Battery.custom]
+)
 @pytest.mark.parametrize("validation", ["valid_passive", "valid_active"])
 async def test_bluetooth_discovery(
-    hass: HomeAssistant, service_info: MagicMock, validation: str
+    hass: HomeAssistant, service_info: MagicMock, validation: str, battery: Battery
 ) -> None:
-    """Confirmed passive and active devices produce unique config entries."""
+    """Confirmed devices persist stable battery identifiers in their options."""
     result = await _discovery_form(hass, service_info, validation)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -151,11 +157,11 @@ async def test_bluetooth_discovery(
     assert len(flows) == 1
     assert not flows[0]["context"].get("confirm_only", False)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
+        result["flow_id"], {CONF_BATTERY_TYPE: battery.value}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
-    assert result["options"] == {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
+    assert result["options"] == {CONF_BATTERY_TYPE: battery.value}
     assert result["result"].unique_id == ADDRESS
 
 
@@ -356,7 +362,7 @@ async def test_manual_custom_must_validate_device(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: "Custom"},
+            {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: Battery.custom.value},
         )
     validate.assert_awaited_once()
     assert result["type"] is FlowResultType.FORM
@@ -376,7 +382,7 @@ async def test_manual_custom_details(
     ) as validate:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: "Custom"},
+            {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: Battery.custom.value},
         )
     validate.assert_awaited_once()
     assert result["type"] is FlowResultType.FORM
@@ -386,7 +392,7 @@ async def test_manual_custom_details(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: ADDRESS}
-    assert result["options"][CONF_BATTERY_TYPE] == "Custom"
+    assert result["options"][CONF_BATTERY_TYPE] == Battery.custom.value
     assert result["options"][CONF_CUSTOM_NUMPY_VOLTS] == [11.0, 11.5, 12.3, 12.8]
     assert result["result"].unique_id == ADDRESS
 
@@ -397,7 +403,7 @@ async def test_bluetooth_custom_details(
     """A custom battery uses a second form and stores derived lookup values."""
     result = await _discovery_form(hass, service_info)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_BATTERY_TYPE: "Custom"}
+        result["flow_id"], {CONF_BATTERY_TYPE: Battery.custom.value}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_battery_details"
@@ -406,7 +412,7 @@ async def test_bluetooth_custom_details(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: ADDRESS}
-    assert result["options"][CONF_BATTERY_TYPE] == "Custom"
+    assert result["options"][CONF_BATTERY_TYPE] == Battery.custom.value
     assert result["options"][CONF_CUSTOM_NUMPY_VOLTS] == [11.0, 11.5, 12.3, 12.8]
     assert result["options"][CONF_CUSTOM_NUMPY_PERCENT] == [0, 20, 50, 100]
     assert result["result"].unique_id == ADDRESS
@@ -418,7 +424,7 @@ async def test_custom_voltages_out_of_order(
     """Invalid custom thresholds keep the form open and can be corrected."""
     result = await _discovery_form(hass, service_info)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_BATTERY_TYPE: "Custom"}
+        result["flow_id"], {CONF_BATTERY_TYPE: Battery.custom.value}
     )
     invalid = {**CUSTOM_DETAILS, CONF_CUSTOM_LOW_VOLTAGE: 11.0}
     result = await hass.config_entries.flow.async_configure(result["flow_id"], invalid)
@@ -454,7 +460,7 @@ async def test_options_switch_from_custom(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=ADDRESS,
-        options={CONF_BATTERY_TYPE: "Custom", **CUSTOM_DETAILS},
+        options={CONF_BATTERY_TYPE: Battery.custom.value, **CUSTOM_DETAILS},
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -478,7 +484,7 @@ async def test_options_custom_error_and_retry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            CONF_BATTERY_TYPE: "Custom",
+            CONF_BATTERY_TYPE: Battery.custom.value,
             CONF_RATE_LIMIT_MODE: DEFAULT_RATE_LIMIT_MODE,
             CONF_RATE_LIMIT: 12,
         },
@@ -703,3 +709,56 @@ async def test_validation_programming_error_propagates(
         pytest.raises(error, match="Unexpected defect"),
     ):
         await protocol_validation.async_validate_device(hass, service_info)
+
+
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_BLUETOOTH, "options"])
+async def test_battery_selector_uses_stable_values(
+    hass: HomeAssistant, service_info: MagicMock, source: str
+) -> None:
+    """All entry points offer translated labels for the same stable values."""
+    if source == SOURCE_USER:
+        result = await _manual_form(hass, service_info)
+    elif source == SOURCE_BLUETOOTH:
+        result = await _discovery_form(hass, service_info)
+    else:
+        entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS)
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    battery_selector = result["data_schema"].schema[CONF_BATTERY_TYPE]
+    assert isinstance(battery_selector, SelectSelector)
+    assert battery_selector.config["translation_key"] == CONF_BATTERY_TYPE
+    assert battery_selector.config["options"] == [
+        "automatic",
+        "agm",
+        "deepcycle",
+        "leadacid",
+        "lifepo4",
+        "itech120x",
+        "lithiumion",
+        "custom",
+    ]
+    for value in battery_selector.config["options"]:
+        assert battery_selector(value) == value
+    with pytest.raises(probatio.Invalid, match="must be one of"):
+        battery_selector("Lead-acid")
+
+
+async def test_battery_selector_labels(hass: HomeAssistant) -> None:
+    """Display labels are translated independently from persisted identifiers."""
+    translations = await async_get_translations(hass, "en", "selector", {DOMAIN})
+    expected = {
+        "automatic": "Automatic (via BM2)",
+        "agm": "AGM",
+        "deepcycle": "Deep-cycle",
+        "leadacid": "Lead-acid",
+        "lifepo4": "LiFePO4",
+        "itech120x": "iTechworld 120X (LiFePO4)",
+        "lithiumion": "Lithium-ion",
+        "custom": "Custom",
+    }
+    for value, label in expected.items():
+        assert (
+            translations[f"component.{DOMAIN}.selector.battery_type.options.{value}"]
+            == label
+        )
