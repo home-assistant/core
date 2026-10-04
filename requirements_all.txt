@@ -2945,7 +2945,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==2.0.0
+radios==2.0.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
