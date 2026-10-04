@@ -3,9 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
+from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 from teslemetry_stream.const import CreditsEvent
 
@@ -57,6 +58,12 @@ PARALLEL_UPDATES = 0
 # Tesla only reports the self-driving/mileage-since-reset fields (258-259) on HW4
 # vehicles, identified by this driver-assist capability in the vehicle config.
 DRIVER_ASSIST_HW4 = "TeslaAP4"
+
+
+def _tires_in_warning(warnings: dict[str, Any] | None) -> int | None:
+    """Count the tires flagged in a per-tire TPMS warning field."""
+    return None if warnings is None else sum(bool(v) for v in warnings.values())
+
 
 BMS_STATES = {
     "Standby": "standby",
@@ -215,6 +222,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     ) = None
     streaming_firmware: str = "2024.26"
     requires_hw4: bool = False
+    requires_location_scope: bool = False
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
@@ -548,6 +556,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_active_route_destination",
+        requires_location_scope=True,
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_DestinationName(
             callback
@@ -632,7 +641,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="cruise_follow_distance",
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_CruiseFollowDistance(callback)
+            vehicle.listen_CruiseFollowDistance(
+                lambda value: callback(
+                    int(value) if value and value.isdigit() else None
+                )
+            )
         ),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -1093,6 +1106,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="gps_heading",
+        requires_location_scope=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_GpsHeading(
             callback
         ),
@@ -1422,7 +1436,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="tpms_hard_warnings",
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsHardWarnings(
-            callback
+            lambda value: callback(_tires_in_warning(value))
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1430,7 +1444,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="tpms_soft_warnings",
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsSoftWarnings(
-            callback
+            lambda value: callback(_tires_in_warning(value))
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1524,25 +1538,6 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslemetryEnergySensorEntityDescription, ...] = 
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-    ),
-    TeslemetryEnergySensorEntityDescription(
-        key="energy_left",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    TeslemetryEnergySensorEntityDescription(
-        key="total_pack_energy",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     TeslemetryEnergySensorEntityDescription(
         key="percentage_charged",
@@ -1670,9 +1665,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
 
+    location_scope = Scope.VEHICLE_LOCATION in entry.runtime_data.scopes
     entities: list[SensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
+            if description.requires_location_scope and not location_scope:
+                continue
             if (
                 not vehicle.poll
                 and description.streaming_listener
@@ -1732,6 +1730,14 @@ async def async_setup_entry(
         for energysite in entry.runtime_data.energysites
         for description in ENERGY_HISTORY_DESCRIPTIONS
         if energysite.history_coordinator is not None
+        and (
+            "battery" not in description.key
+            or energysite.info_coordinator.data.get("components_battery")
+        )
+        and (
+            "solar" not in description.key
+            or energysite.info_coordinator.data.get("components_solar")
+        )
     )
 
     if entry.runtime_data.stream is not None:

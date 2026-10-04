@@ -90,7 +90,7 @@ PERSON_SCHEMA = probatio.Schema(
         probatio.Required(CONF_NAME): cv.string,
         probatio.Optional(CONF_USER_ID): cv.string,
         probatio.Optional(CONF_DEVICE_TRACKERS, default=[]): probatio.All(
-            cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
+            probatio.EnsureList(), cv.entities_domain(DEVICE_TRACKER_DOMAIN)
         ),
         probatio.Optional(CONF_PICTURE): cv.string,
     }
@@ -99,7 +99,7 @@ PERSON_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default=[]): probatio.All(
-            cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA]
+            probatio.EnsureList(), cv.remove_falsy, [PERSON_SCHEMA]
         )
     },
     extra=probatio.ALLOW_EXTRA,
@@ -178,20 +178,20 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 CREATE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
     probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
-        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
+        probatio.EnsureList(), cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
     probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
 }
 
 
 UPDATE_FIELDS: VolDictType = {
-    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
     probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
-        cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
+        probatio.EnsureList(), cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
     probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
 }
@@ -345,7 +345,7 @@ class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket
     {
         probatio.Required("type"): "person/update_own_profile",
         probatio.Optional(CONF_NAME): probatio.All(
-            str, probatio.Strip, probatio.Length(min=1)
+            str, probatio.Strip, probatio.NonEmpty()
         ),
         probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
     }

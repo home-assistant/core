@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): selector.TextSelector(
             selector.TextSelectorConfig()
         ),
         probatio.Required(CONF_FROM): selector.TextSelector(
@@ -44,7 +44,7 @@ DATA_SCHEMA = probatio.Schema(
 )
 DATA_SCHEMA_REAUTH = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): selector.TextSelector(
             selector.TextSelectorConfig()
         ),
     }
