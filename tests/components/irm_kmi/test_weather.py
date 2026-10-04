@@ -1,7 +1,9 @@
 """Test for the weather entity of the IRM KMI integration."""
 
 from typing import Any
+from unittest.mock import MagicMock
 
+from irm_kmi_api import ExtendedForecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -155,3 +157,84 @@ async def test_forecast_language(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device.manufacturer == expected_manufacturer
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize("forecast_fixture", ["high_low_temp.json"])
+@pytest.mark.freeze_time("2024-01-21T14:15:00+01:00")
+async def test_forecasts_do_not_mutate_coordinator_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reading the daily forecast does not change the twice daily forecast."""
+    await setup_integration(hass, mock_config_entry)
+
+    twice_daily = await _get_forecast(hass, "twice_daily")
+    await _get_forecast(hass, "daily")
+
+    assert await _get_forecast(hass, "twice_daily") == twice_daily
+
+
+@pytest.mark.parametrize(
+    ("daily_forecast", "expected"),
+    [
+        pytest.param(
+            [
+                ExtendedForecast(
+                    datetime="2024-01-21",
+                    is_daytime=False,
+                    native_temperature=None,
+                    native_templow=2.0,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-22",
+                    is_daytime=True,
+                    native_temperature=8.0,
+                    native_templow=None,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-23",
+                    is_daytime=True,
+                    native_temperature=9.0,
+                    native_templow=3.0,
+                ),
+            ],
+            [(None, 2.0), (8.0, 2.0), (9.0, 3.0)],
+            id="borrowed_low",
+        ),
+        pytest.param(
+            [
+                ExtendedForecast(
+                    datetime="2024-01-21",
+                    is_daytime=False,
+                    native_temperature=None,
+                    native_templow=12.0,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-22",
+                    is_daytime=True,
+                    native_temperature=8.0,
+                    native_templow=None,
+                ),
+            ],
+            [(None, 12.0), (12.0, 8.0)],
+            id="borrowed_low_swapped",
+        ),
+        # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
+    ],
+)
+async def test_daily_forecast_borrowed_templow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    daily_forecast: list[ExtendedForecast],
+    expected: list[tuple[float | None, float | None]],
+) -> None:
+    """Test the daily forecast borrows the low temperature from the adjacent night."""
+    mock_irm_kmi_api.get_daily_forecast.return_value = daily_forecast
+    await setup_integration(hass, mock_config_entry)
+
+    assert [
+        (forecast.get("temperature"), forecast.get("templow"))
+        for forecast in await _get_forecast(hass, "daily")
+    ] == expected
