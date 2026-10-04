@@ -115,21 +115,21 @@ class DummyDevice:
         """Record turn_on call."""
         self.calls.append(("turn_on", fan_speed, mode))
 
-    def connect(self, check_protocol: bool = False) -> bool:
+    async def connect(self, check_protocol: bool = False) -> bool:
         """Record connect call and mirror midealocal's availability handling."""
         self.calls.append(("connect", check_protocol))
         self.available = check_protocol
         return check_protocol
 
-    def open(self) -> None:
+    async def open(self) -> None:
         """Record open call."""
         self.calls.append(("open",))
 
-    def close(self) -> None:
+    async def close(self) -> None:
         """Record close call."""
         self.calls.append(("close",))
 
-    def close_socket(self) -> None:
+    async def close_socket(self) -> None:
         """Record close_socket call."""
         self.calls.append(("close_socket",))
 

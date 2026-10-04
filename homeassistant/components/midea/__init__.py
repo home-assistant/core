@@ -63,27 +63,14 @@ def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | No
     )
 
 
-def _connect(device: MideaDevice) -> bool:
-    """Connect to the device, always closing the socket on failure.
-
-    connect() swallows AuthException/SocketException internally and can
-    leave the socket open even though it reports failure, so it must be
-    closed explicitly here to avoid a ResourceWarning.
-    """
-    connected = device.connect(True)
-    if not connected:
-        device.close_socket()
-    return connected
-
-
-def _discover_current_ip(device_id: int) -> str | None:
+async def _async_discover_current_ip(device_id: int) -> str | None:
     """Look up the device's current IP address via local discovery.
 
     Devices reply to the discovery broadcast with a persistent device_id
     regardless of their current IP, so this can find a device that has
     moved to a new DHCP-assigned address.
     """
-    found = discover()
+    found = await discover()
     device = found.get(device_id)
     return device[CONF_IP_ADDRESS] if device else None
 
@@ -95,17 +82,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
     device_id: int = data[CONF_DEVICE_ID]
     ip_address: str = data[CONF_IP_ADDRESS]
 
-    device = await hass.async_add_executor_job(_create_device, data, ip_address)
+    device = _create_device(data, ip_address)
     if device is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="unable_initialize_device"
         )
 
-    connected = await hass.async_add_executor_job(_connect, device)
+    connected = await device.connect(check_protocol=True)
     if not connected:
-        new_ip_address = await hass.async_add_executor_job(
-            _discover_current_ip, device_id
-        )
+        new_ip_address = await _async_discover_current_ip(device_id)
         if new_ip_address and new_ip_address != ip_address:
             LOGGER.debug(
                 "Device %s moved from %s to %s, updating config entry",
@@ -115,12 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
             )
             data = {**data, CONF_IP_ADDRESS: new_ip_address}
             hass.config_entries.async_update_entry(entry, data=data)
-            new_device = await hass.async_add_executor_job(
-                _create_device, data, new_ip_address
-            )
+            new_device = _create_device(data, new_ip_address)
             if new_device is not None:
                 device = new_device
-                connected = await hass.async_add_executor_job(_connect, device)
+                connected = await device.connect(check_protocol=True)
         if not connected:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -143,19 +126,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
     device.register_update(_log_availability)
     entry.async_on_unload(partial(device.unregister_update, _log_availability))
 
-    # The library's reconnect loop keeps retrying with a growing backoff
-    # (up to 600s) without checking for a stop request while sleeping, so
-    # device.close() alone cannot guarantee the background thread exits
-    # promptly when offline. Marking it a daemon thread ensures it can
-    # never block Home Assistant shutdown as a zombie thread.
-    device.daemon = True
-    await hass.async_add_executor_job(device.open)
+    await device.open()
     entry.runtime_data = device
-
-    async def _close_device() -> None:
-        await hass.async_add_executor_job(device.close)
-
-    entry.async_on_unload(_close_device)
+    entry.async_on_unload(device.close)
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
@@ -165,9 +138,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> b
     if entry.minor_version < 2:
         # minor_version 2 adds mac/serial number; discovery already parses both
         # from the device reply, so backfill them for pre-existing entries.
-        discovered = await hass.async_add_executor_job(
-            partial(discover, ip_address=entry.data[CONF_IP_ADDRESS])
-        )
+        discovered = await discover(ip_address=entry.data[CONF_IP_ADDRESS])
         device = discovered.get(entry.data[CONF_DEVICE_ID], {})
         new_data = {**entry.data}
         if mac := device.get(CONF_MAC):

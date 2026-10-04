@@ -170,13 +170,13 @@ class MideaFan(MideaEntity, FanEntity):
         return oscillate
 
     @override
-    def oscillate(self, oscillating: bool) -> None:
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Midea Fan oscillate."""
         with midea_api_call():
             self._device.set_attribute(attr="oscillate", value=oscillating)
 
     @override
-    def turn_on(
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
@@ -184,7 +184,7 @@ class MideaFan(MideaEntity, FanEntity):
     ) -> None:
         """Midea Fan turn on."""
         if percentage == 0:
-            self.turn_off()
+            await self.async_turn_off()
             return
         if self.entity_description.has_combined_turn_on:
             fan_speed = (
@@ -201,16 +201,16 @@ class MideaFan(MideaEntity, FanEntity):
             with midea_api_call():
                 self._device.set_attribute(attr="power", value=True)
             if percentage is not None:
-                self.set_percentage(percentage)
+                await self.async_set_percentage(percentage)
             if preset_mode is not None:
-                self.set_preset_mode(preset_mode)
+                await self.async_set_preset_mode(preset_mode)
             return
-        self.set_percentage(
+        await self.async_set_percentage(
             percentage if percentage is not None else round(self.percentage_step)
         )
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Midea Fan turn off."""
         off_value: bool | int = (
             False if self.entity_description.is_on_attribute == "power" else 0
@@ -221,8 +221,11 @@ class MideaFan(MideaEntity, FanEntity):
             )
 
     @override
-    def set_percentage(self, percentage: int) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Midea Fan set percentage."""
+        if percentage == 0:
+            await self.async_turn_off()
+            return
         fan_speed = math.ceil(
             percentage_to_ranged_value((1, self.speed_count), percentage)
         )
@@ -230,15 +233,7 @@ class MideaFan(MideaEntity, FanEntity):
             self._device.set_attribute(attr="fan_speed", value=fan_speed)
 
     @override
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Midea Fan async set percentage."""
-        if percentage == 0:
-            await self.async_turn_off()
-        else:
-            await self.hass.async_add_executor_job(self.set_percentage, percentage)
-
-    @override
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Midea Fan set preset mode."""
         with midea_api_call():
             self._device.set_attribute(attr="mode", value=preset_mode)
