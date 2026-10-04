@@ -26,6 +26,7 @@ from .coordinator import (
     EngieBePricesCoordinator,
     EngieBePricesData,
     epex_slot_covering,
+    epex_slots_cover_day,
     epex_slots_for_day,
     normalize_slot_code,
 )
@@ -319,10 +320,13 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
     def extreme_slot(self, choose: Callable[..., EpexSlot]) -> EpexSlot | None:
         """Return today's cheapest or most expensive slot in Brussels."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
-        slots = epex_slots_for_day(self._slots(), today)
-        if not slots:
+        slots = self._slots()
+        if not epex_slots_cover_day(slots, today, self.entity_description.granularity):
             return None
-        return choose(slots, key=lambda slot: slot.value_eur_per_kwh)
+        return choose(
+            epex_slots_for_day(slots, today),
+            key=lambda slot: slot.value_eur_per_kwh,
+        )
 
     @property
     @override

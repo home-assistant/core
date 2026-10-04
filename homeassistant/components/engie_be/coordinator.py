@@ -237,11 +237,16 @@ def epex_window(day: date) -> tuple[datetime, datetime]:
     return start, start + timedelta(days=1)
 
 
-def epex_slots_cover_day(slots: Iterable[EpexSlot], day: date) -> bool:
+def epex_slots_cover_day(
+    slots: Iterable[EpexSlot], day: date, granularity: EpexGranularity
+) -> bool:
     """Return True when the slots tile the Brussels calendar day without gaps."""
     start, end = epex_window(day)
+    duration = timedelta(minutes=granularity.value)
     day_slots = sorted(epex_slots_for_day(slots, day), key=lambda slot: slot.start)
     if not day_slots or day_slots[0].start != start or day_slots[-1].end != end:
+        return False
+    if any(slot.end - slot.start != duration for slot in day_slots):
         return False
     return all(slot.end == following.start for slot, following in pairwise(day_slots))
 
@@ -249,7 +254,7 @@ def epex_slots_cover_day(slots: Iterable[EpexSlot], day: date) -> bool:
 def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
     """Return True when both granularities fully cover the given day."""
     return all(
-        epex_slots_cover_day(data.slots(granularity), day)
+        epex_slots_cover_day(data.slots(granularity), day, granularity)
         for granularity in EpexGranularity
     )
 
@@ -323,14 +328,14 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             for granularity in EpexGranularity
         }
         if all(
-            epex_slots_cover_day(slots[granularity], day)
+            epex_slots_cover_day(slots[granularity], day, granularity)
             for granularity in EpexGranularity
             for day in (today, tomorrow)
         ):
             return data
         for day, required in ((today, True), (tomorrow, False)):
             for granularity in EpexGranularity:
-                if epex_slots_cover_day(slots[granularity], day):
+                if epex_slots_cover_day(slots[granularity], day, granularity):
                     continue
                 try:
                     payload = await self.client.async_get_epex_prices(

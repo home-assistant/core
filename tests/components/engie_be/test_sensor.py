@@ -1118,6 +1118,30 @@ async def test_epex_sensors_unknown_during_slot_gap(
     assert next_hour_state is not None
     assert float(next_hour_state.state) == pytest.approx(0.16)
 
+    hourly_low = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_low_today_hour"
+    )
+    assert hourly_low is not None
+    hourly_low_state = hass.states.get(hourly_low)
+    assert hourly_low_state is not None
+    assert hourly_low_state.state == STATE_UNKNOWN
+
+    hourly_high = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_high_today_hour"
+    )
+    assert hourly_high is not None
+    hourly_high_state = hass.states.get(hourly_high)
+    assert hourly_high_state is not None
+    assert hourly_high_state.state == STATE_UNKNOWN
+
+    quarter_low = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_low_today_quarter_hour"
+    )
+    assert quarter_low is not None
+    quarter_low_state = hass.states.get(quarter_low)
+    assert quarter_low_state is not None
+    assert float(quarter_low_state.state) == pytest.approx(0.01)
+
 
 async def test_epex_sensors_update_on_quarter_boundaries(
     hass: HomeAssistant,
