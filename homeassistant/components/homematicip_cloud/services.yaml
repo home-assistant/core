@@ -109,3 +109,18 @@ set_home_cooling_mode:
       example: 3014xxxxxxxxxxxxxxxxxxxx
       selector:
         text:
+
+arm_anyway:
+  target:
+    entity:
+      integration: homematicip_cloud
+      domain: alarm_control_panel
+  fields:
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - home
+            - away
+          translation_key: arm_anyway_mode
