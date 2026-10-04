@@ -140,6 +140,44 @@ async def test_pushed_update_during_refresh(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_pushed_update_during_partial_refresh(
+    hass: HomeAssistant,
+    coils: dict[int, float | None],
+    mock_connection: MockConnection,
+) -> None:
+    """Test that a partial polling batch preserves broadcasts for failed coils."""
+    entity_id = "number.heating_offset_climate_system_1_40031"
+    coils[30002] = 10
+    coils[40031] = 10
+    coils[40035] = 20
+
+    entry = await async_add_model(hass, Model.S320)
+    coordinator = entry.runtime_data
+    assert 30002 not in coordinator.context_callbacks
+    coils[40031] = None
+    read_coil_original = mock_connection.read_coil
+
+    async def read_coil(coil: Coil, timeout: float = 0) -> CoilData:
+        data = await read_coil_original(coil, timeout)
+        assert coil.address == 40035
+        # The earlier read failed, but its broadcast arrives during this read.
+        mock_connection.mock_coil_update(40031, 22)
+        mock_connection.mock_coil_update(30002, 30)
+        mock_connection.heatpump.notify_coil_update(data)
+        assert hass.states.get(entity_id).state == "22.0"
+        return data
+
+    with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        await coordinator.async_refresh()
+
+    assert hass.states.get(entity_id).state == "22.0"
+    assert coordinator.data[40031].value == 22
+    assert coordinator.data[40035].value == 20
+    assert 30002 not in coordinator.data
+    assert coordinator.last_update_success
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shutdown(
     hass: HomeAssistant,
     coils: dict[int, Any],

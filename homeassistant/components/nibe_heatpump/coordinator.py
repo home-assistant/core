@@ -218,8 +218,10 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
             )
 
         # Preserve broadcasts received while the polling batch was running.
-        return {
-            address: self.seed.get(address, data) for address, data in result.items()
+        return result | {
+            address: data
+            for address, data in self.seed.items()
+            if address in self.context_callbacks
         }
 
     @override
