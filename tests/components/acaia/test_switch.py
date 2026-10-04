@@ -1,7 +1,10 @@
 """Tests for the acaia switch."""
 
+import asyncio
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -15,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "switch.kitchen_lunar_ddeeff_keep_connected"
 
@@ -177,3 +180,45 @@ async def test_turning_on_while_connected_does_not_reconnect(
     )
 
     mock_scale.connect.assert_not_called()
+
+
+async def test_turning_off_during_pending_connect_disconnects(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test turning off while a reconnect is in flight leaves the scale disconnected."""
+
+    await setup_integration(hass, mock_config_entry)
+    mock_scale.connected = False
+    connect_started = asyncio.Event()
+    release_connect = asyncio.Event()
+
+    async def _blocked_connect(**kwargs: bool) -> None:
+        connect_started.set()
+        await release_connect.wait()
+        mock_scale.connected = True
+
+    mock_scale.connect.side_effect = _blocked_connect
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await connect_started.wait()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_scale.disconnect.assert_not_called()
+
+    release_connect.set()
+    await hass.async_block_till_done()
+
+    mock_scale.disconnect.assert_called_once()
+    assert mock_scale.heartbeat_task is None
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_OFF

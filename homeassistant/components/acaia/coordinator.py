@@ -65,12 +65,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             scanner=async_get_scanner(hass),
         )
 
-        # Acaia scales only run their own auto-off timer while nothing is
-        # connected over Bluetooth, so an integration that stays connected
-        # around the clock prevents the scale from ever sleeping on its own.
-        # Read from config entry options so the preference is in place
-        # before the first refresh, rather than racing a restored entity
-        # state that is only available once the switch platform loads.
+        # Read from options so the preference applies before the first refresh.
         self.keep_connected: bool = entry.options.get(CONF_KEEP_CONNECTED, True)
 
         # Minutes without a weight change before disconnecting, 0 disables.
@@ -194,6 +189,11 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
                 ex,
             )
             self._scale.device_disconnected_handler(notify=False)
+            return
+
+        # keep_connected may have been turned off while connect() was pending.
+        if not self.keep_connected:
+            await self._scale.disconnect()
             return
 
         self._last_activity = dt_util.utcnow()
