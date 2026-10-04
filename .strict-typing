@@ -161,6 +161,7 @@ homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.data_grand_lyon.*
+homeassistant.components.daikin_onecta.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
 homeassistant.components.deako.*

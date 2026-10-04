@@ -1,0 +1,144 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "invalid_token": "Invalid or expired token; please reconfigure the integration.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Failed due to an unexpected error.",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Daikin device on your network. Press **Submit** to continue setting up Daikin Onecta."
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Daikin Onecta integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "calculated_leaving_water_temperature": {
+        "name": "Calculated Leaving Water Temperature"
+      },
+      "domestic_hot_water_temperature": {
+        "name": "Domestic Hot Water Temperature"
+      },
+      "leaving_water_offset": {
+        "name": "Leaving Water Offset"
+      },
+      "leaving_water_temperature": {
+        "name": "Leaving Water Temperature"
+      },
+      "roomtemperature": {
+        "name": "Room Temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "1": "1",
+              "2": "2",
+              "3": "3",
+              "4": "4",
+              "5": "5",
+              "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "stop": "Stop",
+              "swing": "Swing"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "floorheatingairflow": "FloorHeating Airflow",
+              "stop": "Stop",
+              "swing": "Swing",
+              "windnice": "Comfort Airflow"
+            }
+          }
+        }
+      },
+      "setpoint": {
+        "name": "Setpoint {setpoint}"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to {command} for {device}"
+    },
+    "connection_failed": {
+      "message": "Unable to connect to the Daikin API"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "rate_limit_exceeded": {
+      "message": "Daikin API rate limit exceeded"
+    }
+  },
+  "options": {
+    "error": {
+      "high_scan_interval_greater_than_low": "The high-frequency interval must not exceed the low-frequency interval."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "high_scan_interval": "High frequency period update interval (minutes)",
+          "high_scan_start": "High frequency period start time",
+          "homekit_fan_mode_aliases": "Expose HomeKit compatible fan speed aliases",
+          "low_scan_interval": "Low frequency period update interval (minutes)",
+          "low_scan_start": "Low frequency period start time",
+          "scan_ignore": "Number of seconds that a data refresh is ignored after a command"
+        },
+        "data_description": {
+          "high_scan_interval": "How often to refresh during the high-frequency period.",
+          "high_scan_start": "When the high-frequency period starts.",
+          "homekit_fan_mode_aliases": "Add HomeKit-compatible names for supported fan speeds.",
+          "low_scan_interval": "How often to refresh outside the high-frequency period.",
+          "low_scan_start": "When the high-frequency period ends.",
+          "scan_ignore": "How long to keep locally updated state before the next cloud refresh."
+        },
+        "description": "Configure Daikin Onecta Cloud polling"
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_status": "API server",
+      "max_day": "Maximum day",
+      "max_minute": "Maximum minute",
+      "oauth2_status": "OAuth2 server",
+      "oauth2_token_valid": "OAuth2 token valid",
+      "ratelimit_reset": "Rate limit reset",
+      "remaining_day": "Remaining day",
+      "remaining_minute": "Remaining minute",
+      "retry_after": "Retry after"
+    }
+  }
+}

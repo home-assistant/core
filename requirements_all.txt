@@ -819,6 +819,9 @@ crownstone-sse==2.0.5
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
 
+# homeassistant.components.daikin_onecta
+daikin-onecta==0.4.1
+
 # homeassistant.components.data_grand_lyon
 data-grand-lyon-ha==0.9.0
 
