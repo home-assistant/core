@@ -753,6 +753,69 @@ async def test_laundry_dry_scenario(
     )
 
 
+@pytest.mark.parametrize("load_device_file", ["laundry.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.parametrize(
+    ("device", "entity_id", "value_raw", "value_localized", "expected"),
+    [
+        pytest.param(
+            "DummyWasher", "sensor.washing_machine_program", 49, "Express", "express"
+        ),
+        pytest.param(
+            "DummyWasher", "sensor.washing_machine_program", 56, "Whites", "whites"
+        ),
+        pytest.param(
+            "DummyWasher",
+            "sensor.washing_machine_program",
+            127,
+            "Baby clothes",
+            "baby_clothes",
+        ),
+        pytest.param(
+            "DummyWasher",
+            "sensor.washing_machine_program",
+            178,
+            "Hand wash",
+            "hand_wash",
+        ),
+        pytest.param(
+            "DummyDryer",
+            "sensor.tumble_dryer_program",
+            42,
+            "Table cloths",
+            "table_linen",
+        ),
+    ],
+)
+async def test_program_sensor_reports_new_program_codes(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    device_fixture: MieleDevices,
+    setup_platform: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device: str,
+    entity_id: str,
+    value_raw: int,
+    value_localized: str,
+    expected: str,
+) -> None:
+    """Program codes reported by WXI860 and TXI680WP appliances resolve.
+
+    These codes were previously unmapped, so the program sensor reported
+    unknown. See #182716.
+    """
+    device_fixture[device]["state"]["status"]["value_raw"] = 5
+    device_fixture[device]["state"]["status"]["value_localized"] = "In use"
+    device_fixture[device]["state"]["ProgramID"]["value_raw"] = value_raw
+    device_fixture[device]["state"]["ProgramID"]["value_localized"] = value_localized
+
+    freezer.move_to("2025-05-31T12:35:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    check_sensor_state(hass, entity_id, expected, 0)
+
+
 @pytest.mark.parametrize("restore_state", ["45", STATE_UNKNOWN, STATE_UNAVAILABLE])
 @pytest.mark.parametrize(
     "restore_state_abs", ["2025-05-31T13:19:00+00:00", STATE_UNKNOWN, STATE_UNAVAILABLE]
