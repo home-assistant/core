@@ -88,6 +88,7 @@
           "waiting": "Waiting"
         }
       },
+      "charging_time_limit": { "name": "Charging time limit" },
       "current_state": {
         "name": "Current state",
         "state": {
@@ -152,7 +153,11 @@
           "disconnected": "[%key:common::state::disconnected%]"
         }
       },
+      "scheduled_start": { "name": "Scheduled start" },
+      "session_current_limit": { "name": "Session current limit" },
+      "session_duration": { "name": "Session duration" },
       "session_energy": { "name": "Session energy" },
+      "session_start": { "name": "Session start" },
       "total_energy": { "name": "Total energy" }
     },
     "switch": {

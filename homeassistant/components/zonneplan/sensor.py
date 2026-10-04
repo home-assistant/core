@@ -33,7 +33,7 @@ class ZonneplanPriceSensorEntityDescription(SensorEntityDescription):
     """Describes a Zonneplan price sensor."""
 
     value_fn: Callable[[ZonneplanCoordinator], float | str | datetime | None]
-    supported_fn: Callable[[ZonneplanCoordinator], bool] | None = None
+    supported_fn: Callable[[ZonneplanCoordinator], bool]
 
 
 ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
@@ -303,6 +303,7 @@ class ZonneplanUsageSensorEntityDescription(SensorEntityDescription):
 
     group_fn: Callable[[ZonneplanData], ElectricityChartGroup | GasChartGroup | None]
     value_fn: Callable[[ZonneplanData], Decimal | None]
+    supported_fn: Callable[[ZonneplanData], bool]
 
 
 ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
@@ -320,6 +321,7 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
             if data.electricity_usage and (group := data.electricity_usage.group)
             else None
         ),
+        supported_fn=lambda data: data.electricity_usage is not None,
     ),
     ZonneplanUsageSensorEntityDescription(
         key="electricity_produced_this_month",
@@ -335,6 +337,7 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
             if data.electricity_usage and (group := data.electricity_usage.group)
             else None
         ),
+        supported_fn=lambda data: data.electricity_usage is not None,
     ),
     ZonneplanUsageSensorEntityDescription(
         key="gas_delivered_this_month",
@@ -348,6 +351,7 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
             if data.gas_usage and (group := data.gas_usage.group)
             else None
         ),
+        supported_fn=lambda data: data.gas_usage is not None,
     ),
     ZonneplanUsageSensorEntityDescription(
         key="electricity_cost_this_month",
@@ -366,6 +370,7 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
             and group.has_data
             else None
         ),
+        supported_fn=lambda data: data.electricity_usage is not None,
     ),
     ZonneplanUsageSensorEntityDescription(
         key="gas_cost_this_month",
@@ -380,6 +385,7 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
             if data.gas_usage and (group := data.gas_usage.group) and group.has_data
             else None
         ),
+        supported_fn=lambda data: data.gas_usage is not None,
     ),
 )
 
@@ -390,17 +396,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Zonneplan sensor platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         [
             *(
                 ZonneplanPriceSensor(coordinator, description)
                 for description in ZONNEPLAN_SENSORS
+                if description.supported_fn(coordinator)
             ),
             *(
                 ZonneplanUsageSensor(coordinator, description)
                 for description in ZONNEPLAN_USAGE_SENSORS
+                if description.supported_fn(coordinator.data)
             ),
         ]
     )

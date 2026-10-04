@@ -37,7 +37,7 @@ from .const import (
 
 ADD_ALL_LINK_SCHEMA = probatio.Schema(
     {
-        probatio.Required(SRV_ALL_LINK_GROUP): probatio.Range(min=0, max=255),
+        probatio.Required(SRV_ALL_LINK_GROUP): probatio.Byte(),
         probatio.Required(SRV_ALL_LINK_MODE): probatio.In(
             [SRV_CONTROLLER, SRV_RESPONDER]
         ),
@@ -46,7 +46,7 @@ ADD_ALL_LINK_SCHEMA = probatio.Schema(
 
 
 DEL_ALL_LINK_SCHEMA = probatio.Schema(
-    {probatio.Required(SRV_ALL_LINK_GROUP): probatio.Range(min=0, max=255)}
+    {probatio.Required(SRV_ALL_LINK_GROUP): probatio.Byte()}
 )
 
 
@@ -67,7 +67,7 @@ X10_HOUSECODE_SCHEMA = probatio.Schema(
 
 
 TRIGGER_SCENE_SCHEMA = probatio.Schema(
-    {probatio.Required(SRV_ALL_LINK_GROUP): probatio.Range(min=0, max=255)}
+    {probatio.Required(SRV_ALL_LINK_GROUP): probatio.Byte()}
 )
 
 
@@ -114,7 +114,7 @@ def build_x10_schema(
             probatio.Required(CONF_PLATFORM, default=platform): probatio.In(
                 X10_PLATFORMS
             ),
-            dim_steps_schema: probatio.Range(min=0, max=255),
+            dim_steps_schema: probatio.Byte(),
         }
     )
 

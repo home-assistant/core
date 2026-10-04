@@ -110,7 +110,7 @@ def _ordered_shared_schema(schema_input: dict[str, Any]) -> VolDictType:
             CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
         ): str,
         probatio.Required(
-            CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")
+            probatio.Secret(CONF_PASSWORD), default=schema_input.get(CONF_PASSWORD, "")
         ): str,
         probatio.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
         probatio.Optional(
@@ -439,7 +439,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                         probatio.Required(
                             CONF_BACKUP_PATH,
                             default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): probatio.All(str, probatio.Length(min=1)),
+                        ): probatio.All(str, probatio.NonEmpty()),
                     }
                 ),
             )
