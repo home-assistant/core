@@ -232,22 +232,46 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HP Printer sensors from a config entry."""
-    coordinator = entry.runtime_data
-    data = coordinator.data
 
-    entities: list[SensorEntity] = [
-        HpPrinterSensor(coordinator, description)
-        for description in SENSORS
-        if description.value_fn(data) is not None
-    ]
-    entities.extend(
-        HpPrinterConsumableSensor(coordinator, consumable.consumable_id, description)
-        for consumable in data.consumables
-        if consumable.consumable_id in CONSUMABLE_COLORS
-        for description in CONSUMABLE_SENSORS
-        if description.value_fn(consumable) is not None
-    )
-    async_add_entities(entities)
+    coordinator = entry.runtime_data
+
+    # Never forgotten: a consumable sensor stays (unavailable) while its
+    # cartridge is out, so re-adding it would duplicate its unique ID.
+    known_sensors: set[str] = set()
+
+    def _check_sensors() -> None:
+        data = coordinator.data
+        current_sensors = {
+            description.key
+            for description in SENSORS
+            if description.value_fn(data) is not None
+        } | {
+            f"{consumable.consumable_id}_{description.key}"
+            for consumable in data.consumables
+            if consumable.consumable_id in CONSUMABLE_COLORS
+            for description in CONSUMABLE_SENSORS
+            if description.value_fn(consumable) is not None
+        }
+        new_sensors = current_sensors - known_sensors
+        if new_sensors:
+            known_sensors.update(new_sensors)
+            sensors_list: list[SensorEntity] = [
+                HpPrinterSensor(coordinator, sensor_desc)
+                for sensor_desc in SENSORS
+                if sensor_desc.key in new_sensors
+            ]
+            consumables_list: list[SensorEntity] = [
+                HpPrinterConsumableSensor(
+                    coordinator, consumable.consumable_id, consumable_desc
+                )
+                for consumable in data.consumables
+                for consumable_desc in CONSUMABLE_SENSORS
+                if f"{consumable.consumable_id}_{consumable_desc.key}" in new_sensors
+            ]
+            async_add_entities(sensors_list + consumables_list)
+
+    _check_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_check_sensors))
 
 
 class HpPrinterSensor(HpPrinterEntity, SensorEntity):

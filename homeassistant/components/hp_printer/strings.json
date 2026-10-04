@@ -111,6 +111,9 @@
     }
   },
   "exceptions": {
+    "serial_number_mismatch": {
+      "message": "The device at {host} is not the configured HP printer."
+    },
     "update_failed": {
       "message": "Error communicating with the HP printer at {host}."
     }

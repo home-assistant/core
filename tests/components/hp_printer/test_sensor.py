@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 STATUS = "sensor.hp_officejet_pro_9020_series_status"
 CYAN_LEVEL = "sensor.hp_officejet_pro_9020_series_cyan_level"
+PRINTED_PAGES = "sensor.hp_officejet_pro_9020_series_printed_pages"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hp_printer")
@@ -34,14 +35,15 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_unsupported_data_is_skipped(
+async def test_sensors_added_when_data_appears(
     hass: HomeAssistant,
     mock_hp_printer: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_data: HpPrinterData,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensors are only created for data the printer reports."""
+    """Test sensors are created once the printer first reports their data."""
     mock_hp_printer.update.return_value = HpPrinterData(
         online=True, device=mock_data.device, status=mock_data.status
     )
@@ -53,6 +55,16 @@ async def test_unsupported_data_is_skipped(
             entity_registry, mock_config_entry.entry_id
         )
     ] == [STATUS]
+
+    mock_hp_printer.update.return_value = mock_data
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(CYAN_LEVEL))
+    assert state.state == "40.0"
+    assert (state := hass.states.get(PRINTED_PAGES))
+    assert state.state == "875"
 
 
 @pytest.mark.parametrize(
@@ -79,7 +91,8 @@ async def test_status_not_reported(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(STATUS).state == STATE_UNKNOWN
+    assert (state := hass.states.get(STATUS))
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_consumable_removed(
@@ -91,7 +104,8 @@ async def test_consumable_removed(
 ) -> None:
     """Test a consumable sensor is unavailable while its cartridge is missing."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(CYAN_LEVEL).state == "40.0"
+    assert (state := hass.states.get(CYAN_LEVEL))
+    assert state.state == "40.0"
 
     mock_hp_printer.update.return_value = replace(
         mock_data,
@@ -105,11 +119,13 @@ async def test_consumable_removed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(CYAN_LEVEL).state == STATE_UNAVAILABLE
+    assert (state := hass.states.get(CYAN_LEVEL))
+    assert state.state == STATE_UNAVAILABLE
 
     mock_hp_printer.update.return_value = mock_data
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(CYAN_LEVEL).state == "40.0"
+    assert (state := hass.states.get(CYAN_LEVEL))
+    assert state.state == "40.0"

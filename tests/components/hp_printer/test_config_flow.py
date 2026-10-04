@@ -24,8 +24,8 @@ from .conftest import HOST, SERIAL_NUMBER, TITLE
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow(hass: HomeAssistant, mock_hp_printer: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_hp_printer")
+async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the full user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -42,6 +42,8 @@ async def test_user_flow(hass: HomeAssistant, mock_hp_printer: AsyncMock) -> Non
     assert result["title"] == TITLE
     assert result["data"] == {CONF_HOST: HOST}
     assert result["result"].unique_id == SERIAL_NUMBER
+
+    assert mock_setup_entry.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

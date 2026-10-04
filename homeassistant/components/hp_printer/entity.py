@@ -1,5 +1,7 @@
 """Base entity for the HP Printer integration."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,7 +19,8 @@ class HpPrinterEntity(CoordinatorEntity[HpPrinterDataUpdateCoordinator]):
         super().__init__(coordinator)
         # The config flow only creates entries for printers reporting a serial.
         serial_number = coordinator.config_entry.unique_id
-        assert serial_number is not None
+        if TYPE_CHECKING:
+            assert serial_number is not None
 
         device = coordinator.data.device
         model = device.make_and_model if device else None
