@@ -1,0 +1,13 @@
+{
+  "domain": "mijn_farmad_apotheek",
+  "name": "Mijn Farmad Apotheek",
+  "codeowners": ["@DaanVervacke"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mijn_farmad_apotheek",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiofarmad"],
+  "quality_scale": "bronze",
+  "requirements": ["aiofarmad==0.5.0"],
+  "single_config_entry": true
+}

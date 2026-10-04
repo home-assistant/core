@@ -399,6 +399,7 @@ homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
 homeassistant.components.midea.*
 homeassistant.components.miele.*
+homeassistant.components.mijn_farmad_apotheek.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*

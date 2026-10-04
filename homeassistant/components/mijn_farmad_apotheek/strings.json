@@ -1,0 +1,97 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "mfa_required": "Multi-factor authentication is required for this account and is not supported",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your Mijn Farmad Apotheek account.",
+          "password": "The password of your Mijn Farmad Apotheek account."
+        },
+        "description": "Enter the credentials of your Mijn Farmad Apotheek account. Accounts that require multi-factor authentication are not supported.",
+        "title": "Connect to Mijn Farmad Apotheek"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "The Farmad session expired. Remove the integration and set it up again."
+    },
+    "draft_not_empty": {
+      "message": "Your draft basket at pharmacy {apb} still has products or a comment. Submit or clear the draft in the Mijn Farmad Apotheek app and try again."
+    },
+    "invalid_product": {
+      "message": "{product} is not a CNK code of seven digits. Use the 'Search medication' action to find the CNK code of a product."
+    },
+    "multiple_pharmacies": {
+      "message": "Your account is linked to several pharmacies: {pharmacies}. Pass the apb number of the pharmacy to use."
+    },
+    "no_pharmacy": {
+      "message": "Your account is not linked to a pharmacy. Link a pharmacy in the Mijn Farmad Apotheek app first."
+    },
+    "no_search_results": {
+      "message": "No product at pharmacy {apb} matches {query}."
+    },
+    "not_authorized": {
+      "message": "Your account has no access to pharmacy {apb}. Link the pharmacy in the Mijn Farmad Apotheek app first."
+    },
+    "order_failed": {
+      "message": "Ordering at pharmacy {apb} failed."
+    },
+    "order_unconfirmed": {
+      "message": "The order at pharmacy {apb} could not be confirmed. Check the Mijn Farmad Apotheek app before retrying to avoid a duplicate order."
+    },
+    "search_failed": {
+      "message": "Searching at pharmacy {apb} failed."
+    },
+    "setup_failed": {
+      "message": "Unable to connect to Farmad: {error}"
+    }
+  },
+  "services": {
+    "order_medication": {
+      "description": "Places an order for one product at a Farmad pharmacy. The product is paid at pickup.",
+      "fields": {
+        "apb": {
+          "description": "The APB number of the pharmacy to order from. Leave empty when your account is linked to one pharmacy.",
+          "name": "Pharmacy"
+        },
+        "comment": {
+          "description": "An optional comment for the pharmacist.",
+          "name": "Comment"
+        },
+        "product": {
+          "description": "The CNK code of the product to order. Use the 'Search medication' action to find the CNK code of a product.",
+          "name": "Product"
+        },
+        "quantity": {
+          "description": "The number of packages to order.",
+          "name": "Quantity"
+        }
+      },
+      "name": "Order medication"
+    },
+    "search_medication": {
+      "description": "Searches the catalog of a Farmad pharmacy by product name or CNK and returns up to 25 matching products.",
+      "fields": {
+        "apb": {
+          "description": "The APB number of the pharmacy to search in. Leave empty when your account is linked to one pharmacy.",
+          "name": "Pharmacy"
+        },
+        "query": {
+          "description": "The product name or CNK to search for.",
+          "name": "Search term"
+        }
+      },
+      "name": "Search medication"
+    }
+  }
+}

@@ -492,6 +492,7 @@ FLOWS = {
         "microbees",
         "midea",
         "miele",
+        "mijn_farmad_apotheek",
         "mikrotik",
         "mill",
         "minecraft_server",
