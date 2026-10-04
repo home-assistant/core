@@ -1479,6 +1479,140 @@
     'state': 'stop',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer_dry_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'damp',
+        'less',
+        'normal',
+        'more',
+        'very',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.theater_dryer_dry_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dry level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dry level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dry_level',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_custom.dryerDryLevel_dryerDryLevel_dryerDryLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer_dry_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Dry level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'damp',
+        'less',
+        'normal',
+        'more',
+        'very',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.theater_dryer_dry_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer_drying_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '20',
+        '30',
+        '40',
+        '50',
+        '60',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.theater_dryer_drying_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Drying time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'drying_time',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_samsungce.dryerDryingTime_dryingTime_dryingTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer_drying_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Drying time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '20',
+        '30',
+        '40',
+        '50',
+        '60',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.theater_dryer_drying_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1540,6 +1674,136 @@
     'state': 'stop',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa_dry_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '1',
+        '2',
+        '3',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.seca_roupa_dry_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dry level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dry level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dry_level',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_custom.dryerDryLevel_dryerDryLevel_dryerDryLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa_dry_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Dry level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '1',
+        '2',
+        '3',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.seca_roupa_dry_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa_drying_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '30',
+        '60',
+        '90',
+        '120',
+        '150',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.seca_roupa_drying_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Drying time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'drying_time',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_samsungce.dryerDryingTime_dryingTime_dryingTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa_drying_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Drying time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '30',
+        '60',
+        '90',
+        '120',
+        '150',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.seca_roupa_drying_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_01011][select.trockner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1599,6 +1863,148 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][select.trockner_dry_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'damp',
+        'less',
+        'normal',
+        'more',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.trockner_dry_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dry level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dry level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dry_level',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_custom.dryerDryLevel_dryerDryLevel_dryerDryLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][select.trockner_dry_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Dry level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'damp',
+        'less',
+        'normal',
+        'more',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.trockner_dry_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][select.trockner_drying_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '20',
+        '30',
+        '40',
+        '50',
+        '60',
+        '90',
+        '120',
+        '150',
+        '180',
+        '240',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.trockner_drying_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Drying time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'drying_time',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_samsungce.dryerDryingTime_dryingTime_dryingTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][select.trockner_drying_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Drying time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        '20',
+        '30',
+        '40',
+        '50',
+        '60',
+        '90',
+        '120',
+        '150',
+        '180',
+        '240',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.trockner_drying_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001][select.theater_washer-entry]
@@ -1922,6 +2328,83 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'run',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_dry_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'cupboard',
+        '30',
+        '60',
+        '90',
+        '120',
+        '150',
+        '180',
+        '210',
+        '240',
+        '270',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.washing_machine_dry_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dry level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dry level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dry_level',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.dryerDryLevel_dryerDryLevel_dryerDryLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_dry_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Dry level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'cupboard',
+        '30',
+        '60',
+        '90',
+        '120',
+        '150',
+        '180',
+        '210',
+        '240',
+        '270',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.washing_machine_dry_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_spin_level-entry]
