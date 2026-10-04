@@ -107,9 +107,11 @@ from .tasks import (
 )
 from .util import (
     async_create_backup_failure_issue,
+    async_update_corrupt_database_issue,
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
+    find_corrupt_database_files,
     is_second_sunday,
     move_away_broken_database,
     session_scope,
@@ -1437,6 +1439,11 @@ class Recorder(threading.Thread):
 
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
+            self.hass.add_job(
+                async_update_corrupt_database_issue,
+                self.hass,
+                find_corrupt_database_files(dburl_to_path(self.db_url)),
+            )
 
         assert not self.engine
         self.engine = create_engine(self.db_url, **kwargs, future=True)
