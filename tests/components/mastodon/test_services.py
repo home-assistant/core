@@ -13,7 +13,7 @@ from mastodon.Mastodon import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import camera, image, media_source
+from homeassistant.components import media_source
 from homeassistant.components.mastodon.const import (
     ATTR_ACCOUNT_NAME,
     ATTR_ATTRIBUTION_DOMAINS,
@@ -58,6 +58,13 @@ from homeassistant.setup import async_setup_component
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+MEDIA_IMAGES = {
+    "media-source://camera/camera.demo_camera": media_source.MediaImage(
+        b"I play the sax\n", "image/jpeg"
+    ),
+    "media-source://image/image.test": media_source.MediaImage(b"\x89PNG", "image/png"),
+}
 
 
 async def test_get_account_success(
@@ -859,15 +866,9 @@ async def test_service_update_profile(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    with (
-        patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
-        ),
-        patch(
-            "homeassistant.components.image.async_get_image",
-            return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
-        ),
+    with patch(
+        "homeassistant.components.mastodon.services.async_get_media_image",
+        side_effect=lambda hass, media_content_id: MEDIA_IMAGES.get(media_content_id),
     ):
         response = await hass.services.async_call(
             DOMAIN,

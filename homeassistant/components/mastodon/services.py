@@ -19,8 +19,10 @@ from mastodon.Mastodon import (
 )
 import probatio
 
-from homeassistant.components import camera, image
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
@@ -474,15 +476,8 @@ async def _resolve_media(
 ) -> tuple[bytes | Path, str | None]:
     """Resolve media from a media source."""
     media_content_id: str = media_source["media_content_id"]
-    if media_content_id.startswith("media-source://camera/"):
-        entity_id = media_content_id.removeprefix("media-source://camera/")
-        snapshot = await camera.async_get_image(hass, entity_id)
-        return snapshot.content, snapshot.content_type
-
-    if media_content_id.startswith("media-source://image/"):
-        entity_id = media_content_id.removeprefix("media-source://image/")
-        img = await image.async_get_image(hass, entity_id)
-        return img.content, img.content_type
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
+        return media_image.content, media_image.mime_type
 
     media = await async_resolve_media(hass, media_source["media_content_id"], None)
 
