@@ -45,7 +45,7 @@
   "entity": {
     "button": {
       "smoke_test": {
-        "name": "Test alarm"
+        "name": "Start self-test"
       }
     },
     "event": {

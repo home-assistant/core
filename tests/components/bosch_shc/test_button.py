@@ -13,7 +13,7 @@ from .conftest import setup_integration, smoke_detector_device
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "button.smoke_detector_test_alarm"
+ENTITY_ID = "button.smoke_detector_start_self_test"
 
 
 @pytest.fixture(autouse=True)
