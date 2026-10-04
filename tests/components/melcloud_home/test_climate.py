@@ -34,6 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.melcloud_home.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -679,3 +680,28 @@ async def test_action_exceptions(
         )
 
     assert exc_info.value.translation_key == translation_key
+
+
+async def test_action_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+) -> None:
+    """Test an authentication error during an action starts reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.control_ata_unit.side_effect = MelCloudHomeAuthenticationError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ATA_ENTITY_ID},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
