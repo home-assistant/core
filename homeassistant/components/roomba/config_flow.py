@@ -1,39 +1,35 @@
 """Config flow to configure roomba component."""
 
 import asyncio
-from functools import partial
 from typing import Any, override
 
 import probatio
-from roombapy import RoombaFactory, RoombaInfo
-from roombapy.discovery import RoombaDiscovery
-from roombapy.getpassword import RoombaPassword
+from roombapy import (
+    RoombaConnectionError,
+    RoombaDiscovery,
+    RoombaInfo,
+    RoombaPassword,
+    generate_tls_context,
+)
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
-from .const import (
-    CONF_BLID,
-    CONF_CONTINUOUS,
-    DEFAULT_CONTINUOUS,
-    DEFAULT_DELAY,
-    DOMAIN,
-    ROOMBA_SESSION,
+from . import (
+    CannotConnect,
+    async_connect_or_timeout,
+    async_create_roomba,
+    async_disconnect_or_timeout,
 )
-from .models import RoombaConfigEntry
+from .const import CONF_BLID, DOMAIN, ROOMBA_SESSION
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 ALL_ATTEMPTS = 2
 HOST_ATTEMPTS = 6
 ROOMBA_WAKE_TIME = 6
-
-DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
-
-MAX_NUM_DEVICES_TO_DISCOVER = 25
 
 AUTH_HELP_URL_KEY = "auth_help_url"
 AUTH_HELP_URL_VALUE = (
@@ -46,15 +42,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    roomba = await hass.async_add_executor_job(
-        partial(
-            RoombaFactory.create_roomba,
-            address=data[CONF_HOST],
-            blid=data[CONF_BLID],
-            password=data[CONF_PASSWORD],
-            continuous=True,
-            delay=data[CONF_DELAY],
-        )
+    roomba = await async_create_roomba(
+        hass, data[CONF_HOST], data[CONF_BLID], data[CONF_PASSWORD]
     )
 
     info = await async_connect_or_timeout(hass, roomba)
@@ -80,15 +69,6 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the roomba flow."""
         self.discovered_robots: dict[str, RoombaInfo] = {}
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: RoombaConfigEntry,
-    ) -> RoombaOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return RoombaOptionsFlowHandler()
 
     @override
     async def async_step_zeroconf(
@@ -256,21 +236,16 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_NAME: self.name or self.blid},
             )
         assert self.host
-        roomba_pw = RoombaPassword(self.host)
+        tls_context = await self.hass.async_add_executor_job(generate_tls_context)
+        roomba_pw = RoombaPassword(self.host, tls_context=tls_context)
 
-        try:
-            password = await self.hass.async_add_executor_job(roomba_pw.get_password)
-        except OSError:
-            return await self.async_step_link_manual()
-
-        if not password:
+        if not (password := await roomba_pw.get_password()):
             return await self.async_step_link_manual()
 
         config = {
             CONF_HOST: self.host,
             CONF_BLID: self.blid,
             CONF_PASSWORD: password,
-            **DEFAULT_OPTIONS,
         }
 
         if not self.name:
@@ -294,7 +269,6 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.host,
                 CONF_BLID: self.blid,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
-                **DEFAULT_OPTIONS,
             }
             try:
                 info = await validate_input(self.hass, config)
@@ -313,40 +287,10 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class RoombaOptionsFlowHandler(OptionsFlow):
-    """Handle options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = self.config_entry.options
-        return self.async_show_form(
-            step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_CONTINUOUS,
-                        default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
-                    ): bool,
-                    probatio.Optional(
-                        CONF_DELAY,
-                        default=options.get(CONF_DELAY, DEFAULT_DELAY),
-                    ): int,
-                }
-            ),
-        )
-
-
 @callback
 def _async_get_roomba_discovery() -> RoombaDiscovery:
     """Create a discovery object."""
-    discovery = RoombaDiscovery()
-    discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
-    return discovery
+    return RoombaDiscovery()
 
 
 @callback
@@ -369,12 +313,12 @@ async def _async_discover_roombas(
             discovered: set[RoombaInfo] = set()
             try:
                 if host:
-                    device = await hass.async_add_executor_job(discovery.get, host)
+                    device = await discovery.get(host)
                     if device:
                         discovered.add(device)
                 else:
-                    discovered = await hass.async_add_executor_job(discovery.get_all)
-            except OSError:
+                    discovered = await discovery.get_all()
+            except OSError, RoombaConnectionError:
                 # Socket temporarily unavailable
                 await asyncio.sleep(ROOMBA_WAKE_TIME * attempt)
                 continue
@@ -385,7 +329,7 @@ async def _async_discover_roombas(
                     discovered_hosts.add(device.ip)
                     devices.append(device)
             finally:
-                discovery.server_socket.close()
+                await discovery.aclose()
 
         if host and host in discovered_hosts:
             return devices

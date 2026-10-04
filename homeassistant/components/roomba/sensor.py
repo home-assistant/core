@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from roombapy import Roomba
+from roombapy import RoombaClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -190,7 +190,7 @@ class RoombaSensor(IRobotEntity, SensorEntity):
 
     def __init__(
         self,
-        roomba: Roomba,
+        roomba: RoombaClient,
         blid: str,
         entity_description: RoombaSensorEntityDescription,
     ) -> None:
