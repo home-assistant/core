@@ -3,14 +3,20 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock
 
-from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
+from pysma import (
+    SmaAuthenticationException,
+    SmaConnectionException,
+    SmaReadException,
+    SmaSunSpecException,
+    SmaTimeoutException,
+)
 import pytest
 
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_DEVICE, MOCK_USER_INPUT, setup_integration
+from . import MOCK_DEVICE, MOCK_MODBUS_OPTIONS, MOCK_USER_INPUT, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -83,3 +89,66 @@ async def test_unload_closes_session(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_sma_client.close_session.assert_called_once()
+
+
+@pytest.fixture
+def mock_modbus_config_entry() -> MockConfigEntry:
+    """Return a config entry with Modbus enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_DEVICE.name,
+        unique_id=str(MOCK_DEVICE.serial),
+        data=MOCK_USER_INPUT,
+        options=MOCK_MODBUS_OPTIONS,
+        minor_version=2,
+    )
+
+
+@pytest.mark.parametrize(
+    ("failing_step", "exception"),
+    [
+        pytest.param("connect", SmaConnectionException, id="cannot_connect"),
+        pytest.param("connect", SmaTimeoutException, id="timeout"),
+        pytest.param("discover", SmaSunSpecException, id="no_sunspec"),
+    ],
+)
+async def test_modbus_setup_failure(
+    hass: HomeAssistant,
+    mock_sma_client: MagicMock,
+    mock_sma_modbus: MagicMock,
+    mock_modbus_config_entry: MockConfigEntry,
+    failing_step: str,
+    exception: type[Exception],
+) -> None:
+    """Test a Modbus failure keeps the sensors and closes the Modbus connection."""
+    getattr(mock_sma_modbus, failing_step).side_effect = exception
+
+    await setup_integration(hass, mock_modbus_config_entry)
+
+    assert mock_modbus_config_entry.state is ConfigEntryState.LOADED
+    mock_sma_modbus.close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "close_session_error",
+    [
+        pytest.param(None, id="closed"),
+        pytest.param(SmaConnectionException, id="unreachable"),
+    ],
+)
+async def test_unload_closes_modbus(
+    hass: HomeAssistant,
+    mock_sma_client: MagicMock,
+    mock_sma_modbus: MagicMock,
+    mock_modbus_config_entry: MockConfigEntry,
+    close_session_error: type[Exception] | None,
+) -> None:
+    """Test unloading closes the Modbus connection, even if the logout fails."""
+    await setup_integration(hass, mock_modbus_config_entry)
+    assert mock_modbus_config_entry.state is ConfigEntryState.LOADED
+    mock_sma_client.close_session.side_effect = close_session_error
+
+    assert await hass.config_entries.async_unload(mock_modbus_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_sma_modbus.close.assert_called_once()
