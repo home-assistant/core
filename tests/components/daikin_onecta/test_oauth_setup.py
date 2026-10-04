@@ -130,6 +130,7 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
 async def test_update_listener_requests_coordinator_refresh() -> None:
     """Options changes must request a refresh using the new interval."""
     coordinator = MagicMock()
+    coordinator.update_settings.return_value = True
     coordinator.async_request_refresh = AsyncMock()
     config_entry = MagicMock(runtime_data=coordinator)
 
@@ -138,6 +139,20 @@ async def test_update_listener_requests_coordinator_refresh() -> None:
     coordinator.update_settings.assert_called_once_with(config_entry)
     coordinator.async_request_refresh.assert_awaited_once_with()
     coordinator.async_update_listeners.assert_called_once_with()
+
+
+async def test_update_listener_ignores_oauth_token_renewal() -> None:
+    """OAuth token renewal must not trigger a cloud refresh."""
+    coordinator = MagicMock()
+    coordinator.update_settings.return_value = False
+    coordinator.async_request_refresh = AsyncMock()
+    config_entry = MagicMock(runtime_data=coordinator)
+
+    await _async_update_listener(MagicMock(), config_entry)
+
+    coordinator.update_settings.assert_called_once_with(config_entry)
+    coordinator.async_request_refresh.assert_not_awaited()
+    coordinator.async_update_listeners.assert_not_called()
 
 
 @pytest.mark.asyncio

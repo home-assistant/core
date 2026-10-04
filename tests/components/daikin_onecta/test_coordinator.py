@@ -266,8 +266,18 @@ class TestOnectaDataUpdateCoordinator:
             "_determine_update_interval",
             return_value=timedelta(minutes=45),
         ) as determine:
-            coordinator.update_settings(updated_entry)
+            assert coordinator.update_settings(updated_entry)
 
         assert coordinator.options == options
         assert coordinator.update_interval == timedelta(minutes=45)
         determine.assert_called_once_with(mock_hass)
+
+    def test_update_settings_ignores_unchanged_options(
+        self, coordinator, mock_config_entry
+    ):
+        """Do not apply settings when only config-entry data changed."""
+        with patch.object(coordinator, "_determine_update_interval") as determine:
+            assert not coordinator.update_settings(mock_config_entry)
+
+        assert coordinator.options == POLLING_OPTIONS
+        determine.assert_not_called()

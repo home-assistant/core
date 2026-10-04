@@ -121,14 +121,18 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Fetch data for the Home Assistant coordinator interface."""
         return await self._async_update_data_from_cloud()
 
-    def update_settings(self, config_entry: ConfigEntry) -> None:
-        """Apply updated config entry options."""
+    def update_settings(self, config_entry: ConfigEntry) -> bool:
+        """Apply updated config entry options and report whether they changed."""
+        if self.options == config_entry.options:
+            return False
+
         _LOGGER.debug("Daikin coordinator updating settings")
         self.options = config_entry.options
         self.update_interval = self._determine_update_interval(self.hass)
         _LOGGER.info(
             "Daikin coordinator changed interval to '%s'", self.update_interval
         )
+        return True
 
     def _determine_update_interval(self, hass: HomeAssistant) -> timedelta:
         """Determine the next polling interval."""

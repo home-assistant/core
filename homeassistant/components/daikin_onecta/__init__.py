@@ -83,6 +83,6 @@ async def _async_update_listener(
 ) -> None:
     """Handle options update."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    coordinator.update_settings(config_entry)
-    await coordinator.async_request_refresh()
-    coordinator.async_update_listeners()
+    if coordinator.update_settings(config_entry):
+        await coordinator.async_request_refresh()
+        coordinator.async_update_listeners()
