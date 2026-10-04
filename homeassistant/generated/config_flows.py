@@ -346,6 +346,7 @@ FLOWS = {
         "honeywell_string_lights",
         "hortimax",
         "hotspring",
+        "hp_printer",
         "hr_energy_qube",
         "html5",
         "huawei_lte",
