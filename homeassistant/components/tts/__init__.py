@@ -1,7 +1,8 @@
 """Provide functionality for TTS."""
 
 import asyncio
-from collections.abc import AsyncGenerator, MutableMapping
+from collections.abc import AsyncGenerator, Callable, MutableMapping
+from contextlib import aclosing
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -112,6 +113,14 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_BYTES,
     ATTR_PREFERRED_BITRATE,
 }
+_INTERRUPTIBLE_OUTPUT_OPTIONS: Final[frozenset[str]] = frozenset(
+    {
+        ATTR_PREFERRED_FORMAT,
+        ATTR_PREFERRED_SAMPLE_RATE,
+        ATTR_PREFERRED_SAMPLE_CHANNELS,
+        ATTR_PREFERRED_SAMPLE_BYTES,
+    }
+)
 
 CONF_LANG = "language"
 
@@ -468,6 +477,47 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
+def _validate_interruptible_tts(
+    engine_instance: TextToSpeechEntity, options: dict[str, Any]
+) -> None:
+    """Validate an engine can provide the requested interruptible stream."""
+    if not engine_instance.async_supports_streaming_input():
+        raise HomeAssistantError("Interruptible TTS requires a streaming TTS engine")
+
+    if missing_options := {
+        option
+        for option in _INTERRUPTIBLE_OUTPUT_OPTIONS
+        if options.get(option) is None
+    }:
+        raise HomeAssistantError(
+            "Interruptible TTS requires explicit output options: "
+            f"{', '.join(sorted(missing_options))}"
+        )
+    if options[ATTR_PREFERRED_FORMAT] != "wav":
+        raise HomeAssistantError("Interruptible TTS requires WAV output")
+    try:
+        pcm_values = (
+            int(options[ATTR_PREFERRED_SAMPLE_RATE]),
+            int(options[ATTR_PREFERRED_SAMPLE_CHANNELS]),
+            int(options[ATTR_PREFERRED_SAMPLE_BYTES]),
+        )
+    except (TypeError, ValueError) as err:
+        raise HomeAssistantError(
+            "Interruptible TTS requires integer PCM output options"
+        ) from err
+    if any(value <= 0 for value in pcm_values):
+        raise HomeAssistantError(
+            "Interruptible TTS requires positive PCM output options"
+        )
+
+    supported_options = set(engine_instance.supported_options or ())
+    if unsupported_options := _INTERRUPTIBLE_OUTPUT_OPTIONS - supported_options:
+        raise HomeAssistantError(
+            "Interruptible TTS engine does not support required output options: "
+            f"{', '.join(sorted(unsupported_options))}"
+        )
+
+
 @dataclass
 class ResultStream:
     """Class that will stream the result when available."""
@@ -489,6 +539,10 @@ class ResultStream:
 
     _manager: SpeechManager
 
+    supports_audio_interrupt: bool = field(default=False, init=False)
+    _stream_claimed: bool = field(default=False, init=False)
+    _cached_result: TTSCache | None = field(default=None, init=False)
+
     # Override
     _override_media_path: Path | None = None
 
@@ -506,8 +560,8 @@ class ResultStream:
         )
 
     @cached_property
-    def _result_cache(self) -> asyncio.Future[TTSCache]:
-        """Get the future that returns the cache."""
+    def _result(self) -> asyncio.Future[TTSCache | str | AsyncGenerator[str]]:
+        """Get the cached response or the input for a single-use live stream."""
         return asyncio.Future()
 
     @callback
@@ -516,9 +570,12 @@ class ResultStream:
 
         This method will leverage a disk cache to speed up generation.
         """
-        if self._result_cache.done():
+        if self._result.done():
             return
-        self._result_cache.set_result(
+        if self.supports_audio_interrupt:
+            self._result.set_result(message)
+            return
+        self._result.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
                 message=message,
@@ -534,9 +591,12 @@ class ResultStream:
 
         This method can result in faster first byte when generating long responses.
         """
-        if self._result_cache.done():
+        if self._result.done():
             return
-        self._result_cache.set_result(
+        if self.supports_audio_interrupt:
+            self._result.set_result(message_stream)
+            return
+        self._result.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
                 message_stream=message_stream,
@@ -545,8 +605,60 @@ class ResultStream:
             )
         )
 
-    async def async_stream_result(self) -> AsyncGenerator[bytes]:
+    @callback
+    def _async_get_cached_result(self, result: str | AsyncGenerator[str]) -> TTSCache:
+        """Return the cached result for non-interruptible playback.
+
+        Creates the cached result from the raw input if it does not exist yet.
+        """
+        if self._cached_result is not None:
+            return self._cached_result
+
+        # Generating the result claims it exclusively against live playback.
+        if self._stream_claimed:
+            raise HomeAssistantError(
+                "Interruptible TTS streams can only be consumed once"
+            )
+        self._stream_claimed = True
+
+        if isinstance(result, str):
+            self._cached_result = self._manager.async_cache_message_in_memory(
+                engine=self.engine,
+                message=result,
+                use_file_cache=self.use_file_cache,
+                language=self.language,
+                options=self.options,
+            )
+            return self._cached_result
+
+        self._cached_result = self._manager.async_cache_message_stream_in_memory(
+            engine=self.engine,
+            message_stream=result,
+            language=self.language,
+            options=self.options,
+        )
+        return self._cached_result
+
+    async def async_stream_result(
+        self,
+        on_audio_interrupt: Callable[[], None] | None = None,
+    ) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
+        engine: TextToSpeechEntity | None = None
+        if on_audio_interrupt is not None:
+            if not self.supports_audio_interrupt:
+                raise HomeAssistantError(
+                    "This TTS stream does not support audio interruption"
+                )
+            if self._override_media_path is not None:
+                raise HomeAssistantError(
+                    "Overridden TTS streams do not support audio interruption"
+                )
+            engine_instance = get_engine_instance(self.hass, self.engine)
+            if not isinstance(engine_instance, TextToSpeechEntity):
+                raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
+            engine = engine_instance
+
         if self._override_media_path is not None:
             # Overridden
             async for chunk in self._async_stream_override_result():
@@ -555,9 +667,43 @@ class ResultStream:
             self.last_used = monotonic()
             return
 
-        cache = await self._result_cache
-        async for chunk in cache.async_stream_data():
-            yield chunk
+        result = await asyncio.shield(self._result)
+
+        if isinstance(result, TTSCache):
+            async for chunk in result.async_stream_data():
+                yield chunk
+
+            self.last_used = monotonic()
+            return
+
+        # Only engines that support audio interrupt keep their raw input
+        # instead of a cache, so everything below is exclusive to them.
+        if on_audio_interrupt is None:
+            # Consumers that cannot interrupt playback fall back to regular
+            # cached audio, the same as engines without interrupt support.
+            cache = self._async_get_cached_result(result)
+            async for chunk in cache.async_stream_data():
+                yield chunk
+        else:
+            # Interruptible playback generates live for a single consumer.
+            if self._stream_claimed:
+                raise HomeAssistantError(
+                    "Interruptible TTS streams can only be consumed once"
+                )
+            assert engine is not None
+            _validate_interruptible_tts(engine, self.options)
+            self._stream_claimed = True
+            async with aclosing(
+                self._manager.async_generate_tts_audio(
+                    engine,
+                    result,
+                    self.language,
+                    self.options,
+                    on_audio_interrupt,
+                )
+            ) as audio:
+                async for chunk in audio:
+                    yield chunk
 
         self.last_used = monotonic()
 
@@ -589,12 +735,16 @@ class ResultStream:
                 return None
             return self._override_media_path
 
-        if not self.use_file_cache or not self._result_cache.done():
+        if (
+            self.supports_audio_interrupt
+            or not self.use_file_cache
+            or not self._result.done()
+        ):
             return None
 
-        return self._manager.async_get_cache_file_path(
-            self._result_cache.result().cache_key
-        )
+        cache = self._result.result()
+        assert isinstance(cache, TTSCache)
+        return self._manager.async_get_cache_file_path(cache.cache_key)
 
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
@@ -873,6 +1023,11 @@ class SpeechManager:
             hass=self.hass,
             _manager=self,
         )
+        result_stream.supports_audio_interrupt = (
+            isinstance(engine_instance, TextToSpeechEntity)
+            and engine_instance.supports_audio_interrupt
+            and supports_streaming_input
+        )
         self.token_to_stream[token] = result_stream
         self.token_to_stream_cleanup.schedule()
         return result_stream
@@ -894,7 +1049,7 @@ class SpeechManager:
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
-        data_gen = self._async_generate_tts_audio(
+        data_gen = self.async_generate_tts_audio(
             engine_instance, message_stream, language, options
         )
 
@@ -951,7 +1106,7 @@ class SpeechManager:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
-            data_gen = self._async_generate_tts_audio(
+            data_gen = self.async_generate_tts_audio(
                 engine_instance, message, language, options
             )
 
@@ -1023,12 +1178,13 @@ class SpeechManager:
         else:
             self.file_cache[cache.cache_key] = filename
 
-    async def _async_generate_tts_audio(
+    async def async_generate_tts_audio(
         self,
         engine_instance: TextToSpeechEntity | Provider,
         message_or_stream: str | AsyncGenerator[str],
         language: str,
         options: dict[str, Any],
+        on_audio_interrupt: Callable[[], None] | None = None,
     ) -> AsyncGenerator[bytes]:
         """Generate TTS audio from an engine."""
         options = dict(options or {})
@@ -1118,10 +1274,20 @@ class SpeechManager:
                 stream = message_or_stream
 
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, stream)
+                TTSAudioRequest(language, options, stream, on_audio_interrupt)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
+
+        if on_audio_interrupt is not None:
+            async with aclosing(data_gen):
+                if extension != final_extension:
+                    raise HomeAssistantError(
+                        "Interruptible TTS requires the requested audio format"
+                    )
+                async for chunk in data_gen:
+                    yield chunk
+            return
 
         # Only convert if we have a preferred format different than the
         # expected format from the TTS system, or if a specific sample

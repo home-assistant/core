@@ -1,6 +1,6 @@
 """Entity for Text-to-Speech."""
 
-from collections.abc import AsyncGenerator, Mapping
+from collections.abc import AsyncGenerator, Callable, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, final, override
@@ -40,6 +40,7 @@ class TTSAudioRequest:
     language: str
     options: dict[str, Any]
     message_gen: AsyncGenerator[str]
+    on_audio_interrupt: Callable[[], None] | None = None
 
 
 @dataclass
@@ -53,6 +54,7 @@ class TTSAudioResponse:
 class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a single TTS engine."""
 
+    _attr_supports_audio_interrupt = False
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
 
@@ -89,6 +91,18 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
         return self._attr_default_options
+
+    @property
+    def supports_audio_interrupt(self) -> bool:
+        """Return whether playback supports a single-use interruptible WAV stream.
+
+        The engine must discard its pending audio before invoking the callback,
+        preserve the stream header, and yield only replacement audio afterward.
+        It must advertise and honor the preferred format, sample rate, channel,
+        and sample-width options because these streams bypass memory/disk caching
+        and audio conversion. WAV output must use an unknown-length data chunk.
+        """
+        return self._attr_supports_audio_interrupt
 
     def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""

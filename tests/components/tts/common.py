@@ -1,6 +1,6 @@
 """Provide common tests tools for tts."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -303,6 +303,8 @@ class MockResultStream(ResultStream):
         """Set message to be generated."""
         self.test_set_message = message
 
-    async def async_stream_result(self):
+    async def async_stream_result(
+        self, on_audio_interrupt: Callable[[], None] | None = None
+    ) -> AsyncGenerator[bytes]:
         """Stream the result."""
         yield self._mock_data

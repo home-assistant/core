@@ -1,7 +1,8 @@
 """Support for assist satellites in ESPHome."""
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable
+import contextlib
 from functools import partial
 import hashlib
 from itertools import chain
@@ -40,6 +41,7 @@ from homeassistant.components.intent import (
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import get_url
@@ -115,6 +117,7 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
 _CONFIG_TIMEOUT_SEC = 5
+_VOICE_ASSISTANT_TTS_STREAM_FLUSH = VoiceAssistantFeature(1 << 7)
 _WAKE_WORD_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): str,
@@ -161,6 +164,7 @@ class EsphomeAssistSatellite(
         self._pipeline_task: asyncio.Task | None = None
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._tts_streaming_task: asyncio.Task | None = None
+        self._tts_stream_token: str | None = None
         self._udp_server: VoiceAssistantUDPServer | None = None
 
         # Empty config. Updated when added to HA.
@@ -376,6 +380,28 @@ class EsphomeAssistSatellite(
                 return
 
             data_to_send = {"tts_start_streaming": "1"}
+            if (
+                self._tts_stream_token
+                and (stream := tts.async_get_stream(self.hass, self._tts_stream_token))
+                and stream.supports_audio_interrupt
+                and self._tts_streaming_task is None
+                and self._entry_data.device_info is not None
+                and (
+                    feature_flags
+                    := self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                        self._entry_data.api_version
+                    )
+                )
+                & VoiceAssistantFeature.SPEAKER
+                and feature_flags & _VOICE_ASSISTANT_TTS_STREAM_FLUSH
+            ):
+                self._tts_streaming_task = (
+                    self.config_entry.async_create_background_task(
+                        self.hass,
+                        self._stream_tts_audio(stream),
+                        "esphome_voice_assistant_tts",
+                    )
+                )
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
             intent_output = event.data["intent_output"]
@@ -404,8 +430,10 @@ class EsphomeAssistSatellite(
                         self._entry_data.api_version
                     )
                 )
-                if feature_flags & VoiceAssistantFeature.SPEAKER and (
-                    stream := tts.async_get_stream(self.hass, tts_output["token"])
+                if (
+                    self._tts_streaming_task is None
+                    and feature_flags & VoiceAssistantFeature.SPEAKER
+                    and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
                 ):
                     self._tts_streaming_task = (
                         self.config_entry.async_create_background_task(
@@ -430,7 +458,9 @@ class EsphomeAssistSatellite(
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START:
             assert event.data is not None
+            self._tts_stream_token = None
             if tts_output := event.data.get("tts_output"):
+                self._tts_stream_token = tts_output["token"]
                 path = tts_output["url"]
                 url = async_process_play_media_url(self.hass, path)
                 data_to_send = {"url": url}
@@ -715,6 +745,7 @@ class EsphomeAssistSatellite(
             VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
         )
 
+        audio_stream: AsyncGenerator[bytes] | None = None
         try:
             if not self._is_running:
                 return
@@ -728,14 +759,46 @@ class EsphomeAssistSatellite(
             seconds_in_chunk = samples_per_chunk / sample_rate
             start_time: float | None = None
             audio_duration_sent = 0.0
+            supports_audio_interrupt = bool(
+                tts_result.supports_audio_interrupt
+                and self._entry_data.device_info is not None
+                and self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                    self._entry_data.api_version
+                )
+                & _VOICE_ASSISTANT_TTS_STREAM_FLUSH
+            )
+
+            if supports_audio_interrupt:
+                audio_interrupt = asyncio.Event()
+                stream_closed = False
+
+                @callback
+                def on_audio_interrupt() -> None:
+                    nonlocal start_time, audio_duration_sent
+                    if stream_closed:
+                        return
+                    # Restart the same response while flushing remote playback.
+                    self.cli.send_voice_assistant_event(
+                        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
+                        {"flush": "1"},
+                    )
+                    audio_interrupt.set()
+                    start_time = None
+                    audio_duration_sent = 0.0
+
+                audio_stream = tts_result.async_stream_result(on_audio_interrupt)
+            else:
+                audio_interrupt = None
+                audio_stream = tts_result.async_stream_result()
 
             async for chunk, is_last in stream_wav(
-                tts_result.async_stream_result(),
+                audio_stream,
                 expected_format="pcm",
                 expected_channels=sample_channels,
                 expected_width=sample_width,
                 expected_sample_rate=sample_rate,
                 samples_per_chunk=samples_per_chunk,
+                audio_interrupt=audio_interrupt,
             ):
                 if not self._is_running:
                     break  # type: ignore[unreachable]
@@ -756,16 +819,29 @@ class EsphomeAssistSatellite(
                 assert start_time is not None
                 elapsed = asyncio.get_running_loop().time() - start_time
                 if (wait_time := (audio_duration_sent - 0.384) - elapsed) > 0:
-                    await asyncio.sleep(wait_time)
+                    if audio_interrupt is None:
+                        await asyncio.sleep(wait_time)
+                    else:
+                        with contextlib.suppress(TimeoutError):
+                            await asyncio.wait_for(audio_interrupt.wait(), wait_time)
 
-        except ValueError as err:
+        except (HomeAssistantError, ValueError) as err:
             _LOGGER.error("Error streaming WAV: %s", err)
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
-            self.cli.send_voice_assistant_event(
-                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
-            )
+            try:
+                if audio_stream is not None:
+                    if supports_audio_interrupt:
+                        stream_closed = True
+                    try:
+                        await audio_stream.aclose()
+                    except Exception:
+                        _LOGGER.exception("Error closing TTS audio stream")
+            finally:
+                self.cli.send_voice_assistant_event(
+                    VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
+                )
 
         # State change
         self.tts_response_finished()
