@@ -121,7 +121,7 @@ async def test_setup_entry_auth_failed(
     mock_farmad_client.return_value.async_close.assert_awaited_once()
 
 
-async def test_setup_entry_not_ready_schema(
+async def test_setup_entry_not_ready_baskets(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
     """Test a config entry retries setup when the order history cannot be read."""
@@ -671,10 +671,27 @@ async def test_order_medication_after_unload(
         )
 
 
-async def test_order_medication_multiple_pharmacies(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+RESOLVE_APB_ACTIONS = pytest.mark.parametrize(
+    ("action", "data"),
+    [
+        pytest.param(
+            SERVICE_ORDER_MEDICATION, {"product": API_PRODUCT_CNK}, id="order"
+        ),
+        pytest.param(
+            SERVICE_SEARCH_MEDICATION, {"query": API_SEARCH_QUERY}, id="search"
+        ),
+    ],
+)
+
+
+@RESOLVE_APB_ACTIONS
+async def test_multiple_pharmacies(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    action: str,
+    data: dict[str, str],
 ) -> None:
-    """Test ordering without an apb fails when several pharmacies are entitled."""
+    """Test an action without an apb fails when several pharmacies are entitled."""
     mock_farmad_client.return_value.async_get_account.return_value = get_mock_account(
         (API_APB, API_APB_2)
     )
@@ -683,10 +700,7 @@ async def test_order_medication_multiple_pharmacies(
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ORDER_MEDICATION,
-            {"product": API_PRODUCT_CNK},
-            blocking=True,
+            DOMAIN, action, data, blocking=True, return_response=True
         )
 
     assert exc_info.value.translation_key == "multiple_pharmacies"
@@ -695,27 +709,32 @@ async def test_order_medication_multiple_pharmacies(
         f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY}): {API_APB},"
         f" {API_PHARMACY_NAME_2} ({API_PHARMACY_CITY_2}): {API_APB_2}"
     )
+    client.async_search_products_in_apb.assert_not_awaited()
     client.async_get_draft_basket.assert_not_awaited()
 
 
-async def test_order_medication_no_pharmacy(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+@RESOLVE_APB_ACTIONS
+async def test_no_pharmacy(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    action: str,
+    data: dict[str, str],
 ) -> None:
-    """Test ordering without an apb fails when no pharmacy is entitled."""
+    """Test an action without an apb fails when no pharmacy is entitled."""
     mock_farmad_client.return_value.async_get_account.return_value = get_mock_account(
         ()
     )
     await init_integration(hass)
+    client = mock_farmad_client.return_value
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ORDER_MEDICATION,
-            {"product": API_PRODUCT_CNK},
-            blocking=True,
+            DOMAIN, action, data, blocking=True, return_response=True
         )
 
     assert exc_info.value.translation_key == "no_pharmacy"
+    client.async_search_products_in_apb.assert_not_awaited()
+    client.async_get_draft_basket.assert_not_awaited()
 
 
 async def test_search_medication(
