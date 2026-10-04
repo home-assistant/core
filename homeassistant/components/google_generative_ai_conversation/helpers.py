@@ -1,12 +1,38 @@
 """Helper classes for Google Generative AI integration."""
 
 from contextlib import suppress
+from dataclasses import dataclass
 import io
+from typing import Literal
 import wave
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
+
+
+@dataclass(slots=True)
+class PartDetails:
+    """Additional data for a content part."""
+
+    part_type: Literal["text", "thought", "function_call", "google_search_call"]
+    """The part type for which this data is relevant for."""
+
+    index: int
+    """Start position or number of the tool."""
+
+    length: int = 0
+    """Length of the relevant data."""
+
+    thought_signature: str | None = None
+    """Signature, if available."""
+
+
+@dataclass(slots=True)
+class ContentDetails:
+    """Native data for AssistantContent."""
+
+    part_details: list[PartDetails]
 
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
