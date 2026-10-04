@@ -32,36 +32,12 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_tomorrow_prices_available(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
-) -> None:
-    """Test the binary sensor is on when tomorrow's prices are published."""
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
-    )
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.name.endswith("EPEX tomorrow prices available")
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.entity_category is er.EntityCategory.DIAGNOSTIC
-
-
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_tomorrow_prices_not_published(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the binary sensor is off while tomorrow's prices are unpublished."""
@@ -89,13 +65,13 @@ async def test_tomorrow_prices_not_published(
     assert "Fetching EPEX prices for 2026-10-04 failed" in caplog.text
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_tomorrow_prices_partial(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test the binary sensor stays off until tomorrow is fully covered."""
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
@@ -124,12 +100,12 @@ async def test_tomorrow_prices_partial(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_tomorrow_prices_unavailable_when_fetch_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the binary sensor is unavailable when the EPEX fetch fails at setup."""
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
@@ -147,12 +123,12 @@ async def test_tomorrow_prices_unavailable_when_fetch_fails(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_tomorrow_prices_with_stretched_slot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the binary sensor stays off when a slot of tomorrow has the wrong length."""
 

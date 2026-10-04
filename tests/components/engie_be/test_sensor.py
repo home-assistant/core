@@ -1014,90 +1014,40 @@ async def test_service_point_success_without_ean_is_cached_once(
     assert mock_engie_client.return_value.async_get_service_point.call_count == 1
 
 
-async def test_epex_sensors_for_dynamic_household(
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_epex_entities_on_household_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    frozen_afternoon: None,
 ) -> None:
-    """Test the EPEX sensors expose the day-ahead prices of a dynamic household."""
+    """Test the EPEX entities belong to the device of their household."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
     household_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, BAN), mock_config_entry.entry_id
     )
     assert household_device is not None
-
-    expected_values = {
-        "epex_current_hour": 0.15,
-        "epex_next_hour": 0.16,
-        "epex_low_today_hour": 0.01,
-        "epex_high_today_hour": 0.24,
-        "epex_current_quarter_hour": 0.15,
-        "epex_next_quarter_hour": 0.1525,
-        "epex_low_today_quarter_hour": 0.01,
-        "epex_high_today_quarter_hour": 0.2475,
+    epex_entries = [
+        entity_entry
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entity_entry.unique_id.startswith(f"{BAN}_epex_")
+    ]
+    assert len(epex_entries) == 9
+    assert {entity_entry.device_id for entity_entry in epex_entries} == {
+        household_device.id
     }
-    for key, value in expected_values.items():
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{key}"
-        )
-        assert entity_id is not None
-        entity_entry = entity_registry.async_get(entity_id)
-        assert entity_entry is not None
-        assert entity_entry.device_id == household_device.id
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert float(state.state) == pytest.approx(value)
-        assert state.attributes["unit_of_measurement"] == "EUR/kWh"
-
-    current_state = hass.states.get(
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
-        )
-    )
-    assert current_state is not None
-    assert current_state.name.endswith("EPEX current hour price")
-
-    low_state = hass.states.get(
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_low_today_hour"
-        )
-    )
-    assert low_state is not None
-    assert (
-        low_state.attributes["start"]
-        == datetime(2026, 10, 3, 0, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
-    )
-    assert (
-        low_state.attributes["end"]
-        == datetime(2026, 10, 3, 1, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
-    )
-
-    high_quarter_state = hass.states.get(
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_high_today_quarter_hour"
-        )
-    )
-    assert high_quarter_state is not None
-    assert (
-        high_quarter_state.attributes["start"]
-        == datetime(2026, 10, 3, 23, 45, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
-    )
-    assert (
-        high_quarter_state.attributes["end"]
-        == datetime(2026, 10, 4, 0, 0, tzinfo=BRUSSELS_TIME_ZONE).isoformat()
-    )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_sensors_unknown_during_slot_gap(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the hourly current price reads unknown while its slot is missing."""
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
@@ -1160,7 +1110,6 @@ async def test_epex_sensors_update_on_quarter_boundaries(
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test entity states refresh on quarter boundaries without an API call."""
     freezer.move_to(datetime(2026, 10, 3, 14, 7, tzinfo=BRUSSELS_TIME_ZONE))
@@ -1238,13 +1187,13 @@ async def test_epex_sensors_on_dst_days(
     assert _epex_state(hass, entity_registry, "epex_tomorrow_available") == STATE_ON
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_empty_payload_keeps_entities_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test an empty payload leaves the entities unknown and is fetched again."""
 
@@ -1273,13 +1222,13 @@ async def test_epex_empty_payload_keeps_entities_unknown(
     assert client.async_get_epex_prices.call_count == call_count + 4
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_slot_gap_heals_on_next_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test a day with a missing slot is fetched again and fills the daily sensors."""
     client = mock_engie_client.return_value

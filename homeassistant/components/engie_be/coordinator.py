@@ -303,7 +303,6 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             minute=(0, 15, 30, 45),
             second=0,
         )
-        await super()._async_setup()
 
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
@@ -319,12 +318,6 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             ]
             for granularity in EpexGranularity
         }
-        if all(
-            epex_slots_cover_day(slots[granularity], day, granularity)
-            for granularity in EpexGranularity
-            for day in (today, tomorrow)
-        ):
-            return data
         for day, required in ((today, True), (tomorrow, False)):
             for granularity in EpexGranularity:
                 if epex_slots_cover_day(slots[granularity], day, granularity):

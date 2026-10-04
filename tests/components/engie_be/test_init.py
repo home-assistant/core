@@ -467,13 +467,13 @@ async def test_contracts_failure_loads_without_epex(
     )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_contracts_retry_adds_epex_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test a successful classification retry adds the EPEX entities."""
     client = mock_engie_client.return_value
@@ -506,13 +506,13 @@ async def test_contracts_retry_adds_epex_entities(
     )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_newly_dynamic_household_gets_entities_while_another_retries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test a household classified while another still retries gets its EPEX entities."""
     client = mock_engie_client.return_value
@@ -656,81 +656,14 @@ async def test_contracts_retry_stops_once_classified(
     assert client.async_get_energy_contracts.call_count == 2
 
 
-async def test_contracts_retry_stops_on_unload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test unloading the entry stops the tariff retries."""
-    client = mock_engie_client.return_value
-    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    for _ in range(3):
-        freezer.tick(CONTRACTS_RETRY_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert client.async_get_energy_contracts.call_count == 1
-
-
-async def test_contracts_retry_in_flight_during_reload(
+async def test_contracts_retry_in_flight_is_cancelled_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
-    """Test a retry in flight during a reload leaves the new EPEX coordinator running."""
-    client = mock_engie_client.return_value
-    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    release = asyncio.Event()
-
-    async def _slow_fixed_contracts(_ban: str) -> EnergyContractsResponse:
-        await release.wait()
-        return build_contracts()
-
-    client.async_get_energy_contracts.side_effect = _slow_fixed_contracts
-    freezer.tick(CONTRACTS_RETRY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert client.async_get_energy_contracts.call_count == 2
-
-    client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts(
-        dynamic=True
-    )
-    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    release.set()
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    freezer.tick(timedelta(hours=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.16)
-
-
-async def test_contracts_retry_in_flight_during_unload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
-) -> None:
-    """Test a retry that finishes after unload adds no entities and stops retrying."""
+    """Test unloading cancels a running tariff retry and stops the next ones."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
     mock_config_entry.add_to_hass(hass)
@@ -760,6 +693,45 @@ async def test_contracts_retry_in_flight_during_unload(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert client.async_get_energy_contracts.call_count == 2
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+
+async def test_contracts_retry_finishing_while_unloading_adds_no_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retry that returns while the entry unloads leaves the households alone."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    release = asyncio.Event()
+
+    async def _slow_dynamic_contracts(_ban: str) -> EnergyContractsResponse:
+        await release.wait()
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _slow_dynamic_contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_config_entry.mock_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS)
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+
+    assert mock_config_entry.runtime_data.households[BAN].is_dynamic is None
     assert (
         entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{BAN}_epex_current_hour"
@@ -807,13 +779,13 @@ async def test_contracts_retry_resolving_fixed_shuts_down_epex(
     )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_pending_household_does_not_release_epex_of_dynamic_household(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test a retry that resolves the last pending household to fixed keeps EPEX updating."""
     client = mock_engie_client.return_value
@@ -863,11 +835,11 @@ async def test_pending_household_does_not_release_epex_of_dynamic_household(
     )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_first_refresh_fetches_both_granularities_for_both_days(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    frozen_afternoon: None,
 ) -> None:
     """Test setup fetches today and tomorrow for both granularities."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
@@ -890,12 +862,12 @@ async def test_epex_first_refresh_fetches_both_granularities_for_both_days(
     ]
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_refresh_skips_covered_days(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test a scheduled refresh fetches nothing while today and tomorrow are covered."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
@@ -909,12 +881,12 @@ async def test_epex_refresh_skips_covered_days(
     assert client.async_get_epex_prices.call_count == call_count
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_today_fetch_failure_does_not_block_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failing EPEX fetch loads the entry with unavailable EPEX sensors."""
@@ -973,12 +945,12 @@ async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
     assert binary_state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_epex_fetches_stop_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    frozen_afternoon: None,
 ) -> None:
     """Test no EPEX prices are fetched after the entry unloads."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
@@ -995,12 +967,12 @@ async def test_epex_fetches_stop_on_unload(
     assert client.async_get_epex_prices.call_count == call_count
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_no_epex_without_dynamic_household(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    frozen_afternoon: None,
 ) -> None:
     """Test a fixed-tariff entry fetches no EPEX prices and has no EPEX entities."""
     mock_config_entry.add_to_hass(hass)

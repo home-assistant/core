@@ -111,31 +111,31 @@ async def async_setup_entry(
         )
     _async_add_new_entities()
 
-    known_epex_unique_ids: set[str] = set()
+    known_epex_bans: set[str] = set()
 
     @callback
     def _async_add_epex_sensors() -> None:
         """Add the EPEX price sensors for the dynamic households."""
         if (epex := runtime_data.epex) is None:
             return
-        new_entities = [
+        new_bans = [
+            ban
+            for ban, household in runtime_data.households.items()
+            if household.is_dynamic and ban not in known_epex_bans
+        ]
+        if not new_bans:
+            return
+        known_epex_bans.update(new_bans)
+        async_add_entities(
             EngieBeEpexPriceSensor(
                 epex,
                 ban=ban,
-                device_info=household.prices.device_info,
+                device_info=runtime_data.households[ban].prices.device_info,
                 description=description,
             )
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic
+            for ban in new_bans
             for description in _EPEX_SENSORS
-            if f"{ban}_{description.key}" not in known_epex_unique_ids
-        ]
-        if not new_entities:
-            return
-        known_epex_unique_ids.update(
-            unique_id for entity in new_entities if (unique_id := entity.unique_id)
         )
-        async_add_entities(new_entities)
 
     runtime_data.epex_ready_callbacks.append(_async_add_epex_sensors)
     _async_add_epex_sensors()

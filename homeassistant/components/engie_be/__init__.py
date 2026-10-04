@@ -35,7 +35,7 @@ class EngieBeHouseholdCoordinators:
     """Per-household coordinators and tariff state."""
 
     prices: EngieBePricesCoordinator
-    is_dynamic: bool | None = False
+    is_dynamic: bool | None
 
 
 @dataclass
@@ -104,24 +104,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
     device_registry = dr.async_get(hass)
 
     @callback
-    def _async_create_household(ban: str) -> EngieBeHouseholdCoordinators:
+    def _async_create_household(
+        ban: str, is_dynamic: bool | None
+    ) -> EngieBeHouseholdCoordinators:
         """Build the coordinators for a business agreement and register its device."""
         household = EngieBeHouseholdCoordinators(
             prices=EngieBePricesCoordinator(
                 hass, entry, client, ban, relations.data[ban]
-            )
+            ),
+            is_dynamic=is_dynamic,
         )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id, **household.prices.device_info
         )
         return household
 
-    households = {ban: _async_create_household(ban) for ban in relations.data}
     dynamic_flags = await asyncio.gather(
-        *(_async_is_dynamic(client, ban) for ban in households)
+        *(_async_is_dynamic(client, ban) for ban in relations.data)
     )
-    for household, is_dynamic in zip(households.values(), dynamic_flags, strict=True):
-        household.is_dynamic = is_dynamic
+    households = {
+        ban: _async_create_household(ban, is_dynamic)
+        for ban, is_dynamic in zip(relations.data, dynamic_flags, strict=True)
+    }
 
     epex: EngieBeEpexCoordinator | None = None
     if any(household.is_dynamic is not False for household in households.values()):
@@ -143,33 +147,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         households=households,
     )
 
-    cancel_retry: Callable[[], None] | None = None
+    if epex is not None and any(
+        household.is_dynamic is None for household in households.values()
+    ):
+        LOGGER.warning("Tariff lookup failed, EPEX entities wait for a retry")
+        _async_start_tariff_retry(hass, entry, epex)
+
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+    return True
+
+
+@callback
+def _async_start_tariff_retry(
+    hass: HomeAssistant, entry: EngieBeConfigEntry, epex: EngieBeEpexCoordinator
+) -> None:
+    """Retry the tariff lookup of the households whose lookup failed at setup."""
+    runtime_data = entry.runtime_data
+    households = runtime_data.households
 
     async def _async_retry_classification() -> None:
-        """Classify the households whose tariff lookup failed at setup."""
+        """Classify the pending households and stop once none is left."""
         pending = [
             ban for ban, household in households.items() if household.is_dynamic is None
         ]
         results = await asyncio.gather(
-            *(_async_is_dynamic(client, ban) for ban in pending)
+            *(_async_is_dynamic(runtime_data.client, ban) for ban in pending)
         )
         if entry.state is not ConfigEntryState.LOADED:
             return
         for ban, is_dynamic in zip(pending, results, strict=True):
             households[ban].is_dynamic = is_dynamic
-        if any(is_dynamic for is_dynamic in results):
-            if (epex := entry.runtime_data.epex) is not None:
-                await epex.async_request_refresh()
-            for notify in entry.runtime_data.epex_ready_callbacks:
+        if any(results):
+            await epex.async_request_refresh()
+            for notify in runtime_data.epex_ready_callbacks:
                 notify()
         if any(household.is_dynamic is None for household in households.values()):
             return
-        if cancel_retry is not None:
-            cancel_retry()
+        cancel_retry()
         if not any(household.is_dynamic for household in households.values()):
-            if (epex := entry.runtime_data.epex) is not None:
-                await epex.async_shutdown()
-                entry.runtime_data.epex = None
+            await epex.async_shutdown()
+            runtime_data.epex = None
 
     @callback
     def _start_retry_classification(_now: datetime) -> None:
@@ -178,16 +196,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
             hass, _async_retry_classification(), "engie_be tariff retry"
         )
 
-    if any(household.is_dynamic is None for household in households.values()):
-        LOGGER.warning("Tariff lookup failed, EPEX entities wait for a retry")
-        cancel_retry = async_track_time_interval(
-            hass, _start_retry_classification, CONTRACTS_RETRY_INTERVAL
-        )
-        entry.async_on_unload(cancel_retry)
-
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    return True
+    cancel_retry = async_track_time_interval(
+        hass, _start_retry_classification, CONTRACTS_RETRY_INTERVAL
+    )
+    entry.async_on_unload(cancel_retry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> bool:

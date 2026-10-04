@@ -19,7 +19,7 @@ from .conftest import build_epex_payload_without_tomorrow, setup_entry
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_engie_client")
+pytestmark = pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
 
 
 async def _call_service(hass: HomeAssistant, data: Mapping[str, Any]) -> dict[str, Any]:
@@ -36,7 +36,6 @@ async def _call_service(hass: HomeAssistant, data: Mapping[str, Any]) -> dict[st
 async def test_get_epex_prices_for_date(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service returns the hourly slots of the requested date."""
     await setup_entry(hass, mock_config_entry)
@@ -57,7 +56,6 @@ async def test_get_epex_prices_for_date(
 async def test_get_epex_prices_for_date_quarter_hourly(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service returns quarter-hourly slots for the requested granularity."""
     await setup_entry(hass, mock_config_entry)
@@ -80,7 +78,6 @@ async def test_get_epex_prices_for_date_quarter_hourly(
 async def test_get_epex_prices_for_date_rejects_other_dates(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service rejects any date other than today and tomorrow."""
     await setup_entry(hass, mock_config_entry)
@@ -95,7 +92,6 @@ async def test_get_epex_prices_for_date_not_published(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service reports a validation error for unpublished prices."""
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
@@ -113,7 +109,6 @@ async def test_get_epex_prices_for_date_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service reports a HomeAssistantError when the API is unreachable."""
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
@@ -131,7 +126,6 @@ async def test_get_epex_prices_for_date_connection_error(
 async def test_get_epex_prices_for_date_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service rejects a config entry that is not loaded."""
     await setup_entry(hass, mock_config_entry)
@@ -148,7 +142,6 @@ async def test_get_epex_prices_for_date_entry_not_loaded(
 async def test_get_epex_prices_for_date_unknown_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    frozen_afternoon: None,
 ) -> None:
     """Test the service rejects a config entry that does not exist."""
     await setup_entry(hass, mock_config_entry)
