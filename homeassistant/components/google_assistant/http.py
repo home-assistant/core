@@ -13,9 +13,10 @@ import jwt
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -26,9 +27,11 @@ from .const import (
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
     CONF_PRIVATE_KEY,
+    CONF_PROJECT_ID,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DATA_CONFIG,
     DOMAIN,
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
@@ -122,6 +125,34 @@ class GoogleConfig(AbstractConfig):
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
+
+    async def async_reload_yaml(self) -> bool:
+        """Re-read and apply the YAML configuration."""
+        conf = await async_integration_yaml_config(self.hass, DOMAIN)
+        if conf is None:
+            return False
+        config = conf.get(DOMAIN, {})
+        # The config entry, request_sync service, sync button and Home Graph token
+        # are set up for these at startup
+        for key in (CONF_PROJECT_ID, CONF_SERVICE_ACCOUNT):
+            if config.get(key) != self._config.get(key):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="restart_required",
+                    translation_placeholders={"option": key},
+                )
+        # pylint: disable-next=home-assistant-use-runtime-data
+        self.hass.data[DOMAIN][DATA_CONFIG] = self._config = config
+        self.async_update_report_state()
+        return True
+
+    @callback
+    def async_update_report_state(self) -> None:
+        """Enable or disable reporting state as configured."""
+        if self.should_report_state:
+            self.async_enable_report_state()
+        else:
+            self.async_disable_report_state()
 
     @override
     def get_local_user_id(self, webhook_id):
