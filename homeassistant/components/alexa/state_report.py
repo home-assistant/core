@@ -308,7 +308,10 @@ async def async_enable_proactive_mode(
 
         changed_entity = data["entity_id"]
         should_expose = smart_home_config.should_expose(changed_entity)
-        if logged_exposure.get(changed_entity) != should_expose:
+        if (
+            _LOGGER.isEnabledFor(logging.DEBUG)
+            and logged_exposure.get(changed_entity) != should_expose
+        ):
             logged_exposure[changed_entity] = should_expose
             if should_expose:
                 _LOGGER.debug("Exposing %s", changed_entity)
