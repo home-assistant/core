@@ -336,7 +336,7 @@
               'HEOS Drive - Line In 1',
               'Speaker - Line In 1',
             ]),
-            'supported_features': 3079741,
+            'supported_features': 4128317,
             'volume_level': 0.25,
           }),
           'context': dict({
