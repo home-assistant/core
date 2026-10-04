@@ -1,5 +1,7 @@
 """Tests the lock platform of the Loqed integration."""
 
+from unittest.mock import patch
+
 from loqedAPI import loqed
 
 from homeassistant.components.lock import LockState
@@ -40,6 +42,24 @@ async def test_lock_responds_to_bolt_state_updates(
 
     state = hass.states.get(entity_id)
 
+    assert state
+    assert state.state == LockState.LOCKED
+
+
+async def test_lock_applies_polled_bolt_state(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test a coordinator refresh applies the polled bolt state to the lock."""
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+    coordinator = integration.runtime_data
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={"bolt_state": "night_lock", "lock_online": 1},
+    ):
+        await coordinator.async_refresh()
+
+    lock.updateState.assert_awaited_with("night_lock")
+    state = hass.states.get("lock.home")
     assert state
     assert state.state == LockState.LOCKED
 

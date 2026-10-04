@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from http import HTTPStatus
+import json
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -106,6 +107,166 @@ async def test_webhook_ignores_rejected_message(
     state = hass.states.get("lock.home")
     assert state
     assert state.state == LockState.UNLOCKED
+
+
+LOCK_DISCONNECTED = {"wifi_strength": 79, "ble_strength": -1}
+LOCK_CONNECTED = {"wifi_strength": 79, "ble_strength": 20}
+BATTERY = {"battery_type": "NICKEL_METAL_HYDRIDE", "battery_percentage": 50}
+BATTERY_DISCONNECTED = {"battery_type": "UNKNOWN", "battery_percentage": -1}
+
+
+@pytest.mark.parametrize(
+    ("messages", "status_reads"),
+    [
+        pytest.param([BATTERY], 0, id="battery_while_connected"),
+        pytest.param([LOCK_CONNECTED], 0, id="signal_while_connected"),
+        pytest.param([LOCK_DISCONNECTED], 0, id="lock_disconnected"),
+        pytest.param([LOCK_DISCONNECTED, BATTERY], 1, id="reconnect_by_battery"),
+        pytest.param([LOCK_DISCONNECTED, LOCK_CONNECTED], 1, id="reconnect_by_signal"),
+        pytest.param(
+            [BATTERY_DISCONNECTED, LOCK_DISCONNECTED, BATTERY, LOCK_CONNECTED],
+            1,
+            id="read_once_per_reconnect",
+        ),
+        pytest.param(
+            [LOCK_DISCONNECTED, BATTERY, LOCK_DISCONNECTED, BATTERY],
+            2,
+            id="read_on_each_reconnect",
+        ),
+    ],
+)
+async def test_webhook_reads_status_when_lock_reconnects(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    freezer: FrozenDateTimeFactory,
+    messages: list[dict[str, Any]],
+    status_reads: int,
+) -> None:
+    """Test the bridge status is read only when the lock reconnects to the bridge."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={"bolt_state": "night_lock", "lock_online": 1},
+    ) as mock_details:
+        for message in messages:
+            lock.receiveWebhook = AsyncMock(return_value=message)
+            await client.post(
+                f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+                data=json.dumps(message),
+                headers={"timestamp": "1653304609", "hash": "hash"},
+            )
+            # Step past the coordinator's refresh cooldown.
+            freezer.tick(timedelta(seconds=15))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert mock_details.await_count == status_reads
+
+
+async def test_webhook_reads_status_again_while_bridge_reports_lock_offline(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a reconnect read reporting the lock offline allows another read."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        side_effect=[
+            {"bolt_state": "unknown", "lock_online": 0},
+            {"bolt_state": "night_lock", "lock_online": 1},
+        ],
+    ) as mock_details:
+        for message in (LOCK_DISCONNECTED, LOCK_CONNECTED, BATTERY, BATTERY):
+            lock.receiveWebhook = AsyncMock(return_value=message)
+            await client.post(
+                f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+                data=json.dumps(message),
+                headers={"timestamp": "1653304609", "hash": "hash"},
+            )
+            freezer.tick(timedelta(seconds=15))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert mock_details.await_count == 2
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.LOCKED
+
+
+async def test_webhook_retries_failed_reconnect_status_read(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed status read on reconnect is retried on the next message."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        side_effect=[
+            aiohttp.ClientError,
+            {"bolt_state": "night_lock", "lock_online": 1},
+        ],
+    ) as mock_details:
+        for message in (LOCK_DISCONNECTED, BATTERY, LOCK_CONNECTED, BATTERY):
+            lock.receiveWebhook = AsyncMock(return_value=message)
+            await client.post(
+                f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+                data=json.dumps(message),
+                headers={"timestamp": "1653304609", "hash": "hash"},
+            )
+            freezer.tick(timedelta(seconds=15))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert mock_details.await_count == 2
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.LOCKED
+
+
+async def test_webhook_reconnect_applies_bolt_state(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+) -> None:
+    """Test the status read on reconnect applies the bolt state to the lock."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    lock.updateState.side_effect = lambda state: setattr(lock, "bolt_state", state)
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={"bolt_state": "night_lock", "lock_online": 1},
+    ):
+        for message in (LOCK_DISCONNECTED, BATTERY):
+            lock.receiveWebhook = AsyncMock(return_value=message)
+            await client.post(
+                f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+                data=json.dumps(message),
+                headers={"timestamp": "1653304609", "hash": "hash"},
+            )
+            await hass.async_block_till_done()
+
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.LOCKED
 
 
 async def test_setup_webhook_in_bridge(
