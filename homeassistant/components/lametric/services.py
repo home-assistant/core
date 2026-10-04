@@ -33,7 +33,7 @@ from .const import (
     SERVICE_MESSAGE,
 )
 from .coordinator import LaMetricDataUpdateCoordinator
-from .helpers import async_get_coordinator_by_device_id
+from .helpers import async_get_coordinator_by_device_id, has_audio
 
 SERVICE_BASE_SCHEMA = probatio.Schema(
     {
@@ -130,6 +130,11 @@ async def async_send_notification(
                 translation_placeholders={"sound": str(call.data[CONF_SOUND])},
             )
         sound = Sound(sound=snd, category=None)
+
+    # Leave the sound out for a device that cannot play it, rather than have
+    # it refuse the whole notification.
+    if not has_audio(coordinator.data):
+        sound = None
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),
