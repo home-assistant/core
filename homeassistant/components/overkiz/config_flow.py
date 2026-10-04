@@ -2,13 +2,14 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 import probatio
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
+    SomfyTokenCredentials,
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import GatewayCandidate, OverkizClient
@@ -25,6 +26,8 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
+    SomfyServiceError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -44,12 +47,19 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -57,6 +67,8 @@ from .const import (
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_REFRESH_TOKEN,
+    CONF_SITE_OID,
     DEFAULT_SERVER,
     DOMAIN,
     LOGGER,
@@ -87,6 +99,9 @@ class OverkizConfigFlow(
 
     _rexel_gateways: list[GatewayCandidate]
     _rexel_oauth_data: dict[str, Any]
+
+    _somfy_client: OverkizClient
+    _somfy_gateways: list[GatewayCandidate]
 
     @property
     @override
@@ -188,6 +203,10 @@ class OverkizConfigFlow(
             # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
             if self._server == Server.REXEL:
                 return await self.async_step_pick_implementation()
+
+            # Somfy multi-account uses username/password login plus site discovery.
+            if self._server == Server.SOMFY:
+                return await self.async_step_somfy()
 
             return await self.async_step_cloud()
 
@@ -390,25 +409,42 @@ class OverkizConfigFlow(
     async def async_step_select_gateway(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Let the user pick a gateway on a multi-gateway Rexel account."""
+        """Let the user pick a gateway on a multi-gateway account."""
+        candidates = (
+            self._somfy_gateways
+            if self._server == Server.SOMFY
+            else self._rexel_gateways
+        )
+
         if user_input:
             gateway = next(
                 candidate
-                for candidate in self._rexel_gateways
+                for candidate in candidates
                 if candidate.gateway_id == user_input[CONF_GATEWAY_ID]
             )
+            if self._server == Server.SOMFY:
+                return await self._async_create_somfy_entry(gateway)
             return await self._async_create_rexel_entry(gateway)
 
         return self.async_show_form(
             step_id="select_gateway",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_GATEWAY_ID): probatio.In(
-                        {
-                            candidate.gateway_id: candidate.label
-                            or candidate.gateway_id
-                            for candidate in self._rexel_gateways
-                        }
+                    probatio.Required(CONF_GATEWAY_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=candidate.gateway_id,
+                                    label=(
+                                        f"{candidate.label or candidate.gateway_id} ({candidate.country})"
+                                        if candidate.country
+                                        else candidate.label or candidate.gateway_id
+                                    ),
+                                )
+                                for candidate in candidates
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
                     ),
                 }
             ),
@@ -441,6 +477,109 @@ class OverkizConfigFlow(
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=gateway.label or "Rexel", data=data)
+
+    async def async_step_somfy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle Somfy multi-account username/password login and site discovery."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        if user_input:
+            self._user = user_input[CONF_USERNAME]
+            session = async_create_clientsession(self.hass)
+            self._somfy_client = OverkizClient(
+                server=Server.SOMFY,
+                credentials=UsernamePasswordCredentials(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                ),
+                session=session,
+            )
+
+            try:
+                await self._somfy_client.login(register_event_listener=False)
+                self._somfy_gateways = await self._somfy_client.discover_gateways()
+            except TooManyRequestsError:
+                errors["base"] = "too_many_requests"
+            except ApplicationNotAllowedError:
+                errors["base"] = "application_not_allowed"
+            except BadCredentialsError, NotAuthenticatedError:
+                errors["base"] = "invalid_auth"
+            except TimeoutError, ClientError, SomfyServiceError:
+                errors["base"] = "cannot_connect"
+            except MaintenanceError:
+                errors["base"] = "server_in_maintenance"
+            except ServiceUnavailableError:
+                errors["base"] = "cannot_connect"
+            except TooManyAttemptsBannedError:
+                errors["base"] = "too_many_attempts"
+            except UnknownUserError:
+                # Somfy Protect accounts don't use the Overkiz API server; login returns unknown user.
+                description_placeholders["unsupported_device"] = "Somfy Protect"
+                errors["base"] = "unsupported_hardware"
+            except Exception:  # noqa: BLE001
+                errors["base"] = "unknown"
+                LOGGER.exception("Unknown error")
+            else:
+                if not self._somfy_gateways:
+                    return self.async_abort(reason="no_gateways")
+
+                if len(self._somfy_gateways) == 1:
+                    return await self._async_create_somfy_entry(self._somfy_gateways[0])
+
+                return await self.async_step_select_gateway()
+
+        return self.async_show_form(
+            step_id="somfy",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_USERNAME, default=self._user): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
+
+    async def _async_create_somfy_entry(
+        self, gateway: GatewayCandidate
+    ) -> ConfigFlowResult:
+        """Scope the client to the chosen site and persist its token bundle."""
+        self._somfy_client.select_gateway(gateway.gateway_id)
+        credentials = self._somfy_client.to_credentials()
+        if TYPE_CHECKING:
+            assert isinstance(credentials, SomfyTokenCredentials)
+
+        await self.async_set_unique_id(gateway.gateway_id, raise_on_progress=False)
+
+        data = {
+            CONF_HUB: Server.SOMFY,
+            CONF_API_TYPE: APIType.CLOUD,
+            # Only stored to prefill on reauth
+            CONF_USERNAME: self._user,
+            CONF_REFRESH_TOKEN: credentials.refresh_token,
+            CONF_SITE_OID: credentials.site_oid,
+            CONF_REGION: credentials.region,
+            CONF_GATEWAY_ID: gateway.gateway_id,
+        }
+
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
+            )
+
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=gateway.label or gateway.gateway_id, data=data
+        )
 
     @override
     async def async_step_dhcp(
@@ -507,6 +646,12 @@ class OverkizConfigFlow(
     ) -> ConfigFlowResult:
         """Handle reauth."""
         self._init_flow_from_entry(entry_data, cast(str, self.unique_id))
+
+        # Somfy cloud reauth re-runs the multi-account login; local reauth
+        # falls through to the standard host/token flow.
+        if self._server == Server.SOMFY and self._api_type == APIType.CLOUD:
+            return await self.async_step_somfy()
+
         return await self.async_step_user(dict(entry_data))
 
     async def async_step_reconfigure(
