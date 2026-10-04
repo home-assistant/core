@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 
@@ -559,3 +560,194 @@ async def test_migrate_unique_id_non_integer_ids(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
+
+
+async def _create_unmapped_enum_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    climate_adc_t3000: Node,
+    integration: MockConfigEntry,
+) -> str:
+    """Enable the power source sensor, reload, and send an unmapped value."""
+    entity_id = "sensor.adc_t3000_power_source"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": climate_adc_t3000.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 26,
+                "propertyName": "Power Source",
+                "newValue": 99,
+                "prevValue": 1,
+            },
+        },
+    )
+    climate_adc_t3000.receive_event(event)
+    await hass.async_block_till_done()
+
+    return entity_id
+
+
+async def test_unmapped_enum_value_confirm_step(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: Client,
+    climate_adc_t3000: Node,
+    lock_id_lock_as_id150: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the unmapped_enum_value confirm step triggers re-interview."""
+    await _create_unmapped_enum_issue(
+        hass, entity_registry, climate_adc_t3000, integration
+    )
+
+    client.async_send_command_no_wait.reset_mock()
+
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_adc_t3000), integration.entry_id
+    )
+    assert device
+
+    ws_client = await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    unmapped_issues = [
+        i for i in msg["result"]["issues"] if "unmapped_enum_value" in i["issue_id"]
+    ]
+    assert len(unmapped_issues) == 1
+    issue_id = unmapped_issues[0]["issue_id"]
+
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "init"
+    assert data["description_placeholders"]["device_name"] == device.name
+    assert (
+        data["description_placeholders"]["entity_id"] == "sensor.adc_t3000_power_source"
+    )
+    assert data["description_placeholders"]["raw_value"] == "99"
+
+    data = await process_repair_fix_flow(http_client, flow_id)
+    assert data["type"] == "menu"
+
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
+    assert data["type"] == "create_entry"
+
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    assert client.async_send_command_no_wait.call_args[0][0] == {
+        "command": "node.refresh_info",
+        "nodeId": climate_adc_t3000.node_id,
+    }
+
+
+async def test_unmapped_enum_value_ignore_step(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: Client,
+    climate_adc_t3000: Node,
+    lock_id_lock_as_id150: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the unmapped_enum_value ignore step."""
+    await _create_unmapped_enum_issue(
+        hass, entity_registry, climate_adc_t3000, integration
+    )
+
+    client.async_send_command_no_wait.reset_mock()
+
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_adc_t3000), integration.entry_id
+    )
+    assert device
+
+    ws_client = await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    unmapped_issues = [
+        i for i in msg["result"]["issues"] if "unmapped_enum_value" in i["issue_id"]
+    ]
+    assert len(unmapped_issues) == 1
+    issue_id = unmapped_issues[0]["issue_id"]
+
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+    flow_id = data["flow_id"]
+
+    data = await process_repair_fix_flow(http_client, flow_id)
+    assert data["type"] == "menu"
+
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "ignore"}
+    )
+    assert data["type"] == "abort"
+    assert data["reason"] == "issue_ignored"
+
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
+
+async def test_unmapped_enum_value_abort_confirm(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: Client,
+    climate_adc_t3000: Node,
+    lock_id_lock_as_id150: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test aborting unmapped_enum_value confirm when node is disconnected."""
+    await _create_unmapped_enum_issue(
+        hass, entity_registry, climate_adc_t3000, integration
+    )
+
+    ws_client = await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    unmapped_issues = [
+        i for i in msg["result"]["issues"] if "unmapped_enum_value" in i["issue_id"]
+    ]
+    assert len(unmapped_issues) == 1
+    issue_id = unmapped_issues[0]["issue_id"]
+
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+    flow_id = data["flow_id"]
+
+    data = await process_repair_fix_flow(http_client, flow_id)
+    assert data["type"] == "menu"
+
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
+    assert data["type"] == "abort"
+    assert data["reason"] == "cannot_connect"
