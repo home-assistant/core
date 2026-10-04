@@ -119,7 +119,10 @@ class AxleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
-                STEP_SCHEMA, entry.data if self.source == SOURCE_RECONFIGURE else None
+                STEP_SCHEMA,
+                (user_input or entry.data)
+                if self.source == SOURCE_RECONFIGURE
+                else None,
             ),
             description_placeholders={
                 "token_url": "https://vpp.axle.energy/app/account/home-assistant"

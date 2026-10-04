@@ -275,7 +275,7 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert next(iter(result["data_schema"].schema)).description == {
-        "suggested_value": "test-token"
+        "suggested_value": "replacement-token"
     }
     assert result["errors"] == {"base": message}
     assert mock_config_entry.data == {CONF_API_KEY: "test-token"}
@@ -320,7 +320,7 @@ async def test_reconfigure_duplicate(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert next(iter(result["data_schema"].schema)).description == {
-        "suggested_value": "test-token"
+        "suggested_value": "other-token"
     }
     assert result["errors"] == {CONF_API_KEY: "already_configured"}
     assert mock_config_entry.data == {CONF_API_KEY: "test-token"}
