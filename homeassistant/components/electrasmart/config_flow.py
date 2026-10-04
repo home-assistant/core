@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
+from electrasmart.api.utils import generate_imei
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -10,8 +12,6 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_IMEI, CONF_OTP, CONF_PHONE_NUMBER, DOMAIN
-from .pyelectra.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
-from .pyelectra.api.utils import generate_imei
 
 _LOGGER = logging.getLogger(__name__)
 

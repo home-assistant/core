@@ -23,7 +23,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await async_load_fixture(hass, "generate_token_response.json", DOMAIN)
     )
     with patch(
-        "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         return_value=mock_generate_token,
     ):
         # test with required
@@ -69,15 +69,15 @@ async def test_one_time_password(hass: HomeAssistant) -> None:
     )
     with (
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.generate_new_token",
+            "electrasmart.api.ElectraAPI.generate_new_token",
             return_value=mock_generate_token,
         ),
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.validate_one_time_password",
+            "electrasmart.api.ElectraAPI.validate_one_time_password",
             return_value=mock_otp_response,
         ),
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.fetch_devices",
+            "electrasmart.api.ElectraAPI.fetch_devices",
             return_value=[],
         ),
     ):
@@ -107,11 +107,11 @@ async def test_one_time_password_api_error(hass: HomeAssistant) -> None:
     )
     with (
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.generate_new_token",
+            "electrasmart.api.ElectraAPI.generate_new_token",
             return_value=mock_generate_token,
         ),
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.validate_one_time_password",
+            "electrasmart.api.ElectraAPI.validate_one_time_password",
             side_effect=ElectraApiError,
         ),
     ):
@@ -138,7 +138,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test cannot connect."""
 
     with patch(
-        "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         side_effect=ElectraApiError,
     ):
         # test with required
@@ -166,7 +166,7 @@ async def test_invalid_phone_number(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         return_value=mock_invalid_phone_number_response,
     ):
         # test with required
@@ -199,11 +199,11 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.generate_new_token",
+            "electrasmart.api.ElectraAPI.generate_new_token",
             return_value=mock_generate_token_response,
         ),
         patch(
-            "homeassistant.components.electrasmart.pyelectra.api.ElectraAPI.validate_one_time_password",
+            "electrasmart.api.ElectraAPI.validate_one_time_password",
             return_value=mock_invalid_otp_response,
         ),
     ):

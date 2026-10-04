@@ -1,5 +1,7 @@
 """The Electra Air Conditioner integration."""
 
+from electrasmart.api import ElectraAPI, ElectraApiError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -7,7 +9,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_IMEI
-from .pyelectra.api import ElectraAPI, ElectraApiError
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 

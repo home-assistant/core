@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from electrasmart.device import OperationMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,7 +12,6 @@ from homeassistant.components.electrasmart.const import (
     CONF_PHONE_NUMBER,
     DOMAIN,
 )
-from homeassistant.components.electrasmart.pyelectra.device import OperationMode
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -73,15 +73,15 @@ async def test_device_registry(
     assert device_entry == snapshot
 
 
-def test_raw_current_temperature_shift(
+def test_current_temperature_reads_device(
     mock_device: Mock,
 ) -> None:
-    """Raw x256 telemetry is converted back to degrees Celsius.
+    """Current temperature is read from the device.
 
-    The Electra API reports ``I_RAT``/``I_CALC_AT`` values left-shifted by 8
-    bits (x256); raw 5632 must become 22, not 5632.
+    The x256 I_RAT/I_CALC_AT normalization happens in the ``electrasmart``
+    library (``pyelectrasmart``), so the entity just passes the value through.
     """
-    mock_device.get_sensor_temperature.return_value = 5632
+    mock_device.get_sensor_temperature.return_value = 22
 
     entity = ElectraClimateEntity(mock_device, Mock())
 
