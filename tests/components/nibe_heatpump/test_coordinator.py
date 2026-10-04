@@ -98,6 +98,48 @@ async def test_pushed_update(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("seeded_address", "read_address"),
+    [
+        pytest.param(40031, 40035, id="broadcast-after-seeded-value-captured"),
+        pytest.param(40035, 40031, id="broadcast-before-read-response-consumed"),
+    ],
+)
+async def test_pushed_update_during_refresh(
+    hass: HomeAssistant,
+    coils: dict[int, float],
+    mock_connection: MockConnection,
+    seeded_address: int,
+    read_address: int,
+) -> None:
+    """Test that a completed polling batch preserves newer pushed values."""
+    entity_id = "number.heating_offset_climate_system_1_40031"
+    coils[40031] = 10
+    coils[40035] = 20
+
+    entry = await async_add_model(hass, Model.S320)
+    coordinator = entry.runtime_data
+    mock_connection.mock_coil_update(seeded_address, 20)
+
+    async def read_coil(coil: Coil, timeout: float = 0) -> CoilData:
+        assert coil.address == read_address
+        data = CoilData(coil, 20)
+        # NibeGW publishes read replies before the polling iterator consumes them.
+        mock_connection.heatpump.notify_coil_update(data)
+        mock_connection.mock_coil_update(40031, 21)
+        mock_connection.mock_coil_update(40031, 22)
+        assert hass.states.get(entity_id).state == "22.0"
+        return data
+
+    with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        await coordinator.async_refresh()
+
+    assert hass.states.get(entity_id).state == "22.0"
+    assert coordinator.data[40031].value == 22
+    assert coordinator.data[40035].value == 20
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shutdown(
     hass: HomeAssistant,
     coils: dict[int, Any],

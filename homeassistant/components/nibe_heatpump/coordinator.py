@@ -208,7 +208,8 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
         try:
             async for data in self.connection.read_coils(_get_coils()):
                 result[data.coil.address] = data
-                self.seed.pop(data.coil.address, None)
+                if self.seed.get(data.coil.address) is data:
+                    self.seed.pop(data.coil.address, None)
         except ReadException as exception:
             if not result:
                 raise UpdateFailed(f"Failed to update: {exception}") from exception
@@ -216,7 +217,10 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
                 "Some coils failed to update, and may be unsupported: %s", exception
             )
 
-        return result
+        # Preserve broadcasts received while the polling batch was running.
+        return {
+            address: self.seed.get(address, data) for address, data in result.items()
+        }
 
     @override
     async def async_shutdown(self):
