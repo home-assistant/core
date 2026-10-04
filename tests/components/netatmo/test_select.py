@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyatmo.enums import TemperatureControlMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
@@ -56,9 +58,11 @@ async def test_select_schedule_thermostats(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     select_entity = "select.myhome_schedule"
 
+    # The home is in cooling mode, so only cooling schedules are offered
     assert hass.states.get(select_entity).state == "Default"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Default"]
 
-    # Fake backend response changing schedule
+    # Fake backend response changing the heating schedule
     response = {
         "event_type": "schedule",
         "schedule_id": "b1b54a2f45795764f59d50d8",
@@ -68,13 +72,21 @@ async def test_select_schedule_thermostats(
     await simulate_webhook(hass, webhook_id, response)
     await hass.async_block_till_done()
 
-    assert hass.states.get(select_entity).state == "Winter"
-    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == [
-        "Default",
-        "Winter",
-    ]
+    assert hass.states.get(select_entity).state == "Default"
 
-    # Test setting a different schedule
+    # A heating schedule cannot be selected while cooling
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: select_entity,
+                ATTR_OPTION: "Winter",
+            },
+            blocking=True,
+        )
+
+    # Test setting a schedule
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -100,6 +112,45 @@ async def test_select_schedule_thermostats(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(select_entity).state == "Default"
+
+
+async def test_select_schedule_follows_temperature_control_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test the offered schedules follow the home temperature control mode."""
+    with selected_platforms(["climate", "select"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    select_entity = "select.myhome_schedule"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Default"]
+
+    # The home switches from cooling to heating
+    data_handler = config_entry.runtime_data
+    home = data_handler.account.homes["91763b24c43d3e344f424e8b"]
+    home.temperature_control_mode = TemperatureControlMode.HEATING
+    home.schedules["b1b54a2f45795764f59d50d8"].selected = True
+    data_handler._notify_subscribers(f"home-{home.entity_id}")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(select_entity).state == "Winter"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Winter"]
+
+    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: select_entity,
+                ATTR_OPTION: "Winter",
+            },
+            blocking=True,
+        )
+        mock_switch_home_schedule.assert_called_once_with(
+            schedule_id="b1b54a2f45795764f59d50d8"
+        )
 
 
 async def test_select_schedule_unknown_schedule_id(
