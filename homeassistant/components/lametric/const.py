@@ -28,6 +28,7 @@ CONF_LIFETIME: Final = "lifetime"
 CONF_MESSAGE: Final = "message"
 CONF_PRIORITY: Final = "priority"
 CONF_SOUND: Final = "sound"
+CONF_SOUND_URL: Final = "sound_url"
 
 SERVICE_MESSAGE: Final = "message"
 SERVICE_CHART: Final = "chart"

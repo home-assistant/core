@@ -11,7 +11,10 @@ from demetriek import (
     NotificationSound,
     NotificationSoundCategory,
     Simple,
+    Sound,
+    SoundURL,
 )
+import probatio
 import pytest
 
 from homeassistant.components.lametric.const import (
@@ -21,6 +24,7 @@ from homeassistant.components.lametric.const import (
     CONF_MESSAGE,
     CONF_PRIORITY,
     CONF_SOUND,
+    CONF_SOUND_URL,
     DOMAIN,
     SERVICE_CHART,
     SERVICE_MESSAGE,
@@ -239,3 +243,67 @@ async def test_service_message_without_audio(
 
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound is None
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        (
+            {CONF_SOUND_URL: "https://example.com/doorbell.mp3"},
+            SoundURL(url="https://example.com/doorbell.mp3"),
+        ),
+        # A built-in sound given as well plays when the URL cannot be fetched.
+        (
+            {CONF_SOUND_URL: "https://example.com/doorbell.mp3", CONF_SOUND: "cat"},
+            SoundURL(
+                url="https://example.com/doorbell.mp3",
+                fallback=Sound(sound=NotificationSound.CAT),
+            ),
+        ),
+    ],
+    ids=["url", "url_with_fallback"],
+)
+async def test_service_message_sound_url(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lametric: MagicMock,
+    data: dict[str, str],
+    expected: SoundURL,
+) -> None:
+    """Test sending a notification with a sound from a URL."""
+    entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
+    assert entry
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MESSAGE,
+        {CONF_DEVICE_ID: entry.device_id, CONF_MESSAGE: "Ding dong!", **data},
+        blocking=True,
+    )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound == expected
+
+
+async def test_service_message_invalid_sound_url(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a sound URL that is no URL is refused."""
+    entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
+    assert entry
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MESSAGE,
+            {
+                CONF_DEVICE_ID: entry.device_id,
+                CONF_MESSAGE: "Ding dong!",
+                CONF_SOUND_URL: "doorbell",
+            },
+            blocking=True,
+        )
+
+    mock_lametric.notify.assert_not_called()

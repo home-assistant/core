@@ -12,6 +12,8 @@ from demetriek import (
     NotificationSound,
     NotificationSoundCategory,
     Simple,
+    Sound,
+    SoundURL,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -285,3 +287,64 @@ async def test_notification_unknown_sound_without_audio(
         )
 
     mock_lametric.notify.assert_not_called()
+
+
+async def test_notification_sound_url(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test sending a notification with a sound from a URL, and a fallback."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        NOTIFY_SERVICE,
+        {
+            ATTR_MESSAGE: "Ding dong!",
+            ATTR_DATA: {
+                "sound_url": "https://example.com/doorbell.mp3",
+                "sound": "cat",
+            },
+        },
+        blocking=True,
+    )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound == SoundURL(
+        url="https://example.com/doorbell.mp3",
+        fallback=Sound(sound=NotificationSound.CAT),
+    )
+
+
+async def test_notification_invalid_sound_url(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a sound URL that is no URL is refused, naming it."""
+    with pytest.raises(ServiceValidationError, match="Invalid sound URL: doorbell"):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            NOTIFY_SERVICE,
+            {ATTR_MESSAGE: "Ding dong!", ATTR_DATA: {"sound_url": "doorbell"}},
+            blocking=True,
+        )
+
+    mock_lametric.notify.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["device_sa5_bluetooth_unavailable"])
+async def test_notification_sound_url_without_audio(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a sound URL is left out for a device that cannot play it."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "sky",
+        {
+            ATTR_MESSAGE: "Ding dong!",
+            ATTR_DATA: {"sound_url": "https://example.com/doorbell.mp3"},
+        },
+        blocking=True,
+    )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound is None
