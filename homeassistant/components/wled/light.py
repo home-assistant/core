@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
@@ -29,7 +30,13 @@ from .const import (
 )
 from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
-from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handler
+from .helpers import (
+    cct_to_white_channels,
+    kelvin_to_255,
+    kelvin_to_255_reverse,
+    white_channels_to_cct,
+    wled_exception_handler,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -133,6 +140,7 @@ class WLEDMainLight(WLEDEntity, LightEntity):
 class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
+    _attr_supported_color_modes: set[ColorMode]
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_translation_key = "segment"
     _attr_min_color_temp_kelvin = COLOR_TEMP_K_MIN
@@ -169,6 +177,36 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         ):
             self._attr_color_mode = color_modes[0]
             self._attr_supported_color_modes = set(color_modes)
+            self._infer_color_mode()
+
+    @callback
+    def _infer_color_mode(self) -> None:
+        """Infer the color mode from the current color of the segment.
+
+        WLED supports RGBWW lights, but they cannot be controlled as regular RGBWW lights.
+        There are two options: you can control them as RGB+CTT or RGBW+CCT lights.
+
+        RGBW+CCT is emulated as RGBWW.
+
+        RGB+CCT switches from RGB mode to CCT mode when white is selected.
+        """
+        # Checks if the light support RGB and COLOR_TEMP modes
+        if (
+            self._segment not in self.coordinator.data.state.segments
+            or ColorMode.RGB not in self._attr_supported_color_modes
+            or ColorMode.COLOR_TEMP not in self._attr_supported_color_modes
+        ):
+            return
+
+        if not (color := self.coordinator.data.state.segments[self._segment].color):
+            return
+
+        r, g, b = color.primary[:3]
+
+        # Checks if RGB color is white (even if it's dimmed), then choose color mode.
+        # There is currently no way to adjust the color brightness from HA,
+        # so when a new color/temperature is selected the color brightnes is set to max.
+        self._attr_color_mode = ColorMode.COLOR_TEMP if (r == g == b) else ColorMode.RGB
 
     @property
     @override
@@ -177,6 +215,13 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return (
             super().available and self._segment in self.coordinator.data.state.segments
         )
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._infer_color_mode()
+        super()._handle_coordinator_update()
 
     @property
     @override
@@ -193,6 +238,17 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if not (color := self.coordinator.data.state.segments[self._segment].color):
             return None
         return cast(tuple[int, int, int, int], color.primary)
+
+    @property
+    @override
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return rgbww color value from WLED RGBW+CCT color value."""
+        seg = self.coordinator.data.state.segments[self._segment]
+        if not (color := seg.color):
+            return None
+
+        w_brightness = color.primary[3] if len(color.primary) > 3 else 0
+        return (*color.primary[:3], *cct_to_white_channels(seg.cct, w_brightness))
 
     @property
     @override
@@ -270,12 +326,35 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         }
 
         if ATTR_RGB_COLOR in kwargs:
+            # if the light supports cct reset white balance to white to not distort colors
+            if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+                data[ATTR_CCT] = 127
+
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
+            # if the light supports cct reset white balance to white to not distort colors
+            if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+                data[ATTR_CCT] = 127
+
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
+        if ATTR_RGBWW_COLOR in kwargs:
+            # HA sends: (Red, Green, Blue, ColdWhite, WarmWhite)
+            r, g, b, cw, ww = kwargs[ATTR_RGBWW_COLOR]
+
+            cct, w_brightness = white_channels_to_cct(cw, ww)
+
+            data[ATTR_COLOR_PRIMARY] = (r, g, b, w_brightness)
+            data[ATTR_CCT] = cct
+
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            # If light supports RGB+CCT set RGB to white
+            # There is currently no way to adjust the color brightness from HA,
+            # so when a new color/temperature is selected the color brightnes is set to max.
+            if ColorMode.RGB in self._attr_supported_color_modes:
+                data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
+
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
             )
