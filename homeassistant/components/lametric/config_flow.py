@@ -438,11 +438,15 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         device = await lametric.device()
 
-        if self.source != SOURCE_REAUTH:
-            await self.async_set_unique_id(
-                device.serial_number,
-                raise_on_progress=False,
-            )
+        await self.async_set_unique_id(
+            device.serial_number,
+            raise_on_progress=False,
+        )
+        if self.source == SOURCE_REAUTH:
+            # The host can differ from the one set up, so make sure it is
+            # still the same device before touching its entry.
+            self._abort_if_unique_id_mismatch()
+        else:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
             )

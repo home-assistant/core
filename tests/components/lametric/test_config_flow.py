@@ -926,6 +926,10 @@ async def test_reauth_manual_sky(
 ) -> None:
     """Test reauth flow with manual entry for LaMetric Sky."""
     mock_config_entry.add_to_hass(hass)
+    # The entry belongs to the SKY the reauthentication talks to.
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id="SA52100000123TBNC"
+    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -1297,3 +1301,34 @@ async def test_press_button_existing_device(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_lametric_local_auth")
+async def test_reauth_press_button_other_device(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthenticating against another device is refused.
+
+    The host can be changed when pressing the button, so it could point at
+    another LaMetric device than the one set up.
+    """
+    mock_config_entry.add_to_hass(hass)
+    mock_lametric.device.return_value.serial_number = "SA000000000000000000"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "press_button"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.42"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_API_KEY] == "mock-from-fixture"
+    mock_lametric.notify.assert_not_called()
