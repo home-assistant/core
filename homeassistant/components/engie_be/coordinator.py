@@ -21,7 +21,7 @@ from aioengiebelgium import (
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -279,38 +279,30 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             update_interval=EPEX_SCAN_INTERVAL,
         )
         self.client = client
-        self.listener_unsub: Callable[[], None] | None = None
-
-    @staticmethod
-    def _next_quarter_boundary(now: datetime) -> datetime:
-        """Return the first UTC quarter-hour boundary after the given moment."""
-        next_run = now + timedelta(minutes=15)
-        return next_run.replace(
-            minute=next_run.minute // 15 * 15, second=0, microsecond=0
-        )
+        self._listener_unsub: Callable[[], None] | None = None
 
     @callback
-    def _async_update_listeners(self, now: datetime) -> None:
+    def _async_quarter_hour_tick(self, _now: datetime) -> None:
         """Notify the entities on every quarter-hour boundary."""
-        self.listener_unsub = async_track_point_in_utc_time(
-            self.hass,
-            self._async_update_listeners,
-            self._next_quarter_boundary(now),
-        )
         self.async_update_listeners()
 
     @override
     async def async_shutdown(self) -> None:
         """Cancel the quarter-hour listener timer and shut down."""
-        if self.listener_unsub is not None:
-            self.listener_unsub()
-            self.listener_unsub = None
+        if self._listener_unsub is not None:
+            self._listener_unsub()
+            self._listener_unsub = None
         await super().async_shutdown()
 
     @override
     async def _async_setup(self) -> None:
-        """Arm the quarter-hour listener loop."""
-        self._async_update_listeners(dt_util.utcnow())
+        """Start the quarter-hour listener timer."""
+        self._listener_unsub = async_track_utc_time_change(
+            self.hass,
+            self._async_quarter_hour_tick,
+            minute=(0, 15, 30, 45),
+            second=0,
+        )
         await super()._async_setup()
 
     @override
