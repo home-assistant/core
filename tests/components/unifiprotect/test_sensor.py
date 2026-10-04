@@ -13,8 +13,11 @@ from uiprotect.data import (
     Event,
     EventType,
     Light,
+    Liveview,
     ModelType,
+    Permission,
     Sensor,
+    Viewer,
     WSAction,
 )
 from uiprotect.data.nvr import EventMetadata
@@ -32,6 +35,7 @@ from homeassistant.components.unifiprotect.sensor import (
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
+    VIEWER_SENSORS,
     ProtectSensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -61,6 +65,7 @@ from .utils import (
     reset_objects,
     setup_public_light,
     setup_public_sensor,
+    setup_public_viewer,
     time_changed,
 )
 
@@ -752,6 +757,61 @@ async def test_sensor_precision(
     )
 
     assert hass.states.get(entity_id).state == "17.49"
+
+
+@pytest.mark.parametrize(
+    "liveview_id",
+    [
+        pytest.param(None, id="no_liveview"),
+        pytest.param("personal_liveview", id="personal_liveview"),
+    ],
+)
+async def test_sensor_viewer_liveview_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+    liveview_id: str | None,
+) -> None:
+    """The read-only liveview sensor reads the public viewer's liveview."""
+
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "viewer:read:*"})
+    ]
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, viewer, VIEWER_SENSORS[0]
+    )
+    assert hass.states.get(entity_id).state == liveview.name
+
+    public = ufp.api.public_bootstrap.viewers[viewer.id]
+    public.liveview_id = liveview_id
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_sensor_viewer_liveview_not_for_writers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
+) -> None:
+    """A user who can write gets the liveview select, not the read-only sensor."""
+
+    setup_public_viewer(ufp, [liveview])
+    await init_entry(hass, ufp, [viewer])
+
+    unique_id, _ = await ids_from_device_description(
+        hass, Platform.SENSOR, viewer, VIEWER_SENSORS[0]
+    )
+    assert (
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id) is None
+    )
 
 
 async def test_sensor_light_last_motion_public(

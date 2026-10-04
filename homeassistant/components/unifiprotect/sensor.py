@@ -573,7 +573,7 @@ VIEWER_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="viewer",
         translation_key="liveview",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="liveview.name",
+        ufp_public_value="liveview.name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )

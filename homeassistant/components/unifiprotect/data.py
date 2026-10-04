@@ -21,6 +21,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    PublicStoreChange,
     Relay,
     WSAction,
     WSSubscriptionMessage,
@@ -306,6 +307,7 @@ class ProtectData:
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_public_store_changes(self._async_public_store_changed),
         ]
         if api.is_public_only:
             # No private session: the private websocket and the private poll
@@ -748,14 +750,6 @@ class ProtectData:
                 self._async_signal_device_update(sensor)
             return
 
-        if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
-            # alert user viewport needs restart so voice clients can get new options
-            _LOGGER.warning(
-                "Liveviews updated. Restart Home Assistant to update Viewport select"
-                " options"
-            )
-            return
-
         if message.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
             self._async_add_device(new_obj)
             return
@@ -787,6 +781,14 @@ class ProtectData:
             name=f"{DOMAIN} {self._entry.title} refresh",
             eager_start=True,
         )
+
+    @callback
+    def _async_public_store_changed(self, change: PublicStoreChange) -> None:
+        """Re-read the viewports when the public liveviews change."""
+        if change.store != "liveviews" or not self.api.has_public_bootstrap:
+            return
+        for viewer in self.api.public_bootstrap.viewers.values():
+            self._async_signal_public_update(viewer.mac, None)
 
     @callback
     def async_subscribe(

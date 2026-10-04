@@ -23,6 +23,7 @@ from uiprotect.data import (
     ModelType,
     NvrArmMode,
     NvrArmModeStatus,
+    PublicStoreChange,
     Sensor,
     SmartDetectObjectType,
     StateType,
@@ -278,6 +279,14 @@ def mock_entry(
         ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
         ufp_client.subscribe_events_websocket_state = subscribe_events_websocket_state
+
+        def subscribe_public_store_changes(
+            store_callback: Callable[[PublicStoreChange], None],
+        ) -> Any:
+            ufp.public_store_subscription = store_callback
+            return Mock()
+
+        ufp_client.subscribe_public_store_changes = subscribe_public_store_changes
 
         async def update_public() -> Any:
             # Mirror the library prime: build each camera's public model from the
@@ -653,6 +662,16 @@ def mock_ufp_public_only(
     ufp_public_only_client.subscribe_events = subscribe_events
     ufp_public_only_client.subscribe_events_websocket_state = (
         subscribe_events_websocket_state
+    )
+
+    def subscribe_public_store_changes(
+        store_callback: Callable[[PublicStoreChange], None],
+    ) -> Any:
+        ufp.public_store_subscription = store_callback
+        return Mock()
+
+    ufp_public_only_client.subscribe_public_store_changes = (
+        subscribe_public_store_changes
     )
     return ufp
 

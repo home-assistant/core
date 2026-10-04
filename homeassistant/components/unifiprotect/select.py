@@ -133,7 +133,8 @@ class ProtectSelectEntityDescription(
 
 def _get_viewer_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     return [
-        {"id": item.id, "name": item.name} for item in api.bootstrap.liveviews.values()
+        {"id": item.id, "name": item.name}
+        for item in api.public_bootstrap.liveviews.values()
     ]
 
 
@@ -163,10 +164,6 @@ def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     )
 
     return options
-
-
-def _get_viewer_current(obj: Viewer) -> str:
-    return obj.liveview_id
 
 
 def _get_doorbell_current(obj: Camera) -> str | None:
@@ -204,12 +201,6 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
         await obj.set_lcd_message_public(None)
     else:
         await obj.set_lcd_message_public(DoorbellMessageType(message), reset_at=None)
-
-
-async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
-    """Set the liveview for a viewer."""
-    liveview = obj.api.bootstrap.liveviews[liveview_id]
-    await obj.set_liveview(liveview)
 
 
 async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
@@ -346,8 +337,8 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         key="viewer",
         translation_key="liveview",
         ufp_options_fn=_get_viewer_options,
-        ufp_value_fn=_get_viewer_current,
-        ufp_set_method_fn=_set_liveview,
+        ufp_public_value="liveview_id",
+        ufp_set_method="set_liveview",
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -451,12 +442,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         entity_description = self.entity_description
-        # entities with categories are not exposed for voice
-        # and safe to update dynamically
-        if (
-            entity_description.entity_category is not None
-            and entity_description.ufp_options_fn is not None
-        ):
+        if entity_description.ufp_options_fn is not None:
             _LOGGER.debug("Updating dynamic select options for %s", self.entity_id)
             self._async_set_options(self.data, entity_description)
         if (
