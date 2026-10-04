@@ -1927,6 +1927,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
+/homeassistant/components/timer_list/ @home-assistant/core @synesthesiam
+/tests/components/timer_list/ @home-assistant/core @synesthesiam
 /homeassistant/components/tmb/ @alemuro
 /homeassistant/components/todo/ @home-assistant/core
 /tests/components/todo/ @home-assistant/core
