@@ -24,6 +24,14 @@ BASE_CONFIG = [
 
 EMPTY_CONFIG = []
 
+PKCE_CODE_VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+PKCE_CODE_CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+PKCE_AUTHORIZATION_REQUEST = {
+    "response_type": "code",
+    "code_challenge": PKCE_CODE_CHALLENGE,
+    "code_challenge_method": "S256",
+}
+
 
 async def async_setup_auth(
     hass: HomeAssistant,

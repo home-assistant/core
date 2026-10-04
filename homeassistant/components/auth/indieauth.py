@@ -1,10 +1,12 @@
 """Helpers to resolve client ID/secret."""
 
+import base64
 from html.parser import HTMLParser
 from http import HTTPStatus
 from ipaddress import ip_address
 import json
 import logging
+import re
 from typing import override
 from urllib.parse import ParseResult, urljoin, urlparse
 
@@ -18,6 +20,27 @@ _LOGGER = logging.getLogger(__name__)
 
 # We limit reads of a client_id page to the first 10kB.
 MAX_FETCH_BYTES = 10240
+
+CODE_CHALLENGE_METHOD_S256 = "S256"
+PKCE_CODE_VERIFIER_PATTERN = re.compile(r"[A-Za-z0-9\-._~]{43,128}")
+PKCE_S256_CODE_CHALLENGE_PATTERN = re.compile(r"[A-Za-z0-9_-]{43}")
+
+
+def is_valid_pkce_request(
+    code_challenge: str | None,
+    code_challenge_method: str | None,
+) -> bool:
+    """Validate optional PKCE parameters while allowing legacy authorization."""
+    if code_challenge is None:
+        return code_challenge_method is None
+    if (
+        code_challenge_method != CODE_CHALLENGE_METHOD_S256
+        or PKCE_S256_CODE_CHALLENGE_PATTERN.fullmatch(code_challenge) is None
+    ):
+        return False
+
+    decoded = base64.urlsafe_b64decode(f"{code_challenge}=")
+    return base64.urlsafe_b64encode(decoded).decode().rstrip("=") == code_challenge
 
 
 async def verify_redirect_uri(

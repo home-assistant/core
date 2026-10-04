@@ -356,9 +356,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 ),
                 probatio.Required("redirect_uri"): str,
                 # S256 challenges are always 43 unpadded base64url characters.
-                probatio.Optional("code_challenge"): probatio.Match(
-                    r"^[A-Za-z0-9_-]{43}\Z"
-                ),
+                probatio.Optional("code_challenge"): str,
+                probatio.Optional("response_type"): "code",
+                probatio.Optional("state"): str,
                 probatio.Optional("code_challenge_method"): str,
                 probatio.Optional(
                     "type", default="authorize"
@@ -376,17 +376,10 @@ class LoginFlowIndexView(LoginFlowBaseView):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         code_challenge = data.get("code_challenge")
-        code_challenge_method = data.get("code_challenge_method")
-        if code_challenge_method is not None and not code_challenge:
-            return self.json_message(
-                "code_challenge required when code_challenge_method is provided",
-                HTTPStatus.BAD_REQUEST,
-            )
-        # RFC 7636 4.3: the method defaults to "plain", which is not supported.
-        if code_challenge is not None and code_challenge_method != "S256":
-            return self.json_message(
-                "Transform algorithm not supported", HTTPStatus.BAD_REQUEST
-            )
+        if not indieauth.is_valid_pkce_request(
+            code_challenge, data.get("code_challenge_method")
+        ):
+            return self.json_message("Invalid PKCE parameters", HTTPStatus.BAD_REQUEST)
 
         handler: tuple[str, str] = tuple(data["handler"])
 
@@ -394,9 +387,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
             ip_address=ip_address(request.remote),  # type: ignore[arg-type]
             redirect_uri=redirect_uri,
         )
-        if code_challenge and code_challenge_method:
+        if code_challenge is not None:
             flow_context["code_challenge"] = code_challenge
-            flow_context["code_challenge_method"] = code_challenge_method
+            flow_context["code_challenge_method"] = data["code_challenge_method"]
 
         try:
             result = await self._flow_mgr.async_init(
