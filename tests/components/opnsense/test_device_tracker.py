@@ -8,7 +8,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker
-from homeassistant.components.opnsense import OPNsenseRuntimeData
 from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -116,10 +115,7 @@ async def test_device_tracker_with_interfaces_filter(
             "verify_ssl": False,
             "tracker_interfaces": ["WAN"],  # Filter to only WAN interface
         },
-    )
-    mock_config_entry.runtime_data = OPNsenseRuntimeData(
-        client=mock_opnsense_client.return_value,
-        tracker_interfaces=["WAN"],
+        unique_id="mocked_unique_id",
     )
     mock_config_entry.add_to_hass(hass)
 

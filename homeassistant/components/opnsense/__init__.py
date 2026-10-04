@@ -17,11 +17,17 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACES,
+    DOMAIN,
+    get_firmware_privilege_issue_id,
+)
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -41,7 +47,7 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.UPDATE]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -79,8 +85,12 @@ async def async_setup_entry(
         opts={"verify_ssl": config_entry.data[CONF_VERIFY_SSL]},
     )
     tracker_interfaces = config_entry.data.get(CONF_TRACKER_INTERFACES, [])
+    firmware_privilege_missing = False
     try:
-        await client.validate()
+        try:
+            await client.validate()
+        except OPNsensePrivilegeMissing:
+            firmware_privilege_missing = True
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
     except OPNsenseUnknownFirmware as err:
@@ -151,9 +161,11 @@ async def async_setup_entry(
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
         tracker_interfaces=tracker_interfaces,
+        firmware_privilege_missing=firmware_privilege_missing,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 
@@ -161,4 +173,12 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: OPNsenseConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
+
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        get_firmware_privilege_issue_id(config_entry.entry_id),
+    )
+    return True
