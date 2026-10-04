@@ -60,6 +60,7 @@ class HpPrinterSensorEntityDescription(SensorEntityDescription):
     """Describes an HP Printer sensor entity."""
 
     value_fn: Callable[[HpPrinterData], StateType]
+    always_create: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,6 +76,8 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=list(DEVICE_STATUSES.values()),
+        # Unknown statuses are reported as None, which must not hide the sensor.
+        always_create=True,
         value_fn=_device_status,
     ),
     HpPrinterSensorEntityDescription(
@@ -244,7 +247,7 @@ async def async_setup_entry(
         current_sensors = {
             description.key
             for description in SENSORS
-            if description.value_fn(data) is not None
+            if description.always_create or description.value_fn(data) is not None
         } | {
             f"{consumable.consumable_id}_{description.key}"
             for consumable in data.consumables

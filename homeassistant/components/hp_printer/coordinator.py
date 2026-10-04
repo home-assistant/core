@@ -50,13 +50,12 @@ class HpPrinterDataUpdateCoordinator(DataUpdateCoordinator[HpPrinterData]):
             )
         # The host may now point to another printer, e.g. after a DHCP change.
         if (
-            data.device is not None
-            and data.device.serial_number is not None
-            and data.device.serial_number != self.config_entry.unique_id
+            data.device is None
+            or data.device.serial_number != self.config_entry.unique_id
         ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="serial_number_mismatch",
+                translation_key="unverified_printer",
                 translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             )
         return data

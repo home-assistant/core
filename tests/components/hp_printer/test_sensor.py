@@ -80,16 +80,11 @@ async def test_status_not_reported(
     mock_hp_printer: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_data: HpPrinterData,
-    freezer: FrozenDateTimeFactory,
     status: HpPrinterStatus | None,
 ) -> None:
-    """Test the status is unknown when the printer reports no known status."""
-    await setup_integration(hass, mock_config_entry)
-
+    """Test the status sensor is created as unknown without a known status."""
     mock_hp_printer.update.return_value = replace(mock_data, status=status)
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(STATUS))
     assert state.state == STATE_UNKNOWN

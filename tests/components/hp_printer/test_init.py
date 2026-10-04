@@ -32,6 +32,11 @@ UNUSABLE_DATA = [
         ),
         id="other_printer",
     ),
+    pytest.param(lambda data: replace(data, device=None), id="no_device"),
+    pytest.param(
+        lambda data: replace(data, device=replace(data.device, serial_number=None)),
+        id="no_serial_number",
+    ),
 ]
 
 

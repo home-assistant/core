@@ -53,6 +53,59 @@
     'state': '80.0',
   })
 # ---
+# name: test_all_entities[sensor.hp_officejet_pro_9020_series_black_pages_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hp_officejet_pro_9020_series_black_pages_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Black pages remaining',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Black pages remaining',
+    'platform': 'hp_printer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'black_pages_remaining',
+    'unique_id': 'TH12A3B4CD_K_pages_remaining',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hp_officejet_pro_9020_series_black_pages_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HP OfficeJet Pro 9020 series Black pages remaining',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hp_officejet_pro_9020_series_black_pages_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '550',
+  })
+# ---
 # name: test_all_entities[sensor.hp_officejet_pro_9020_series_copied_pages-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

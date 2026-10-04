@@ -50,7 +50,11 @@ def mock_device() -> HpPrinterDevice:
 
 
 def _ink(
-    consumable_id: str, marker_color: str, station: str, level: float
+    consumable_id: str,
+    marker_color: str,
+    station: str,
+    level: float,
+    pages_remaining: int | None = None,
 ) -> HpConsumable:
     """Return an ink cartridge as reported by an HP OfficeJet Pro 9022e."""
     return HpConsumable(
@@ -61,12 +65,17 @@ def _ink(
         brand="HP",
         station=station,
         percentage_level_remaining=level,
+        estimated_pages_remaining=pages_remaining,
     )
 
 
 @pytest.fixture
 def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
-    """Return data captured from a real HP OfficeJet Pro 9022e."""
+    """Return data captured from a real HP OfficeJet Pro 9022e.
+
+    That printer reports no pages-remaining estimates, so the black cartridge
+    gets the one an HP Color LaserJet M255dw reports for its black toner.
+    """
     return HpPrinterData(
         online=True,
         device=mock_device,
@@ -80,7 +89,7 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
                 brand="HP",
                 station="0",
             ),
-            _ink("K", "Black", "4", 80.0),
+            _ink("K", "Black", "4", 80.0, pages_remaining=550),
             _ink("M", "Magenta", "2", 40.0),
             _ink("Y", "Yellow", "3", 40.0),
         ],
