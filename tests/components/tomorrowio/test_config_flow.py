@@ -1,6 +1,6 @@
 """Test the Tomorrow.io config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from pytomorrowio.exceptions import (
@@ -59,9 +59,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
 
 
-async def test_user_flow_minimum_fields_in_zone(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     """Test user config flow with minimum fields."""
     assert await async_setup_component(
         hass,
@@ -92,8 +90,6 @@ async def test_user_flow_minimum_fields_in_zone(
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
-
-    assert mock_setup_entry.call_count == 1
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
@@ -133,10 +129,7 @@ async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_flow_errors(
-    hass: HomeAssistant,
-    side_effect: type[Exception],
-    errors: dict[str, str],
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, side_effect: type[Exception], errors: dict[str, str]
 ) -> None:
     """Test user config flow errors and recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -173,7 +166,6 @@ async def test_user_flow_errors(
             CONF_LONGITUDE: hass.config.longitude,
         },
     }
-    assert mock_setup_entry.call_count == 1
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

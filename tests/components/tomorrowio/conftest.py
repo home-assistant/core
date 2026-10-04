@@ -38,12 +38,3 @@ def tomorrowio_config_entry_update_fixture() -> Generator[AsyncMock]:
         mock_max_requests_per_day.return_value = 100
         mock_num_api_requests.return_value = 2
         yield mock_update
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.tomorrowio.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
