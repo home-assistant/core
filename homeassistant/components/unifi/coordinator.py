@@ -3,10 +3,11 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
-from aiounifi import EndpointNotFound
+from aiounifi import EndpointNotFound, LoginRequired, Unauthorized
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -57,6 +58,8 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         """Update data from the API handler."""
         try:
             await self._handler.update()
+        except (Unauthorized, LoginRequired) as err:
+            raise ConfigEntryAuthFailed(str(err)) from err
         except EndpointNotFound as err:
             if (
                 self._disable_polling_on_endpoint_not_found
