@@ -338,6 +338,10 @@ async def test_washing_machine_switch_services(
         [("set_attribute", switch, True)],
         device,
     )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "on"
+
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
@@ -345,6 +349,9 @@ async def test_washing_machine_switch_services(
         [("set_attribute", switch, False)],
         device,
     )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == "off"
 
 
 async def test_a1_pump_services(
