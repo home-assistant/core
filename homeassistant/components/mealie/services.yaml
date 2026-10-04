@@ -10,6 +10,18 @@ delete_mealplan:
       selector:
         text:
 
+get_ingredient:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    ingredient:
+      required: true
+      selector:
+        text:
+
 get_mealplan:
   fields:
     config_entry_id:
