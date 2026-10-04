@@ -7,9 +7,9 @@ import probatio
 import prowlpy
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 
-from .const import DOMAIN
+from .const import CONF_LEGACY_SERVICE_NAME, DOMAIN
 from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +49,29 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input,
             ),
             errors=errors,
+        )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import a YAML notify platform configuration."""
+        api_key = import_data[CONF_API_KEY]
+        legacy_data = {CONF_LEGACY_SERVICE_NAME: import_data.get(CONF_NAME)}
+
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_API_KEY] != api_key:
+                continue
+            if CONF_LEGACY_SERVICE_NAME in entry.data:
+                return self.async_abort(reason="already_configured")
+            # Keep the legacy notify service for the YAML config on the existing entry
+            return self.async_update_reload_and_abort(
+                entry, data_updates=legacy_data, reason="already_configured"
+            )
+
+        if errors := await self._validate_api_key(api_key):
+            return self.async_abort(reason=errors["base"])
+
+        return self.async_create_entry(
+            title=import_data.get(CONF_NAME) or "Prowl",
+            data={CONF_API_KEY: api_key, **legacy_data},
         )
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
