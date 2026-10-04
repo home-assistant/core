@@ -97,6 +97,14 @@
           "auto": "[%key:common::state::auto%]",
           "manual": "[%key:common::state::manual%]"
         }
+      },
+      "screensaver_mode": {
+        "name": "Screensaver mode",
+        "state": {
+          "screen_off": "Screen off",
+          "time_based": "Time-based",
+          "when_dark": "When dark"
+        }
       }
     },
     "sensor": {
@@ -127,6 +135,9 @@
     },
     "notification_failed": {
       "message": "Could not send the notification to the LaMetric device: {error}"
+    },
+    "screensaver_times_required": {
+      "message": "Set the screensaver start and end time first, before switching to the time-based screensaver."
     },
     "unknown_sound": {
       "message": "Unknown sound: {sound}"
