@@ -1,16 +1,19 @@
 """Test Wallbox Init Component."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.wallbox.const import CHARGER_JWT_TTL
+from homeassistant.components.wallbox.coordinator import check_token_validity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .conftest import http_403_error, http_429_error, setup_integration
 from .const import (
@@ -19,6 +22,23 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.mark.parametrize(
+    ("remaining_seconds", "valid"),
+    [(-1, False), (0, False), (1, True)],
+)
+def test_token_validity(remaining_seconds: int, valid: bool) -> None:
+    """Check the token validity boundary after accounting for clock drift."""
+    now = 1_700_000_000
+    drift = 30
+    with patch(
+        "homeassistant.components.wallbox.coordinator.time.time", return_value=now
+    ):
+        assert (
+            check_token_validity((now + drift + remaining_seconds) * 1000, drift)
+            is valid
+        )
 
 
 async def test_wallbox_setup_unload_entry(
@@ -59,9 +79,7 @@ async def test_wallbox_refresh_failed_error_auth(
     assert entry.state is ConfigEntryState.LOADED
 
     data = dict(entry.data)
-    data[CHARGER_JWT_TTL] = (
-        datetime.timestamp(datetime.now() - timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
-    )
+    data[CHARGER_JWT_TTL] = (time.time() - 3600) * 1000
     hass.config_entries.async_update_entry(entry, data=data)
 
     with (
@@ -119,7 +137,7 @@ async def test_wallbox_refresh_failed_too_many_requests(
     assert entry.state is ConfigEntryState.LOADED
 
     with patch.object(mock_wallbox, "getChargerStatus", side_effect=http_429_error):
-        async_fire_time_changed(hass, datetime.now() + timedelta(seconds=120), True)  # pylint: disable=home-assistant-enforce-naive-now
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120), True)
         await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -135,7 +153,7 @@ async def test_wallbox_refresh_failed_connection_error(
     assert entry.state is ConfigEntryState.LOADED
 
     with patch.object(mock_wallbox, "pauseChargingSession", side_effect=http_403_error):
-        async_fire_time_changed(hass, datetime.now() + timedelta(seconds=120), True)  # pylint: disable=home-assistant-enforce-naive-now
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120), True)
         await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
