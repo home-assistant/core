@@ -30,6 +30,10 @@ class TeslemetryData:
     scopes: list[Scope]
     stream: TeslemetryStream | None
     metadata_coordinator: TeslemetryMetadataCoordinator
+    # Counts credits events and keeps the newest state, so a command can tell
+    # whether credits were reported available while it was in flight.
+    credits_generation: int = 0
+    credits_available: bool = False
 
 
 @dataclass

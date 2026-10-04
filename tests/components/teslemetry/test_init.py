@@ -51,6 +51,7 @@ from homeassistant.components.teslemetry.const import (
     CLIENT_ID,
     CONF_SITE_ID,
     CONF_VIN,
+    CREDITS_URL,
     DOMAIN,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
@@ -282,6 +283,134 @@ async def test_vehicle_asleep_polling(
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None
     assert state.state == STATE_OFF
+
+
+def _create_insufficient_credits_issue(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> str:
+    """Create the repair a rejected command raises and return its issue id."""
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"account": entry.title, "credits_url": CREDITS_URL},
+        learn_more_url=CREDITS_URL,
+    )
+    return issue_id
+
+
+@pytest.mark.parametrize(
+    ("credits", "resolved"),
+    [
+        pytest.param(
+            {"type": "topup", "cost": -100, "name": "topup", "balance": 100},
+            True,
+            id="balance_topup",
+        ),
+        pytest.param(
+            {
+                "type": "command",
+                "cost": 1,
+                "name": "command",
+                "quota": {
+                    "used": 5,
+                    "fraction": 0.5,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
+                },
+                "balance": 0,
+            },
+            True,
+            id="quota_available",
+        ),
+        pytest.param(
+            {
+                "type": "command",
+                "cost": 1,
+                "name": "command",
+                "quota": {
+                    "used": 10,
+                    "fraction": 1.0,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
+                },
+                "balance": 0,
+            },
+            False,
+            id="still_insufficient",
+        ),
+        pytest.param(
+            {"type": "command", "cost": 1, "name": "command", "balance": 25},
+            False,
+            id="no_quota_low_balance",
+        ),
+    ],
+)
+async def test_insufficient_credits_resolved_by_stream(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+    credits: dict[str, object],
+    resolved: bool,
+) -> None:
+    """Test the insufficient credits issue is resolved by a credits event."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = _create_insufficient_credits_issue(hass, entry)
+
+    mock_add_listener.send(
+        {"credits": credits, "createdAt": "2024-10-04T10:45:17.537Z"}
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue is None) is resolved
+
+
+async def test_insufficient_credits_survives_reload_and_still_clears(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Test the repair survives a reload and a credits event still clears it."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = _create_insufficient_credits_issue(hass, entry)
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    mock_add_listener.send(
+        {
+            "credits": {"type": "topup", "cost": -100, "name": "topup", "balance": 100},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_insufficient_credits_cleared_on_removal(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the insufficient credits issue is cleared when the entry is removed."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = _create_insufficient_credits_issue(hass, entry)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_no_live_status(

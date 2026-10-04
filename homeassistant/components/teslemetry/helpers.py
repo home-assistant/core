@@ -2,22 +2,54 @@
 
 import asyncio
 from collections.abc import Awaitable
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import InsufficientCredits, TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import EnergySite
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
+from teslemetry_stream.const import CreditsEvent
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+from .const import (
+    BLE_PARENT_KEY,
+    BLE_PARENT_LOCK_KEY,
+    CREDITS_URL,
+    DOMAIN,
+    LOGGER,
+    VEHICLE_KEY_FILE,
+)
+
+if TYPE_CHECKING:
+    from . import TeslemetryConfigEntry
+
+INSUFFICIENT_CREDITS_ISSUE = "insufficient_credits"
+
+# Margins a credits event must clear before the insufficient credits issue is
+# removed, so a nearly exhausted quota or balance keeps the repair up.
+CREDITS_QUOTA_FRACTION_THRESHOLD = 0.95
+CREDITS_BALANCE_THRESHOLD = 25
+
+
+def insufficient_credits_issue_id(entry: TeslemetryConfigEntry) -> str:
+    """Return the per-config-entry insufficient credits issue id.
+
+    The issue is scoped to the config entry so that one account running out of
+    credits does not clear (or get cleared by) another account's repair.
+    """
+    return f"{INSUFFICIENT_CREDITS_ISSUE}_{entry.entry_id}"
 
 
 class PowerwallKeyRejectedError(Exception):
@@ -94,10 +126,49 @@ def flatten(
     return result
 
 
-async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
+async def handle_command(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    command: Awaitable[dict[str, Any]],
+) -> dict[str, Any]:
     """Handle a command."""
+    # An unload while the command is in flight deletes entry.runtime_data.
+    runtime_data = entry.runtime_data
+    credits_generation = runtime_data.credits_generation
     try:
         result = await command
+    except InsufficientCredits as e:
+        # Credits reported available while this command was in flight make the
+        # rejection stale.
+        stale = (
+            runtime_data.credits_generation != credits_generation
+            and runtime_data.credits_available
+        )
+        # A response settling after an unload or reload was never checked
+        # against the credit events of the load now running, so it may be stale.
+        if (
+            not stale
+            and entry.state is ConfigEntryState.LOADED
+            and entry.runtime_data is runtime_data
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                insufficient_credits_issue_id(entry),
+                is_fixable=False,
+                is_persistent=True,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=INSUFFICIENT_CREDITS_ISSUE,
+                translation_placeholders={
+                    "account": entry.title,
+                    "credits_url": CREDITS_URL,
+                },
+                learn_more_url=CREDITS_URL,
+            )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=INSUFFICIENT_CREDITS_ISSUE,
+        ) from e
     except TeslaFleetError as e:
         message = e.message
         if isinstance(e.data, dict):
@@ -119,9 +190,13 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
-async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
+async def handle_vehicle_command(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    command: Awaitable[dict[str, Any]],
+) -> Any:
     """Handle a vehicle command."""
-    result = await handle_command(command)
+    result = await handle_command(hass, entry, command)
     if (response := result.get("response")) is None:
         if error := result.get("error"):
             # No response with error
@@ -151,6 +226,22 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_handle_credits(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: CreditsEvent
+) -> None:
+    """Record the latest credit state and clear the issue when credits return."""
+    # An account without a quota sends none, so the event carries no fraction.
+    fraction = credits.quota.get("fraction")
+    available = credits.balance > CREDITS_BALANCE_THRESHOLD or (
+        fraction is not None and fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
+    )
+    entry.runtime_data.credits_generation += 1
+    entry.runtime_data.credits_available = available
+    if available:
+        ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
 
 
 @callback
