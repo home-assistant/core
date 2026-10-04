@@ -21,7 +21,11 @@ from homeassistant.components.sofar.const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -57,6 +61,14 @@ def _patch_temporary_unit(connection: MockModbusConnection) -> _patch:
     return patch(
         "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
         side_effect=_get_temporary_unit,
+    )
+
+
+def _patch_unit(connection: MockModbusConnection) -> _patch:
+    """Stand in for async_get_unit, handing out a unit on connection."""
+    return patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
     )
 
 
@@ -417,3 +429,113 @@ def _serial_entry() -> MockConfigEntry:
         title=MOCK_MODEL,
         minor_version=2,
     )
+
+
+@pytest.mark.parametrize(
+    ("setup_error", "setup_state"),
+    [
+        pytest.param(None, ConfigEntryState.LOADED, id="loaded"),
+        pytest.param(
+            ModbusTimeoutError("stuck"),
+            ConfigEntryState.SETUP_RETRY,
+            id="setup_retry",
+        ),
+    ],
+)
+async def test_reconfigure_new_line_settings(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    setup_error: Exception | None,
+    setup_state: ConfigEntryState,
+) -> None:
+    """Test new line settings take the entry off the bus before probing."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+    states: list[ConfigEntryState] = []
+
+    @asynccontextmanager
+    async def _probe_watching_the_entry(
+        hass: HomeAssistant,
+        params: ModbusSerialParams | ModbusTcpParams,
+        unit_id: int,
+    ) -> AsyncIterator[MockModbusUnit]:
+        states.append(entry.state)
+        yield mock_connection.for_unit(unit_id)
+
+    mock_connection.for_unit(1).fail_requests(setup_error)
+    with _patch_unit(mock_connection):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert entry.state is setup_state
+        mock_connection.for_unit(1).fail_requests(None)
+
+        result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+        with patch(
+            "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
+            side_effect=_probe_watching_the_entry,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+            )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert states == [ConfigEntryState.NOT_LOADED]
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_BAUDRATE] == 19200
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_new_line_settings_cannot_connect(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test a failed probe puts the entry back on the bus it was taken off."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+
+    with _patch_unit(mock_connection):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("stuck"))
+
+        result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+        with _patch_temporary_unit(mock_connection):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+            )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    # Setting the entry back up hits the same dead device, so it
+    # lands in retry rather than staying unloaded.
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reconfigure_new_line_settings_wrong_device(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test a different inverter on the new settings restores the entry."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+
+    other_conn = MockModbusConnection()
+    seed_pv_inverter(other_conn.for_unit(1), serial=_UNMODELED_SERIAL)
+
+    with _patch_unit(mock_connection):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+        with _patch_temporary_unit(other_conn):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+            )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.state is ConfigEntryState.LOADED
