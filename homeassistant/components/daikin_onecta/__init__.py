@@ -24,12 +24,16 @@ from .daikin_api import DaikinApi
 
 _LOGGER = logging.getLogger(__name__)
 
+type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
+
 PLATFORMS = [
     Platform.CLIMATE,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
+) -> bool:
     """Establish connection with Daikin."""
     try:
         implementation = (
@@ -66,14 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
+) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading integration")
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def _async_update_listener(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
 ) -> None:
     """Handle options update."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data

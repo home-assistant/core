@@ -8,7 +8,7 @@ import jwt
 import probatio
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.selector import (
@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
     TimeSelector,
 )
 
+from . import DaikinOnectaConfigEntry
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ OAUTH_SCOPES = [
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options handler for Daikin Onecta ."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: DaikinOnectaConfigEntry) -> None:
         """Initialize Daikin Onecta options flow."""
         self.options = dict(config_entry.options)
 
@@ -149,6 +150,8 @@ class FlowHandler(
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: DaikinOnectaConfigEntry,
+    ) -> OptionsFlowHandler:
         """Options callback for Daikin Onecta."""
         return OptionsFlowHandler(config_entry)
