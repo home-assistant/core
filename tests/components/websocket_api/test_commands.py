@@ -18,7 +18,7 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
-from homeassistant.components.websocket_api import DOMAIN, const
+from homeassistant.components.websocket_api import DOMAIN, const, messages
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -29,10 +29,12 @@ from homeassistant.components.websocket_api.automation import (
     _get_automation_component_lookup_table,
 )
 from homeassistant.components.websocket_api.commands import (
+    _MAX_BATCHED_STATE_CHANGES,
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
     ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
     ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
 )
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -40,7 +42,14 @@ from homeassistant.const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -3940,6 +3949,410 @@ async def test_subscribe_entities_chained_state_change(
     }
 
     await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_batches_changes_from_one_iteration(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Entities changed without awaiting in between arrive in a single message."""
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    # An integration refreshing a device sets all of its entities without awaiting
+    # between them, so the changes land in one iteration of the event loop.
+    hass.states.async_set("light.one", "on")
+    hass.states.async_set("light.two", "on")
+    hass.states.async_set("light.three", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.one": {"a": {}, "c": ANY, "lc": ANY, "s": "on"},
+            "light.two": {"a": {}, "c": ANY, "lc": ANY, "s": "on"},
+            "light.three": {"a": {}, "c": ANY, "lc": ANY, "s": "on"},
+        }
+    }
+
+    # Anything still queued would arrive ahead of the pong.
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_sends_two_updates_for_one_entity_separately(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """An entity changed twice is sent twice, in the order it changed.
+
+    A diff is relative to the state before it, and the client applies additions,
+    removals and changes in a fixed order that need not match the order they happened
+    in, so two updates for one entity must not be collapsed into one message.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.one", "on")
+    hass.states.async_set("light.one", "off")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "a": {"light.one": {"a": {}, "c": ANY, "lc": ANY, "s": "on"}}
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "c": {"light.one": {"+": {"c": ANY, "lc": ANY, "s": "off"}}}
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_batches_additions_changes_and_removals(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """One message carries an addition, a change and a removal at once."""
+    hass.states.async_set("light.existing", "on")
+    hass.states.async_set("light.doomed", "on")
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert set(msg["event"]["a"]) == {"light.existing", "light.doomed"}
+
+    hass.states.async_set("light.existing", "off")
+    hass.states.async_remove("light.doomed")
+    hass.states.async_set("light.fresh", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {"light.fresh": {"a": {}, "c": ANY, "lc": ANY, "s": "on"}},
+        "c": {"light.existing": {"+": {"c": ANY, "lc": ANY, "s": "off"}}},
+        "r": ["light.doomed"],
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_batch_leaves_out_entities_the_user_cannot_see(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Collecting changes together does not carry one past the permission check."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+    assert not hass_admin_user.is_admin
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on")
+    hass.states.async_set("light.also_not_permitted", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "a": {"light.permitted": {"a": {}, "c": ANY, "lc": ANY, "s": "on"}}
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_unsubscribing_discards_a_batch_that_was_not_sent(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Unsubscribing drops changes collected but not yet sent.
+
+    The flush is scheduled on the loop, so a batch collected in the same iteration as
+    an unsubscribe would otherwise still be handed to send_message afterwards, for a
+    subscription - and possibly a connection - that has gone. Driven through the
+    registered command, so that the unsubscribe callback it installs is the one being
+    tested rather than a batch built here.
+    """
+    handlers = hass.data[DOMAIN]
+    subscribe_entities, schema = handlers["subscribe_entities"]
+    connections: list[ActiveConnection] = []
+
+    @callback
+    def capture_connection(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        """Record the connection, so its subscription can be ended directly."""
+        connections.append(connection)
+        subscribe_entities(hass, connection, msg)
+
+    handlers["subscribe_entities"] = (capture_connection, schema)
+    try:
+        await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+        msg = await websocket_client.receive_json()
+        subscription = msg["id"]
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"]
+
+        msg = await websocket_client.receive_json()
+        assert msg["event"] == {"a": {}}
+    finally:
+        handlers["subscribe_entities"] = (subscribe_entities, schema)
+
+    # Both in one iteration, which is the case the discard exists for: the flush for
+    # this change is already scheduled by the time the subscription goes away.
+    hass.states.async_set("light.one", "on")
+    connections[0].subscriptions.pop(subscription)()
+
+    await hass.async_block_till_done()
+
+    # The collected change would arrive ahead of the pong if it were still sent.
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_batch_survives_one_unserializable_change(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A change that will not serialize costs only its own update.
+
+    Unbatched, such a change became an error message for that change alone. Letting it
+    propagate out of a flush would instead lose every entity collected alongside it.
+    """
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.one", "on")
+    hass.states.async_set("light.bad", "on", {"bad": CannotSerializeMe()})
+    hass.states.async_set("light.two", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert set(msg["event"]["a"]) == {"light.one", "light.two"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "result"
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "Invalid JSON in response",
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_sends_a_change_before_the_result_that_caused_it(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A change reaches the client before the result of the command that caused it.
+
+    The flush is scheduled on the loop, so without flushing ahead of anything else
+    the connection sends, a synchronous service call would have its result queued
+    first - reversing the order sent before batching, and letting the client's command
+    resolve before the state change it caused had been applied.
+    """
+
+    @callback
+    def set_state(call: ServiceCall) -> None:
+        """Change a state synchronously, inside the service call."""
+        hass.states.async_set("light.one", "on")
+
+    hass.services.async_register("test_batch", "set_state", set_state)
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "call_service", "domain": "test_batch", "service": "set_state"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "event"
+    assert set(msg["event"]["a"]) == {"light.one"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_sends_a_change_before_an_earlier_event_subscription(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A subscription that started first does not overtake a collected change.
+
+    Subscriptions capture the connection's sender when they start, so one created
+    before this is batching at all would hold a sender that skipped the flush and
+    queue its own copy of the event ahead of the collected change - the reverse of
+    the order it was sent in before batching.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_events"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    events_subscription = msg["id"]
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    entities_subscription = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.one", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == entities_subscription, "the state change should arrive first"
+    assert set(msg["event"]["a"]) == {"light.one"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == events_subscription
+    assert msg["event"]["event_type"] == "state_changed"
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_caps_how_much_one_message_can_carry(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A batch is bounded, so a client that stops reading cannot hold unlimited state.
+
+    A connection is limited by the number of messages waiting for it, not their size,
+    so one unbounded message would weaken that limit by however many entities it
+    happened to carry.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    changes = _MAX_BATCHED_STATE_CHANGES * 2 + 1
+    for index in range(changes):
+        hass.states.async_set(f"light.bulb_{index}", "on")
+
+    seen = 0
+    messages_received = 0
+    while seen < changes:
+        msg = await websocket_client.receive_json()
+        carried = len(msg["event"].get("a", {}))
+        assert carried <= _MAX_BATCHED_STATE_CHANGES, (
+            f"one message carried {carried} changes"
+        )
+        seen += carried
+        messages_received += 1
+
+    assert seen == changes
+    assert messages_received == 3
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_serializes_once_however_large_the_batch(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A batch bigger than the fragment cache is still serialized once for everyone.
+
+    Fragments are resolved while the bus is dispatching each event, so every
+    subscription asks for the same one consecutively and only the first pays.
+    Resolving them when the batch is sent instead would make the reuse distance a
+    whole batch, and a batch larger than the cache would then be serialized again in
+    full for every connected client.
+    """
+    clients = [await hass_ws_client(hass), await hass_ws_client(hass)]
+    for client in clients:
+        await client.send_json_auto_id({"type": "subscribe_entities"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        await client.receive_json()
+
+    maxsize = messages.cached_state_diff_fragment.cache_parameters()["maxsize"]
+    entity_count = maxsize * 2
+    messages.cached_state_diff_fragment.cache_clear()
+
+    for index in range(entity_count):
+        hass.states.async_set(f"light.bulb_{index}", "on")
+    await hass.async_block_till_done()
+
+    # Once each, with every other subscription served from the cache. Resolving at
+    # send time would evict each entry before the second connection reached it, so
+    # the whole batch would be serialized again per client: 2 * entity_count misses.
+    info = messages.cached_state_diff_fragment.cache_info()
+    assert info.misses == entity_count
+    assert info.hits == entity_count * (len(clients) - 1)
+
+    for client in clients:
+        await client.close()
     await hass.async_block_till_done()
 
 
