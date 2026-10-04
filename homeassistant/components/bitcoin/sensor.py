@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from . import BitcoinConfigEntry, BitcoinData
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
@@ -142,6 +143,44 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+# Two sensors are called Trade volume and two Miners revenue, so the first one
+# created takes the plain entity ID and the second one gets a _2 suffix. Picking
+# only the second of a pair used to give it the plain ID; now that every sensor
+# is created, the first one takes it and the plain ID means the other currency.
+# (option that used to win the ID, option that wins it now, ID, where it moved)
+COLLIDING_OPTIONS = (
+    ("trade_volume_usd", "trade_volume_btc", "trade_volume", "trade_volume_2"),
+    ("miners_revenue_btc", "miners_revenue_usd", "miners_revenue", "miners_revenue_2"),
+)
+
+
+@callback
+def _async_warn_about_reused_entity_ids(
+    hass: HomeAssistant, display_options: list[str]
+) -> None:
+    """Warn when an entity ID now belongs to the other currency of a pair."""
+    for option, takes_over, entity_id, moved_to in COLLIDING_OPTIONS:
+        if option not in display_options or takes_over in display_options:
+            continue
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"reused_entity_id_{entity_id}",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="reused_entity_id",
+            translation_placeholders={
+                "entity_id": f"sensor.{entity_id}",
+                "moved_to": f"sensor.{moved_to}",
+                "option": option,
+                "takes_over": takes_over,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+
+
 @callback
 def _async_create_import_issue(
     hass: HomeAssistant, issue_id: str, translation_key: str, currency: str
@@ -150,7 +189,8 @@ def _async_create_import_issue(
     ir.async_create_issue(
         hass,
         DOMAIN,
-        f"deprecated_yaml_import_issue_{issue_id}",
+        # The currency comes straight from YAML, so keep it out of the issue ID.
+        f"deprecated_yaml_import_issue_{slugify(issue_id)}",
         breaks_in_ha_version=BREAKS_IN_HA_VERSION,
         is_fixable=False,
         issue_domain=DOMAIN,
@@ -179,17 +219,20 @@ async def async_setup_platform(
     if result["type"] is FlowResultType.ABORT:
         reason = result["reason"]
         if reason != "single_instance_allowed":
-            _async_create_import_issue(hass, reason, reason, currency)
+            _async_create_import_issue(hass, f"{reason}_{currency}", reason, currency)
             return
 
         # Only one entry is allowed, so a second block asking for another
         # currency is dropped. Say so instead of reporting a clean import.
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        if entry.data[CONF_CURRENCY] != currency:
+        # Ignored entries also abort the flow, and those carry no currency.
+        entries = hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+        if entries and entries[0].data[CONF_CURRENCY] != currency:
             _async_create_import_issue(
                 hass, f"dropped_currency_{currency}", "dropped_currency", currency
             )
             return
+
+    _async_warn_about_reused_entity_ids(hass, config[CONF_DISPLAY_OPTIONS])
 
     ir.async_create_issue(
         hass,

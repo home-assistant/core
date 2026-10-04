@@ -27,6 +27,10 @@
     "deprecated_yaml_import_issue_unknown_currency": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nWhile importing your YAML configuration, Home Assistant found that blockchain.com does not quote Bitcoin in `{currency}`. Correct the currency in your `configuration.yaml` file and restart Home Assistant to try again, or remove the `{domain}` sensor platform and set the integration up from the UI.",
       "title": "[%key:component::bitcoin::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "reused_entity_id": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour YAML configuration listed `{option}` but not `{takes_over}`, so before this update `{entity_id}` was your `{option}` sensor. Every sensor is created now, so `{entity_id}` is the `{takes_over}` one and `{option}` is `{moved_to}`. If you used `{entity_id}` in dashboards, automations, or scripts, point them at `{moved_to}`.",
+      "title": "A {integration_title} entity ID now belongs to another sensor"
     }
   }
 }
