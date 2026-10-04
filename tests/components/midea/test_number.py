@@ -21,13 +21,18 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import DummyDevice, entity_entries
+from .conftest import DummyDevice, SetDeviceAttribute, entity_entries
 from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -46,6 +51,20 @@ def _c2_device() -> DummyDevice:
     device.max_water_temp_level = 5
     device.max_seat_temp_level = 5
     return device
+
+
+def _ac_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 60,
+        },
+        capabilities={"fan_custom": True},
+    )
 
 
 def _cd_device() -> DummyDevice:
@@ -95,6 +114,7 @@ async def _assert_service_call(
 @pytest.mark.parametrize(
     "device",
     [
+        pytest.param(_ac_device(), id="ac"),
         pytest.param(_c2_device(), id="c2"),
         pytest.param(_cd_device(), id="cd"),
         pytest.param(_ed_device(), id="ed"),
@@ -276,26 +296,110 @@ async def test_number_not_created_when_attribute_missing(
     assert entity_entries(hass, config_entry) == {}
 
 
-async def test_number_not_created_for_other_device_type(
+async def test_ac_fan_speed_not_created_without_custom_capability(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
 ) -> None:
-    """Test no number entity is created for a device type without one (e.g. AC's fan_speed)."""
-    device = DummyDevice(
-        DeviceType.AC,
-        attributes={
-            ACAttributes.power: True,
-            ACAttributes.mode: 1,
-            ACAttributes.target_temperature: 22.0,
-            ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.fan_speed: 60,
-        },
-    )
+    """Test AC fan_speed is not created when custom fan speed capability is false."""
+    device = _ac_device()
+    device.capabilities = {"fan_custom": False}
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry, device)
 
     assert entity_entries(hass, config_entry) == {}
+
+
+async def test_ac_fan_speed_created_when_custom_capability_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC fan_speed is created when capability map is not yet populated."""
+    device = _ac_device()
+    device.capabilities = {}
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_fan_speed" in entity_entries(hass, config_entry)
+
+
+async def test_ac_fan_speed_number_range_and_service_call(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC fan_speed number is created for fan_custom capability and settable."""
+    device = _ac_device()
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan_speed"]
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert float(state.state) == 60
+    assert state.attributes[ATTR_MIN] == 1
+    assert state.attributes[ATTR_MAX] == 100
+    assert state.attributes[ATTR_STEP] == 1
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        42.4,
+        [("set_attribute", "fan_speed", 42)],
+        device,
+    )
+
+
+async def test_ac_fan_speed_unknown_when_auto_mode_value_reported(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    set_device_attribute: SetDeviceAttribute,
+) -> None:
+    """Test AC fan_speed reports unknown when device sends auto fan speed value."""
+    device = _ac_device()
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_id = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_fan_speed"
+    ].entity_id
+    await set_device_attribute(device, ACAttributes.fan_speed, 102)
+
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_ac_fan_speed_unavailable_when_power_off(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    set_device_attribute: SetDeviceAttribute,
+) -> None:
+    """Test AC fan speed number is unavailable while the unit is powered off."""
+    device = _ac_device()
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_id = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_fan_speed"
+    ].entity_id
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    await set_device_attribute(device, ACAttributes.power, False)
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await set_device_attribute(device, ACAttributes.power, True)
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    device.available = False
+    device.notify_update({"available": False})
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_number_set_value_raises_on_device_communication_error(
