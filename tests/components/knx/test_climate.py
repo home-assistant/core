@@ -368,8 +368,7 @@ async def test_climate_preset_mode(
     knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
 
     assert len(knx.xknx.devices) == 2
-    assert len(knx.xknx.devices[0].device_updated_cbs) == 2
-    assert len(knx.xknx.devices[1].device_updated_cbs) == 2
+    assert [len(device.device_updated_cbs) for device in knx.xknx.devices] == [2, 2]
     # test removing also removes hooks
     entity_registry.async_remove("climate.test")
     # If we remove the entity the underlying devices should disappear too

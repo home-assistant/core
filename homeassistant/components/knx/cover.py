@@ -4,6 +4,7 @@ from typing import Any, override
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover
+from xknx.telegram import telegram_context
 
 from homeassistant import config_entries
 from homeassistant.components.cover import (
@@ -183,23 +184,27 @@ class _KnxCover(CoverEntity, RestoreEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._device.set_down()
+        with telegram_context(self._context):
+            await self._device.set_down()
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._device.set_up()
+        with telegram_context(self._context):
+            await self._device.set_up()
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        knx_position = 100 - kwargs[ATTR_POSITION]
-        await self._device.set_position(knx_position)
+        with telegram_context(self._context):
+            knx_position = 100 - kwargs[ATTR_POSITION]
+            await self._device.set_position(knx_position)
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._device.stop()
+        with telegram_context(self._context):
+            await self._device.stop()
 
     @property
     @override
@@ -212,29 +217,33 @@ class _KnxCover(CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
-        await self._device.set_angle(knx_tilt_position)
+        with telegram_context(self._context):
+            knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
+            await self._device.set_angle(knx_tilt_position)
 
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        if self._device.angle.writable:
-            await self._device.set_angle(0)
-        else:
-            await self._device.set_short_up()
+        with telegram_context(self._context):
+            if self._device.angle.writable:
+                await self._device.set_angle(0)
+            else:
+                await self._device.set_short_up()
 
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        if self._device.angle.writable:
-            await self._device.set_angle(100)
-        else:
-            await self._device.set_short_down()
+        with telegram_context(self._context):
+            if self._device.angle.writable:
+                await self._device.set_angle(100)
+            else:
+                await self._device.set_short_down()
 
     @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
-        await self._device.stop()
+        with telegram_context(self._context):
+            await self._device.stop()
 
 
 class KnxYamlCover(_KnxCover, KnxYamlEntity):

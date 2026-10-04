@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from xknx.devices import Device as XknxDevice
+from xknx.devices import Device as XknxDevice, DeviceUpdate
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
 from homeassistant.const import (
@@ -15,8 +15,11 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -29,6 +32,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .storage.config_store import PlatformControllerBase
 from .storage.entity_store_schema import BaseEntityConfig, KnxEntityData
+from .telegrams import KnxTelegramContext
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -148,8 +152,25 @@ class _KnxEntityBase(Entity):
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    def after_update_callback(self, device: XknxDevice) -> None:
-        """Call after device was updated."""
+    def after_update_callback(self, device: XknxDevice, update: DeviceUpdate) -> None:
+        """Apply the explicit cause and record relevant actor state transitions."""
+        if self.platform_data.domain in (
+            Platform.LIGHT,
+            Platform.SWITCH,
+            Platform.COVER,
+        ):
+            context = (
+                update.context if isinstance(update.context, Context) else Context()
+            )
+            self.async_set_context(context)
+            if (
+                isinstance(context, KnxTelegramContext)
+                and (old_state := self.hass.states.get(self.entity_id)) is not None
+                and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and self.state is not None
+                and old_state.state != self.state
+            ):
+                context.async_log(self.hass)
         self.async_write_ha_state()
 
     @override
