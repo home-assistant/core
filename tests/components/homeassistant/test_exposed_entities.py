@@ -529,7 +529,110 @@ async def test_list_exposed_entities(
             "test.test": {"cloud.alexa": True, "cloud.google_assistant": True},
             "test.test_unique1": {"cloud.alexa": True, "cloud.google_assistant": True},
         },
+        "locked_entities": {},
     }
+
+
+async def test_list_exposed_entities_locked(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test list exposed entities includes a locked entity that isn't exposed.
+
+    The entity is neither registered nor has any assistant option set, so it
+    only shows up through the lock store, not through the exposed-entities
+    iteration.
+    """
+    ws_client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    entity_id = "test.not_exposed"
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_entity_locked("cloud.google_assistant", entity_id, False)
+
+    await ws_client.send_json_auto_id({"type": "homeassistant/expose_entity/list"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"]["exposed_entities"] == {}
+    assert response["result"]["locked_entities"] == {
+        entity_id: {"cloud.google_assistant": True},
+    }
+
+
+async def test_expose_entity_locked(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a locked entity's exposure cannot be changed over the websocket API."""
+    ws_client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get_or_create("test", "test", "unique1")
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_entity_locked(
+        "cloud.google_assistant", entry.entity_id, True
+    )
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.google_assistant"],
+            "entity_ids": [entry.entity_id],
+            "should_expose": True,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_allowed"
+    assert entry.entity_id not in async_get_assistant_settings(
+        hass, "cloud.google_assistant"
+    )
+
+
+async def test_set_entity_locked_noop_leaves_no_stray_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test unlocking an entity that was never locked doesn't leave an entry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", None)
+
+    assert exposed_entities.locked_entities == {}
+
+
+async def test_set_entity_locked(hass: HomeAssistant) -> None:
+    """Test locking, updating, and unlocking an entity's exposure."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    callbacks = []
+    exposed_entities.async_listen_entity_updates("test1", lambda: callbacks.append(1))
+
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", True)
+    assert exposed_entities.locked_entities == {"light.kitchen": {"test1": True}}
+    assert len(callbacks) == 1
+
+    # Setting the same value again is a no-op.
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", True)
+    assert len(callbacks) == 1
+
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", False)
+    assert exposed_entities.locked_entities == {"light.kitchen": {"test1": False}}
+    assert len(callbacks) == 2
+
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", None)
+    assert exposed_entities.locked_entities == {}
+    assert len(callbacks) == 3
+
+    # Unlocking again is a no-op.
+    exposed_entities.async_set_entity_locked("test1", "light.kitchen", None)
+    assert len(callbacks) == 3
 
 
 async def test_listeners(
