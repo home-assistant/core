@@ -18,18 +18,6 @@ FAKE_REFRESH_TOKEN = "test-refresh-token"
 FAKE_AUTH_IMPL = "conftest-imported-cred"
 
 
-@pytest.fixture
-def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
-    """Ignore the unavailable core reauthentication issue translation."""
-    if request.node.name in {
-        "test_config_entry_unique_id_migration",
-        "test_setup_entry_reauth_on_token_request",
-        "test_setup_entry_preserves_reauth_from_first_refresh",
-    }:
-        return ["component.homeassistant.issues.config_entry_reauth."]
-    return []
-
-
 @pytest.fixture(name="config_entry")
 def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Return a Daikin Onecta config entry."""

@@ -184,9 +184,6 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", [["component.climate.services."]]
-)
 @pytest.mark.parametrize("patch_result", [True, False])
 async def test_climate_service_updates_entity_state(
     hass: HomeAssistant,
@@ -272,9 +269,6 @@ async def test_climate_service_updates_entity_state(
     )
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", [["component.climate.services."]]
-)
 async def test_climate_platform_services_and_management_points(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -406,9 +400,6 @@ async def test_climate_platform_services_and_management_points(
     assert bedroom_state.attributes[ATTR_TEMPERATURE] == 18
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", [["component.climate.services."]]
-)
 async def test_setup_creates_entities_per_management_point(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
