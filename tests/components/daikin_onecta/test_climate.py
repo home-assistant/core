@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.climate import ClimateEntity, HVACMode
+from homeassistant.components.climate import PRESET_BOOST, ClimateEntity, HVACMode
 from homeassistant.components.daikin_onecta.climate import DaikinClimate
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform, UnitOfTemperature
@@ -49,6 +49,22 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
 
     assert setpoint.value == 21
     coordinator.async_update_listeners.assert_called_once_with()
+
+
+async def test_enable_boost_stops_after_failed_turn_on() -> None:
+    """Do not enable boost when the prerequisite turn-on fails."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device", name="Device")
+    device.patch = AsyncMock(return_value=True)
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
+    entity.async_turn_on = AsyncMock()
+
+    assert not await entity._async_enable_preset_mode(PRESET_BOOST)
+
+    entity.async_turn_on.assert_awaited_once()
+    device.patch.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

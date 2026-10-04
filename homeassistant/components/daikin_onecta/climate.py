@@ -805,9 +805,10 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     async def _async_enable_preset_mode(self, preset_mode) -> bool:
         """Enable the requested Daikin preset mode."""
         daikin_mode = HA_PRESET_TO_DAIKIN[preset_mode]
-        turned_on = True
         if self.hvac_mode == HVACMode.OFF and preset_mode == PRESET_BOOST:
             await self.async_turn_on()
+            if self.hvac_mode == HVACMode.OFF:
+                return False
         if preset_mode == PRESET_AWAY:
             today = dt_util.now().date()
             value = {
@@ -832,7 +833,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 preset.value.enabled = True
             elif preset is not None:
                 preset.value = "on"
-        return turned_on and result
+        return result
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
