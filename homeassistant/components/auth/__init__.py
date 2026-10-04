@@ -191,7 +191,6 @@ class StoreResultType(Protocol):
         self,
         client_id: str,
         result: Credentials,
-        *,
         redirect_uri: str | None = None,
         code_challenge: str | None = None,
     ) -> str:
@@ -205,7 +204,6 @@ class RetrieveResultType(Protocol):
         self,
         client_id: str,
         code: str,
-        *,
         redirect_uri: str | None = None,
         code_verifier: str | None = None,
     ) -> Credentials | AuthorizationCodeValidationError:
@@ -222,7 +220,6 @@ def create_auth_code(
     hass: HomeAssistant,
     client_id: str,
     credential: Credentials,
-    *,
     redirect_uri: str | None = None,
     code_challenge: str | None = None,
 ) -> str:
@@ -537,7 +534,6 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(
         client_id: str,
         result: Credentials,
-        *,
         redirect_uri: str | None = None,
         code_challenge: str | None = None,
     ) -> str:
@@ -558,7 +554,6 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def retrieve_result(
         client_id: str,
         code: str,
-        *,
         redirect_uri: str | None = None,
         code_verifier: str | None = None,
     ) -> Credentials | AuthorizationCodeValidationError:
