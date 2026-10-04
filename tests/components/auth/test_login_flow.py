@@ -9,7 +9,12 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
-from . import BASE_CONFIG, PKCE_CODE_CHALLENGE, async_setup_auth
+from . import (
+    BASE_CONFIG,
+    PKCE_AUTHORIZATION_REQUEST,
+    PKCE_CODE_CHALLENGE,
+    async_setup_auth,
+)
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from tests.typing import ClientSessionGenerator
@@ -245,8 +250,24 @@ async def test_invalid_redirect_uri(
     assert data["message"] == "Invalid redirect URI"
 
 
+@pytest.mark.parametrize(
+    "authorization_data",
+    [
+        pytest.param({}, id="legacy"),
+        pytest.param(
+            {
+                **PKCE_AUTHORIZATION_REQUEST,
+                "state": "opaque+state/with=reserved&chars?",
+            },
+            id="opaque-state",
+        ),
+        pytest.param({**PKCE_AUTHORIZATION_REQUEST, "state": ""}, id="empty-state"),
+    ],
+)
 async def test_login_exist_user(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    authorization_data: dict[str, str],
 ) -> None:
     """Test logging in with exist user."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
@@ -261,6 +282,7 @@ async def test_login_exist_user(
             "client_id": CLIENT_ID,
             "handler": ["insecure_example", None],
             "redirect_uri": CLIENT_REDIRECT_URI,
+            **authorization_data,
         },
     )
     assert resp.status == HTTPStatus.OK

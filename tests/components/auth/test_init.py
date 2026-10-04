@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import PKCE_AUTHORIZATION_REQUEST, PKCE_CODE_VERIFIER, async_setup_auth
+from . import PKCE_CODE_CHALLENGE, PKCE_CODE_VERIFIER, async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -198,33 +198,6 @@ def test_auth_code_store_expiration(
     assert entry.credentials == mock_credential
 
 
-async def async_get_auth_code(
-    client: TestClient, authorization_data: dict[str, str]
-) -> str:
-    """Complete a login with the given authorization parameters."""
-    resp = await client.post(
-        "/auth/login_flow",
-        json={
-            "client_id": CLIENT_ID,
-            "handler": ["insecure_example", None],
-            "redirect_uri": CLIENT_REDIRECT_URI,
-            **authorization_data,
-        },
-    )
-    assert resp.status == HTTPStatus.OK
-    step = await resp.json()
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={
-            "client_id": CLIENT_ID,
-            "username": "test-user",
-            "password": "test-pass",
-        },
-    )
-    assert resp.status == HTTPStatus.OK
-    return (await resp.json())["result"]
-
-
 @pytest.mark.parametrize(
     "parameter", ["client_id", "grant_type", "code", "redirect_uri", "code_verifier"]
 )
@@ -235,7 +208,7 @@ async def test_pkce_token_request_rejects_duplicate_parameters(
 ) -> None:
     """Test ambiguous token parameters are rejected without consuming the code."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-    code = await async_get_auth_code(client, PKCE_AUTHORIZATION_REQUEST)
+    code = await _async_login_for_code(client, PKCE_CODE_CHALLENGE)
     token_data = MultiDict(
         {
             "client_id": CLIENT_ID,
@@ -261,7 +234,7 @@ async def test_pkce_token_request_rejects_file_verifier(
 ) -> None:
     """Test a multipart file cannot be used as a code verifier."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-    code = await async_get_auth_code(client, PKCE_AUTHORIZATION_REQUEST)
+    code = await _async_login_for_code(client, PKCE_CODE_CHALLENGE)
     token_data = FormData(
         {
             "client_id": CLIENT_ID,
