@@ -11,6 +11,7 @@ from tplink_omada_client import (
     OmadaControllerUpdateInfo,
     OmadaSiteClient,
     OmadaSwitchPortDetails,
+    OmadaVpnPolicy,
 )
 from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.devices import (
@@ -38,6 +39,7 @@ POLL_DEVICES = 300
 POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
+POLL_VPN = 300
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -236,6 +238,29 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
             async for c in self.omada_client.get_connected_clients()
             if isinstance(c, OmadaWirelessClient)
         }
+
+
+class OmadaVpnPoliciesCoordinator(OmadaCoordinator[OmadaVpnPolicy]):
+    """Coordinator for getting details about the site's VPN policies."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(hass, config_entry, omada_client, "VpnPolicies", POLL_VPN)
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaVpnPolicy]:
+        """Poll the site's current VPN policies."""
+        return {p.unique_id: p for p in await self.omada_client.get_vpn_policies()}
+
+    async def set_vpn_policy_enabled(self, policy_id: str, enabled: bool) -> None:
+        """Enable or disable a VPN policy, then refresh the current state."""
+        await self.omada_client.set_vpn_policy_enabled(policy_id, enabled)
+        await self.async_request_refresh()
 
 
 class FirmwareUpdateStatus(NamedTuple):
