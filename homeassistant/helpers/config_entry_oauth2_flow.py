@@ -9,20 +9,15 @@ This module exists of the following parts:
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
-import base64
 from collections.abc import Awaitable, Callable, Mapping
-import hashlib
-from http import HTTPStatus
-import json
 import logging
 import secrets
 import time
-from typing import Any, NoReturn, cast, override
+from typing import Any, cast, override
 
-from aiohttp import ClientError, ClientResponseError, client, hdrs, web
+from aiohttp import ClientError, client, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
-from multidict import CIMultiDict
 import probatio
 from yarl import URL
 
@@ -33,15 +28,14 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
-    OAuth2TokenRequestTransientError,
     UnknownImplementationError,
 )
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
-from . import http
-from .aiohttp_client import async_get_clientsession
+from . import http, oauth2
 from .network import NoURLAvailableError
+from .oauth2 import async_oauth2_request
 from .service_info.dhcp import DhcpServiceInfo
 from .service_info.ssdp import SsdpServiceInfo
 from .service_info.zeroconf import ZeroconfServiceInfo
@@ -104,28 +98,6 @@ _SHARED_ABORT_REASONS = frozenset(
         "user_rejected_authorize",
     }
 )
-
-
-def _raise_mapped_token_error(err: ClientError, domain: str) -> NoReturn:
-    """Re-raise a failed token request as the matching OAuth2 token error."""
-    if not isinstance(err, ClientResponseError):
-        # Nothing was received, so there is no status to tell the causes apart.
-        _LOGGER.debug("Token request for %s got no response: %s", domain, err)
-        raise OAuth2TokenRequestConnectionError(domain=domain) from err
-
-    kwargs: dict[str, Any] = {
-        "request_info": err.request_info,
-        "history": err.history,
-        "status": err.status,
-        "message": err.message,
-        "headers": err.headers,
-        "domain": domain,
-    }
-    if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-        raise OAuth2TokenRequestTransientError(**kwargs) from err
-    if 400 <= err.status <= 499:
-        raise OAuth2TokenRequestReauthError(**kwargs) from err
-    raise OAuth2TokenRequestError(**kwargs) from err
 
 
 @callback
@@ -204,7 +176,7 @@ class AbstractOAuth2Implementation(ABC):
         except ClientError as err:
             # Implementations that issue their own token request may not map their
             # failures, so callers would see a raw aiohttp error instead.
-            _raise_mapped_token_error(err, self.service_domain)
+            oauth2.raise_mapped_token_error(err, self.service_domain)
         # Force int for non-compliant oauth2 providers
         try:
             new_token["expires_in"] = int(new_token["expires_in"])
@@ -272,19 +244,14 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         redirect_uri = self.redirect_uri
-        return str(
-            URL(self.authorize_url)
-            .with_query(
-                {
-                    "response_type": "code",
-                    "client_id": self.client_id,
-                    "redirect_uri": redirect_uri,
-                    "state": _encode_jwt(
-                        self.hass, {"flow_id": flow_id, "redirect_uri": redirect_uri}
-                    ),
-                }
-            )
-            .update_query(self.extra_authorize_data)
+        return oauth2.build_authorize_url(
+            self.authorize_url,
+            client_id=self.client_id,
+            redirect_uri=redirect_uri,
+            state=_encode_jwt(
+                self.hass, {"flow_id": flow_id, "redirect_uri": redirect_uri}
+            ),
+            extra=self.extra_authorize_data,
         )
 
     @override
@@ -322,44 +289,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         Raises OAuth2TokenRequestError on token request failure.
         """
-        session = async_get_clientsession(self.hass)
-
         data["client_id"] = self.client_id
         if self.client_secret:
             data["client_secret"] = self.client_secret
 
-        _LOGGER.debug("Sending token request to %s", self.token_url)
-
-        try:
-            resp = await session.post(self.token_url, data=data)
-            if resp.status >= 400:
-                error_body = ""
-                try:
-                    error_body = await resp.text()
-                    error_data = json.loads(error_body)
-                    error_code = error_data.get("error", "unknown error")
-                    error_description = error_data.get("error_description")
-                    detail = (
-                        f"{error_code}: {error_description}"
-                        if error_description
-                        else error_code
-                    )
-                except ClientError, ValueError, AttributeError:
-                    detail = error_body[:200] if error_body else "unknown error"
-                _LOGGER.debug(
-                    "Token request for %s failed (%s): %s",
-                    self.domain,
-                    resp.status,
-                    detail,
-                )
-            resp.raise_for_status()
-            return cast(dict, await resp.json())
-        except ClientResponseError as err:
-            _raise_mapped_token_error(err, self.service_domain)
-        except ClientError as err:
-            # Bare TimeoutError is left alone so an enclosing asyncio.timeout still
-            # aborts with oauth_timeout; aiohttp's own timeouts are ClientErrors.
-            _raise_mapped_token_error(err, self.service_domain)
+        return await oauth2.async_token_request(
+            self.hass, self.token_url, data, domain=self.service_domain
+        )
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
@@ -435,27 +371,12 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
     @staticmethod
     def generate_code_verifier(code_verifier_length: int = 128) -> str:
         """Generate a code verifier."""
-        if not 43 <= code_verifier_length <= 128:
-            msg = (
-                "Parameter `code_verifier_length` must validate"
-                "`43 <= code_verifier_length <= 128`."
-            )
-            raise ValueError(msg)
-        return secrets.token_urlsafe(96)[:code_verifier_length]
+        return oauth2.generate_code_verifier(code_verifier_length)
 
     @staticmethod
     def compute_code_challenge(code_verifier: str) -> str:
         """Compute the code challenge."""
-        if not 43 <= len(code_verifier) <= 128:
-            msg = (
-                "Parameter `code_verifier` must validate "
-                "`43 <= len(code_verifier) <= 128`."
-            )
-            raise ValueError(msg)
-
-        hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
-        encoded = base64.urlsafe_b64encode(hashed)
-        return encoded.decode("ascii").replace("=", "")
+        return oauth2.compute_code_challenge(code_verifier)
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
@@ -889,19 +810,6 @@ class OAuth2Session:
         return await async_oauth2_request(
             self.hass, self.config_entry.data["token"], method, url, **kwargs
         )
-
-
-async def async_oauth2_request(
-    hass: HomeAssistant, token: dict, method: str, url: str, **kwargs: Any
-) -> client.ClientResponse:
-    """Make an OAuth2 authenticated request.
-
-    This method will not refresh tokens. Use OAuth2 session for that.
-    """
-    session = async_get_clientsession(hass)
-    headers = CIMultiDict(kwargs.pop("headers", {}))
-    headers[hdrs.AUTHORIZATION] = f"Bearer {token['access_token']}"
-    return await session.request(method, url, **kwargs, headers=headers)
 
 
 @callback
