@@ -8,6 +8,7 @@ from roborock.data.v1 import RoborockDockTypeCode
 from roborock.device_features import RoborockDockFeatures
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockTimeout
+from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
@@ -459,3 +460,155 @@ async def test_dock_cleaning_brush_button_press(
         ConsumableAttribute.CLEANING_BRUSH_WORK_TIME
     )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+CLEAN_CLEANING_TRAY_ENTITY_ID = "button.roborock_s7_maxv_dock_clean_cleaning_tray"
+CLEAN_CLEANING_TRAY_UNIQUE_ID = "clean_cleaning_tray_abc123"
+
+
+def _set_dock(
+    fake_vacuum: FakeDevice,
+    dock_type: RoborockDockTypeCode,
+    has_am: bool | None,
+) -> None:
+    """Configure the fake vacuum dock type and AM variant.
+
+    The coordinator refreshes the status trait during setup, which copies every
+    attribute from the STATUS template again, so has_am is re-applied after each
+    refresh.
+    """
+    status = fake_vacuum.v1_properties.status
+    original_refresh = status.refresh.side_effect
+
+    async def refresh() -> None:
+        await original_refresh()
+        status.has_am = has_am
+
+    status.refresh.side_effect = refresh
+    status.has_am = has_am
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(dock_type, has_am=has_am)
+    )
+
+
+@pytest.mark.parametrize(
+    ("dock_type", "has_am", "expected_created"),
+    [
+        # Clean carousel dock without the AM variant.
+        (RoborockDockTypeCode.shell_3_dock, None, True),
+        (RoborockDockTypeCode.shell_3_dock, False, True),
+        # AM variant is supported regardless of the dock type.
+        (RoborockDockTypeCode.shell_3_dock, True, True),
+        (RoborockDockTypeCode.pearl_dock, True, True),
+        # Dock without a self-cleaning tray.
+        (RoborockDockTypeCode.pearl_dock, None, False),
+        (RoborockDockTypeCode.pearl_dock, False, False),
+    ],
+)
+async def test_clean_cleaning_tray_button_supported(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    dock_type: RoborockDockTypeCode,
+    has_am: bool | None,
+    expected_created: bool,
+) -> None:
+    """Test the clean cleaning tray button is only created for supported docks."""
+    _set_dock(fake_vacuum, dock_type, has_am)
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (hass.states.get(CLEAN_CLEANING_TRAY_ENTITY_ID) is not None) is (
+        expected_created
+    )
+
+
+async def test_clean_cleaning_tray_button_not_created_and_cleaned_up(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test the clean cleaning tray button is removed from the registry if unsupported."""
+    _set_dock(fake_vacuum, RoborockDockTypeCode.pearl_dock, has_am=False)
+    entity_registry.async_get_or_create(
+        domain=Platform.BUTTON,
+        platform=DOMAIN,
+        unique_id=CLEAN_CLEANING_TRAY_UNIQUE_ID,
+        config_entry=mock_roborock_entry,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, CLEAN_CLEANING_TRAY_UNIQUE_ID
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, CLEAN_CLEANING_TRAY_UNIQUE_ID
+        )
+        is None
+    )
+    assert hass.states.get(CLEAN_CLEANING_TRAY_ENTITY_ID) is None
+
+
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+async def test_clean_cleaning_tray_button_press(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    vacuum_command: Mock,
+) -> None:
+    """Test pressing the clean cleaning tray button sends the dock command."""
+    _set_dock(fake_vacuum, RoborockDockTypeCode.shell_3_dock, has_am=None)
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(CLEAN_CLEANING_TRAY_ENTITY_ID).state == "unknown"
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": CLEAN_CLEANING_TRAY_ENTITY_ID},
+    )
+
+    vacuum_command.send.assert_called_once_with(
+        RoborockCommand.APP_AMETHYST_SELF_CHECK, params=None
+    )
+    assert (
+        hass.states.get(CLEAN_CLEANING_TRAY_ENTITY_ID).state
+        == "2023-10-30T08:50:00+00:00"
+    )
+
+
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_clean_cleaning_tray_button_press_failure(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    vacuum_command: Mock,
+) -> None:
+    """Test failure while pressing the clean cleaning tray button."""
+    _set_dock(fake_vacuum, RoborockDockTypeCode.shell_3_dock, has_am=None)
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError, match="Error while calling APP_AMETHYST_SELF_CHECK"
+    ):
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            blocking=True,
+            target={"entity_id": CLEAN_CLEANING_TRAY_ENTITY_ID},
+        )
+    vacuum_command.send.assert_called_once_with(
+        RoborockCommand.APP_AMETHYST_SELF_CHECK, params=None
+    )

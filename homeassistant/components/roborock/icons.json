@@ -21,6 +21,9 @@
       }
     },
     "button": {
+      "clean_cleaning_tray": {
+        "default": "mdi:tray-arrow-down"
+      },
       "reset_air_filter_consumable": {
         "default": "mdi:air-filter"
       },
