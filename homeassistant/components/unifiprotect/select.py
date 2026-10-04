@@ -504,6 +504,7 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
     """A UniFi Protect PTZ Patrol Select Entity."""
 
     device: Camera
+    entity_description: ProtectSelectEntityDescription
     _attr_current_option: str | None = None
     _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
     # Patrols are listed from the private API; the active slot and the
@@ -528,8 +529,6 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         self._attr_options = list(self._hass_to_unifi_options)
 
         super().__init__(data, device, PTZ_PATROL_DESCRIPTION)
-        # Set initial state based on active patrol
-        self._update_patrol_state()
 
     def _update_patrol_state(self) -> None:
         """Update the patrol state based on active_patrol_slot."""
@@ -556,7 +555,7 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         # Home Assistant validates options before calling this method,
         # so we can safely assume the option is valid
         unifi_value = self._hass_to_unifi_options[option]
-        await _set_ptz_patrol(cast(PublicCamera, self._ufp_set_target()), unifi_value)
+        await self.entity_description.ufp_set(self._ufp_set_target(), unifi_value)
         # State will be updated via websocket when active_patrol_slot changes
 
 

@@ -625,7 +625,7 @@ def make_public_camera(
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
     gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
     and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
-    private camera when not overridden.
+    private camera when not overridden; ``active_patrol_slot`` always mirrors it.
 
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would

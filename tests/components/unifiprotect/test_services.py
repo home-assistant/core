@@ -523,13 +523,13 @@ async def test_ptz_goto_preset_client_error(
         )
 
 
-async def test_ptz_goto_preset_command_client_error(
+async def test_ptz_goto_preset_public_client_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     ptz_camera: Camera,
 ) -> None:
-    """Test ptz_goto_preset service when the goto command raises ClientError."""
+    """Test ptz_goto_preset service when ptz_goto_preset raises ClientError."""
     ptz_camera.get_ptz_presets.return_value = _make_presets()
     ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
@@ -581,7 +581,6 @@ async def test_ptz_goto_preset_no_public_camera(
     ptz_camera: Camera,
 ) -> None:
     """Test ptz_goto_preset raises when the camera is missing from the public API."""
-    ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
 
     camera_entry = entity_registry.async_get(
@@ -589,13 +588,14 @@ async def test_ptz_goto_preset_no_public_camera(
     )
 
     ufp.api.public_bootstrap.cameras = {}
-    with pytest.raises(HomeAssistantError, match="no longer available"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,
             {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
             blocking=True,
         )
+    assert exc_info.value.translation_key == "device_not_available"
 
 
 async def test_public_only_action_rejected(

@@ -963,6 +963,41 @@ async def test_select_ptz_patrol_websocket_update(
     assert state.state == PTZ_PATROL_STOP
 
 
+async def test_select_ptz_patrol_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test the PTZ patrol select is unavailable without a public camera."""
+
+    async def _prime_without_camera() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_without_camera)
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_select_ptz_patrol_unavailable_on_public_disconnect(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ patrol availability follows the public camera's state."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == PTZ_PATROL_STOP
+
+    public = make_public_camera(ptz_camera, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_select_ptz_camera_adopt(
     hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
 ) -> None:

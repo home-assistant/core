@@ -286,10 +286,7 @@ async def _async_ptz_command(
 @callback
 def _async_get_public_camera(camera: Camera) -> PublicCamera:
     """Get the public camera matching a private camera."""
-    api = camera.api
-    if api.has_public_bootstrap and (
-        public := api.public_bootstrap.cameras.get(camera.id)
-    ):
+    if (public := camera.api.public_bootstrap.cameras.get(camera.id)) is not None:
         return public
     raise HomeAssistantError(
         translation_domain=DOMAIN,
