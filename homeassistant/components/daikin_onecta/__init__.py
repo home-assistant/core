@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await daikin_api.async_get_access_token()
     except OAuth2TokenRequestReauthError as err:
         raise ConfigEntryAuthFailed from err
-    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
+    except (OAuth2TokenRequestError, TimeoutError, aiohttp.ClientError) as err:
         raise ConfigEntryNotReady from err
 
     config_entry.runtime_data = OnectaDataUpdateCoordinator(

@@ -89,6 +89,26 @@ async def test_setup_entry_not_ready_on_transient_token_error(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_entry_not_ready_on_token_timeout(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Token validation timeouts must retry setup."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            side_effect=TimeoutError,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.asyncio
 async def test_setup_entry_not_ready_when_implementation_unavailable(
     hass: HomeAssistant,
