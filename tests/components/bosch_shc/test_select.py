@@ -62,9 +62,10 @@ async def test_outdoor_siren_sound_level_select_option(
         {ATTR_ENTITY_ID: SOUND_LEVEL_ENTITY_ID, "option": "high"},
         blocking=True,
     )
-    device.siren.async_set_configuration.assert_awaited_once_with(
-        sound_level=OutdoorSirenService.SoundLevel.HIGH
-    )
+    device.siren.put_state_element.assert_called_once()
+    key, config = device.siren.put_state_element.call_args.args
+    assert key == "outdoorSirenConfiguration"
+    assert config["soundLevel"] == OutdoorSirenService.SoundLevel.HIGH.value
 
 
 @pytest.mark.parametrize(
@@ -132,8 +133,9 @@ async def test_motion_sensitivity_select_option(
         {ATTR_ENTITY_ID: MOTION_SENSITIVITY_ENTITY_ID, "option": "high"},
         blocking=True,
     )
-    device.async_set_motion_sensitivity.assert_awaited_once_with(
-        PirSensorConfigurationService.MotionSensitivity.HIGH
+    assert (
+        device.motion_sensitivity
+        == PirSensorConfigurationService.MotionSensitivity.HIGH
     )
 
 
