@@ -157,7 +157,10 @@ class RTorrentSensor(SensorEntity):
             self.data = cast(RTorrentData, multicall())
             self._attr_available = True
         except (xmlrpc.client.ProtocolError, OSError) as ex:
-            _LOGGER.error("Connection to rtorrent failed (%s)", ex)
+            # Interpolating the exception would leak the configured URL into
+            # the log: xmlrpc.client.ProtocolError embeds the request URL,
+            # which carries HTTP basic-auth credentials, in its repr.
+            _LOGGER.error("Connection to rtorrent failed (%s)", type(ex).__name__)
             self._attr_available = False
             return
 
