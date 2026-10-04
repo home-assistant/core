@@ -3,18 +3,18 @@
 import asyncio
 from dataclasses import dataclass, field
 
-from aiofarmad import FarmadClient, FarmadError
+from aiofarmad import FarmadAuthenticationError, FarmadClient, FarmadError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
-from .services import async_setup_service_schemas, async_setup_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -23,8 +23,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 class FarmadData:
     """Runtime data of the Mijn Farmad Apotheek integration.
 
-    The pharmacies hold the options of the pharmacy fields of the
-    actions. The products map the CNK codes of the order history to
+    The pharmacies list the apb number and display label of every
+    pharmacy the account is linked to. The products map the CNK codes of the order history to
     their descriptions, so ordering a known CNK needs no catalog
     search. The lock serializes the draft handling of the order
     action, so concurrent orders cannot invalidate each other.
@@ -61,10 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
         refresh_token=entry.data.get(CONF_REFRESH_TOKEN),
         on_token_refresh=persist_tokens,
     )
+    pharmacies: list[dict[str, str]] = []
+    products: dict[str, str] = {}
     try:
         account = await client.async_get_account()
-        pharmacies: list[dict[str, str]] = []
-        products: dict[str, str] = {}
         for apb in account.entitled_pharmacies:
             organization = await client.async_get_organization(apb)
             pharmacies.append(
@@ -73,10 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
             for basket in await client.async_get_baskets(apb):
                 for line in basket.items:
                     products.setdefault(line.cnk, line.description_nl)
-        entry.runtime_data = FarmadData(
-            client=client, pharmacies=pharmacies, products=products
-        )
-        async_setup_service_schemas(hass, entry.runtime_data)
+    except FarmadAuthenticationError as err:
+        await client.async_close()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
     except FarmadError as err:
         await client.async_close()
         raise ConfigEntryNotReady(
@@ -85,6 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
             translation_placeholders={"error": str(err)},
         ) from err
 
+    entry.runtime_data = FarmadData(
+        client=client, pharmacies=pharmacies, products=products
+    )
     return True
 
 

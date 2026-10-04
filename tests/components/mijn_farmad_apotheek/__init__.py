@@ -160,6 +160,7 @@ def get_mock_client() -> Mock:
     client.async_save_draft_basket = AsyncMock(return_value=API_DRAFT_ID)
     client.async_update_draft_basket = AsyncMock(return_value=API_DRAFT_ID)
     client.async_submit_basket = AsyncMock(return_value=API_BASKET_ID)
+    client.async_clear_draft_basket = AsyncMock(return_value=None)
     client.async_close = AsyncMock(return_value=None)
     return client
 

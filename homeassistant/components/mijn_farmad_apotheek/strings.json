@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -64,7 +61,7 @@
       "description": "Places an order for one product at a Farmad pharmacy. The product is paid at pickup.",
       "fields": {
         "apb": {
-          "description": "The pharmacy to order from. The list refreshes when the integration reloads.",
+          "description": "The APB number of the pharmacy to order from. Leave empty when your account is linked to one pharmacy.",
           "name": "Pharmacy"
         },
         "comment": {
@@ -86,7 +83,7 @@
       "description": "Searches the catalog of a Farmad pharmacy by product name or CNK and returns up to 25 matching products.",
       "fields": {
         "apb": {
-          "description": "The pharmacy to search in. The list refreshes when the integration reloads.",
+          "description": "The APB number of the pharmacy to search in. Leave empty when your account is linked to one pharmacy.",
           "name": "Pharmacy"
         },
         "query": {

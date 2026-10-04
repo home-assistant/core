@@ -1,5 +1,6 @@
 """Actions for the Mijn Farmad Apotheek integration."""
 
+from contextlib import suppress
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -86,97 +87,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-@callback
-def async_setup_service_schemas(hass: HomeAssistant, data: FarmadData) -> None:
-    """Register the per-account schemas of the actions.
-
-    The pharmacy options come from the entitled pharmacies of the
-    account, so a reload of the config entry refreshes the list.
-    """
-
-    def apb_field(description: str) -> dict[str, Any]:
-        """Build the pharmacy field for a per-account schema."""
-        return {
-            "name": "Pharmacy",
-            "description": description,
-            "required": len(data.pharmacies) > 1,
-            "selector": {
-                "select": {
-                    "options": data.pharmacies,
-                    "mode": "dropdown",
-                }
-            },
-        }
-
-    service.async_set_service_schema(
-        hass,
-        DOMAIN,
-        SERVICE_SEARCH_MEDICATION,
-        {
-            "name": "Search medication",
-            "description": (
-                "Searches the catalog of a Farmad pharmacy by product name or"
-                " CNK and returns up to 25 matching products."
-            ),
-            "fields": {
-                ATTR_QUERY: {
-                    "name": "Search term",
-                    "description": "The product name or CNK to search for.",
-                    "required": True,
-                    "selector": {"text": None},
-                },
-                ATTR_APB: apb_field(
-                    "The pharmacy to search in. The list refreshes when the"
-                    " integration reloads."
-                ),
-            },
-        },
-    )
-    order_fields: dict[str, Any] = {
-        ATTR_PRODUCT: {
-            "name": "Product",
-            "description": (
-                "The CNK code of the product to order. Use the search_medication"
-                " action to find the CNK code of a product."
-            ),
-            "required": True,
-            "selector": {"text": None},
-        },
-        ATTR_QUANTITY: {
-            "name": "Quantity",
-            "description": "The number of packages to order.",
-            "required": False,
-            "default": 1,
-            "selector": {"number": {"min": 1, "mode": "box"}},
-        },
-    }
-    if len(data.pharmacies) > 1:
-        order_fields[ATTR_APB] = apb_field(
-            "The pharmacy to order from. The list refreshes when the"
-            " integration reloads."
-        )
-    order_fields[ATTR_COMMENT] = {
-        "name": "Comment",
-        "description": "An optional comment for the pharmacist.",
-        "required": False,
-        "selector": {"text": None},
-    }
-    service.async_set_service_schema(
-        hass,
-        DOMAIN,
-        SERVICE_ORDER_MEDICATION,
-        {
-            "name": "Order medication",
-            "description": (
-                "Places an order for one product at a Farmad pharmacy. The"
-                " product is paid at pickup."
-            ),
-            "fields": order_fields,
-        },
-    )
-
-
-@callback
 def _resolve_apb(data: FarmadData, apb: str | None) -> str:
     """Return the given apb or the only pharmacy the account is entitled at."""
     if apb is not None:
@@ -191,11 +101,33 @@ def _resolve_apb(data: FarmadData, apb: str | None) -> str:
             translation_key="multiple_pharmacies",
             translation_placeholders={
                 ATTR_PHARMACIES: ", ".join(
-                    option["label"] for option in data.pharmacies
+                    f"{option['label']}: {option['value']}"
+                    for option in data.pharmacies
                 )
             },
         )
     return data.pharmacies[0]["value"]
+
+
+def _translate_error(
+    err: FarmadError, apb: str, translation_key: str
+) -> HomeAssistantError:
+    """Return the Home Assistant error for a library error.
+
+    The translation key applies to every error that is no
+    authentication or authorization failure.
+    """
+    if isinstance(err, FarmadAuthenticationError):
+        return HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        )
+    if isinstance(err, FarmadAuthorizationError):
+        translation_key = "not_authorized"
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders={ATTR_APB: apb},
+    )
 
 
 def _product_description(product: CatalogProduct) -> str:
@@ -241,101 +173,110 @@ async def _async_resolve_product(
     return match.cnk, _product_description(match)
 
 
+async def _async_clear_draft(data: FarmadData, apb: str) -> None:
+    """Remove the product lines a failed order left in the draft basket.
+
+    The order action only writes to an empty draft, so clearing it
+    removes nothing the user added. A failed clear is ignored because
+    the next order reports the leftover draft.
+    """
+    with suppress(FarmadError):
+        await data.client.async_clear_draft_basket(apb)
+
+
+async def _async_write_draft(
+    data: FarmadData, apb: str, products: tuple[DraftProduct, ...]
+) -> str:
+    """Write the products to the empty draft basket and return its id."""
+    draft = await data.client.async_get_draft_basket(apb)
+    if draft is not None and draft.items:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="draft_not_empty",
+            translation_placeholders={ATTR_APB: apb},
+        )
+    draft_id: str | None
+    try:
+        if draft is not None and draft.id is not None:
+            await data.client.async_update_draft_basket(
+                apb, draft.id, products=products
+            )
+            draft_id = draft.id
+        else:
+            draft_id = await data.client.async_save_draft_basket(apb, products=products)
+    except FarmadError:
+        await _async_clear_draft(data, apb)
+        raise
+    if draft_id is None:
+        await _async_clear_draft(data, apb)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="order_failed",
+            translation_placeholders={ATTR_APB: apb},
+        )
+    return draft_id
+
+
+async def _async_place_order(
+    data: FarmadData,
+    apb: str,
+    products: tuple[DraftProduct, ...],
+    comment: str | None,
+) -> str:
+    """Submit the products as an order and return the basket id."""
+    async with data.lock:
+        draft_id = await _async_write_draft(data, apb, products)
+        try:
+            basket_id = await data.client.async_submit_basket(
+                apb, draft_id, products=products, comment=comment
+            )
+        except FarmadCommunicationError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="order_unconfirmed",
+                translation_placeholders={ATTR_APB: apb},
+            ) from err
+        except FarmadError:
+            await _async_clear_draft(data, apb)
+            raise
+    if basket_id is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="order_unconfirmed",
+            translation_placeholders={ATTR_APB: apb},
+        )
+    return basket_id
+
+
 async def _async_search_medication(call: ServiceCall) -> ServiceResponse:
     """Search the catalog of a Farmad pharmacy."""
-    hass = call.hass
-    entry: FarmadConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
+    entry: FarmadConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     data = entry.runtime_data
     apb = _resolve_apb(data, call.data.get(ATTR_APB))
-    query = call.data[ATTR_QUERY]
     try:
-        products = await data.client.async_search_products_in_apb(apb, query, limit=25)
-    except FarmadAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from err
-    except FarmadAuthorizationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="not_authorized",
-            translation_placeholders={ATTR_APB: apb},
-        ) from err
+        products = await data.client.async_search_products_in_apb(
+            apb, call.data[ATTR_QUERY], limit=25
+        )
     except FarmadError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="search_failed",
-            translation_placeholders={ATTR_APB: apb},
-        ) from err
+        raise _translate_error(err, apb, "search_failed") from err
     return {ATTR_PRODUCTS: [_serialize_product(product) for product in products]}
 
 
 async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
     """Order one product at a Farmad pharmacy."""
-    hass = call.hass
-    entry: FarmadConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
+    entry: FarmadConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     data = entry.runtime_data
     apb = _resolve_apb(data, call.data.get(ATTR_APB))
-    product_input: str = call.data[ATTR_PRODUCT]
     try:
-        cnk, description = await _async_resolve_product(data, apb, product_input)
-        products = (DraftProduct(product_cnk=cnk, quantity=call.data[ATTR_QUANTITY]),)
-        async with data.lock:
-            draft = await data.client.async_get_draft_basket(apb)
-            if draft is not None and draft.items:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="draft_not_empty",
-                    translation_placeholders={ATTR_APB: apb},
-                )
-            draft_id: str | None
-            if draft is not None and draft.id is not None:
-                await data.client.async_update_draft_basket(
-                    apb, draft.id, products=products
-                )
-                draft_id = draft.id
-            else:
-                draft_id = await data.client.async_save_draft_basket(
-                    apb, products=products
-                )
-            if draft_id is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="order_failed",
-                    translation_placeholders={ATTR_APB: apb},
-                )
-            try:
-                basket_id = await data.client.async_submit_basket(
-                    apb,
-                    draft_id,
-                    products=products,
-                    comment=call.data.get(ATTR_COMMENT),
-                )
-            except FarmadCommunicationError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="order_unconfirmed",
-                    translation_placeholders={ATTR_APB: apb},
-                ) from err
-            if basket_id is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="order_unconfirmed",
-                    translation_placeholders={ATTR_APB: apb},
-                )
-    except FarmadAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from err
-    except FarmadAuthorizationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="not_authorized",
-            translation_placeholders={ATTR_APB: apb},
-        ) from err
+        cnk, description = await _async_resolve_product(
+            data, apb, call.data[ATTR_PRODUCT]
+        )
+        basket_id = await _async_place_order(
+            data,
+            apb,
+            (DraftProduct(product_cnk=cnk, quantity=call.data[ATTR_QUANTITY]),),
+            call.data.get(ATTR_COMMENT),
+        )
     except FarmadError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="order_failed",
-            translation_placeholders={ATTR_APB: apb},
-        ) from err
+        raise _translate_error(err, apb, "order_failed") from err
     return {ATTR_BASKET_ID: basket_id, ATTR_DESCRIPTION: description}

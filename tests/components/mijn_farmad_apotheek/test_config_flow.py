@@ -78,8 +78,9 @@ async def test_form_errors(
     side_effect: Exception,
     error: str,
 ) -> None:
-    """Test the form shows the error matching the login failure."""
-    mock_farmad_client_config_flow.return_value.async_login.side_effect = side_effect
+    """Test the form shows the login error and recovers on the next attempt."""
+    client = mock_farmad_client_config_flow.return_value
+    client.async_login.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -89,13 +90,20 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    client.async_login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_access_token(
     hass: HomeAssistant, mock_farmad_client_config_flow: MagicMock
 ) -> None:
-    """Test the form shows invalid_auth when the login returns no access token."""
-    mock_farmad_client_config_flow.return_value.access_token = None
+    """Test the form shows invalid_auth without an access token and then recovers."""
+    client = mock_farmad_client_config_flow.return_value
+    client.access_token = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -104,6 +112,12 @@ async def test_form_no_access_token(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    client.access_token = API_ACCESS_TOKEN
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_farmad_client_config_flow")

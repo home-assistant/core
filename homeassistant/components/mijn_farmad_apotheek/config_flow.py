@@ -75,7 +75,6 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(account.id)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=account.full_name,
                     data={

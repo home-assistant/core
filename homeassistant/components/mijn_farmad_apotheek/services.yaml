@@ -15,9 +15,7 @@ order_medication:
     apb:
       example: "343602"
       selector:
-        select:
-          options: []
-          mode: dropdown
+        text:
     comment:
       selector:
         text:
@@ -31,6 +29,4 @@ search_medication:
     apb:
       example: "343602"
       selector:
-        select:
-          options: []
-          mode: dropdown
+        text:

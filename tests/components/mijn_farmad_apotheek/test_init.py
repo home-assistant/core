@@ -10,13 +10,13 @@ from aiofarmad import (
     FarmadAuthenticationError,
     FarmadAuthorizationError,
     FarmadCommunicationError,
+    FarmadError,
     FarmadTimeoutError,
 )
 import probatio
 import pytest
 
 from homeassistant.components.mijn_farmad_apotheek.const import (
-    ATTR_APB,
     ATTR_BASKET_ID,
     ATTR_COMMENT,
     ATTR_DESCRIPTION,
@@ -33,7 +33,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import service
 
 from . import (
     API_APB,
@@ -110,6 +109,18 @@ async def test_setup_entry_not_ready(
     mock_farmad_client.return_value.async_close.assert_awaited_once()
 
 
+async def test_setup_entry_auth_failed(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test a config entry fails setup without retrying when the session expired."""
+    mock_farmad_client.return_value.async_get_account.side_effect = (
+        FarmadAuthenticationError("mock")
+    )
+    entry = await init_integration(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    mock_farmad_client.return_value.async_close.assert_awaited_once()
+
+
 async def test_setup_entry_not_ready_schema(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
@@ -120,68 +131,6 @@ async def test_setup_entry_not_ready_schema(
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     mock_farmad_client.return_value.async_close.assert_awaited_once()
-
-
-async def test_setup_entry_schemas(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
-) -> None:
-    """Test setup builds the per-account action schemas from the account."""
-    await init_integration(hass)
-    order = service.async_get_cached_service_description(
-        hass, DOMAIN, SERVICE_ORDER_MEDICATION
-    )
-    search = service.async_get_cached_service_description(
-        hass, DOMAIN, SERVICE_SEARCH_MEDICATION
-    )
-    assert order is not None
-    assert search is not None
-    assert order["name"] == "Order medication"
-    assert order["fields"]["product"]["selector"] == {"text": None}
-    assert order["fields"]["quantity"]["required"] is False
-    assert order["fields"]["quantity"]["default"] == 1
-    assert order["fields"]["comment"]["required"] is False
-    assert ATTR_APB not in order["fields"]
-    assert search["name"] == "Search medication"
-    assert search["fields"]["query"]["required"] is True
-    assert search["fields"]["apb"]["required"] is False
-    assert search["fields"]["apb"]["selector"]["select"]["options"] == [
-        {
-            "value": API_APB,
-            "label": f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY})",
-        }
-    ]
-    assert search["fields"]["apb"]["selector"]["select"]["mode"] == "dropdown"
-    assert "custom_value" not in search["fields"]["apb"]["selector"]["select"]
-
-
-async def test_setup_entry_schemas_multiple_pharmacies(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
-) -> None:
-    """Test the pharmacy field is required when several pharmacies are entitled."""
-    mock_farmad_client.return_value.async_get_account.return_value = get_mock_account(
-        (API_APB, API_APB_2)
-    )
-    await init_integration(hass)
-    order = service.async_get_cached_service_description(
-        hass, DOMAIN, SERVICE_ORDER_MEDICATION
-    )
-    search = service.async_get_cached_service_description(
-        hass, DOMAIN, SERVICE_SEARCH_MEDICATION
-    )
-    assert order is not None
-    assert search is not None
-    assert order["fields"]["apb"]["required"] is True
-    assert order["fields"]["apb"]["selector"]["select"]["options"] == [
-        {
-            "value": API_APB,
-            "label": f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY})",
-        },
-        {
-            "value": API_APB_2,
-            "label": f"{API_PHARMACY_NAME_2} ({API_PHARMACY_CITY_2})",
-        },
-    ]
-    assert search["fields"]["apb"]["required"] is True
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_farmad_client: MagicMock) -> None:
@@ -453,36 +402,55 @@ async def test_order_medication_invalid_product(
 
 
 @pytest.mark.parametrize(
-    ("method", "side_effect", "translation_key"),
+    ("method", "side_effect", "translation_key", "clear_count"),
     [
         pytest.param(
             "async_submit_basket",
             FarmadAuthenticationError("mock"),
             "authentication_failed",
+            1,
             id="authentication",
         ),
         pytest.param(
             "async_submit_basket",
             FarmadAuthorizationError("mock"),
             "not_authorized",
+            1,
             id="authorization",
+        ),
+        pytest.param(
+            "async_submit_basket",
+            FarmadError("mock"),
+            "order_failed",
+            1,
+            id="rejected",
         ),
         pytest.param(
             "async_submit_basket",
             FarmadCommunicationError("mock"),
             "order_unconfirmed",
+            0,
             id="communication",
         ),
         pytest.param(
             "async_submit_basket",
             FarmadTimeoutError("mock"),
             "order_unconfirmed",
+            0,
             id="timeout",
+        ),
+        pytest.param(
+            "async_save_draft_basket",
+            FarmadCommunicationError("mock"),
+            "order_failed",
+            1,
+            id="save-draft-communication",
         ),
         pytest.param(
             "async_get_draft_basket",
             FarmadCommunicationError("mock"),
             "order_failed",
+            0,
             id="draft-communication",
         ),
     ],
@@ -493,10 +461,12 @@ async def test_order_medication_errors(
     method: str,
     side_effect: Exception,
     translation_key: str,
+    clear_count: int,
 ) -> None:
     """Test library errors during ordering map to translated Home Assistant errors."""
     await init_integration(hass)
-    getattr(mock_farmad_client.return_value, method).side_effect = side_effect
+    client = mock_farmad_client.return_value
+    getattr(client, method).side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -504,12 +474,31 @@ async def test_order_medication_errors(
         )
 
     assert exc_info.value.translation_key == translation_key
+    assert client.async_clear_draft_basket.await_count == clear_count
+
+
+async def test_order_medication_clear_draft_fails(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test a failed draft clear does not hide the original order error."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    client.async_submit_basket.side_effect = FarmadError("mock")
+    client.async_clear_draft_basket.side_effect = FarmadCommunicationError("mock")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "order_failed"
+    client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
 
 
 async def test_order_medication_without_draft_id(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
-    """Test ordering fails when Farmad returns no draft id."""
+    """Test ordering fails and clears the draft when Farmad returns no draft id."""
     await init_integration(hass)
     client = mock_farmad_client.return_value
     client.async_save_draft_basket.return_value = None
@@ -521,12 +510,13 @@ async def test_order_medication_without_draft_id(
 
     assert exc_info.value.translation_key == "order_failed"
     client.async_submit_basket.assert_not_awaited()
+    client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
 
 
 async def test_order_medication_without_basket_id(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
-    """Test ordering fails when Farmad returns no basket id."""
+    """Test ordering keeps the draft when Farmad returns no basket id."""
     await init_integration(hass)
     client = mock_farmad_client.return_value
     client.async_submit_basket.return_value = None
@@ -537,6 +527,7 @@ async def test_order_medication_without_basket_id(
         )
 
     assert exc_info.value.translation_key == "order_unconfirmed"
+    client.async_clear_draft_basket.assert_not_awaited()
 
 
 async def test_order_medication_serialized(
@@ -636,8 +627,8 @@ async def test_order_medication_multiple_pharmacies(
     assert exc_info.value.translation_key == "multiple_pharmacies"
     assert exc_info.value.translation_placeholders is not None
     assert exc_info.value.translation_placeholders["pharmacies"] == (
-        f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY}),"
-        f" {API_PHARMACY_NAME_2} ({API_PHARMACY_CITY_2})"
+        f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY}): {API_APB},"
+        f" {API_PHARMACY_NAME_2} ({API_PHARMACY_CITY_2}): {API_APB_2}"
     )
     client.async_get_draft_basket.assert_not_awaited()
 
