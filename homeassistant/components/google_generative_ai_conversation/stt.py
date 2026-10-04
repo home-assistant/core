@@ -1,9 +1,15 @@
 """Speech to text support for Google Generative AI."""
 
 from collections.abc import AsyncIterable
-from typing import override
+import io
+from typing import cast, override
 
 from google.genai.errors import APIError, ClientError
+from google.genai.interactions import (
+    AudioContentMimeType,
+    AudioContentParam,
+    TranscriptionConfigParam,
+)
 from google.genai.types import Part
 
 from homeassistant.components import stt
@@ -15,6 +21,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, LOGGER, RECOMMENDED_STT_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
+
+
+def _model_requires_interactions_api(model: str) -> bool:
+    """Return whether a model is only reachable through the Interactions API.
+
+    Neither the SDK nor Google's model listing API documents a way to
+    detect this from the model itself, so this is a name-based heuristic
+    matched as a substring (not just a suffix) so dated/preview variants
+    like "gemini-3.5-transcribe-preview" are covered too.
+    """
+    return "-transcribe" in model.rsplit("/", maxsplit=1)[-1]
 
 
 async def async_setup_entry(
@@ -238,6 +255,13 @@ class GoogleGenerativeAISttEntity(
                 f"audio/L{metadata.bit_rate.value};rate={metadata.sample_rate.value}",
             )
 
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL)
+
+        if _model_requires_interactions_api(model):
+            return await self._async_transcribe_via_interactions(
+                model, audio_data, metadata
+            )
+
         prompt = self.subentry.data.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
         if metadata.language:
             prompt = (
@@ -248,7 +272,7 @@ class GoogleGenerativeAISttEntity(
 
         try:
             response = await self._genai_client.aio.models.generate_content(
-                model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
+                model=model,
                 contents=[
                     prompt,
                     Part.from_bytes(
@@ -267,4 +291,51 @@ class GoogleGenerativeAISttEntity(
                     stt.SpeechResultState.SUCCESS,
                 )
 
+        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+    async def _async_transcribe_via_interactions(
+        self,
+        model: str,
+        audio_data: bytes,
+        metadata: stt.SpeechMetadata,
+    ) -> stt.SpeechResult:
+        """Transcribe audio through the Interactions API.
+
+        Used for models only served this way (not generateContent), like
+        gemini-3.5-transcribe. This API doesn't accept a system prompt or
+        sampling/safety options, so those are skipped.
+        """
+        if self.subentry.data.get(CONF_PROMPT):
+            LOGGER.debug("Ignoring configured STT prompt: not supported by %s", model)
+
+        audio_content: AudioContentParam = {
+            "type": "audio",
+            "data": io.BytesIO(audio_data),
+            "mime_type": cast(AudioContentMimeType, f"audio/{metadata.format.value}"),
+        }
+        transcription_config: TranscriptionConfigParam = {}
+        if metadata.language:
+            transcription_config["language_codes"] = [metadata.language]
+
+        try:
+            interaction = await self._genai_client.aio.interactions.create(
+                model=model,
+                store=False,
+                stream=False,
+                input=[audio_content],
+                generation_config={"transcription_config": transcription_config},
+            )
+        except Exception as err:  # noqa: BLE001
+            # This API has no public exception type to catch narrowly.
+            LOGGER.error("Error during STT: %s", err)
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+        # mypy can't narrow create()'s return type here (an SDK typing gap);
+        # the streaming variant can't happen since stream=False.
+        output_text = interaction.output_text  # type: ignore[union-attr]
+        if output_text:
+            return stt.SpeechResult(output_text, stt.SpeechResultState.SUCCESS)
+
+        status = interaction.status  # type: ignore[union-attr]
+        LOGGER.error("STT response contained no text (status=%s)", status)
         return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
