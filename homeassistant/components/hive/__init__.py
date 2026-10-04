@@ -10,7 +10,6 @@ from apyhiveapi import Auth, Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
@@ -29,13 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     web_session = aiohttp_client.async_get_clientsession(hass)
     hive_config = dict(entry.data)
     hive = Hive(web_session)
-
-    # Keep using the user configured interval. For new setups
-    # a custom interval cannot be configured and defaults to 120s
-    hive_config["options"] = {}
-    hive_config["options"].update(
-        {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
-    )
 
     entry.runtime_data = hive
 
