@@ -28,6 +28,7 @@ from .const import (
     CONF_INCLUDE_ASSOCIATED,
     CONF_INTERFACES,
     CONF_TRY_HOTSPOT,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
@@ -153,7 +154,9 @@ class KeeneticRouter:
             await self.request_update()
             self._cancel_periodic_update = async_call_later(
                 self.hass,
-                self.config_entry.options[CONF_SCAN_INTERVAL],
+                self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
                 async_update_data,
             )
 
