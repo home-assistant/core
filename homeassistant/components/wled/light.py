@@ -180,6 +180,24 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
     @property
     @override
+    def color_mode(self) -> ColorMode | None:
+        """Return the active color mode inferred from the segment's primary color."""
+        supported = self._attr_supported_color_modes or set()
+        if ColorMode.COLOR_TEMP in supported and (
+            ColorMode.RGBW in supported or ColorMode.RGB in supported
+        ):
+            if (
+                color := self.coordinator.data.state.segments[self._segment].color
+            ) is not None:
+                if tuple(color.primary[:3]) != (0, 0, 0):
+                    return (
+                        ColorMode.RGBW if ColorMode.RGBW in supported else ColorMode.RGB
+                    )
+                return ColorMode.COLOR_TEMP
+        return self._attr_color_mode
+
+    @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
         if not (color := self.coordinator.data.state.segments[self._segment].color):
