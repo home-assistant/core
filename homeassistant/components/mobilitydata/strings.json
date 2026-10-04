@@ -1,0 +1,164 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "build_failed": "Downloading or indexing the transit schedule failed: {error}",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_results": "No feeds matched your search. Try a different provider or city name.",
+      "search_or_select": "Enter a search query or pick a feed from the results.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "progress": {
+      "build": "Downloading and indexing the transit schedule. This can take a few minutes for large feeds."
+    },
+    "step": {
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key issued by the transit data producer"
+        },
+        "description": "This feed's realtime data requires an API key issued by the transit provider. See [the provider's instructions]({authentication_info_url}) for how to get one."
+      },
+      "reauth_api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::mobilitydata::config::step::api_key::data_description::api_key%]"
+        },
+        "description": "The transit provider rejected the configured API key. Enter a new one. See [the provider's instructions]({authentication_info_url}) for how to get one."
+      },
+      "reauth_token": {
+        "data": {
+          "refresh_token": "[%key:component::mobilitydata::config::step::user::data::refresh_token%]"
+        },
+        "data_description": {
+          "refresh_token": "[%key:component::mobilitydata::config::step::user::data_description::refresh_token%]"
+        },
+        "description": "Your Mobility Database refresh token is no longer valid. Enter a new one."
+      },
+      "search": {
+        "data": {
+          "feed_id": "Feed",
+          "search_query": "Search"
+        },
+        "data_description": {
+          "feed_id": "The transit feed to add",
+          "search_query": "Provider or city name, for example 'LADOT' or 'Vienna'"
+        },
+        "description": "Search the catalog by transit provider or city, then pick a feed from the results. Submit a new search to refine the results.",
+        "title": "Find your transit feed"
+      },
+      "user": {
+        "data": {
+          "refresh_token": "Refresh token"
+        },
+        "data_description": {
+          "refresh_token": "The long-lived refresh token from your Mobility Database account"
+        },
+        "description": "Sign in to the Mobility Database with the refresh token from your account settings at {account_url}."
+      }
+    }
+  },
+  "config_subentries": {
+    "stop": {
+      "abort": {
+        "already_configured": "This stop is already configured.",
+        "not_ready": "The transit schedule is still being prepared. Try again in a few minutes.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Transit stop",
+      "error": {
+        "choose_one": "Pick a zone or a map area.",
+        "no_stops_in_zone": "No stops found in this area. Try a larger radius or a different location.",
+        "zone_not_found": "That zone no longer exists."
+      },
+      "initiate_flow": {
+        "user": "Add transit stop"
+      },
+      "step": {
+        "headsigns": {
+          "data": {
+            "headsigns": "Destinations"
+          },
+          "data_description": {
+            "headsigns": "Only departures with these headsigns are shown"
+          },
+          "description": "Optionally limit departures to specific destinations (headsigns). Leave empty to include all.",
+          "title": "Filter by destination"
+        },
+        "routes": {
+          "data": {
+            "route_ids": "Routes"
+          },
+          "data_description": {
+            "route_ids": "Only departures on these routes are shown"
+          },
+          "description": "Optionally limit departures to specific routes. Leave empty to include all routes.",
+          "title": "Filter by route"
+        },
+        "stop": {
+          "data": {
+            "stop": "Stop"
+          },
+          "data_description": {
+            "stop": "The stop or station to track departures for"
+          },
+          "title": "Choose a stop"
+        },
+        "user": {
+          "data": {
+            "location": "Map area",
+            "zone": "Zone"
+          },
+          "data_description": {
+            "location": "A circle on the map to search for stops",
+            "zone": "An existing Home Assistant zone to search for stops. Takes precedence over the map area."
+          },
+          "description": "Pick an existing zone or draw a circle on the map. Stops inside the area are offered in the next step.",
+          "title": "Choose a search area"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_departure": {
+        "name": "Next departure"
+      },
+      "second_departure": {
+        "name": "Second departure"
+      },
+      "third_departure": {
+        "name": "Third departure"
+      }
+    }
+  },
+  "exceptions": {
+    "arrivals_refresh_failed": {
+      "message": "Error fetching departures: {error}"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed: {error}"
+    },
+    "static_index_not_ready": {
+      "message": "The transit schedule index is not ready yet."
+    },
+    "static_refresh_failed": {
+      "message": "Error refreshing the static schedule: {error}"
+    }
+  },
+  "issues": {
+    "stop_missing": {
+      "description": "The stop {stop_name} is no longer present in the latest schedule published for {feed_title}. Its sensors are unavailable. Remove the stop and add a nearby replacement if it has been permanently retired.",
+      "title": "Transit stop no longer in schedule"
+    }
+  }
+}
