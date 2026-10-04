@@ -533,7 +533,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     on_off_mode,
                 )
                 self._raise_command_failed("set the HVAC mode")
-            if cc.on_off_mode is not None:
+            cc = self.climate_control()
+            if cc is not None and cc.on_off_mode is not None:
                 cc.on_off_mode.value = on_off_mode
                 # Publish the confirmed power change before a subsequent
                 # operation-mode write, which may be rejected by the cloud.
@@ -560,7 +561,9 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     operation_mode,
                 )
                 self._raise_command_failed("set the HVAC mode")
-            cc.operation_mode.value = operation_mode
+            cc = self.climate_control()
+            if cc is not None and cc.operation_mode is not None:
+                cc.operation_mode.value = operation_mode
             # When switching HVAC mode it could be that we can set min/max/target/etc
             # which we couldn't set with a previous HVAC mode.
             self.update_state()
@@ -641,6 +644,10 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     FANMODE_FIXED,
                 ):
                     self._raise_command_failed("set the fan mode")
+                fan_operation = self.fan_operation()
+                if fan_operation is None or fan_operation.fan_speed is None:
+                    return
+                fan_speed = fan_operation.fan_speed
                 fan_speed.current_mode.value = FANMODE_FIXED
                 # The fan is already in fixed mode even if the following speed
                 # write fails, so publish this confirmed intermediate state.
@@ -657,6 +664,13 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     new_fixed_mode,
                 ):
                     self._raise_command_failed("set the fan mode")
+                fan_operation = self.fan_operation()
+                if fan_operation is None or fan_operation.fan_speed is None:
+                    return
+                fan_speed = fan_operation.fan_speed
+                fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
+                if fixed is None:
+                    return
                 fixed.value = new_fixed_mode
         elif fan_speed.current_mode.value != fan_mode:
             if not await self._device.patch(
@@ -667,6 +681,10 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 fan_mode,
             ):
                 self._raise_command_failed("set the fan mode")
+            fan_operation = self.fan_operation()
+            if fan_operation is None or fan_operation.fan_speed is None:
+                return
+            fan_speed = fan_operation.fan_speed
             fan_speed.current_mode.value = fan_mode
 
         self._attr_fan_mode = self.get_fan_mode()
@@ -736,7 +754,11 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             new_mode,
         )
         if result:
-            axis.current_mode.value = new_mode
+            fan_operation = self.fan_operation()
+            if fan_operation is not None and fan_operation.fan_direction is not None:
+                axis = getattr(fan_operation.fan_direction, direction)
+                if axis is not None:
+                    axis.current_mode.value = new_mode
         return result
 
     @override
@@ -893,6 +915,9 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 )
                 self._raise_command_failed("turn on")
             else:
+                cc = self.climate_control()
+                if cc is None or cc.on_off_mode is None:
+                    return
                 cc.on_off_mode.value = "on"
                 self._attr_hvac_mode = self.get_hvac_mode()
                 self.coordinator.async_update_listeners()
@@ -918,6 +943,9 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 )
                 self._raise_command_failed("turn off")
             else:
+                cc = self.climate_control()
+                if cc is None or cc.on_off_mode is None:
+                    return
                 cc.on_off_mode.value = "off"
                 self._attr_hvac_mode = self.get_hvac_mode()
                 self.coordinator.async_update_listeners()

@@ -119,6 +119,43 @@ async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
+async def test_set_hvac_mode_updates_replaced_management_point() -> None:
+    """Update the current model when polling replaces it during a command."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.name = "Device"
+    device.patch = AsyncMock(return_value=True)
+    coordinator = MagicMock()
+    previous_management_point = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value="off"),
+        operation_mode=SimpleNamespace(value="heating"),
+    )
+    current_management_point = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value="off"),
+        operation_mode=SimpleNamespace(value="heating"),
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
+    entity.coordinator = coordinator
+    entity.climate_control = MagicMock(
+        side_effect=[
+            previous_management_point,
+            current_management_point,
+            current_management_point,
+        ]
+    )
+    entity.update_state = MagicMock()
+
+    await entity.async_set_hvac_mode(HVACMode.COOL)
+
+    assert previous_management_point.on_off_mode.value == "off"
+    assert previous_management_point.operation_mode.value == "heating"
+    assert current_management_point.on_off_mode.value == "on"
+    assert current_management_point.operation_mode.value == "cooling"
+    assert coordinator.async_update_listeners.call_count == 2
+
+
 async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     """Publish fixed mode when the following fan-speed write fails."""
     entity = object.__new__(DaikinClimate)
