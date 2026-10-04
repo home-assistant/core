@@ -679,6 +679,49 @@ async def test_contracts_retry_stops_on_unload(
     assert client.async_get_energy_contracts.call_count == 1
 
 
+async def test_contracts_retry_in_flight_during_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    frozen_afternoon: None,
+) -> None:
+    """Test a retry in flight during a reload leaves the new EPEX coordinator running."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    release = asyncio.Event()
+
+    async def _slow_fixed_contracts(_ban: str) -> EnergyContractsResponse:
+        await release.wait()
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _slow_fixed_contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert client.async_get_energy_contracts.call_count == 2
+
+    client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts(
+        dynamic=True
+    )
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.16)
+
+
 async def test_contracts_retry_in_flight_during_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

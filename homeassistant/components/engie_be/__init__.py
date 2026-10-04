@@ -145,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
 
     cancel_retry: Callable[[], None] | None = None
 
-    async def _retry_classification(_now: datetime) -> None:
+    async def _async_retry_classification() -> None:
         """Classify the households whose tariff lookup failed at setup."""
         pending = [
             ban for ban, household in households.items() if household.is_dynamic is None
@@ -171,10 +171,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
                 await epex.async_shutdown()
                 entry.runtime_data.epex = None
 
+    @callback
+    def _start_retry_classification(_now: datetime) -> None:
+        """Run a tariff retry as a task that stops when the entry unloads."""
+        entry.async_create_background_task(
+            hass, _async_retry_classification(), "engie_be tariff retry"
+        )
+
     if any(household.is_dynamic is None for household in households.values()):
         LOGGER.warning("Tariff lookup failed, EPEX entities wait for a retry")
         cancel_retry = async_track_time_interval(
-            hass, _retry_classification, CONTRACTS_RETRY_INTERVAL
+            hass, _start_retry_classification, CONTRACTS_RETRY_INTERVAL
         )
         entry.async_on_unload(cancel_retry)
 
