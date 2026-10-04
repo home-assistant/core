@@ -3,7 +3,12 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import PARAM_STATE, PARAM_STATUS
+from pyimouapi.const import (
+    PARAM_SIREN_START,
+    PARAM_SIREN_STOP,
+    PARAM_STATE,
+    PARAM_STATUS,
+)
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
@@ -90,6 +95,51 @@ async def test_press_button_via_service(
     assert call is not None
     assert call.args[1] == PARAM_MUTE
     assert call.args[2] == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON]], indirect=True)
+@pytest.mark.parametrize(
+    ("imou_mock_devices", "button_key"),
+    [
+        pytest.param(
+            [create_online_device("d1", "Device 1", button_keys=(PARAM_SIREN_START,))],
+            PARAM_SIREN_START,
+            id="start",
+        ),
+        pytest.param(
+            [create_online_device("d1", "Device 1", button_keys=(PARAM_SIREN_STOP,))],
+            PARAM_SIREN_STOP,
+            id="stop",
+        ),
+    ],
+    indirect=["imou_mock_devices"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_press_siren_button(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    imou_mock_devices: list[ImouHaDevice],
+    button_key: str,
+) -> None:
+    """Expose only supported siren actions and dispatch the selected command."""
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 1
+    assert entries[0].translation_key == button_key
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entries[0].entity_id},
+        blocking=True,
+    )
+
+    mock_imou_ha_device_manager.async_press_button.assert_awaited_once_with(
+        imou_mock_devices[0], button_key, 0
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
