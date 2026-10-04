@@ -80,6 +80,7 @@ class PlexSensor(SensorEntity):
 
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._server = plex_server

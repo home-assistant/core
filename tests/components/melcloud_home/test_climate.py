@@ -12,6 +12,7 @@ from aiomelcloudhome import (
     ATWZoneMode,
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeNotFoundError,
     MelCloudHomeTimeoutError,
     UserContext,
 )
@@ -650,6 +651,7 @@ async def test_atw_zone_hvac_action(
         (MelCloudHomeAuthenticationError, "invalid_auth"),
         (MelCloudHomeConnectionError, "cannot_connect"),
         (MelCloudHomeTimeoutError, "timeout_connect"),
+        (MelCloudHomeNotFoundError, "api_error"),
     ],
 )
 async def test_action_exceptions(

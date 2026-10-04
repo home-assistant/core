@@ -57,32 +57,22 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
-    ("missing_market_segment", "entity_id"),
+    "missing_market_segments",
     [
-        pytest.param(
-            "electricity",
-            "sensor.zonneplan_current_electricity_price",
-            id="missing_electricity",
-        ),
-        pytest.param("gas", "sensor.zonneplan_gas_price_daily", id="missing_gas"),
-        pytest.param(
-            "electricity",
-            "sensor.zonneplan_electricity_used_this_month",
-            id="missing_electricity_usage",
-        ),
-        pytest.param(
-            "gas", "sensor.zonneplan_gas_used_this_month", id="missing_gas_usage"
-        ),
+        pytest.param({"electricity"}, id="missing_electricity"),
+        pytest.param({"gas"}, id="missing_gas"),
+        pytest.param({"electricity", "gas"}, id="no_energy_contract"),
     ],
 )
-async def test_sensor_unknown_for_missing_market_segment(
+async def test_entities_not_created_for_missing_market_segment(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_zonneplan_client: AsyncMock,
-    missing_market_segment: str,
-    entity_id: str,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    missing_market_segments: set[str],
 ) -> None:
-    """Test a sensor is unknown when its market segment isn't on the account."""
+    """Test no entities are created for a market segment that isn't on the account."""
     mock_zonneplan_client.async_get_account.return_value = dataclasses.replace(
         MOCK_ACCOUNT,
         address_groups=[
@@ -91,7 +81,7 @@ async def test_sensor_unknown_for_missing_market_segment(
                 connections=[
                     connection
                     for connection in address_group.connections
-                    if connection.market_segment != missing_market_segment
+                    if connection.market_segment not in missing_market_segments
                 ],
             )
             for address_group in MOCK_ACCOUNT.address_groups
@@ -102,8 +92,15 @@ async def test_sensor_unknown_for_missing_market_segment(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNKNOWN
+    assert (
+        sorted(
+            entity.entity_id
+            for entity in er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == snapshot
+    )
 
 
 @pytest.mark.parametrize(

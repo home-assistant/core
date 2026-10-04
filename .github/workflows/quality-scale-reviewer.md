@@ -1,5 +1,6 @@
 ---
 name: quality-scale-reviewer
+run-name: "quality-scale-reviewer: ${{ github.event.workflow_run.display_title || format('PR #{0}', inputs.pull_request_number) }}"
 description: >
   Reviews pull requests that touch an integration against the Integration
   Quality Scale rules the integration declares as `done` or `exempt` in its
@@ -107,7 +108,7 @@ jobs:
               '[.[] | select(.state == "open" and .base.repo.full_name == $base and .head.sha == $sha and .head.repo.full_name == $repo and .draft == false) | .number]')
           COUNT=$(jq 'length' <<< "${MATCHES}")
           if [ "${COUNT}" -ne 1 ]; then
-            echo "Expected one open, non-draft pull request for ${HEAD_REPO}@${HEAD_SHA}, found ${COUNT}: ${MATCHES}"
+            echo "::notice title=Quality scale review skipped::Expected one open, non-draft pull request for ${HEAD_REPO}@${HEAD_SHA}, found ${COUNT}: ${MATCHES}"
             echo "skip=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
@@ -149,6 +150,9 @@ jobs:
             echo "pr_number=${PR_NUMBER}"
             echo "head_sha=$(jq -r '.head_sha' "${RESULTS}")"
           } >> "${GITHUB_OUTPUT}"
+          if [ "$(jq -r '.skip' "${RESULTS}")" = "true" ]; then
+            echo "::notice title=Quality scale review skipped::PR #${PR_NUMBER} $(jq -r '.skip_reason' "${RESULTS}")"
+          fi
       - name: Comment that the pull request is too long to review
         if: steps.prepare.outputs.too_long == 'true'
         env:
@@ -195,7 +199,7 @@ steps:
       git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
       # The prepared diff describes HEAD_SHA; a newer push requires its own workflow run to be reviewed.
       if [ "$(git rev-parse FETCH_HEAD)" != "${HEAD_SHA}" ]; then
-        echo "PR #${PR_NUMBER} head moved since preparation, aborting"
+        echo "::error title=Quality scale review aborted::PR #${PR_NUMBER} head moved since preparation, aborting"
         exit 1
       fi
       git checkout --detach "${HEAD_SHA}"
@@ -308,6 +312,10 @@ integration's codebase, analyze only the files and lines changed in
 cannot be judged without them. The exception is a newly claimed rule, which is
 verified against the integration as a whole because a PR that claims a rule
 must satisfy it.
+
+A Python environment is not available. For rules where running tests or scripts is
+desirable, judge statically from the code and tests instead. If the static evidence is
+insufficient for a confident verdict, do not report a finding.
 
 A finding is reportable only when all of the following hold:
 
