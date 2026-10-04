@@ -131,7 +131,7 @@ class ElectraAPI:
             self._last_sid_request_ts + DELAY_BETWEEM_SID_REQUESTS
         ):
             logger.debug(
-                'Session ID was requested less than 5 minutes ago! waiting in '
+                "Session ID was requested less than 5 minutes ago! waiting in "
                 'order to prevent "intruder lockdown"...'
             )
             return

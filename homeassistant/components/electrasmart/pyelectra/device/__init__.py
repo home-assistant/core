@@ -69,12 +69,16 @@ class ElectraAirConditioner:
     def set_horizontal_swing(self, enable: bool) -> None:
         """Enable or disable horizontal swing."""
         if "HSWING" in self._oper_data:
-            self._oper_data["HSWING"] = OperationMode.ON if enable else OperationMode.OFF
+            self._oper_data["HSWING"] = (
+                OperationMode.ON if enable else OperationMode.OFF
+            )
 
     def set_vertical_swing(self, enable: bool) -> None:
         """Enable or disable vertical swing."""
         if "VSWING" in self._oper_data:
-            self._oper_data["VSWING"] = OperationMode.ON if enable else OperationMode.OFF
+            self._oper_data["VSWING"] = (
+                OperationMode.ON if enable else OperationMode.OFF
+            )
 
     def is_vertical_swing(self) -> bool:
         """Return True if vertical swing is enabled."""
