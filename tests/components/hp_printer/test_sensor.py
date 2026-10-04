@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 STATUS = "sensor.hp_officejet_pro_9020_series_status"
 CYAN_LEVEL = "sensor.hp_officejet_pro_9020_series_cyan_level"
 PRINTED_PAGES = "sensor.hp_officejet_pro_9020_series_printed_pages"
+BLACK_PAGES_REMAINING = "sensor.hp_officejet_pro_9020_series_black_pages_remaining"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hp_printer")
@@ -65,6 +66,8 @@ async def test_sensors_added_when_data_appears(
     assert state.state == "40.0"
     assert (state := hass.states.get(PRINTED_PAGES))
     assert state.state == "875"
+    assert (state := hass.states.get(BLACK_PAGES_REMAINING))
+    assert state.state == "550"
 
 
 @pytest.mark.parametrize(
