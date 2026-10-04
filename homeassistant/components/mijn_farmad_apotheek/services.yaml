@@ -11,6 +11,7 @@ order_medication:
       selector:
         number:
           min: 1
+          step: 1
           mode: box
     apb:
       example: "343602"

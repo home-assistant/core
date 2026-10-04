@@ -61,7 +61,7 @@ ORDER_MEDICATION_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_PRODUCT): cv.string,
         probatio.Optional(ATTR_QUANTITY, default=1): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=1)
+            probatio.Number(scale=0), probatio.Coerce(int), probatio.Range(min=1)
         ),
         probatio.Optional(ATTR_APB): NON_EMPTY_STRING,
         probatio.Optional(ATTR_COMMENT): cv.string,

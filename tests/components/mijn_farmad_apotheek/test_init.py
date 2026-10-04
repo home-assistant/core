@@ -599,17 +599,27 @@ async def test_order_medication_serialized(
     assert max_in_flight == 1
 
 
+@pytest.mark.parametrize(
+    "quantity",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(1.9, id="fraction"),
+        pytest.param("1.9", id="fraction-string"),
+    ],
+)
 async def test_order_medication_invalid_quantity(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    quantity: float | str,
 ) -> None:
-    """Test a non positive quantity is rejected."""
+    """Test a quantity that is not an integer or not positive is rejected."""
     await init_integration(hass)
 
     with pytest.raises(probatio.MultipleInvalid, match="quantity"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ORDER_MEDICATION,
-            {"product": API_PRODUCT_CNK, "apb": API_APB, "quantity": 0},
+            {"product": API_PRODUCT_CNK, "apb": API_APB, "quantity": quantity},
             blocking=True,
         )
 
