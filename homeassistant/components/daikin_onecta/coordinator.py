@@ -72,7 +72,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             )
         else:
             try:
-                cloud_devices = await self.api.get_cloud_device_details()
+                cloud_devices = await self.api.get_cloud_device_details(
+                    cooldown=timedelta(seconds=scan_ignore_value)
+                )
             except OnectaRateLimitError as err:
                 _LOGGER.warning(
                     "Daikin API rate limit reached; retrying after %s seconds",
@@ -85,23 +87,26 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except OnectaConnectionError as err:
                 raise UpdateFailed(CONNECTION_FAILED) from err
 
-            cloud_device_ids = {device.id for device in cloud_devices}
-            for device_id, device in devices.items():
-                if device_id not in cloud_device_ids:
-                    device.mark_unavailable()
+            if cloud_devices is None:
+                self.update_interval = timedelta(seconds=scan_ignore_value)
+                _LOGGER.debug("API UPDATE skipped (just updated from UI)")
+            else:
+                cloud_device_ids = {device.id for device in cloud_devices}
+                for device_id, device in devices.items():
+                    if device_id not in cloud_device_ids:
+                        device.mark_unavailable()
 
-            for dev_data in cloud_devices:
-                if dev_data.id in devices:
-                    devices[dev_data.id].set_device_data(dev_data)
-                else:
-                    device = DaikinOnectaDevice(dev_data, self.api)
-                    # Register the gateway device in the device registry now, before
-                    # this coordinator's first refresh returns and platforms are set
-                    # up, so every platform can link back to it via via_device_id.
-                    device.async_register_ha_device(self.hass, self._config_entry)
-                    devices[dev_data.id] = device
+                for dev_data in cloud_devices:
+                    if dev_data.id in devices:
+                        devices[dev_data.id].set_device_data(dev_data)
+                    else:
+                        device = DaikinOnectaDevice(dev_data, self.api)
+                        # Register the gateway device before entity platforms are set
+                        # up so they can link back to this gateway device.
+                        device.async_register_ha_device(self.hass, self._config_entry)
+                        devices[dev_data.id] = device
 
-            self.update_interval = self.determine_update_interval(self.hass)
+                self.update_interval = self.determine_update_interval(self.hass)
 
         _LOGGER.debug(
             "Daikin coordinator finished _async_update_data, next interval %s",

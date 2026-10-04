@@ -1,5 +1,6 @@
 """Tests for the Daikin Onecta API client."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
@@ -8,6 +9,7 @@ import pytest
 
 from homeassistant.components.daikin_onecta.daikin_api import DaikinApi
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -49,6 +51,19 @@ async def test_get_device_details_rate_limit(
 
     with pytest.raises(OnectaRateLimitError):
         await api.get_cloud_device_details()
+
+
+async def test_get_device_details_respects_cooldown(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Do not fetch cloud data while a successful write is in its cooldown."""
+    api = DaikinApi(hass, config_entry, MagicMock())
+    api._last_patch_call = dt_util.now()
+    api.client.get_gateway_devices = AsyncMock()
+
+    assert await api.get_cloud_device_details(cooldown=timedelta(seconds=30)) is None
+    api.client.get_gateway_devices.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

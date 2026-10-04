@@ -1,7 +1,7 @@
 """Home Assistant adapter for the Daikin Onecta API client."""
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -73,9 +73,17 @@ class DaikinApi:
         await self.session.async_ensure_token_valid()
         return self.session.token["access_token"]
 
-    async def get_cloud_device_details(self) -> list[GatewayDevice]:
-        """Get typed device data from the Daikin cloud."""
+    async def get_cloud_device_details(
+        self, *, cooldown: timedelta | None = None
+    ) -> list[GatewayDevice] | None:
+        """Get typed device data from the Daikin cloud, respecting cooldown."""
         async with self._cloud_lock:
+            if (
+                cooldown is not None
+                and self._last_patch_call is not None
+                and dt_util.now() - self._last_patch_call < cooldown
+            ):
+                return None
             return await self._client.get_gateway_devices()
 
     async def patch_characteristic(

@@ -127,6 +127,17 @@ class TestOnectaDataUpdateCoordinator:
             "Daikin API rate limit reached; retrying after 3060 seconds" in caplog.text
         )
 
+    async def test_post_write_cooldown_is_checked_under_cloud_lock(self, coordinator):
+        """Keep cached data when a write completes while polling waits for the lock."""
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(return_value=None)
+
+        assert await coordinator.async_update_data() == {}
+        coordinator.api.get_cloud_device_details.assert_awaited_once_with(
+            cooldown=timedelta(seconds=30)
+        )
+        assert coordinator.update_interval == timedelta(seconds=30)
+
     async def test_connection_error_uses_update_failed(self, coordinator):
         """A connection error should mark the coordinator update as failed."""
         coordinator.api.last_patch_call = None
