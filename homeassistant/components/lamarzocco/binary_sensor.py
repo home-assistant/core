@@ -97,6 +97,18 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    LaMarzoccoBinarySensorEntityDescription(
+        key="bluetooth_connected",
+        translation_key="bluetooth_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        is_on_fn=(lambda machine: machine.bluetooth_connected),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        supported_fn=lambda coordinator: (
+            coordinator.config_entry.runtime_data.bluetooth_coordinator is not None
+        ),
+        bt_offline_mode=True,
+    ),
 )
 
 
