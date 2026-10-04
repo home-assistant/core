@@ -4,6 +4,7 @@ from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -12,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AcmedaConfigEntry
-from .const import ACMEDA_HUB_UPDATE
+from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
 
@@ -24,11 +25,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
     hub = config_entry.runtime_data
+    LOGGER.debug(
+        "Setting up cover platform, connecting dispatcher for entry %s",
+        config_entry.entry_id,
+    )
 
     current: set[int] = set()
 
     @callback
     def async_add_acmeda_covers() -> None:
+        LOGGER.debug("async_add_acmeda_covers callback fired - adding new covers")
         async_add_acmeda_entities(
             hass, AcmedaCover, config_entry, current, async_add_entities
         )
@@ -40,6 +46,7 @@ async def async_setup_entry(
             async_add_acmeda_covers,
         )
     )
+    LOGGER.debug("Cover dispatcher connected")
 
 
 class AcmedaCover(AcmedaEntity, CoverEntity):
@@ -55,7 +62,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type != 7:
+        if self.roller.closed_percent is not None:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -67,7 +74,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type in (7, 10):
+        if self.roller.closed_percent is not None:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -76,14 +83,14 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature(0)
-        if self.current_cover_position is not None:
+        if self.roller.type != 7:
             supported_features |= (
                 CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
                 | CoverEntityFeature.STOP
                 | CoverEntityFeature.SET_POSITION
             )
-        if self.current_cover_tilt_position is not None:
+        if self.roller.type in (7, 10):
             supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
@@ -95,9 +102,12 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
 
     @property
     @override
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self.roller.closed_percent == 100  # type: ignore[no-any-return]
+        closed_percent: int | None = self.roller.closed_percent
+        if closed_percent is None:
+            return None
+        return closed_percent == 100
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -137,4 +147,4 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the roller shutter to a specific position."""
-        await self.roller.move_to(100 - kwargs[ATTR_POSITION])
+        await self.roller.move_to(100 - kwargs[ATTR_TILT_POSITION])

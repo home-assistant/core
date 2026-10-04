@@ -49,4 +49,5 @@ class AcmedaBattery(AcmedaEntity, SensorEntity):
     @override
     def native_value(self) -> float | int | None:
         """Return the state of the device."""
-        return self.roller.battery  # type: ignore[no-any-return]
+        battery: int | None = self.roller.battery
+        return battery
