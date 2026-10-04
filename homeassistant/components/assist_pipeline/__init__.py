@@ -5,11 +5,16 @@ from typing import Any
 
 import probatio
 
-from homeassistant.components import stt
+from homeassistant.components import stt, tts
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import chat_session
 from homeassistant.helpers.typing import ConfigType
 
+from .audio_output import (
+    AudioOutputStream,
+    PipelineAudioOutputError,
+    PipelineAudioOutputView,
+)
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
@@ -41,6 +46,7 @@ from .pipeline import (
     async_setup_pipeline_store,
     async_update_pipeline,
 )
+from .runtime import KEY_ASSIST_PIPELINE
 from .select import AssistPipelineSelect, VadSensitivitySelect
 from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
@@ -54,8 +60,10 @@ __all__ = (
     "SAMPLE_RATE",
     "SAMPLE_WIDTH",
     "AssistPipelineSelect",
+    "AudioOutputStream",
     "AudioSettings",
     "Pipeline",
+    "PipelineAudioOutputError",
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
@@ -63,6 +71,7 @@ __all__ = (
     "VadSensitivitySelect",
     "WakeWordSettings",
     "async_create_default_pipeline",
+    "async_get_audio_output_stream",
     "async_get_pipelines",
     "async_pipeline_from_audio_stream",
     "async_update_pipeline",
@@ -87,10 +96,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # wake_word_id -> timestamp of last detection (monotonic_ns)
     hass.data[DATA_LAST_WAKE_UP] = {}
 
-    await async_setup_pipeline_store(hass)
+    pipeline_data = await async_setup_pipeline_store(hass)
+    hass.http.register_view(PipelineAudioOutputView(pipeline_data.audio_output_manager))
     async_register_websocket_api(hass)
 
     return True
+
+
+def async_get_audio_output_stream(
+    hass: HomeAssistant, token: str
+) -> AudioOutputStream | None:
+    """Return an Assist pipeline or legacy TTS output stream."""
+    if (pipeline_data := hass.data.get(KEY_ASSIST_PIPELINE)) and (
+        output := pipeline_data.audio_output_manager.async_get(token)
+    ) is not None:
+        return output
+    return tts.async_get_stream(hass, token)
 
 
 async def async_pipeline_from_audio_stream(
