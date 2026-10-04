@@ -74,6 +74,16 @@ async def async_resolve_sound_url(hass: HomeAssistant, sound: str) -> str:
     The device fetches the sound itself, so media from Home Assistant becomes
     a full URL to Home Assistant, which the device reaches on the network.
     """
+    invalid = ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_sound_url",
+        translation_placeholders={"url": sound},
+    )
+
+    # An empty value, or picked media without an ID, is no sound at all.
+    if not sound:
+        raise invalid
+
     if media_source.is_media_source_id(sound):
         media = await media_source.async_resolve_media(hass, sound, None)
         sound = media.url
@@ -82,11 +92,7 @@ async def async_resolve_sound_url(hass: HomeAssistant, sound: str) -> str:
     try:
         return cv.url(url)
     except probatio.Invalid as err:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_sound_url",
-            translation_placeholders={"url": sound},
-        ) from err
+        raise invalid from err
 
 
 def media_content_id(value: Any) -> str:

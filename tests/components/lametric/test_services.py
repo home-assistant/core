@@ -286,23 +286,33 @@ async def test_service_message_sound_url(
     assert notification.model.sound == expected
 
 
+@pytest.mark.parametrize(
+    "sound_url",
+    [
+        "doorbell",
+        "",
+        {"media_content_type": "audio/mpeg"},
+    ],
+    ids=["no_url", "empty", "no_media_content_id"],
+)
 async def test_service_message_invalid_sound_url(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_lametric: MagicMock,
+    sound_url: str | dict[str, str],
 ) -> None:
-    """Test a sound URL that is no URL is refused."""
+    """Test a sound that does not end up as a URL is refused."""
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry
 
-    with pytest.raises(ServiceValidationError, match="Invalid sound URL: doorbell"):
+    with pytest.raises(ServiceValidationError, match="Invalid sound URL"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MESSAGE,
             {
                 CONF_DEVICE_ID: entry.device_id,
                 CONF_MESSAGE: "Ding dong!",
-                CONF_SOUND_URL: "doorbell",
+                CONF_SOUND_URL: sound_url,
             },
             blocking=True,
         )
