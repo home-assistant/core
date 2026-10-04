@@ -476,6 +476,74 @@ async def test_contracts_retry_adds_epex_entities(
     )
 
 
+async def test_newly_dynamic_household_gets_entities_while_another_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    frozen_afternoon: None,
+) -> None:
+    """Test a household classified while another still retries gets its EPEX entities."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+    def _dynamic_for_ban(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == BAN_2:
+            raise EngieBeCommunicationError("boom")
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _dynamic_for_ban
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    sensor_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    )
+    assert sensor_entity_id is not None
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(0.15)
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+        )
+        is None
+    )
+
+    client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.runtime_data.epex is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+        )
+        is None
+    )
+
+
 async def test_contracts_failure_keeps_retrying(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

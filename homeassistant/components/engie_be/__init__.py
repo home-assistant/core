@@ -153,6 +153,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         )
         for ban, is_dynamic in zip(pending, results, strict=True):
             households[ban].is_dynamic = is_dynamic
+        if any(is_dynamic for is_dynamic in results):
+            if (epex := entry.runtime_data.epex) is not None:
+                await epex.async_request_refresh()
+            for notify in entry.runtime_data.epex_ready_callbacks:
+                notify()
         if any(household.is_dynamic is None for household in households.values()):
             entry.async_on_unload(
                 async_call_later(hass, CONTRACTS_RETRY_INTERVAL, _retry_classification)
@@ -162,11 +167,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
             if (epex := entry.runtime_data.epex) is not None:
                 await epex.async_shutdown()
                 entry.runtime_data.epex = None
-            return
-        if (epex := entry.runtime_data.epex) is not None:
-            await epex.async_request_refresh()
-        for notify in entry.runtime_data.epex_ready_callbacks:
-            notify()
 
     if any(household.is_dynamic is None for household in households.values()):
         LOGGER.warning("Tariff lookup failed, EPEX entities wait for a retry")
