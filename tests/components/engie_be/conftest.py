@@ -234,27 +234,6 @@ def build_epex_payload_with_gap(
     )
 
 
-def build_epex_payload_with_stretched_slot(
-    start: datetime,
-    end: datetime,
-    granularity: EpexGranularity = EpexGranularity.HOURLY,
-) -> EpexPayload:
-    """Return a payload where a skipped entry stretches the previous slot."""
-    payload = build_epex_payload(start, end, granularity)
-    stretched_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
-    slots = list(payload.slots)
-    for index, slot in enumerate(slots[:-1]):
-        if slot.start == stretched_start:
-            slots[index] = EpexSlot(
-                start=slot.start,
-                end=slots[index + 1].end,
-                value_eur_per_kwh=slot.value_eur_per_kwh,
-            )
-            del slots[index + 1]
-            break
-    return EpexPayload(slots=tuple(slots), slot_duration=payload.slot_duration)
-
-
 def build_epex_payload_with_partial_tomorrow(
     start: datetime,
     end: datetime,

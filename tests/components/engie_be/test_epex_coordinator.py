@@ -1,15 +1,10 @@
 """Test the EPEX coordinator of the ENGIE Belgium integration."""
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 import logging
 from unittest.mock import MagicMock
 
-from aioengiebelgium import (
-    EngieBeCommunicationError,
-    EpexGranularity,
-    EpexPayload,
-    EpexSlot,
-)
+from aioengiebelgium import EngieBeCommunicationError, EpexGranularity, EpexPayload
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -20,7 +15,6 @@ from homeassistant.components.engie_be.coordinator import (
     epex_day_available,
     epex_slot_covering,
     epex_slots_for_day,
-    epex_trim_slots,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN
@@ -31,7 +25,6 @@ from .conftest import (
     BAN,
     build_epex_payload,
     build_epex_payload_with_gap,
-    build_epex_payload_with_stretched_slot,
     build_epex_payload_without_tomorrow,
     setup_dynamic_entry,
     setup_entry,
@@ -53,34 +46,6 @@ def _epex_coordinator(mock_config_entry: MockConfigEntry) -> EngieBeEpexCoordina
     coordinator = mock_config_entry.runtime_data.epex
     assert coordinator is not None
     return coordinator
-
-
-def test_epex_trim_slots_only_shortens_oversized_slots() -> None:
-    """Test the trim shortens only slots longer than one granularity step."""
-    start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
-    exact = EpexSlot(start=start, end=start + timedelta(hours=1), value_eur_per_kwh=0.1)
-    stretched = EpexSlot(
-        start=start + timedelta(hours=1),
-        end=start + timedelta(hours=3),
-        value_eur_per_kwh=0.2,
-    )
-    short = EpexSlot(
-        start=start + timedelta(hours=3),
-        end=start + timedelta(hours=3, minutes=30),
-        value_eur_per_kwh=0.3,
-    )
-
-    trimmed = epex_trim_slots((exact, stretched, short), EpexGranularity.HOURLY)
-
-    assert trimmed == (
-        exact,
-        EpexSlot(
-            start=stretched.start,
-            end=stretched.start + timedelta(hours=1),
-            value_eur_per_kwh=0.2,
-        ),
-        short,
-    )
 
 
 async def test_first_refresh_fetches_both_granularities_for_both_days(
@@ -334,49 +299,6 @@ async def test_partial_day_is_refetched_and_healed(
     )
     assert len(hourly_today) == 24
     assert len({slot.start for slot in hourly_today}) == 24
-    assert epex_day_available(coordinator.data, date(2026, 10, 3)) is True
-
-
-async def test_stretched_slot_is_trimmed_and_healed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    frozen_afternoon: None,
-) -> None:
-    """Test a stretched slot from a skipped entry is trimmed and healed on refresh."""
-    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
-        build_epex_payload_with_stretched_slot
-    )
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-
-    coordinator = _epex_coordinator(mock_config_entry)
-    client = mock_engie_client.return_value
-    hourly_today = epex_slots_for_day(
-        coordinator.data.slots(EpexGranularity.HOURLY), date(2026, 10, 3)
-    )
-    assert len(hourly_today) == 23
-    assert all(slot.end - slot.start == timedelta(hours=1) for slot in hourly_today)
-    assert (
-        epex_slot_covering(hourly_today, datetime(2026, 10, 3, 13, 30, tzinfo=UTC))
-        is None
-    )
-    quarter_today = epex_slots_for_day(
-        coordinator.data.slots(EpexGranularity.QUARTER_HOURLY), date(2026, 10, 3)
-    )
-    assert len(quarter_today) == 95
-    assert all(slot.end - slot.start == timedelta(minutes=15) for slot in quarter_today)
-    assert epex_day_available(coordinator.data, date(2026, 10, 3)) is False
-
-    call_count = client.async_get_epex_prices.call_count
-    client.async_get_epex_prices.side_effect = build_epex_payload
-    await coordinator.async_refresh()
-
-    assert client.async_get_epex_prices.call_count == call_count + 2
-    assert _fetched_days(client)[-2:] == [date(2026, 10, 3), date(2026, 10, 3)]
-    hourly_today = epex_slots_for_day(
-        coordinator.data.slots(EpexGranularity.HOURLY), date(2026, 10, 3)
-    )
-    assert len(hourly_today) == 24
     assert epex_day_available(coordinator.data, date(2026, 10, 3)) is True
 
 

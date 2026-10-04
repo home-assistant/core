@@ -259,23 +259,6 @@ def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
     )
 
 
-def epex_trim_slots(
-    slots: Iterable[EpexSlot], granularity: EpexGranularity
-) -> tuple[EpexSlot, ...]:
-    """Return the slots with oversized durations shortened to one granularity step."""
-    step = timedelta(minutes=granularity.value)
-    return tuple(
-        slot
-        if slot.end - slot.start <= step
-        else EpexSlot(
-            start=slot.start,
-            end=slot.start + step,
-            value_eur_per_kwh=slot.value_eur_per_kwh,
-        )
-        for slot in slots
-    )
-
-
 class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     """Coordinator that fetches Belgian EPEX day-ahead prices for both granularities."""
 
@@ -370,7 +353,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                     slot
                     for slot in slots[granularity]
                     if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() != day
-                ] + list(epex_trim_slots(payload.slots, granularity))
+                ] + list(payload.slots)
         return EngieBeEpexData(
             hourly=tuple(
                 sorted(slots[EpexGranularity.HOURLY], key=lambda slot: slot.start)
