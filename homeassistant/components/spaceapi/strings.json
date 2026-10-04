@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "SpaceAPI is already configured."
+    },
+    "error": {
+      "confirmation_required": "Confirm that the unsupported fields should be removed before saving.",
+      "invalid_config": "The optional settings are invalid. Check their values and try again.",
+      "spacefed_required": "SpaceAPI v15 requires both Spacenet and SpaceSAML when spacefed is configured."
+    },
+    "step": {
+      "configure": {
+        "data": {
+          "address": "Address",
+          "cache": "Cache settings",
+          "cam": "Camera URLs",
+          "contact_details": "Additional contact details",
+          "custom_sensors": "Additional sensor types",
+          "email": "Contact email",
+          "feeds": "Feeds",
+          "icon_closed": "Closed icon URL",
+          "icon_open": "Open icon URL",
+          "issue_report_channels": "Issue report channels",
+          "logo": "Logo URL",
+          "projects": "Project URLs",
+          "radio_show": "Radio shows",
+          "sensor_humidity": "Humidity sensors",
+          "sensor_temperature": "Temperature sensors",
+          "space": "Space name",
+          "spacefed": "Space federation",
+          "state_entity_id": "Entity representing whether the space is open",
+          "stream": "Streams",
+          "url": "Website"
+        },
+        "description": "Configure the required fields and expand Optional configuration for extra SpaceAPI data.",
+        "sections": {
+          "optional": {
+            "description": "Optional data included in the SpaceAPI response.",
+            "name": "Optional configuration"
+          }
+        },
+        "title": "SpaceAPI configuration"
+      },
+      "confirm_v15": {
+        "data": {
+          "confirm_removal": "I understand these fields will be removed"
+        },
+        "description": "SpaceAPI v15 does not support these configured fields: {unsupported_items}. Confirm to remove them and continue.",
+        "title": "Review fields unsupported by v15"
+      },
+      "reconfigure": {
+        "data": {
+          "api_version": "SpaceAPI version"
+        },
+        "title": "Choose SpaceAPI version"
+      },
+      "user": {
+        "data": {
+          "api_version": "SpaceAPI version"
+        },
+        "title": "Choose SpaceAPI version"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+       "description": "SpaceAPI is now configured through a config entry instead of YAML.\n\nRemove the `spaceapi` section from your `configuration.yaml` file and restart Home Assistant. The SpaceAPI endpoint will continue to work from the config entry.",
+       "title": "Remove the SpaceAPI YAML configuration"
+    }
+  }
+}
