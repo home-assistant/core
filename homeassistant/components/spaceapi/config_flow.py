@@ -247,7 +247,8 @@ def _unsupported_v15_items(data: dict[str, Any]) -> list[str]:
     unsupported.extend(
         f"{CONF_CONTACT}.{key}" for key in ("jabber", "google") if key in contact
     )
-    if "spacephone" in data.get(CONF_SPACEFED, {}):
+    spacefed = data.get(CONF_SPACEFED)
+    if isinstance(spacefed, dict) and "spacephone" in spacefed:
         unsupported.append(f"{CONF_SPACEFED}.spacephone")
     return unsupported
 
