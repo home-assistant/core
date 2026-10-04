@@ -239,10 +239,8 @@ def build_epex_payload_with_stretched_slot(
     end: datetime,
     granularity: EpexGranularity = EpexGranularity.HOURLY,
 ) -> EpexPayload:
-    """Return an hourly payload where a skipped entry stretches the previous slot."""
+    """Return a payload where a skipped entry stretches the previous slot."""
     payload = build_epex_payload(start, end, granularity)
-    if granularity is not EpexGranularity.HOURLY:
-        return payload
     stretched_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
     slots = list(payload.slots)
     for index, slot in enumerate(slots[:-1]):

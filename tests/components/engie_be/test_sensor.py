@@ -40,6 +40,7 @@ from .conftest import (
     OFFTAKE_INJECTION_EAN,
     OFFTAKE_ONLY_EAN,
     build_epex_payload_with_gap,
+    build_epex_payload_with_stretched_slot,
     build_prices,
     build_relations,
     setup_dynamic_entry,
@@ -1141,6 +1142,52 @@ async def test_epex_sensors_unknown_during_slot_gap(
     quarter_low_state = hass.states.get(quarter_low)
     assert quarter_low_state is not None
     assert float(quarter_low_state.state) == pytest.approx(0.01)
+
+
+async def test_epex_current_prices_unknown_during_stretched_slots(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    frozen_afternoon: None,
+) -> None:
+    """Test a trimmed stretched slot keeps its price and leaves the skipped interval unknown."""
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_stretched_slot
+    )
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+
+    hourly_current = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    )
+    assert hourly_current is not None
+    quarter_current = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_epex_current_quarter_hour"
+    )
+    assert quarter_current is not None
+    hourly_state = hass.states.get(hourly_current)
+    assert hourly_state is not None
+    assert float(hourly_state.state) == pytest.approx(0.15)
+    quarter_state = hass.states.get(quarter_current)
+    assert quarter_state is not None
+    assert float(quarter_state.state) == pytest.approx(0.15)
+
+    freezer.move_to(datetime(2026, 10, 3, 14, 20, tzinfo=BRUSSELS_TIME_ZONE))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    quarter_state = hass.states.get(quarter_current)
+    assert quarter_state is not None
+    assert quarter_state.state == STATE_UNKNOWN
+
+    freezer.move_to(datetime(2026, 10, 3, 15, 0, tzinfo=BRUSSELS_TIME_ZONE))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    hourly_state = hass.states.get(hourly_current)
+    assert hourly_state is not None
+    assert hourly_state.state == STATE_UNKNOWN
 
 
 async def test_epex_sensors_update_on_quarter_boundaries(
