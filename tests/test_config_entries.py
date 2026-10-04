@@ -43,7 +43,12 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    frame,
+    issue_registry as ir,
+)
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
@@ -11571,3 +11576,53 @@ async def test_orphaned_ignored_entries_safe_recovery_mode(
         )
         is None
     )
+
+
+async def test_remove_subentry_cleans_registries_before_update_listener(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Update listeners see registry cleanup when a subentry is removed."""
+    entry = MockConfigEntry(
+        domain="test",
+        subentries_data=[
+            config_entries.ConfigSubentryDataWithId(
+                data={},
+                subentry_id="removed",
+                subentry_type="test",
+                title="Removed",
+                unique_id="removed",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id="removed",
+        identifiers={("test", "removed")},
+    )
+    entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "removed",
+        config_entry=entry,
+        config_subentry_id="removed",
+        device_id=device.id,
+    )
+    observed: list[tuple[bool, bool, bool]] = []
+
+    async def listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Capture registry state before the listener yields."""
+        observed.append(
+            (
+                "removed" in entry.subentries,
+                device_registry.async_get(device.id) is not None,
+                entity_registry.async_get(entity.entity_id) is not None,
+            )
+        )
+
+    entry.add_update_listener(listener)
+    assert hass.config_entries.async_remove_subentry(entry, "removed")
+    await hass.async_block_till_done()
+    assert observed == [(False, False, False)]
