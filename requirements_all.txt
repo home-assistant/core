@@ -680,7 +680,7 @@ besen==0.4.10
 bitvis-protobuf==2.0.4
 
 # homeassistant.components.bizkaibus
-bizkaibus==0.1.1
+bizkaibus==1.1.2
 
 # homeassistant.components.esphome
 bleak-esphome==4.0.0
