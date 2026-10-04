@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection import ModbusError
 from sofar_modbus.modern.device import (
     BATTERY_STRING_COMPONENTS,
     SofarInverter,
@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
@@ -35,8 +35,10 @@ from .const import (
     METER_ENERGY,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
+    TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .helpers import create_modbus_params
 from .sensor import SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
@@ -143,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     unit = async_get_unit(
         hass,
         entry,
-        ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT]),
+        create_modbus_params(entry.data),
         entry.data[CONF_UNIT_ID],
     )
 
@@ -230,6 +232,15 @@ async def async_remove_config_entry_device(
 
     if runtime_data is not None:
         runtime_data.wired_packs -= packs
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version == 1:
+        hass.config_entries.async_update_entry(
+            entry, data={CONF_TYPE: TYPE_TCP, **entry.data}, minor_version=2
+        )
     return True
 
 

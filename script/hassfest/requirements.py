@@ -191,7 +191,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
-    "lametric": {"demetriek": {"backoff"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
