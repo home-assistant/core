@@ -4,7 +4,7 @@ See ``NOTICE.md`` in this package for provenance and the divergences from
 upstream.
 """
 
-from asyncio import create_task
+from asyncio import TaskGroup
 from datetime import datetime
 from json import JSONDecodeError
 from logging import getLogger
@@ -73,7 +73,7 @@ class ElectraAPI:
             ) from ex
         except JSONDecodeError as ex:
             raise ElectraApiError(
-                f"Recieved invalid response from Electra API: {ex!s}"
+                f"Received invalid response from Electra API: {ex!s}"
             ) from ex
 
         return json_resp
@@ -124,7 +124,7 @@ class ElectraAPI:
         """Acquire a session id, reusing the cached one when still valid."""
         current_ts = int(datetime.now().timestamp())
         if not force and not self._sid_expired():
-            logger.debug("Found valid sid (%s) in cache, using it", self._sid)
+            logger.debug("Found valid sid in cache, using it")
             return
 
         if self._last_sid_request_ts and current_ts < (
@@ -154,17 +154,16 @@ class ElectraAPI:
             raise ElectraApiError("Failed to retrieve sid")
         if not resp[Attributes.DATA][Attributes.SID]:
             raise ElectraApiError(
-                "Failed to retrieve SID due to %s",
-                resp[Attributes.DATA][Attributes.DESC],
+                f"Failed to retrieve SID due to "
+                f"{resp[Attributes.DATA][Attributes.DESC]}"
             )
         self._sid = resp[Attributes.DATA][Attributes.SID]
         self._sid_expiration = current_ts + SID_EXPIRATION
         self._last_sid_request_ts = current_ts
-        logger.debug("Successfully acquired sid: %s", self._sid)
+        logger.debug("Successfully acquired session id")
 
     async def fetch_devices(self) -> None:
         """Fetch devices and their current operation state."""
-        fetch_state_tasks = []
         logger.debug("About to Get Electra AC devices")
         await self._get_sid()
 
@@ -178,21 +177,19 @@ class ElectraAPI:
                     electra_ac: ElectraAirConditioner = ElectraAirConditioner(ac)
                     logger.debug("Discovered A/C device %s", electra_ac.name)
                     ac_list.append(electra_ac)
-                    fetch_state_tasks.append(
-                        create_task(self.get_last_telemtry(electra_ac))
-                    )
                 else:
                     logger.debug("Discovered non AC device %s", ac)
 
-            for task in fetch_state_tasks:
-                await task
+            async with TaskGroup() as tg:
+                for ac in ac_list:
+                    tg.create_task(self.get_last_telemtry(ac))
 
             for ac in ac_list:
                 ac.update_features()
 
             self._devices = ac_list
         else:
-            raise ElectraApiError("Failed to fetch devices %s", resp)
+            raise ElectraApiError(f"Failed to fetch devices {resp}")
 
     async def get_last_telemtry(self, ac: ElectraAirConditioner) -> None:
         """Fetch the current operation state for a device."""
