@@ -584,16 +584,6 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
-    "_https._tcp.local.": [
-        {
-            "domain": "daikin_onecta",
-            "name": "altherma4-*._https._tcp.local.",
-        },
-        {
-            "domain": "daikin_onecta",
-            "name": "homehub._https._tcp.local.",
-        },
-    ],
     "_http._tcp.local.": [
         {
             "domain": "airq",
@@ -718,6 +708,16 @@ ZEROCONF = {
         {
             "domain": "velux",
             "name": "velux_klf_lan_*",
+        },
+    ],
+    "_https._tcp.local.": [
+        {
+            "domain": "daikin_onecta",
+            "name": "altherma4-*._https._tcp.local.",
+        },
+        {
+            "domain": "daikin_onecta",
+            "name": "homehub._https._tcp.local.",
         },
     ],
     "_hue._tcp.local.": [
