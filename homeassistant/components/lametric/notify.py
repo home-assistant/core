@@ -14,7 +14,6 @@ from demetriek import (
     Sound,
     SoundURL,
 )
-import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -24,7 +23,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.enum import try_parse_enum
@@ -39,7 +37,12 @@ from .const import (
 )
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
-from .helpers import has_audio, lametric_exception_handler
+from .helpers import (
+    async_resolve_sound_url,
+    has_audio,
+    lametric_exception_handler,
+    media_content_id,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -121,15 +124,12 @@ class LaMetricNotificationService(BaseNotificationService):
         # A built-in sound given as well plays when the URL cannot be fetched.
         sound: Sound | SoundURL | None = builtin_sound
         if CONF_SOUND_URL in data:
-            try:
-                url = cv.url(data[CONF_SOUND_URL])
-            except probatio.Invalid as err:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_sound_url",
-                    translation_placeholders={"url": str(data[CONF_SOUND_URL])},
-                ) from err
-            sound = SoundURL(url=url, fallback=builtin_sound)
+            sound = SoundURL(
+                url=await async_resolve_sound_url(
+                    self.hass, media_content_id(data[CONF_SOUND_URL])
+                ),
+                fallback=builtin_sound,
+            )
 
         # Leave the sound out for a device that cannot play it, rather than have
         # it refuse the whole notification.

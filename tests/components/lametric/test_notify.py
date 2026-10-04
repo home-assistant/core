@@ -1,6 +1,6 @@
 """Tests for the LaMetric notify platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from demetriek import (
     LaMetricConnectionError,
@@ -19,6 +19,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lametric.const import DOMAIN
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
@@ -348,3 +350,36 @@ async def test_notification_sound_url_without_audio(
 
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound is None
+
+
+async def test_notification_sound_from_media(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a sound picked from the media in Home Assistant, in the notify data."""
+    await async_process_ha_core_config(hass, {"internal_url": "http://10.0.0.2:8123"})
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=PlayMedia(url="/media/local/doorbell.mp3", mime_type="audio/mpeg"),
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            NOTIFY_SERVICE,
+            {
+                ATTR_MESSAGE: "Ding dong!",
+                ATTR_DATA: {
+                    "sound_url": {
+                        "media_content_id": "media-source://media_source/local/doorbell.mp3",
+                        "media_content_type": "audio/mpeg",
+                    }
+                },
+            },
+            blocking=True,
+        )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert isinstance(notification.model.sound, SoundURL)
+    assert notification.model.sound.url.startswith(
+        "http://10.0.0.2:8123/media/local/doorbell.mp3?authSig="
+    )

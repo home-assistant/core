@@ -235,8 +235,8 @@
           "name": "Sound"
         },
         "sound_url": {
-          "description": "The URL of an MP3 file to play instead of a built-in sound. When a sound is selected as well, it plays when the URL cannot be fetched.",
-          "name": "Sound URL"
+          "description": "An MP3 file to play instead of a built-in sound: pick one from your media, or enter its URL. When a sound is selected as well, it plays when the file cannot be fetched.",
+          "name": "Custom sound"
         }
       },
       "name": "Display a chart"

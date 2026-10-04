@@ -67,8 +67,9 @@ chart:
     sound_url: &sound_url
       required: false
       selector:
-        text:
-          type: url
+        media:
+          accept:
+            - audio/mpeg
     cycles: &cycles
       required: false
       default: 1

@@ -35,7 +35,12 @@ from .const import (
     SERVICE_MESSAGE,
 )
 from .coordinator import LaMetricDataUpdateCoordinator
-from .helpers import async_get_coordinator_by_device_id, has_audio
+from .helpers import (
+    async_get_coordinator_by_device_id,
+    async_resolve_sound_url,
+    has_audio,
+    media_content_id,
+)
 
 SERVICE_BASE_SCHEMA = probatio.Schema(
     {
@@ -50,7 +55,7 @@ SERVICE_BASE_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SOUND): probatio.Any(
             probatio.Coerce(AlarmSound), probatio.Coerce(NotificationSound)
         ),
-        probatio.Optional(CONF_SOUND_URL): cv.url,
+        probatio.Optional(CONF_SOUND_URL): media_content_id,
     }
 )
 
@@ -137,7 +142,12 @@ async def async_send_notification(
     # A built-in sound given as well plays when the URL cannot be fetched.
     sound: Sound | SoundURL | None = builtin_sound
     if CONF_SOUND_URL in call.data:
-        sound = SoundURL(url=call.data[CONF_SOUND_URL], fallback=builtin_sound)
+        sound = SoundURL(
+            url=await async_resolve_sound_url(
+                coordinator.hass, call.data[CONF_SOUND_URL]
+            ),
+            fallback=builtin_sound,
+        )
 
     # Leave the sound out for a device that cannot play it, rather than have
     # it refuse the whole notification.

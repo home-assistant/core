@@ -3,7 +3,7 @@
   "name": "LaMetric",
   "codeowners": ["@robbiet480", "@frenck", "@bachya"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "media_source"],
   "dhcp": [
     {
       "registered_devices": true

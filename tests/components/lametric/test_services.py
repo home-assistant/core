@@ -1,6 +1,6 @@
 """Tests for the LaMetric services."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from demetriek import (
     Chart,
@@ -14,7 +14,6 @@ from demetriek import (
     Sound,
     SoundURL,
 )
-import probatio
 import pytest
 
 from homeassistant.components.lametric.const import (
@@ -29,9 +28,11 @@ from homeassistant.components.lametric.const import (
     SERVICE_CHART,
     SERVICE_MESSAGE,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.const import CONF_DEVICE_ID, CONF_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -294,7 +295,7 @@ async def test_service_message_invalid_sound_url(
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry
 
-    with pytest.raises(probatio.Invalid):
+    with pytest.raises(ServiceValidationError, match="Invalid sound URL: doorbell"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MESSAGE,
@@ -307,3 +308,45 @@ async def test_service_message_invalid_sound_url(
         )
 
     mock_lametric.notify.assert_not_called()
+
+
+async def test_service_message_sound_from_media(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test a sound picked from the media in Home Assistant.
+
+    The device fetches the sound itself, so it gets a full URL to Home
+    Assistant, signed so the device does not need to log in.
+    """
+    await async_process_ha_core_config(hass, {"internal_url": "http://10.0.0.2:8123"})
+    entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
+    assert entry
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=PlayMedia(url="/media/local/doorbell.mp3", mime_type="audio/mpeg"),
+    ) as resolve_media:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MESSAGE,
+            {
+                CONF_DEVICE_ID: entry.device_id,
+                CONF_MESSAGE: "Ding dong!",
+                CONF_SOUND_URL: {
+                    "media_content_id": "media-source://media_source/local/doorbell.mp3",
+                    "media_content_type": "audio/mpeg",
+                },
+            },
+            blocking=True,
+        )
+
+    resolve_media.assert_called_once_with(
+        hass, "media-source://media_source/local/doorbell.mp3", None
+    )
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert isinstance(notification.model.sound, SoundURL)
+    assert notification.model.sound.url.startswith(
+        "http://10.0.0.2:8123/media/local/doorbell.mp3?authSig="
+    )
