@@ -1,0 +1,12 @@
+{
+  "domain": "keba_p40",
+  "name": "KEBA P40",
+  "codeowners": ["@lpostiglione"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/keba_p40",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["keba_kecontact_p40"],
+  "quality_scale": "bronze",
+  "requirements": ["keba-kecontact-p40==0.1.0"]
+}
