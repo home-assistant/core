@@ -251,3 +251,20 @@ async def test_send_message_error(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("device_fixture", ["device_sa5_bluetooth_unavailable"])
+async def test_notification_without_audio(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test the sound is left out for a device that cannot play it."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "sky",
+        {ATTR_MESSAGE: "Meow!", ATTR_DATA: {"sound": "cat"}},
+        blocking=True,
+    )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound is None
