@@ -17,7 +17,6 @@ from homeassistant.const import (
 from ..const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
-    CONF_ALLOW_WAN_NETWORKS,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
@@ -28,16 +27,17 @@ from ..const import (
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WAN_NETWORKS,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
-    DEFAULT_ALLOW_WAN_NETWORKS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_LOCAL_MAC,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
+    DEFAULT_TRACK_WAN_NETWORKS,
     DEFAULT_TRACK_WIRED_CLIENTS,
 )
 
@@ -91,7 +91,7 @@ class UnifiConfig:
 
     # WAN network options
 
-    option_allow_wan_networks: bool
+    option_track_wan_networks: bool
     """Config entry option to allow WAN network devices and entities."""
 
     @classmethod
@@ -133,7 +133,7 @@ class UnifiConfig:
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
             ),
-            option_allow_wan_networks=options.get(
-                CONF_ALLOW_WAN_NETWORKS, DEFAULT_ALLOW_WAN_NETWORKS
+            option_track_wan_networks=options.get(
+                CONF_TRACK_WAN_NETWORKS, DEFAULT_TRACK_WAN_NETWORKS
             ),
         )

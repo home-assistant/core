@@ -243,16 +243,16 @@
     "step": {
       "init": {
         "data": {
-          "allow_wan_networks": "Track WAN networks",
           "block_client": "Network access controlled clients",
           "track_clients": "Track network clients",
-          "track_devices": "Track network devices (Ubiquiti devices)"
+          "track_devices": "Track network devices (Ubiquiti devices)",
+          "track_wan_networks": "Track WAN networks"
         },
         "data_description": {
-          "allow_wan_networks": "Create a device per WAN network, with its status and load balancing and failover settings.",
           "block_client": "Select clients whose network access you want to control via switches.",
           "track_clients": "Create device tracker entities for network clients.",
-          "track_devices": "Create device tracker entities for Ubiquiti network devices."
+          "track_devices": "Create device tracker entities for Ubiquiti network devices.",
+          "track_wan_networks": "Create a device per WAN network, with its status and load balancing and failover settings."
         },
         "sections": {
           "more_options": {

@@ -12,7 +12,6 @@ from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
-    CONF_ALLOW_WAN_NETWORKS,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
@@ -24,6 +23,7 @@ from homeassistant.components.unifi.const import (
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WAN_NETWORKS,
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN,
 )
@@ -493,7 +493,7 @@ async def test_option_flow(
         user_input={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
-            CONF_ALLOW_WAN_NETWORKS: True,
+            CONF_TRACK_WAN_NETWORKS: True,
             CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
             CONF_MORE_OPTIONS: {
                 CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
@@ -522,7 +522,7 @@ async def test_option_flow(
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
-        CONF_ALLOW_WAN_NETWORKS: True,
+        CONF_TRACK_WAN_NETWORKS: True,
     }
 
 

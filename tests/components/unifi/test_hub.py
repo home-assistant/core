@@ -12,8 +12,8 @@ from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import (
-    CONF_ALLOW_WAN_NETWORKS,
     CONF_BLOCK_CLIENT,
+    CONF_TRACK_WAN_NETWORKS,
     DOMAIN,
 )
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
@@ -613,7 +613,7 @@ async def test_wan_networks_option_toggle(
     assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
 
     hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_ALLOW_WAN_NETWORKS: True}
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: True}
     )
     await hass.async_block_till_done()
 
@@ -621,7 +621,7 @@ async def test_wan_networks_option_toggle(
     assert _networkconf_requests(aioclient_mock) == 1
 
     hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_ALLOW_WAN_NETWORKS: False}
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: False}
     )
     await hass.async_block_till_done()
 
@@ -631,7 +631,7 @@ async def test_wan_networks_option_toggle(
     )
 
     hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_ALLOW_WAN_NETWORKS: True}
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: True}
     )
     await hass.async_block_till_done()
 

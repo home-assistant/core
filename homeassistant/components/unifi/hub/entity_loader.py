@@ -94,7 +94,7 @@ class UnifiEntityLoader:
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
-        self._wan_networks_loaded = self.hub.config.option_allow_wan_networks
+        self._wan_networks_loaded = self.hub.config.option_track_wan_networks
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
@@ -118,7 +118,7 @@ class UnifiEntityLoader:
 
     async def _async_load_wan_networks(self) -> None:
         """Fetch WAN networks once enabled, the handler then adds their entities."""
-        if self._wan_networks_loaded or not self.hub.config.option_allow_wan_networks:
+        if self._wan_networks_loaded or not self.hub.config.option_track_wan_networks:
             return
         self._wan_networks_loaded = True
         await self._data_coordinators[id(self.hub.api.networks)].async_refresh()
