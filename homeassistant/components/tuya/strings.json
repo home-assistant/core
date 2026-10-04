@@ -737,6 +737,9 @@
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
       },
+      "countdown_end": {
+        "name": "Countdown end"
+      },
       "current": {
         "name": "[%key:component::sensor::entity_component::current::name%]"
       },
