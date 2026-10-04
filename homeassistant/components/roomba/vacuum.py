@@ -34,11 +34,13 @@ SUPPORT_IROBOT = (
 STATE_MAP = {
     "": VacuumActivity.IDLE,
     "charge": VacuumActivity.DOCKED,
-    "evac": VacuumActivity.RETURNING,  # Emptying at cleanbase
+    "evac": VacuumActivity.DOCKED,  # Emptying at cleanbase; the robot does not move
     "hmMidMsn": VacuumActivity.CLEANING,  # Recharging at the middle of a cycle
     "hmPostMsn": VacuumActivity.RETURNING,  # Cycle finished
     "hmUsrDock": VacuumActivity.RETURNING,
+    "padWash": VacuumActivity.DOCKED,  # Dock washing the mop pad
     "pause": VacuumActivity.PAUSED,
+    "refill": VacuumActivity.DOCKED,  # Dock refilling the robot's tank
     "run": VacuumActivity.CLEANING,
     "stop": VacuumActivity.IDLE,
     "stuck": VacuumActivity.ERROR,
@@ -133,6 +135,9 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state = STATE_MAP[phase]
         except KeyError:
             return VacuumActivity.ERROR
+        # Dock servicing reports `run` with no mission cycle.
+        if phase == "run" and cycle == "none":
+            state = VacuumActivity.DOCKED
         # A robot stopped in the middle of a mission is paused, but one that is
         # docked to recharge mid-mission stays docked (the charging binary
         # sensor distinguishes it from a user-initiated pause on the floor).
