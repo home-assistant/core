@@ -209,6 +209,17 @@ class TestOnectaDataUpdateCoordinator:
         )
         assert coordinator.update_interval == timedelta(seconds=42)
 
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
+    async def test_recent_write_skips_cloud_polling(self, mock_now, coordinator):
+        """Use the configured cooldown before polling after a recent write."""
+        mock_now.return_value = datetime(2023, 1, 1, 12, 0)
+        coordinator.api.last_patch_call = mock_now.return_value - timedelta(seconds=1)
+        coordinator.api.get_cloud_device_details = AsyncMock()
+
+        assert await coordinator.async_update_data() == {}
+        assert coordinator.update_interval == timedelta(seconds=42)
+        coordinator.api.get_cloud_device_details.assert_not_awaited()
+
     async def test_connection_error_uses_update_failed(self, coordinator):
         """A connection error should mark the coordinator update as failed."""
         coordinator.api.last_patch_call = None
