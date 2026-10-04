@@ -6,8 +6,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
+    PRESET_ECO,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntity,
     HVACMode,
@@ -225,6 +233,140 @@ async def test_climate_service_updates_entity_state(
         "/operationModes/heating/setpoints/roomTemperature",
         21,
     )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", [["component.climate.services."]]
+)
+async def test_climate_platform_services_and_management_points(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test platform services with real entities for two management points."""
+
+    def climate_control(embedded_id: str, target_temperature: int) -> SimpleNamespace:
+        setpoint = SimpleNamespace(
+            value=target_temperature,
+            min_value=7,
+            max_value=30,
+            step_value=1,
+            settable=True,
+        )
+        fan_operation = SimpleNamespace(
+            fan_speed=SimpleNamespace(
+                current_mode=SimpleNamespace(value="auto", values=["auto", "quiet"]),
+                modes={},
+            ),
+            fan_direction=SimpleNamespace(
+                vertical=SimpleNamespace(
+                    current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+                ),
+                horizontal=None,
+            ),
+        )
+        presets = {
+            "powerfulMode": SimpleNamespace(value="off"),
+            "comfortMode": SimpleNamespace(value="off"),
+            "econoMode": SimpleNamespace(value="off"),
+        }
+        return SimpleNamespace(
+            embedded_id=embedded_id,
+            temperature_control=SimpleNamespace(
+                value=SimpleNamespace(
+                    operation_modes={
+                        mode: SimpleNamespace(setpoints={"roomTemperature": setpoint})
+                        for mode in ("heating", "cooling")
+                    }
+                )
+            ),
+            operation_mode=SimpleNamespace(
+                value="heating", values=["heating", "cooling"], settable=True
+            ),
+            on_off_mode=SimpleNamespace(value="on"),
+            fan_control=SimpleNamespace(
+                value=SimpleNamespace(
+                    operation_modes={
+                        "heating": fan_operation,
+                        "cooling": fan_operation,
+                    }
+                )
+            ),
+            holiday_mode=SimpleNamespace(value=SimpleNamespace(enabled=False)),
+            sensory_data=None,
+            characteristic=presets.get,
+        )
+
+    climate_controls = {
+        "living_room": climate_control("living_room", 20),
+        "bedroom": climate_control("bedroom", 18),
+    }
+    device = MagicMock(id="gateway", available=True)
+    device.name = "Daikin"
+    device.device = SimpleNamespace(
+        device_model="Daikin",
+        management_points_by_type=lambda _: tuple(climate_controls.values()),
+    )
+    device.management_point.side_effect = climate_controls.get
+    device.patch = AsyncMock(return_value=True)
+
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    coordinator.data = {device.id: device}
+    coordinator.last_update_success = True
+    coordinator.async_config_entry_first_refresh = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.daikin_onecta."
+            "config_entry_oauth2_flow.async_get_config_entry_implementation"
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    living_room_entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, "gateway_living_room_roomTemperature"
+    )
+    bedroom_entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, "gateway_bedroom_roomTemperature"
+    )
+    assert living_room_entity_id is not None
+    assert bedroom_entity_id is not None
+
+    async def call_service(service: str, **service_data: str | int | HVACMode) -> None:
+        """Call a climate service for the living room entity."""
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: living_room_entity_id, **service_data},
+            blocking=True,
+        )
+
+    await call_service(SERVICE_SET_TEMPERATURE, temperature=21)
+    await call_service(SERVICE_SET_HVAC_MODE, hvac_mode=HVACMode.COOL)
+    await call_service(SERVICE_SET_FAN_MODE, fan_mode="quiet")
+    await call_service(SERVICE_SET_SWING_MODE, swing_mode="swing")
+    await call_service(SERVICE_SET_PRESET_MODE, preset_mode=PRESET_ECO)
+
+    living_room_state = hass.states.get(living_room_entity_id)
+    bedroom_state = hass.states.get(bedroom_entity_id)
+    assert living_room_state is not None
+    assert bedroom_state is not None
+    assert living_room_state.state == HVACMode.COOL
+    assert living_room_state.attributes[ATTR_TEMPERATURE] == 21
+    assert living_room_state.attributes[ATTR_FAN_MODE] == "quiet"
+    assert living_room_state.attributes[ATTR_SWING_MODE] == "swing"
+    assert living_room_state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+    assert bedroom_state.state == HVACMode.HEAT
+    assert bedroom_state.attributes[ATTR_TEMPERATURE] == 18
 
 
 @pytest.mark.parametrize(
