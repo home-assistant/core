@@ -1812,6 +1812,9 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    schema = result["data_schema"].schema
+    assert next(iter(schema)) == CONF_VIN
+    assert schema[CONF_VIN].container == {VIN: "Test"}
 
     # async_schedule_reload is left unpatched so the real reload runs here with the
     # committed BLE address; keep the setup-time Bluetooth mocks active so it neither
