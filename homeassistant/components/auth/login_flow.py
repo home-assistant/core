@@ -98,6 +98,7 @@ from homeassistant.helpers.network import (
 from homeassistant.util.network import is_local
 
 from . import indieauth
+from .resource import normalize_resource
 
 if TYPE_CHECKING:
     from homeassistant.auth.providers.trusted_networks import (
@@ -332,6 +333,7 @@ class LoginFlowBaseView(HomeAssistantView):
             result_obj,
             redirect_uri=context["redirect_uri"],
             code_challenge=context.get("code_challenge"),
+            resource=context.get("resource"),
         )
 
         return self.json(response)
@@ -360,6 +362,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 probatio.Optional("code_challenge"): str,
                 probatio.Optional("response_type"): "code",
                 probatio.Optional("state"): str,
+                probatio.Optional("resource"): str,
                 probatio.Optional("code_challenge_method"): str,
                 probatio.Optional(
                     "type", default="authorize"
@@ -382,6 +385,20 @@ class LoginFlowIndexView(LoginFlowBaseView):
         ):
             return self.json_message("Invalid PKCE parameters", HTTPStatus.BAD_REQUEST)
 
+        try:
+            resource = normalize_resource(request.app[KEY_HASS], data.get("resource"))
+        except ValueError:
+            return self.json(
+                {"error": "invalid_target", "message": "Invalid resource"},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+        if resource is not None and data["type"] == "link_user":
+            return self.json(
+                {"error": "invalid_target", "message": "Invalid resource"},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
         handler: tuple[str, str] = tuple(data["handler"])
         context = AuthFlowContext(
             client_id=client_id,
@@ -390,6 +407,8 @@ class LoginFlowIndexView(LoginFlowBaseView):
         )
         if code_challenge is not None:
             context["code_challenge"] = code_challenge
+        if resource is not None:
+            context["resource"] = resource
 
         try:
             result = await self._flow_mgr.async_init(

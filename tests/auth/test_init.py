@@ -35,6 +35,57 @@ from tests.common import (
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
 
 
+@pytest.mark.parametrize(
+    "resource",
+    [pytest.param(None, id="legacy"), pytest.param("https://example.com", id="bound")],
+)
+async def test_access_token_resource(hass: HomeAssistant, resource: str | None) -> None:
+    """Access tokens keep the audience of their refresh token."""
+    user = await hass.auth.async_create_user("Test User")
+    refresh_token = await hass.auth.async_create_refresh_token(
+        user, CLIENT_ID, resource=resource
+    )
+    access_token = hass.auth.async_create_access_token(refresh_token)
+    assert hass.auth.async_validate_access_token(access_token) is refresh_token
+    claims = jwt.decode(
+        access_token,
+        refresh_token.jwt_key,
+        algorithms=["HS256"],
+        options={"verify_aud": False},
+    )
+    assert claims.get("aud") == resource
+
+
+@pytest.mark.parametrize(
+    ("resource", "audience"),
+    [
+        pytest.param("https://example.com", {}, id="missing"),
+        pytest.param(
+            "https://example.com", {"aud": "https://other.example"}, id="wrong"
+        ),
+        pytest.param(
+            "https://example.com", {"aud": ["https://example.com"]}, id="multiple-form"
+        ),
+        pytest.param(None, {"aud": "https://example.com"}, id="unexpected"),
+    ],
+)
+async def test_reject_access_token_with_incorrect_audience(
+    hass: HomeAssistant, resource: str | None, audience: dict[str, str | list[str]]
+) -> None:
+    """Even a signed access token must match the stored grant audience."""
+    user = await hass.auth.async_create_user("Test User")
+    refresh_token = await hass.auth.async_create_refresh_token(
+        user, CLIENT_ID, resource=resource
+    )
+    now = int(time.time())
+    access_token = jwt.encode(
+        {"iss": refresh_token.id, "iat": now, "exp": now + 1800, **audience},
+        refresh_token.jwt_key,
+        algorithm="HS256",
+    )
+    assert hass.auth.async_validate_access_token(access_token) is None
+
+
 @pytest.fixture
 def mock_hass(hass: HomeAssistant) -> HomeAssistant:
     """Home Assistant mock with minimum amount of data set to make it work with auth."""

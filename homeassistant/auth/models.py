@@ -30,6 +30,7 @@ class AuthFlowContext(FlowContext, total=False):
     code_challenge: str
     ip_address: IPv4Address | IPv6Address
     redirect_uri: str
+    resource: str
 
 
 class AuthFlowResult(FlowResult[AuthFlowContext, tuple[str, str]], total=False):
@@ -129,6 +130,7 @@ class RefreshToken:
     credential: Credentials | None = attr.ib(default=None)
 
     version: str | None = attr.ib(default=__version__)
+    resource: str | None = attr.ib(default=None, kw_only=True)
 
 
 @attr.s(slots=True)

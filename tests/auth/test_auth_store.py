@@ -10,6 +10,30 @@ import pytest
 from homeassistant.auth import auth_store
 from homeassistant.core import HomeAssistant
 
+from tests.common import flush_store
+
+
+@pytest.mark.parametrize(
+    "resource",
+    [pytest.param(None, id="legacy"), pytest.param("https://example.com", id="bound")],
+)
+async def test_refresh_token_resource_survives_reload(
+    hass: HomeAssistant, resource: str | None
+) -> None:
+    """Restarting Home Assistant preserves resource restrictions on grants."""
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    user = await store.async_create_user("Test User")
+    token = await store.async_create_refresh_token(user, "client-id", resource=resource)
+    await flush_store(store._store)
+
+    reloaded = auth_store.AuthStore(hass)
+    await reloaded.async_load()
+    saved_token = reloaded.async_get_refresh_token(token.id)
+    assert saved_token is not None
+    assert saved_token.resource == resource
+
+
 MOCK_STORAGE_DATA = {
     "version": 1,
     "data": {

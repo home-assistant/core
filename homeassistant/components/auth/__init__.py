@@ -163,6 +163,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from . import indieauth, login_flow, mfa_setup_flow
+from .resource import normalize_resource
 
 DOMAIN = "auth"
 
@@ -175,6 +176,7 @@ class AuthCodeEntry:
     created: datetime
     redirect_uri: str | None = None
     code_challenge: str | None = None
+    resource: str | None = None
 
 
 class AuthorizationCodeValidationError(NamedTuple):
@@ -193,6 +195,7 @@ class StoreResultType(Protocol):
         result: Credentials,
         redirect_uri: str | None = None,
         code_challenge: str | None = None,
+        resource: str | None = None,
     ) -> str:
         """Store an authorization code."""
 
@@ -206,6 +209,7 @@ class RetrieveResultType(Protocol):
         code: str,
         redirect_uri: str | None = None,
         code_verifier: str | None = None,
+        resource: str | None = None,
     ) -> Credentials | AuthorizationCodeValidationError:
         """Return credentials only after validating all code bindings."""
 
@@ -222,6 +226,7 @@ def create_auth_code(
     credential: Credentials,
     redirect_uri: str | None = None,
     code_challenge: str | None = None,
+    resource: str | None = None,
 ) -> str:
     """Create an authorization code to fetch tokens."""
     return hass.data[DATA_STORE](
@@ -229,6 +234,7 @@ def create_auth_code(
         credential,
         redirect_uri=redirect_uri,
         code_challenge=code_challenge,
+        resource=resource,
     )
 
 
@@ -361,11 +367,19 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
+        try:
+            resource = normalize_resource(hass, data.get("resource"))
+        except ValueError:
+            return self.json(
+                {"error": "invalid_target"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+
         credential = self._retrieve_auth(
             client_id,
             code,
             redirect_uri=data.get("redirect_uri"),
             code_verifier=data.get("code_verifier"),
+            resource=resource,
         )
         if isinstance(credential, AuthorizationCodeValidationError):
             error_response = {"error": credential.error}
@@ -388,7 +402,7 @@ class TokenView(HomeAssistantView):
             )
 
         refresh_token = await hass.auth.async_create_refresh_token(
-            user, client_id, credential=credential
+            user, client_id, credential=credential, resource=resource
         )
         try:
             access_token = hass.auth.async_create_access_token(
@@ -446,6 +460,16 @@ class TokenView(HomeAssistantView):
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )
+
+        if "resource" in data:
+            try:
+                resource = normalize_resource(hass, data["resource"])
+            except ValueError:
+                resource = None
+            if resource is None or resource != refresh_token.resource:
+                return self.json(
+                    {"error": "invalid_target"}, status_code=HTTPStatus.BAD_REQUEST
+                )
 
         if user_access_error := async_user_not_allowed_do_auth(
             hass, refresh_token.user
@@ -536,6 +560,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
         result: Credentials,
         redirect_uri: str | None = None,
         code_challenge: str | None = None,
+        resource: str | None = None,
     ) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
@@ -547,6 +572,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
             created=dt_util.utcnow(),
             redirect_uri=redirect_uri,
             code_challenge=code_challenge,
+            resource=resource,
         )
         return code
 
@@ -556,6 +582,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
         code: str,
         redirect_uri: str | None = None,
         code_verifier: str | None = None,
+        resource: str | None = None,
     ) -> Credentials | AuthorizationCodeValidationError:
         """Validate and consume the code before yielding to another request."""
         key = (client_id, code)
@@ -570,6 +597,8 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
             del temp_results[key]
             return AuthorizationCodeValidationError("invalid_grant", "Invalid code")
 
+        if entry.resource != resource:
+            return AuthorizationCodeValidationError("invalid_target")
         if entry.code_challenge is not None:
             if not code_verifier:
                 return AuthorizationCodeValidationError(

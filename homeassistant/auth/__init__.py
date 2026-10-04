@@ -459,6 +459,8 @@ class AuthManager:
         token_type: str | None = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
         credential: models.Credentials | None = None,
+        *,
+        resource: str | None = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -514,6 +516,7 @@ class AuthManager:
             access_token_expiration,
             expire_at,
             credential,
+            resource=resource,
         )
 
     @callback
@@ -611,6 +614,7 @@ class AuthManager:
                 "iss": refresh_token.id,
                 "iat": now,
                 "exp": now + expire_seconds,
+                **({"aud": refresh_token.resource} if refresh_token.resource else {}),
             },
             refresh_token.jwt_key,
             algorithm="HS256",
@@ -670,13 +674,21 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt_wrapper.verify_and_decode(
-                token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
+            claims = jwt_wrapper.verify_and_decode(
+                token,
+                jwt_key,
+                leeway=10,
+                issuer=issuer,
+                algorithms=["HS256"],
+                options={"verify_aud": False},
             )
         except jwt.InvalidTokenError, jwt.InvalidKeyError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:
+            return None
+
+        if claims.get("aud") != refresh_token.resource:
             return None
 
         return refresh_token
