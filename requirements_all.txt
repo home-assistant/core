@@ -481,7 +481,7 @@ aiovitesy==1.3.0
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.2
+aiovodafone==3.3.5
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -728,7 +728,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.13
+boschshcpy==0.6.15
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -2153,9 +2153,6 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.6
 
-# homeassistant.components.radio_browser
-pycountry==24.6.1
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2187,7 +2184,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.9.0
+pydrawise==2026.9.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2951,7 +2948,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==1.0.0
+radios==2.0.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -3333,7 +3330,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==17.7.0
+uiprotect==20.2.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
