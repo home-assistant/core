@@ -17,6 +17,7 @@ from aiopowerwall import (
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
@@ -57,6 +58,7 @@ from homeassistant.components.teslemetry.const import (
     SUBENTRY_TYPE_VEHICLE,
     TOKEN_URL,
 )
+from homeassistant.components.teslemetry.coordinator import METADATA_INTERVAL
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
@@ -77,7 +79,7 @@ from homeassistant.setup import async_setup_component
 from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -1661,11 +1663,38 @@ async def test_subentry_add_flow_hides_unsupported_vehicles(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    options = result["data_schema"].schema[CONF_VIN].config["options"]
-    assert options == [
-        {"value": "LRW3F7EK4NC700001", "label": "Supported"},
-        {"value": "LRW3F7EK4NC700003", "label": "Unknown"},
-    ]
+    assert result["data_schema"].schema[CONF_VIN].container == {
+        "LRW3F7EK4NC700001": "Supported",
+        "LRW3F7EK4NC700003": "Unknown",
+    }
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_keeps_vehicle_without_metadata(
+    hass: HomeAssistant, mock_metadata: AsyncMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A vehicle missing from refreshed metadata is offered as unknown support."""
+    entry = await _setup_account_entry(hass)
+    metadata = deepcopy(METADATA)
+    del metadata["vehicles"][VIN]
+    mock_metadata.return_value = metadata
+
+    # The flow can open after the metadata refresh but before its reload runs.
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+            context={"source": "user"},
+        )
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_VIN].container == {VIN: "Test"}
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
