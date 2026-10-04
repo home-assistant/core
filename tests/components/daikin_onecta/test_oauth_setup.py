@@ -131,5 +131,4 @@ async def test_setup_entry_preserves_reauth_from_first_refresh(
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
-    if config_entry.state is ConfigEntryState.LOADED:
-        pytest.fail("config entry should not be LOADED after reauth failure")
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
