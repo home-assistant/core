@@ -8,7 +8,6 @@ from typing import Any, override
 from forecast_solar.models import Estimate
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -168,7 +167,6 @@ class ForecastSolarSensorEntity(
         """Initialize Forecast.Solar sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = entity_description
-        self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
@@ -179,6 +177,12 @@ class ForecastSolarSensorEntity(
             name="Solar production forecast",
             configuration_url="https://forecast.solar",
         )
+
+    @property
+    @override
+    def suggested_object_id(self) -> str | None:
+        """Base the entity ID on the key, prefixed with the device name."""
+        return self.entity_description.key
 
     @property
     @override
