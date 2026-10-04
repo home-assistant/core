@@ -12,6 +12,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager, suppress
+from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 import functools as ft
@@ -98,7 +99,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
+from homeassistant.helpers.json import JSONEncoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, ulid as ulid_util, uuid as uuid_util
@@ -1518,71 +1519,45 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
     if data is None:
         data = {}
 
-    orig_load = storage.Store._async_load
+    class MockStoreIO(storage._FileStoreIO):
+        """Store serialized envelopes in the fixture's shared dictionary."""
 
-    async def mock_async_load(
-        store: storage.Store,
-    ) -> dict[str, Any] | list[Any] | None:
-        """Mock version of load."""
-        if store._data is None:
-            # No data to load
-            if store.key not in data:
-                # Make sure the next attempt will still load
-                store._load_task = None
-                return None
-
-            mock_data = data.get(store.key)
-
-            if "data" not in mock_data or "version" not in mock_data:
+        async def async_load(self) -> JsonValueType:
+            """Read a copy without consuming pending writes or filesystem caches."""
+            if self._key not in data:
+                return {}
+            envelope = data[self._key]
+            if "data" not in envelope or "version" not in envelope:
                 _LOGGER.error('Mock data needs "version" and "data"')
                 raise ValueError('Mock data needs "version" and "data"')
+            return deepcopy(envelope)
 
-            store._data = mock_data
+        @callback
+        def async_invalidate_cache(self) -> None:
+            """The fixture dictionary is authoritative and has no preload cache."""
 
-        # Route through original load so that we trigger migration
-        loaded = await orig_load(store)
-        _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
-        return loaded
+        async def async_write(self, mode: str, json_data: str | bytes) -> None:
+            """Decode the envelope serialized by Store."""
+            data[self._key] = json_loads(json_data)
 
-    async def mock_write_data(
-        store: storage.Store, data_to_write: dict[str, Any]
-    ) -> None:
-        """Mock version of write data."""
-        # To ensure that the data can be serialized
-        _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
-        raise_contains_mocks(data_to_write)
+        async def async_remove(self) -> None:
+            """Remove the envelope after Store cleans up its scheduled writes."""
+            data.pop(self._key, None)
 
-        if "data_func" in data_to_write:
-            data_to_write["data"] = data_to_write.pop("data_func")()
+    original_prepare_save_json = storage.json_helper.prepare_save_json
 
-        encoder = store._encoder
-        if encoder and encoder is not JSONEncoder:
-            # If they pass a custom encoder that is not the
-            # default JSONEncoder, we use the slow path of json.dumps
-            dump = ft.partial(json.dumps, cls=store._encoder)
-        else:
-            dump = _orjson_default_encoder
-        data[store.key] = json_loads(dump(data_to_write))
-
-    async def mock_remove(store: storage.Store) -> None:
-        """Remove data."""
-        data.pop(store.key, None)
+    def checked_prepare_save_json(
+        value: list | dict, *, encoder: type[json.JSONEncoder] | None = None
+    ) -> tuple[str, str | bytes]:
+        """Reject mocks before delegating to production serialization."""
+        raise_contains_mocks(value)
+        return original_prepare_save_json(value, encoder=encoder)
 
     with (
+        patch("homeassistant.helpers.storage._FileStoreIO", MockStoreIO),
         patch(
-            "homeassistant.helpers.storage.Store._async_load",
-            side_effect=mock_async_load,
-            autospec=True,
-        ),
-        patch(
-            "homeassistant.helpers.storage.Store._async_write_data",
-            side_effect=mock_write_data,
-            autospec=True,
-        ),
-        patch(
-            "homeassistant.helpers.storage.Store.async_remove",
-            side_effect=mock_remove,
-            autospec=True,
+            "homeassistant.helpers.storage.json_helper.prepare_save_json",
+            checked_prepare_save_json,
         ),
     ):
         yield data
