@@ -495,6 +495,7 @@ FLOWS = {
         "mikrotik",
         "mill",
         "minecraft_server",
+        "mistral_ai",
         "mitsubishi_comfort",
         "mjpeg",
         "moat",
