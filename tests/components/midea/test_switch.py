@@ -276,6 +276,44 @@ async def test_child_lock_switch_created_and_services(
     )
 
 
+@pytest.mark.parametrize(("device_type"), [DeviceType.DA, DeviceType.DB, DeviceType.DC])
+async def test_washing_machine_switch_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+) -> None:
+    """Test the washing machine start switch service calls reach the device."""
+    switches = ["power", "start"]
+    device = DummyDevice(
+        device_type,
+        attributes={"power": False, "start": False},
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    for switch in switches:
+        entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_{switch}"]
+
+        assert (state := hass.states.get(entity_entry.entity_id)) is not None
+        assert state.state == "off"
+
+        await _assert_service_call(
+            hass,
+            entity_entry.entity_id,
+            SERVICE_TURN_ON,
+            [("set_attribute", switch, True)],
+            device,
+        )
+        await _assert_service_call(
+            hass,
+            entity_entry.entity_id,
+            SERVICE_TURN_OFF,
+            [("set_attribute", switch, False)],
+            device,
+        )
+
+
 async def test_a1_pump_services(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
