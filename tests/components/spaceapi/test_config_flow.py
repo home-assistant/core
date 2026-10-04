@@ -233,6 +233,7 @@ async def test_v15_removes_deprecated_fields(
     assert "api" not in data
     assert "issue_report_channels" not in data
     assert data["state"] == {
+        "open": None,
         "lastchange": 0,
         "icon": {
             "open": "https://example.com/open.png",

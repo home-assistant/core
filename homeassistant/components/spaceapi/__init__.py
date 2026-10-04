@@ -398,14 +398,14 @@ class APISpaceApiView(HomeAssistantView):
 
         state_entity_id = spaceapi[CONF_STATE][ATTR_ENTITY_ID]
 
-        state: dict[str, bool | int | float | str | dict[str, str]]
+        state: dict[str, bool | int | float | str | dict[str, str] | None]
         if (space_state := hass.states.get(state_entity_id)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
             }
         elif spaceapi.get(CONF_API_VERSION) == SPACEAPI_VERSION_15:
-            state = {ATTR_LASTCHANGE: 0}
+            state = {ATTR_OPEN: None, ATTR_LASTCHANGE: 0}
         else:
             state = {
                 ATTR_OPEN: "null",
