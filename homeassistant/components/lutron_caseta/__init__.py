@@ -20,6 +20,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -46,6 +47,7 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
+    SIGNAL_BUTTON_EVENT,
     UNASSIGNED_AREA,
 )
 from .device_trigger import (
@@ -97,6 +99,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
@@ -322,6 +325,7 @@ def _async_setup_keypads(
 
     _async_subscribe_keypad_events(
         hass=hass,
+        config_entry_id=config_entry_id,
         bridge=bridge,
         keypads=keypads,
         keypad_buttons=keypad_buttons,
@@ -444,6 +448,7 @@ def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
 @callback
 def _async_subscribe_keypad_events(
     hass: HomeAssistant,
+    config_entry_id: str,
     bridge: Smartbridge,
     keypads: dict[int, LutronKeypad],
     keypad_buttons: dict[int, LutronButton],
@@ -488,6 +493,11 @@ def _async_subscribe_keypad_events(
                 ATTR_BUTTON_TYPE: button_type,
                 ATTR_ACTION: action,
             },
+        )
+        # The bridge allows one subscriber per button, so event entities
+        # receive button actions through this signal instead.
+        async_dispatcher_send(
+            hass, SIGNAL_BUTTON_EVENT.format(config_entry_id, button_id), action
         )
 
     for button_id in keypad_buttons:
