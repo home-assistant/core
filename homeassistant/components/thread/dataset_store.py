@@ -55,7 +55,7 @@ def _format_dataset(
     return result
 
 
-def _normalize_dataset(
+def normalize_dataset(
     dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
 ) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
     """Normalize a dataset for equivalence comparison.
@@ -340,8 +340,8 @@ class DatasetStore:
             if old_ts >= new_ts:
                 # Silently accept datasets that are functionally equivalent but
                 # reported without a newer active timestamp by some OpenThread
-                # Border Router versions (see _normalize_dataset).
-                if old_ts > new_ts or _normalize_dataset(dataset) != _normalize_dataset(
+                # Border Router versions (see normalize_dataset).
+                if old_ts > new_ts or normalize_dataset(dataset) != normalize_dataset(
                     entry.dataset
                 ):
                     _LOGGER.warning(
@@ -563,6 +563,16 @@ class DatasetStore:
     def async_schedule_save(self) -> None:
         """Schedule saving the dataset store."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    async def async_save(self) -> None:
+        """Write the dataset store now, ahead of any scheduled save.
+
+        For a caller whose write has an external side effect that cannot be
+        called back, such as a mesh that is already migrating to the stored
+        credentials, so that a crash inside the save delay cannot leave the
+        store behind the network.
+        """
+        await self._store.async_save(self._data_to_save())
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:

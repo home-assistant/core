@@ -1,15 +1,22 @@
 """Utility functions for the Open Thread Border Router integration."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
 import logging
+import math
 import random
 from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 import aiohttp
+from awesomeversion import AwesomeVersion, AwesomeVersionException
 import python_otbr_api
-from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
+from python_otbr_api import (
+    PENDING_DATASET_DELAY_TIMER,
+    PENDING_DATASET_TIMEOUT,
+    tlv_parser,
+)
 from python_otbr_api.pskc import compute_pskc
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
@@ -19,16 +26,235 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     is_multiprotocol_url,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import API_TIMEOUT, DOMAIN
 
 if TYPE_CHECKING:
     from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DATASET_LOCK_KEY: HassKey[asyncio.Lock] = HassKey("otbr_dataset_lock")
+ISSUED_TIMESTAMPS_KEY: HassKey[IssuedTimestamps] = HassKey("otbr_issued_timestamps")
+ISSUED_TIMESTAMPS_STORAGE_KEY = f"{DOMAIN}.issued_timestamps"
+ISSUED_TIMESTAMPS_STORAGE_VERSION = 1
+
+# The REST API version from which the border router registers a pending
+# dataset with the Thread leader instead of writing it locally
+# (ot-br-posix#3582).
+_LEADER_REGISTERING_API = AwesomeVersion("0.6.0")
+
+# How long a pending dataset write can take: up to two reads within the
+# API timeout, then the write, waiting for the leader's verdict for as long
+# as the library allows.
+_WRITE_WINDOW_S = 2 * API_TIMEOUT + PENDING_DATASET_TIMEOUT
+
+
+class IssuedTimestamps:
+    """The newest timestamp this integration has issued, per source network.
+
+    Keyed by extended PAN ID: a busy network must not raise the floor for the
+    others, which would eventually exhaust their timestamps too.
+
+    Kept on disk, not only in memory: a pending dataset takes its delay to
+    reach every router on the mesh, and a restart inside that window must not
+    let the next migration hand out the stamp again.
+
+    The record also remembers until when the issued dataset is propagating.
+    A newer stamp alone does not protect the mesh in that window: a second
+    migration handed to a router that has not learned the first dataset yet
+    supersedes it, and devices that only ever received the first one switch
+    to a different network than the rest.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the record."""
+        self._store = Store[dict[str, dict[str, Any]]](
+            hass,
+            ISSUED_TIMESTAMPS_STORAGE_VERSION,
+            ISSUED_TIMESTAMPS_STORAGE_KEY,
+            # This file exists to survive an ill-timed restart; the same
+            # restart must not be able to truncate an in-place rewrite.
+            atomic_writes=True,
+        )
+        self._issued: dict[str, tuple[int, int]] = {}
+        self._until: dict[str, float] = {}
+
+    async def async_load(self) -> None:
+        """Load what was issued before the last restart."""
+        if data := await self._store.async_load():
+            for xpan, record in data.items():
+                seconds, ticks = record["timestamp"]
+                self._issued[xpan] = (seconds, ticks)
+                self._until[xpan] = record["until"]
+
+    def get(self, extended_pan_id: str) -> tuple[int, int]:
+        """Return the newest timestamp issued for a network."""
+        return self._issued.get(extended_pan_id, (0, 0))
+
+    def seconds_in_flight(self, extended_pan_id: str) -> int:
+        """Return how long the dataset issued for a network keeps propagating.
+
+        Zero once its delay has expired, or when nothing was issued.
+        """
+        remaining = self._until.get(extended_pan_id, 0) - dt_util.utcnow().timestamp()
+        return max(0, math.ceil(remaining))
+
+    def record(self, extended_pan_id: str) -> tuple[tuple[int, int], float] | None:
+        """Return what is recorded for a network, to hand to async_restore."""
+        if extended_pan_id not in self._issued:
+            return None
+        return (self._issued[extended_pan_id], self._until[extended_pan_id])
+
+    async def async_set(
+        self, extended_pan_id: str, timestamp: tuple[int, int], *, until: float
+    ) -> None:
+        """Record a timestamp about to be issued for a network.
+
+        Written through before the caller hands the dataset to the router:
+        delaying the save would reopen the window this record exists to close.
+        """
+        self._issued[extended_pan_id] = timestamp
+        self._until[extended_pan_id] = until
+        await self._async_save()
+
+    async def async_restore(
+        self, extended_pan_id: str, record: tuple[tuple[int, int], float] | None
+    ) -> None:
+        """Put back what record() returned, when the issued dataset never left.
+
+        A router that refused the write leaves no migration under way; the
+        window recorded for it would only refuse every retry until it expired.
+        """
+        if record is None:
+            self._issued.pop(extended_pan_id, None)
+            self._until.pop(extended_pan_id, None)
+        else:
+            self._issued[extended_pan_id], self._until[extended_pan_id] = record
+        await self._async_save()
+
+    async def async_write(
+        self,
+        data: OTBRData,
+        extended_pan_id: str,
+        timestamp: tuple[int, int],
+        delay: float,
+        write: Callable[[], Coroutine[Any, Any, None]],
+    ) -> None:
+        """Run a pending dataset write inside the window it opens on the mesh.
+
+        The record is written before the write and deliberately outlasts the
+        delay: the router starts its own timer only once it accepts the
+        dataset, up to _WRITE_WINDOW_S later, and a crash in between leaves
+        this record as the only one. Erring long costs a late retry after
+        such a crash; erring short lets the next migration overtake a mesh
+        still counting down. The record is tightened to the real deadline
+        once the write completes.
+        """
+        previous = self.record(extended_pan_id)
+        await self.async_set(
+            extended_pan_id,
+            timestamp,
+            until=dt_util.utcnow().timestamp() + delay + _WRITE_WINDOW_S,
+        )
+        try:
+            await write()
+        except HomeAssistantError as err:
+            # A verdict from the router, the library's own refusal, or a
+            # connection that never came up: nothing was written. A router
+            # that registered the dataset with the leader and got no answer
+            # may well have written it, and is not asked; one the connection
+            # to dropped is asked whether it holds a pending dataset.
+            # Something propagating keeps the window, measured from the
+            # latest moment the write can have landed; nothing hands it
+            # back, or every retry would be refused until it expired.
+            cause = err.__cause__
+            if isinstance(cause, python_otbr_api.PendingDatasetOutcomeUnknownError):
+                in_flight = True
+            elif isinstance(
+                cause, (python_otbr_api.OTBRError, aiohttp.ClientConnectorError)
+            ):
+                in_flight = False
+            else:
+                in_flight = await _router_holds_a_pending_dataset(data)
+            if in_flight:
+                await self.async_set(
+                    extended_pan_id,
+                    timestamp,
+                    until=dt_util.utcnow().timestamp() + delay,
+                )
+            else:
+                await self.async_restore(extended_pan_id, previous)
+            raise
+        # The router's delay timer started when it accepted the write, not
+        # when the request left: a slow request would otherwise end the
+        # recorded window while the mesh is still counting down.
+        await self.async_set(
+            extended_pan_id, timestamp, until=dt_util.utcnow().timestamp() + delay
+        )
+
+    async def _async_save(self) -> None:
+        await self._store.async_save(
+            {
+                xpan: {"timestamp": list(stamp), "until": self._until[xpan]}
+                for xpan, stamp in self._issued.items()
+            }
+        )
+
+
+@singleton(ISSUED_TIMESTAMPS_KEY, async_=True)
+async def async_get_issued_timestamps(hass: HomeAssistant) -> IssuedTimestamps:
+    """Return the record of issued timestamps, loading it on first use."""
+    issued = IssuedTimestamps(hass)
+    await issued.async_load()
+    return issued
+
+
+async def _router_holds_a_pending_dataset(data: OTBRData) -> bool:
+    """Return whether the router has a pending dataset, assuming it does.
+
+    Asked after a write whose outcome the connection did not report. Any
+    pending dataset means one is propagating, whether or not it is the one
+    that was being written. A router that cannot be asked leaves the
+    question open, and the answer that protects the mesh is that there is
+    one.
+
+    So does a router that registers the dataset with the Thread leader:
+    its own copy only arrives once the leader hands the dataset back to
+    the mesh, so not holding one right after the write says nothing about
+    whether the write landed. It is not asked.
+    """
+    try:
+        version = await data.get_api_version()
+        if version is not None and AwesomeVersion(version) >= _LEADER_REGISTERING_API:
+            return True
+        return await data.get_pending_dataset_tlvs() is not None
+    except HomeAssistantError, AwesomeVersionException:
+        return True
+
+
+@callback
+def async_get_dataset_lock(hass: HomeAssistant) -> asyncio.Lock:
+    """Return the lock serializing dataset mutations.
+
+    It covers every config entry, and is acquired by callers rather than by
+    the OTBRData methods, so a sequence that reads the router's state and
+    writes it back stays atomic: concurrent writers would otherwise work from
+    state the other has already replaced, and the mesh silently ignores
+    whichever pending dataset is not the newest while its writer still
+    reports success.
+    """
+    if (lock := hass.data.get(DATASET_LOCK_KEY)) is None:
+        lock = hass.data[DATASET_LOCK_KEY] = asyncio.Lock()
+    return lock
 
 
 INSECURE_NETWORK_KEYS = (
@@ -62,12 +288,43 @@ def generate_random_pan_id() -> int:
 def _handle_otbr_error[**_P, _R](
     func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
-    """Handle OTBR errors."""
+    """Handle OTBR errors.
+
+    The verdicts on a pending dataset write each get their own error: the
+    caller has to tell "nothing happened" from "something may have", and
+    the user is told the router's reason.
+    """
 
     @wraps(func)
     async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
+        except python_otbr_api.PendingDatasetConflictError as exc:
+            # A write the library refused because the mesh is already
+            # mid-change. Every caller of one gets the same answer -- wait
+            # the in-flight change out, do not retry -- so it is told here
+            # rather than reported as a generic API failure.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="pending_dataset_in_place",
+            ) from exc
+        except python_otbr_api.PendingDatasetRejectedError as exc:
+            # The router is not attached, the leader refused the dataset, or
+            # an earlier registration is still being answered.
+            if exc.reason:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="pending_dataset_refused_reason",
+                    translation_placeholders={"reason": exc.reason},
+                ) from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="pending_dataset_refused"
+            ) from exc
+        except python_otbr_api.PendingDatasetOutcomeUnknownError as exc:
+            # The leader did not answer in time, so the write may have landed.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="pending_dataset_unanswered"
+            ) from exc
         except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
             raise HomeAssistantError("Failed to call OTBR API") from exc
 
@@ -107,6 +364,11 @@ class OTBRData:
             raise GetBorderAgentIdNotSupported from exc
 
     @_handle_otbr_error
+    async def get_api_version(self) -> str | None:
+        """Get the REST API version, or None for a router that has none."""
+        return await self.api.get_api_version()
+
+    @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
         """Enable or disable the router."""
         return await self.api.set_enabled(enabled)
@@ -144,10 +406,54 @@ class OTBRData:
         await self.api.set_active_dataset_tlvs(dataset)
 
     @_handle_otbr_error
+    async def set_pending_dataset_tlvs(self, dataset: bytes) -> None:
+        """Set the pending operational dataset in TLVS format.
+
+        Refused while a pending dataset is in place; a border router that
+        registers the dataset with the Thread leader (ot-br-posix#3582) can
+        also reject it, or report no verdict. The wrapper names each.
+        """
+        await self.api.set_pending_dataset_tlvs(dataset)
+
     async def set_channel(
-        self, channel: int, delay: float = PENDING_DATASET_DELAY_TIMER / 1000
+        self,
+        hass: HomeAssistant,
+        channel: int,
+        delay: float = PENDING_DATASET_DELAY_TIMER / 1000,
     ) -> None:
-        """Set current channel."""
+        """Change the channel with a pending dataset, recording it as propagating.
+
+        The change reaches every router on the mesh, so it is recorded like a
+        migration: a migration of the mesh is refused until the delay expires,
+        and stamped above the change afterwards. Refused while a migration is
+        propagating, for the same reason. The caller holds the dataset lock.
+        """
+        active = await self.get_active_dataset()
+        if active is None or not active.extended_pan_id:
+            # Nothing to key a record on; the library refuses the write itself.
+            await self._set_channel(channel, delay)
+            return
+        extended_pan_id = active.extended_pan_id.lower()
+        issued = await async_get_issued_timestamps(hass)
+        if remaining := issued.seconds_in_flight(extended_pan_id):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="migration_in_flight",
+                translation_placeholders={"remaining": str(remaining)},
+            )
+        # The library stamps the pending dataset one second above the active one.
+        stamp = active.active_timestamp
+        seconds = stamp.seconds if stamp and stamp.seconds is not None else 0
+        await issued.async_write(
+            self,
+            extended_pan_id,
+            (seconds + 1, 0),
+            delay,
+            lambda: self._set_channel(channel, delay),
+        )
+
+    @_handle_otbr_error
+    async def _set_channel(self, channel: int, delay: float) -> None:
         await self.api.set_channel(channel, delay=int(delay * 1000))
 
     @_handle_otbr_error

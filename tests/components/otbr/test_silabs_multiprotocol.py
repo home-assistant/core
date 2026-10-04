@@ -1,16 +1,19 @@
 """Test OTBR Silicon Labs Multiprotocol support."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_otbr_api import ActiveDataSet, tlv_parser
+from python_otbr_api import ActiveDataSet, Timestamp, tlv_parser
 
 from homeassistant.components.otbr import (
     silabs_multiprotocol as otbr_silabs_multiprotocol,
 )
+from homeassistant.components.otbr.util import async_get_issued_timestamps
 from homeassistant.components.thread import dataset_store
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from . import DATASET_CH16
 
@@ -34,6 +37,20 @@ DATASET_CH16_PENDING = (
 @pytest.fixture(autouse=True)
 def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
     """Mock supervisor client."""
+
+
+@pytest.fixture(autouse=True)
+def router_on_its_network() -> Generator[None]:
+    """Have the router report the network of DATASET_CH16 as its active one."""
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset",
+        return_value=ActiveDataSet(
+            channel=16,
+            extended_pan_id="F642646DA209B1C0",
+            active_timestamp=Timestamp(seconds=1, ticks=0),
+        ),
+    ):
+        yield
 
 
 async def test_async_change_channel(
@@ -62,6 +79,48 @@ async def test_async_change_channel(
     assert list(store.datasets.values())[0].tlv == tlv_parser.encode_tlv(
         pending_dataset
     )
+
+
+async def test_async_change_channel_records_the_window(
+    hass: HomeAssistant, otbr_config_entry_multipan: str
+) -> None:
+    """The change is recorded as propagating on the mesh for its delay."""
+    with (
+        patch("python_otbr_api.OTBR.set_channel"),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    issued = await async_get_issued_timestamps(hass)
+    assert issued.get("f642646da209b1c0") == (2, 0)
+    assert issued.seconds_in_flight("f642646da209b1c0") == 5 * 300
+
+
+async def test_async_change_channel_refuses_while_the_mesh_is_migrating(
+    hass: HomeAssistant, otbr_config_entry_multipan: str
+) -> None:
+    """A migration in flight on the mesh refuses the channel change.
+
+    This router has not learned the migration yet; its channel change would
+    supersede it for the whole mesh.
+    """
+    issued = await async_get_issued_timestamps(hass)
+    await issued.async_set(
+        "f642646da209b1c0", (2, 0), until=dt_util.utcnow().timestamp() + 300
+    )
+
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
+
+    assert exc_info.value.translation_key == "migration_in_flight"
+    assert exc_info.value.translation_placeholders == {"remaining": "300"}
+    mock_set_channel.assert_not_awaited()
 
 
 async def test_async_change_channel_no_pending(

@@ -1,14 +1,23 @@
 """Test OTBR Websocket API."""
 
+import asyncio
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import python_otbr_api
 
 from homeassistant.components import otbr, thread
 from homeassistant.components.otbr import DOMAIN
+from homeassistant.components.otbr.util import (
+    async_get_dataset_lock,
+    async_get_issued_timestamps,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
     BASE_URL,
@@ -33,6 +42,20 @@ async def websocket_client(
 @pytest.fixture(autouse=True)
 def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
     """Mock supervisor client."""
+
+
+@pytest.fixture(autouse=True)
+def mesh_not_migrating() -> Generator[None]:
+    """Have the router report no dataset change in flight.
+
+    Every dataset write asks before touching the router; the tests of a
+    change in flight override this.
+    """
+    with (
+        patch("python_otbr_api.OTBR.get_pending_dataset_tlvs", return_value=None),
+        patch("python_otbr_api.OTBR.get_active_dataset", return_value=None),
+    ):
+        yield
 
 
 async def test_get_info(
@@ -807,6 +830,42 @@ async def test_set_channel_fails_1(
     assert msg["error"]["code"] == "set_channel_failed"
 
 
+async def test_set_channel_while_a_pending_dataset_is_in_flight(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test a channel change refused because the mesh is already migrating.
+
+    The library refuses the write rather than superseding the dataset in
+    flight; the user is told to wait it out instead of getting the generic
+    API failure.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=python_otbr_api.PendingDatasetConflictError,
+        ),
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_channel",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+                "channel": 12,
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "set_channel_failed"
+    assert "migration or channel change is propagating" in msg["error"]["message"]
+
+
 async def test_set_channel_fails_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -853,3 +912,262 @@ async def test_set_channel_fails_3(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "unknown_router"
+
+
+async def _dataset_write(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket, command: str
+) -> dict[str, Any]:
+    """Send one of the commands that write a dataset, and return the reply."""
+    msg: dict[str, Any] = {
+        "type": f"otbr/{command}",
+        "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    }
+    if command == "set_network":
+        await thread.async_add_dataset(hass, "test", DATASET_CH15.hex())
+        dataset_store = await thread.dataset_store.async_get_store(hass)
+        msg["dataset_id"] = list(dataset_store.datasets)[1]
+    if command == "set_channel":
+        msg["channel"] = 12
+    await websocket_client.send_json_auto_id(msg)
+    return await websocket_client.receive_json()
+
+
+@pytest.mark.parametrize("command", ["create_network", "set_network", "set_channel"])
+async def test_dataset_write_while_a_pending_dataset_is_in_place(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+    command: str,
+) -> None:
+    """A router holding a pending dataset is left alone.
+
+    Its mesh is counting down to that dataset, and each of these writes
+    would undo the change in passing, which the migrate action refuses to.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch("python_otbr_api.OTBR.set_enabled") as set_enabled_mock,
+        patch("python_otbr_api.OTBR.set_channel") as set_channel_mock,
+    ):
+        msg = await _dataset_write(hass, websocket_client, command)
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "pending_dataset_in_place"
+    assert "already in place" in msg["error"]["message"]
+    set_enabled_mock.assert_not_called()
+    set_channel_mock.assert_not_called()
+
+
+async def test_a_pending_dataset_refusal_is_not_hidden_by_a_failed_read(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """The refusal is known once the pending dataset is; nothing after it can mask it."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            side_effect=python_otbr_api.OTBRError,
+        ),
+    ):
+        msg = await _dataset_write(hass, websocket_client, "create_network")
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "pending_dataset_in_place"
+
+
+@pytest.mark.parametrize("command", ["create_network", "set_network", "set_channel"])
+async def test_dataset_write_while_the_mesh_is_migrating(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    command: str,
+) -> None:
+    """A router on a mesh with a migration in flight is left alone.
+
+    This router has not learned the pending dataset yet, as a second border
+    router on the mesh may not have; the window the migrate action persisted
+    is what says the mesh is mid-change.
+    """
+    issued = await async_get_issued_timestamps(hass)
+    await issued.async_set(
+        "abcd1234abcd1234", (1, 0), until=dt_util.utcnow().timestamp() + 300
+    )
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15, extended_pan_id="ABCD1234ABCD1234"
+            ),
+        ),
+        patch("python_otbr_api.OTBR.set_enabled") as set_enabled_mock,
+        patch("python_otbr_api.OTBR.set_channel") as set_channel_mock,
+    ):
+        msg = await _dataset_write(hass, websocket_client, command)
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "migration_in_flight"
+    assert msg["error"]["translation_placeholders"] == {"remaining": "300"}
+    assert "300 seconds" in msg["error"]["message"]
+    set_enabled_mock.assert_not_called()
+    set_channel_mock.assert_not_called()
+
+
+async def test_a_channel_change_records_its_propagation_window(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A channel change is recorded as a migration in flight for its mesh.
+
+    A second border router on the mesh has not learned it yet; a migration
+    through that one would otherwise be written into the change's delay.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15,
+                extended_pan_id="ABCD1234ABCD1234",
+                active_timestamp=python_otbr_api.Timestamp(seconds=5, ticks=0),
+            ),
+        ),
+        patch("python_otbr_api.OTBR.set_channel"),
+    ):
+        msg = await _dataset_write(hass, websocket_client, "set_channel")
+
+    assert msg["success"]
+    issued = await async_get_issued_timestamps(hass)
+    # Stamped the way the library stamps it: one second above the network.
+    assert issued.get("abcd1234abcd1234") == (6, 0)
+    assert issued.seconds_in_flight("abcd1234abcd1234") == 300
+
+
+async def test_a_refused_channel_change_records_nothing(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A channel change the router refused leaves no window behind."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15, extended_pan_id="ABCD1234ABCD1234"
+            ),
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=python_otbr_api.PendingDatasetRejectedError("not attached"),
+        ),
+    ):
+        msg = await _dataset_write(hass, websocket_client, "set_channel")
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "set_channel_failed"
+    assert "not attached" in msg["error"]["message"]
+    issued = await async_get_issued_timestamps(hass)
+    assert issued.record("abcd1234abcd1234") is None
+
+
+@pytest.mark.parametrize("command", ["create_network", "set_network", "set_channel"])
+@pytest.mark.parametrize(
+    "failing_read", ["get_pending_dataset_tlvs", "get_active_dataset"]
+)
+async def test_a_failed_read_before_a_dataset_write_is_reported(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+    command: str,
+    failing_read: str,
+) -> None:
+    """A router that cannot say whether its mesh is mid-change is left alone."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            f"python_otbr_api.OTBR.{failing_read}",
+            side_effect=python_otbr_api.OTBRError,
+        ),
+        patch("python_otbr_api.OTBR.set_enabled") as set_enabled_mock,
+        patch("python_otbr_api.OTBR.set_channel") as set_channel_mock,
+    ):
+        msg = await _dataset_write(hass, websocket_client, command)
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_dataset_failed"
+    set_enabled_mock.assert_not_called()
+    set_channel_mock.assert_not_called()
+
+
+@pytest.mark.parametrize("command", ["create_network", "set_network", "set_channel"])
+async def test_a_dataset_write_waits_for_the_dataset_lock(
+    hass: HomeAssistant,
+    otbr_config_entry_thread: None,
+    websocket_client: MockHAClientWebSocket,
+    command: str,
+) -> None:
+    """A dataset write does not touch the router while a migration holds the lock."""
+    reached_router = asyncio.Event()
+
+    async def extended_address() -> bytes:
+        reached_router.set()
+        return TEST_BORDER_AGENT_EXTENDED_ADDRESS
+
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address", side_effect=extended_address
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs", return_value=None
+        ) as pending_read,
+        patch(
+            "python_otbr_api.OTBR.set_enabled", side_effect=python_otbr_api.OTBRError
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_channel", side_effect=python_otbr_api.OTBRError
+        ),
+    ):
+        async with async_get_dataset_lock(hass):
+            task = hass.async_create_task(
+                _dataset_write(hass, websocket_client, command)
+            )
+            # The router is identified before the lock, and read only after it.
+            await reached_router.wait()
+            for _ in range(5):
+                await asyncio.sleep(0)
+            assert not task.done()
+            pending_read.assert_not_awaited()
+
+        msg = await task
+
+    assert not msg["success"]
+    pending_read.assert_awaited_once()

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "migrate_network": {
+      "service": "mdi:swap-horizontal-variant"
+    }
+  }
+}
