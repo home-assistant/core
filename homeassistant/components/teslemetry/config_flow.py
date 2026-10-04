@@ -25,6 +25,11 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
     WhitelistOperationAttemptingToAddExistingKey,
+    WhitelistOperationCouldNotStartLocalEntityAuth,
+    WhitelistOperationLocalEntityAuthFailedCancelled,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
+    WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
@@ -231,6 +236,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self._vehicle: VehicleBluetooth | None = None
         self._pair_task: asyncio.Task[None] | None = None
         self._pair_error: dict[str, str] = {}
+        self._key_added = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -340,7 +346,10 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
             return self.async_show_form(
                 step_id="scan",
-                errors={"base": "cannot_connect"},
+                # The key is already on the vehicle; say so rather than prompt a re-pair.
+                errors={
+                    "base": "key_unverified" if self._key_added else "cannot_connect"
+                },
                 description_placeholders={"vin": self._vin or ""},
             )
         if TYPE_CHECKING:
@@ -399,6 +408,27 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_progress_done(next_step_id="instructions")
         except WhitelistOperationAttemptingToAddExistingKey as err:
             LOGGER.debug("Virtual key is already on the whitelist: %s", err)
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap as err:
+            LOGGER.debug(
+                "No key card was tapped before the vehicle stopped waiting: %s", err
+            )
+            self._pair_error = {"base": "tap_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck as err:
+            LOGGER.debug("Key was not confirmed on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "confirm_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except (
+            WhitelistOperationLocalEntityAuthFailedUIDenied,
+            WhitelistOperationLocalEntityAuthFailedCancelled,
+        ) as err:
+            LOGGER.debug("Key was declined on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "pair_denied"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationCouldNotStartLocalEntityAuth as err:
+            LOGGER.debug("Vehicle could not start the key card request: %s", err)
+            self._pair_error = {"base": "auth_not_started"}
+            return self.async_show_progress_done(next_step_id="instructions")
         except TeslaFleetError as err:
             LOGGER.error("Bluetooth pairing was rejected: %s", err)
             self._pair_error = {"base": "pair_failed"}
@@ -407,6 +437,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # async_remove() only runs if the flow is still tracked when this step raises.
             await self._async_disconnect()
             raise
+        self._key_added = True
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_disconnect(self) -> None:
