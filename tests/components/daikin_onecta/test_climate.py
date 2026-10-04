@@ -1,13 +1,27 @@
 """Tests for the Daikin Onecta climate platform."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.climate import PRESET_BOOST, ClimateEntity, HVACMode
+from homeassistant.components.climate import (
+    PRESET_BOOST,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntity,
+    HVACMode,
+)
 from homeassistant.components.daikin_onecta.climate import DaikinClimate
+from homeassistant.components.daikin_onecta.coordinator import (
+    OnectaDataUpdateCoordinator,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -65,6 +79,81 @@ async def test_enable_boost_stops_after_failed_turn_on() -> None:
 
     entity.async_turn_on.assert_awaited_once()
     device.patch.assert_not_awaited()
+
+
+async def test_climate_service_updates_entity_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test climate services through the Home Assistant integration API."""
+    setpoint = SimpleNamespace(
+        value=20, min_value=7, max_value=30, step_value=1, settable=True
+    )
+    operation_mode = SimpleNamespace(value="heating", values=["heating"], settable=True)
+    climate_control = MagicMock(embedded_id="zone")
+    climate_control.temperature_control = SimpleNamespace(
+        value=SimpleNamespace(
+            operation_modes={
+                "heating": SimpleNamespace(setpoints={"roomTemperature": setpoint})
+            }
+        )
+    )
+    climate_control.operation_mode = operation_mode
+    climate_control.on_off_mode = SimpleNamespace(value="on")
+    climate_control.fan_control = None
+    climate_control.holiday_mode = None
+    climate_control.sensory_data = None
+    climate_control.characteristic.return_value = None
+
+    device = MagicMock(id="gateway", name="Daikin", available=True)
+    device.device = SimpleNamespace(
+        device_model="Daikin",
+        management_points_by_type=lambda _: (climate_control,),
+    )
+    device.management_point.return_value = climate_control
+    device.patch = AsyncMock(return_value=True)
+
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    coordinator.data = {device.id: device}
+    coordinator.last_update_success = True
+    coordinator.async_config_entry_first_refresh = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.daikin_onecta."
+            "config_entry_oauth2_flow.async_get_config_entry_implementation"
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, "gateway_zone_roomTemperature"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        Platform.CLIMATE,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
+        blocking=True,
+    )
+
+    assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 21
+    device.patch.assert_awaited_once_with(
+        "gateway",
+        "zone",
+        "temperatureControl",
+        "/operationModes/heating/setpoints/roomTemperature",
+        21,
+    )
 
 
 @pytest.mark.parametrize(
