@@ -43,6 +43,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
+    AggregationType,
     ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
@@ -419,6 +420,7 @@ def _requires_pre_aggregation_unit_conversion(
     statistic_id: str,
     metadata: StatisticMetaData,
     requested_units: dict[str, str] | None,
+    aggregations: set[AggregationType],
 ) -> bool:
     """Return whether unit conversion excludes SQL aggregate reduction."""
     statistic_unit = metadata["unit_of_measurement"]
@@ -437,7 +439,24 @@ def _requires_pre_aggregation_unit_conversion(
         else state_unit
     )
 
-    return display_unit in converter.VALID_UNITS and display_unit != statistic_unit
+    if display_unit not in converter.VALID_UNITS:
+        return False
+
+    if (
+        display_unit != statistic_unit
+        and "mean" in aggregations
+        and metadata["mean_type"] is StatisticMeanType.CIRCULAR
+    ):
+        return True
+
+    return any(
+        not converter.is_aggregation_preserving(
+            statistic_unit,
+            display_unit,
+            aggregation,
+        )
+        for aggregation in aggregations
+    )
 
 
 def _get_display_to_statistic_unit_converter_func(
@@ -2638,26 +2657,37 @@ def _statistics_during_period_with_session(
     )
     mean_type = next(iter(mean_types), StatisticMeanType.NONE)
 
-    requires_pre_aggregation_conversion = not types.isdisjoint(
-        {"mean", "min", "max"}
-    ) and any(
-        _requires_pre_aggregation_unit_conversion(
-            hass,
-            statistic_id,
-            meta,
-            units,
-        )
-        for statistic_id, (_, meta) in metadata.items()
+    aggregations = cast(
+        set[AggregationType],
+        types & {"mean", "min", "max"},
     )
 
     supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
-    use_period_query = (
-        types
+    period_query_candidate = (
+        bool(types)
         and end_time is not None
         and period in {"day", "week", "month", "year"}
         and types <= supported_types
         and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
-        and not requires_pre_aggregation_conversion
+    )
+
+    requires_pre_aggregation_conversion = (
+        period_query_candidate
+        and bool(aggregations)
+        and any(
+            _requires_pre_aggregation_unit_conversion(
+                hass,
+                statistic_id,
+                meta,
+                units,
+                aggregations,
+            )
+            for statistic_id, (_, meta) in metadata.items()
+        )
+    )
+
+    use_period_query = (
+        period_query_candidate and not requires_pre_aggregation_conversion
     )
 
     if use_period_query:
