@@ -65,6 +65,13 @@ class HomeConnectApplianceData:
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
+    """
+    Program keys mapping is to cover API issues
+    where the API returns a different program key
+    than the requested one, which usually it isn't
+    in the list of available programs.
+    """
+    program_keys_mapped: dict[ProgramKey, ProgramKey]
 
     def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
@@ -78,6 +85,7 @@ class HomeConnectApplianceData:
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
         self.status.update(other.status)
+        self.program_keys_mapped.update(other.program_keys_mapped)
 
     @classmethod
     def empty(cls, appliance: HomeAppliance) -> HomeConnectApplianceData:
@@ -90,6 +98,7 @@ class HomeConnectApplianceData:
             programs=[],
             settings={},
             status={},
+            program_keys_mapped={},
         )
 
 
@@ -493,7 +502,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
         programs = []
         events = {}
-        options = {}
+        options: dict[OptionKey, ProgramDefinitionOption] = {}
+        program_keys_mapped: dict[ProgramKey, ProgramKey] = {}
         if appliance.type in APPLIANCES_WITH_PROGRAMS:  # pylint: disable=too-many-nested-blocks
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
@@ -540,7 +550,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                                     break
 
                 if current_program_key:
-                    options = await self.get_options_definitions(current_program_key)
+                    options, program_keys_mapped = await self.get_program_information(
+                        current_program_key
+                    )
                     for option in program_options or []:
                         option_event_key = EventKey(option.key)
                         events[option_event_key] = Event(
@@ -576,25 +588,24 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 programs=programs,
                 settings=settings,
                 status=status,
+                program_keys_mapped=program_keys_mapped,
             )
         )
 
-    async def get_options_definitions(
+    async def get_program_information(
         self, program_key: ProgramKey
-    ) -> dict[OptionKey, ProgramDefinitionOption]:
-        """Get options with constraints for appliance."""
+    ) -> tuple[dict[OptionKey, ProgramDefinitionOption], dict[ProgramKey, ProgramKey]]:
+        """Get options with constraints and program keys mapping for appliance.
+
+        It returns the program keys mapping only when the requested program and the
+        key from the program definition are different.
+        """
         if program_key is ProgramKey.UNKNOWN:
-            return {}
+            return {}, {}
         try:
-            return {
-                option.key: option
-                for option in (
-                    await self.client.get_available_program(
-                        self.data.info.ha_id, program_key=program_key
-                    )
-                ).options
-                or []
-            }
+            program_definition = await self.client.get_available_program(
+                self.data.info.ha_id, program_key=program_key
+            )
         except TooManyRequestsError:
             raise
         except HomeConnectError as error:
@@ -603,7 +614,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self.data.info.ha_id,
                 error,
             )
-            return {}
+            return {}, {}
+        return {option.key: option for option in program_definition.options or []}, {
+            program_key: program_definition.key
+        } if program_key != program_definition.key else {}
 
     async def update_options(self, program_key: ProgramKey) -> None:
         """Update options for appliance."""
@@ -622,7 +636,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         else:
             resolved_program_key = program_key
 
-        options.update(await self.get_options_definitions(resolved_program_key))
+        new_options, program_keys_mapped = await self.get_program_information(
+            resolved_program_key
+        )
+        options.update(new_options)
+        self.data.program_keys_mapped.update(program_keys_mapped)
 
         for option in options.values():
             option_event_key = EventKey(option.key)
