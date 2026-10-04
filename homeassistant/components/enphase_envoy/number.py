@@ -5,9 +5,8 @@ from dataclasses import dataclass
 from operator import attrgetter
 from typing import Any, override
 
-from pyenphase import Envoy, EnvoyDryContactSettings
+from pyenphase import Envoy, EnvoyData, EnvoyDryContactSettings
 from pyenphase.const import SupportedFeatures
-from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -38,8 +37,17 @@ class EnvoyRelayNumberEntityDescription(NumberEntityDescription):
 class EnvoyStorageSettingsNumberEntityDescription(NumberEntityDescription):
     """Describes an Envoy storage mode number entity."""
 
-    value_fn: Callable[[EnvoyStorageSettings], float]
+    value_fn: Callable[[EnvoyData], float]
     update_fn: Callable[[Envoy, float], Awaitable[dict[str, Any]]]
+
+
+def _reserve_soc(data: EnvoyData) -> float:
+    """Return the configured battery reserve, or the tariff reserve without aggregate data."""
+    # The tariff reserved_soc can read 0 while secctrl reports the configured reserve
+    if data.encharge_aggregate is not None:
+        return float(data.encharge_aggregate.configured_reserve_state_of_charge)
+    assert data.tariff is not None and data.tariff.storage_settings is not None
+    return data.tariff.storage_settings.reserved_soc
 
 
 RELAY_ENTITIES = (
@@ -64,7 +72,7 @@ STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
     translation_key="reserve_soc",
     native_unit_of_measurement=PERCENTAGE,
     device_class=NumberDeviceClass.BATTERY,
-    value_fn=attrgetter("reserved_soc"),
+    value_fn=_reserve_soc,
     update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )
 
@@ -193,9 +201,7 @@ class EnvoyStorageSettingsNumberEntity(EnvoyBaseEntity, NumberEntity):
     @override
     def native_value(self) -> float:
         """Return the state of the storage setting entity."""
-        assert self.data.tariff is not None
-        assert self.data.tariff.storage_settings is not None
-        return self.entity_description.value_fn(self.data.tariff.storage_settings)
+        return self.entity_description.value_fn(self.data)
 
     @exception_handler
     @override

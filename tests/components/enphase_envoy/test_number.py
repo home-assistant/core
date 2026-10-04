@@ -21,6 +21,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+RESERVE_ENTITY_ID = "number.enpower_654321_reserve_battery_level"
+
 
 @pytest.mark.parametrize(
     "mock_envoy",
@@ -99,6 +101,51 @@ async def test_number_operation_storage(
     )
 
     mock_envoy.set_reserve_soc.assert_awaited_once_with(test_value)
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize(
+    ("tariff_reserve", "configured_reserve", "adjusted_reserve", "expected_value"),
+    [
+        pytest.param(0.0, 30, 30, 30.0, id="tariff_zero"),
+        pytest.param(15.0, 40, 20, 40.0, id="configured_not_adjusted"),
+        pytest.param(25.0, 0, 0, 0.0, id="configured_zero"),
+    ],
+)
+async def test_number_reserve_from_aggregate(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    tariff_reserve: float,
+    configured_reserve: int,
+    adjusted_reserve: int,
+    expected_value: float,
+) -> None:
+    """Test the reserve number reports the configured reserve from aggregate data."""
+    mock_envoy.data.tariff.storage_settings.reserved_soc = tariff_reserve
+    aggregate = mock_envoy.data.encharge_aggregate
+    aggregate.configured_reserve_state_of_charge = configured_reserve
+    aggregate.reserve_state_of_charge = adjusted_reserve
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    assert (entity_state := hass.states.get(RESERVE_ENTITY_ID))
+    assert float(entity_state.state) == expected_value
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+async def test_number_reserve_without_aggregate(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the reserve number reports the tariff reserve without aggregate data."""
+    mock_envoy.data.encharge_aggregate = None
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    assert (entity_state := hass.states.get(RESERVE_ENTITY_ID))
+    assert float(entity_state.state) == 15.0
 
 
 @pytest.mark.parametrize(
