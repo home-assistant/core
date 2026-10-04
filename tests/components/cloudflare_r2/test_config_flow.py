@@ -107,18 +107,32 @@ async def test_flow_create_client_errors(
     assert result["data"] == USER_INPUT
 
 
+@pytest.mark.parametrize(
+    ("status_code", "error"),
+    [
+        pytest.param(401, "invalid_credentials", id="unauthorized"),
+        pytest.param(403, "invalid_credentials", id="forbidden"),
+        pytest.param(429, "service_error", id="throttled"),
+        pytest.param(503, "service_error", id="service_unavailable"),
+    ],
+)
 async def test_flow_head_bucket_error(
     hass: HomeAssistant,
     mock_client: AsyncMock,
+    status_code: int,
+    error: str,
 ) -> None:
-    """Test setup_entry error when calling head_bucket."""
+    """Test config flow errors when calling head_bucket."""
     mock_client.head_bucket.side_effect = ClientError(
-        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+        error_response={
+            "Error": {"Code": str(status_code)},
+            "ResponseMetadata": {"HTTPStatusCode": status_code},
+        },
         operation_name="head_bucket",
     )
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_credentials"}
+    assert result["errors"] == {"base": error}
 
     # Fix and finish the test
     mock_client.head_bucket.side_effect = None
@@ -194,11 +208,25 @@ async def test_reauth_flow(
     [
         pytest.param(
             ClientError(
-                error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+                error_response={
+                    "Error": {"Code": "InvalidAccessKeyId"},
+                    "ResponseMetadata": {"HTTPStatusCode": 403},
+                },
                 operation_name="head_bucket",
             ),
             "invalid_credentials",
             id="invalid_credentials",
+        ),
+        pytest.param(
+            ClientError(
+                error_response={
+                    "Error": {"Code": "ServiceUnavailable"},
+                    "ResponseMetadata": {"HTTPStatusCode": 503},
+                },
+                operation_name="head_bucket",
+            ),
+            "service_error",
+            id="service_error",
         ),
         pytest.param(
             EndpointConnectionError(endpoint_url="http://example.com"),

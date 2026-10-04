@@ -9,6 +9,7 @@
       "invalid_bucket_name": "[%key:component::cloudflare_r2::exceptions::invalid_bucket_name::message%]",
       "invalid_credentials": "[%key:component::cloudflare_r2::exceptions::invalid_credentials::message%]",
       "invalid_endpoint_url": "[%key:component::cloudflare_r2::exceptions::invalid_endpoint_url::message%]",
+      "service_error": "Cloudflare R2 returned an unexpected error. Try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -75,6 +76,9 @@
     },
     "invalid_endpoint_url": {
       "message": "Invalid endpoint URL. Please enter a valid Cloudflare R2 endpoint URL."
+    },
+    "service_error": {
+      "message": "Cloudflare R2 returned an error: {error}"
     }
   }
 }

@@ -25,6 +25,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    AUTH_ERROR_HTTP_STATUS_CODES,
     BUCKET_NOT_FOUND_ERROR_CODES,
     CLOUDFLARE_R2_DOMAIN,
     CONF_ACCESS_KEY_ID,
@@ -81,7 +82,12 @@ async def _async_validate_input(data: Mapping[str, Any]) -> dict[str, str]:
     except ClientError as err:
         if err.response["Error"]["Code"] in BUCKET_NOT_FOUND_ERROR_CODES:
             return {CONF_BUCKET: "bucket_not_found"}
-        return {"base": "invalid_credentials"}
+        if (
+            err.response["ResponseMetadata"]["HTTPStatusCode"]
+            in AUTH_ERROR_HTTP_STATUS_CODES
+        ):
+            return {"base": "invalid_credentials"}
+        return {"base": "service_error"}
     except ParamValidationError as err:
         if "Invalid bucket name" in str(err):
             return {CONF_BUCKET: "invalid_bucket_name"}

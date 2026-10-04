@@ -22,6 +22,7 @@ from homeassistant.exceptions import (
 )
 
 from .const import (
+    AUTH_ERROR_HTTP_STATUS_CODES,
     BUCKET_NOT_FOUND_ERROR_CODES,
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
@@ -69,9 +70,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
                 translation_key="bucket_not_found",
                 translation_placeholders={"bucket": data[CONF_BUCKET]},
             ) from err
-        raise ConfigEntryAuthFailed(
+        if (
+            err.response["ResponseMetadata"]["HTTPStatusCode"]
+            in AUTH_ERROR_HTTP_STATUS_CODES
+        ):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="invalid_credentials",
+            translation_key="service_error",
+            translation_placeholders={"error": err.response["Error"]["Code"]},
         ) from err
     except ParamValidationError as err:
         if "Invalid bucket name" in str(err):
