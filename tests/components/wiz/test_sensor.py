@@ -38,7 +38,10 @@ async def test_signal_strength(
 
     assert hass.states.get(entity_id).state == "-55"
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "rssi": -50})
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "devices": 1, "rssi": -50})
+    assert hass.states.get(entity_id).state == "-50"
+
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "rssi": -40})
     assert hass.states.get(entity_id).state == "-50"
 
 

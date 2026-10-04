@@ -243,6 +243,8 @@ def _mocked_wizlight(
     bulb_type: BulbType | None,
 ) -> wizlight:
     bulb = MagicMock(auto_spec=wizlight, name="Mocked wizlight")
+    bulb_type = bulb_type or FAKE_DIMMABLE_BULB
+    state = [FAKE_STATE, None] if bulb_type.features.dual_head else [FAKE_STATE]
 
     async def _save_setup_callback(callback: Callable) -> None:
         bulb.push_callback = callback
@@ -256,7 +258,7 @@ def _mocked_wizlight(
     bulb.get_power = AsyncMock(return_value=None)
     bulb.turn_off = AsyncMock()
     bulb.power_monitoring = False
-    bulb.updateState = AsyncMock(return_value=FAKE_STATE)
+    bulb.updateState = AsyncMock(return_value=state)
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES.values()))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_close = AsyncMock()
@@ -270,10 +272,10 @@ def _mocked_wizlight(
         "roomId": 123,
         "homeId": 34,
     }
-    bulb.state = FAKE_STATE
+    bulb.state = state
     bulb.mac = FAKE_MAC
-    bulb.bulbtype = bulb_type or FAKE_DIMMABLE_BULB
-    bulb.get_bulbtype = AsyncMock(return_value=bulb_type or FAKE_DIMMABLE_BULB)
+    bulb.bulbtype = bulb_type
+    bulb.get_bulbtype = AsyncMock(return_value=bulb_type)
 
     return bulb
 
@@ -332,10 +334,29 @@ async def async_setup_integration(
 
 
 async def async_push_update(
-    hass: HomeAssistant, device: wizlight, params: dict[str, Any]
+    hass: HomeAssistant,
+    device: wizlight,
+    params: dict[str, Any],
 ) -> None:
     """Push an update to the device."""
-    device.state = PilotParser(params)
-    device.status = params.get("state")
+    state = PilotParser(params)
+    if device.bulbtype.features.dual_head:
+        state_index = params.get("devices")
+        if (
+            isinstance(state_index, int)
+            and not isinstance(state_index, bool)
+            and 1 <= state_index <= 2
+        ):
+            while len(device.state) < 2:
+                device.state.append(None)
+            device.state[state_index - 1] = state
+        elif len(device.state) > 1:
+            return
+        else:
+            device.state = [state]
+    else:
+        device.state = [state]
+    if isinstance(device.updateState, AsyncMock):
+        device.updateState.return_value = device.state
     device.push_callback(device.state)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)

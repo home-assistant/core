@@ -14,19 +14,23 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    FAKE_DUAL_HEAD_RGBWW_BULB,
     FAKE_MAC,
     FAKE_OLD_FIRMWARE_DIMMABLE_BULB,
     FAKE_RGBW_BULB,
     FAKE_RGBWW_BULB,
+    FAKE_STATE,
     FAKE_TURNABLE_BULB,
     _mocked_wizlight,
     async_push_update,
@@ -43,6 +47,7 @@ async def test_light_unique_id(
     assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title"
 
 
 async def test_light_operation(
@@ -70,6 +75,93 @@ async def test_light_operation(
 
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": True})
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_dual_head_light(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test dual head light entities."""
+    bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
+    entity_id = "light.mock_title_zone_a"
+    zone_b_entity_id = "light.mock_title_zone_b"
+
+    assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
+    assert entity_registry.async_get(zone_b_entity_id).unique_id == f"{FAKE_MAC}_1"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title Zone A"
+    state = hass.states.get(zone_b_entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title Zone B"
+
+    await async_push_update(
+        hass,
+        bulb,
+        {"mac": FAKE_MAC, "devices": 2, "state": False},
+    )
+    assert hass.states.get(zone_b_entity_id).state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    bulb.turn_off.assert_called_once_with(device=1)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: zone_b_entity_id, ATTR_RGBWW_COLOR: (1, 2, 3, 4, 5)},
+        blocking=True,
+    )
+    pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
+    assert pilot.pilot_params == {"b": 3, "c": 4, "g": 2, "r": 1, "w": 5}
+    assert bulb.turn_on.mock_calls[0][2] == {"device": 2}
+
+    await async_push_update(
+        hass,
+        bulb,
+        {
+            "mac": FAKE_MAC,
+            "devices": 2,
+            "state": True,
+            **pilot.pilot_params,
+        },
+    )
+    state = hass.states.get(zone_b_entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGBWW_COLOR] == (1, 2, 3, 4, 5)
+
+
+async def test_ratio_dual_head_uses_one_unsuffixed_light(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a ratio-based dual-head device does not create zone lights."""
+    bulb = _mocked_wizlight(None, None, FAKE_DUAL_HEAD_RGBWW_BULB)
+    bulb.state = [PilotParser({**FAKE_STATE.pilotResult, "ratio": 50})]
+    bulb.updateState.return_value = bulb.state
+
+    await async_setup_integration(hass, wizlight=bulb)
+
+    entity_id = "light.mock_title"
+    assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
+    assert entity_registry.async_get("light.mock_title_zone_a") is None
+    assert entity_registry.async_get("light.mock_title_zone_b") is None
+    assert hass.states.get(entity_id).attributes[ATTR_FRIENDLY_NAME] == "Mock Title"
+
+    await async_push_update(
+        hass,
+        bulb,
+        {"mac": FAKE_MAC, "devices": 1, "state": True, "ratio": 50},
+    )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    bulb.turn_off.assert_awaited_once_with()
 
 
 async def test_rgbww_light(hass: HomeAssistant) -> None:
@@ -122,6 +214,25 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT] == "Ocean"
+    assert state.attributes[ATTR_COLOR_MODE] == "brightness"
+
+    await async_push_update(
+        hass,
+        bulb,
+        {
+            "mac": FAKE_MAC,
+            "state": True,
+            "sceneId": 1,
+            "dimming": 50,
+            "r": 1,
+            "g": 2,
+            "b": 3,
+            "c": 4,
+            "w": 5,
+        },
+    )
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_EFFECT] == "Ocean"
     assert state.attributes[ATTR_COLOR_MODE] == "brightness"
 
