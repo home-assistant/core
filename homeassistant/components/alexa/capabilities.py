@@ -2778,3 +2778,46 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
+
+
+class AlexaRTCSessionController(AlexaCapability):
+    """Implements Alexa.RTCSessionController.
+
+    Alexa sends a WebRTC SDP offer and expects a complete SDP answer in return.
+    This is what Echo Show devices use for the live view of a camera.
+
+    https://developer.amazon.com/docs/device-apis/alexa-rtcsessioncontroller.html
+    """
+
+    supported_locales = {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "nl-NL",
+        "pt-BR",
+    }
+
+    @override
+    def name(self) -> str:
+        """Return the Alexa API name of this interface."""
+        return "Alexa.RTCSessionController"
+
+    @override
+    def configuration(self) -> dict[str, Any] | None:
+        """Return configuration object.
+
+        Two-way audio is not supported, so the session is half duplex.
+        """
+        return {"isFullDuplexAudioSupported": False}
