@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import Camera, Chime, Color, Light, ModelType, PTZPreset
+from uiprotect.data import Camera, Chime, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest, ClientError
 
@@ -283,7 +283,7 @@ async def test_remove_privacy_zone(
 
     ufp.api.update_device = AsyncMock()
     doorbell.privacy_zones = [
-        CameraZone(id=0, name="Testing", color=Color("red"), points=[(0, 0), (1, 1)])
+        CameraZone(id=0, name="Testing", color="#FF0000", points=[(0, 0), (1, 1)])
     ]
 
     await init_entry(hass, ufp, [doorbell])
