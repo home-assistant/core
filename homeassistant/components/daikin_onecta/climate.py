@@ -509,8 +509,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             hvac_mode,
         )
 
-        result = True
-
         # First determine the new settings for onOffMode/operationMode
         on_off_mode = None
         operation_mode = None
@@ -526,17 +524,21 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
         # Only set the on/off to Daikin when we need to change it
         if on_off_mode is not None:
-            result &= await self._device.patch(
+            if not await self._device.patch(
                 self._device.id, self._embedded_id, "onOffMode", "", on_off_mode
-            )
-            if result is False:
+            ):
                 _LOGGER.warning(
                     "Device '%s' problem setting onOffMode to '%s'",
                     self._device.name,
                     on_off_mode,
                 )
-            elif cc.on_off_mode is not None:
+                self._raise_command_failed("set the HVAC mode")
+            if cc.on_off_mode is not None:
                 cc.on_off_mode.value = on_off_mode
+                # Publish the confirmed power change before a subsequent
+                # operation-mode write, which may be rejected by the cloud.
+                self.update_state()
+                self.coordinator.async_update_listeners()
 
         # Only set the operationMode when it has changed, also prevents setting it when
         # it is readOnly
@@ -545,29 +547,24 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             and cc.operation_mode is not None
             and operation_mode != cc.operation_mode.value
         ):
-            result &= await self._device.patch(
+            if not await self._device.patch(
                 self._device.id,
                 self._embedded_id,
                 "operationMode",
                 "",
                 operation_mode,
-            )
-            if result is False:
+            ):
                 _LOGGER.warning(
                     "Device '%s' problem setting operationMode to '%s'",
                     self._device.name,
                     operation_mode,
                 )
-            else:
-                cc.operation_mode.value = operation_mode
-
-        if result is True:
-            # When switching hvac mode it could be that we can set min/max/target/etc
-            # which we couldn't set with a previous hvac mode
+                self._raise_command_failed("set the HVAC mode")
+            cc.operation_mode.value = operation_mode
+            # When switching HVAC mode it could be that we can set min/max/target/etc
+            # which we couldn't set with a previous HVAC mode.
             self.update_state()
             self.coordinator.async_update_listeners()
-        else:
-            self._raise_command_failed("set the HVAC mode")
 
     def get_fan_mode(self):
         """Return the active fan mode."""
@@ -634,46 +631,46 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
         fan_mode = self.resolve_homekit_fan_mode_alias(fan_speed, requested_fan_mode)
-        result = True
         if fan_mode.isnumeric():
             if fan_speed.current_mode.value != FANMODE_FIXED:
-                result = await self._device.patch(
+                if not await self._device.patch(
                     self._device.id,
                     self._embedded_id,
                     "fanControl",
                     f"/operationModes/{operation_mode}/fanSpeed/currentMode",
                     FANMODE_FIXED,
-                )
+                ):
+                    self._raise_command_failed("set the fan mode")
+                fan_speed.current_mode.value = FANMODE_FIXED
+                # The fan is already in fixed mode even if the following speed
+                # write fails, so publish this confirmed intermediate state.
+                self._attr_fan_mode = self.get_fan_mode()
+                self.coordinator.async_update_listeners()
             fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
             new_fixed_mode = int(fan_mode)
-            if result and fixed is not None and fixed.value != new_fixed_mode:
-                result &= await self._device.patch(
+            if fixed is not None and fixed.value != new_fixed_mode:
+                if not await self._device.patch(
                     self._device.id,
                     self._embedded_id,
                     "fanControl",
                     f"/operationModes/{operation_mode}/fanSpeed/modes/fixed",
                     new_fixed_mode,
-                )
-            if result:
-                fan_speed.current_mode.value = FANMODE_FIXED
-                if fixed is not None:
-                    fixed.value = new_fixed_mode
+                ):
+                    self._raise_command_failed("set the fan mode")
+                fixed.value = new_fixed_mode
         elif fan_speed.current_mode.value != fan_mode:
-            result = await self._device.patch(
+            if not await self._device.patch(
                 self._device.id,
                 self._embedded_id,
                 "fanControl",
                 f"/operationModes/{operation_mode}/fanSpeed/currentMode",
                 fan_mode,
-            )
-            if result:
-                fan_speed.current_mode.value = fan_mode
+            ):
+                self._raise_command_failed("set the fan mode")
+            fan_speed.current_mode.value = fan_mode
 
-        if result:
-            self._attr_fan_mode = requested_fan_mode
-            self.coordinator.async_update_listeners()
-        else:
-            self._raise_command_failed("set the fan mode")
+        self._attr_fan_mode = self.get_fan_mode()
+        self.coordinator.async_update_listeners()
 
     def __get_swing_mode(self, direction):
         """Return current swing mode for an axis."""

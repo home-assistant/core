@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.daikin_onecta.climate import DaikinClimate
+from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
@@ -81,6 +82,61 @@ async def test_enable_boost_stops_after_failed_turn_on() -> None:
 
     entity.async_turn_on.assert_awaited_once()
     device.patch.assert_not_awaited()
+
+
+async def test_set_hvac_mode_publishes_successful_power_write() -> None:
+    """Publish a successful power write before a failed mode write."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.name = "Device"
+    device.patch = AsyncMock(side_effect=[True, False])
+    coordinator = MagicMock()
+    climate_control = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value="off"),
+        operation_mode=SimpleNamespace(value="cooling"),
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
+    entity.coordinator = coordinator
+    entity.climate_control = MagicMock(return_value=climate_control)
+    entity.update_state = MagicMock()
+
+    with pytest.raises(HomeAssistantError, match="Failed to set the HVAC mode"):
+        await entity.async_set_hvac_mode(HVACMode.HEAT)
+
+    assert climate_control.on_off_mode.value == "on"
+    assert climate_control.operation_mode.value == "cooling"
+    entity.update_state.assert_called_once_with()
+    coordinator.async_update_listeners.assert_called_once_with()
+
+
+async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
+    """Publish fixed mode when the following fan-speed write fails."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.name = "Device"
+    device.patch = AsyncMock(side_effect=[True, False])
+    coordinator = MagicMock()
+    fan_speed = SimpleNamespace(
+        current_mode=SimpleNamespace(value="auto"),
+        modes={FANMODE_FIXED: SimpleNamespace(value=1)},
+    )
+    climate_control = SimpleNamespace(operation_mode=SimpleNamespace(value="heating"))
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    entity.coordinator = coordinator
+    entity.fan_operation = MagicMock(return_value=SimpleNamespace(fan_speed=fan_speed))
+    entity.climate_control = MagicMock(return_value=climate_control)
+    entity.resolve_homekit_fan_mode_alias = MagicMock(return_value="3")
+    entity.get_fan_mode = MagicMock(return_value="1")
+
+    with pytest.raises(HomeAssistantError, match="Failed to set the fan mode"):
+        await entity.async_set_fan_mode("3")
+
+    assert fan_speed.current_mode.value == FANMODE_FIXED
+    assert fan_speed.modes[FANMODE_FIXED].value == 1
+    coordinator.async_update_listeners.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
