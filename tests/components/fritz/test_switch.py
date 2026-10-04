@@ -3,13 +3,14 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -38,7 +39,7 @@ from .const import (
     MOCK_USER_DATA,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
     "WLANConfiguration1": {
@@ -423,7 +424,7 @@ async def test_switch_device_no_ip_address(
         (
             "switch.mock_title_port_forward_test_port_mapping",
             "async_add_port_mapping",
-            STATE_OFF,
+            STATE_ON,
         ),
         (
             "switch.printer_internet_access",
@@ -494,6 +495,35 @@ async def test_switch_turn_on_off(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == state_value
+
+
+async def test_switch_port_coordinator_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test port forward switch state is refreshed by the coordinator."""
+    entity_id = "switch.mock_title_port_forward_test_port_mapping"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    fc_data = deepcopy(MOCK_FB_SERVICES)
+    fc_data["WANPPPConnection1"]["GetGenericPortMappingEntry"][0]["NewEnabled"] = False
+    fc_class_mock.return_value.override_services(fc_data)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(

@@ -84,6 +84,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
+    port_mappings: dict[int, dict[str, Any]]
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -179,6 +180,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
+        self._port_mapping_indexes: set[int] = set()
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -299,6 +301,34 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return unregister_entity_updates
 
+    async def async_register_port_mapping(self, index: int) -> Callable[[], None]:
+        """Register a port mapping to be updated by coordinator."""
+
+        def unregister_port_mapping() -> None:
+            """Unregister a port mapping from coordinator updates."""
+            self._port_mapping_indexes.discard(index)
+            self.data["port_mappings"].pop(index, None)
+
+        self._port_mapping_indexes.add(index)
+        self.data["port_mappings"][index] = await self.hass.async_add_executor_job(
+            self._get_port_mapping, index
+        )
+        return unregister_port_mapping
+
+    def _get_port_mapping(self, index: int) -> dict[str, Any]:
+        """Get a port mapping entry."""
+        return self.connection.call_action(
+            f"{self.device_conn_type}1",
+            "GetGenericPortMappingEntry",
+            NewPortMappingIndex=index,
+        )
+
+    def _port_mappings_update(self) -> dict[int, dict[str, Any]]:
+        """Update registered port mappings."""
+        return {
+            index: self._get_port_mapping(index) for index in self._port_mapping_indexes
+        }
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -316,6 +346,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
+            "port_mappings": {},
         }
         self.connection.clear_cache()
         try:
@@ -332,6 +363,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_data[
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
+
+            entity_data["port_mappings"] = await self.hass.async_add_executor_job(
+                self._port_mappings_update
+            )
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",

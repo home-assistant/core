@@ -415,8 +415,10 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._attr_is_on = turn_on
 
 
-class FritzBoxPortSwitch(FritzBoxBaseSwitch):
+class FritzBoxPortSwitch(FritzBoxBaseCoordinatorSwitch):
     """Defines a FRITZ!Box Tools PortForward switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -432,51 +434,56 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         # dict in the format as it comes from fritzconnection,
         # eg: {"NewRemoteHost": "0.0.0.0", "NewExternalPort": 22, ...}
         self.port_mapping = port_mapping
-        self._idx = idx  # needed for update routine
-        self._attr_entity_category = EntityCategory.CONFIG
-
-        switch_info = SwitchInfo(
-            description=f"Port forward {port_name}",
+        self._idx = idx
+        name = f"Port forward {port_name}"
+        description = SwitchEntityDescription(
+            key=slugify(name),
             icon="mdi:check-network",
-            type=SWITCH_TYPE_PORTFORWARD,
-            callback_update=self._async_fetch_update,
-            callback_switch=self._async_switch_on_off_executor,
-            init_state=port_mapping["NewEnabled"],
         )
-        super().__init__(avm_wrapper, device_friendly_name, switch_info)
+        super().__init__(avm_wrapper, device_friendly_name, description)
+        self._attr_name = name
 
-    async def _async_fetch_update(self) -> None:
-        """Fetch updates."""
-
-        self.port_mapping = await self._avm_wrapper.async_get_port_mapping(
-            self.connection_type, self._idx
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            await self.coordinator.async_register_port_mapping(self._idx)
         )
-        LOGGER.debug(
-            "Specific %s response: %s", SWITCH_TYPE_PORTFORWARD, self.port_mapping
-        )
-        if not self.port_mapping:
-            self._attr_available = False
-            return
 
-        self._attr_is_on = self.port_mapping["NewEnabled"] is True
-        self._attr_available = True
+    @property
+    @override
+    def data(self) -> dict[str, Any]:
+        """Return port mapping data."""
+        return self.coordinator.data["port_mappings"].get(self._idx, {})
 
-        attributes_dict = {
-            "NewInternalClient": "internal_ip",
-            "NewInternalPort": "internal_port",
-            "NewExternalPort": "external_port",
-            "NewProtocol": "protocol",
-            "NewPortMappingDescription": "description",
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return port mapping attributes."""
+        return {
+            "internal_ip": self.data["NewInternalClient"],
+            "internal_port": self.data["NewInternalPort"],
+            "external_port": self.data["NewExternalPort"],
+            "protocol": self.data["NewProtocol"],
+            "description": self.data["NewPortMappingDescription"],
         }
 
-        for key, attr in attributes_dict.items():
-            self._attr_extra_state_attributes[attr] = self.port_mapping[key]
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Switch status."""
+        return self.data["NewEnabled"] is True
 
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
-        self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
-        await self._avm_wrapper.async_add_port_mapping(
-            self.connection_type, self.port_mapping
+    @override
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
+        """Handle port forward switch."""
+        await self.coordinator.async_add_port_mapping(
+            self.connection_type,
+            {**self.data, "NewEnabled": "1" if turn_on else "0"},
         )
+        self.coordinator.data["port_mappings"][self._idx]["NewEnabled"] = turn_on
+        self.async_write_ha_state()
 
 
 class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
