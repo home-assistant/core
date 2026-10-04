@@ -200,5 +200,10 @@
         "name": "Valve"
       }
     }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "This room does not support the HVAC mode {hvac_mode}."
+    }
   }
 }
