@@ -126,6 +126,30 @@ async def test_options_flow_homekit_fan_mode_aliases_default(
     assert result["data"][CONF_HOMEKIT_FAN_MODE_ALIASES] is False
 
 
+async def test_options_flow_rejects_high_interval_above_low_interval(
+    hass: HomeAssistant,
+) -> None:
+    """Test the high-frequency interval may not exceed the low-frequency interval."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "high_scan_interval": 30,
+            "low_scan_interval": 10,
+            "high_scan_start": "07:00:00",
+            "low_scan_start": "22:00:00",
+            "scan_ignore": 30,
+            CONF_HOMEKIT_FAN_MODE_ALIASES: False,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "high_scan_interval_greater_than_low"}
+
+
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("10.0.0.131"),
     ip_addresses=[ip_address("10.0.0.131")],

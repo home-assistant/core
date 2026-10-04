@@ -40,7 +40,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if user_input["high_scan_interval"] <= user_input["low_scan_interval"]:
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -78,7 +79,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): BooleanSelector(),
                 }
             ),
-            errors={},
+            errors={"base": "high_scan_interval_greater_than_low"}
+            if user_input is not None
+            else {},
         )
 
 

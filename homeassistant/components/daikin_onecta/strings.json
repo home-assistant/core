@@ -103,6 +103,9 @@
     }
   },
   "options": {
+    "error": {
+      "high_scan_interval_greater_than_low": "The high-frequency interval must not exceed the low-frequency interval."
+    },
     "step": {
       "init": {
         "data": {
