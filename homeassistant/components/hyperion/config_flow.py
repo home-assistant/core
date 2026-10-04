@@ -321,7 +321,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_CREATE_TOKEN): bool,
-                    probatio.Optional(CONF_TOKEN): str,
+                    probatio.Optional(probatio.Secret(CONF_TOKEN)): str,
                 }
             ),
             errors=errors,
@@ -482,9 +482,7 @@ class HyperionOptionsFlow(OptionsFlowWithReload):
                         default=self.config_entry.options.get(
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
-                    ): probatio.All(
-                        probatio.Coerce(int), probatio.Range(min=0, max=255)
-                    ),
+                    ): probatio.All(probatio.Coerce(int), probatio.Byte()),
                     probatio.Optional(
                         CONF_EFFECT_SHOW_LIST,
                         default=default_effect_show_list,

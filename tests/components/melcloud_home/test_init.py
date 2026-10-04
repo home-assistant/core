@@ -17,11 +17,12 @@ from homeassistant.components.melcloud_home.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+from .conftest import MOCK_USER_INPUT
 
 from tests.common import (
     MockConfigEntry,
@@ -388,3 +389,59 @@ async def test_telemetry_unavailable_logged_once(
 
     assert caplog.text.count(unavailable) == 1
     assert caplog.text.count(available) == 1
+
+
+@pytest.mark.usefixtures("mock_melcloud_client")
+@pytest.mark.parametrize(
+    ("platform", "old_unique_id", "new_unique_id"),
+    [
+        pytest.param(
+            Platform.CLIMATE, "ata-unit-uuid-1", "ata-unit-uuid-1_ata_unit", id="ata"
+        ),
+        pytest.param(
+            Platform.CLIMATE,
+            "atw-unit-uuid-1_zone_1",
+            "atw-unit-uuid-1_zone_1",
+            id="atw_zone",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            "ata-unit-uuid-1_room_temperature",
+            "ata-unit-uuid-1_room_temperature",
+            id="other_platform",
+        ),
+    ],
+)
+async def test_migrate_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    platform: Platform,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test the unique ID migration to the entity description key."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, old_unique_id, config_entry=entry
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    entity_entry = entity_registry.async_get(entity.entity_id)
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
+    # The platform must pick up the migrated entry instead of creating a new one
+    assert hass.states.get(entity.entity_id)
+
+
+async def test_migrate_future_version(hass: HomeAssistant) -> None:
+    """Test a config entry from a newer version isn't migrated."""
+    entry = MockConfigEntry(domain=DOMAIN, version=2)
+
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

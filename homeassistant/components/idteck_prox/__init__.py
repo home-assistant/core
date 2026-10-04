@@ -24,12 +24,12 @@ EVENT_IDTECK_PROX_KEYCARD = "idteck_prox_keycard"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): cv.string,
-                        probatio.Required(CONF_PORT): cv.port,
+                        probatio.Required(CONF_PORT): probatio.Port(),
                         probatio.Required(CONF_NAME): cv.string,
                     }
                 )

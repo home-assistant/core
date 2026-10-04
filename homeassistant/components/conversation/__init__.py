@@ -77,7 +77,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(DOMAIN): probatio.Schema(
             {
                 probatio.Optional("intents"): probatio.Schema(
-                    {cv.string: probatio.All(cv.ensure_list, [cv.string])}
+                    {cv.string: probatio.All(probatio.EnsureList(), [cv.string])}
                 )
             }
         ),

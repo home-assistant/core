@@ -1,5 +1,23 @@
 {
   "entity": {
+    "button": {
+      "filter_changed": {
+        "default": "mdi:air-filter"
+      },
+      "fridge_cleaned": {
+        "default": "mdi:fridge"
+      }
+    },
+    "select": {
+      "mode": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "boost": "mdi:rocket-launch",
+          "eco": "mdi:leaf",
+          "shelf": "mdi:fridge-outline"
+        }
+      }
+    },
     "sensor": {
       "air_quality_score": {
         "default": "mdi:air-filter"

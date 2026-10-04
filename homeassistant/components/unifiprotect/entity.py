@@ -49,6 +49,7 @@ from .const import (
     DOMAIN,
 )
 from .data import ProtectData, ProtectDeviceType
+from .utils import _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -551,6 +552,17 @@ class ProtectNVREntity(BaseProtectEntity):
     @callback
     @override
     def _async_set_device_info(self) -> None:
+        if self.data.api.is_public_only:
+            # The public NVR carries no market name, version or console URL.
+            mac = _async_unifi_mac_from_hass(self.device.mac)
+            self._attr_device_info = DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                identifiers={(DOMAIN, mac)},
+                manufacturer=DEFAULT_BRAND,
+                name=self.device.display_name or None,
+                model=self.device.type,
+            )
+            return
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, self.device.mac)},

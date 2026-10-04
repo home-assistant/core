@@ -29,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -114,7 +113,7 @@ RPC_SLEEPING_PLATFORMS: Final = [
 
 COAP_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): probatio.Port(),
     }
 )
 CONFIG_SCHEMA: Final = probatio.Schema(

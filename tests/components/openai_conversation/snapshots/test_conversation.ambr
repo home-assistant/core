@@ -529,6 +529,46 @@
     }),
   })
 # ---
+# name: test_model_args[subentry_options7]
+  dict({
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-luna',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[subentry_options8]
+  dict({
+    'max_output_tokens': 3000,
+    'model': 'gpt-6-luna',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'none',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'temperature': 0.5,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+    'top_p': 0.9,
+  })
+# ---
 # name: test_web_search[False]
   list([
     dict({

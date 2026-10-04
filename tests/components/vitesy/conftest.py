@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiovitesy.api import VitesyDevice
+from aiovitesy.api import VitesyDevice, VitesyModeStatus
 import pytest
 
 from homeassistant.components.vitesy.const import DOMAIN
@@ -80,6 +80,11 @@ def mock_vitesy_client(
         client.login = AsyncMock(return_value=None)
         client.get_user = AsyncMock(return_value={"id": USER_ID})
         client.get_all_devices = AsyncMock(return_value=mock_devices)
+        client.get_mode_status = AsyncMock(
+            return_value=VitesyModeStatus(
+                desired_mode="eco", current_mode="eco", pending=False
+            )
+        )
         yield client
 
 

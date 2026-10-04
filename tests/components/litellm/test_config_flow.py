@@ -12,7 +12,13 @@ from openai import (
 import pytest
 
 from homeassistant.components.litellm.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.litellm.const import CONF_PROMPT, DOMAIN
+from homeassistant.components.litellm.const import (
+    CONF_PROMPT,
+    CONF_STT_CUSTOM_PROMPT_KEYWORDS,
+    CONF_STT_KEYWORDS,
+    CONF_STT_PROMPT,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -175,6 +181,189 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (InvalidAuth(), "invalid_auth"),
+        (CannotConnect(), "cannot_connect"),
+        (Exception("unexpected"), "unknown"),
+    ],
+)
+async def test_stt_subentry_exceptions(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test STT subentry flow aborts when models cannot be fetched."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "stt"),
+            context={"source": SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.usefixtures("mock_models")
+async def test_create_stt_subentry(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an STT subentry."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "stt"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "gpt-4"
+    assert result["data"] == {
+        CONF_MODEL: "gpt-4",
+        CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+    }
+
+    subentry_id = get_subentry_id(mock_config_entry, "stt")
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def _create_stt_with_hints(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> str:
+    """Create an STT subentry with both optional hints enabled."""
+    await setup_integration(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "stt"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: True},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "gpt-4",
+            CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
+            CONF_STT_PROMPT: "Old prompt",
+            CONF_STT_KEYWORDS: "Old, keywords",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    return get_subentry_id(mock_config_entry, "stt")
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_models")
+@pytest.mark.parametrize(
+    ("hints", "expected_hints"),
+    [
+        pytest.param({}, {}, id="clear-both-omitted"),
+        pytest.param(
+            {CONF_STT_KEYWORDS: "Old, keywords"},
+            {CONF_STT_KEYWORDS: "Old, keywords"},
+            id="clear-prompt",
+        ),
+        pytest.param(
+            {CONF_STT_PROMPT: "Old prompt"},
+            {CONF_STT_PROMPT: "Old prompt"},
+            id="clear-keywords",
+        ),
+        pytest.param(
+            {CONF_STT_PROMPT: "", CONF_STT_KEYWORDS: ""},
+            {},
+            id="clear-both-empty",
+        ),
+        pytest.param(
+            {CONF_STT_PROMPT: "New prompt", CONF_STT_KEYWORDS: "New, keywords"},
+            {CONF_STT_PROMPT: "New prompt", CONF_STT_KEYWORDS: "New, keywords"},
+            id="edit-both",
+        ),
+    ],
+)
+async def test_reconfigure_stt_hints(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hints: dict[str, str],
+    expected_hints: dict[str, str],
+) -> None:
+    """Test saved STT hints reflect the submitted form fields."""
+    subentry_id = await _create_stt_with_hints(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "gpt-4",
+            CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
+            **hints,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data == {
+        CONF_MODEL: "gpt-4",
+        CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
+        **expected_hints,
+    }
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_models")
+async def test_reconfigure_stt_disable_hints(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test disabling hints clears both saved STT fields."""
+    subentry_id = await _create_stt_with_hints(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data == {
+        CONF_MODEL: "gpt-4",
+        CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+    }
 
 
 @pytest.mark.usefixtures("mock_models")
@@ -369,15 +558,17 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     assert key.default() == []
 
 
+@pytest.mark.parametrize("subentry_type", ["conversation", "stt"])
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
     """Test reconfiguring aborts when the main entry is not loaded."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": SOURCE_USER},
     )
 
