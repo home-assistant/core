@@ -27,6 +27,7 @@ from .const import (
 )
 from .services import async_setup_services
 from .utils import (
+    STATUS_LOCK,
     add_insteon_events,
     get_device_platforms,
     register_new_device_callback,
@@ -44,7 +45,8 @@ async def async_get_device_config(hass, config_entry):
         if devices[address].is_battery:
             continue
         with suppress(AttributeError):
-            await devices[address].async_status()
+            async with STATUS_LOCK:
+                await devices[address].async_status()
 
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)

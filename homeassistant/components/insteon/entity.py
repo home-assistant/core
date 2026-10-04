@@ -1,5 +1,6 @@
 """Insteon base entity."""
 
+from contextlib import suppress
 import functools
 import logging
 from typing import Any, override
@@ -24,7 +25,7 @@ from .const import (
     SIGNAL_SAVE_DEVICES,
     STATE_NAME_LABEL_MAP,
 )
-from .utils import print_aldb_to_log
+from .utils import STATUS_LOCK, print_aldb_to_log
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,3 +192,11 @@ class InsteonEntity(Entity):
     async def _async_add_default_links(self):
         """Add default links between the device and the modem."""
         await self._insteon_device.async_add_default_links()
+
+    async def async_update(self) -> None:
+        """Request a live status update from the device, skipping battery-powered devices."""
+        if self._insteon_device.is_battery:
+            return
+        with suppress(AttributeError):
+            async with STATUS_LOCK:
+                await self._insteon_device.async_status(self.insteon_group)
