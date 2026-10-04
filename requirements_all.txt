@@ -2754,7 +2754,7 @@ python-izone==1.3.10
 python-join-api==0.1.1
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.10.2
+python-kasa[speedups]==0.11.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.2.14
