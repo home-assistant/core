@@ -6,14 +6,9 @@ from aiohttp.client_exceptions import ClientError
 from pyControl4.error_handling import BadCredentials, NotFound, Unauthorized
 import pytest
 
-from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.control4.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -29,7 +24,6 @@ async def test_full_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test full config flow."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -185,44 +179,3 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_option_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test config flow options."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 4},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: 4,
-    }
-
-
-async def test_option_flow_defaults(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test config flow options."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-    }
