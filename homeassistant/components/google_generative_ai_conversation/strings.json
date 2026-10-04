@@ -153,6 +153,18 @@
       }
     }
   },
+  "options": {
+    "error": {
+      "cannot_disable_interactions": "Interactions API cannot be disabled while a conversation agent has both Google Search and Control Home Assistant enabled."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "use_interactions_api": "Use Interactions API"
+        }
+      }
+    }
+  },
   "selector": {
     "thinking_level": {
       "options": {

@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+from google.genai import interactions
 from google.genai.types import GenerateContentResponse, ThinkingLevel
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,6 +15,10 @@ from homeassistant.components.conversation import (
     ToolResultContent,
     UserContent,
     trace,
+)
+from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_USE_GOOGLE_SEARCH_TOOL,
+    CONF_USE_INTERACTIONS_API,
 )
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
@@ -1013,3 +1018,288 @@ async def test_token_stats_reported(
         "cached_input_tokens": 5,
         "output_tokens": 20,
     }
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_interactions_conversation_simple(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test simple text conversation with Interactions API enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
+        ),
+        interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(text="Hello from Interactions API!"),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    async def mock_stream(*args, **kwargs):
+        for event in events:
+            yield event
+
+    with patch.object(
+        mock_config_entry.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_ai_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"]
+        == "Hello from Interactions API!"
+    )
+    assert mock_create.call_count == 1
+    call_kwargs = mock_create.call_args.kwargs
+    assert call_kwargs["stream"] is True
+    assert call_kwargs["store"] is False
+    assert len(call_kwargs["input"]) == 1
+    assert isinstance(call_kwargs["input"][0], interactions.UserInputStep)
+    assert call_kwargs["input"][0].content[0].text == "hello"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.usefixtures("mock_ulid_tools")
+async def test_interactions_conversation_function_call(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+) -> None:
+    """Test function calling with Interactions API enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_assist,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    turn1_events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.FunctionCallStep(
+                id="call-time-1",
+                name="HassGetCurrentTime",
+                arguments={},
+            ),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    turn2_events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
+        ),
+        interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(text="The current time is 12:00 PM."),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    async def mock_stream_1(*args, **kwargs):
+        for event in turn1_events:
+            yield event
+
+    async def mock_stream_2(*args, **kwargs):
+        for event in turn2_events:
+            yield event
+
+    with patch.object(
+        mock_config_entry_with_assist.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        side_effect=[mock_stream_1(), mock_stream_2()],
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "What time is it?",
+            None,
+            Context(),
+            agent_id="conversation.google_ai_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"]
+        == "The current time is 12:00 PM."
+    )
+    assert mock_create.call_count == 2
+    call2_input = mock_create.call_args_list[1].kwargs["input"]
+    has_fn_result = any(
+        isinstance(step, interactions.FunctionResultStep)
+        and step.name == "HassGetCurrentTime"
+        and step.call_id == "call-time-1"
+        for step in call2_input
+    )
+    assert has_fn_result
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.usefixtures("mock_ulid_tools")
+async def test_interactions_conversation_with_assist_and_google_search(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+) -> None:
+    """Test function calling with Interactions API and Google Search enabled."""
+    subentry = next(iter(mock_config_entry_with_assist.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry_with_assist,
+        subentry,
+        data={**subentry.data, CONF_USE_GOOGLE_SEARCH_TOOL: True},
+    )
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_assist,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
+        ),
+        interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(
+                text="I checked both your devices and Google!"
+            ),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    async def mock_stream(*args, **kwargs):
+        for event in events:
+            yield event
+
+    with patch.object(
+        mock_config_entry_with_assist.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "Check the time and what is the latest news",
+            None,
+            Context(),
+            agent_id="conversation.google_ai_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"]
+        == "I checked both your devices and Google!"
+    )
+    assert mock_create.call_count == 1
+    call_kwargs = mock_create.call_args.kwargs
+    tools = call_kwargs["tools"]
+    assert any(isinstance(t, interactions.Function) for t in tools)
+    assert any(isinstance(t, interactions.GoogleSearch) for t in tools)
+
+
+@pytest.mark.parametrize(
+    ("error"),
+    [
+        (API_ERROR_500,),
+        (CLIENT_ERROR_BAD_REQUEST,),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_interactions_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Test client errors during Interactions API call are caught."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    with patch.object(
+        mock_config_entry.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        side_effect=error,
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_ai_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"] == ERROR_GETTING_RESPONSE
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_interactions_toggle_off_uses_legacy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_send_message_stream: AsyncMock,
+) -> None:
+    """Test that when CONF_USE_INTERACTIONS_API is False, legacy chats API is used."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: False},
+    )
+    await hass.async_block_till_done()
+
+    mock_send_message_stream.return_value = [
+        [
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [
+                                {"text": "Hello from legacy!"},
+                            ]
+                        }
+                    }
+                ]
+            )
+        ]
+    ]
+
+    with patch.object(
+        mock_config_entry.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+    ) as mock_interactions_create:
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_ai_conversation",
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"] == "Hello from legacy!"
+    )
+    assert mock_send_message_stream.call_count == 1
+    assert mock_interactions_create.call_count == 0

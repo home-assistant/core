@@ -1,20 +1,25 @@
 """Tests for the Google Generative AI Conversation TTS entity."""
 
+import base64
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from google.genai import types
+from google.genai import interactions, types
 from google.genai.errors import APIError
 import pytest
 
 from homeassistant.components import tts
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_USE_INTERACTIONS_API,
     DOMAIN,
     RECOMMENDED_TEMPERATURE,
+)
+from homeassistant.components.google_generative_ai_conversation.helpers import (
+    convert_to_wav,
 )
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -64,6 +69,18 @@ def mock_genai_client() -> Generator[AsyncMock]:
     """Mock genai_client."""
     client = Mock()
     client.aio.models.get = AsyncMock()
+    valid_wav_bytes = convert_to_wav(b"\x00\x00" * 100, "audio/l16;rate=24000")
+    client.aio.interactions.create = AsyncMock(
+        return_value=Mock(
+            id="interaction_123",
+            status="completed",
+            output_audio=interactions.AudioContent(
+                data=base64.b64encode(valid_wav_bytes).decode(),
+                mime_type="audio/wav",
+            ),
+            steps=[],
+        )
+    )
     client.aio.models.generate_content = AsyncMock(
         return_value=types.GenerateContentResponse(
             candidates=(
@@ -229,4 +246,94 @@ async def test_tts_service_speak_error(
             ),
             temperature=RECOMMENDED_TEMPERATURE,
         ),
+    )
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_service_speak_interactions(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    calls: list[ServiceCall],
+) -> None:
+    """Test tts service using Interactions API."""
+    service_data = {
+        ATTR_ENTITY_ID: "tts.google_ai_tts",
+        tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+        tts.ATTR_MESSAGE: "There is a person at the front door.",
+        tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "puck"},
+    }
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    hass.config_entries.async_update_entry(
+        tts_entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+    tts_entity._genai_client.aio.interactions.create.reset_mock()
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
+    tts_entity._genai_client.aio.interactions.create.assert_called_once_with(
+        model=TEST_CHAT_MODEL,
+        input="There is a person at the front door.",
+        stream=False,
+        store=False,
+        response_format=interactions.AudioResponseFormat(
+            type="audio",
+            mime_type="audio/wav",
+            delivery="inline",
+        ),
+        generation_config={
+            "temperature": RECOMMENDED_TEMPERATURE,
+            "speech_config": [interactions.SpeechConfig(voice="puck")],
+        },
+    )
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_service_speak_interactions_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    calls: list[ServiceCall],
+) -> None:
+    """Test tts service using Interactions API when interaction fails."""
+    service_data = {
+        ATTR_ENTITY_ID: "tts.google_ai_tts",
+        tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+        tts.ATTR_MESSAGE: "There is a person at the front door.",
+        tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "puck"},
+    }
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    hass.config_entries.async_update_entry(
+        tts_entity.entry, options={CONF_USE_INTERACTIONS_API: True}
+    )
+    tts_entity._genai_client.aio.interactions.create.reset_mock()
+    tts_entity._genai_client.aio.interactions.create.return_value = Mock(
+        id="interaction_failed",
+        status="failed",
+        output_audio=None,
+        steps=[],
+    )
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )

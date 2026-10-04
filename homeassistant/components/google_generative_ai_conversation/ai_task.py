@@ -3,7 +3,8 @@
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, override
 
-from google.genai.errors import APIError
+from google.genai import interactions
+from google.genai.errors import APIError, ClientError
 from google.genai.types import GenerateContentConfig, Part, PartUnionDict
 
 from homeassistant.components import ai_task, conversation
@@ -16,6 +17,7 @@ from homeassistant.util.json import json_loads
 from .const import (
     CONF_CHAT_MODEL,
     CONF_RECOMMENDED,
+    CONF_USE_INTERACTIONS_API,
     LOGGER,
     RECOMMENDED_AI_TASK_MAX_TOKENS,
     RECOMMENDED_IMAGE_MODEL,
@@ -24,6 +26,13 @@ from .entity import (
     ERROR_GETTING_RESPONSE,
     GoogleGenerativeAILLMBaseEntity,
     async_prepare_files_for_prompt,
+)
+from .interactions import (
+    async_prepare_chat_log_attachments,
+    build_interaction_request,
+    convert_chat_log_to_interactions_steps,
+    extract_output_image,
+    format_image_response_format,
 )
 
 if TYPE_CHECKING:
@@ -128,6 +137,83 @@ class GoogleGenerativeAITaskEntity(
         assert isinstance(user_message, conversation.UserContent)
 
         model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_IMAGE_MODEL)
+
+        if self.entry.options.get(CONF_USE_INTERACTIONS_API, False):
+            return await self._async_generate_image_interactions(model, chat_log)
+
+        return await self._async_generate_image_models(model, user_message, chat_log)
+
+    async def _async_generate_image_interactions(
+        self,
+        model: str,
+        chat_log: conversation.ChatLog,
+    ) -> ai_task.GenImageTaskResult:
+        """Generate an image using the Interactions API."""
+        prepared_attachments = await async_prepare_chat_log_attachments(
+            self.hass, chat_log
+        )
+        input_steps = convert_chat_log_to_interactions_steps(
+            chat_log, prepared_attachments=prepared_attachments
+        )
+        request = build_interaction_request(
+            model=model,
+            input_content=input_steps,
+            options=self.subentry.data,
+            response_format=format_image_response_format(),
+            stream=False,
+        )
+        try:
+            interaction = await self._genai_client.aio.interactions.create(**request)
+        except (APIError, ClientError, ValueError) as err:
+            LOGGER.error("Error generating image: %s", err)
+            raise HomeAssistantError(f"Error generating image: {err}") from err
+
+        if getattr(interaction, "status", None) in ("failed", "cancelled"):
+            err_msg = (
+                interaction.errors[0].message
+                if interaction.errors
+                and getattr(interaction.errors[0], "message", None)
+                else interaction.status
+            )
+            raise HomeAssistantError(f"Error generating image: {err_msg}")
+
+        try:
+            image_data, mime_type = extract_output_image(interaction)
+        except ValueError as err:
+            raise HomeAssistantError("Response did not include image") from err
+
+        response_text = interaction.output_text or ""
+        if not response_text and interaction.steps:
+            for step in interaction.steps:
+                if isinstance(step, interactions.ModelOutputStep) and step.content:
+                    for content_part in step.content:
+                        if (
+                            isinstance(content_part, interactions.TextContent)
+                            and content_part.text
+                        ):
+                            response_text += content_part.text
+
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id=self.entity_id,
+                content=response_text,
+            )
+        )
+
+        return ai_task.GenImageTaskResult(
+            image_data=image_data,
+            conversation_id=chat_log.conversation_id,
+            mime_type=mime_type,
+            model=model.partition("/")[-1],
+        )
+
+    async def _async_generate_image_models(
+        self,
+        model: str,
+        user_message: conversation.UserContent,
+        chat_log: conversation.ChatLog,
+    ) -> ai_task.GenImageTaskResult:
+        """Generate an image using the models API."""
         prompt_parts: list[PartUnionDict] = [user_message.content]
         if user_message.attachments:
             prompt_parts.extend(

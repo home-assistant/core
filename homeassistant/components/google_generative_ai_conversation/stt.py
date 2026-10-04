@@ -1,8 +1,9 @@
 """Speech to text support for Google Generative AI."""
 
 from collections.abc import AsyncIterable
-from typing import override
+from typing import Any, override
 
+from google.genai import interactions
 from google.genai.errors import APIError, ClientError
 from google.genai.types import Part
 
@@ -12,9 +13,16 @@ from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, LOGGER, RECOMMENDED_STT_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_USE_INTERACTIONS_API,
+    DEFAULT_STT_PROMPT,
+    LOGGER,
+    RECOMMENDED_STT_MODEL,
+)
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
+from .interactions import build_interaction_request, format_audio_content
 
 
 async def async_setup_entry(
@@ -246,16 +254,78 @@ class GoogleGenerativeAISttEntity(
                 f"Transcribe in that language."
             )
 
+        if self.entry.options.get(CONF_USE_INTERACTIONS_API, False):
+            return await self._async_process_audio_stream_interactions(
+                metadata, prompt, audio_data
+            )
+        return await self._async_process_audio_stream_models(
+            metadata, prompt, audio_data
+        )
+
+    async def _async_process_audio_stream_interactions(
+        self, metadata: stt.SpeechMetadata, prompt: str, audio_data: bytes
+    ) -> stt.SpeechResult:
+        """Process an audio stream using the Gemini Interactions API."""
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL)
+        audio_part = format_audio_content(
+            data=audio_data,
+            mime_type=f"audio/{metadata.format.value}",
+        )
+        input_step = interactions.UserInputStep(
+            content=[
+                interactions.TextContent(text=prompt),
+                audio_part,
+            ]
+        )
+        request = build_interaction_request(
+            model=model,
+            input_content=[input_step],
+            options=self.subentry.data,
+            stream=False,
+            store=False,
+        )
+
+        try:
+            interaction = await self._genai_client.aio.interactions.create(**request)
+        except (APIError, ClientError, ValueError) as err:
+            LOGGER.error("Error during STT: %s", err)
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+        if getattr(interaction, "status", None) in ("failed", "cancelled"):
+            LOGGER.error("Interaction ended with status: %s", interaction.status)
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+        text: str | None = interaction.output_text
+        if not text and interaction.steps:
+            for step in interaction.steps:
+                if isinstance(step, interactions.ModelOutputStep) and step.content:
+                    for content_part in step.content:
+                        if (
+                            isinstance(content_part, interactions.TextContent)
+                            and content_part.text
+                        ):
+                            text = (text or "") + content_part.text
+
+        if text:
+            return stt.SpeechResult(text, stt.SpeechResultState.SUCCESS)
+
+        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+    async def _async_process_audio_stream_models(
+        self, metadata: stt.SpeechMetadata, prompt: str, audio_data: bytes
+    ) -> stt.SpeechResult:
+        """Process an audio stream using the legacy models generate_content API."""
+        contents: list[Any] = [
+            prompt,
+            Part.from_bytes(
+                data=audio_data,
+                mime_type=f"audio/{metadata.format.value}",
+            ),
+        ]
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
-                contents=[
-                    prompt,
-                    Part.from_bytes(
-                        data=audio_data,
-                        mime_type=f"audio/{metadata.format.value}",
-                    ),
-                ],
+                contents=contents,
                 config=self.create_generate_content_config(),
             )
         except (APIError, ClientError, ValueError) as err:
