@@ -1,0 +1,233 @@
+# serializer version: 1
+# name: test_all_entities[event.ha_gateway_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'message',
+        'direct_message',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.ha_gateway_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Message',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Message',
+    'platform': 'meshtastic',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'message',
+    'unique_id': '!2e9545b8_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[event.ha_gateway_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'message',
+        'direct_message',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Gateway Message',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.ha_gateway_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[event.remote_one_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'message',
+        'direct_message',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.remote_one_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Message',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Message',
+    'platform': 'meshtastic',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'message',
+    'unique_id': '!2e9545b8_!aabbccdd_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[event.remote_one_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'message',
+        'direct_message',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Remote One Message',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.remote_one_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[event.weather_shed_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'message',
+        'direct_message',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.weather_shed_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Message',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Message',
+    'platform': 'meshtastic',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'message',
+    'unique_id': '!2e9545b8_!deadbeef_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[event.weather_shed_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'message',
+        'direct_message',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Weather Shed Message',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.weather_shed_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_broadcast_message_fires_event
+  ReadOnlyDict({
+    'channel': 0,
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'message',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+      'message',
+      'direct_message',
+    ]),
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Gateway Message',
+    'from_id': '!aabbccdd',
+    'from_name': 'Remote One',
+    'from_num': 2864434397,
+    'hops_away': 0,
+    'packet_id': 305441741,
+    'portnum': 'TEXT_MESSAGE_APP',
+    'received_at': '2025-09-08T02:57:10+00:00',
+    'reply_id': None,
+    'rx_rssi': -87,
+    'rx_snr': 5.5,
+    'rx_time': 1757300200,
+    'text': 'hallo mesh',
+    'to_id': '^all',
+    'to_num': 4294967295,
+    'via_mqtt': False,
+  })
+# ---
+# name: test_direct_message_fires_direct_message_event
+  ReadOnlyDict({
+    'channel': 0,
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'direct_message',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+      'message',
+      'direct_message',
+    ]),
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Gateway Message',
+    'from_id': '!aabbccdd',
+    'from_name': 'Remote One',
+    'from_num': 2864434397,
+    'hops_away': 1,
+    'packet_id': 305441742,
+    'portnum': 'TEXT_MESSAGE_APP',
+    'received_at': '2025-09-08T02:57:10+00:00',
+    'reply_id': None,
+    'rx_rssi': -80,
+    'rx_snr': 6.25,
+    'rx_time': 1757300260,
+    'text': 'direct hello',
+    'to_id': '!2e9545b8',
+    'to_num': 781534648,
+    'via_mqtt': False,
+  })
+# ---

@@ -1,0 +1,19 @@
+{
+  "from": 2864434397,
+  "to": 4294967295,
+  "fromId": "!aabbccdd",
+  "toId": "^all",
+  "channel": 0,
+  "id": 305441741,
+  "rxTime": 1757300200,
+  "rxSnr": 5.5,
+  "rxRssi": -87,
+  "hopLimit": 3,
+  "hopStart": 3,
+  "priority": "DEFAULT",
+  "decoded": {
+    "portnum": "TEXT_MESSAGE_APP",
+    "bitfield": 1,
+    "text": "hallo mesh"
+  }
+}

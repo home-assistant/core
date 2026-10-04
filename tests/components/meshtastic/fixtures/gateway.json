@@ -1,0 +1,17 @@
+{
+  "node_num": 781534648,
+  "node_id": "!2e9545b8",
+  "long_name": "HA Gateway",
+  "short_name": "HAGW",
+  "hardware_model": "TBEAM",
+  "firmware_version": "2.7.26.54e0d8d",
+  "role": "CLIENT",
+  "region": "EU_868",
+  "modem_preset": "LONG_FAST",
+  "reboot_count": 7,
+  "nodedb_count": 3,
+  "channels": [
+    { "index": 0, "name": "", "role": "PRIMARY", "encrypted": true },
+    { "index": 1, "name": "admin", "role": "SECONDARY", "encrypted": true }
+  ]
+}
