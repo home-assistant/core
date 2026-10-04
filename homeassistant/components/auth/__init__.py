@@ -126,14 +126,13 @@ as part of a config flow.
 
 import asyncio
 import base64
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import hashlib
 import hmac
 from http import HTTPStatus
 from logging import getLogger
-from typing import Any, Protocol, cast
+from typing import Any, NamedTuple, Protocol, cast
 import uuid
 
 from aiohttp import web
@@ -168,30 +167,51 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class AuthCodeEntry:
-    """Entry stored in the auth code store."""
+    """Authorization code bindings, with S256 used for any PKCE challenge."""
 
-    created: datetime
     credentials: Credentials
+    created: datetime
+    redirect_uri: str | None = None
     code_challenge: str | None = None
-    code_challenge_method: str | None = None
+
+
+class AuthorizationCodeValidationError(NamedTuple):
+    """Authorization code validation error."""
+
+    error: str
+    error_description: str | None = None
 
 
 class StoreResultType(Protocol):
-    """Protocol for storing auth flow results."""
+    """Callable that stores an authorization code."""
 
     def __call__(
         self,
         client_id: str,
         result: Credentials,
+        *,
+        redirect_uri: str | None = None,
         code_challenge: str | None = None,
-        code_challenge_method: str | None = None,
     ) -> str:
-        """Store flow result and return a code to retrieve it."""
+        """Store an authorization code."""
 
 
-type RetrieveResultType = Callable[[str, str], AuthCodeEntry | None]
+class RetrieveResultType(Protocol):
+    """Callable that validates and consumes an authorization code."""
+
+    def __call__(
+        self,
+        client_id: str,
+        code: str,
+        *,
+        redirect_uri: str | None = None,
+        code_verifier: str | None = None,
+    ) -> Credentials | AuthorizationCodeValidationError:
+        """Return credentials only after validating all code bindings."""
+
+
 DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -199,10 +219,20 @@ DELETE_CURRENT_TOKEN_DELAY = 2
 
 
 def create_auth_code(
-    hass: HomeAssistant, client_id: str, credential: Credentials
+    hass: HomeAssistant,
+    client_id: str,
+    credential: Credentials,
+    *,
+    redirect_uri: str | None = None,
+    code_challenge: str | None = None,
 ) -> str:
     """Create an authorization code to fetch tokens."""
-    return hass.data[DATA_STORE](client_id, credential)
+    return hass.data[DATA_STORE](
+        client_id,
+        credential,
+        redirect_uri=redirect_uri,
+        code_challenge=code_challenge,
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -334,43 +364,21 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        entry = self._retrieve_auth(client_id, code)
-
-        if entry is None:
+        credential = self._retrieve_auth(
+            client_id,
+            code,
+            redirect_uri=data.get("redirect_uri"),
+            code_verifier=data.get("code_verifier"),
+        )
+        if isinstance(credential, AuthorizationCodeValidationError):
+            error_response = {"error": credential.error}
+            if credential.error_description is not None:
+                error_response["error_description"] = credential.error_description
             return self.json(
-                {"error": "invalid_request", "error_description": "Invalid code"},
+                error_response,
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        if entry.code_challenge is not None:
-            if not (code_verifier := data.get("code_verifier")):
-                return self.json(
-                    {
-                        "error": "invalid_request",
-                        "error_description": "Code verifier required",
-                    },
-                    status_code=HTTPStatus.BAD_REQUEST,
-                )
-            if not _verify_code_verifier(code_verifier, entry.code_challenge):
-                return self.json(
-                    {
-                        "error": "invalid_grant",
-                        "error_description": "Invalid code verifier",
-                    },
-                    status_code=HTTPStatus.BAD_REQUEST,
-                )
-        elif "code_verifier" in data:
-            return self.json(
-                {
-                    "error": "invalid_request",
-                    "error_description": (
-                        "Code verifier provided but no code challenge was present"
-                    ),
-                },
-                status_code=HTTPStatus.BAD_REQUEST,
-            )
-
-        credential = entry.credentials
         user = await hass.auth.async_get_or_create_user(credential)
 
         if user_access_error := async_user_not_allowed_do_auth(hass, user):
@@ -488,18 +496,27 @@ class LinkUserView(HomeAssistantView):
         """Initialize the link user view."""
         self._retrieve_credentials = retrieve_credentials
 
-    @RequestDataValidator(probatio.Schema({"code": str, "client_id": str}))
+    @RequestDataValidator(
+        probatio.Schema(
+            {
+                probatio.Required("code"): str,
+                probatio.Required("client_id"): str,
+            }
+        )
+    )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Link a user."""
         hass = request.app[KEY_HASS]
         user: User = request["hass_user"]
 
-        entry = self._retrieve_credentials(data["client_id"], data["code"])
-
-        if entry is None or entry.code_challenge is not None:
+        credentials = self._retrieve_credentials(
+            data["client_id"],
+            data["code"],
+        )
+        if isinstance(credentials, AuthorizationCodeValidationError):
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)
+        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
         if linked_user != user and linked_user is not None:
             return self.json_message(
                 "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
@@ -507,7 +524,7 @@ class LinkUserView(HomeAssistantView):
 
         # No-op if credential is already linked to the user it will be linked to
         if linked_user != user:
-            await hass.auth.async_link_user(user, entry.credentials)
+            await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
 
 
@@ -520,8 +537,9 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(
         client_id: str,
         result: Credentials,
+        *,
+        redirect_uri: str | None = None,
         code_challenge: str | None = None,
-        code_challenge_method: str | None = None,
     ) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
@@ -529,31 +547,53 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
 
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = AuthCodeEntry(
-            created=dt_util.utcnow(),
             credentials=result,
+            created=dt_util.utcnow(),
+            redirect_uri=redirect_uri,
             code_challenge=code_challenge,
-            code_challenge_method=code_challenge_method,
         )
         return code
 
     @callback
-    def retrieve_result(client_id: str, code: str) -> AuthCodeEntry | None:
-        """Retrieve flow result."""
+    def retrieve_result(
+        client_id: str,
+        code: str,
+        *,
+        redirect_uri: str | None = None,
+        code_verifier: str | None = None,
+    ) -> Credentials | AuthorizationCodeValidationError:
+        """Validate and consume the code before yielding to another request."""
         key = (client_id, code)
-
-        if key not in temp_results:
-            return None
-
-        entry = temp_results.pop(key)
+        if (entry := temp_results.get(key)) is None:
+            return AuthorizationCodeValidationError("invalid_grant", "Invalid code")
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to
         # mitigate the risk of leaks.  A maximum authorization code lifetime of
         # 10 minutes is RECOMMENDED.
-        if dt_util.utcnow() - entry.created < timedelta(minutes=10):
-            return entry
+        if dt_util.utcnow() - entry.created >= timedelta(minutes=10):
+            del temp_results[key]
+            return AuthorizationCodeValidationError("invalid_grant", "Invalid code")
 
-        return None
+        if entry.code_challenge is not None:
+            if not code_verifier:
+                return AuthorizationCodeValidationError(
+                    "invalid_request", "Code verifier required"
+                )
+            if not _verify_code_verifier(code_verifier, entry.code_challenge):
+                return AuthorizationCodeValidationError(
+                    "invalid_grant", "Invalid code verifier"
+                )
+        elif code_verifier is not None:
+            return AuthorizationCodeValidationError(
+                "invalid_request",
+                "Code verifier provided but no code challenge was present",
+            )
+        if redirect_uri is not None and redirect_uri != entry.redirect_uri:
+            return AuthorizationCodeValidationError("invalid_grant")
+
+        del temp_results[key]
+        return entry.credentials
 
     return store_result, retrieve_result
 

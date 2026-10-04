@@ -250,6 +250,34 @@ async def test_invalid_redirect_uri(
     assert data["message"] == "Invalid redirect URI"
 
 
+async def test_client_id_cannot_change_during_login_flow(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test the client id is bound to the login flow."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": "https://other.example.com/",
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {"message": "Client id changed"}
+
+
 @pytest.mark.parametrize(
     "authorization_data",
     [

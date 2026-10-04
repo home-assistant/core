@@ -308,10 +308,8 @@ class LoginFlowBaseView(HomeAssistantView):
         ):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
-        result.pop("data")
-        context = result.pop("context")
-
-        result_obj = result.pop("result")
+        context = result["context"]
+        result_obj = result["result"]
 
         # Result can be None if credential was never linked to a user before.
         user = await hass.auth.async_get_user_by_credentials(result_obj)
@@ -324,15 +322,19 @@ class LoginFlowBaseView(HomeAssistantView):
             )
 
         process_success_login(request)
-        # We overwrite the Credentials object with the string code to retrieve it.
-        result["result"] = self._store_result(
+        response: dict[str, Any] = {
+            key: value
+            for key, value in result.items()
+            if key not in ("data", "context")
+        }
+        response["result"] = self._store_result(
             client_id,
             result_obj,
+            redirect_uri=context["redirect_uri"],
             code_challenge=context.get("code_challenge"),
-            code_challenge_method=context.get("code_challenge_method"),
-        )  # type: ignore[typeddict-item]
+        )
 
-        return self.json(result)
+        return self.json(response)
 
 
 class LoginFlowIndexView(LoginFlowBaseView):
@@ -355,7 +357,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     probatio.Coerce(tuple),
                 ),
                 probatio.Required("redirect_uri"): str,
-                # S256 challenges are always 43 unpadded base64url characters.
                 probatio.Optional("code_challenge"): str,
                 probatio.Optional("response_type"): "code",
                 probatio.Optional("state"): str,
@@ -382,19 +383,18 @@ class LoginFlowIndexView(LoginFlowBaseView):
             return self.json_message("Invalid PKCE parameters", HTTPStatus.BAD_REQUEST)
 
         handler: tuple[str, str] = tuple(data["handler"])
-
-        flow_context = AuthFlowContext(
+        context = AuthFlowContext(
+            client_id=client_id,
             ip_address=ip_address(request.remote),  # type: ignore[arg-type]
             redirect_uri=redirect_uri,
         )
         if code_challenge is not None:
-            flow_context["code_challenge"] = code_challenge
-            flow_context["code_challenge_method"] = data["code_challenge_method"]
+            context["code_challenge"] = code_challenge
 
         try:
             result = await self._flow_mgr.async_init(
                 handler,
-                context=flow_context,
+                context=context,
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
@@ -437,6 +437,8 @@ class LoginFlowResourceView(LoginFlowBaseView):
             flow = self._flow_mgr.async_get(flow_id)
             if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
                 return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
+            if flow["context"]["client_id"] != client_id:
+                return self.json_message("Client id changed", HTTPStatus.BAD_REQUEST)
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
