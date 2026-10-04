@@ -13,6 +13,7 @@ from uiprotect.data import (
     DeviceState,
     IRLEDMode,
     Light,
+    ModelType,
     Permission,
     ProtectAdoptableDeviceModel,
     RingSetting,
@@ -20,7 +21,11 @@ from uiprotect.data import (
     WSAction,
 )
 from uiprotect.data.devices import Hotplug
-from uiprotect.data.public_devices import PublicChime, SensorFeatureCapability
+from uiprotect.data.public_devices import (
+    PublicChime,
+    PublicRingSettings,
+    SensorFeatureCapability,
+)
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.number import (
@@ -49,6 +54,7 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     make_public_camera,
+    make_public_chime,
     make_public_light,
     make_public_sensor,
     make_streamless_public_camera,
@@ -56,6 +62,7 @@ from .utils import (
     registered_keys,
     remove_entities,
     setup_public_camera,
+    setup_public_chime,
     setup_public_light,
     setup_public_sensor,
 )
@@ -621,6 +628,7 @@ async def test_chime_ring_volume_setup(
 ) -> None:
     """Test chime ring volume number entity setup."""
     _setup_chime_with_doorbell(chime, doorbell, volume=75)
+    setup_public_chime(ufp)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
@@ -641,24 +649,23 @@ async def test_chime_ring_volume_set_value(
     chime: Chime,
     doorbell: Camera,
 ) -> None:
-    """Test setting chime ring volume."""
+    """Test setting chime ring volume writes through the public chime."""
     _setup_chime_with_doorbell(chime, doorbell)
+    setup_public_chime(ufp)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
     entity_id = "number.test_chime_ring_volume_test_camera"
+    public = ufp.api.public_bootstrap.get(ModelType.CHIME, chime.id)
 
-    with patch_ufp_method(
-        chime, "set_volume_for_camera_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "number",
-            "set_value",
-            {ATTR_ENTITY_ID: entity_id, "value": 80.0},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {ATTR_ENTITY_ID: entity_id, "value": 80.0},
+        blocking=True,
+    )
 
-        mock_method.assert_called_once_with(doorbell, 80)
+    public.set_volume_for_camera.assert_awaited_once_with(doorbell.id, 80)
 
 
 async def test_chime_volume_set_value(
@@ -724,6 +731,8 @@ async def test_chime_ring_volume_multiple_cameras(
         ),
     ]
 
+    setup_public_chime(ufp)
+
     await init_entry(hass, ufp, [chime, doorbell, doorbell2], regenerate_ids=False)
 
     state1 = hass.states.get("number.test_chime_ring_volume_test_camera")
@@ -743,6 +752,7 @@ async def test_chime_ring_volume_unavailable_when_unpaired(
 ) -> None:
     """Test chime ring volume becomes unavailable when camera is unpaired."""
     _setup_chime_with_doorbell(chime, doorbell)
+    setup_public_chime(ufp)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
@@ -751,22 +761,82 @@ async def test_chime_ring_volume_unavailable_when_unpaired(
     assert state
     assert state.state == "50"
 
-    # Simulate removing the camera pairing
-    new_chime = chime.model_copy()
-    new_chime.ring_settings = []
-
-    ufp.api.bootstrap.chimes = {new_chime.id: new_chime}
-    ufp.api.bootstrap.nvr.system_info.ustorage = None
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_chime
-
-    ufp.ws_msg(mock_msg)
+    # Simulate removing the camera pairing on the public chime
+    public = make_public_chime(chime, ring_settings=[])
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unavailable"
+
+
+async def test_chime_ring_volume_reads_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """The ring volume follows the public chime, not the private one."""
+    _setup_chime_with_doorbell(chime, doorbell, volume=50)
+    setup_public_chime(ufp)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    entity_id = "number.test_chime_ring_volume_test_camera"
+    public = make_public_chime(
+        chime,
+        ring_settings=[
+            PublicRingSettings(
+                camera_id=doorbell.id,
+                repeat_times=1,
+                ringtone_id="test-ringtone-id",
+                volume=30,
+            )
+        ],
+    )
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "30"
+
+
+async def test_chime_ring_volume_unavailable_without_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """The ring volume is unavailable without a public chime."""
+    _setup_chime_with_doorbell(chime, doorbell)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    state = hass.states.get("number.test_chime_ring_volume_test_camera")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_chime_ring_volume_unavailable_on_public_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """The ring volume availability follows the public chime's state."""
+    _setup_chime_with_doorbell(chime, doorbell)
+    setup_public_chime(ufp)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    entity_id = "number.test_chime_ring_volume_test_camera"
+    assert hass.states.get(entity_id).state == "50"
+
+    public = make_public_chime(chime, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -905,7 +975,7 @@ async def test_public_only_number_chime_has_no_numbers(
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
-    """Chime volumes are private-only settings, so a public chime yields nothing."""
+    """A public chime yields no numbers, they are built from the private chime."""
     public = Mock(spec=PublicChime)
     public.id = chime.id
     public.mac = chime.mac
