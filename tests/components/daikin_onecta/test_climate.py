@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     SERVICE_SET_TEMPERATURE,
     ClimateEntity,
@@ -82,7 +83,9 @@ async def test_enable_boost_stops_after_failed_turn_on() -> None:
 
 
 async def test_climate_service_updates_entity_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test climate services through the Home Assistant integration API."""
     setpoint = SimpleNamespace(
@@ -134,13 +137,13 @@ async def test_climate_service_updates_entity_state(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, "gateway_zone_roomTemperature"
     )
     assert entity_id is not None
 
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
         blocking=True,
@@ -160,7 +163,9 @@ async def test_climate_service_updates_entity_state(
     "ignore_missing_translations", [["component.climate.services."]]
 )
 async def test_setup_creates_entities_per_management_point(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Set up a separate climate entity for each climate-control zone."""
     coordinator = MagicMock()
@@ -216,10 +221,9 @@ async def test_setup_creates_entities_per_management_point(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    registry = er.async_get(hass)
-    assert registry.async_get_entity_id(
+    assert entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, "device_first_zone_roomTemperature"
     )
-    assert registry.async_get_entity_id(
+    assert entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, "device_second_zone_roomTemperature"
     )
