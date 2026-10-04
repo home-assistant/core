@@ -15,18 +15,30 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_PORT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import async_import_yaml, build_url
+from .const import DEFAULT_MODE, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "CONCORD232"
-DEFAULT_PORT = 5007
-DEFAULT_MODE = "audible"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
@@ -41,25 +53,35 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Concord232 alarm control panel platform."""
-    name: str = config[CONF_NAME]
-    code: str | None = config.get(CONF_CODE)
-    mode: str = config[CONF_MODE]
-    host: str = config[CONF_HOST]
-    port: int = config[CONF_PORT]
+    """Import the YAML platform configuration and create a config entry."""
+    await async_import_yaml(hass, config, Platform.ALARM_CONTROL_PANEL)
 
-    url = f"http://{host}:{port}"
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Concord232 alarm control panel from a config entry."""
+    url = build_url(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    # "" is the options flow's explicit cleared-code marker
+    code: str | None = entry.options.get(CONF_CODE) or None
+    mode: str = entry.options.get(CONF_MODE, DEFAULT_MODE)
     try:
-        add_entities([Concord232Alarm(url, name, code, mode)], True)
+        # The constructor does blocking I/O against the server
+        alarm = await hass.async_add_executor_job(
+            Concord232Alarm, url, entry.title, code, mode
+        )
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
+        return
+    async_add_entities([alarm], True)
 
 
 class Concord232Alarm(AlarmControlPanelEntity):
@@ -77,6 +99,9 @@ class Concord232Alarm(AlarmControlPanelEntity):
         self._attr_name = name
         self._code = code
         self._alarm_control_panel_option_default_code = code
+        # The panel protocol arms without a code; only require one when the
+        # user configured a code to gate arming locally.
+        self._attr_code_arm_required = code is not None
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)
