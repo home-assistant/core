@@ -148,6 +148,46 @@ MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+
+MISCALE_S400_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="MIBFS",
+    address="8C:D0:B2:F6:BE:EF",
+    device=generate_ble_device("8C:D0:B2:F6:BE:EF", None),
+    rssi=-60,
+    manufacturer_data={},
+    service_data={
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b'HY\xd5;\n\xbc\x07\x8f\xf24\x8c\x84A8\xe90"\x00\x00\x00\x9eS\x85\x99'
+        )
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
+MISCALE_S400_PACKET2_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="MIBFS",
+    address="8C:D0:B2:F6:BE:EF",
+    device=generate_ble_device("8C:D0:B2:F6:BE:EF", None),
+    rssi=-60,
+    manufacturer_data={},
+    service_data={
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b"HY\xd5;\x0b\xd6\xef\x0b%\xdbrx^~/F\xd6\x00\x00\x00\xd8d-\xf6"
+        )
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
+
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     name="LYWSD02MMC",
     address="A4:C1:38:56:53:84",
