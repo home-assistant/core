@@ -194,6 +194,60 @@ async def test_pushed_update_during_partial_refresh(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("broadcast_addresses", "expected_success", "expected_state"),
+    [
+        pytest.param((40031,), True, "22.0", id="active-broadcast"),
+        pytest.param((30002,), False, "unavailable", id="inactive-broadcast"),
+        pytest.param((), False, "unavailable", id="no-broadcast"),
+    ],
+)
+async def test_pushed_update_during_failed_refresh(
+    hass: HomeAssistant,
+    coils: dict[int, float | None],
+    mock_connection: MockConnection,
+    broadcast_addresses: tuple[int, ...],
+    expected_success: bool,
+    expected_state: str,
+) -> None:
+    """Test availability when all polling reads fail during a broadcast."""
+    entity_id = "number.heating_offset_climate_system_1_40031"
+    coils[30002] = 10
+    coils[40031] = 10
+    coils[40035] = 20
+
+    entry = await async_add_model(hass, Model.S320)
+    coordinator = entry.runtime_data
+    assert 30002 not in coordinator.context_callbacks
+    coils[40031] = None
+    coils[40035] = None
+    read_coil_original = mock_connection.read_coil
+
+    async def read_coil(coil: Coil, timeout: float = 0) -> CoilData:
+        try:
+            return await read_coil_original(coil, timeout)
+        finally:
+            for address in broadcast_addresses:
+                mock_connection.mock_coil_update(address, 22)
+
+    with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is expected_success
+    assert hass.states.get(entity_id).state == expected_state
+
+    # The following refresh must recover with fresh reads, without more broadcasts.
+    coils[40031] = 30
+    coils[40035] = 40
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert hass.states.get(entity_id).state == "30.0"
+    assert coordinator.data[40035].value == 40
+    assert 30002 not in coordinator.data
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shutdown(
     hass: HomeAssistant,
     coils: dict[int, Any],
