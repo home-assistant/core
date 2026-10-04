@@ -5,10 +5,6 @@ import logging
 import time
 from typing import Any, override
 
-from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
-from electrasmart.device import ElectraAirConditioner, OperationMode
-from electrasmart.device.const import MAX_TEMP, MIN_TEMP, Feature
-
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
@@ -38,6 +34,9 @@ from .const import (
     SCAN_INTERVAL_SEC,
     UNAVAILABLE_THRESH_SEC,
 )
+from .pyelectra.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
+from .pyelectra.device import ElectraAirConditioner, OperationMode
+from .pyelectra.device.const import MAX_TEMP, MIN_TEMP, Feature
 
 FAN_ELECTRA_TO_HASS = {
     OperationMode.FAN_SPEED_AUTO: FAN_AUTO,
@@ -271,9 +270,13 @@ class ElectraClimateEntity(ClimateEntity):
         self._attr_fan_mode = FAN_ELECTRA_TO_HASS[
             self._electra_ac_device.get_fan_speed()
         ]
-        self._attr_current_temperature = (
-            self._electra_ac_device.get_sensor_temperature()
-        )
+        raw_temp = self._electra_ac_device.get_sensor_temperature()
+        if raw_temp is not None and raw_temp > 100:
+            # I_RAT/I_CALC_AT telemetry is a raw integer left-shifted by 8 bits
+            # (x256); shift it back to degrees Celsius.
+            self._attr_current_temperature = raw_temp >> 8
+        else:
+            self._attr_current_temperature = raw_temp
         self._attr_target_temperature = self._electra_ac_device.get_temperature()
 
         self._attr_hvac_mode = (

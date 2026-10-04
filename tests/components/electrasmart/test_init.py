@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from electrasmart.device import OperationMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,6 +10,7 @@ from homeassistant.components.electrasmart.const import (
     CONF_PHONE_NUMBER,
     DOMAIN,
 )
+from homeassistant.components.electrasmart.pyelectra.device import OperationMode
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
