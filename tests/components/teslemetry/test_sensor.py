@@ -1,7 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -49,6 +48,20 @@ ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
 # Assistant runs on US/Pacific in tests, so a last_reset derived from its clock
 # or from the event's created_at cannot produce this.
 SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
+
+# Per-tire TPMS warning objects including the Tesla Semi.
+TPMS_NO_WARNINGS = {
+    "frontLeft": False,
+    "frontRight": False,
+    "rearLeft": False,
+    "rearRight": False,
+    "semiMiddleAxleLeft2": False,
+    "semiMiddleAxleRight2": False,
+    "semiRearAxleLeft": False,
+    "semiRearAxleLeft2": False,
+    "semiRearAxleRight": False,
+    "semiRearAxleRight2": False,
+}
 
 
 def _products_with_driver_assist(driver_assist: str) -> dict:
@@ -461,6 +474,48 @@ async def test_sensors_streaming_tpms_none_clears_state(
 
 
 @pytest.mark.parametrize(
+    ("signal", "entity_id"),
+    [
+        pytest.param(
+            Signal.TPMS_HARD_WARNINGS,
+            "sensor.test_tire_pressure_hard_warnings",
+            id="hard",
+        ),
+        pytest.param(
+            Signal.TPMS_SOFT_WARNINGS,
+            "sensor.test_tire_pressure_soft_warnings",
+            id="soft",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_tpms_warnings(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    signal: Signal,
+    entity_id: str,
+) -> None:
+    """Test TPMS warning sensors report how many tires are in warning."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    for warnings, expected_state in (
+        ({**TPMS_NO_WARNINGS, "frontRight": True, "rearLeft": True}, "2"),
+        (TPMS_NO_WARNINGS, "0"),
+        (None, STATE_UNKNOWN),
+    ):
+        mock_add_listener.send(
+            {
+                "vin": vin,
+                "data": {signal: warnings},
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
     "raw_value",
     [
         pytest.param("FollowDistanceUnknown", id="unknown"),
@@ -692,21 +747,32 @@ async def test_energy_history_time_zone_fallback(
     assert state.attributes["last_reset"] == "2024-09-18T00:00:00-07:00"
 
 
-async def test_energy_history_update_entity_service_is_a_noop(
+@pytest.mark.parametrize(
+    ("connected", "expected_state"),
+    [
+        pytest.param(True, "0.036", id="connected"),
+        pytest.param(False, STATE_UNAVAILABLE, id="disconnected"),
+    ],
+)
+async def test_energy_history_update_entity_service(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
+    connected: bool,
+    expected_state: str,
 ) -> None:
-    """The generic update service keeps the streamed totals instead of failing.
+    """The generic update service leaves the history sensors as the stream set them.
 
-    The coordinator has nothing to fetch, so the service must not leave the
-    sensors unavailable on a stream that is perfectly healthy.
+    The stream is their only source, so the service must neither fail on a
+    healthy stream nor revive stale totals while it is down.
     """
     await setup_platform(hass, [Platform.SENSOR])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    mock_add_connection_listener.send(connected)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -715,15 +781,10 @@ async def test_energy_history_update_entity_service_is_a_noop(
         {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
         blocking=True,
     )
-    # The coordinator debounces refresh requests, so let the deferred one land.
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     assert "NotImplementedError" not in caplog.text
     assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
-    assert state.state == "0.036"
-    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert state.state == expected_state
 
 
 async def test_energy_history_unavailable_while_stream_disconnected(
@@ -745,6 +806,58 @@ async def test_energy_history_unavailable_while_stream_disconnected(
     mock_energy_totals_stream.send(is_cache=True)
     await hass.async_block_till_done()
     assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+
+@pytest.mark.parametrize(
+    ("components", "absent"),
+    [
+        pytest.param(
+            {"battery": False},
+            {
+                "grid_energy_exported_from_battery",
+                "battery_energy_exported",
+                "battery_energy_imported_from_grid",
+                "battery_energy_imported_from_solar",
+                "battery_energy_imported_from_generator",
+                "consumer_energy_imported_from_battery",
+                "total_battery_charge",
+                "total_battery_discharge",
+            },
+            id="solar_only",
+        ),
+        pytest.param(
+            {"solar": False},
+            {
+                "solar_energy_exported",
+                "grid_energy_exported_from_solar",
+                "battery_energy_imported_from_solar",
+                "consumer_energy_imported_from_solar",
+                "total_solar_generation",
+            },
+            id="battery_only",
+        ),
+    ],
+)
+async def test_energy_history_sensors_match_site_components(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_site_info: AsyncMock,
+    components: dict[str, bool],
+    absent: set[str],
+) -> None:
+    """History sensors are only created for the components a site has."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"].update(components)
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    created = {
+        key
+        for key in ENERGY_HISTORY_FIELDS
+        if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"123456-{key}")
+    }
+    assert created == set(ENERGY_HISTORY_FIELDS) - absent
 
 
 @pytest.mark.parametrize(

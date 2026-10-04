@@ -244,6 +244,9 @@
     "update": {
       "container_image_update": {
         "name": "Image update available"
+      },
+      "server_update": {
+        "name": "Update"
       }
     }
   },
