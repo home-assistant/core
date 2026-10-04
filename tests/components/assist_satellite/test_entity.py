@@ -135,6 +135,36 @@ async def test_entity_state(
     assert state.state == AssistSatelliteState.IDLE
 
 
+async def test_immediate_pipeline_audio_state(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test immediate pipeline audio keeps the satellite responding."""
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
+    ) as mock_start_pipeline:
+        await entity.async_accept_pipeline_from_satellite(object())
+
+    event_callback = mock_start_pipeline.call_args.kwargs["event_callback"]
+    event_callback(
+        PipelineEvent(
+            PipelineEventType.RUN_START,
+            {
+                "tts_output": {
+                    "token": "pipeline-output",
+                    "start_streaming": True,
+                }
+            },
+        )
+    )
+    assert entity.state == AssistSatelliteState.RESPONDING
+
+    event_callback(PipelineEvent(PipelineEventType.RUN_END))
+    assert entity.state == AssistSatelliteState.RESPONDING
+
+    entity.tts_response_finished()
+    assert entity.state == AssistSatelliteState.IDLE
+
+
 async def test_new_pipeline_cancels_pipeline(
     hass: HomeAssistant,
     init_components: ConfigEntry,
