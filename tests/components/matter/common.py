@@ -54,6 +54,7 @@ FIXTURES = [
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_battery_storage",
+    "mock_camera",
     "mock_chime",
     "mock_closure_covering_lift",
     "mock_closure_roof_window",
