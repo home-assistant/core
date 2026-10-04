@@ -58,5 +58,31 @@
       "description": "Configuring {integration_title} using YAML is being removed, but the gateway at {host} did not report any air conditioners, so the configuration could not be imported.\n\nCheck that the air conditioners are switched on and addressed on the gateway, then restart Home Assistant.",
       "title": "[%key:component::zhong_hong::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
     }
+  },
+  "options": {
+    "error": {
+      "no_fan_modes_selected": "Select at least one fan speed."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "fan_modes": "Fan speeds"
+        },
+        "data_description": {
+          "fan_modes": "The fan speeds your air conditioners have. Clear any they do not, so those are left out of the interface."
+        }
+      }
+    }
+  },
+  "selector": {
+    "fan_modes": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "medium_high": "Medium high",
+        "medium_low": "Medium low"
+      }
+    }
   }
 }
