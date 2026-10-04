@@ -10,6 +10,19 @@
         "default": "mdi:qrcode"
       }
     },
+    "number": {
+      "wan_failover_priority": {
+        "default": "mdi:sort-numeric-ascending"
+      },
+      "wan_load_balance_weight": {
+        "default": "mdi:scale-balance"
+      }
+    },
+    "select": {
+      "wan_load_balancing": {
+        "default": "mdi:call-split"
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "default": "mdi:download"
@@ -40,6 +53,15 @@
       },
       "port_link_speed": {
         "default": "mdi:speedometer"
+      },
+      "wan_status": {
+        "default": "mdi:wan",
+        "state": {
+          "disabled": "mdi:cancel",
+          "no_link": "mdi:ethernet-off",
+          "offline": "mdi:web-off",
+          "online": "mdi:web"
+        }
       },
       "wlan_clients": {
         "default": "mdi:account-multiple"

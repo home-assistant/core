@@ -8,20 +8,27 @@ from unittest.mock import patch
 import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.networks import Networks
 from aiounifi.models.message import MessageKey
 import pytest
 
-from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_BLOCK_CLIENT,
+    CONF_TRACK_WAN_NETWORKS,
+    DOMAIN,
+)
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    WAN_ENABLED_OPTIONS,
+    WAN_NETWORKS,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
@@ -50,6 +57,8 @@ async def test_hub_setup(
             Platform.DEVICE_TRACKER,
             Platform.IMAGE,
             Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
             Platform.UPDATE,
@@ -73,8 +82,10 @@ async def test_coordinators_preserve_handler_update_sources(
 
     clients_coordinator = loader.get_data_update_coordinator(api.clients)
     devices_coordinator = loader.get_data_update_coordinator(api.devices)
+    networks_coordinator = loader.get_data_update_coordinator(api.networks)
     assert clients_coordinator.update_interval is None
     assert devices_coordinator.update_interval is None
+    assert networks_coordinator.update_interval is None
 
     assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
     assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
@@ -541,3 +552,126 @@ async def test_get_unifi_api_fails_to_connect(
         pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, config_entry_data)
+
+
+WAN_ENTITY_IDS = [
+    "number.internet_1_failover_priority",
+    "number.internet_1_load_balance_weight",
+    "select.internet_1_load_balancing",
+    "sensor.internet_1_status",
+]
+
+
+def _networkconf_requests(aioclient_mock: AiohttpClientMocker) -> int:
+    """Count networkconf requests."""
+    return sum(
+        str(call[1]).endswith("/rest/networkconf") for call in aioclient_mock.mock_calls
+    )
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize(
+    ("config_entry_options", "expected_entity_ids", "expected_requests"),
+    [
+        pytest.param({}, [], 0, id="disabled_by_default"),
+        pytest.param(WAN_ENABLED_OPTIONS, WAN_ENTITY_IDS, 1, id="enabled"),
+    ],
+)
+async def test_wan_networks_option(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: MockConfigEntry,
+    expected_entity_ids: list[str],
+    expected_requests: int,
+) -> None:
+    """Verify WAN network devices and entities are only created when enabled."""
+    assert (
+        sorted(
+            entity_id
+            for entity_id in hass.states.async_entity_ids()
+            if entity_id.startswith(("number.", "select.", "sensor.internet_1"))
+        )
+        == expected_entity_ids
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, WAN_NETWORKS[0]["_id"]), config_entry_setup.entry_id
+        )
+        is not None
+    ) is bool(expected_entity_ids)
+    assert _networkconf_requests(aioclient_mock) == expected_requests
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+async def test_wan_networks_option_toggle(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify toggling the WAN network option adds and removes entities."""
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: True}
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
+    assert _networkconf_requests(aioclient_mock) == 1
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: False}
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+    assert all(
+        entity_registry.async_get(entity_id) is None for entity_id in WAN_ENTITY_IDS
+    )
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: True}
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
+    assert _networkconf_requests(aioclient_mock) == 1
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
+async def test_wan_networks_fetch_retried_on_reconnect(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Verify a failed WAN network fetch is retried once the controller reconnects."""
+    with patch.object(Networks, "update", side_effect=aiounifi.AiounifiException):
+        await config_entry_factory()
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+
+    await mock_websocket_state.disconnect()
+    await mock_websocket_state.reconnect()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)
+
+
+@pytest.mark.parametrize(
+    "network_payload", [[{**WAN_NETWORKS[0], "purpose": "corporate"}]]
+)
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_network_reconfigured_as_wan(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
+    """Verify a network reconfigured into a WAN gets its entities without a reload."""
+    assert all(hass.states.get(entity_id) is None for entity_id in WAN_ENTITY_IDS)
+
+    mock_websocket_message(
+        message=MessageKey.NETWORK_CONF_UPDATED, data=WAN_NETWORKS[0]
+    )
+    await hass.async_block_till_done()
+
+    assert all(hass.states.get(entity_id) for entity_id in WAN_ENTITY_IDS)

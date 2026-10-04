@@ -12,7 +12,11 @@ import orjson
 import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_SITE_ID,
+    CONF_TRACK_WAN_NETWORKS,
+    DOMAIN,
+)
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import (
     CONF_HOST,
@@ -48,6 +52,40 @@ CONTROLLER_HOST = {
     "wired-tx_bytes": 5678000000,
     "uptime": 1562600160,
 }
+
+WAN_NETWORKS = [
+    {
+        "_id": "600c0f0000000000000000a1",
+        "name": "Internet 1",
+        "purpose": "wan",
+        "wan_failover_priority": 1,
+        "wan_load_balance_type": "failover-only",
+        "wan_load_balance_weight": 80,
+        "wan_networkgroup": "WAN",
+        "wan_type": "dhcp",
+    },
+    {
+        "_id": "600c0f0000000000000000a2",
+        "name": "Internet 2",
+        "purpose": "wan",
+        "wan_failover_priority": 2,
+        "wan_load_balance_type": "weighted",
+        "wan_load_balance_weight": 20,
+        "wan_networkgroup": "WAN2",
+        "wan_type": "dhcp",
+    },
+    {
+        "_id": "600c0f0000000000000000a3",
+        "name": "UniFi 5G A",
+        "purpose": "wan",
+        "wan_failover_priority": 3,
+        "wan_load_balance_type": "weighted",
+        "wan_load_balance_weight": 1,
+        "wan_networkgroup": "WAN3",
+        "wan_type": "dhcp",
+    },
+]
+WAN_ENABLED_OPTIONS = {CONF_TRACK_WAN_NETWORKS: True}
 
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 
@@ -179,6 +217,7 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     firewall_policy_payload: list[dict[str, Any]],
+    network_payload: list[dict[str, Any]],
     object_oriented_network_config_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
@@ -226,6 +265,7 @@ def fixture_request(
             f"/v2/api/site/{site_id}/object-oriented-network-configs",
             object_oriented_network_config_payload,
         )
+        mock_get_request(f"/api/s/{site_id}/rest/networkconf", network_payload)
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
@@ -271,6 +311,12 @@ def fixture_dpi_group_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="firewall_policy_payload")
 def firewall_policy_payload_data() -> list[dict[str, Any]]:
     """Firewall policy data."""
+    return []
+
+
+@pytest.fixture(name="network_payload")
+def fixture_network_data() -> list[dict[str, Any]]:
+    """Network configuration data."""
     return []
 
 

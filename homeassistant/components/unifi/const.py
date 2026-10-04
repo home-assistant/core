@@ -21,6 +21,8 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
     Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -40,6 +42,7 @@ CONF_IGNORE_LOCAL_MAC = "ignore_local_mac"
 CONF_IGNORE_WIRED_BUG = "ignore_wired_bug"
 CONF_TRACK_CLIENTS = "track_clients"
 CONF_TRACK_DEVICES = "track_devices"
+CONF_TRACK_WAN_NETWORKS = "track_wan_networks"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_MORE_OPTIONS = "more_options"
 CONF_SSID_FILTER = "ssid_filter"
@@ -51,6 +54,7 @@ DEFAULT_IGNORE_LOCAL_MAC = False
 DEFAULT_IGNORE_WIRED_BUG = False
 DEFAULT_TRACK_CLIENTS = True
 DEFAULT_TRACK_DEVICES = True
+DEFAULT_TRACK_WAN_NETWORKS = False
 DEFAULT_TRACK_WIRED_CLIENTS = True
 DEFAULT_DETECTION_TIME = 300
 

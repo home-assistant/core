@@ -78,6 +78,23 @@
         "name": "LED"
       }
     },
+    "number": {
+      "wan_failover_priority": {
+        "name": "Failover priority"
+      },
+      "wan_load_balance_weight": {
+        "name": "Load balance weight"
+      }
+    },
+    "select": {
+      "wan_load_balancing": {
+        "name": "Load balancing",
+        "state": {
+          "failover-only": "Failover only",
+          "weighted": "Weighted"
+        }
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "name": "RX"
@@ -165,6 +182,15 @@
       "wan_latency": {
         "name": "{target} {wan} latency"
       },
+      "wan_status": {
+        "name": "Status",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "no_link": "No link",
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
       "wired_client_link_speed": {
         "name": "Link speed"
       },
@@ -188,6 +214,9 @@
     "action_request_failed": {
       "message": "Failed to send action request to UniFi Network"
     },
+    "action_request_rejected": {
+      "message": "UniFi Network could not apply the action: {reason}"
+    },
     "reconnect_client_device_not_found": {
       "message": "Unable to reconnect client: device not found"
     },
@@ -199,6 +228,12 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "wan_failover_priority_conflict": {
+      "message": "Another WAN already uses this failover priority. Move that WAN to an unused priority first, then try again"
+    },
+    "wan_load_balance_weighted_required": {
+      "message": "At least one WAN must use weighted load balancing"
     }
   },
   "options": {
@@ -210,12 +245,14 @@
         "data": {
           "block_client": "Network access controlled clients",
           "track_clients": "Track network clients",
-          "track_devices": "Track network devices (Ubiquiti devices)"
+          "track_devices": "Track network devices (Ubiquiti devices)",
+          "track_wan_networks": "Track WAN networks"
         },
         "data_description": {
           "block_client": "Select clients whose network access you want to control via switches.",
           "track_clients": "Create device tracker entities for network clients.",
-          "track_devices": "Create device tracker entities for Ubiquiti network devices."
+          "track_devices": "Create device tracker entities for Ubiquiti network devices.",
+          "track_wan_networks": "Create a device per WAN network, with its status and load balancing and failover settings."
         },
         "sections": {
           "more_options": {
