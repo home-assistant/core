@@ -110,7 +110,7 @@ class RecorderOutput(StreamOutput):
             # Create output on first segment
             if not output:
                 container_options: dict[str, str] = {
-                    "video_track_timescale": str(int(1 / source_v.time_base)),  # type: ignore[operator]
+                    "video_track_timescale": str(int(1 / source_v.time_base)),
                     "movflags": "frag_keyframe+empty_moov",
                     "min_frag_duration": str(self.stream_settings.min_segment_duration),
                 }
@@ -133,12 +133,12 @@ class RecorderOutput(StreamOutput):
                 last_stream_id = segment.stream_id
                 pts_adjuster["video"] = int(
                     (running_duration - source.start_time)
-                    / (av.time_base * source_v.time_base)  # type: ignore[operator]
+                    / (av.time_base * source_v.time_base)
                 )
                 if source_a:
                     pts_adjuster["audio"] = int(
                         (running_duration - source.start_time)
-                        / (av.time_base * source_a.time_base)  # type: ignore[operator]
+                        / (av.time_base * source_a.time_base)
                     )
 
             # Remux video
