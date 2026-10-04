@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,15 +16,21 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
+    setup_integration_with_node_fixture,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+from tests.common import mock_restore_cache_with_extra_data
+
+THERMOSTAT_ENTITY_ID = "climate.longan_link_hvac"
+ROOM_AC_ENTITY_ID = "climate.room_airconditioner"
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -775,3 +782,266 @@ async def test_thermostat_with_null_local_temperature(
     state = hass.states.get("climate.longan_link_hvac")
     assert state
     assert state.attributes["current_temperature"] is None
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+@pytest.mark.parametrize(
+    ("system_mode", "hvac_mode"),
+    [
+        pytest.param(1, HVACMode.HEAT_COOL, id="auto"),
+        pytest.param(3, HVACMode.COOL, id="cool"),
+        pytest.param(4, HVACMode.HEAT, id="heat"),
+    ],
+)
+async def test_turn_on_restores_reported_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    system_mode: int,
+    hvac_mode: HVACMode,
+) -> None:
+    """Only turn_on restores the mode reported before an external shutdown."""
+    set_node_attribute(matter_node, 1, 513, 28, system_mode)
+    await trigger_subscription_callback(hass, matter_client)
+    set_node_attribute(matter_node, 1, 513, 28, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.state == HVACMode.OFF
+    matter_client.write_attribute.assert_not_called()
+    matter_client.send_device_command.assert_not_called()
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=system_mode
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.state == hvac_mode
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+@pytest.mark.parametrize(
+    "attributes", [{"1/513/28": 1}, {"1/513/28": 3}, {"1/513/28": 4}]
+)
+@pytest.mark.usefixtures("matter_node")
+async def test_turn_on_keeps_running_mode(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """Turning on an already running thermostat does not send commands."""
+    initial_state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert initial_state
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_not_called()
+    matter_client.send_device_command.assert_not_called()
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.state == initial_state.state
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+async def test_turn_on_after_reload(
+    hass: HomeAssistant, matter_client: MagicMock, matter_node: MatterNode
+) -> None:
+    """Reload keeps the thermostat off until turn_on restores its previous mode."""
+    await hass.services.async_call(
+        "climate", "turn_off", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.state == HVACMode.OFF
+    matter_client.write_attribute.reset_mock()
+
+    entry = hass.config_entries.async_entries("matter")[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.state == HVACMode.OFF
+    matter_client.write_attribute.assert_not_called()
+    matter_client.send_device_command.assert_not_called()
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=3
+    )
+
+
+@pytest.mark.parametrize(
+    ("stored_mode", "system_mode", "expected_mode"),
+    [
+        pytest.param("cool", 0, 3, id="restore-cool"),
+        pytest.param("heat", 0, 4, id="restore-heat"),
+        pytest.param("heat_cool", 0, 1, id="restore-auto"),
+        pytest.param(None, 0, 1, id="no-history"),
+        pytest.param("off", 0, 1, id="off-history"),
+        pytest.param("invalid", 0, 1, id="invalid-history"),
+        pytest.param("fan_only", 0, 1, id="unsupported-history"),
+        pytest.param("heat", 3, 3, id="live-mode-takes-precedence"),
+    ],
+)
+async def test_turn_on_restored_history(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    stored_mode: str | None,
+    system_mode: int,
+    expected_mode: int,
+) -> None:
+    """Stored history never overrides device state or sends commands on setup."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State(THERMOSTAT_ENTITY_ID, HVACMode.OFF), {"last_hvac_mode": stored_mode})],
+    )
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "longan_link_thermostat", matter_client, {"1/513/28": system_mode}
+    )
+    matter_client.write_attribute.assert_not_called()
+    matter_client.send_device_command.assert_not_called()
+
+    # An external shutdown must not overwrite the last running mode.
+    set_node_attribute(matter_node, 1, 513, 28, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.state == HVACMode.OFF
+    matter_client.write_attribute.assert_not_called()
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=expected_mode
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+async def test_turn_on_after_supported_modes_change(
+    hass: HomeAssistant, matter_client: MagicMock, matter_node: MatterNode
+) -> None:
+    """Fall back when a previously used mode is no longer supported."""
+    set_node_attribute(matter_node, 1, 513, 28, 0)
+    set_node_attribute(
+        matter_node, 1, 513, 65532, clusters.Thermostat.Bitmaps.Feature.kHeating
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    matter_client.write_attribute.assert_not_called()
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=4
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+async def test_explicit_mode_overrides_history(
+    hass: HomeAssistant, matter_client: MagicMock, matter_node: MatterNode
+) -> None:
+    """An explicit mode command is not replaced by the remembered cooling mode."""
+    await hass.services.async_call(
+        "climate", "turn_off", {"entity_id": THERMOSTAT_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": THERMOSTAT_ENTITY_ID, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=4
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
+@pytest.mark.parametrize("attributes", [{"1/6/0": True, "1/513/28": 4}])
+@pytest.mark.parametrize(
+    ("hvac_mode", "system_mode"),
+    [
+        pytest.param(HVACMode.COOL, 3, id="cool"),
+        pytest.param(HVACMode.HEAT_COOL, 1, id="auto"),
+        pytest.param(HVACMode.DRY, 8, id="dry"),
+        pytest.param(HVACMode.FAN_ONLY, 7, id="fan-only"),
+    ],
+)
+async def test_turn_on_uses_mode_selected_with_power_off(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    hvac_mode: HVACMode,
+    system_mode: int,
+) -> None:
+    """An explicit mode selected while power is off replaces the remembered mode."""
+    set_node_attribute(matter_node, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+    matter_client.write_attribute.assert_not_called()
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": ROOM_AC_ENTITY_ID, "hvac_mode": hvac_mode},
+        blocking=True,
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=system_mode
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(ROOM_AC_ENTITY_ID)
+    assert state
+    assert state.state == HVACMode.OFF
+    matter_client.send_device_command.assert_not_called()
+    matter_client.write_attribute.reset_mock()
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": ROOM_AC_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=system_mode
+    )
+    matter_client.send_device_command.assert_called_once_with(
+        node_id=matter_node.node_id, endpoint_id=1, command=clusters.OnOff.Commands.On()
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
+@pytest.mark.parametrize("attributes", [{"1/6/0": True, "1/513/28": 4}])
+async def test_failed_mode_write_keeps_previous_mode(
+    hass: HomeAssistant, matter_client: MagicMock, matter_node: MatterNode
+) -> None:
+    """A failed mode write while power is off does not change the remembered mode."""
+    set_node_attribute(matter_node, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+    matter_client.write_attribute.side_effect = MatterError("Mode write failed")
+    with pytest.raises(HomeAssistantError, match="Mode write failed"):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": ROOM_AC_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+            blocking=True,
+        )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=3
+    )
+    matter_client.send_device_command.assert_not_called()
+    matter_client.write_attribute.reset_mock(side_effect=True)
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": ROOM_AC_ENTITY_ID}, blocking=True
+    )
+    matter_client.write_attribute.assert_called_once_with(
+        node_id=matter_node.node_id, attribute_path="1/513/28", value=4
+    )
+    matter_client.send_device_command.assert_called_once_with(
+        node_id=matter_node.node_id, endpoint_id=1, command=clusters.OnOff.Commands.On()
+    )
