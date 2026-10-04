@@ -6,7 +6,7 @@ rules:
   appropriate-polling: done
   brands: todo
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -31,7 +31,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No special configuration option. Also mentioned in the documentation
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -46,12 +46,12 @@ rules:
   diagnostics: todo
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
