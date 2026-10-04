@@ -51,6 +51,12 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_water_tank": {
+        "name": "Clean water tank"
+      },
+      "dirty_water_tank": {
+        "name": "Dirty water tank"
+      },
       "water_mop_attached": {
         "name": "Mop attached"
       }
