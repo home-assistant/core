@@ -5,10 +5,17 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.teslemetry.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.teslemetry.const import (
+    CONF_VIN,
+    DOMAIN,
+    SUBENTRY_TYPE_VEHICLE,
+)
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .const import ADDRESS, VIN
 
 from tests.common import MockConfigEntry
 
@@ -29,6 +36,46 @@ def mock_config_entry() -> MockConfigEntry:
             },
         },
     )
+
+
+def mock_ble_config_entry() -> MockConfigEntry:
+    """Create a mock config entry whose vehicle subentry is already BLE paired."""
+
+    entry = mock_config_entry()
+    return MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                unique_id=VIN,
+                title="Test",
+                data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
+            )
+        ],
+    )
+
+
+async def setup_ble_platform(
+    hass: HomeAssistant,
+    platforms: list[Platform] | None = None,
+) -> MockConfigEntry:
+    """Set up the Teslemetry platform for a BLE paired vehicle."""
+
+    entry = mock_ble_config_entry()
+    entry.add_to_hass(hass)
+
+    if platforms is None:
+        await hass.config_entries.async_setup(entry.entry_id)
+    else:
+        with patch("homeassistant.components.teslemetry.PLATFORMS", platforms):
+            await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
 
 
 async def setup_platform(
