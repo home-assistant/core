@@ -104,7 +104,7 @@ class TestOnectaDataUpdateCoordinator:
                     "high_scan_start": "08:00:00",
                     "low_scan_start": "09:00:00",
                 },
-                timedelta(minutes=1),
+                timedelta(minutes=5),
             ),
             (
                 datetime(2023, 1, 1, 8, 58),
@@ -114,7 +114,7 @@ class TestOnectaDataUpdateCoordinator:
                     "high_scan_start": "08:00:00",
                     "low_scan_start": "09:00:00",
                 },
-                timedelta(minutes=2),
+                timedelta(minutes=5),
             ),
             (
                 datetime(2023, 1, 1, 21, 59),
@@ -124,7 +124,7 @@ class TestOnectaDataUpdateCoordinator:
                     "high_scan_start": "22:00:00",
                     "low_scan_start": "07:00:00",
                 },
-                timedelta(minutes=1),
+                timedelta(minutes=5),
             ),
             (
                 datetime(2023, 1, 1, 6, 58),
@@ -134,7 +134,17 @@ class TestOnectaDataUpdateCoordinator:
                     "high_scan_start": "22:00:00",
                     "low_scan_start": "07:00:00",
                 },
-                timedelta(minutes=2),
+                timedelta(minutes=5),
+            ),
+            (
+                datetime(2023, 1, 1, 7, 59, 59, 500000),
+                {
+                    "low_scan_interval": 240,
+                    "high_scan_interval": 5,
+                    "high_scan_start": "08:00:00",
+                    "low_scan_start": "09:00:00",
+                },
+                timedelta(minutes=5),
             ),
         ],
     )
@@ -142,7 +152,7 @@ class TestOnectaDataUpdateCoordinator:
     def test_scan_interval_is_capped_at_window_boundary(
         self, mock_now, coordinator, mock_hass, now, options, expected
     ):
-        """Re-evaluate polling when a frequency window starts or ends."""
+        """Use at least the high-frequency interval near a window boundary."""
         mock_now.return_value = now
         coordinator.options = options
 
@@ -158,7 +168,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_random.randint.return_value = 120  # 2 minutes
 
         with patch.object(coordinator, "in_between", side_effect=[False, True]):
-            expected = timedelta(seconds=120)
+            expected = timedelta(minutes=13)
             result = coordinator.determine_update_interval(mock_hass)
             assert result == expected
             mock_random.randint.assert_called_once_with(60, 2820)
