@@ -22,7 +22,6 @@ class ConnectDenonAVR:
         zone2: bool,
         zone3: bool,
         use_telnet: bool,
-        update_audyssey: bool,
         async_client_getter: Callable[[], httpx.AsyncClient],
     ) -> None:
         """Initialize the class."""
@@ -32,7 +31,6 @@ class ConnectDenonAVR:
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
         self._use_telnet = use_telnet
-        self._update_audyssey = update_audyssey
 
         self._zones: dict[str, str | None] = {}
         if zone2:
@@ -96,8 +94,6 @@ class ConnectDenonAVR:
             for zone in receiver.zones.values():
                 with contextlib.suppress(AvrProcessingError):
                     await zone.async_update()
-                if self._update_audyssey:
-                    await zone.async_update_audyssey()
             await receiver.async_telnet_connect()
 
         self._receiver = receiver
