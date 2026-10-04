@@ -262,11 +262,11 @@ def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
 def epex_trim_slots(
     slots: Iterable[EpexSlot], granularity: EpexGranularity
 ) -> tuple[EpexSlot, ...]:
-    """Return the slots with mismatched durations shortened to one granularity step."""
+    """Return the slots with oversized durations shortened to one granularity step."""
     step = timedelta(minutes=granularity.value)
     return tuple(
         slot
-        if slot.end - slot.start == step
+        if slot.end - slot.start <= step
         else EpexSlot(
             start=slot.start,
             end=slot.start + step,

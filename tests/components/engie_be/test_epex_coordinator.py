@@ -4,7 +4,12 @@ from datetime import UTC, date, datetime, timedelta
 import logging
 from unittest.mock import MagicMock
 
-from aioengiebelgium import EngieBeCommunicationError, EpexGranularity, EpexPayload
+from aioengiebelgium import (
+    EngieBeCommunicationError,
+    EpexGranularity,
+    EpexPayload,
+    EpexSlot,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -15,6 +20,7 @@ from homeassistant.components.engie_be.coordinator import (
     epex_day_available,
     epex_slot_covering,
     epex_slots_for_day,
+    epex_trim_slots,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN
@@ -47,6 +53,34 @@ def _epex_coordinator(mock_config_entry: MockConfigEntry) -> EngieBeEpexCoordina
     coordinator = mock_config_entry.runtime_data.epex
     assert coordinator is not None
     return coordinator
+
+
+def test_epex_trim_slots_only_shortens_oversized_slots() -> None:
+    """Test the trim shortens only slots longer than one granularity step."""
+    start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    exact = EpexSlot(start=start, end=start + timedelta(hours=1), value_eur_per_kwh=0.1)
+    stretched = EpexSlot(
+        start=start + timedelta(hours=1),
+        end=start + timedelta(hours=3),
+        value_eur_per_kwh=0.2,
+    )
+    short = EpexSlot(
+        start=start + timedelta(hours=3),
+        end=start + timedelta(hours=3, minutes=30),
+        value_eur_per_kwh=0.3,
+    )
+
+    trimmed = epex_trim_slots((exact, stretched, short), EpexGranularity.HOURLY)
+
+    assert trimmed == (
+        exact,
+        EpexSlot(
+            start=stretched.start,
+            end=stretched.start + timedelta(hours=1),
+            value_eur_per_kwh=0.2,
+        ),
+        short,
+    )
 
 
 async def test_first_refresh_fetches_both_granularities_for_both_days(
