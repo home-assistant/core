@@ -1,0 +1,34 @@
+{
+  "domain": "bmx_monitor",
+  "name": "BM2 battery monitor",
+  "bluetooth": [
+    {
+      "connectable": false,
+      "local_name": "Battery Monitor"
+    },
+    {
+      "connectable": false,
+      "local_name": "Li Battery Monitor"
+    },
+    {
+      "connectable": false,
+      "local_name": "ZX-1689"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [
+        2, 21, 101, 95, 131, 202, 174, 22, 161, 10, 112, 46, 49, 243, 13, 88,
+        221, 130
+      ],
+      "manufacturer_id": 76
+    }
+  ],
+  "codeowners": ["@andystewart999"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/bmx_monitor",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["bmx-ble==0.3.0"]
+}

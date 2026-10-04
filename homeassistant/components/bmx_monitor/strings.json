@@ -1,0 +1,139 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "The device is already configured.",
+      "cannot_validate": "Home Assistant could not confirm that this device is a BM2 battery monitor. The advertisement did not contain a recognised BM2 packet and an active Bluetooth validation could not be completed.",
+      "no_devices_found": "No Bluetooth devices were found.",
+      "not_supported": "The Bluetooth device does not appear to be a supported BM2 battery monitor.",
+      "reconfig_successful": "Reconfiguration successful."
+    },
+    "error": {
+      "cannot_connect": "Failed to make a Bluetooth connection.",
+      "cannot_validate": "Home Assistant could not confirm that this device is a BM2 battery monitor. Try again when the device is closer to a Bluetooth adapter/proxy or when another advertisement has been received.",
+      "custom_voltages_not_in_order": "Please make sure your custom voltages are in ascending order.",
+      "no_data": "Unable to read battery info - the selected device doesn't appear to be a BM2 battery monitor.",
+      "not_bm2": "The selected Bluetooth device was checked and does not appear to implement the BM2 protocol."
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "battery_type": "Battery chemistry"
+        },
+        "data_description": {
+          "battery_type": "Battery chemistry"
+        },
+        "description": "A supported BM2 battery monitor was detected. Do you want to add `{name}` to Home Assistant?\n\nRoutine updates will prefer the active BM2 connection and can fall back to advertisement data where supported.",
+        "title": "BM2 Battery Monitor discovered"
+      },
+      "custom_battery_details": {
+        "data": {
+          "custom_battery_chemistry": "Battery name, type or chemistry",
+          "custom_charging_voltage": "Charging voltage",
+          "custom_critical_voltage": "Critical voltage threshold (0% remaining)",
+          "custom_fifty_percent_voltage": "50% remaining voltage",
+          "custom_floating_voltage": "Floating voltage",
+          "custom_hundred_percent_voltage": "100% remaining voltage (while not being charged)",
+          "custom_low_voltage": "Low voltage threshold (20% remaining)"
+        },
+        "data_description": {
+          "custom_battery_chemistry": "Battery name, type or chemistry",
+          "custom_charging_voltage": "Charging voltage",
+          "custom_critical_voltage": "Critical voltage threshold (0% remaining)",
+          "custom_fifty_percent_voltage": "50% remaining voltage",
+          "custom_floating_voltage": "Floating voltage",
+          "custom_hundred_percent_voltage": "100% remaining voltage (while not being charged)",
+          "custom_low_voltage": "Low voltage threshold (20% remaining)"
+        },
+        "description": "Provide the appropriate voltage thresholds for your battery so its state can be monitored correctly.  The overall percentage will be determined from the 0%, 20%, 50% and 100% figures provided, with interpolation as required.",
+        "title": "Custom battery values"
+      },
+      "user": {
+        "data": {
+          "address": "Bluetooth device",
+          "battery_type": "Battery chemistry"
+        },
+        "data_description": {
+          "address": "Bluetooth device",
+          "battery_type": "Battery chemistry"
+        },
+        "description": "Select a Bluetooth device to add. Devices with known BM2 advertisements are validated passively.  If the advertisement data is inconclusive, Home Assistant will make a one-off active connection attempt to verify the BM2 protocol before creating the integration.",
+        "title": "BM2 Battery Monitor"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_chemistry": { "name": "Battery chemistry" },
+      "battery_percent": { "name": "Percent" },
+      "battery_status": { "name": "Status" },
+      "battery_voltage": { "name": "Voltage" },
+      "bm2_generation": { "name": "BM2 generation" },
+      "signal_strength": { "name": "Signal strength" }
+    }
+  },
+  "options": {
+    "error": {
+      "custom_voltages_not_in_order": "Please make sure your custom voltages are in ascending order."
+    },
+    "step": {
+      "custom_battery_details": {
+        "data": {
+          "custom_battery_chemistry": "Battery name, type or chemistry",
+          "custom_charging_voltage": "Charging voltage",
+          "custom_critical_voltage": "Critical voltage threshold (0% remaining)",
+          "custom_fifty_percent_voltage": "50% remaining voltage",
+          "custom_floating_voltage": "Floating voltage",
+          "custom_hundred_percent_voltage": "100% remaining voltage (while not being charged)",
+          "custom_low_voltage": "Low voltage threshold (20% remaining)"
+        },
+        "data_description": {
+          "custom_battery_chemistry": "Battery name, type or chemistry",
+          "custom_charging_voltage": "Charging voltage",
+          "custom_critical_voltage": "Critical voltage threshold (0% remaining)",
+          "custom_fifty_percent_voltage": "50% remaining voltage",
+          "custom_floating_voltage": "Floating voltage",
+          "custom_hundred_percent_voltage": "100% remaining voltage (while not being charged)",
+          "custom_low_voltage": "Low voltage threshold (20% remaining)"
+        },
+        "description": "Provide the appropriate voltage thresholds for your battery so its state can be monitored correctly.  The overall percentage will be determined from the 0%, 20%, 50% and 100% figures provided, with interpolation as required.",
+        "title": "Custom battery values"
+      },
+      "init": {
+        "data": {
+          "battery_type": "Battery chemistry",
+          "rate_limit": "Rate limit",
+          "rate_limit_mode": "Sensor update rate limit:"
+        },
+        "data_description": {
+          "battery_type": "Select the type of battery that is being monitored.",
+          "rate_limit": "The minimum allowed time between sensor updates (in seconds).",
+          "rate_limit_mode": "Select if/when you want to rate limit sensor updates."
+        },
+        "description": "Sensor updates are only ever done when a Bluetooth advertisement is seen, so the rate limit is a way of throttling updates if the device is sending out a lot of advertisements.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
+        "title": "Options"
+      }
+    }
+  },
+  "selector": {
+    "battery_type": {
+      "options": {
+        "agm": "AGM",
+        "automatic": "Automatic (via BM2)",
+        "custom": "Custom",
+        "deepcycle": "Deep-cycle",
+        "itech120x": "iTechworld 120X (LiFePO4)",
+        "leadacid": "Lead-acid",
+        "lifepo4": "LiFePO4",
+        "lithiumion": "Lithium-ion"
+      }
+    },
+    "rate_selector": {
+      "options": {
+        "always": "Always limit sensor updates",
+        "never": "Never limit sensor updates",
+        "when_charging": "Only limit when charging",
+        "when_not_charging": "Only limit when not charging"
+      }
+    }
+  }
+}
