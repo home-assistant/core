@@ -1440,7 +1440,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "lg_thinq",
     "lidarr",
     "life360",
-    "lifx",
     "lifx_cloud",
     "lightwave",
     "limitlessled",
