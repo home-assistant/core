@@ -62,10 +62,9 @@ async def test_outdoor_siren_sound_level_select_option(
         {ATTR_ENTITY_ID: SOUND_LEVEL_ENTITY_ID, "option": "high"},
         blocking=True,
     )
-    device.siren.put_state_element.assert_called_once()
-    key, config = device.siren.put_state_element.call_args.args
-    assert key == "outdoorSirenConfiguration"
-    assert config["soundLevel"] == OutdoorSirenService.SoundLevel.HIGH.value
+    device.siren.set_configuration.assert_called_once_with(
+        sound_level=OutdoorSirenService.SoundLevel.HIGH
+    )
 
 
 @pytest.mark.parametrize(

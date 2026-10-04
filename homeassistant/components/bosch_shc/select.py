@@ -39,16 +39,8 @@ def _siren_current_option(
 
 def _siren_select_option(device: SHCOutdoorSiren, option: str) -> None:
     """Write the Outdoor Siren's sound level."""
-    siren = device.siren
-    siren.put_state_element(
-        "outdoorSirenConfiguration",
-        {
-            "alarmDuration": siren.alarm_duration,
-            "flashDuration": siren.flash_duration,
-            "soundLevel": OutdoorSirenService.SoundLevel[option.upper()].value,
-            "alarmDelay": siren.alarm_delay,
-            "flashDelay": siren.flash_delay,
-        },
+    device.siren.set_configuration(
+        sound_level=OutdoorSirenService.SoundLevel[option.upper()]
     )
 
 
