@@ -929,6 +929,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
+/homeassistant/components/iont/ @Electrotom
+/tests/components/iont/ @Electrotom
 /homeassistant/components/ios/ @robbiet480
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard @agners
