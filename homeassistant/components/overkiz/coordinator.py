@@ -1,9 +1,9 @@
 """Helpers to help coordinate updates."""
 
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -13,6 +13,7 @@ from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
     NotAuthenticatedError,
+    OverkizError,
     ServiceUnavailableError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
@@ -35,12 +36,21 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_EXECUTION_SETTLE,
+    UPDATE_INTERVAL_RATE_LIMITED_MAX,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -48,11 +58,24 @@ EVENT_HANDLERS: Registry[
 ] = Registry()
 
 
+# pyoverkiz types the rate limit only for AUTHENTICATION_ERROR + "Too many
+# requests"; the cloud's own QUOTA_EXCEEDED arrives as a bare OverkizError and
+# would otherwise bypass the back off entirely.
+QUOTA_EXCEEDED_ERROR_CODE: Final = "QUOTA_EXCEEDED"
+
+
+def _is_rate_limited(exception: OverkizError) -> bool:
+    """Whether an otherwise untyped Overkiz error is the cloud rate limit."""
+    return QUOTA_EXCEEDED_ERROR_CODE in str(exception)
+
+
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
     config_entry: OverkizDataConfigEntry
     _default_update_interval: timedelta
+    _rate_limited_interval: timedelta | None
+    _executions_seen_at: datetime | None
 
     def __init__(
         self,
@@ -79,6 +102,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.executions: dict[str, list[dict[str, str]]] = {}
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
+        self._rate_limited_interval = None
+        self._executions_seen_at = None
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -103,6 +128,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
+            self._back_off()
             raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
@@ -110,6 +136,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Server is unavailable.") from exception
         except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
+        except OverkizError as exception:
+            if not _is_rate_limited(exception):
+                raise
+            self._back_off()
+            raise UpdateFailed("Too many requests, try again later.") from exception
         except (TimeoutError, ClientConnectorError) as exception:
             LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
@@ -123,7 +154,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
             except TooManyRequestsError as exception:
+                self._back_off()
                 raise UpdateFailed("Too many requests, try again later.") from exception
+            except OverkizError as exception:
+                if not _is_rate_limited(exception):
+                    raise
+                self._back_off()
+                raise UpdateFailed("Too many requests, try again later.") from exception
+
+            self._on_successful_update()
 
             return self.devices
 
@@ -133,9 +172,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
-        # Restore the default update interval if no executions are pending
-        if not self.executions:
-            self.update_interval = self._default_update_interval
+        self._on_successful_update()
 
         return self.devices
 
@@ -155,6 +192,47 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 areas.update(self._places_to_area(sub_place))
 
         return areas
+
+    def _on_successful_update(self) -> None:
+        """Clear the rate limit back off and restore the polling cadence.
+
+        Every path that returns data has to go through this, including the
+        reconnect after a ServerDisconnectedError.
+        """
+        self._rate_limited_interval = None
+
+        if self.is_stateless:
+            self.update_interval = self._default_update_interval
+            return
+
+        if self.executions:
+            self._executions_seen_at = dt_util.utcnow()
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+            return
+
+        # The server reports an execution COMPLETED before it publishes the
+        # states that execution produced, so returning to the slow interval on
+        # the same refresh strands them until the next poll.
+        if (
+            self._executions_seen_at is not None
+            and dt_util.utcnow() - self._executions_seen_at
+            < UPDATE_INTERVAL_EXECUTION_SETTLE
+        ):
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+        else:
+            self.update_interval = self._default_update_interval
+
+    def _back_off(self) -> None:
+        """Poll less often while the server is rate limiting us.
+
+        DataUpdateCoordinator otherwise retries at the unchanged interval.
+        """
+        # An all-assumed-state hub already polls hourly, so the cap has to
+        # respect the configured interval or backing off would speed it up.
+        maximum = max(UPDATE_INTERVAL_RATE_LIMITED_MAX, self._default_update_interval)
+        previous = self._rate_limited_interval or self._default_update_interval
+        self._rate_limited_interval = min(previous * 2, maximum)
+        self.update_interval = self._rate_limited_interval
 
     def set_update_interval(self, update_interval: timedelta) -> None:
         """Set the update interval and store this value."""
@@ -229,9 +307,6 @@ async def on_execution_registered(
     """Handle execution registered event."""
     if event.exec_id not in coordinator.executions:
         coordinator.executions[event.exec_id] = []
-
-    if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
