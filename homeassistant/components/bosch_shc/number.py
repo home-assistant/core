@@ -1,8 +1,8 @@
 """Platform for number integration."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     SHCMicromoduleRelay,
@@ -33,7 +33,7 @@ class SHCNumberEntityDescription[_DeviceT: SHCDevice](NumberEntityDescription):
     """Describes a SHC number entity."""
 
     value_fn: Callable[[_DeviceT], float | None]
-    set_value_fn: Callable[[_DeviceT, float], Coroutine[Any, Any, None]]
+    set_value_fn: Callable[[_DeviceT, float], None]
 
 
 def _impulse_length_value_fn(device: SHCMicromoduleRelay) -> float | None:
@@ -49,22 +49,20 @@ def _impulse_length_value_fn(device: SHCMicromoduleRelay) -> float | None:
     return float(raw) / 10.0
 
 
-async def _impulse_length_set_value_fn(
-    device: SHCMicromoduleRelay, value: float
-) -> None:
-    await device.async_set_impulse_length(round(value * 10))
+def _impulse_length_set_value_fn(device: SHCMicromoduleRelay, value: float) -> None:
+    device.impulse_length = round(value * 10)
 
 
-async def _power_threshold_set_value_fn(
+def _power_threshold_set_value_fn(
     device: SHCSmartPlug | SHCSmartPlugCompact, value: float
 ) -> None:
-    await device.async_set_power_threshold(value)
+    device.power_threshold = value
 
 
-async def _enter_duration_set_value_fn(
+def _enter_duration_set_value_fn(
     device: SHCSmartPlug | SHCSmartPlugCompact, value: float
 ) -> None:
-    await device.async_set_enter_duration_seconds(round(value))
+    device.enter_duration_seconds = round(value)
 
 
 IMPULSE_LENGTH = "impulse_length"
@@ -94,8 +92,8 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         native_step=1.0,
         mode=NumberMode.BOX,
         value_fn=lambda device: float(device.bypass_timeout),
-        set_value_fn=lambda device, value: device.async_set_bypass_timeout(
-            round(value)
+        set_value_fn=lambda device, value: device.set_bypass_configuration(
+            timeout=round(value)
         ),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
@@ -248,6 +246,6 @@ class SHCNumber[_DeviceT: SHCDevice](SHCEntity, NumberEntity):
         return self.entity_description.value_fn(self._device)
 
     @override
-    async def async_set_native_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set a new value, writing it to the device."""
-        await self.entity_description.set_value_fn(self._device, value)
+        self.entity_description.set_value_fn(self._device, value)

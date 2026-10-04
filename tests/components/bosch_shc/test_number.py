@@ -73,7 +73,7 @@ async def test_micromodule_impulse_relay_impulse_length_set_value(
         {ATTR_ENTITY_ID: IMPULSE_LENGTH_ENTITY_ID, ATTR_VALUE: 2.5},
         blocking=True,
     )
-    device.async_set_impulse_length.assert_awaited_once_with(25)
+    assert device.impulse_length == 25
 
 
 @pytest.mark.parametrize(
@@ -155,7 +155,7 @@ async def test_shutter_contact2_bypass_timeout_set_value(
         {ATTR_ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID, ATTR_VALUE: 10.6},
         blocking=True,
     )
-    device.async_set_bypass_timeout.assert_awaited_once_with(11)
+    device.set_bypass_configuration.assert_called_once_with(timeout=11)
 
 
 @pytest.mark.parametrize(
@@ -217,7 +217,7 @@ async def test_smart_plug_power_threshold_set_value(
         {ATTR_ENTITY_ID: POWER_THRESHOLD_ENTITY_ID, ATTR_VALUE: 20},
         blocking=True,
     )
-    device.async_set_power_threshold.assert_awaited_once_with(20)
+    assert device.power_threshold == 20
 
 
 @pytest.mark.parametrize(
@@ -309,7 +309,7 @@ async def test_smart_plug_enter_duration_set_value(
         {ATTR_ENTITY_ID: ENTER_DURATION_ENTITY_ID, ATTR_VALUE: 300},
         blocking=True,
     )
-    device.async_set_enter_duration_seconds.assert_awaited_once_with(300)
+    assert device.enter_duration_seconds == 300
 
 
 @pytest.mark.parametrize(
