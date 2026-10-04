@@ -31,10 +31,11 @@ def _get_precision_column_types(
     table_object: type[DeclarativeBase],
 ) -> list[str]:
     """Get the column names for the columns that need to be checked for precision."""
+    # Columns from mixins get a copy of the type, so compare the type class
     return [
         column.key
         for column in table_object.__table__.columns
-        if column.type is DOUBLE_TYPE
+        if isinstance(column.type, type(DOUBLE_TYPE))
     ]
 
 
