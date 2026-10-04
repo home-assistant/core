@@ -138,6 +138,14 @@ async def test_pushed_update_during_refresh(
     assert coordinator.data[40031].value == 22
     assert coordinator.data[40035].value == 20
 
+    # Without more broadcasts, the following refresh must read both coils again.
+    coils[40031] = 30
+    coils[40035] = 40
+    await coordinator.async_refresh()
+
+    assert hass.states.get(entity_id).state == "30.0"
+    assert coordinator.data[40035].value == 40
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_pushed_update_during_partial_refresh(
@@ -175,6 +183,14 @@ async def test_pushed_update_during_partial_refresh(
     assert coordinator.data[40035].value == 20
     assert 30002 not in coordinator.data
     assert coordinator.last_update_success
+
+    # Without more broadcasts, the following refresh must read both coils again.
+    coils[40031] = 30
+    coils[40035] = 40
+    await coordinator.async_refresh()
+
+    assert hass.states.get(entity_id).state == "30.0"
+    assert coordinator.data[40035].value == 40
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
