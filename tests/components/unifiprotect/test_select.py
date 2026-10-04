@@ -31,7 +31,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.nvr import DoorbellMessage
 from uiprotect.data.public_devices import SensorFeatureCapability
-from uiprotect.exceptions import GlobalAlarmManagerError
+from uiprotect.exceptions import ClientError, GlobalAlarmManagerError
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.select import ATTR_OPTIONS
@@ -910,14 +910,40 @@ async def test_select_ptz_patrol_stop(
     public.ptz_patrol_stop.assert_awaited_once_with()
 
 
+async def test_select_ptz_patrol_client_error(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test a failed patrol command raises HomeAssistantError."""
+    await _setup_ptz_camera(
+        hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id)[:1]
+    )
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    public.ptz_patrol_start.side_effect = ClientError("boom")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
+            blocking=True,
+        )
+
+
 async def test_select_ptz_patrol_active_state(
     hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
 ) -> None:
-    """Test PTZ patrol shows active patrol from device state."""
-    patrols = _make_patrols(ptz_camera.id)
-    ptz_camera.active_patrol_slot = 0
+    """Test PTZ patrol shows the active patrol from the public camera."""
+    prime = ufp.api.update_public.side_effect
 
-    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=patrols)
+    async def _prime_with_active_patrol() -> Any:
+        pb = await prime()
+        pb.cameras[ptz_camera.id].active_patrol_slot = 0
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_with_active_patrol)
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
 
     entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert entity_id is not None
@@ -943,8 +969,7 @@ async def test_select_ptz_patrol_websocket_update(
     assert state.state == PTZ_PATROL_STOP
 
     # Simulate public websocket update: patrol starts
-    public = make_public_camera(ptz_camera)
-    public.active_patrol_slot = 1
+    public = make_public_camera(ptz_camera, active_patrol_slot=1)
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
@@ -954,7 +979,6 @@ async def test_select_ptz_patrol_websocket_update(
 
     # Simulate public websocket update: patrol stops
     public = make_public_camera(ptz_camera)
-    public.active_patrol_slot = None
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 

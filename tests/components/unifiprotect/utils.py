@@ -617,6 +617,7 @@ def make_public_camera(
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
+    active_patrol_slot: int | None = None,
 ) -> Mock:
     """Build a public-API camera for a private camera's migrated fields.
 
@@ -625,7 +626,7 @@ def make_public_camera(
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
     gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
     and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
-    private camera when not overridden; ``active_patrol_slot`` always mirrors it.
+    private camera when not overridden.
 
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
@@ -649,7 +650,7 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
-    public.active_patrol_slot = camera.active_patrol_slot
+    public.active_patrol_slot = active_patrol_slot
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected
