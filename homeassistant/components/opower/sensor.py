@@ -32,6 +32,7 @@ class OpowerEntityDescription(SensorEntityDescription):
     """Class describing Opower sensors entities."""
 
     value_fn: Callable[[OpowerData], str | float | date | datetime | None]
+    available_fn: Callable[[OpowerData], bool] = lambda data: True
 
 
 COMMON_SENSORS: tuple[OpowerEntityDescription, ...] = (
@@ -125,6 +126,17 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.forecast.end_date if data.forecast else None,
+    ),
+)
+ELEC_ACCOUNT_SENSORS: tuple[OpowerEntityDescription, ...] = (
+    OpowerEntityDescription(
+        key="last_bill_electricity_rate",
+        translation_key="last_bill_electricity_rate",
+        native_unit_of_measurement="USD/kWh",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        value_fn=lambda data: data.last_bill_electricity_rate,
+        available_fn=lambda data: data.last_bill_electricity_rate is not None,
     ),
 )
 GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
@@ -233,12 +245,14 @@ async def async_setup_entry(
                 entry_type=DeviceEntryType.SERVICE,
             )
             sensors: tuple[OpowerEntityDescription, ...] = COMMON_SENSORS
-            if (
-                account.meter_type is MeterType.ELEC
-                and forecast is not None
-                and forecast.unit_of_measure is UnitOfMeasure.KWH
-            ):
-                sensors += ELEC_SENSORS
+            if account.meter_type is MeterType.ELEC:
+                if opower_data.last_bill_electricity_rate is not None:
+                    sensors += ELEC_ACCOUNT_SENSORS
+                if (
+                    forecast is not None
+                    and forecast.unit_of_measure is UnitOfMeasure.KWH
+                ):
+                    sensors += ELEC_SENSORS
             elif (
                 account.meter_type is MeterType.GAS
                 and forecast is not None
@@ -328,7 +342,13 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.utility_account_id in self.coordinator.data
+        return (
+            super().available
+            and self.utility_account_id in self.coordinator.data
+            and self.entity_description.available_fn(
+                self.coordinator.data[self.utility_account_id]
+            )
+        )
 
     @property
     @override
