@@ -217,17 +217,6 @@ def async_device_battery_pool_supported_fn(
 
 
 @callback
-def async_device_battery_pool_available_fn(
-    field: str, hub: UnifiHub, obj_id: str
-) -> bool:
-    """Determine if a battery pool field has a current reading."""
-    return async_device_available_fn(hub, obj_id) and (
-        async_device_battery_pool_value_fn(field, hub, hub.api.devices[obj_id])
-        is not None
-    )
-
-
-@callback
 def async_device_battery_pool_value_fn(
     field: str, hub: UnifiHub, device: Device
 ) -> float | int | None:
@@ -667,7 +656,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(async_device_battery_pool_available_fn, "batteryLevel"),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -683,7 +672,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(async_device_battery_pool_available_fn, "timeToRemain"),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -702,9 +691,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(
-            async_device_battery_pool_available_fn, "device_total_power_output"
-        ),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -725,9 +712,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(
-            async_device_battery_pool_available_fn, "device_output_current"
-        ),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -746,9 +731,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(
-            async_device_battery_pool_available_fn, "device_output_voltage"
-        ),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -767,9 +750,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(
-            async_device_battery_pool_available_fn, "device_input_voltage"
-        ),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -788,9 +769,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(
-            async_device_battery_pool_available_fn, "device_bypass_voltage"
-        ),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
@@ -808,9 +787,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         api_handler_fn=lambda api: api.devices,
-        available_fn=partial(
-            async_device_battery_pool_available_fn, "device_total_power_factor"
-        ),
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(

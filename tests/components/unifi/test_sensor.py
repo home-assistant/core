@@ -1205,7 +1205,7 @@ async def test_ups_battery_pool_sensors(
     await hass.async_block_till_done()
 
     for entity_id, registry_entry in registry_entries.items():
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        assert hass.states.get(entity_id).state == STATE_UNKNOWN
         assert entity_registry.async_get(entity_id) == registry_entry
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
@@ -1251,9 +1251,9 @@ async def test_ups_battery_pool_readings(
     missing_field_pool = deepcopy(original_pool)
     missing_field_pool.pop(field)
     for pool, expected_state in (
-        (missing_field_pool, STATE_UNAVAILABLE),
+        (missing_field_pool, STATE_UNKNOWN),
         (original_pool, str(original_pool[field])),
-        ({**original_pool, field: None}, STATE_UNAVAILABLE),
+        ({**original_pool, field: None}, STATE_UNKNOWN),
         ({**original_pool, field: 0}, "0"),
     ):
         updated_device_data = deepcopy(original_device)
