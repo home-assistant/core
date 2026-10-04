@@ -101,14 +101,16 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize switch."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.key in ("cb", "switch", "script"):
+        if description.config_source:
+            self.configure_translation_attributes()
+        elif description.key in ("cb", "switch", "script"):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
     @override
     def is_on(self) -> bool:
         """If switch is on."""
-        return self.entity_description.is_on(self.status)
+        return self.entity_description.is_on(self.source_data)
 
     @rpc_call
     @override
@@ -422,6 +424,33 @@ RPC_SWITCHES = {
         method_on="cury_set_away_mode",
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
+    ),
+    "switch_in_locked": RpcSwitchDescription(
+        key="switch",
+        sub_key="in_locked",
+        config_source=True,
+        # on a device in cover profile the "switch" key resolves to the cover
+        # component, which is handled by "cover_in_locked" below
+        removal_condition=lambda _config, _status, key: not key.startswith("switch:"),
+        translation_key="input_lock",
+        is_on=lambda config: bool(config["in_locked"]),
+        method_on="switch_set_config",
+        method_off="switch_set_config",
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    "cover_in_locked": RpcSwitchDescription(
+        key="cover",
+        sub_key="in_locked",
+        config_source=True,
+        translation_key="input_lock",
+        is_on=lambda config: bool(config["in_locked"]),
+        method_on="cover_set_config",
+        method_off="cover_set_config",
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     "camera_privacy": RpcSwitchDescription(
         key="camera",

@@ -90,6 +90,13 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
+# Refresh interval for the device configuration
+RPC_CONFIG_POLLING_INTERVAL: Final = 60
+
+# The config revision is bumped on every config change, so it tells us nothing
+# about which part of the config has changed
+IGNORED_CONFIG_KEYS: Final = {("sys", "cfg_rev")}
+
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
 # Multiplier used to calculate the "update_interval" for shelly devices.

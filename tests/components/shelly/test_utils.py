@@ -35,6 +35,7 @@ from homeassistant.components.shelly.utils import (
     get_rpc_input_triggers,
     get_rpc_sub_device_name,
     is_block_momentary_input,
+    is_config_entity_only_change,
     mac_address_from_name,
 )
 
@@ -355,3 +356,79 @@ async def test_get_rpc_sub_device_name_with_emeter_phase(
 
     assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Test name Phase A"
     assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Test name Phase B"
+
+
+@pytest.mark.parametrize(
+    ("new_config", "tracked_keys", "expected"),
+    [
+        # only a tracked key changed, no reload needed
+        (
+            {"switch:0": {"name": None, "in_locked": True}},
+            {("switch:0", "in_locked")},
+            True,
+        ),
+        # the same key on another component is not the one being tracked
+        (
+            {"switch:0": {"name": None, "in_locked": True}},
+            {("switch:1", "in_locked")},
+            False,
+        ),
+        # an untracked key changed as well
+        (
+            {"switch:0": {"name": "kitchen", "in_locked": True}},
+            {("switch:0", "in_locked")},
+            False,
+        ),
+        # only an untracked key changed
+        (
+            {"switch:0": {"name": "kitchen", "in_locked": False}},
+            {("switch:0", "in_locked")},
+            False,
+        ),
+        # the config revision always changes and must be ignored
+        (
+            {"switch:0": {"name": None, "in_locked": True}, "sys": {"cfg_rev": 2}},
+            {("switch:0", "in_locked")},
+            True,
+        ),
+        # a bumped config revision on its own is not an entity change
+        (
+            {"switch:0": {"name": None, "in_locked": False}, "sys": {"cfg_rev": 2}},
+            {("switch:0", "in_locked")},
+            False,
+        ),
+        # nothing changed, so the change cannot be attributed to an entity
+        (
+            {"switch:0": {"name": None, "in_locked": False}},
+            {("switch:0", "in_locked")},
+            False,
+        ),
+        # no entity is watching the config
+        (
+            {"switch:0": {"name": None, "in_locked": True}},
+            set(),
+            False,
+        ),
+        # a component was added
+        (
+            {"switch:0": {"name": None, "in_locked": True}, "switch:1": {}},
+            {("switch:0", "in_locked")},
+            False,
+        ),
+    ],
+)
+def test_is_config_entity_only_change(
+    new_config: dict[str, Any],
+    tracked_keys: set[tuple[str, str]],
+    expected: bool,
+) -> None:
+    """Test is_config_entity_only_change()."""
+    old_config: dict[str, Any] = {
+        "switch:0": {"name": None, "in_locked": False},
+        "sys": {"cfg_rev": 1},
+    }
+    new_config.setdefault("sys", {"cfg_rev": 1})
+
+    assert (
+        is_config_entity_only_change(old_config, new_config, tracked_keys) is expected
+    )
