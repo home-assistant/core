@@ -86,6 +86,7 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
     await entity.async_set_temperature(temperature=21)
 
     assert setpoint.value == 21
+    entity.setpoint.assert_called_once_with("heating")
     coordinator.async_update_listeners.assert_called_once_with()
 
 

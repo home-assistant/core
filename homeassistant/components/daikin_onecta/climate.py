@@ -279,17 +279,21 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         """Return the Daikin fan mode represented by a HomeKit alias."""
         return self.homekit_fan_mode_aliases(fan_speed).get(fan_mode, fan_mode)
 
-    def setpoint(self):
-        """Return the active operation-mode setpoint."""
+    def setpoint(self, operation_mode: str | None = None):
+        """Return a setpoint for an operation mode."""
         cc = self.climate_control()
-        if cc is None or cc.temperature_control is None or cc.operation_mode is None:
+        if cc is None or cc.temperature_control is None:
             return None
-        operation_mode = cc.temperature_control.value.operation_modes.get(
-            cc.operation_mode.value
-        )
         if operation_mode is None:
+            if cc.operation_mode is None:
+                return None
+            operation_mode = cc.operation_mode.value
+        mode_setpoints = cc.temperature_control.value.operation_modes.get(
+            operation_mode
+        )
+        if mode_setpoints is None:
             return None
-        return operation_mode.setpoints.get(self._setpoint)
+        return mode_setpoints.setpoints.get(self._setpoint)
 
     def sensory_data(self, setpoint):
         """Return a sensory characteristic by Daikin API name."""
@@ -451,7 +455,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     )
                     # When updating the value to the daikin cloud worked update our local cached version
                     if res:
-                        setpointdict = self.setpoint()
+                        setpointdict = self.setpoint(omv)
                         if setpointdict is not None:
                             setpointdict.value = value
                             self._attr_target_temperature = value
