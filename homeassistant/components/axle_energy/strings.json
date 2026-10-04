@@ -26,7 +26,7 @@
         "data_description": {
           "api_key": "[%key:component::axle_energy::config::step::user::data_description::api_key%]"
         },
-        "description": "[%key:component::axle_energy::config::step::user::description%]"
+        "description": "Submit the saved API key to check it again. To change it, copy your Home Assistant token from the [Home Assistant page in your Axle account]({token_url}) and enter it in **API key**. If **Generate Token** is available, select it before copying the token."
       },
       "user": {
         "data": {
