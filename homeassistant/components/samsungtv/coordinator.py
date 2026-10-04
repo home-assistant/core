@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from typing import Any, override
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,7 +38,7 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.bridge = bridge
         self.is_on: bool | None = None
-        self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
+        self.async_extra_update: Callable[[], Coroutine[None, None, None]] | None = None
 
     @override
     async def _async_update_data(self) -> None:
