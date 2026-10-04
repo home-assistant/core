@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_ECO,
+    PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import climate_control_device, setup_integration
 
@@ -60,10 +62,15 @@ def room_name(mock_session: MagicMock) -> None:
         (
             {"supports_cooling": True, "cooling_mode": True},
             HVACMode.COOL,
+            HVACAction.IDLE,
+        ),
+        (
+            {"supports_cooling": True, "cooling_mode": True, "has_demand": True},
+            HVACMode.COOL,
             HVACAction.COOLING,
         ),
     ],
-    ids=["auto", "heating", "manual", "off", "cooling"],
+    ids=["auto", "heating", "manual", "off", "cooling-idle", "cooling"],
 )
 async def test_states(
     hass: HomeAssistant,
@@ -95,7 +102,7 @@ async def test_states(
             True,
             True,
             [HVACMode.AUTO, HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
-            [PRESET_BOOST, PRESET_ECO],
+            [PRESET_NONE, PRESET_BOOST, PRESET_ECO],
         ),
         (
             False,
@@ -301,6 +308,63 @@ async def test_set_preset_mode(
         blocking=True,
     )
     assert device.boost_mode is True
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "boost_mode", "low"),
+    [({"boost_mode": True}, False, False), ({"low": True}, False, False)],
+    ids=["cancel-boost", "cancel-eco"],
+)
+async def test_cancel_preset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    device_kwargs: dict,
+    boost_mode: bool,
+    low: bool,
+) -> None:
+    """The none preset clears boost and eco."""
+    device = climate_control_device(**device_kwargs)
+    mock_session.device_helper.climate_controls = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_NONE},
+        blocking=True,
+    )
+
+    assert device.boost_mode is boost_mode
+    assert device.low is low
+
+
+@pytest.mark.parametrize("hvac_mode", [HVACMode.COOL, HVACMode.FAN_ONLY])
+async def test_set_temperature_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    hvac_mode: HVACMode,
+) -> None:
+    """A combined call with an unsupported HVAC mode changes nothing."""
+    device = climate_control_device(low=True)
+    mock_session.device_helper.climate_controls = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 22.5,
+                "hvac_mode": hvac_mode,
+            },
+            blocking=True,
+        )
+
+    assert device.low is True
+    assert device.setpoint_temperature == 21.0
 
 
 async def test_turn_on_off(
