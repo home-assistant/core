@@ -28,6 +28,9 @@ from .utils import retry_after_from
 _LOGGER = logging.getLogger(__name__)
 
 
+BACKOFF_STEPS = (300, 600, 900)  # 5min, 10min, 15min
+
+
 class ViCareCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single ViCare gateway.
 
@@ -58,6 +61,7 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         self._device = device
         self._accessor = accessor
         self._value_readers: list[Callable[[], None]] = []
+        self._consecutive_offline_failures: int = 0
 
     @callback
     def async_add_value_reader(self, reader: Callable[[], None]) -> Callable[[], None]:
@@ -84,6 +88,7 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             _LOGGER.debug(
                 "No accessible features for gateway %s", self._accessor.serial
             )
+            self._consecutive_offline_failures = 0
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
         except PyViCareRateLimitError as err:
@@ -94,14 +99,44 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
                     self.update_interval or timedelta(seconds=DEFAULT_CACHE_DURATION),
                 ),
             ) from err
+        except PyViCareDeviceCommunicationError as err:
+            error_str = str(err)
+            if (
+                getattr(err, "reason", None) == "GATEWAY_OFFLINE"
+                or "GATEWAY_OFFLINE" in error_str
+            ):
+                self._consecutive_offline_failures += 1
+                idx = min(
+                    self._consecutive_offline_failures - 1,
+                    len(BACKOFF_STEPS) - 1,
+                )
+                normal_interval = int(
+                    (
+                        self.update_interval
+                        or timedelta(seconds=DEFAULT_CACHE_DURATION)
+                    ).total_seconds()
+                )
+                backoff = max(BACKOFF_STEPS[idx], normal_interval)
+                _LOGGER.debug(
+                    "ViCare gateway %s is offline (consecutive failures: %d). "
+                    "Backing off next refresh for %d seconds",
+                    self._accessor.serial,
+                    self._consecutive_offline_failures,
+                    backoff,
+                )
+                raise UpdateFailed(
+                    error_str,
+                    retry_after=backoff,
+                ) from err
+            raise UpdateFailed(error_str) from err
         except (
-            PyViCareDeviceCommunicationError,
             PyViCareInternalServerError,
             PyViCareInvalidDataError,
             requests.RequestException,
         ) as err:
             raise UpdateFailed(str(err)) from err
         else:
+            self._consecutive_offline_failures = 0
             # Only after a successful fetch: the cache was emptied above, and a
             # reader must not be the one to refill it from the event loop.
             # Iterate a copy, entities deregister from the event loop thread.
