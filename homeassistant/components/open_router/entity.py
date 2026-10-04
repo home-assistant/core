@@ -182,6 +182,13 @@ async def _transform_stream(
                         current_tool_call["arguments"] + tool_call.function.arguments
                     )
 
+        # OpenRouter returns generated images in a non-standard `images` field that
+        # the OpenAI SDK preserves as an extra attribute on the delta.
+        if choice.delta.model_extra and (
+            images := choice.delta.model_extra.get("images")
+        ):
+            data["native"] = images
+
         if choice.finish_reason == "tool_calls":
             completed_tool_calls = [tool_calls[index] for index in sorted(tool_calls)]
 
@@ -263,12 +270,15 @@ class OpenRouterEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: probatio.Schema | None = None,
+        force_image: bool = False,
     ) -> None:
         """Generate an answer for the chat log."""
 
         model = self.model
 
         extra_body: dict[str, Any] = {"provider": {"require_parameters": True}}
+        if force_image:
+            extra_body["modalities"] = ["image", "text"]
 
         tools: list[ChatCompletionFunctionToolParam | dict[str, Any]] = []
         if chat_log.llm_api:
