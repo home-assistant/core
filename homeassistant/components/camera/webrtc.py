@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
-from functools import cache, partial, wraps
+from functools import cache, wraps
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -30,6 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_webrtc_providers"
+)
+_DATA_WEBRTC_SESSION_OWNERS: HassKey[dict[str, object]] = HassKey(
+    "camera_webrtc_session_owners"
 )
 
 
@@ -259,6 +262,31 @@ def require_webrtc_support(
     return decorate
 
 
+@callback
+def _async_subscribe_session(
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    camera: Camera,
+    session_id: str,
+) -> None:
+    """Make the subscription the owner of the session and close it on unsubscribe.
+
+    A re-offer replaces the owner, so dropping the subscription of an earlier
+    offer must not close the session that is now owned by the re-offer.
+    """
+    owners = camera.hass.data.setdefault(_DATA_WEBRTC_SESSION_OWNERS, {})
+    owners[session_id] = token = object()
+
+    @callback
+    def close_session() -> None:
+        if owners.get(session_id) is not token:
+            return
+        del owners[session_id]
+        camera.close_webrtc_session(session_id)
+
+    connection.subscriptions[msg_id] = close_session
+
+
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "camera/webrtc/offer",
@@ -283,9 +311,7 @@ async def ws_webrtc_offer(
     """
     offer = msg["offer"]
     session_id = ulid()
-    connection.subscriptions[msg["id"]] = partial(
-        camera.close_webrtc_session, session_id
-    )
+    _async_subscribe_session(connection, msg["id"], camera, session_id)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -338,11 +364,7 @@ async def ws_webrtc_re_offer(
     """
     offer = msg["offer"]
     session_id = msg["session_id"]
-    # The re-offer takes over ownership of the session from the subscription of
-    # the previous offer, which the client drops once this one is established.
-    connection.subscriptions[msg["id"]] = partial(
-        camera.close_webrtc_session, session_id
-    )
+    _async_subscribe_session(connection, msg["id"], camera, session_id)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
