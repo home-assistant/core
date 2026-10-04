@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import UTC, date, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
     AccountRelation,
@@ -33,7 +33,13 @@ from homeassistant.components.engie_be.const import (
     PRICES_SCAN_INTERVAL,
 )
 from homeassistant.components.engie_be.coordinator import EngieBePricesData
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -1294,3 +1300,18 @@ async def test_epex_slot_gap_heals_on_next_refresh(
     assert float(
         _epex_state(hass, entity_registry, "epex_low_today_hour")
     ) == pytest.approx(0.01)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
+async def test_epex_sensors_snapshot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the sensors of a household with a dynamic tariff."""
+    with patch("homeassistant.components.engie_be._PLATFORMS", [Platform.SENSOR]):
+        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

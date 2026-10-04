@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 import logging
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
     EngieBeCommunicationError,
@@ -12,10 +12,11 @@ from aioengiebelgium import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -28,7 +29,7 @@ from .conftest import (
     setup_dynamic_entry,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_tomorrow_prices_available(
@@ -184,3 +185,20 @@ async def test_tomorrow_prices_with_stretched_slot(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_binary_sensors_snapshot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the binary sensors of a household with a dynamic tariff."""
+    with patch(
+        "homeassistant.components.engie_be._PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

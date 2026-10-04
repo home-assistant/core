@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_binary_sensors_snapshot[binary_sensor.main_street_1_1000_brussels_epex_tomorrow_prices_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.main_street_1_1000_brussels_epex_tomorrow_prices_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EPEX tomorrow prices available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EPEX tomorrow prices available',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'epex_tomorrow_available',
+    'unique_id': '000000000001_epex_tomorrow_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors_snapshot[binary_sensor.main_street_1_1000_brussels_epex_tomorrow_prices_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels EPEX tomorrow prices available',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.main_street_1_1000_brussels_epex_tomorrow_prices_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
