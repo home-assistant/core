@@ -2606,6 +2606,9 @@ pysensibo==1.2.1
 # homeassistant.components.senz
 pysenz==1.1.2
 
+# homeassistant.components.sesame_ble
+pysesame-ble==0.1.1
+
 # homeassistant.components.sesame
 pysesame2==1.0.2
 

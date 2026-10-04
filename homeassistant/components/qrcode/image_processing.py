@@ -1,16 +1,14 @@
 """Support for the QR code image processing."""
 
-import io
 from typing import override
-
-from PIL import Image
-from pyzbar import pyzbar
 
 from homeassistant.components.image_processing import ImageProcessingEntity
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import decode_qr_image
 
 
 def setup_platform(
@@ -43,11 +41,8 @@ class QrEntity(ImageProcessingEntity):
     @override
     def process_image(self, image: bytes) -> None:
         """Process image."""
-        stream = io.BytesIO(image)
-        img = Image.open(stream)
-
-        barcodes = pyzbar.decode(img)
+        barcodes = decode_qr_image(image)
         if barcodes:
-            self._attr_state = barcodes[0].data.decode("utf-8")
+            self._attr_state = barcodes[0]
         else:
             self._attr_state = None
