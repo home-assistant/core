@@ -55,7 +55,7 @@ MQTT_INFRARED_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
 SIGNAL_SCHEMA = probatio.Schema(
     {
-        probatio.Required("timings"): probatio.All([int], probatio.Length(min=1)),
+        probatio.Required("timings"): probatio.All([int], probatio.NonEmpty()),
         probatio.Optional("modulation"): probatio.Any(int, None),
     },
     extra=probatio.REMOVE_EXTRA,

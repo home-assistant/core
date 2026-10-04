@@ -70,6 +70,24 @@
         "name": "Pulse length"
       }
     },
+    "select": {
+      "motion_sensitivity": {
+        "name": "Motion sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "middle": "Medium"
+        }
+      },
+      "siren_sound_level": {
+        "name": "Siren volume",
+        "state": {
+          "high": "Loud",
+          "low": "Reduced",
+          "medium": "Medium"
+        }
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
@@ -125,8 +143,17 @@
       "bypass_infinite": {
         "name": "Break function never expires"
       },
+      "camera_ambientlight": {
+        "name": "Ambient light"
+      },
+      "camera_frontlight": {
+        "name": "Front light"
+      },
       "camera_light": {
         "name": "Camera light"
+      },
+      "camera_notification": {
+        "name": "Notifications"
       },
       "child_lock": {
         "name": "Child lock"

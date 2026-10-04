@@ -39,3 +39,36 @@ async def test_state(
 
     assert (state := hass.states.get(MOCK_ENTITY_ID))
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("ambilight_configuration", "expected_state"),
+    [
+        pytest.param(None, STATE_OFF, id="ambilight-idle"),
+        pytest.param(
+            {"styleName": "FOLLOW_VIDEO", "isExpert": False},
+            STATE_ON,
+            id="ambilight-active",
+        ),
+    ],
+)
+async def test_state_screenstate_always_off(
+    hass: HomeAssistant,
+    mock_tv: PhilipsTV,
+    mock_config_entry: MockConfigEntry,
+    ambilight_configuration: dict[str, str | bool] | None,
+    expected_state: str,
+) -> None:
+    """Test ambilight decides the state when screenstate is always off."""
+    mock_tv.json_feature_supported.side_effect = lambda feature, value: (
+        (feature, value) == ("ambilight", "Ambilight")
+    )
+    mock_tv.powerstate = None
+    mock_tv.screenstate = TV_STATE_OFF
+    mock_tv.ambilight_current_configuration = ambilight_configuration
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(MOCK_ENTITY_ID))
+    assert state.state == expected_state

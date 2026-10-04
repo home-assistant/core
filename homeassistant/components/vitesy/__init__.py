@@ -8,6 +8,7 @@ from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 

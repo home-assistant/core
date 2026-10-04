@@ -21,9 +21,14 @@ from .coordinator import DevoloHomeNetworkConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_IP_ADDRESS): str, probatio.Optional(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_IP_ADDRESS): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Optional(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Optional(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:

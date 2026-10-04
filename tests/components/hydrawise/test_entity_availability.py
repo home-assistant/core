@@ -6,7 +6,9 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from pydrawise import APIError
 from pydrawise.schema import Controller
+import pytest
 
 from homeassistant.components.hydrawise.const import WATER_USE_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
@@ -31,22 +33,26 @@ async def test_controller_offline(
     _test_availability(hass, config_entry, entity_registry)
 
 
+@pytest.mark.parametrize("side_effect", [ClientError, APIError("unavailable")])
 async def test_api_offline(
     hass: HomeAssistant,
     mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
     entity_registry: er.EntityRegistry,
     mock_pydrawise: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: Exception,
 ) -> None:
     """Test availability of sensors when API call fails."""
     config_entry = await mock_add_config_entry()
     mock_pydrawise.get_user.reset_mock(return_value=True)
-    mock_pydrawise.get_user.side_effect = ClientError
-    mock_pydrawise.get_water_use_summary.side_effect = ClientError
+    mock_pydrawise.get_user.side_effect = side_effect
+    mock_pydrawise.get_water_use_summary.side_effect = side_effect
     freezer.tick(WATER_USE_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     _test_availability(hass, config_entry, entity_registry)
+    assert "Unexpected error" not in caplog.text
 
 
 def _test_availability(

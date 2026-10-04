@@ -30,8 +30,12 @@ CONF_MESSAGE = "message"
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_INCLUDE): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional(CONF_EXCLUDE): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_INCLUDE): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_EXCLUDE): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(
             CONF_MESSAGE, default="{} is your Home Assistant login code"
         ): str,

@@ -187,7 +187,7 @@ SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
         probatio.ExactSequence(
             (
                 probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=359)),
-                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Percentage()),
             )
         ),
     ),
