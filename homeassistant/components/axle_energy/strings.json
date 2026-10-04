@@ -34,6 +34,13 @@
     "binary_sensor": {
       "event_in_progress": {
         "name": "Event in progress"
+      },
+      "participation": {
+        "name": "Participation",
+        "state": {
+          "off": "Opted out",
+          "on": "Opted in"
+        }
       }
     },
     "sensor": {
