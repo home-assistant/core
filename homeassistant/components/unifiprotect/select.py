@@ -212,12 +212,12 @@ async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
     await obj.set_liveview(liveview)
 
 
-async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
+async def _set_ptz_patrol(obj: PublicCamera, patrol_slot: str) -> None:
     """Start or stop PTZ patrol."""
     if patrol_slot == PTZ_PATROL_STOP:
-        await obj.api.ptz_patrol_stop_public(obj.id)
+        await obj.ptz_patrol_stop()
     else:
-        await obj.api.ptz_patrol_start_public(obj.id, slot=int(patrol_slot))
+        await obj.ptz_patrol_start(int(patrol_slot))
 
 
 _HDR_MODE_MAP = {
@@ -506,6 +506,9 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
     device: Camera
     _attr_current_option: str | None = None
     _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
+    # Patrols are listed from the private API; the active slot and the
+    # commands are public.
+    _ufp_uses_public = True
 
     def __init__(
         self,
@@ -530,9 +533,10 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
 
     def _update_patrol_state(self) -> None:
         """Update the patrol state based on active_patrol_slot."""
-        if self.device.active_patrol_slot is not None:
+        public = cast(PublicCamera | None, self._ufp_public_obj)
+        if public is not None and public.active_patrol_slot is not None:
             # A patrol is running - show which one
-            slot_str = str(self.device.active_patrol_slot)
+            slot_str = str(public.active_patrol_slot)
             self._attr_current_option = self._unifi_to_hass_options.get(slot_str)
         else:
             # No patrol running - show Stop
@@ -552,7 +556,7 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         # Home Assistant validates options before calling this method,
         # so we can safely assume the option is valid
         unifi_value = self._hass_to_unifi_options[option]
-        await _set_ptz_patrol(self.device, unifi_value)
+        await _set_ptz_patrol(cast(PublicCamera, self._ufp_set_target()), unifi_value)
         # State will be updated via websocket when active_patrol_slot changes
 
 

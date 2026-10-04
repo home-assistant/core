@@ -1,7 +1,7 @@
 """UniFi Protect Integration services."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, cast
 
@@ -9,6 +9,7 @@ import probatio
 from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
+from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import ClientError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -268,7 +269,9 @@ def _async_get_ptz_camera(call: ServiceCall) -> Camera:
     return camera
 
 
-async def _async_ptz_command(func: Callable[..., Awaitable[Any]], **kwargs: Any) -> Any:
+async def _async_ptz_command(
+    func: Callable[..., Coroutine[Any, Any, Any]], **kwargs: Any
+) -> Any:
     """Execute a PTZ command with error handling."""
     try:
         return await func(**kwargs)
@@ -280,24 +283,36 @@ async def _async_ptz_command(func: Callable[..., Awaitable[Any]], **kwargs: Any)
         ) from err
 
 
+@callback
+def _async_get_public_camera(camera: Camera) -> PublicCamera:
+    """Get the public camera matching a private camera."""
+    api = camera.api
+    if api.has_public_bootstrap and (
+        public := api.public_bootstrap.cameras.get(camera.id)
+    ):
+        return public
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_available",
+        translation_placeholders={"device_name": camera.display_name},
+    )
+
+
 async def ptz_goto_preset(call: ServiceCall) -> None:
     """Move a PTZ camera to a preset position."""
     camera = _async_get_ptz_camera(call)
+    public = _async_get_public_camera(camera)
     preset_name: str = call.data[ATTR_PRESET]
 
     if preset_name.lower() == "home":
-        await _async_ptz_command(
-            camera.api.ptz_goto_preset_public, camera_id=camera.id, slot=-1
-        )
+        await _async_ptz_command(public.ptz_goto_preset, slot=-1)
         return
 
     presets = await _async_ptz_command(camera.get_ptz_presets)
 
     for preset in presets:
         if preset.name == preset_name:
-            await _async_ptz_command(
-                camera.api.ptz_goto_preset_public, camera_id=camera.id, slot=preset.slot
-            )
+            await _async_ptz_command(public.ptz_goto_preset, slot=preset.slot)
             return
 
     raise ServiceValidationError(

@@ -418,16 +418,14 @@ async def test_ptz_goto_preset(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    ufp.api.ptz_goto_preset_public = AsyncMock()
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PTZ_GOTO_PRESET,
         {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
         blocking=True,
     )
-    ufp.api.ptz_goto_preset_public.assert_called_once_with(
-        camera_id=ptz_camera.id, slot=0
-    )
+    public.ptz_goto_preset.assert_awaited_once_with(slot=0)
 
 
 async def test_ptz_goto_preset_home(
@@ -444,16 +442,14 @@ async def test_ptz_goto_preset_home(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    ufp.api.ptz_goto_preset_public = AsyncMock()
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PTZ_GOTO_PRESET,
         {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
         blocking=True,
     )
-    ufp.api.ptz_goto_preset_public.assert_called_once_with(
-        camera_id=ptz_camera.id, slot=-1
-    )
+    public.ptz_goto_preset.assert_awaited_once_with(slot=-1)
 
 
 async def test_ptz_goto_preset_not_found(
@@ -542,9 +538,8 @@ async def test_ptz_goto_preset_command_client_error(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    ufp.api.ptz_goto_preset_public = AsyncMock(
-        side_effect=ClientError("Connection failed")
-    )
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    public.ptz_goto_preset.side_effect = ClientError("Connection failed")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
@@ -568,10 +563,33 @@ async def test_ptz_goto_home_preset_client_error(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    ufp.api.ptz_goto_preset_public = AsyncMock(
-        side_effect=ClientError("Connection failed")
-    )
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    public.ptz_goto_preset.side_effect = ClientError("Connection failed")
     with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_preset_no_public_camera(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset raises when the camera is missing from the public API."""
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    ufp.api.public_bootstrap.cameras = {}
+    with pytest.raises(HomeAssistantError, match="no longer available"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,

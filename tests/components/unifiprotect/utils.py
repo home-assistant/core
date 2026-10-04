@@ -649,6 +649,7 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.active_patrol_slot = camera.active_patrol_slot
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected
