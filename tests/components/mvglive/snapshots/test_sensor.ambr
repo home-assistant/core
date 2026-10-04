@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_sensor[sensor.hauptbahnhof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hauptbahnhof',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hauptbahnhof',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:subway',
+    'original_name': 'Hauptbahnhof',
+    'platform': 'mvglive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'de:09162:6',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.hauptbahnhof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by mvg.de',
+      'cancelled': False,
+      'departures': list([
+        dict({
+          'cancelled': False,
+          'destination': 'Feldmoching',
+          'icon': 'mdi:subway',
+          'line': 'U2',
+          'platform': '1',
+          'time_in_mins': 511942380,
+          'type': 'U-Bahn',
+        }),
+      ]),
+      'destination': 'Feldmoching',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hauptbahnhof',
+      'icon': 'mdi:subway',
+      'line': 'U2',
+      'platform': '1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'time_in_mins': 511942380,
+      'type': 'U-Bahn',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hauptbahnhof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '511942380',
+  })
+# ---
