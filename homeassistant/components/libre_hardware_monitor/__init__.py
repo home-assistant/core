@@ -2,11 +2,11 @@
 
 import logging
 
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
+from .const import DOMAIN, THROUGHPUT_UNIQUE_ID_FRAGMENT
 from .coordinator import (
     LibreHardwareMonitorConfigEntry,
     LibreHardwareMonitorCoordinator,
@@ -20,8 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: LibreHardwareMonitorConfigEntry
 ) -> bool:
-    """Migrate non-unique entity and device ids."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    """Migrate to current config flow version."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
 
     if config_entry.version == 1:
         # Migrate entity identifiers
@@ -61,11 +63,40 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(
-            config_entry, data=config_entry.data, version=2
+            config_entry, data=config_entry.data, version=2, minor_version=1
         )
 
-        _LOGGER.debug("Migration to version 2 successful")
-        return True
+        _LOGGER.debug("Migration to version 2.1 successful")
+
+    if config_entry.version == 2 and config_entry.minor_version == 1:
+        # Migrate Throughput unit from KB/s to KiB/s
+        entity_registry = er.async_get(hass)
+        registry_entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+
+        throughput_entities = [
+            entry
+            for entry in registry_entries
+            if THROUGHPUT_UNIQUE_ID_FRAGMENT in entry.unique_id
+        ]
+        for reg_entry in throughput_entities:
+            _LOGGER.debug(
+                "Migrating entity %s unit from %s to %s",
+                reg_entry.entity_id,
+                reg_entry.unit_of_measurement,
+                UnitOfDataRate.KIBIBYTES_PER_SECOND,
+            )
+            entity_registry.async_update_entity(
+                reg_entry.entity_id,
+                unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+            )
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data, version=2, minor_version=2
+        )
+
+        _LOGGER.debug("Migration to version 2.2 successful")
 
     return True
 

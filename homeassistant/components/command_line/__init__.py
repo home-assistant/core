@@ -67,6 +67,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .utils import async_prune_shell_template_issues, build_shell_template_issue_id
 
 BINARY_SENSOR_DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -191,7 +192,7 @@ COMBINED_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [COMBINED_SCHEMA],
         )
     },
@@ -209,6 +210,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()
+        # Prune template deprecation issues for entities that no longer exist,
+        # keeping issues for still-configured entities so an ignored issue is not
+        # reset by a delete-and-recreate. Each entity refreshes or clears its own
+        # issue on its next update after reload.
+        valid_issue_ids = _shell_template_issue_ids(
+            reload_config.get(DOMAIN, []) if reload_config else []
+        )
+        async_prune_shell_template_issues(hass, valid_issue_ids)
         if not reload_config:
             return
         await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)
@@ -218,6 +227,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_load_platforms(hass, config.get(DOMAIN, []), config)
 
     return True
+
+
+def _shell_template_issue_ids(
+    command_line_config: list[dict[str, dict[str, Any]]],
+) -> set[str]:
+    """Return the shell template deprecation issue ids for the given config.
+
+    Only sensor, binary_sensor and notify run templated commands and can raise
+    the issue. The name mirrors each platform's setup: sensor and binary_sensor
+    always have a name (schema default), while notify falls back to the
+    integration domain when no name is configured.
+    """
+    issue_ids: set[str] = set()
+    for platform_config in command_line_config:
+        for platform, platform_conf in platform_config.items():
+            if platform == NOTIFY_DOMAIN:
+                name = platform_conf.get(CONF_NAME) or DOMAIN
+            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+                name = platform_conf[CONF_NAME]
+            else:
+                continue
+            issue_ids.add(build_shell_template_issue_id(platform, name))
+    return issue_ids
 
 
 async def async_load_platforms(

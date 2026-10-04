@@ -80,7 +80,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             schema=probatio.Schema(
                 probatio.All(
                     {
-                        probatio.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                        probatio.Required(ATTR_DEVICE_ID): probatio.EnsureList(),
                         probatio.Required(attrib): cv.string,
                     }
                 )
@@ -94,7 +94,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=probatio.Schema(
             probatio.All(
                 {
-                    probatio.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                    probatio.Required(ATTR_DEVICE_ID): probatio.EnsureList(),
                     probatio.Required(ATTR_KEY): cv.string,
                     probatio.Required(ATTR_VALUE): probatio.Any(str, bool, int),
                 }

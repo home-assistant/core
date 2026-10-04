@@ -52,16 +52,18 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
         "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
-      "entry_type": "Energy site",
+      "entry_type": "Local energy site",
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
         "key_expired": "The approval window on your Powerwall closed before the key was approved. Submit to open a new window, flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
-        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "powerwall_unreachable": "[%key:component::teslemetry::config_subentries::energy_site::abort::powerwall_unreachable%]"
       },
       "initiate_flow": {
         "reconfigure": "Reconfigure energy site",
@@ -96,7 +98,7 @@
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
         "no_vehicles": "Every eligible vehicle in your Teslemetry account has already been added over Bluetooth."
       },
-      "entry_type": "Bluetooth vehicle",
+      "entry_type": "Local vehicle",
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
@@ -857,9 +859,6 @@
       "drive_state_speed": {
         "name": "Speed"
       },
-      "energy_left": {
-        "name": "Energy left"
-      },
       "energy_remaining": {
         "name": "Energy remaining"
       },
@@ -1130,9 +1129,6 @@
       "total_home_usage": {
         "name": "Home usage"
       },
-      "total_pack_energy": {
-        "name": "Total pack energy"
-      },
       "total_solar_generation": {
         "name": "Solar generated"
       },
@@ -1232,6 +1228,9 @@
     "auth_failed_subscription_required": {
       "message": "Teslemetry subscription required"
     },
+    "command_connection_error": {
+      "message": "Unable to connect to Teslemetry"
+    },
     "command_error": {
       "message": "Command returned error: {error}"
     },
@@ -1246,9 +1245,6 @@
     },
     "command_reason": {
       "message": "Command was rejected: {reason}"
-    },
-    "invalid_cop_temp": {
-      "message": "Cabin overheat protection does not support that temperature"
     },
     "missing_scope": {
       "message": "Missing required scope: {scope}"
@@ -1289,9 +1285,6 @@
     "update_failed_insufficient_credits": {
       "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
-    "update_failed_invalid_data": {
-      "message": "Received invalid data from API"
-    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
@@ -1300,6 +1293,32 @@
     }
   },
   "issues": {
+    "gateway_not_found": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "entry_not_loaded": "[%key:component::teslemetry::config_subentries::energy_site::abort::entry_not_loaded%]"
+        },
+        "error": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "invalid_auth": "The Powerwall system at this address did not accept the saved password. Check that the address belongs to the Powerwall system for this energy site.",
+          "key_not_approved": "[%key:component::teslemetry::config_subentries::energy_site::error::key_not_approved%]"
+        },
+        "step": {
+          "host": {
+            "data": {
+              "host": "[%key:common::config_flow::data::host%]"
+            },
+            "data_description": {
+              "host": "The address of your Powerwall system on your local network."
+            },
+            "description": "Home Assistant cannot reach the Powerwall system for {site} at its saved address on your local network, so local control is unavailable and commands are sent through the cloud. Enter its current local network address.",
+            "title": "[%key:component::teslemetry::issues::gateway_not_found::title%]"
+          }
+        }
+      },
+      "title": "Local control unavailable for {site}"
+    },
     "key": {
       "fix_flow": {
         "error": {

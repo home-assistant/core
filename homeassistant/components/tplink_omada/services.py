@@ -181,7 +181,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 ),
                 probatio.Required(ATTR_DEVICE_ID): selector.DeviceSelector(),
                 probatio.Required(ATTR_NAME): probatio.All(
-                    cv.string, probatio.Length(min=1)
+                    cv.string, probatio.NonEmpty()
                 ),
             }
         ),

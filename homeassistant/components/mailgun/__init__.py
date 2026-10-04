@@ -29,7 +29,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN): probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
                 probatio.Required(CONF_DOMAIN): cv.string,
                 probatio.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
             }

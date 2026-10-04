@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
+from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 import probatio
 from tesla_fleet_api.const import (
@@ -18,6 +18,7 @@ from tesla_fleet_api.const import (
 from tesla_fleet_api.exceptions import (
     BluetoothTimeout,
     BluetoothTransportError,
+    EnergyGatewayUnreachable,
     InvalidToken,
     NotOnWhitelistFault,
     PrivateKeyError,
@@ -70,31 +71,21 @@ from .const import (
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
-from .helpers import async_get_ble_parent
+from .helpers import (
+    PowerwallKeyRejectedError,
+    async_get_ble_parent,
+    async_verify_local_gateway,
+    cloud_energy_site,
+)
 from .models import TeslemetryEnergyData
+
+
+class PowerwallSetupError(Exception):
+    """Signal a recoverable energy-site setup failure for the form to retry."""
 
 
 class PowerwallLookupError(Exception):
     """Signal that the authorized-client lookup failed for a non-retryable reason."""
-
-
-class PowerwallKeyRejectedError(Exception):
-    """Signal that the gateway refused a v1r-signed read with our RSA key."""
-
-
-def _cloud_energy_site(energy_data: TeslemetryEnergyData) -> TeslemetryEnergySite:
-    """Return the cloud energy-site API for pairing.
-
-    Pairing always registers the key through the Teslemetry cloud; a paired
-    site's api is an EnergySiteRouter, so unwrap its cloud secondary rather
-    than routing to the local Powerwall primary.
-    """
-    return cast(
-        TeslemetryEnergySite,
-        energy_data.api.secondary
-        if isinstance(energy_data.api, EnergySiteRouter)
-        else energy_data.api,
-    )
 
 
 class OAuth2FlowHandler(
@@ -444,7 +435,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
-        self._energy_site: TeslemetryEnergySite | None = None
+        self._energy_site: TeslemetryEnergySite | EnergySiteRouter | None = None
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
@@ -482,15 +473,18 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 reason="all_sites_added" if local_control_sites else "no_powerwall"
             )
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            if abort := await self._prepare_energy_site(
-                _cloud_energy_site(energy_data)
-            ):
-                return abort
-            return await self._async_begin_pairing()
+            try:
+                await self._prepare_energy_site(energy_data)
+                return await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                errors["base"] = "powerwall_unreachable"
+            except PowerwallSetupError:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -504,6 +498,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                     )
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_reconfigure(
@@ -525,14 +520,20 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        if abort := await self._prepare_energy_site(_cloud_energy_site(energy_data)):
-            return abort
-        return await self._async_begin_pairing()
+        try:
+            await self._prepare_energy_site(energy_data)
+            return await self._async_begin_pairing()
+        except EnergyGatewayUnreachable:
+            return self.async_abort(reason="powerwall_unreachable")
+        except PowerwallSetupError:
+            return self.async_abort(reason="cannot_connect")
 
-    async def _prepare_energy_site(
-        self, energy_site: TeslemetryEnergySite
-    ) -> SubentryFlowResult | None:
-        """Discover the gateway address and load the integration's RSA key."""
+    async def _prepare_energy_site(self, energy_data: TeslemetryEnergyData) -> None:
+        """Discover the gateway address and load the integration's RSA key.
+
+        Raises PowerwallSetupError if the RSA key cannot be loaded.
+        """
+        energy_site = cast(TeslemetryEnergySite | EnergySiteRouter, energy_data.api)
         self._energy_site = energy_site
 
         try:
@@ -555,17 +556,16 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             )
         except (OSError, ValueError, PrivateKeyError) as err:
             LOGGER.debug("RSA key load failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
-        return None
 
     async def _async_begin_pairing(self) -> SubentryFlowResult:
         """Resume or begin key pairing based on the key's state on the gateway."""
         try:
             client = await self._find_authorized_client()
-        except PowerwallLookupError:
-            return self.async_abort(reason="cannot_connect")
+        except PowerwallLookupError as err:
+            raise PowerwallSetupError from err
         if client is not None:
             # Key already registered; do not re-register a pending one (it would reset).
             if client.state == AuthorizedClientState.VERIFIED:
@@ -575,23 +575,27 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if client.state != AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
                 # Unrecognized state is unusable; treat it as a lookup failure.
                 LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
-                return self.async_abort(reason="cannot_connect")
+                raise PowerwallSetupError
             # Re-registering resets the expired window (no duplicate); fall through.
 
         if TYPE_CHECKING:
             assert self._energy_site is not None
+        # Registration must reach Tesla, so it never routes to the local gateway.
+        cloud_site = cloud_energy_site(self._energy_site)
         try:
             # Not revoked on removal: other consumers may share this key.
-            LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
-            await self._energy_site.add_authorized_client(
+            LOGGER.info("Powerwall key setup: id=%s", cloud_site.energy_site_id)
+            await cloud_site.add_authorized_client(
                 self._public_key_der,
                 description="Home Assistant",
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
+        except EnergyGatewayUnreachable:
+            raise
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
 
         return await self.async_step_pair()
 
@@ -606,11 +610,25 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         if self._approval_expired:
             # The user saw the expired-window notice and submitted to try again.
+            try:
+                result = await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "powerwall_unreachable"}
+                )
+            except PowerwallSetupError:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "cannot_connect"}
+                )
             self._approval_expired = False
-            return await self._async_begin_pairing()
+            return result
 
         try:
             client = await self._find_authorized_client()
+        except EnergyGatewayUnreachable:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "powerwall_unreachable"}
+            )
         except PowerwallLookupError:
             return self.async_show_form(
                 step_id="pair", errors={"base": "cannot_connect"}
@@ -638,6 +656,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
+        except EnergyGatewayUnreachable:
+            # Unwrapped so callers can report an unreachable gateway as retryable.
+            raise
         except (ClientError, TeslaFleetError) as err:
             # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)
@@ -650,24 +671,6 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             ),
             None,
         )
-
-    async def _verify_local_gateway(self, host: str, password: str) -> None:
-        """Prove the LAN connection and the RSA key against the gateway."""
-        if TYPE_CHECKING:
-            assert self._key_pem is not None
-            assert self._energy_site is not None
-        async with PowerwallClient(
-            host=host,
-            gateway_password=password,
-            rsa_private_key_pem=self._key_pem,
-            session=async_get_clientsession(self.hass),
-        ) as client:
-            await client.connect()
-            try:
-                # connect() passed the password, so a failure here is key rejection.
-                await client.get_status()
-            except PowerwallAuthenticationError as err:
-                raise PowerwallKeyRejectedError from err
 
     def _default_gateway_host(self) -> str:
         """Return the host to pre-fill on the credentials form, or "" for blank.
@@ -691,11 +694,14 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self._energy_site is not None
+                assert self._key_pem is not None
             host = user_input[CONF_HOST].strip()
             # The gateway accepts only the last 5 characters of the Wi-Fi password.
             password = user_input[CONF_PASSWORD].strip()[-5:]
             try:
-                await self._verify_local_gateway(host, password)
+                await async_verify_local_gateway(
+                    self.hass, host, password, self._key_pem
+                )
             except PowerwallKeyRejectedError as err:
                 LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
                 errors["base"] = "key_not_approved"
@@ -715,7 +721,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                         CONF_HOST,
                         default=self._default_gateway_host() or probatio.UNDEFINED,
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
