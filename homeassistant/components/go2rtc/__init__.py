@@ -366,6 +366,9 @@ class WebRTCProvider(CameraWebRTCProvider):
         send_message: WebRTCSendMessage,
     ) -> None:
         """Handle the WebRTC offer on renegotiation and return the answer via the provided callback."""
+        if previous_session := self._sessions.pop(session_id, None):
+            await previous_session.ws_client.close()
+
         ws_client = Go2RtcWsClient(
             self._session, self._url, source=get_camera_identifier(camera)
         )

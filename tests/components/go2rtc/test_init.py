@@ -66,6 +66,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture_
 # and is only a pass through.
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
+RE_OFFER_SDP = "v=0\r\no=carol 28908764872 28908764873 IN IP4 100.3.6.6\r\n..."
 
 
 async def _setup_camera_prefs(
@@ -493,6 +494,34 @@ async def test_close_session(
     ws_client.reset_mock()
     camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_re_offer_closes_previous_session(
+    ws_clients: list[Mock],
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a re-offer closes the go2rtc session it replaces."""
+    camera = init_test_integration
+    session_id = "session_id"
+    ice_servers = (
+        camera.async_get_webrtc_client_configuration().configuration.ice_servers
+    )
+
+    await camera.async_handle_async_webrtc_offer(OFFER_SDP, session_id, Mock())
+    assert len(ws_clients) == 1
+    ws_clients[0].send.assert_called_once_with(WebRTCOffer(OFFER_SDP, ice_servers))
+
+    await camera.async_handle_async_webrtc_re_offer(RE_OFFER_SDP, session_id, Mock())
+    assert len(ws_clients) == 2
+    ws_clients[0].close.assert_awaited_once()
+    ws_clients[1].send.assert_called_once_with(WebRTCOffer(RE_OFFER_SDP, ice_servers))
+
+    # Closing the session only closes the client that replaced the first one
+    camera.close_webrtc_session(session_id)
+    await asyncio.sleep(0)
+    ws_clients[0].close.assert_awaited_once()
+    ws_clients[1].close.assert_awaited_once()
 
 
 async def _fail_with_offer(hass: HomeAssistant, camera: MockCamera, error: str) -> None:
