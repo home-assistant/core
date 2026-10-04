@@ -23,6 +23,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -181,6 +182,10 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         self._attr_swing_horizontal_mode = self.get_swing_horizontal_mode()
         self._attr_preset_mode = self.get_preset_mode()
         self._attr_fan_mode = self.get_fan_mode()
+
+    def _raise_command_failed(self, command: str) -> None:
+        """Raise an error when Daikin rejects a command."""
+        raise HomeAssistantError(f"Failed to {command} for {self._device.name}")
 
     @callback
     @override
@@ -460,6 +465,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                             self._device.name,
                             value,
                         )
+                        self._raise_command_failed("set the temperature")
 
     def get_hvac_mode(self):
         """Return current HVAC mode."""
@@ -560,6 +566,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             # which we couldn't set with a previous hvac mode
             self.update_state()
             self.coordinator.async_update_listeners()
+        else:
+            self._raise_command_failed("set the HVAC mode")
 
     def get_fan_mode(self):
         """Return the active fan mode."""
@@ -664,6 +672,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         if result:
             self._attr_fan_mode = requested_fan_mode
             self.coordinator.async_update_listeners()
+        else:
+            self._raise_command_failed("set the fan mode")
 
     def __get_swing_mode(self, direction):
         """Return current swing mode for an axis."""
@@ -742,6 +752,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             if res is True:
                 self._attr_swing_mode = swing_mode
                 self.coordinator.async_update_listeners()
+            else:
+                self._raise_command_failed("set the swing mode")
         else:
             _LOGGER.debug(
                 "Device '%s' request to set vertical swing mode '%s' ignored already set",
@@ -759,6 +771,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             if res is True:
                 self._attr_swing_horizontal_mode = swing_horizontal_mode
                 self.coordinator.async_update_listeners()
+            else:
+                self._raise_command_failed("set the horizontal swing mode")
         else:
             _LOGGER.debug(
                 "Device '%s' request to set horizontal swing mode '%s' ignored already set",
@@ -852,6 +866,8 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         if result is True:
             self._attr_preset_mode = preset_mode
             self.coordinator.async_update_listeners()
+        else:
+            self._raise_command_failed("set the preset mode")
 
     def get_preset_modes(self):
         """Return supported preset modes."""
@@ -878,6 +894,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 _LOGGER.error(
                     "Device '%s' problem setting onOffMode to on", self._device.name
                 )
+                self._raise_command_failed("turn on")
             else:
                 cc.on_off_mode.value = "on"
                 self._attr_hvac_mode = self.get_hvac_mode()
@@ -902,6 +919,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 _LOGGER.error(
                     "Device '%s' problem setting onOffMode to off", self._device.name
                 )
+                self._raise_command_failed("turn off")
             else:
                 cc.on_off_mode.value = "off"
                 self._attr_hvac_mode = self.get_hvac_mode()

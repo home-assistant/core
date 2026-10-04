@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import DOMAIN
@@ -82,10 +83,15 @@ async def test_enable_boost_stops_after_failed_turn_on() -> None:
     device.patch.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", [["component.climate.services."]]
+)
+@pytest.mark.parametrize("patch_result", [True, False])
 async def test_climate_service_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    patch_result: bool,
 ) -> None:
     """Test climate services through the Home Assistant integration API."""
     setpoint = SimpleNamespace(
@@ -107,13 +113,14 @@ async def test_climate_service_updates_entity_state(
     climate_control.sensory_data = None
     climate_control.characteristic.return_value = None
 
-    device = MagicMock(id="gateway", name="Daikin", available=True)
+    device = MagicMock(id="gateway", available=True)
+    device.name = "Daikin"
     device.device = SimpleNamespace(
         device_model="Daikin",
         management_points_by_type=lambda _: (climate_control,),
     )
     device.management_point.return_value = climate_control
-    device.patch = AsyncMock(return_value=True)
+    device.patch = AsyncMock(return_value=patch_result)
 
     coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     coordinator.data = {device.id: device}
@@ -142,14 +149,19 @@ async def test_climate_service_updates_entity_state(
     )
     assert entity_id is not None
 
-    await hass.services.async_call(
+    service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
         blocking=True,
     )
+    if patch_result:
+        await service_call
+        assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 21
+    else:
+        with pytest.raises(HomeAssistantError, match="Failed to set the temperature"):
+            await service_call
 
-    assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 21
     device.patch.assert_awaited_once_with(
         "gateway",
         "zone",
@@ -196,6 +208,7 @@ async def test_setup_creates_entities_per_management_point(
             """Initialize the test entity."""
             self._attr_unique_id = f"{device.id}_{embedded_id}_{setpoint}"
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_hvac_mode = HVACMode.HEAT
             self._attr_hvac_modes = [HVACMode.OFF]
 
     with (
