@@ -16,6 +16,9 @@ description: Everything you need to know to build, test and review Home Assistan
 - When validation guarantees a key is present, prefer direct dictionary indexing (`data["key"]`) over `.get("key")` so invalid assumptions fail fast.
 - Integrations should be thin wrappers. Protocol parsing, device state machines, or other domain logic belong in a separate PyPI library, not in the integration itself. If unsure, ask before inlining.
 - Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue.
+- Do not add entities for data that Home Assistant intentionally only exposes through an action, for example weather forecasts (`weather.get_forecasts`).
+- In config flows, map known failures to the matching standard error (for example `invalid_auth`, `cannot_connect`). Do not mix translated and untranslated text in an error shown to the user, and only log errors that are unexpected.
+- Dependency bumps go in their own PR, separate from feature changes.
 
 The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
@@ -24,6 +27,8 @@ The following platforms have extra guidelines:
 ## Entity platforms
 
 - Ensure `async_added_to_hass()` and `async_will_remove_from_hass()` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is torn down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
+- Use `_attr_*` class attributes for values that never change. Only define a property when the value is dynamic.
+- When overriding `available`, combine it with the parent's value (`return super().available and ...`).
 - Entity base class (e.g. `SensorEntity`, `TrackerEntity`) provide a stable API for child classes to inherit from. Do not suggest redeclaring or duplicating attributes, properties, or methods the base class already provides, and do not add guards against the parent's behavior changing — rely on the base class instead.
 
 ## Integration Quality Scale
@@ -46,3 +51,9 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 ## Testing Requirements
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
+- Define shared mocks as fixtures in `conftest.py` so every platform test can reuse them, including a `mock_config_entry` with a `unique_id`.
+- Load mock API data from JSON fixture files instead of building it inline with `json.dumps()`.
+- Do not manually assert values that a snapshot test already covers.
+- Use the `Platform` enum and the `ATTR_*` constants instead of string literals.
+- Patch objects where they are used, not where they are defined.
+- To give a fixture different data in one test, parametrize the fixture with `pytest.mark.parametrize` instead of patching again inside the test.

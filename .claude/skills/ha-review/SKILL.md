@@ -15,6 +15,8 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 - Security concerns
 - Test coverage
 - Documentation updates if needed
+- Values that reach new code from existing code. Read the producing side, including its fallbacks and defaults, not only the diff.
+- State added to an entity or coordinator. Check where it is reset, for example on reconnect or reload.
 
 ## Quality scale:
 - If the changes include a `quality_scale.yaml` file, run a subagent to verify all the added or modified rules, following the `ha-quality-scale-verify` skill.
@@ -22,6 +24,7 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 
 ## Verification:
 - After the review, run parallel subagents for each finding to double-check it.
+- When a finding suggests a change, also check that the suggested change is valid, for example that it does not violate one of the Home Assistant pylint plugin rules.
 - Spawn up to a maximum of 10 parallel subagents at a time.
 - Gather the results from the subagents and summarize them in the final review comments.
 
