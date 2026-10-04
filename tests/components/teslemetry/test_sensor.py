@@ -50,7 +50,7 @@ ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
 # or from the event's created_at cannot produce this.
 SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
 
-# Per-tire TPMS warning object as streamed by a Model 3.
+# Per-tire TPMS warning objects including the Tesla Semi.
 TPMS_NO_WARNINGS = {
     "frontLeft": False,
     "frontRight": False,
