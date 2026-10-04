@@ -81,12 +81,12 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_setpoint", "roomTemperature")
     object.__setattr__(entity, "_attr_target_temperature", 20)
-    entity.operation_mode = MagicMock(return_value=MagicMock(value="heating"))
-    entity.setpoint = MagicMock(return_value=setpoint)
+    entity._operation_mode = MagicMock(return_value=MagicMock(value="heating"))
+    entity._get_setpoint = MagicMock(return_value=setpoint)
     await entity.async_set_temperature(temperature=21)
 
     assert setpoint.value == 21
-    entity.setpoint.assert_called_once_with("heating")
+    entity._get_setpoint.assert_called_once_with("heating")
     coordinator.async_update_listeners.assert_called_once_with()
 
 
@@ -139,15 +139,15 @@ async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
     entity.coordinator = coordinator
-    entity.climate_control = MagicMock(return_value=climate_control)
-    entity.update_state = MagicMock()
+    entity._climate_control = MagicMock(return_value=climate_control)
+    entity._update_state = MagicMock()
 
     with pytest.raises(HomeAssistantError, match="Failed to set the HVAC mode"):
         await entity.async_set_hvac_mode(HVACMode.HEAT)
 
     assert climate_control.on_off_mode.value == "on"
     assert climate_control.operation_mode.value == "cooling"
-    entity.update_state.assert_called_once_with()
+    entity._update_state.assert_called_once_with()
     coordinator.async_update_listeners.assert_called_once_with()
 
 
@@ -174,7 +174,7 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
     entity.coordinator = coordinator
-    entity.climate_control = MagicMock(
+    entity._climate_control = MagicMock(
         side_effect=[
             previous_management_point,
             current_management_point,
@@ -182,7 +182,7 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
             current_management_point,
         ]
     )
-    entity.update_state = MagicMock()
+    entity._update_state = MagicMock()
 
     await entity.async_set_hvac_mode(HVACMode.COOL)
 
@@ -213,11 +213,11 @@ async def test_set_hvac_mode_preserves_matching_native_mode(
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", hvac_mode)
-    entity.climate_control = MagicMock(return_value=climate_control)
+    entity._climate_control = MagicMock(return_value=climate_control)
 
     await entity.async_set_hvac_mode(hvac_mode)
 
-    assert entity.get_hvac_modes() == [HVACMode.OFF, hvac_mode]
+    assert entity._get_hvac_modes() == [HVACMode.OFF, hvac_mode]
     device.patch.assert_not_awaited()
 
 
@@ -237,8 +237,8 @@ async def test_set_hvac_mode_uses_advertised_native_mode() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.COOL)
     entity.coordinator = coordinator
-    entity.climate_control = MagicMock(return_value=climate_control)
-    entity.update_state = MagicMock()
+    entity._climate_control = MagicMock(return_value=climate_control)
+    entity._update_state = MagicMock()
 
     await entity.async_set_hvac_mode(HVACMode.HEAT)
 
@@ -263,12 +263,12 @@ async def test_set_hvac_mode_ignores_unknown_native_mode() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_setpoint", "roomTemperature")
     object.__setattr__(entity, "_attr_hvac_mode", None)
-    entity.climate_control = MagicMock(return_value=climate_control)
+    entity._climate_control = MagicMock(return_value=climate_control)
 
     await entity.async_set_hvac_mode(HVACMode.HEAT)
 
-    assert entity.get_hvac_mode() is None
-    assert entity.get_hvac_modes() == [HVACMode.OFF]
+    assert entity._get_hvac_mode() is None
+    assert entity._get_hvac_modes() == [HVACMode.OFF]
     device.patch.assert_not_awaited()
 
 
@@ -287,10 +287,10 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     entity.coordinator = coordinator
-    entity.fan_operation = MagicMock(return_value=SimpleNamespace(fan_speed=fan_speed))
-    entity.climate_control = MagicMock(return_value=climate_control)
-    entity.resolve_homekit_fan_mode_alias = MagicMock(return_value="3")
-    entity.get_fan_mode = MagicMock(return_value="1")
+    entity._fan_operation = MagicMock(return_value=SimpleNamespace(fan_speed=fan_speed))
+    entity._climate_control = MagicMock(return_value=climate_control)
+    entity._resolve_homekit_fan_mode_alias = MagicMock(return_value="3")
+    entity._get_fan_mode = MagicMock(return_value="1")
 
     with pytest.raises(HomeAssistantError, match="Failed to set the fan mode"):
         await entity.async_set_fan_mode("3")
@@ -332,15 +332,15 @@ async def test_set_fan_mode_updates_captured_operation_mode() -> None:
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     entity.coordinator = coordinator
-    entity.climate_control = MagicMock(
+    entity._climate_control = MagicMock(
         side_effect=[
             previous_management_point,
             previous_management_point,
             current_management_point,
         ]
     )
-    entity.resolve_homekit_fan_mode_alias = MagicMock(return_value="quiet")
-    entity.get_fan_mode = MagicMock(return_value="auto")
+    entity._resolve_homekit_fan_mode_alias = MagicMock(return_value="quiet")
+    entity._get_fan_mode = MagicMock(return_value="auto")
 
     await entity.async_set_fan_mode("quiet")
 
@@ -397,7 +397,7 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
-    entity.climate_control = MagicMock(
+    entity._climate_control = MagicMock(
         side_effect=[
             previous_management_point,
             previous_management_point,
@@ -405,7 +405,7 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
         ]
     )
 
-    assert await entity._DaikinClimate__set_swing("vertical", "swing")
+    assert await entity._async_set_swing("vertical", "swing")
 
     assert captured_fan.fan_direction.vertical.current_mode.value == "swing"
     assert active_fan.fan_direction.vertical.current_mode.value == "stop"
@@ -426,7 +426,7 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_attr_preset_mode", PRESET_BOOST)
     entity.coordinator = coordinator
-    entity.update_state = MagicMock()
+    entity._update_state = MagicMock()
     entity._async_disable_preset_mode = AsyncMock(return_value=False)
     entity._async_enable_preset_mode = AsyncMock()
 
@@ -435,7 +435,7 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
 
     entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
     entity._async_enable_preset_mode.assert_not_awaited()
-    entity.update_state.assert_not_called()
+    entity._update_state.assert_not_called()
     coordinator.async_update_listeners.assert_not_called()
 
 
@@ -447,7 +447,7 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_attr_preset_mode", PRESET_BOOST)
     entity.coordinator = coordinator
-    entity.update_state = MagicMock()
+    entity._update_state = MagicMock()
     entity._async_disable_preset_mode = AsyncMock(return_value=True)
     entity._async_enable_preset_mode = AsyncMock(return_value=False)
 
@@ -456,7 +456,7 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
 
     entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
     entity._async_enable_preset_mode.assert_awaited_once_with(PRESET_COMFORT)
-    entity.update_state.assert_called_once_with()
+    entity._update_state.assert_called_once_with()
     coordinator.async_update_listeners.assert_called_once_with()
 
 

@@ -6,7 +6,7 @@ from aiohttp import RequestInfo
 import pytest
 from yarl import URL
 
-from homeassistant.components.daikin_onecta import update_listener
+from homeassistant.components.daikin_onecta import _async_update_listener
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
@@ -133,7 +133,7 @@ async def test_update_listener_requests_coordinator_refresh() -> None:
     coordinator.async_request_refresh = AsyncMock()
     config_entry = MagicMock(runtime_data=coordinator)
 
-    await update_listener(MagicMock(), config_entry)
+    await _async_update_listener(MagicMock(), config_entry)
 
     coordinator.update_settings.assert_called_once_with(config_entry)
     coordinator.async_request_refresh.assert_awaited_once_with()

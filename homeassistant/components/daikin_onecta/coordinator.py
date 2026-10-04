@@ -37,7 +37,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=self.determine_update_interval(hass),
+            update_interval=self._determine_update_interval(hass),
         )
 
         _LOGGER.info(
@@ -50,16 +50,16 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Return the Daikin API client."""
         return self._daikin_api
 
-    def scan_ignore(self) -> int:
+    def _scan_ignore(self) -> int:
         """Return the delay after a write before polling resumes."""
         return self.options.get("scan_ignore", 30)
 
-    async def async_update_data(self) -> dict[str, DaikinOnectaDevice]:
+    async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
         _LOGGER.debug("Daikin coordinator start _async_update_data")
 
         devices = self.data or {}
-        scan_ignore_value = self.scan_ignore()
+        scan_ignore_value = self._scan_ignore()
 
         if (
             self.api.last_patch_call is not None
@@ -106,7 +106,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         device.async_register_ha_device(self.hass, self._config_entry)
                         devices[dev_data.id] = device
 
-                self.update_interval = self.determine_update_interval(self.hass)
+                self.update_interval = self._determine_update_interval(self.hass)
 
         _LOGGER.debug(
             "Daikin coordinator finished _async_update_data, next interval %s",
@@ -117,18 +117,18 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     @override
     async def _async_update_data(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch data for the Home Assistant coordinator interface."""
-        return await self.async_update_data()
+        return await self._async_update_data_from_cloud()
 
     def update_settings(self, config_entry: ConfigEntry) -> None:
         """Apply updated config entry options."""
         _LOGGER.debug("Daikin coordinator updating settings")
         self.options = config_entry.options
-        self.update_interval = self.determine_update_interval(self.hass)
+        self.update_interval = self._determine_update_interval(self.hass)
         _LOGGER.info(
             "Daikin coordinator changed interval to '%s'", self.update_interval
         )
 
-    def determine_update_interval(self, hass: HomeAssistant) -> timedelta:
+    def _determine_update_interval(self, hass: HomeAssistant) -> timedelta:
         """Determine the next polling interval."""
         now = dt_util.now()
         # Default of low scan minutes interval
@@ -138,7 +138,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         ls = dt_util.parse_time(self.options.get("low_scan_start", "22:00:00"))
         assert hs is not None
         assert ls is not None
-        in_high_frequency_window = self.in_between(now.time(), hs, ls)
+        in_high_frequency_window = self._in_between(now.time(), hs, ls)
         if in_high_frequency_window:
             scan_interval = high_scan_interval
         else:
@@ -154,7 +154,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     seconds=ls.second + high_scan_interval,
                 )
             ).time()
-            if self.in_between(now.time(), ls, end_time):
+            if self._in_between(now.time(), ls, end_time):
                 scan_interval = random.randint(60, int(scan_interval))
 
         if hs != ls:
@@ -173,7 +173,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         return timedelta(seconds=scan_interval)
 
     @staticmethod
-    def in_between(now: time, start: time, end: time) -> bool:
+    def _in_between(now: time, start: time, end: time) -> bool:
         """Return whether now is between start and end, including overnight ranges."""
         if start <= end:
             return start <= now < end

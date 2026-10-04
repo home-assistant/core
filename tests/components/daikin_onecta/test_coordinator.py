@@ -58,21 +58,21 @@ class TestOnectaDataUpdateCoordinator:
         """Time within a simple range not crossing midnight."""
         start = time(8, 0, 0)
         end = time(10, 0, 0)
-        assert not coordinator.in_between(time(7, 0, 0), start, end)
-        assert coordinator.in_between(time(8, 0, 0), start, end)
-        assert coordinator.in_between(time(9, 0, 0), start, end)
-        assert not coordinator.in_between(time(10, 0, 0), start, end)
-        assert not coordinator.in_between(time(11, 0, 0), start, end)
+        assert not coordinator._in_between(time(7, 0, 0), start, end)
+        assert coordinator._in_between(time(8, 0, 0), start, end)
+        assert coordinator._in_between(time(9, 0, 0), start, end)
+        assert not coordinator._in_between(time(10, 0, 0), start, end)
+        assert not coordinator._in_between(time(11, 0, 0), start, end)
 
     def test_in_between_overnight_range(self, coordinator):
         """Time within a range that crosses midnight."""
         start = time(22, 0, 0)
         end = time(7, 0, 0)
-        assert coordinator.in_between(time(6, 0, 0), start, end)
-        assert not coordinator.in_between(time(7, 0, 0), start, end)
-        assert not coordinator.in_between(time(12, 0, 0), start, end)
-        assert coordinator.in_between(time(22, 0, 0), start, end)
-        assert coordinator.in_between(time(23, 0, 0), start, end)
+        assert coordinator._in_between(time(6, 0, 0), start, end)
+        assert not coordinator._in_between(time(7, 0, 0), start, end)
+        assert not coordinator._in_between(time(12, 0, 0), start, end)
+        assert coordinator._in_between(time(22, 0, 0), start, end)
+        assert coordinator._in_between(time(23, 0, 0), start, end)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_high_scan_interval(self, mock_now, coordinator, mock_hass):
@@ -80,7 +80,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_now.return_value = datetime(2023, 1, 1, 10, 0, 0)
 
         expected = timedelta(minutes=13)
-        result = coordinator.determine_update_interval(mock_hass)
+        result = coordinator._determine_update_interval(mock_hass)
         assert result == expected
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
@@ -88,9 +88,9 @@ class TestOnectaDataUpdateCoordinator:
         """Low scan interval should apply outside transition windows."""
         mock_now.return_value = datetime(2023, 1, 1, 23, 0, 0)
 
-        with patch.object(coordinator, "in_between", side_effect=[False, False]):
+        with patch.object(coordinator, "_in_between", side_effect=[False, False]):
             expected = timedelta(minutes=47)
-            result = coordinator.determine_update_interval(mock_hass)
+            result = coordinator._determine_update_interval(mock_hass)
             assert result == expected
 
     @pytest.mark.parametrize(
@@ -156,7 +156,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_now.return_value = now
         coordinator.options = options
 
-        assert coordinator.determine_update_interval(mock_hass) == expected
+        assert coordinator._determine_update_interval(mock_hass) == expected
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
@@ -167,9 +167,9 @@ class TestOnectaDataUpdateCoordinator:
         mock_now.return_value = datetime(2023, 1, 1, 22, 5, 0)
         mock_random.randint.return_value = 120  # 2 minutes
 
-        with patch.object(coordinator, "in_between", side_effect=[False, True]):
+        with patch.object(coordinator, "_in_between", side_effect=[False, True]):
             expected = timedelta(minutes=13)
-            result = coordinator.determine_update_interval(mock_hass)
+            result = coordinator._determine_update_interval(mock_hass)
             assert result == expected
             mock_random.randint.assert_called_once_with(60, 2820)
 
@@ -190,7 +190,7 @@ class TestOnectaDataUpdateCoordinator:
 
         # Simulate daily rate limit reached
         with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator.async_update_data()
+            await coordinator._async_update_data_from_cloud()
 
         assert exc_info.value.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
         assert coordinator.update_interval == initial_interval
@@ -203,7 +203,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.api.last_patch_call = None
         coordinator.api.get_cloud_device_details = AsyncMock(return_value=None)
 
-        assert await coordinator.async_update_data() == {}
+        assert await coordinator._async_update_data_from_cloud() == {}
         coordinator.api.get_cloud_device_details.assert_awaited_once_with(
             cooldown=timedelta(seconds=42)
         )
@@ -216,7 +216,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.api.last_patch_call = mock_now.return_value - timedelta(seconds=1)
         coordinator.api.get_cloud_device_details = AsyncMock()
 
-        assert await coordinator.async_update_data() == {}
+        assert await coordinator._async_update_data_from_cloud() == {}
         assert coordinator.update_interval == timedelta(seconds=42)
         coordinator.api.get_cloud_device_details.assert_not_awaited()
 
@@ -234,7 +234,7 @@ class TestOnectaDataUpdateCoordinator:
         with pytest.raises(
             UpdateFailed, match="Unable to connect to the Daikin API"
         ) as exc_info:
-            await coordinator.async_update_data()
+            await coordinator._async_update_data_from_cloud()
 
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
 
@@ -245,7 +245,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.api.last_patch_call = None
         coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
 
-        await coordinator.async_update_data()
+        await coordinator._async_update_data_from_cloud()
 
         missing_device.mark_unavailable.assert_called_once_with()
 
@@ -262,7 +262,9 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         with patch.object(
-            coordinator, "determine_update_interval", return_value=timedelta(minutes=45)
+            coordinator,
+            "_determine_update_interval",
+            return_value=timedelta(minutes=45),
         ) as determine:
             coordinator.update_settings(updated_entry)
 
