@@ -21,7 +21,13 @@ async def test_get_device_details_propagates_connection_error(
     """Propagate library connection errors to the coordinator."""
     with patch(
         "homeassistant.components.daikin_onecta.daikin_api.OnectaClient.get_gateway_devices",
-        new=AsyncMock(side_effect=OnectaConnectionError("network unavailable")),
+        new=AsyncMock(
+            side_effect=OnectaConnectionError(
+                "network unavailable",
+                method="GET",
+                path="/v1/gateway-devices",
+            )
+        ),
     ):
         api = DaikinApi(hass, config_entry, MagicMock())
         with pytest.raises(OnectaConnectionError, match="network unavailable"):
@@ -47,7 +53,13 @@ async def test_get_device_details_rate_limit(
 ) -> None:
     """Propagate a library rate-limit error to the coordinator."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    api.client.get_gateway_devices = AsyncMock(side_effect=OnectaRateLimitError(60))
+    api.client.get_gateway_devices = AsyncMock(
+        side_effect=OnectaRateLimitError(
+            RateLimit(retry_after=60),
+            method="GET",
+            path="/v1/gateway-devices",
+        )
+    )
 
     with pytest.raises(OnectaRateLimitError):
         await api.get_cloud_device_details()
@@ -112,15 +124,28 @@ async def test_write_success(
 async def test_write_api_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     method: str,
     arguments: tuple,
 ) -> None:
     """Return false for API write failures."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    setattr(api.client, method, AsyncMock(side_effect=OnectaApiError(500, "failed")))
+    setattr(
+        api.client,
+        method,
+        AsyncMock(
+            side_effect=OnectaApiError(
+                500, "failed", method="PATCH", path="/v1/management-points/point"
+            )
+        ),
+    )
 
     assert not await getattr(api, method)(*arguments)
     assert api.last_patch_call is None
+    assert (
+        "Daikin request PATCH /v1/management-points/point failed with HTTP 500"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -140,15 +165,30 @@ async def test_write_api_error(
 async def test_write_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     method: str,
     arguments: tuple,
 ) -> None:
     """Return false for rate-limited writes."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    setattr(api.client, method, AsyncMock(side_effect=OnectaRateLimitError(60)))
+    setattr(
+        api.client,
+        method,
+        AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point",
+            )
+        ),
+    )
 
     assert not await getattr(api, method)(*arguments)
     assert api.last_patch_call is None
+    assert (
+        "Daikin request PATCH /v1/management-points/point was rate limited; "
+        "retry after 60 seconds" in caplog.text
+    )
 
 
 async def test_rate_limits_preserve_unknown_values(

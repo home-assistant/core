@@ -4,6 +4,7 @@ from datetime import datetime, time, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta.rate_limit import RateLimit
 import pytest
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
@@ -114,7 +115,11 @@ class TestOnectaDataUpdateCoordinator:
         daikin_api = coordinator.api
         daikin_api.last_patch_call = None
         daikin_api.get_cloud_device_details = AsyncMock(
-            side_effect=OnectaRateLimitError(3060)
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=3060),
+                method="GET",
+                path="/v1/gateway-devices",
+            )
         )
         initial_interval = coordinator.update_interval
 
@@ -143,7 +148,11 @@ class TestOnectaDataUpdateCoordinator:
         """A connection error should mark the coordinator update as failed."""
         coordinator.api.last_patch_call = None
         coordinator.api.get_cloud_device_details = AsyncMock(
-            side_effect=OnectaConnectionError(EXPECTED_CONNECTION_ERROR)
+            side_effect=OnectaConnectionError(
+                EXPECTED_CONNECTION_ERROR,
+                method="GET",
+                path="/v1/gateway-devices",
+            )
         )
 
         with pytest.raises(

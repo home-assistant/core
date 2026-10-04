@@ -1,6 +1,7 @@
 """Home Assistant adapter for the Daikin Onecta API client."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -96,18 +97,36 @@ class DaikinApi:
         path: str | None = None,
     ) -> bool:
         """Patch a characteristic through the standalone library."""
+        return await self._async_write(
+            lambda: self._client.patch_characteristic(
+                gateway_id,
+                management_point_id,
+                characteristic,
+                value,
+                path=path,
+            )
+        )
+
+    async def _async_write(self, request: Callable[[], Awaitable[Any]]) -> bool:
+        """Run a cloud command and log contextual expected failures."""
         async with self._cloud_lock:
             try:
-                await self._client.patch_characteristic(
-                    gateway_id,
-                    management_point_id,
-                    characteristic,
-                    value,
-                    path=path,
+                await request()
+            except OnectaRateLimitError as err:
+                _LOGGER.warning(
+                    "Daikin request %s %s was rate limited; retry after %s seconds",
+                    err.method,
+                    err.path,
+                    err.retry_after,
                 )
-            except OnectaRateLimitError:
                 return False
-            except OnectaApiError:
+            except OnectaApiError as err:
+                _LOGGER.warning(
+                    "Daikin request %s %s failed with HTTP %s",
+                    err.method,
+                    err.path,
+                    err.status,
+                )
                 return False
             self._last_patch_call = dt_util.now()
             return True
@@ -120,17 +139,11 @@ class DaikinApi:
         value: Any,
     ) -> bool:
         """POST a management-point resource through the standalone library."""
-        async with self._cloud_lock:
-            try:
-                await self._client.post_management_point(
-                    gateway_id, management_point_id, resource, value
-                )
-            except OnectaRateLimitError:
-                return False
-            except OnectaApiError:
-                return False
-            self._last_patch_call = dt_util.now()
-            return True
+        return await self._async_write(
+            lambda: self._client.post_management_point(
+                gateway_id, management_point_id, resource, value
+            )
+        )
 
     async def put_management_point(
         self,
@@ -140,14 +153,8 @@ class DaikinApi:
         value: Any = None,
     ) -> bool:
         """PUT a management-point resource through the standalone library."""
-        async with self._cloud_lock:
-            try:
-                await self._client.put_management_point(
-                    gateway_id, management_point_id, resource, value
-                )
-            except OnectaRateLimitError:
-                return False
-            except OnectaApiError:
-                return False
-            self._last_patch_call = dt_util.now()
-            return True
+        return await self._async_write(
+            lambda: self._client.put_management_point(
+                gateway_id, management_point_id, resource, value
+            )
+        )
