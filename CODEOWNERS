@@ -1378,6 +1378,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
 /tests/components/openhome/ @bazwilliams
+/homeassistant/components/openresponses/ @zweckj
+/tests/components/openresponses/ @zweckj
 /homeassistant/components/openrgb/ @felipecrs
 /tests/components/openrgb/ @felipecrs
 /homeassistant/components/opensensemap/ @AlCalzone

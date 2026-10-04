@@ -5310,6 +5310,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "openresponses": {
+      "name": "Open Responses",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "openrgb": {
       "name": "OpenRGB",
       "integration_type": "hub",

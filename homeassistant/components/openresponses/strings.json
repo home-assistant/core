@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "api_key": "The API key of the server. Leave empty if the server does not require authentication.",
+          "url": "The base URL of the server, including the version prefix, for example `http://localhost:8080/v1`."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "model": "[%key:common::generic::model%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "llm_hass_api": "Select which tools the model can use to interact with your devices and entities.",
+            "model": "The name of the model to use, for example `gpt-oss:20b`.",
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error talking to the server: {error}"
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to the server"
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication"
+    },
+    "invalid_tool_arguments": {
+      "message": "The model returned invalid tool arguments: {error}"
+    },
+    "response_failed": {
+      "message": "The response failed: {error}"
+    },
+    "response_incomplete": {
+      "message": "The response is incomplete: {reason}"
+    },
+    "stream_ended": {
+      "message": "The server ended the response before it was complete"
+    }
+  }
+}
