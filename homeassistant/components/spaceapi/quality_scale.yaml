@@ -80,7 +80,7 @@ rules:
     comment: This integration does not provide any automation
   docs-known-limitations:
     status: done
-    comment: SpaceAPI v13 and v15 are supported. SpaceAPI v15 ist implemented by supporting the minimal requiered fields.
+    comment: SpaceAPI v13 and v15 are supported. SpaceAPI v15 is implemented by supporting the minimum required fields.
   docs-supported-devices:
     status: exempt
     comment: This integration is a service and has no devices.
