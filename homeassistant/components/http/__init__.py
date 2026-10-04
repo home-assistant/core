@@ -72,7 +72,7 @@ HTTP_SCHEMA: Final = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(CONF_SERVER_HOST): probatio.All(
-                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             ),
             # No default: the YAML migration needs to tell an explicitly
             # configured port apart from an omitted one, which it keeps on the

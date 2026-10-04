@@ -192,11 +192,13 @@ async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
 
 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
-    if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
-        message = message.rsplit(":", maxsplit=1)[-1]
+    custom_prefix = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:"
+    if message.startswith(custom_prefix):
         # reset_at=None keeps the message up until it is changed
         await obj.set_lcd_message_public(
-            DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
+            DoorbellMessageType.CUSTOM_MESSAGE,
+            text=message.removeprefix(custom_prefix),
+            reset_at=None,
         )
     elif message == TYPE_EMPTY_VALUE:
         await obj.set_lcd_message_public(None)
