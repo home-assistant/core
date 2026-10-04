@@ -82,6 +82,7 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
+    _report_not_triggered_noop,
     async_initialize_triggers,
     async_validate_trigger_config,
     make_entity_numerical_state_changed_trigger,

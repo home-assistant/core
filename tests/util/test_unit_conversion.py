@@ -902,6 +902,20 @@ _CONVERTED_VALUE: dict[
             UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         ),
     ],
+    RadiationConcentrationConverter: [
+        (
+            37,
+            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            1,
+            UnitOfRadiationConcentration.PICOCURIES_PER_LITER,
+        ),
+        (
+            1,
+            UnitOfRadiationConcentration.PICOCURIES_PER_LITER,
+            37,
+            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        ),
+    ],
     ReactiveEnergyConverter: [
         (
             5,

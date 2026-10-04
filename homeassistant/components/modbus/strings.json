@@ -85,5 +85,6 @@
       },
       "name": "Write register"
     }
-  }
+  },
+  "title": "Manual Modbus"
 }

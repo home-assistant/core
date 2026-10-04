@@ -291,6 +291,11 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         """Return reboot notice as an ha-alert box."""
         return f"<ha-alert alert-type='info'>{OS_UPDATE_REBOOT_NOTICE}</ha-alert>\n"
 
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return reboot notice as an ha-alert box."""
+        return f"<ha-alert alert-type='info'>{OS_UPDATE_REBOOT_NOTICE}</ha-alert>\n"
+
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     """Update entity to handle updates for the Home Assistant Supervisor.
