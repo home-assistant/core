@@ -191,11 +191,6 @@ class AppleTvMediaPlayer(
             return None
         if self.atv is None:
             return MediaPlayerState.OFF
-        if (
-            self._is_feature_available(FeatureName.PowerState)
-            and self.atv.power.power_state is PowerState.Off
-        ):
-            return MediaPlayerState.OFF
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
@@ -205,6 +200,11 @@ class AppleTvMediaPlayer(
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
             return MediaPlayerState.IDLE  # type: ignore[unreachable]  # Bad or unknown state?
+        if (
+            self._is_feature_available(FeatureName.PowerState)
+            and self.atv.power.power_state is PowerState.Off
+        ):
+            return MediaPlayerState.OFF
         return None
 
     @callback
