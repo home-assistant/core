@@ -45,11 +45,11 @@ from .entity import (
     ShellyRpcEntity,
     async_setup_entry_rpc,
     get_entity_block_device_info,
+    get_entity_blu_trv_device_info,
     rpc_call,
 )
 from .utils import (
     async_remove_shelly_entity,
-    get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_by_role,
     get_rpc_key_id,
@@ -819,15 +819,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
-        fw_ver = coordinator.device.status[self.key].get("fw_ver")
-        self._attr_device_info = get_blu_trv_device_info(
-            coordinator.hass,
-            coordinator.config_entry.entry_id,
-            self._config,
-            ble_addr,
-            self.coordinator.mac,
-            fw_ver,
-        )
+        self._attr_device_info = get_entity_blu_trv_device_info(coordinator, self.key)
 
     @property
     @override

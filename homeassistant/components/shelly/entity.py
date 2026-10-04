@@ -23,6 +23,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
+    get_blu_trv_device_info,
     get_rpc_channel_name,
     get_rpc_device_info,
     get_rpc_key,
@@ -758,4 +759,19 @@ def get_entity_rpc_device_info(
         key,
         emeter_phase=emeter_phase,
         suggested_area=coordinator.suggested_area,
+    )
+
+
+def get_entity_blu_trv_device_info(
+    coordinator: ShellyRpcCoordinator, key: str
+) -> DeviceInfo:
+    """Get device info for BLU TRV entities."""
+    config = coordinator.device.config[key]
+    return get_blu_trv_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
+        config,
+        config["addr"],
+        coordinator.mac,
+        coordinator.device.status[key].get("fw_ver"),
     )
