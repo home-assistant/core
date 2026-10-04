@@ -184,6 +184,7 @@ FLOWS = {
         "duco",
         "dunehd",
         "duotecno",
+        "dvla",
         "dwd_weather_warnings",
         "dynalite",
         "dyson_infrared",
