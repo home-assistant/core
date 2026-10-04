@@ -23,6 +23,7 @@ CONFIG_DATA_IMPORT = {
 
 ARP = [
     {
+        "expires": "2026-06-01T10:00:00+00:00",
         "hostname": "",
         "intf": "igb1",
         "intf_description": "LAN",
@@ -31,6 +32,7 @@ ARP = [
         "manufacturer": "",
     },
     {
+        "expires": "2026-06-01T10:05:00+00:00",
         "hostname": "Desktop",
         "intf": "igb1",
         "intf_description": "LAN",
