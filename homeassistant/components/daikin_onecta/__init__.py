@@ -75,6 +75,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     """Handle options update."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     coordinator.update_settings(config_entry)
+    await coordinator.async_request_refresh()
     coordinator.async_update_listeners()
 
 

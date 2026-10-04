@@ -6,6 +6,7 @@ from aiohttp import RequestInfo
 import pytest
 from yarl import URL
 
+from homeassistant.components.daikin_onecta import update_listener
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
@@ -124,6 +125,19 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_listener_requests_coordinator_refresh() -> None:
+    """Options changes must request a refresh using the new interval."""
+    coordinator = MagicMock()
+    coordinator.async_request_refresh = AsyncMock()
+    config_entry = MagicMock(runtime_data=coordinator)
+
+    await update_listener(MagicMock(), config_entry)
+
+    coordinator.update_settings.assert_called_once_with(config_entry)
+    coordinator.async_request_refresh.assert_awaited_once_with()
+    coordinator.async_update_listeners.assert_called_once_with()
 
 
 @pytest.mark.asyncio

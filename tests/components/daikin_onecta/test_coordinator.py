@@ -93,6 +93,61 @@ class TestOnectaDataUpdateCoordinator:
             result = coordinator.determine_update_interval(mock_hass)
             assert result == expected
 
+    @pytest.mark.parametrize(
+        ("now", "options", "expected"),
+        [
+            (
+                datetime(2023, 1, 1, 7, 59),
+                {
+                    "low_scan_interval": 240,
+                    "high_scan_interval": 5,
+                    "high_scan_start": "08:00:00",
+                    "low_scan_start": "09:00:00",
+                },
+                timedelta(minutes=1),
+            ),
+            (
+                datetime(2023, 1, 1, 8, 58),
+                {
+                    "low_scan_interval": 240,
+                    "high_scan_interval": 5,
+                    "high_scan_start": "08:00:00",
+                    "low_scan_start": "09:00:00",
+                },
+                timedelta(minutes=2),
+            ),
+            (
+                datetime(2023, 1, 1, 21, 59),
+                {
+                    "low_scan_interval": 240,
+                    "high_scan_interval": 5,
+                    "high_scan_start": "22:00:00",
+                    "low_scan_start": "07:00:00",
+                },
+                timedelta(minutes=1),
+            ),
+            (
+                datetime(2023, 1, 1, 6, 58),
+                {
+                    "low_scan_interval": 240,
+                    "high_scan_interval": 5,
+                    "high_scan_start": "22:00:00",
+                    "low_scan_start": "07:00:00",
+                },
+                timedelta(minutes=2),
+            ),
+        ],
+    )
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
+    def test_scan_interval_is_capped_at_window_boundary(
+        self, mock_now, coordinator, mock_hass, now, options, expected
+    ):
+        """Re-evaluate polling when a frequency window starts or ends."""
+        mock_now.return_value = now
+        coordinator.options = options
+
+        assert coordinator.determine_update_interval(mock_hass) == expected
+
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
     def test_transition_period_randomization(

@@ -1,6 +1,6 @@
 """Coordinator for Daikin Onecta integration."""
 
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 import logging
 import random
 from typing import override
@@ -130,6 +130,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     def determine_update_interval(self, hass: HomeAssistant) -> timedelta:
         """Determine the next polling interval."""
+        now = dt_util.now()
         # Default of low scan minutes interval
         scan_interval = self.options.get("low_scan_interval", 30) * 60
         high_scan_interval = self.options.get("high_scan_interval", 10) * 60
@@ -137,7 +138,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         ls = dt_util.parse_time(self.options.get("low_scan_start", "22:00:00"))
         assert hs is not None
         assert ls is not None
-        if self.in_between(dt_util.now().time(), hs, ls):
+        in_high_frequency_window = self.in_between(now.time(), hs, ls)
+        if in_high_frequency_window:
             scan_interval = high_scan_interval
         else:
             # When switching from high to low frequency polling we need to randomize the first
@@ -152,8 +154,17 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     seconds=ls.second + high_scan_interval,
                 )
             ).time()
-            if self.in_between(dt_util.now().time(), ls, end_time):
+            if self.in_between(now.time(), ls, end_time):
                 scan_interval = random.randint(60, int(scan_interval))
+
+        if hs != ls:
+            boundary = ls if in_high_frequency_window else hs
+            next_boundary = datetime.combine(now.date(), boundary, now.tzinfo)
+            if next_boundary <= now:
+                next_boundary += timedelta(days=1)
+            scan_interval = min(
+                scan_interval, int((next_boundary - now).total_seconds())
+            )
 
         return timedelta(seconds=scan_interval)
 
