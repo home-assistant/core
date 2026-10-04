@@ -53,6 +53,26 @@ async def test_update_exception_leads_to_active_disconnect(
     mock_scale.device_disconnected_handler.assert_called_once()
 
 
+async def test_disabled_keep_connected_skips_reconnect_polling(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the coordinator does not try to reconnect while keep_connected is off."""
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_set_keep_connected(False)
+    mock_scale.connected = False
+    mock_scale.connect.reset_mock()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_scale.connect.assert_not_called()
+
+
 async def test_device(
     mock_scale: MagicMock,
     device_registry: dr.DeviceRegistry,
