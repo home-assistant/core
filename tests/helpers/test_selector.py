@@ -9,6 +9,7 @@ import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import DEGREE, PERCENTAGE, UnitOfTemperature
 from homeassistant.helpers import selector
 from homeassistant.util import yaml as yaml_util
 
@@ -51,6 +52,7 @@ def test_invalid_base_schema(schema) -> None:
         pytest.param(selector.AttributeSelector, id="attribute"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
+        pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
     ],
 )
 def test_allowed_context_keys_read_only(
@@ -67,6 +69,7 @@ def test_allowed_context_keys_read_only(
         pytest.param(selector.AttributeSelector, id="attribute"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
+        pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
     ],
 )
 def test_allowed_context_keys_values_immutable(
@@ -1825,6 +1828,303 @@ def test_state_class_selector_schema(
 ) -> None:
     """Test state class selector."""
     _test_selector("state_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        (None, does_not_raise()),
+        ({}, does_not_raise()),
+        ({"state_classes": "total"}, does_not_raise()),
+        ({"state_classes": None}, does_not_raise()),
+        ({"state_classes": "invalid"}, pytest.raises(probatio.Invalid)),
+        ({"state_classes": ["total"]}, does_not_raise()),
+        ({"state_classes": ["invalid"]}, pytest.raises(probatio.Invalid)),
+        ({"device_classes": None}, does_not_raise()),
+        ({"device_classes": "date"}, does_not_raise()),
+        ({"device_classes": "enum"}, does_not_raise()),
+        ({"device_classes": "temperature"}, does_not_raise()),
+        ({"device_classes": "invalid"}, pytest.raises(probatio.Invalid)),
+        ({"device_classes": ["temperature", "humidity"]}, does_not_raise()),
+        ({"device_classes": ["invalid"]}, pytest.raises(probatio.Invalid)),
+        ({"context": {}}, does_not_raise()),
+        ({"context": {"filter_device_class": "device_class"}}, does_not_raise()),
+        (
+            {
+                "context": {
+                    "filter_device_class": "device_class",
+                    "filter_state_class": "state_class",
+                }
+            },
+            does_not_raise(),
+        ),
+        ({"context": {"filter_entity": "entity_id"}}, pytest.raises(probatio.Invalid)),
+        ({"context": {"filter_device_class": 1}}, pytest.raises(probatio.Invalid)),
+        ({"context": "device_class"}, pytest.raises(probatio.Invalid)),
+        (
+            {
+                "device_classes": "temperature",
+                "context": {"filter_state_class": "state_class"},
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "state_classes": "measurement",
+                "context": {"filter_device_class": "device_class"},
+            },
+            does_not_raise(),
+        ),
+        (
+            {"device_classes": None, "context": {"filter_device_class": "dc"}},
+            does_not_raise(),
+        ),
+        (
+            {"state_classes": [], "context": {"filter_state_class": "sc"}},
+            does_not_raise(),
+        ),
+        (
+            {
+                "device_classes": "temperature",
+                "context": {"filter_device_class": "device_class"},
+            },
+            pytest.raises(probatio.Invalid, match="filter_device_class"),
+        ),
+        (
+            {
+                "state_classes": ["measurement"],
+                "context": {"filter_state_class": "state_class"},
+            },
+            pytest.raises(probatio.Invalid, match="filter_state_class"),
+        ),
+    ],
+)
+def test_uom_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test unit of measurement class selector schemas."""
+    with raises:
+        selector.validate_selector({"unit_of_measurement": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                None,
+            ),
+            (5, ["cats"]),
+        ),
+        (
+            None,
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                None,
+            ),
+            (5, ["cats"]),
+        ),
+        (
+            {"device_classes": "temperature"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+            ("cats", "dogs", DEGREE),
+        ),
+        (
+            {"device_classes": "enum"},
+            (None,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {"device_classes": "date"},
+            (None,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {"state_classes": "measurement"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+            (),
+        ),
+        (
+            {"state_classes": "measurement_angle"},
+            (DEGREE,),
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+        ),
+        (
+            {"device_classes": "wind_direction", "state_classes": "measurement_angle"},
+            (DEGREE,),
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+                "cats",
+                "dogs",
+            ),
+        ),
+        (
+            {"device_classes": "temperature", "state_classes": "measurement"},
+            (
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+            ("cats", "dogs", DEGREE),
+        ),
+        (
+            {"device_classes": "temperature", "state_classes": "measurement_angle"},
+            (),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {
+                "device_classes": ["battery", "humidity"],
+                "state_classes": ["measurement_angle", "measurement"],
+            },
+            (PERCENTAGE,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        (
+            {
+                "device_classes": ["battery", "humidity"],
+                "state_classes": ["measurement"],
+            },
+            (PERCENTAGE,),
+            (
+                "cats",
+                "dogs",
+                DEGREE,
+                UnitOfTemperature.KELVIN,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            ),
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "humidity"]},
+            (UnitOfTemperature.CELSIUS, PERCENTAGE),
+            ("cats", DEGREE, None),
+            id="device_classes_union",
+        ),
+        pytest.param(
+            {"device_classes": "aqi"},
+            (None,),
+            ("cats", PERCENTAGE),
+            id="device_class_without_unit",
+        ),
+        pytest.param(
+            {"device_classes": "monetary"},
+            ("EUR", "USD", None),
+            (5,),
+            id="device_class_without_unit_limit",
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "monetary"]},
+            (UnitOfTemperature.CELSIUS, "EUR"),
+            (5,),
+            id="device_classes_mixed_unrestricted",
+        ),
+        pytest.param(
+            {"device_classes": ["temperature", "enum"]},
+            (UnitOfTemperature.CELSIUS, None),
+            ("cats",),
+            id="device_classes_mixed_non_numeric",
+        ),
+        pytest.param(
+            {"state_classes": "measurement_angle"},
+            (),
+            (None,),
+            id="state_class_limited_rejects_none",
+        ),
+        pytest.param(
+            {"state_classes": ["measurement_angle", "measurement"]},
+            (DEGREE, PERCENTAGE, "cats", None),
+            (5,),
+            id="state_classes_mixed_unrestricted",
+        ),
+    ],
+)
+def test_uom_selector_schema(
+    schema: dict[str, Any] | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test uom class selector."""
+    _test_selector("unit_of_measurement", schema, valid_selections, invalid_selections)
+
+
+def test_uom_selector_context_in_config() -> None:
+    """Test the uom selector context is kept in the selector config."""
+    context = {
+        "filter_device_class": "device_class",
+        "filter_state_class": "state_class",
+    }
+    uom_selector = selector.selector({"unit_of_measurement": {"context": context}})
+
+    assert uom_selector.serialize() == {
+        "selector": {"unit_of_measurement": {"context": context}}
+    }
+    assert uom_selector == selector.UnitOfMeasurementSelector(
+        selector.UnitOfMeasurementSelectorConfig(context=context)
+    )
+    assert uom_selector != selector.UnitOfMeasurementSelector()
+
+
+def test_uom_selector_allowed_context_keys() -> None:
+    """Test uom selector allows device class and state class context."""
+    assert selector.UnitOfMeasurementSelector().allowed_context_keys == {
+        "filter_device_class": {"device_class"},
+        "filter_state_class": {"state_class"},
+    }
 
 
 @pytest.mark.parametrize(
