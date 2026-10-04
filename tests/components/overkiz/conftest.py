@@ -169,10 +169,14 @@ def setup_overkiz_integration(
     async def _setup(
         *,
         fixture: str = DEFAULT_SETUP_FIXTURE,
+        mutate: Callable[[Setup], None] | None = None,
     ) -> MockConfigEntry:
         mock_config_entry.add_to_hass(hass)
 
         mock_client.set_setup_fixture(fixture)
+
+        if mutate:
+            mutate(mock_client.setup)
 
         with (
             patch(
