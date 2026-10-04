@@ -144,18 +144,31 @@ class _TranslationsCacheData:
 class _TranslationCache:
     """Cache for flattened translations."""
 
-    __slots__ = ("cache_data", "hass", "lock")
+    __slots__ = ("cache_data", "generations", "hass", "lock")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self.hass = hass
         self.cache_data = _TranslationsCacheData({}, {})
         self.lock = asyncio.Lock()
+        self.generations: dict[str, int] = {}
 
     @callback
     def async_is_loaded(self, language: str, components: set[str]) -> bool:
         """Return if the given components are loaded for the language."""
         return components.issubset(self.cache_data.loaded.get(language, set()))
+
+    @callback
+    def async_invalidate(self, components: set[str]) -> None:
+        """Invalidate all languages and categories for these components."""
+        for component in components:
+            self.generations[component] = self.generations.get(component, 0) + 1
+        for loaded in self.cache_data.loaded.values():
+            loaded.difference_update(components)
+        for categories in self.cache_data.cache.values():
+            for category in categories.values():
+                for component in components:
+                    category.pop(component, None)
 
     async def async_load(
         self,
@@ -165,14 +178,11 @@ class _TranslationCache:
         """Load resources into the cache."""
         loaded = self.cache_data.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
-            # Translations are never unloaded so if there are no components to load
-            # we can skip the lock which reduces contention when multiple different
-            # translations categories are being fetched at the same time which is
-            # common from the frontend.
+            # Cached reads do not yield, so they can skip the lock.
             async with self.lock:
                 # Check components to load again, as another task might have loaded
                 # them while we were waiting for the lock.
-                if components_to_load := components - loaded:
+                while components_to_load := components - loaded:
                     await self._async_load(language, components_to_load)
 
     async def async_fetch(
@@ -208,6 +218,9 @@ class _TranslationCache:
     async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
         loaded = self.cache_data.loaded
+        generations = {
+            component: self.generations.get(component, 0) for component in components
+        }
         _LOGGER.debug(
             "Cache miss for %s: %s",
             language,
@@ -229,6 +242,13 @@ class _TranslationCache:
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
+
+        # An invalidation during I/O must also discard the stale load.
+        components = {
+            component
+            for component in components
+            if self.generations.get(component, 0) == generations[component]
+        }
 
         # English is always the fallback language so we load them first
         self._build_category_cache(
@@ -355,6 +375,18 @@ async def async_get_translations(
     return await _async_get_translations_cache(hass).async_fetch(
         language, category, components
     )
+
+
+@callback
+def async_invalidate_translations(
+    hass: HomeAssistant, integrations: Iterable[str]
+) -> None:
+    """Invalidate cached translations after changing local integration resources.
+
+    Subsequent requests read the installed resources. This does not reload
+    integration code or metadata.
+    """
+    _async_get_translations_cache(hass).async_invalidate(set(integrations))
 
 
 @callback

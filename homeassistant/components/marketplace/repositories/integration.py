@@ -12,6 +12,7 @@ import probatio
 
 from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.translation import async_invalidate_translations
 from homeassistant.loader import (
     PACKAGE_CUSTOM_COMPONENTS,
     IntegrationNotLoaded,
@@ -190,6 +191,8 @@ class IntegrationRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
+        if self.data.domain:
+            async_invalidate_translations(self.marketplace.hass, {self.data.domain})
         self.pending_restart = True
         if self.data.config_flow:
             found = await self.reload_custom_components()
@@ -247,6 +250,8 @@ class IntegrationRepository(Repository):
         loaded = self._known_to_the_loader()
         if self.data.config_flow:
             await self.reload_custom_components()
+        if self.data.domain:
+            async_invalidate_translations(self.marketplace.hass, {self.data.domain})
         self.pending_restart = loaded or not self.data.config_flow
 
         if self.pending_restart:
