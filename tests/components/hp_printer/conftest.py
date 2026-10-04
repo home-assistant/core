@@ -138,6 +138,7 @@ def mock_hp_printer(
         client = mock_client.return_value
         client.base_url = f"http://{HOST}:80"
         client.device.return_value = mock_device
+        client.status.return_value = mock_data.status
         client.update.return_value = mock_data
         yield client
 

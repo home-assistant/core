@@ -75,14 +75,16 @@ async def test_user_flow_title_falls_back_to_host(
         pytest.param(HpPrinterParseError, id="parse"),
     ],
 )
+@pytest.mark.parametrize("endpoint", ["device", "status"])
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
     mock_hp_printer: AsyncMock,
     exception: HpPrinterError,
+    endpoint: str,
 ) -> None:
     """Test the flow recovers after the printer could not be reached."""
-    mock_hp_printer.device.side_effect = exception
+    getattr(mock_hp_printer, endpoint).side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -94,7 +96,7 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_hp_printer.device.side_effect = None
+    getattr(mock_hp_printer, endpoint).side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: HOST}
     )

@@ -34,6 +34,8 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 device = await client.device()
+                # Updates fail without the status endpoint, so check it too.
+                await client.status()
             except HpPrinterError:
                 errors["base"] = "cannot_connect"
             else:
