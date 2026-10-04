@@ -8,13 +8,7 @@ from ndms2_client import Client, ConnectionException, Device, TelnetConnection
 from ndms2_client.client import RouterInfo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -154,9 +148,7 @@ class KeeneticRouter:
             await self.request_update()
             self._cancel_periodic_update = async_call_later(
                 self.hass,
-                self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
+                DEFAULT_SCAN_INTERVAL,
                 async_update_data,
             )
 
