@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
 from pyoverkiz.exceptions import (
+    BadCredentialsError,
     MaintenanceError,
     ServiceUnavailableError,
     TooManyRequestsError,
@@ -13,6 +14,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestError,
@@ -110,7 +112,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         assert entry.unique_id == unique_id
 
     # Test if the config entry is migrated to the latest minor version
-    assert mock_entry.minor_version == 2
+    assert mock_entry.minor_version == 3
 
 
 async def test_setup_rexel_local_uses_local_client(
@@ -141,6 +143,168 @@ async def test_setup_rexel_local_uses_local_client(
     )
     mock_create_rexel_client.assert_not_called()
     assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_go_to_alias_button_unique_id_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test migration of the legacy goToAlias button unique_id.
+
+    The legacy button hardcoded alias id 1, the favorite1 slot. Only devices
+    advertising a favorite1 alias have a counterpart to be renamed to; the
+    others never had a working button and are removed.
+    """
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    # This pergola has no core:SupportedAliases attribute at all.
+    pergola_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/10943109-goToAlias",
+        config_entry=mock_entry,
+    )
+    # This garage door only advertises a partial alias, never favorite1.
+    garage_door_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "io://1234-1234-6233/16730050-goToAlias",
+        config_entry=mock_entry,
+    )
+    venetian_blind_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/16730100-goToAlias",
+        config_entry=mock_entry,
+    )
+
+    mock_client.set_setup_fixture("setup/cloud_somfy_tahoma_v2_europe.json")
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(pergola_button.entity_id) is None
+    assert entity_registry.async_get(garage_door_button.entity_id) is None
+    assert (
+        entry := entity_registry.async_get(venetian_blind_button.entity_id)
+    ) is not None
+    assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_favorite1"
+    assert mock_entry.minor_version == 3
+    # The migration's throwaway client must not leave an event listener behind.
+    mock_client.login.assert_any_await(register_event_listener=False)
+
+
+async def test_go_to_alias_button_migration_connection_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test the migration is retried when it cannot reach the API."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    legacy_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/16730100-goToAlias",
+        config_entry=mock_entry,
+    )
+
+    mock_client.get_setup.side_effect = ClientError("Connection error")
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert not await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_entry.minor_version == 2
+    # The button is left untouched so the retried migration can still rename it.
+    assert (entry := entity_registry.async_get(legacy_button.entity_id)) is not None
+    assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias"
+
+
+async def test_go_to_alias_button_migration_auth_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test an auth failure removes the legacy buttons so setup can start reauth."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    legacy_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/16730100-goToAlias",
+        config_entry=mock_entry,
+    )
+
+    mock_client.login.side_effect = BadCredentialsError("Bad credentials")
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert not await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(legacy_button.entity_id) is None
+    assert mock_entry.minor_version == 3
+    assert mock_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+async def test_go_to_alias_button_migration_without_legacy_buttons(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test the migration skips the API when there is no legacy button."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ) as mock_create_cloud_client:
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert mock_entry.minor_version == 3
+    # Only async_setup_entry creates a client and logs in.
+    mock_create_cloud_client.assert_called_once()
+    mock_client.login.assert_awaited_once()
 
 
 async def test_setup_token_reauth_error_starts_reauth(
