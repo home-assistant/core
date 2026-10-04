@@ -203,12 +203,16 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         cc = self.climate_control()
         return cc.operation_mode if cc is not None else None
 
-    def fan_operation(self):
-        """Return fan controls for the active operation mode."""
+    def fan_operation(self, operation_mode: str | None = None):
+        """Return fan controls for an operation mode."""
         cc = self.climate_control()
-        if cc is None or cc.fan_control is None or cc.operation_mode is None:
+        if cc is None or cc.fan_control is None:
             return None
-        return cc.fan_control.value.operation_modes.get(cc.operation_mode.value)
+        if operation_mode is None:
+            if cc.operation_mode is None:
+                return None
+            operation_mode = cc.operation_mode.value
+        return cc.fan_control.value.operation_modes.get(operation_mode)
 
     def preset_characteristic(self, daikin_mode):
         """Return a preset characteristic by Daikin API name."""
@@ -664,7 +668,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     FANMODE_FIXED,
                 ):
                     self._raise_command_failed("set the fan mode")
-                fan_operation = self.fan_operation()
+                fan_operation = self.fan_operation(operation_mode)
                 if fan_operation is None or fan_operation.fan_speed is None:
                     return
                 fan_speed = fan_operation.fan_speed
@@ -684,7 +688,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                     new_fixed_mode,
                 ):
                     self._raise_command_failed("set the fan mode")
-                fan_operation = self.fan_operation()
+                fan_operation = self.fan_operation(operation_mode)
                 if fan_operation is None or fan_operation.fan_speed is None:
                     return
                 fan_speed = fan_operation.fan_speed
@@ -701,7 +705,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 fan_mode,
             ):
                 self._raise_command_failed("set the fan mode")
-            fan_operation = self.fan_operation()
+            fan_operation = self.fan_operation(operation_mode)
             if fan_operation is None or fan_operation.fan_speed is None:
                 return
             fan_speed = fan_operation.fan_speed
@@ -766,15 +770,16 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             ),
             "stop",
         )
+        operation_mode = cc.operation_mode.value
         result = await self._device.patch(
             self._device.id,
             self._embedded_id,
             "fanControl",
-            f"/operationModes/{cc.operation_mode.value}/fanDirection/{direction}/currentMode",
+            f"/operationModes/{operation_mode}/fanDirection/{direction}/currentMode",
             new_mode,
         )
         if result:
-            fan_operation = self.fan_operation()
+            fan_operation = self.fan_operation(operation_mode)
             if fan_operation is not None and fan_operation.fan_direction is not None:
                 axis = getattr(fan_operation.fan_direction, direction)
                 if axis is not None:

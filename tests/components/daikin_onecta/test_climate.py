@@ -284,6 +284,124 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
+async def test_set_fan_mode_updates_captured_operation_mode() -> None:
+    """Update the targeted fan mode when polling replaces the active mode."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock(return_value=True)
+    coordinator = MagicMock()
+    previous_fan = SimpleNamespace(
+        fan_speed=SimpleNamespace(current_mode=SimpleNamespace(value="auto"), modes={})
+    )
+    captured_fan = SimpleNamespace(
+        fan_speed=SimpleNamespace(current_mode=SimpleNamespace(value="auto"), modes={})
+    )
+    active_fan = SimpleNamespace(
+        fan_speed=SimpleNamespace(current_mode=SimpleNamespace(value="auto"), modes={})
+    )
+    previous_management_point = SimpleNamespace(
+        operation_mode=SimpleNamespace(value="heating"),
+        fan_control=SimpleNamespace(
+            value=SimpleNamespace(operation_modes={"heating": previous_fan})
+        ),
+    )
+    current_management_point = SimpleNamespace(
+        operation_mode=SimpleNamespace(value="cooling"),
+        fan_control=SimpleNamespace(
+            value=SimpleNamespace(
+                operation_modes={"heating": captured_fan, "cooling": active_fan}
+            )
+        ),
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    entity.coordinator = coordinator
+    entity.climate_control = MagicMock(
+        side_effect=[
+            previous_management_point,
+            previous_management_point,
+            current_management_point,
+        ]
+    )
+    entity.resolve_homekit_fan_mode_alias = MagicMock(return_value="quiet")
+    entity.get_fan_mode = MagicMock(return_value="auto")
+
+    await entity.async_set_fan_mode("quiet")
+
+    assert captured_fan.fan_speed.current_mode.value == "quiet"
+    assert active_fan.fan_speed.current_mode.value == "auto"
+    device.patch.assert_awaited_once_with(
+        "device",
+        "zone",
+        "fanControl",
+        "/operationModes/heating/fanSpeed/currentMode",
+        "quiet",
+    )
+
+
+async def test_set_swing_mode_updates_captured_operation_mode() -> None:
+    """Update the targeted swing mode when polling replaces the active mode."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock(return_value=True)
+    previous_fan = SimpleNamespace(
+        fan_direction=SimpleNamespace(
+            vertical=SimpleNamespace(
+                current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+            )
+        )
+    )
+    captured_fan = SimpleNamespace(
+        fan_direction=SimpleNamespace(
+            vertical=SimpleNamespace(
+                current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+            )
+        )
+    )
+    active_fan = SimpleNamespace(
+        fan_direction=SimpleNamespace(
+            vertical=SimpleNamespace(
+                current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+            )
+        )
+    )
+    previous_management_point = SimpleNamespace(
+        operation_mode=SimpleNamespace(value="heating"),
+        fan_control=SimpleNamespace(
+            value=SimpleNamespace(operation_modes={"heating": previous_fan})
+        ),
+    )
+    current_management_point = SimpleNamespace(
+        operation_mode=SimpleNamespace(value="cooling"),
+        fan_control=SimpleNamespace(
+            value=SimpleNamespace(
+                operation_modes={"heating": captured_fan, "cooling": active_fan}
+            )
+        ),
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    entity.climate_control = MagicMock(
+        side_effect=[
+            previous_management_point,
+            previous_management_point,
+            current_management_point,
+        ]
+    )
+
+    assert await entity._DaikinClimate__set_swing("vertical", "swing")
+
+    assert captured_fan.fan_direction.vertical.current_mode.value == "swing"
+    assert active_fan.fan_direction.vertical.current_mode.value == "stop"
+    device.patch.assert_awaited_once_with(
+        "device",
+        "zone",
+        "fanControl",
+        "/operationModes/heating/fanDirection/vertical/currentMode",
+        "swing",
+    )
+
+
 async def test_set_preset_mode_stops_after_failed_disable() -> None:
     """Do not enable a replacement preset when disabling the old one fails."""
     entity = object.__new__(DaikinClimate)
