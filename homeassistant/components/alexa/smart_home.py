@@ -22,6 +22,7 @@ from .auth import Auth
 from .config import AbstractConfig
 from .const import (
     API_DIRECTIVE,
+    API_ENDPOINT,
     API_HEADER,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
@@ -165,8 +166,12 @@ class SmartHomeView(HomeAssistantView):
         message: dict[str, Any] = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            endpoint_id: str | None = (
+                message.get(API_DIRECTIVE, {}).get(API_ENDPOINT, {}).get("endpointId")
+            )
             _LOGGER.debug(
-                "Received Alexa Smart Home request: %s",
+                "Received Alexa Smart Home request for entity %s: %s",
+                endpoint_id.replace("#", ".") if endpoint_id else None,
                 async_redact_auth_data(message),
             )
 

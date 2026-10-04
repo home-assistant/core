@@ -293,6 +293,7 @@ async def async_enable_proactive_mode(
         return old_extra_arg is not None and old_extra_arg != new_extra_arg
 
     checker = await create_checker(hass, DOMAIN, extra_significant_check)
+    logged_exposure: dict[str, bool] = {}
 
     @callback
     def _async_entity_state_filter(data: EventStateChangedData) -> bool:
@@ -306,11 +307,17 @@ async def async_enable_proactive_mode(
             return False
 
         changed_entity = data["entity_id"]
-        if not smart_home_config.should_expose(changed_entity):
-            _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
-            return False
+        should_expose = smart_home_config.should_expose(changed_entity)
+        if logged_exposure.get(changed_entity) != should_expose:
+            logged_exposure[changed_entity] = should_expose
+            if should_expose:
+                _LOGGER.debug("Exposing %s", changed_entity)
+            else:
+                _LOGGER.debug(
+                    "Not exposing %s because filtered by config", changed_entity
+                )
 
-        return True
+        return should_expose
 
     async def _async_entity_state_listener(
         event_: Event[EventStateChangedData],
