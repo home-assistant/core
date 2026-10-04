@@ -7,6 +7,7 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -1019,3 +1020,124 @@ async def test_setup_loads_with_unpaid_package_gateway(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_backs_off_on_gateway_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator applies sequential backoff on GATEWAY_OFFLINE."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow"
+            ".OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = mock_config_entry.runtime_data.devices[0].coordinator
+        assert coordinator is not None
+        assert coordinator._consecutive_offline_failures == 0
+
+        # 1st failure: GATEWAY_OFFLINE -> backoff 300s
+        service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+            {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+        )
+        freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert coordinator._consecutive_offline_failures == 1
+        assert not coordinator.last_update_success
+        calls = service.fetch_all_features.call_count
+
+        # Verify that before 300s, ordinary interval (60s) does not trigger fetch
+        freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls
+
+        # Advance to 300s (remaining 240s) -> triggers fetch
+        freezer.tick(timedelta(seconds=240))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls + 1
+
+        # 2nd failure: consecutive failures is 2 -> backoff is 600s
+        assert coordinator._consecutive_offline_failures == 2
+        calls = service.fetch_all_features.call_count
+
+        # At 300s into the 600s backoff, no fetch should occur
+        freezer.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls
+
+        # Advance remaining 300s (total 600s) -> triggers fetch
+        freezer.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls + 1
+
+        # 3rd failure: consecutive failures is 3 -> backoff is 900s
+        assert coordinator._consecutive_offline_failures == 3
+        calls = service.fetch_all_features.call_count
+
+        # At 600s into 900s backoff, no fetch
+        freezer.tick(timedelta(seconds=600))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls
+
+        # Recovery: gateway is back online before the 900s retry
+        service.fetch_all_features.side_effect = None
+
+        # Advance remaining 300s (total 900s) -> triggers fetch which now succeeds
+        freezer.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls + 1
+        assert coordinator._consecutive_offline_failures == 0
+        assert coordinator.last_update_success
+
+        # Subsequent refresh happens at regular interval (60s)
+        calls = service.fetch_all_features.call_count
+        freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls + 1
+        assert coordinator.last_update_success
+
+        # A second offline episode after recovery starts backoff at 300s again
+        service.fetch_all_features.side_effect = PyViCareDeviceCommunicationError(
+            {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+        )
+        freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert coordinator._consecutive_offline_failures == 1
+        calls = service.fetch_all_features.call_count
+
+        # Verify it starts at 300s backoff (not 600s or 900s)
+        freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls
+
+        freezer.tick(timedelta(seconds=240))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert service.fetch_all_features.call_count == calls + 1
