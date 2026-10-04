@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "epex_tomorrow_available": {
+        "name": "EPEX tomorrow prices available"
+      }
+    },
     "sensor": {
       "electricity_price_injection": {
         "name": "Electricity injection price"
@@ -276,6 +281,62 @@
       "energy_price_offtake_with_ean": {
         "name": "Offtake price ({ean_suffix})"
       },
+      "epex_current_hour": {
+        "name": "EPEX current hour price"
+      },
+      "epex_current_quarter_hour": {
+        "name": "EPEX current quarter-hourly price"
+      },
+      "epex_high_today_hour": {
+        "name": "EPEX highest hour price today",
+        "state_attributes": {
+          "end": {
+            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::end::name%]"
+          },
+          "start": {
+            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::start::name%]"
+          }
+        }
+      },
+      "epex_high_today_quarter_hour": {
+        "name": "EPEX highest quarter-hourly price today",
+        "state_attributes": {
+          "end": {
+            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::end::name%]"
+          },
+          "start": {
+            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::start::name%]"
+          }
+        }
+      },
+      "epex_low_today_hour": {
+        "name": "EPEX lowest hour price today",
+        "state_attributes": {
+          "end": {
+            "name": "End time"
+          },
+          "start": {
+            "name": "Start time"
+          }
+        }
+      },
+      "epex_low_today_quarter_hour": {
+        "name": "EPEX lowest quarter-hourly price today",
+        "state_attributes": {
+          "end": {
+            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::end::name%]"
+          },
+          "start": {
+            "name": "[%key:component::engie_be::entity::sensor::epex_low_today_hour::state_attributes::start::name%]"
+          }
+        }
+      },
+      "epex_next_hour": {
+        "name": "EPEX next hour price"
+      },
+      "epex_next_quarter_hour": {
+        "name": "EPEX next quarter-hourly price"
+      },
       "gas_price_offtake": {
         "name": "Gas offtake price"
       },
@@ -338,12 +399,49 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "There was a connection error connecting to the API. Try again later."
+    },
+    "invalid_date": {
+      "message": "Only today and tomorrow are supported, got {date}."
+    },
+    "prices_not_published": {
+      "message": "Prices for {date} are not published yet."
+    }
+  },
   "selector": {
+    "granularity": {
+      "options": {
+        "hourly": "Hourly",
+        "quarter_hourly": "Quarter-hourly"
+      }
+    },
     "mfa_method": {
       "options": {
         "email": "Email",
         "sms": "SMS"
       }
+    }
+  },
+  "services": {
+    "get_epex_prices_for_date": {
+      "description": "Retrieves the Belgian EPEX day-ahead prices for today or tomorrow.",
+      "fields": {
+        "config_entry": {
+          "description": "The ENGIE Belgium configuration entry for this action.",
+          "name": "Config entry"
+        },
+        "date": {
+          "description": "Only today and tomorrow are supported.",
+          "name": "Date"
+        },
+        "granularity": {
+          "description": "Fetch hourly or quarter-hourly prices.",
+          "name": "Granularity"
+        }
+      },
+      "name": "Get EPEX prices for date"
     }
   }
 }
