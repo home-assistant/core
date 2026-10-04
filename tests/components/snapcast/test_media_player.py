@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -63,6 +63,8 @@ async def test_client_identity_survives_reconnect(
     registry_entry = entity_registry.async_get(entity_id)
     assert registry_entry is not None
     original_unique_id = registry_entry.unique_id
+    original_callback = mock_client_1.set_callback.call_args.args[0]
+    assert original_callback is not None
 
     mock_create_server.clients = [mock_client_2]
     mock_config_entry.runtime_data.async_update_listeners()
@@ -71,6 +73,10 @@ async def test_client_identity_survives_reconnect(
     registry_entry = entity_registry.async_get(entity_id)
     assert registry_entry is not None
     assert registry_entry.unique_id == original_unique_id
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    mock_client_1.set_callback.assert_called_with(None)
 
     replacement_client = AsyncMock(spec=Snapclient)
     replacement_client.identifier = mock_client_1.identifier
@@ -86,6 +92,15 @@ async def test_client_identity_survives_reconnect(
     mock_create_server.clients = [replacement_client, mock_client_2]
     mock_config_entry.runtime_data.async_update_listeners()
     await hass.async_block_till_done()
+
+    replacement_client.set_callback.assert_called_once()
+    replacement_callback = replacement_client.set_callback.call_args.args[0]
+    assert replacement_callback is not None
+    assert replacement_callback.__self__ is original_callback.__self__
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == MediaPlayerState.PLAYING
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
