@@ -90,6 +90,9 @@
     }
   },
   "exceptions": {
+    "empty_regions": {
+      "message": "The command {command} needs at least one region. An empty regions list would make the robot clean the whole home."
+    },
     "invalid_fan_speed": {
       "message": "Invalid fan speed {fan_speed}. Expected one of: {fan_speeds}."
     },
@@ -102,18 +105,11 @@
     "invalid_spray_amount": {
       "message": "Invalid spray amount {spray_amount}. Expected one of: {spray_amounts}."
     },
+    "not_connected": {
+      "message": "The command could not be sent because the robot is not connected."
+    },
     "spray_amount_not_a_number": {
       "message": "Invalid spray amount {spray_amount}. Expected a whole number."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "continuous": "Continuous",
-          "delay": "Delay"
-        }
-      }
     }
   }
 }
