@@ -44,6 +44,7 @@ from boschshcpy import (
 )
 from boschshcpy.services_impl import (
     OutdoorSirenService,
+    PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
     ValveTappetService,
 )
@@ -633,6 +634,8 @@ def motion_detector2_device(
     supports_smart_sensitivity: bool = False,
     smart_sensitivity_enabled: bool = False,
     latestmotion: str = "",
+    motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
+    | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -650,6 +653,10 @@ def motion_detector2_device(
     device.supports_smart_sensitivity = supports_smart_sensitivity
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.latestmotion = latestmotion
+    if motion_sensitivity is None:
+        del device.motion_sensitivity
+    else:
+        device.motion_sensitivity = motion_sensitivity
     return device
 
 
