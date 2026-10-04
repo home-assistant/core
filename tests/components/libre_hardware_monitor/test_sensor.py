@@ -143,7 +143,7 @@ async def test_sensors_are_created(
             # LHM labels binary megabytes as MB
             "MB",
             SensorDeviceClass.DATA_SIZE,
-            UnitOfInformation.MEBIBYTES,
+            UnitOfInformation.GIBIBYTES,
             id="small_data",
         ),
         pytest.param(

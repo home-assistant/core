@@ -113,8 +113,7 @@ class LibreHardwareMonitorSensor(
             elif device_class is SensorDeviceClass.VOLTAGE:
                 # Device class default rounds voltages to whole volts
                 self._attr_suggested_display_precision = 3
-
-            if sensor_data.type is SensorType.DATA:
+            elif device_class is SensorDeviceClass.DATA_SIZE:
                 # LHM versions >= 0.9.7 report data sizes in raw bytes
                 self._attr_suggested_unit_of_measurement = UnitOfInformation.GIBIBYTES
 
