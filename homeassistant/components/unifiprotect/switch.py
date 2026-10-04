@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal, override
+from typing import Any, Literal, cast, override
 
 from uiprotect.data import (
     Camera,
@@ -63,8 +63,12 @@ async def _set_highfps(obj: PublicCamera, value: bool) -> None:
     await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
 
 
-async def _set_hdr(obj: Camera, value: bool) -> None:
-    await obj.set_hdr_mode_public(PublicHdrMode.AUTO if value else PublicHdrMode.OFF)
+def _get_hdr(obj: PublicDeviceModel) -> bool:
+    return cast(PublicCamera, obj).hdr_type is not PublicHdrMode.OFF
+
+
+async def _set_hdr(obj: PublicCamera, value: bool) -> None:
+    await obj.set_hdr_mode(PublicHdrMode.AUTO if value else PublicHdrMode.OFF)
 
 
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
@@ -92,7 +96,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         ufp_required_field="feature_flags.has_hdr",
-        ufp_value="hdr_mode",
+        ufp_public_value_fn=_get_hdr,
         ufp_set_method_fn=_set_hdr,
         ufp_perm=PermRequired.WRITE,
     ),

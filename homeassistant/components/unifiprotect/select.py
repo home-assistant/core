@@ -169,10 +169,8 @@ def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
 
-def _get_doorbell_current(obj: Camera) -> str | None:
-    if obj.lcd_message is None:
-        return None
-    return obj.lcd_message.text
+def _get_doorbell_current(obj: PublicDeviceModel) -> str | None:
+    return cast(PublicCamera, obj).lcd_message_text
 
 
 async def _set_light_mode(obj: PublicLight, mode: str) -> None:
@@ -191,19 +189,19 @@ async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
     await obj.set_paired_camera(camera)
 
 
-async def _set_doorbell_message(obj: Camera, message: str) -> None:
+async def _set_doorbell_message(obj: PublicCamera, message: str) -> None:
     custom_prefix = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:"
     if message.startswith(custom_prefix):
         # reset_at=None keeps the message up until it is changed
-        await obj.set_lcd_message_public(
+        await obj.set_lcd_message(
             DoorbellMessageType.CUSTOM_MESSAGE,
             text=message.removeprefix(custom_prefix),
             reset_at=None,
         )
     elif message == TYPE_EMPTY_VALUE:
-        await obj.set_lcd_message_public(None)
+        await obj.set_lcd_message(None)
     else:
-        await obj.set_lcd_message_public(DoorbellMessageType(message), reset_at=None)
+        await obj.set_lcd_message(DoorbellMessageType(message), reset_at=None)
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -269,7 +267,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value_fn=_get_doorbell_current,
+        ufp_public_value_fn=_get_doorbell_current,
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
         ufp_perm=PermRequired.WRITE,

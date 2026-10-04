@@ -14,7 +14,6 @@ from uiprotect.data import (
     DeviceState,
     DoorbellMessageType,
     IRLEDMode,
-    LCDMessage,
     Light,
     LightModeEnableType,
     LightModeType,
@@ -30,7 +29,7 @@ from uiprotect.data import (
     WSAction,
 )
 from uiprotect.data.nvr import DoorbellMessage
-from uiprotect.data.public_devices import SensorFeatureCapability
+from uiprotect.data.public_devices import PublicLcdMessage, SensorFeatureCapability
 from uiprotect.exceptions import GlobalAlarmManagerError
 from uiprotect.websocket import WebsocketState
 
@@ -397,6 +396,7 @@ async def test_select_update_doorbell_message(
 ) -> None:
     """Test select entity update (change doorbell message)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -408,22 +408,33 @@ async def test_select_update_doorbell_message(
     assert state
     assert state.state == "Default Message (Welcome)"
 
-    new_camera = doorbell.model_copy()
-    new_camera.lcd_message = LCDMessage(
-        type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+    public = make_public_camera(
+        doorbell,
+        lcd_message=PublicLcdMessage(
+            type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+        ),
     )
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.ws_msg(mock_msg)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "Test"
+
+    public = make_public_camera(
+        doorbell,
+        lcd_message=PublicLcdMessage(type=DoorbellMessageType.DO_NOT_DISTURB),
+    )
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "DO NOT DISTURB"
+
+    public = make_public_camera(doorbell, lcd_message=None)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "Default Message (Welcome)"
 
 
 async def test_select_set_option_light_motion(
@@ -645,6 +656,7 @@ async def test_select_set_option_camera_doorbell_custom(
 ) -> None:
     """Test Doorbell Text select (user defined message)."""
 
+    setup_public_camera(ufp)
     doorbell_settings = ufp.api.bootstrap.nvr.doorbell_settings
     doorbell_settings.all_messages = [
         *doorbell_settings.all_messages,
@@ -657,9 +669,11 @@ async def test_select_set_option_camera_doorbell_custom(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_message_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -679,6 +693,7 @@ async def test_select_set_option_camera_doorbell_unifi(
 ) -> None:
     """Test Doorbell Text select (unifi message)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -686,9 +701,11 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_message_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -709,6 +726,7 @@ async def test_select_set_option_camera_doorbell_default(
 ) -> None:
     """Test Doorbell Text select (default message)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -716,9 +734,11 @@ async def test_select_set_option_camera_doorbell_default(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_message_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",

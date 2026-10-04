@@ -36,6 +36,7 @@ from uiprotect.data.public_devices import (
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
     PublicHdrMode,
+    PublicLcdMessage,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
@@ -60,6 +61,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -617,15 +619,16 @@ def make_public_camera(
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
+    lcd_message: PublicLcdMessage | UndefinedType | None = UNDEFINED,
 ) -> Mock:
     """Build a public-API camera for a private camera's migrated fields.
 
     The stream tiers/mic/HDR back the migrated stream and select entities; the
     ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
-    gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
-    and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
-    private camera when not overridden.
+    gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``,
+    ``hdr_type`` (derived from the private ``hdr_mode_display``) and
+    ``lcd_message`` mirror the private camera when not overridden.
 
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
@@ -649,6 +652,18 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    if lcd_message is UNDEFINED:
+        lcd_message = (
+            None
+            if (lcd := camera.lcd_message) is None
+            else PublicLcdMessage(
+                type=lcd.type, text=lcd.text, reset_at=to_js_time(lcd.reset_at)
+            )
+        )
+    public.lcd_message = lcd_message
+    public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
+    # The doorbell text falls back to the default message of the private NVR.
+    public.api = camera._api
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected
