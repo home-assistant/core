@@ -493,6 +493,7 @@ async def test_option_flow(
         user_input={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
+            CONF_ALLOW_WAN_NETWORKS: True,
             CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
             CONF_MORE_OPTIONS: {
                 CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
@@ -503,7 +504,6 @@ async def test_option_flow(
                 CONF_DPI_RESTRICTIONS: False,
                 CONF_ALLOW_BANDWIDTH_SENSORS: True,
                 CONF_ALLOW_UPTIME_SENSORS: True,
-                CONF_ALLOW_WAN_NETWORKS: True,
             },
         },
     )

@@ -357,6 +357,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                         default=self.hub.config.option_track_devices,
                     ): bool,
                     probatio.Optional(
+                        CONF_ALLOW_WAN_NETWORKS,
+                        default=self.hub.config.option_allow_wan_networks,
+                    ): bool,
+                    probatio.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
                     probatio.Required(CONF_MORE_OPTIONS): section(
@@ -409,10 +413,6 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                 probatio.Optional(
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
-                                ): bool,
-                                probatio.Optional(
-                                    CONF_ALLOW_WAN_NETWORKS,
-                                    default=self.hub.config.option_allow_wan_networks,
                                 ): bool,
                             }
                         ),
