@@ -984,7 +984,8 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         if self.entity_description.custom_subscribe is not None:
             self.async_on_remove(
                 self.entity_description.custom_subscribe(self.api)(
-                    self._async_custom_subscription_callback, ItemEvent.CHANGED
+                    self._async_custom_subscription_callback,
+                    (ItemEvent.ADDED, ItemEvent.CHANGED, ItemEvent.DELETED),
                 ),
             )
 

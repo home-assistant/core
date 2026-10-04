@@ -2604,3 +2604,30 @@ async def test_wan_status_not_written_without_change(
     await hass.async_block_till_done()
 
     assert written_entity_ids == []
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_status_gateway_added(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
+    """Verify a gateway added after setup provides the WAN status."""
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == STATE_UNKNOWN
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=WAN_GATEWAY)
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "online"
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize("device_payload", [[WAN_GATEWAY]])
+async def test_wan_status_gateway_removed(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Verify the WAN status becomes unknown once the gateway is removed."""
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == "online"
+
+    # aiounifi has no websocket message removing a device, drive the handler directly
+    config_entry_setup.runtime_data.api.devices.remove_item(WAN_GATEWAY)
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID).state == STATE_UNKNOWN

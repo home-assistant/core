@@ -34,7 +34,9 @@ from .errors import controller_error_reason
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
-type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+type SubscriptionType = Callable[
+    [CallbackType, tuple[ItemEvent, ...] | ItemEvent], UnsubscribeType
+]
 
 
 def is_locally_administered_mac(mac: str) -> bool:
