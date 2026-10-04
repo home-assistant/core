@@ -126,8 +126,6 @@ def _create_climate_entities(
 class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntity):
     """Representation of a Daikin HVAC."""
 
-    _enable_turn_on_off_backwards_compatibility = False  # Remove with HA 2025.1
-
     # Setpoint is the setpoint string under
     # temperatureControl/value/operationsModes/mode/setpoints, for example roomTemperature/leavingWaterOffset
     def __init__(
