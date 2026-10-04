@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     AccountRelation,
@@ -33,13 +34,13 @@ from homeassistant.components.engie_be.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.components.engie_be.coordinator import BRUSSELS_TIME_ZONE
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
+BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
 SUBJECT = "auth0|69f5b418f3be21cc2ede9c98"
