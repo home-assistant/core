@@ -161,6 +161,7 @@ async def handle_new_task(call: ServiceCall) -> None:
         data["due_datetime"] = dt_util.as_utc(due_date)
 
     api_task = await coordinator.api.add_task(content, **data)
+    await coordinator.async_refresh()
 
     # The REST API doesn't support reminders, so we use the Sync API directly
     # to maintain functional parity with the component.
