@@ -491,11 +491,13 @@ async def async_setup_integration(
         """Return a mock bridge."""
         if not timeout_during_connect:
             on_connect_callback()
-        return mock_bridge(
+        bridge = mock_bridge(
             can_connect=can_connect,
             timeout_on_connect=timeout_during_configure,
             smart_away_state=smart_away_state,
         )
+        bridge.on_connect_callback = on_connect_callback
+        return bridge
 
     with patch(
         "homeassistant.components.lutron_caseta.Smartbridge.create_tls",

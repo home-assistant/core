@@ -14,6 +14,8 @@ LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 # Dispatcher signal for button events, formatted with (entry_id, button device id)
 SIGNAL_BUTTON_EVENT = "lutron_caseta_button_event_{}_{}"
+# Dispatcher signal for each bridge (re)connect, formatted with (entry_id)
+SIGNAL_BRIDGE_CONNECTED = "lutron_caseta_bridge_connected_{}"
 
 BRIDGE_DEVICE_ID = "1"
 

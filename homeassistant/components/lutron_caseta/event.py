@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from pylutron_caseta import BUTTON_STATUS_PRESSED, BUTTON_STATUS_RELEASED
+
 from homeassistant.components.event import (
     ButtonEventType,
     EventDeviceClass,
@@ -12,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ACTION_PRESS, ACTION_RELEASE, SIGNAL_BUTTON_EVENT
+from .const import SIGNAL_BRIDGE_CONNECTED, SIGNAL_BUTTON_EVENT
 from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
 from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry, LutronCasetaData
@@ -76,21 +78,33 @@ class LutronCasetaButtonEvent(LutronCasetaEntity, EventEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_BUTTON_EVENT.format(self._config_entry_id, self.device_id),
-                self._handle_action,
+                self._handle_button_status,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_BRIDGE_CONNECTED.format(self._config_entry_id),
+                self._handle_bridge_connected,
             )
         )
 
     @callback
-    def _handle_action(self, action: str) -> None:
-        """Translate a button action into a standard button event."""
+    def _handle_bridge_connected(self) -> None:
+        """Forget a pending press, as its release may have been lost."""
+        self._pressed = False
+
+    @callback
+    def _handle_button_status(self, status: str) -> None:
+        """Translate a LEAP button status into a standard button event."""
         # MultiTap is not mapped: each tap still emits a press, as device triggers do.
-        if action == ACTION_PRESS and self._reports_release:
+        if status == BUTTON_STATUS_PRESSED and self._reports_release:
             self._pressed = True
             self._trigger_event(ButtonEventType.PRESS_START)
-        elif action == ACTION_PRESS:
+        elif status == BUTTON_STATUS_PRESSED:
             # A keypad release may never come, so fire on the press.
             self._trigger_event(ButtonEventType.PRESS_END)
-        elif action == ACTION_RELEASE and self._pressed:
+        elif status == BUTTON_STATUS_RELEASED and self._pressed:
             # A release without a press is the bridge replaying status on reconnect.
             self._pressed = False
             self._trigger_event(ButtonEventType.PRESS_END)

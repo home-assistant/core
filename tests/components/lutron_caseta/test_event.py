@@ -65,6 +65,14 @@ async def test_entities(
             [ButtonEventType.PRESS_START, ButtonEventType.PRESS_END],
             id="pico_multi_tap_ignored",
         ),
+        # The bus event treats unknown statuses as a release; the entity must not
+        pytest.param(
+            PICO_BUTTON_ENTITY_ID,
+            PICO_BUTTON_ID,
+            [BUTTON_STATUS_PRESSED, "UnknownEventType"],
+            [ButtonEventType.PRESS_START],
+            id="pico_unknown_status_ignored",
+        ),
         # Keypads may never report a release, so repeated presses must each fire
         pytest.param(
             KEYPAD_BUTTON_ENTITY_ID,
@@ -110,3 +118,22 @@ async def test_button_event_mapping(
         for event in state_changes
         if event.data["entity_id"] == entity_id
     ] == expected_event_types
+
+
+async def test_pending_press_cleared_on_reconnect(hass: HomeAssistant) -> None:
+    """Test a release replayed after a reconnect does not end a stale press."""
+    config_entry = await async_setup_integration(hass, MockBridge)
+    bridge = config_entry.runtime_data.bridge
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    bridge.call_button_subscribers(PICO_BUTTON_ID, BUTTON_STATUS_PRESSED)
+    # The release is lost while disconnected, then replayed on reconnect
+    bridge.on_connect_callback()
+    bridge.call_button_subscribers(PICO_BUTTON_ID, BUTTON_STATUS_RELEASED)
+    await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].attributes[ATTR_EVENT_TYPE]
+        for event in state_changes
+        if event.data["entity_id"] == PICO_BUTTON_ENTITY_ID
+    ] == [ButtonEventType.PRESS_START]

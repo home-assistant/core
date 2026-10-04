@@ -47,6 +47,7 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
+    SIGNAL_BRIDGE_CONNECTED,
     SIGNAL_BUTTON_EVENT,
     UNASSIGNED_AREA,
 )
@@ -173,6 +174,7 @@ async def async_setup_entry(
         nonlocal connected_future
         if not connected_future.done():
             connected_future.set_result(None)
+        async_dispatcher_send(hass, SIGNAL_BRIDGE_CONNECTED.format(entry_id))
 
     try:
         bridge = Smartbridge.create_tls(
@@ -495,9 +497,9 @@ def _async_subscribe_keypad_events(
             },
         )
         # The bridge allows one subscriber per button, so event entities
-        # receive button actions through this signal instead.
+        # receive the button status through this signal instead.
         async_dispatcher_send(
-            hass, SIGNAL_BUTTON_EVENT.format(config_entry_id, button_id), action
+            hass, SIGNAL_BUTTON_EVENT.format(config_entry_id, button_id), event_type
         )
 
     for button_id in keypad_buttons:
