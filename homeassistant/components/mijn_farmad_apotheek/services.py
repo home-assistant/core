@@ -48,10 +48,12 @@ from .const import (
 if TYPE_CHECKING:
     from . import FarmadConfigEntry, FarmadData
 
+NON_EMPTY_STRING = probatio.All(cv.string, probatio.Length(min=1))
+
 SEARCH_MEDICATION_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_QUERY): cv.string,
-        probatio.Optional(ATTR_APB): cv.string,
+        probatio.Required(ATTR_QUERY): NON_EMPTY_STRING,
+        probatio.Optional(ATTR_APB): NON_EMPTY_STRING,
     }
 )
 
@@ -61,7 +63,7 @@ ORDER_MEDICATION_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_QUANTITY, default=1): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1)
         ),
-        probatio.Optional(ATTR_APB): cv.string,
+        probatio.Optional(ATTR_APB): NON_EMPTY_STRING,
         probatio.Optional(ATTR_COMMENT): cv.string,
     }
 )
@@ -189,7 +191,7 @@ async def _async_write_draft(
 ) -> str:
     """Write the products to the empty draft basket and return its id."""
     draft = await data.client.async_get_draft_basket(apb)
-    if draft is not None and draft.items:
+    if draft is not None and (draft.items or draft.comment):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="draft_not_empty",

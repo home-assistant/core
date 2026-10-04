@@ -247,25 +247,47 @@ async def test_order_medication_existing_draft(
 
 
 @pytest.mark.parametrize(
-    "draft_id",
+    "draft",
     [
-        pytest.param(API_DRAFT_ID, id="with-id"),
-        pytest.param(None, id="without-id"),
+        pytest.param(
+            DraftBasket(
+                id=API_DRAFT_ID,
+                comment=None,
+                items=(
+                    BasketItem(
+                        product_cnk=API_PRODUCT_CNK_2, quantity=1, unit_price=None
+                    ),
+                ),
+            ),
+            id="items-with-id",
+        ),
+        pytest.param(
+            DraftBasket(
+                id=None,
+                comment=None,
+                items=(
+                    BasketItem(
+                        product_cnk=API_PRODUCT_CNK_2, quantity=1, unit_price=None
+                    ),
+                ),
+            ),
+            id="items-without-id",
+        ),
+        pytest.param(
+            DraftBasket(id=API_DRAFT_ID, comment="draft comment", items=()),
+            id="comment-only",
+        ),
     ],
 )
 async def test_order_medication_existing_draft_items(
     hass: HomeAssistant,
     mock_farmad_client: MagicMock,
-    draft_id: str | None,
+    draft: DraftBasket,
 ) -> None:
-    """Test ordering is rejected when the draft basket has products."""
+    """Test ordering is rejected when the draft basket has products or a comment."""
     await init_integration(hass)
     client = mock_farmad_client.return_value
-    client.async_get_draft_basket.return_value = DraftBasket(
-        id=draft_id,
-        comment=None,
-        items=(BasketItem(product_cnk=API_PRODUCT_CNK_2, quantity=1, unit_price=None),),
-    )
+    client.async_get_draft_basket.return_value = draft
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
@@ -590,6 +612,49 @@ async def test_order_medication_invalid_quantity(
             {"product": API_PRODUCT_CNK, "apb": API_APB, "quantity": 0},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("action", "data", "field"),
+    [
+        pytest.param(
+            SERVICE_SEARCH_MEDICATION,
+            {"query": ""},
+            "query",
+            id="search-empty-query",
+        ),
+        pytest.param(
+            SERVICE_SEARCH_MEDICATION,
+            {"query": API_SEARCH_QUERY, "apb": ""},
+            "apb",
+            id="search-empty-apb",
+        ),
+        pytest.param(
+            SERVICE_ORDER_MEDICATION,
+            {"product": API_PRODUCT_CNK, "apb": ""},
+            "apb",
+            id="order-empty-apb",
+        ),
+    ],
+)
+async def test_empty_input_rejected(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    action: str,
+    data: dict[str, str],
+    field: str,
+) -> None:
+    """Test an empty search term or apb is rejected before reaching Farmad."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+
+    with pytest.raises(probatio.MultipleInvalid, match=field):
+        await hass.services.async_call(
+            DOMAIN, action, data, blocking=True, return_response=True
+        )
+
+    client.async_search_products_in_apb.assert_not_awaited()
+    client.async_get_draft_basket.assert_not_awaited()
 
 
 async def test_order_medication_after_unload(
