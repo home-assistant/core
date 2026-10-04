@@ -1,0 +1,12 @@
+{
+  "domain": "hase_iq",
+  "name": "Hase iQ",
+  "codeowners": ["@bbayszczak"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hase_iq",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pyhaseiq"],
+  "quality_scale": "bronze",
+  "requirements": ["pyhaseiq==0.2.0"]
+}
