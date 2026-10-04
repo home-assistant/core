@@ -2,9 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyatmo import Home
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.netatmo.coordinator import NetatmoDataHandler
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -126,3 +128,38 @@ async def test_select_schedule_unknown_schedule_id(
     await hass.async_block_till_done()
 
     assert hass.states.get(select_entity).state == original_state
+
+
+async def test_select_created_when_climate_is_not_first_room_feature(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test the schedule select does not depend on the room features order.
+
+    Room features are a set, so their iteration order changes with the hash
+    seed of the process. Simulate climate rooms that also have a humidity
+    sensor and iterate with the humidity feature first.
+    """
+    original = NetatmoDataHandler.setup_climate_schedule_select
+
+    def _setup_climate_schedule_select(
+        self: NetatmoDataHandler, home: Home, signal_home: str
+    ) -> None:
+        for room in home.rooms.values():
+            if "climate" in room.features:
+                room.features = ["humidity", "climate"]
+        original(self, home, signal_home)
+
+    with (
+        selected_platforms(["climate", "select"]),
+        patch.object(
+            NetatmoDataHandler,
+            "setup_climate_schedule_select",
+            _setup_climate_schedule_select,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("select.myhome_schedule").state == "Default"
