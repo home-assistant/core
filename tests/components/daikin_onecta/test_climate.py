@@ -34,7 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import DOMAIN
@@ -88,6 +88,22 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
     assert setpoint.value == 21
     entity.setpoint.assert_called_once_with("heating")
     coordinator.async_update_listeners.assert_called_once_with()
+
+
+async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
+    """Reject an unsupported HVAC mode before changing the temperature."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock()
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    object.__setattr__(entity, "_attr_hvac_modes", [HVACMode.OFF, HVACMode.COOL])
+    object.__setattr__(entity, "_attr_target_temperature", 20)
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_set_temperature(hvac_mode=HVACMode.HEAT, temperature=21)
+
+    device.patch.assert_not_awaited()
 
 
 async def test_enable_boost_stops_after_failed_turn_on() -> None:

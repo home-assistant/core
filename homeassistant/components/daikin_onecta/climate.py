@@ -435,7 +435,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the HVAC mode and/or target temperature."""
         if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+            await self.async_handle_set_hvac_mode_service(kwargs[ATTR_HVAC_MODE])
 
         if ATTR_TEMPERATURE in kwargs:
             value = kwargs[ATTR_TEMPERATURE]
