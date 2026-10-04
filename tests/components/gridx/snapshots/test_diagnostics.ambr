@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'password': '**REDACTED**',
+      'username': '**REDACTED**',
+    }),
+    'live_data': dict({
+      'system_1': dict({
+        'battery': dict({
+          'applianceID': '**REDACTED**',
+          'capacity': 10000,
+          'nominalCapacity': 10000,
+          'power': -853,
+          'remainingCharge': 7700,
+          'stateOfCharge': 0.77,
+        }),
+        'consumption': 600,
+        'directConsumptionEV': 0,
+        'directConsumptionHeatPump': 0,
+        'directConsumptionHeater': 0,
+        'directConsumptionHousehold': 600,
+        'directConsumptionRate': 0.397,
+        'evChargingStation': dict({
+          'applianceID': '**REDACTED**',
+          'currentL1': 16.0,
+          'currentL2': 15.8,
+          'currentL3': 16.1,
+          'power': 11000,
+          'readingTotal': 1234567,
+          'stateOfCharge': 0.42,
+        }),
+        'grid': -59,
+        'gridMeterReadingNegative': 14081760000,
+        'gridMeterReadingPositive': 7393320000,
+        'heatPump': 1200,
+        'heating': 500,
+        'heatingTemperature': 48.5,
+        'measuredAt': '2024-05-08T09:42:18Z',
+        'photovoltaic': 1512,
+        'production': 1512,
+        'selfConsumption': 1453,
+        'selfConsumptionRate': 0.96,
+        'selfSufficiencyRate': 1.0,
+        'selfSupply': 600,
+        'totalConsumption': 600,
+      }),
+    }),
+  })
+# ---
