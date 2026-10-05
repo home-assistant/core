@@ -25,7 +25,7 @@ from aiomobilitydatabase.feeds import (
     StationGroup,
     TransitFeedHandle,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -73,16 +73,16 @@ _LOGGER = logging.getLogger(__name__)
 
 ACCOUNT_URL = "https://mobilitydatabase.org"
 
-TOKEN_SCHEMA = vol.Schema(
+TOKEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_REFRESH_TOKEN): TextSelector(
+        probatio.Required(CONF_REFRESH_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         )
     }
 )
-API_KEY_SCHEMA = vol.Schema(
+API_KEY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         )
     }
@@ -267,17 +267,17 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 errors["base"] = "search_or_select"
 
-        schema: dict[vol.Marker, Any] = {
-            vol.Optional(CONF_SEARCH_QUERY): TextSelector()
+        schema: dict[probatio.Marker, Any] = {
+            probatio.Optional(CONF_SEARCH_QUERY): TextSelector()
         }
         if self._feed_options:
-            schema[vol.Optional(CONF_FEED_ID)] = SelectSelector(
+            schema[probatio.Optional(CONF_FEED_ID)] = SelectSelector(
                 SelectSelectorConfig(
                     options=self._feed_options, mode=SelectSelectorMode.DROPDOWN
                 )
             )
         return self.async_show_form(
-            step_id="search", data_schema=vol.Schema(schema), errors=errors
+            step_id="search", data_schema=probatio.Schema(schema), errors=errors
         )
 
     async def _async_resolve_feed_family(self, feed_id: str) -> ConfigFlowResult:
@@ -572,12 +572,12 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                     self._groups = {group.id: group for group in groups}
                     return await self.async_step_stop()
                 errors["base"] = "no_stops_in_zone"
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(CONF_ZONE): EntitySelector(
+                probatio.Optional(CONF_ZONE): EntitySelector(
                     EntitySelectorConfig(domain="zone")
                 ),
-                vol.Optional(CONF_LOCATION): LocationSelector(
+                probatio.Optional(CONF_LOCATION): LocationSelector(
                     LocationSelectorConfig(radius=True)
                 ),
             }
@@ -604,9 +604,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_routes()
         return self.async_show_form(
             step_id="stop",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STOP): SelectSelector(
+                    probatio.Required(CONF_STOP): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(value=group_key, label=group.name)
@@ -640,9 +640,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_headsigns()
         return self.async_show_form(
             step_id="routes",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_ROUTE_IDS, default=self._route_ids): (
+                    probatio.Optional(CONF_ROUTE_IDS, default=self._route_ids): (
                         SelectSelector(
                             SelectSelectorConfig(
                                 options=[
@@ -685,9 +685,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         current = [headsign for headsign in self._headsigns if headsign in headsigns]
         return self.async_show_form(
             step_id="headsigns",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_HEADSIGNS, default=current): SelectSelector(
+                    probatio.Optional(CONF_HEADSIGNS, default=current): SelectSelector(
                         SelectSelectorConfig(
                             options=headsigns,
                             multiple=True,

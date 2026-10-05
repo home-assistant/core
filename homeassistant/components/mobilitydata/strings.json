@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "build_failed": "Downloading or indexing the transit schedule failed: {error}",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -71,8 +70,7 @@
     "stop": {
       "abort": {
         "already_configured": "This stop is already configured.",
-        "not_ready": "The transit schedule is still being prepared. Try again in a few minutes.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "not_ready": "The transit schedule is still being prepared. Try again in a few minutes."
       },
       "entry_type": "Transit stop",
       "error": {
