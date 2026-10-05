@@ -115,19 +115,22 @@ class OPNsenseFirmwareUpdate(
             self._unsub_post_upgrade_refresh()
             self._unsub_post_upgrade_refresh = None
 
-    async def _async_refresh_after_upgrade(self, now: datetime) -> None:
+    async def _async_refresh_after_upgrade(
+        self, now: datetime, *, generation: int
+    ) -> None:
         """Refresh firmware information after OPNsense restarts."""
+        if generation != self._upgrade_status_generation:
+            return
         self._unsub_post_upgrade_refresh = None
         await self.coordinator.async_request_refresh()
-        if (
-            not self.coordinator.last_update_success
-            and not self._post_upgrade_refresh_retried
-        ):
+        if generation != self._upgrade_status_generation:
+            return
+        if not self._post_upgrade_refresh_retried:
             self._post_upgrade_refresh_retried = True
             self._unsub_post_upgrade_refresh = async_call_later(
                 self.hass,
                 POST_UPGRADE_REFRESH_DELAY,
-                self._async_refresh_after_upgrade,
+                partial(self._async_refresh_after_upgrade, generation=generation),
             )
 
     @property
@@ -180,11 +183,14 @@ class OPNsenseFirmwareUpdate(
         self.async_write_ha_state()
         if status and status.get("status") in ("done", "reboot"):
             self._post_upgrade_refresh_retried = False
+            generation = self._upgrade_status_generation
             await self.coordinator.async_request_refresh()
+            if generation != self._upgrade_status_generation:
+                return
             self._unsub_post_upgrade_refresh = async_call_later(
                 self.hass,
                 POST_UPGRADE_REFRESH_DELAY,
-                self._async_refresh_after_upgrade,
+                partial(self._async_refresh_after_upgrade, generation=generation),
             )
         else:
             _LOGGER.error("OPNsense firmware upgrade failed or timed out: %s", status)

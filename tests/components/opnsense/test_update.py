@@ -434,14 +434,20 @@ async def test_firmware_upgrade_refreshes_after_reboot(
     mock_opnsense_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Retry firmware info once if OPNsense is still restarting."""
+    """Retry once after a stale firmware response while OPNsense restarts."""
     mock_opnsense_client.get_firmware_update_info.side_effect = [
         {
             "status": "update",
             "product": {"product_version": "25.7.8", "product_latest": "25.7.8"},
         },
-        OPNsenseConnectionError("router is rebooting"),
-        OPNsenseConnectionError("router is still rebooting"),
+        {
+            "status": "update",
+            "product": {"product_version": "25.7.8", "product_latest": "25.7.8"},
+        },
+        {
+            "status": "update",
+            "product": {"product_version": "25.7.8", "product_latest": "25.7.8"},
+        },
         {
             "status": "update",
             "product": {"product_version": "25.7.8", "product_latest": "25.7.9"},
@@ -478,6 +484,52 @@ async def test_firmware_upgrade_refreshes_after_reboot(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_opnsense_client.get_firmware_update_info.await_count == 4
+
+
+async def test_firmware_post_upgrade_refresh_does_not_retry_after_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not rearm a delayed refresh after the entity unloads."""
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
+    mock_opnsense_client.upgrade_status.return_value = {"status": "reboot"}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "install", {"entity_id": "update.mock_title_firmware"}, blocking=True
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    update_entity = hass.data[DATA_COMPONENT].get_entity("update.mock_title_firmware")
+    assert update_entity is not None
+    refresh_started = Event()
+    finish_refresh = Event()
+
+    async def wait_for_refresh() -> None:
+        refresh_started.set()
+        await finish_refresh.wait()
+
+    refresh = AsyncMock(side_effect=wait_for_refresh)
+    monkeypatch.setattr(update_entity.coordinator, "async_request_refresh", refresh)
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await refresh_started.wait()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    finish_refresh.set()
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    refresh.assert_awaited_once()
 
 
 async def test_firmware_upgrade_times_out(
