@@ -132,11 +132,19 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self._stop_id)
                 self._abort_if_unique_id_configured()
 
-                api = await BizkaibusAPI.create(
-                    BizkaibusLanguages.ES,
-                    self._stop_id,
-                    session=async_get_clientsession(self.hass),
-                )
+                try:
+                    api = await BizkaibusAPI.create(
+                        BizkaibusLanguages.ES,
+                        self._stop_id,
+                        session=async_get_clientsession(self.hass),
+                    )
+                except BizkaibusConnectionError:
+                    errors["base"] = "cannot_connect"
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=USER_DATA_SCHEMA,
+                        errors=errors,
+                    )
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
@@ -202,11 +210,21 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(stop_id)
                     self._abort_if_unique_id_configured()
 
-                api = await BizkaibusAPI.create(
-                    BizkaibusLanguages.ES,
-                    stop_id,
-                    session=async_get_clientsession(self.hass),
-                )
+                try:
+                    api = await BizkaibusAPI.create(
+                        BizkaibusLanguages.ES,
+                        stop_id,
+                        session=async_get_clientsession(self.hass),
+                    )
+                except BizkaibusConnectionError:
+                    errors["base"] = "cannot_connect"
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, reconfigure_entry.data
+                        ),
+                        errors=errors,
+                    )
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
@@ -234,11 +252,14 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         if not stop_id:
             return self.async_abort(reason="invalid_stop_id")
 
-        api = await BizkaibusAPI.create(
-            BizkaibusLanguages.ES,
-            stop_id,
-            session=async_get_clientsession(self.hass),
-        )
+        try:
+            api = await BizkaibusAPI.create(
+                BizkaibusLanguages.ES,
+                stop_id,
+                session=async_get_clientsession(self.hass),
+            )
+        except BizkaibusConnectionError:
+            return self.async_abort(reason="cannot_connect")
         line_ids, lines = await _async_get_lines(api)
         if line_ids == []:
             return self.async_abort(reason="cannot_connect")
@@ -315,11 +336,14 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
                 },
             )
 
-        api = await BizkaibusAPI.create(
-            BizkaibusLanguages.ES,
-            self.config_entry.data[CONF_STOP_ID],
-            session=async_get_clientsession(self.hass),
-        )
+        try:
+            api = await BizkaibusAPI.create(
+                BizkaibusLanguages.ES,
+                self.config_entry.data[CONF_STOP_ID],
+                session=async_get_clientsession(self.hass),
+            )
+        except BizkaibusConnectionError:
+            return self.async_abort(reason="cannot_connect")
         self._line_ids, self._lines = await _async_get_lines(api)
         if self._line_ids == []:
             return self.async_abort(reason="cannot_connect")

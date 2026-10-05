@@ -23,6 +23,25 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from tests.common import MockConfigEntry
 
 
+def _mock_api(
+    mock_api_class: object,
+    *,
+    lines: list[SimpleNamespace] | None = None,
+    timetable: SimpleNamespace | None = None,
+    test_connection: bool | list[bool] = True,
+) -> SimpleNamespace:
+    """Create a mock Bizkaibus API instance matching the async factory API."""
+    mock_api = mock_api_class.return_value
+    mock_api_class.create = AsyncMock(return_value=mock_api)
+    if isinstance(test_connection, list):
+        mock_api.test_connection = AsyncMock(side_effect=test_connection)
+    else:
+        mock_api.test_connection = AsyncMock(return_value=test_connection)
+    mock_api.get_lines_on_stop = AsyncMock(return_value=lines or [])
+    mock_api.get_timetable = AsyncMock(return_value=timetable)
+    return mock_api
+
+
 async def test_user_flow_displays_form(hass: HomeAssistant) -> None:
     """Test the user step displays the form."""
     result = await hass.config_entries.flow.async_init(
@@ -43,11 +62,11 @@ async def test_user_flow_with_valid_stop_id(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api_class.create = AsyncMock(return_value=mock_api)
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[line1, line2])
-        mock_api.get_timetable = AsyncMock(return_value=timetable)
+        _mock_api(
+            mock_api_class,
+            lines=[line1, line2],
+            timetable=timetable,
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -73,12 +92,11 @@ async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(side_effect=[False, True, True])
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            test_connection=[False, True, True],
         )
-        mock_api.get_timetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -121,10 +139,11 @@ async def test_user_flow_with_timetable_none(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[line])
-        mock_api.get_timetable = AsyncMock(return_value=None)
+        _mock_api(
+            mock_api_class,
+            lines=[line],
+            timetable=None,
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -143,10 +162,10 @@ async def test_user_flow_with_title_connection_error(hass: HomeAssistant) -> Non
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(side_effect=[True, False])
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            test_connection=[True, False],
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -174,10 +193,11 @@ async def test_lines_flow_creates_entry(hass: HomeAssistant) -> None:
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
         mock_setup.return_value = True
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[line1, line2])
-        mock_api.get_timetable = AsyncMock(return_value=timetable)
+        _mock_api(
+            mock_api_class,
+            lines=[line1, line2],
+            timetable=timetable,
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -211,10 +231,11 @@ async def test_lines_flow_with_single_line(hass: HomeAssistant) -> None:
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
         mock_setup.return_value = True
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[line])
-        mock_api.get_timetable = AsyncMock(return_value=timetable)
+        _mock_api(
+            mock_api_class,
+            lines=[line],
+            timetable=timetable,
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -243,10 +264,11 @@ async def test_lines_flow_displays_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[line1, line2])
-        mock_api.get_timetable = AsyncMock(return_value=timetable)
+        _mock_api(
+            mock_api_class,
+            lines=[line1, line2],
+            timetable=timetable,
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -274,10 +296,11 @@ async def test_duplicate_stop_entry_is_blocked(hass: HomeAssistant) -> None:
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
         mock_setup.return_value = True
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[line])
-        mock_api.get_timetable = AsyncMock(return_value=timetable)
+        _mock_api(
+            mock_api_class,
+            lines=[line],
+            timetable=timetable,
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -323,15 +346,12 @@ async def test_reconfigure_step(hass: HomeAssistant) -> None:
         ),
     ):
         mock_setup.return_value = True
-        mock_api = mock_api_class.return_value
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_0232", name="Central Station"),
+        )
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
-        )
-        mock_api.get_timetable = AsyncMock(
-            return_value=SimpleNamespace(id="stop_0232", name="Central Station")
-        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -403,15 +423,12 @@ async def test_reconfigure_step_without_changing_stop(hass: HomeAssistant) -> No
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            timetable=SimpleNamespace(id="stop_0252", name="Central Station"),
+        )
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
-        )
-        mock_api.get_timetable = AsyncMock(
-            return_value=SimpleNamespace(id="stop_0252", name="Central Station")
-        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -466,10 +483,10 @@ async def test_reconfigure_step_with_title_connection_error(
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(side_effect=[True, False])
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            test_connection=[True, False],
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -499,13 +516,12 @@ async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.test_connection = AsyncMock(side_effect=[False, True, True])
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            test_connection=[False, True, True],
         )
-        mock_api.get_timetable = AsyncMock(return_value=None)
+        config_entry.runtime_data = SimpleNamespace(api=mock_api)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -544,16 +560,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.test_connection = AsyncMock(return_value=True)
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[
                 SimpleNamespace(id="A", route="Route A updated"),
                 SimpleNamespace(id="C", route="Route C"),
-            ]
+            ],
         )
-        mock_api.get_timetable = AsyncMock(return_value=None)
+        config_entry.runtime_data = SimpleNamespace(api=mock_api)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -585,11 +599,12 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
             "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
         ) as mock_api_class,
     ):
-        mock_api = mock_api_class.return_value
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[],
+            test_connection=[True, False],
+        )
         config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.test_connection = AsyncMock(side_effect=[True, False])
-        mock_api.get_lines_on_stop = AsyncMock(return_value=[])
-        mock_api.get_timetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -606,9 +621,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         ) as mock_api_class,
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
-        mock_api_class.return_value.test_connection = AsyncMock(return_value=True)
-        mock_api_class.return_value.get_lines_on_stop = AsyncMock(return_value=[])
-        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
+        _mock_api(mock_api_class)
         mock_setup.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_STOP_ID: "1234"}
@@ -616,7 +629,6 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
-    mock_api_class.return_value.__aexit__.assert_awaited_once()
 
 
 async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
@@ -624,7 +636,7 @@ async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api_class.return_value.test_connection = AsyncMock(
+        mock_api_class.create = AsyncMock(
             side_effect=BizkaibusConnectionError("Bizkaibus service returned NOINFO")
         )
         result = await hass.config_entries.flow.async_init(
@@ -643,11 +655,10 @@ async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:
         ) as mock_api_class,
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
-        mock_api_class.return_value.test_connection = AsyncMock(return_value=True)
-        mock_api_class.return_value.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
         )
-        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
         mock_setup.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -661,7 +672,6 @@ async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:
         CONF_LINE_IDS: ["A"],
         CONF_LINES: {"A": "Route A"},
     }
-    mock_api_class.return_value.__aexit__.assert_awaited_once()
 
 
 async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> None:
@@ -679,14 +689,13 @@ async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> No
         ) as mock_api_class,
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
-        mock_api_class.return_value.test_connection = AsyncMock(return_value=True)
-        mock_api_class.return_value.get_lines_on_stop = AsyncMock(
-            return_value=[
+        _mock_api(
+            mock_api_class,
+            lines=[
                 SimpleNamespace(id="A", route="Route A"),
                 SimpleNamespace(id="B", route="Route B"),
-            ]
+            ],
         )
-        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
         mock_setup.return_value = True
 
         result = await hass.config_entries.flow.async_init(
@@ -696,7 +705,7 @@ async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> No
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == "import_updated"
     assert config_entry.options == {
         CONF_LINE_IDS: ["A", "B"],
         CONF_LINES: {"A": "Route A", "B": "Route B"},
@@ -715,11 +724,10 @@ async def test_import_flow_aborts_for_existing_line(hass: HomeAssistant) -> None
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api_class.return_value.test_connection = AsyncMock(return_value=True)
-        mock_api_class.return_value.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
         )
-        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -749,11 +757,10 @@ async def test_import_flow_with_unknown_route(hass: HomeAssistant) -> None:
         ) as mock_api_class,
         patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
     ):
-        mock_api_class.return_value.test_connection = AsyncMock(return_value=True)
-        mock_api_class.return_value.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
         )
-        mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
         mock_setup.return_value = True
 
         result = await hass.config_entries.flow.async_init(
@@ -771,10 +778,10 @@ async def test_import_flow_title_connection_error(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        mock_api.test_connection = AsyncMock(side_effect=[True, False])
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            test_connection=[True, False],
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -799,13 +806,12 @@ async def test_options_flow_connection_error_on_save(hass: HomeAssistant) -> Non
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api = mock_api_class.return_value
-        config_entry.runtime_data = SimpleNamespace(api=mock_api)
-        mock_api.test_connection = AsyncMock(side_effect=[True, False])
-        mock_api.get_lines_on_stop = AsyncMock(
-            return_value=[SimpleNamespace(id="A", route="Route A")]
+        mock_api = _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+            test_connection=[True, False],
         )
-        mock_api.get_timetable = AsyncMock(return_value=None)
+        config_entry.runtime_data = SimpleNamespace(api=mock_api)
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
