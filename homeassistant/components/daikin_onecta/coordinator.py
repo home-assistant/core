@@ -26,8 +26,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self, hass: HomeAssistant, config_entry: ConfigEntry, daikin_api: DaikinApi
     ) -> None:
         """Initialize."""
+        self.config_entry: ConfigEntry
         self.options = config_entry.options
-        self._config_entry = config_entry
         self._daikin_api = daikin_api
 
         super().__init__(
@@ -105,7 +105,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         device = DaikinOnectaDevice(dev_data, self.api)
                         # Register the gateway device before entity platforms are set
                         # up so they can link back to this gateway device.
-                        device.async_register_ha_device(self.hass, self._config_entry)
+                        device.async_register_ha_device(self.hass, self.config_entry)
                         devices[dev_data.id] = device
 
                 self.update_interval = self._determine_update_interval(self.hass)
