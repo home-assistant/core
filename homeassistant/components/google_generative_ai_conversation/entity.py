@@ -4,13 +4,13 @@ import asyncio
 import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
-from dataclasses import dataclass, replace
+from dataclasses import replace
 import datetime
 import mimetypes
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from google.genai import Client
+from google.genai import Client, interactions
 from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
@@ -54,7 +54,9 @@ from .const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    CONF_USE_INTERACTIONS_API,
     DOMAIN,
+    ERROR_GETTING_RESPONSE,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -67,16 +69,21 @@ from .const import (
     RECOMMENDED_TOP_P,
     TIMEOUT_MILLIS,
 )
+from .helpers import ContentDetails, PartDetails
+from .interactions import (
+    async_prepare_chat_log_attachments,
+    build_interaction_request,
+    convert_chat_log_to_interactions_steps,
+    format_response_format,
+    format_tools_for_interactions,
+    transform_interactions_stream,
+)
 
 if TYPE_CHECKING:
     from . import GoogleGenerativeAIConfigEntry
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
-
-ERROR_GETTING_RESPONSE = (
-    "Sorry, I had a problem getting a response from Google Generative AI."
-)
 
 
 SUPPORTED_SCHEMA_KEYS = {
@@ -290,30 +297,6 @@ def _create_google_tool_response_content(
         role="user",
         parts=_create_google_tool_response_parts(content),
     )
-
-
-@dataclass(slots=True)
-class PartDetails:
-    """Additional data for a content part."""
-
-    part_type: Literal["text", "thought", "function_call"]
-    """The part type for which this data is relevant for."""
-
-    index: int
-    """Start position or number of the tool."""
-
-    length: int = 0
-    """Length of the relevant data."""
-
-    thought_signature: str | None = None
-    """Base64 encoded thought signature, if available."""
-
-
-@dataclass(slots=True)
-class ContentDetails:
-    """Native data for AssistantContent."""
-
-    part_details: list[PartDetails]
 
 
 def _convert_content(
@@ -582,6 +565,15 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
+        if self.entry.options.get(CONF_USE_INTERACTIONS_API, False):
+            await self._async_handle_chat_log_interactions(
+                chat_log,
+                structure=structure,
+                default_max_tokens=default_max_tokens,
+                max_iterations=max_iterations,
+            )
+            return
+
         options = self.subentry.data
 
         tools: ToolListUnion | None = None
@@ -727,6 +719,103 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                     ]
                 )
             )
+
+            if not chat_log.unresponded_tool_results:
+                break
+
+    async def _async_handle_chat_log_interactions(
+        self,
+        chat_log: conversation.ChatLog,
+        structure: probatio.Schema | None = None,
+        default_max_tokens: int | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
+    ) -> None:
+        """Generate an answer for the chat log using the Interactions API."""
+        options = self.subentry.data
+        model_name = options.get(CONF_CHAT_MODEL, self.default_model)
+        supports_system_instruction = (
+            "gemma" not in model_name
+            and "gemini-2.0-flash-preview-image-generation" not in model_name
+        )
+
+        prompt_content = cast(
+            conversation.SystemContent,
+            chat_log.content[0],
+        )
+
+        if prompt_content.content:
+            prompt = prompt_content.content
+        else:
+            raise HomeAssistantError("Invalid prompt content")
+
+        enable_google_search = bool(options.get(CONF_USE_GOOGLE_SEARCH_TOOL, False))
+        interactions_tools = format_tools_for_interactions(
+            tools=chat_log.llm_api.tools if chat_log.llm_api else None,
+            custom_serializer=(
+                chat_log.llm_api.custom_serializer if chat_log.llm_api else None
+            ),
+            enable_google_search=enable_google_search,
+        )
+
+        response_format = format_response_format(
+            structure,
+            custom_serializer=(
+                chat_log.llm_api.custom_serializer if chat_log.llm_api else None
+            ),
+        )
+
+        prepared_attachments = await async_prepare_chat_log_attachments(
+            self.hass, chat_log
+        )
+
+        for _iteration in range(max_iterations):
+            input_steps = convert_chat_log_to_interactions_steps(
+                chat_log, prepared_attachments=prepared_attachments
+            )
+
+            if not supports_system_instruction:
+                input_steps = [
+                    interactions.UserInputStep(
+                        content=[interactions.TextContent(text=prompt)]
+                    ),
+                    interactions.ModelOutputStep(
+                        content=[interactions.TextContent(text="Ok")]
+                    ),
+                    *input_steps,
+                ]
+
+            request = build_interaction_request(
+                model=model_name,
+                input_content=input_steps,
+                options=options,
+                system_instruction=prompt if supports_system_instruction else None,
+                tools=interactions_tools or None,
+                response_format=response_format,
+                default_max_tokens=default_max_tokens,
+                stream=True,
+                store=False,
+            )
+
+            try:
+                stream = await self._genai_client.aio.interactions.create(**request)
+            except (
+                APIError,
+                ClientError,
+                ValueError,
+            ) as err:
+                LOGGER.error("Error sending message: %s %s", type(err), err)
+                error = ERROR_GETTING_RESPONSE
+                raise HomeAssistantError(error) from err
+
+            stream_response = cast(
+                AsyncIterator[interactions.InteractionSSEEvent], stream
+            )
+
+            async for _ in chat_log.async_add_delta_content_stream(
+                self.entity_id,
+                transform_interactions_stream(chat_log, stream_response),
+            ):
+                pass
 
             if not chat_log.unresponded_tool_results:
                 break

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from google.genai import types
+from google.genai import interactions, types
 from google.genai.errors import APIError, ClientError
 from propcache.api import cached_property
 
@@ -21,12 +21,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     CONF_CHAT_MODEL,
     CONF_TEMPERATURE,
+    CONF_USE_INTERACTIONS_API,
     LOGGER,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TTS_MODEL,
 )
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
+from .interactions import (
+    build_interaction_request,
+    extract_output_audio,
+    format_audio_response_format,
+)
 
 
 async def async_setup_entry(
@@ -200,6 +206,41 @@ class GoogleGenerativeAITextToSpeechEntity(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
+        if self.entry.options.get(CONF_USE_INTERACTIONS_API, False):
+            return await self._async_get_tts_audio_interactions(message, options)
+        return await self._async_get_tts_audio_models(message, options)
+
+    async def _async_get_tts_audio_interactions(
+        self, message: str, options: dict[str, Any]
+    ) -> TtsAudioType:
+        """Load tts audio using the Gemini Interactions API."""
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
+        voice = options.get(ATTR_VOICE, self._supported_voices[0].voice_id)
+        request = build_interaction_request(
+            model=model,
+            input_content=message,
+            options=self.subentry.data,
+            response_format=format_audio_response_format(mime_type="audio/wav"),
+            speech_config=[interactions.SpeechConfig(voice=voice)],
+            stream=False,
+        )
+        try:
+            interaction = await self._genai_client.aio.interactions.create(**request)
+            if interaction.status in ("failed", "cancelled"):
+                raise HomeAssistantError(
+                    f"Interaction {interaction.id} ended with status: {interaction.status}"
+                )
+            data, mime_type = extract_output_audio(interaction)
+        except (APIError, ClientError, ValueError, TypeError) as exc:
+            LOGGER.error("Error during TTS: %s", exc, exc_info=True)
+            raise HomeAssistantError(exc) from exc
+
+        return "wav", convert_to_wav(data, mime_type)
+
+    async def _async_get_tts_audio_models(
+        self, message: str, options: dict[str, Any]
+    ) -> TtsAudioType:
+        """Load tts audio using the legacy models generate_content API."""
         config = types.GenerateContentConfig()
         config.temperature = self.subentry.data.get(
             CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE

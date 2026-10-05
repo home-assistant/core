@@ -1,14 +1,17 @@
 """Test AI Task platform of Google Generative AI Conversation integration."""
 
+import base64
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
+from google.genai import interactions
 from google.genai.types import File, FileState, GenerateContentResponse
 import probatio
 import pytest
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_USE_INTERACTIONS_API,
     RECOMMENDED_IMAGE_MODEL,
 )
 from homeassistant.core import HomeAssistant
@@ -286,3 +289,252 @@ async def test_generate_image(
     assert call_args.kwargs["model"] == RECOMMENDED_IMAGE_MODEL
     assert call_args.kwargs["contents"] == ["Generate a test image"]
     assert call_args.kwargs["config"].response_modalities == ["TEXT", "IMAGE"]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_with_interactions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test generating structured data with Interactions API enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    events = [
+        interactions.StepStart(
+            index=0,
+            step=interactions.ModelOutputStep(),
+        ),
+        interactions.StepDelta(
+            index=0,
+            delta=interactions.TextDelta(text='{"answer": "Interactions result"}'),
+        ),
+        interactions.StepStop(index=0),
+    ]
+
+    async def mock_stream(*args, **kwargs):
+        for event in events:
+            yield event
+
+    with patch.object(
+        mock_config_entry.runtime_data.aio.interactions,
+        "create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ) as mock_create:
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.google_ai_task",
+            instructions="Generate test data",
+            structure=probatio.Schema({"answer": str}),
+        )
+
+    assert result.data == {"answer": "Interactions result"}
+    assert mock_create.call_count == 1
+    call_kwargs = mock_create.call_args.kwargs
+    assert call_kwargs["stream"] is True
+    assert call_kwargs["store"] is False
+    assert call_kwargs["response_format"] is not None
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
+async def test_generate_image_with_interactions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test AI Task image generation with Interactions API enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    mock_image_bytes = b"fake_interactions_image_data"
+    mock_image_b64 = base64.b64encode(mock_image_bytes).decode("ascii")
+
+    mock_interaction = interactions.Interaction(
+        id="int_img_1",
+        model=RECOMMENDED_IMAGE_MODEL,
+        status="completed",
+        output_text="Here is your generated image",
+        output_image=interactions.ImageContent(
+            data=mock_image_b64,
+            mime_type="image/png",
+        ),
+    )
+
+    with (
+        patch.object(
+            mock_config_entry.runtime_data.aio.interactions,
+            "create",
+            new_callable=AsyncMock,
+            return_value=mock_interaction,
+        ) as mock_create,
+        patch.object(
+            media_source.local_source.LocalSource,
+            "async_upload_media",
+            return_value="media-source://ai_task/image/2025-06-14_155900_test_task.png",
+        ) as mock_upload_media,
+    ):
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.google_ai_task",
+            instructions="Generate a test image",
+        )
+
+    assert result["height"] is None
+    assert result["width"] is None
+    assert result["revised_prompt"] == "Generate a test image"
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == RECOMMENDED_IMAGE_MODEL.partition("/")[-1]
+
+    mock_upload_media.assert_called_once()
+    image_data = mock_upload_media.call_args[0][1]
+    assert image_data.file.getvalue() == mock_image_bytes
+    assert image_data.content_type == "image/png"
+    assert image_data.filename == "2025-06-14_155900_test_task.png"
+
+    assert mock_create.call_count == 1
+    call_kwargs = mock_create.call_args.kwargs
+    assert call_kwargs["model"] == RECOMMENDED_IMAGE_MODEL
+    assert call_kwargs["stream"] is False
+    assert call_kwargs["store"] is False
+    assert call_kwargs["response_format"].type == "image"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
+async def test_generate_image_with_interactions_steps(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test AI Task image generation with image in steps."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    mock_image_bytes = b"fake_steps_image_data"
+    mock_image_b64 = base64.b64encode(mock_image_bytes).decode("ascii")
+
+    mock_interaction = interactions.Interaction(
+        id="int_img_steps",
+        model=RECOMMENDED_IMAGE_MODEL,
+        status="completed",
+        steps=[
+            interactions.ModelOutputStep(
+                content=[
+                    interactions.TextContent(text="Generated image from step"),
+                    interactions.ImageContent(
+                        data=mock_image_b64,
+                        mime_type="image/jpeg",
+                    ),
+                ]
+            )
+        ],
+    )
+
+    with (
+        patch.object(
+            mock_config_entry.runtime_data.aio.interactions,
+            "create",
+            new_callable=AsyncMock,
+            return_value=mock_interaction,
+        ) as mock_create,
+        patch.object(
+            media_source.local_source.LocalSource,
+            "async_upload_media",
+            return_value="media-source://ai_task/image/2025-06-14_155900_test_task.jpg",
+        ) as mock_upload_media,
+    ):
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.google_ai_task",
+            instructions="Generate a test image",
+        )
+
+    assert result["mime_type"] == "image/jpeg"
+    mock_upload_media.assert_called_once()
+    image_data = mock_upload_media.call_args[0][1]
+    assert image_data.file.getvalue() == mock_image_bytes
+    assert mock_create.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_image_with_interactions_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test AI Task image generation failure."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    mock_interaction = interactions.Interaction(
+        id="int_failed",
+        model=RECOMMENDED_IMAGE_MODEL,
+        status="failed",
+        errors=[interactions.Error(message="Prompt violates safety policy")],
+    )
+
+    with (
+        patch.object(
+            mock_config_entry.runtime_data.aio.interactions,
+            "create",
+            new_callable=AsyncMock,
+            return_value=mock_interaction,
+        ),
+        pytest.raises(HomeAssistantError, match="Prompt violates safety policy"),
+    ):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.google_ai_task",
+            instructions="Generate a test image",
+        )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_image_with_interactions_missing_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test AI Task image generation when interaction has no image."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    await hass.async_block_till_done()
+
+    mock_interaction = interactions.Interaction(
+        id="int_no_img",
+        model=RECOMMENDED_IMAGE_MODEL,
+        status="completed",
+        output_text="I could not generate an image",
+    )
+
+    with (
+        patch.object(
+            mock_config_entry.runtime_data.aio.interactions,
+            "create",
+            new_callable=AsyncMock,
+            return_value=mock_interaction,
+        ),
+        pytest.raises(HomeAssistantError, match="Response did not include image"),
+    ):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.google_ai_task",
+            instructions="Generate a test image",
+        )

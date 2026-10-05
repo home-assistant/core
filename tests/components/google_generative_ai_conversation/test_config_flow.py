@@ -21,6 +21,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    CONF_USE_INTERACTIONS_API,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
@@ -852,3 +853,205 @@ async def test_subentry_chat_model_labels_keep_the_full_model_id(
         "learnlm-2.0-flash-experimental",
         "lyria-realtime-exp",
     ]
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test options flow to toggle Interactions API."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_USE_INTERACTIONS_API)
+    assert key.default() is False
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONF_USE_INTERACTIONS_API: True},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_USE_INTERACTIONS_API: True}
+    assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: True}
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_USE_INTERACTIONS_API)
+    assert key.default() is True
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONF_USE_INTERACTIONS_API: False},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_USE_INTERACTIONS_API: False}
+    assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: False}
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_google_search_with_assist_allowed_with_interactions_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that Google Search tool can be enabled with an Assist API when Interactions API is enabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_RECOMMENDED: False},
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+    assert CONF_HARASSMENT_BLOCK_THRESHOLD not in options_flow["data_schema"].schema
+    assert CONF_HATE_BLOCK_THRESHOLD not in options_flow["data_schema"].schema
+    assert CONF_SEXUAL_BLOCK_THRESHOLD not in options_flow["data_schema"].schema
+    assert CONF_DANGEROUS_BLOCK_THRESHOLD not in options_flow["data_schema"].schema
+
+    new_options = {
+        CONF_RECOMMENDED: False,
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_LLM_HASS_API: ["assist"],
+        CONF_TEMPERATURE: 0.3,
+        CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+        CONF_TOP_P: RECOMMENDED_TOP_P,
+        CONF_TOP_K: RECOMMENDED_TOP_K,
+        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+        CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+        CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
+        CONF_USE_GOOGLE_SEARCH_TOOL: True,
+    }
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            new_options,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_USE_GOOGLE_SEARCH_TOOL] is True
+    assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_harm_block_thresholds_visible_without_interactions_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that harm block thresholds are visible when Interactions API is disabled."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_RECOMMENDED: False},
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+    assert CONF_HARASSMENT_BLOCK_THRESHOLD in options_flow["data_schema"].schema
+    assert CONF_HATE_BLOCK_THRESHOLD in options_flow["data_schema"].schema
+    assert CONF_SEXUAL_BLOCK_THRESHOLD in options_flow["data_schema"].schema
+    assert CONF_DANGEROUS_BLOCK_THRESHOLD in options_flow["data_schema"].schema
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_options_flow_cannot_disable_interactions_with_search_and_assist(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that Interactions API cannot be disabled if a subentry has both Assist and Google Search."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_USE_INTERACTIONS_API: True},
+    )
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_LLM_HASS_API: ["assist"],
+            CONF_USE_GOOGLE_SEARCH_TOOL: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_USE_INTERACTIONS_API: False},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_disable_interactions"}
+    assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: True}
+
+    # Now remove the Google Search tool and verify disabling interactions succeeds
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_USE_GOOGLE_SEARCH_TOOL: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONF_USE_INTERACTIONS_API: False},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_USE_INTERACTIONS_API: False}
+    assert mock_config_entry.options == {CONF_USE_INTERACTIONS_API: False}
