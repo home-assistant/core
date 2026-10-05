@@ -15,6 +15,7 @@ from aiopowerwall import (
     PowerwallConnectionError,
     PowerwallFaultError,
 )
+from bleak.backends.device import BLEDevice
 from bleak.exc import BleakDeviceNotFoundError, BleakError
 from bleak_retry_connector import (
     BleakConnectionError,
@@ -1618,6 +1619,8 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
     """A vehicle found by the active scan is connected only once it is heard again."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle()
+    parent = _mock_ble_parent(vehicle)
+    fresh_device = generate_ble_device(ADDRESS)
     events: list[str] = []
     auto_scanner = FakeScanner(
         "AA:BB:CC:00:00:02",
@@ -1628,10 +1631,12 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
     )
     unregister_scanner = async_register_scanner(hass, auto_scanner)
 
-    def _advertise(source: str, connectable: bool) -> None:
+    def _advertise(
+        source: str, connectable: bool, device: BLEDevice | None = None
+    ) -> None:
         inject_advertisement_with_time_and_source_connectable(
             hass,
-            generate_ble_device(ADDRESS),
+            device or generate_ble_device(ADDRESS),
             generate_advertisement_data(),
             time.monotonic(),
             source,
@@ -1651,7 +1656,7 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
 
     def _advertise_after_window_ends() -> None:
         events.append("advertisement after the active window ends")
-        _advertise(auto_scanner.source, True)
+        _advertise(auto_scanner.source, True, fresh_device)
 
     async def _active_scan(hass: HomeAssistant) -> None:
         events.append("active scan")
@@ -1671,7 +1676,7 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
-            return_value=_mock_ble_parent(vehicle),
+            return_value=parent,
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
     ):
@@ -1690,6 +1695,8 @@ async def test_subentry_scan_waits_for_advertisement_after_active_scan(
         "advertisement after the active window ends",
         "connect",
     ]
+    # The pre-scan handle may be stale, so the connection uses the advertisement heard afterwards.
+    parent.vehicles.createBluetooth.assert_called_once_with(VIN, device=fresh_device)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert len(subentries) == 1

@@ -301,7 +301,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                         )
                     else:
                         # Ending the active scan drops the vehicle from a local adapter until its next advertisement.
-                        heard: asyncio.Future[None] = self.hass.loop.create_future()
+                        heard: asyncio.Future[BluetoothServiceInfoBleak] = (
+                            self.hass.loop.create_future()
+                        )
 
                         @callback
                         def _async_heard(
@@ -318,14 +320,14 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                                     for scanner in async_current_scanners(self.hass)
                                 )
                             ):
-                                heard.set_result(None)
+                                heard.set_result(service_info)
 
                         cancel = async_register_advertisement_callback(
                             self.hass, _async_heard, info.address
                         )
                         try:
                             async with asyncio.timeout(BLE_ADVERTISEMENT_TIMEOUT):
-                                await heard
+                                info = await heard
                         except TimeoutError:
                             LOGGER.debug(
                                 "Vehicle not heard again after the active scan"
