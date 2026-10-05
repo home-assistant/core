@@ -774,6 +774,23 @@
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }
   },
+  "issues": {
+    "full_dust": {
+      "fix_flow": {
+        "abort": {
+          "entry_removed": "The device config entry was removed.",
+          "reset_requested": "The reset command was sent. This repair will close when the device reports that the filter reminder has cleared."
+        },
+        "step": {
+          "confirm": {
+            "description": "The device reports that its air filter is full. A dirty filter can restrict airflow and reduce performance.\n\n1. Clean and reinstall the air filter according to the device manual.\n2. Select Submit to reset the reminder.\n\nThis repair will close when the device reports that the filter reminder has cleared.",
+            "title": "Reset the filter reminder"
+          }
+        }
+      },
+      "title": "Clean the air conditioner filter"
+    }
+  },
   "selector": {
     "login_mode": {
       "options": {
