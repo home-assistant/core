@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DOMAIN
 
@@ -472,6 +472,7 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
 async def test_climate_service_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     patch_result: bool,
 ) -> None:
@@ -503,6 +504,12 @@ async def test_climate_service_updates_entity_state(
     )
     device.management_point.return_value = climate_control
     device.patch = AsyncMock(return_value=patch_result)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, device.id)},
+        manufacturer="Daikin",
+        name=device.name,
+    )
 
     coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     coordinator.data = {device.id: device}
@@ -529,7 +536,7 @@ async def test_climate_service_updates_entity_state(
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, "gateway_zone_roomTemperature"
     )
-    assert entity_id is not None
+    assert entity_id == "climate.daikin_room_temperature"
 
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
