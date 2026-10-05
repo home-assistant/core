@@ -332,6 +332,70 @@ def test_combined_color_preferred() -> None:
     ]
 
 
+def _with_com_objects(**com_objects: dict) -> dict[str, Any]:
+    """Return the test project extended by additional com objects."""
+    return {
+        **TEST_PROJECT,
+        "communication_objects": TEST_PROJECT["communication_objects"] | com_objects,
+    }
+
+
+def test_passive_address_with_other_dpt_dropped() -> None:
+    """Test passive addresses are checked against the DPT of their key."""
+    project = _with_com_objects(
+        # 1/0/5 is DPT 5.001 - not a valid switch address
+        **{"co-90": _com_object(["417.52"], ["1/0/1", "1/0/5", "1/0/2"])},
+        # 5/0/3 is DPT 5.001 - a valid colour temperature DPT, but not the one
+        # of the key, which is set from the first address (7.600)
+        **{"co-91": _com_object(["427.81"], ["5/0/5", "5/0/3"])},
+    )
+    suggestion = _build_platform_suggestion(
+        project, _channel("Mixed", ["417"], ["co-90"]), Platform.SWITCH
+    )
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_switch": {"write": "1/0/1", "passive": ["1/0/2"]}}
+    assert "1/0/5" not in [
+        ga["address"] for ga in suggestion["matched_group_addresses"]
+    ]
+
+    suggestion = _build_platform_suggestion(
+        project, _channel("TW", ["427"], ["co-50", "co-91"]), Platform.LIGHT
+    )
+    assert suggestion is not None
+    assert suggestion["knx"]["ga_color_temp"] == {"write": "5/0/5", "dpt": "7.600"}
+
+
+def test_incomplete_preferred_color_option_skipped() -> None:
+    """Test an incomplete preferred option doesn't hide a complete one."""
+    # combined colour only provides a state address - not enough for `ga_color`
+    channel = _channel(
+        "RGB",
+        ["423"],
+        [
+            "co-60",
+            "co-61",
+            "co-63",
+            "co-70",
+            "co-71",
+            "co-72",
+            "co-73",
+            "co-74",
+            "co-75",
+        ],
+    )
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "ga_switch": {"write": "6/0/1", "state": "6/0/2"},
+        "color": {
+            "ga_red_brightness": {"write": "6/1/1", "state": "6/1/2"},
+            "ga_green_brightness": {"write": "6/1/3", "state": "6/1/4"},
+            "ga_blue_brightness": {"write": "6/1/5", "state": "6/1/6"},
+        },
+    }
+    assert suggestion["unmatched"] == ["423.81"]
+
+
 def test_individual_color_without_combined() -> None:
     """Test individual colour addresses are used when no combined com objects exist."""
     channel = _channel(

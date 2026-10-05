@@ -10,6 +10,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 from functools import cache
+from itertools import product
 from typing import TYPE_CHECKING, Any, Final, Literal, Required, TypedDict, override
 
 from awesomeversion import AwesomeVersion
@@ -268,41 +269,65 @@ def _try_assign_dpa(
         assignment.ga_schema[CONF_DPT] = dpt_value
     assignment.dpas.append(dpa)
     assignment.group_addresses.add(primary_ga)
-    if target.selector.passive and len(ga_links) > 1:
+    if target.selector.passive and (
+        passive_links := [
+            ga
+            for ga in ga_links[1:]
+            if _passive_dpt_valid(
+                project["group_addresses"][ga]["dpt"],
+                target.selector,
+                assignment.ga_schema.get(CONF_DPT),
+            )
+        ]
+    ):
         passive: list[str] = assignment.ga_schema.setdefault(CONF_GA_PASSIVE, [])
-        passive.extend(ga for ga in ga_links[1:] if ga not in passive)
-        assignment.group_addresses.update(ga_links[1:])
+        passive.extend(ga for ga in passive_links if ga not in passive)
+        assignment.group_addresses.update(passive_links)
     return True
 
 
-def _resolve_group_select_options(
-    assignments: dict[ConfigPath, _SlotAssignment],
-    unmatched: set[str],
-) -> None:
-    """Drop assignments of all but the preferred matched group select option.
+def _passive_dpt_valid(
+    ga_dpt: DPTType | None, selector: GASelector, dpt_value: str | None
+) -> bool:
+    """Check a passive address against the selector and the DPT of its key.
 
-    A device may provide com objects matching multiple options (eg. combined
-    and individual colour addresses).
+    Passive addresses are decoded with the DPT of their key, so for selectors
+    choosing a DPT they have to resolve to the same choice.
     """
-    # group select path -> option index -> assignment paths
-    group_selects: dict[ConfigPath, dict[int, list[ConfigPath]]] = {}
+    return _ga_dpt_valid_for_selector(ga_dpt, selector) and (
+        _dpt_select_value(ga_dpt, selector) == dpt_value
+    )
+
+
+def _group_select_alternatives(
+    assignments: dict[ConfigPath, _SlotAssignment],
+) -> Iterator[dict[ConfigPath, _SlotAssignment]]:
+    """Yield the assignments for each combination of group select options.
+
+    Group select options are mutually exclusive alternatives, but a device may
+    provide com objects matching multiple options (eg. combined and individual
+    colour addresses), or only part of one. Combinations are yielded in order of
+    preference - lower options first - so the first valid one is the preferred
+    complete option.
+    """
+    fixed: dict[ConfigPath, _SlotAssignment] = {}
+    # group select path -> option index -> assignments of that option
+    options: dict[ConfigPath, dict[int, dict[ConfigPath, _SlotAssignment]]] = {}
     for path, assignment in assignments.items():
-        if assignment.group_select is None:
+        if (option := assignment.group_select) is None:
+            fixed[path] = assignment
             continue
-        option = assignment.group_select
-        group_selects.setdefault(option.path, {}).setdefault(option.index, []).append(
-            path
+        options.setdefault(option.path, {}).setdefault(option.index, {})[path] = (
+            assignment
         )
-    for options in group_selects.values():
-        if len(options) <= 1:
-            continue
-        winning_option = min(options)
-        for option_index, paths in options.items():
-            if option_index == winning_option:
-                continue
-            for path in paths:
-                unmatched.update(assignments[path].dpas)
-                del assignments[path]
+    choices = [
+        [by_index[index] for index in sorted(by_index)] for by_index in options.values()
+    ]
+    for combination in product(*choices):
+        alternative = dict(fixed)
+        for chosen in combination:
+            alternative |= chosen
+        yield alternative
 
 
 def _set_nested_value(config: dict[str, Any], path: ConfigPath, value: Any) -> None:
@@ -342,29 +367,35 @@ def _build_platform_suggestion(
             ):
                 unmatched.add(dpa)
 
-    _resolve_group_select_options(assignments, unmatched)
-
-    knx_config: dict[str, Any] = {}
-    matched_group_addresses: set[str] = set()
-    for path, assignment in assignments.items():
-        _set_nested_value(knx_config, path, assignment.ga_schema)
-        matched_group_addresses.update(assignment.group_addresses)
-
-    # the schema decides what a complete configuration needs - eg. a write address
-    if not assignments or not _validates(platform, knx_config):
-        return None
-
-    return PlatformSuggestion(
-        knx=knx_config,
-        # names carry the semantics a channel name often lacks
-        matched_group_addresses=[
-            SuggestedGroupAddress(
-                address=address, name=project["group_addresses"][address]["name"]
-            )
-            for address in sorted(matched_group_addresses)
-        ],
-        unmatched=sorted(unmatched),
-    )
+    for alternative in _group_select_alternatives(assignments):
+        if not alternative:
+            continue
+        knx_config: dict[str, Any] = {}
+        for path, assignment in alternative.items():
+            _set_nested_value(knx_config, path, assignment.ga_schema)
+        # the schema decides what a complete configuration needs - eg. a write address
+        if not _validates(platform, knx_config):
+            continue
+        for path in assignments.keys() - alternative.keys():
+            unmatched.update(assignments[path].dpas)
+        return PlatformSuggestion(
+            knx=knx_config,
+            # names carry the semantics a channel name often lacks
+            matched_group_addresses=[
+                SuggestedGroupAddress(
+                    address=address, name=project["group_addresses"][address]["name"]
+                )
+                for address in sorted(
+                    {
+                        address
+                        for assignment in alternative.values()
+                        for address in assignment.group_addresses
+                    }
+                )
+            ],
+            unmatched=sorted(unmatched),
+        )
+    return None
 
 
 def _build_channel_suggestion(
