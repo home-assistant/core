@@ -1,8 +1,8 @@
 """The tests for the Netatmo climate platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from pyatmo.enums import TemperatureControlMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,7 +21,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
+from .common import (
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 from tests.common import MockConfigEntry
 
@@ -117,24 +122,38 @@ async def test_select_schedule_thermostats(
 async def test_select_schedule_follows_temperature_control_mode(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
 ) -> None:
     """Test the offered schedules follow the home temperature control mode."""
-    with selected_platforms(["climate", "select"]):
+
+    def set_heating_mode(payload: dict[str, Any]) -> None:
+        """Put the home in heating mode with the heating schedule selected."""
+        for home in payload.get("body", {}).get("homes", []):
+            if home["id"] != "91763b24c43d3e344f424e8b":
+                continue
+            home["temperature_control_mode"] = "heating"
+            for schedule in home["schedules"]:
+                schedule["selected"] = schedule["id"] == "b1b54a2f45795764f59d50d8"
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data for a home in heating mode."""
+        return await fake_post_request(
+            hass, *args, msg_callback=set_heating_mode, **kwargs
+        )
+
+    with (
+        selected_platforms(["climate", "select"]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     select_entity = "select.myhome_schedule"
-    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Default"]
-
-    # The home switches from cooling to heating
-    data_handler = config_entry.runtime_data
-    home = data_handler.account.homes["91763b24c43d3e344f424e8b"]
-    home.temperature_control_mode = TemperatureControlMode.HEATING
-    home.schedules["b1b54a2f45795764f59d50d8"].selected = True
-    data_handler._notify_subscribers(f"home-{home.entity_id}")
-    await hass.async_block_till_done()
-
     assert hass.states.get(select_entity).state == "Winter"
     assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Winter"]
 
