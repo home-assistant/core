@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
-from functools import cache, wraps
+from functools import cache, partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -30,9 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_webrtc_providers"
-)
-_DATA_WEBRTC_SESSION_OWNERS: HassKey[dict[str, object]] = HassKey(
-    "camera_webrtc_session_owners"
 )
 
 
@@ -138,16 +135,6 @@ class CameraWebRTCProvider(ABC):
         send_message: WebRTCSendMessage,
     ) -> None:
         """Handle the WebRTC offer and return the answer via the provided callback."""
-
-    @abstractmethod
-    async def async_handle_async_webrtc_re_offer(
-        self,
-        camera: Camera,
-        offer_sdp: str,
-        session_id: str,
-        send_message: WebRTCSendMessage,
-    ) -> None:
-        """Handle the WebRTC offer on renegotiations and return the answer via the provided callback."""
 
     @abstractmethod
     async def async_on_webrtc_candidate(
@@ -262,31 +249,6 @@ def require_webrtc_support(
     return decorate
 
 
-@callback
-def _async_subscribe_session(
-    connection: websocket_api.ActiveConnection,
-    msg_id: int,
-    camera: Camera,
-    session_id: str,
-) -> None:
-    """Make the subscription the owner of the session and close it on unsubscribe.
-
-    A re-offer replaces the owner, so dropping the subscription of an earlier
-    offer must not close the session that is now owned by the re-offer.
-    """
-    owners = camera.hass.data.setdefault(_DATA_WEBRTC_SESSION_OWNERS, {})
-    owners[session_id] = token = object()
-
-    @callback
-    def close_session() -> None:
-        if owners.get(session_id) is not token:
-            return
-        del owners[session_id]
-        camera.close_webrtc_session(session_id)
-
-    connection.subscriptions[msg_id] = close_session
-
-
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "camera/webrtc/offer",
@@ -311,7 +273,9 @@ async def ws_webrtc_offer(
     """
     offer = msg["offer"]
     session_id = ulid()
-    _async_subscribe_session(connection, msg["id"], camera, session_id)
+    connection.subscriptions[msg["id"]] = partial(
+        camera.close_webrtc_session, session_id
+    )
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -329,59 +293,6 @@ async def ws_webrtc_offer(
 
     try:
         await camera.async_handle_async_webrtc_offer(offer, session_id, send_message)
-    except HomeAssistantError as ex:
-        _LOGGER.error("Error handling WebRTC offer: %s", ex)
-        send_message(
-            WebRTCError(
-                "webrtc_offer_failed",
-                str(ex),
-            )
-        )
-
-
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): "camera/webrtc/re_offer",
-        probatio.Required("entity_id"): cv.entity_id,
-        probatio.Required("offer"): str,
-        probatio.Required("session_id"): str,
-    }
-)
-@websocket_api.async_response
-@require_webrtc_support("webrtc_offer_failed")
-async def ws_webrtc_re_offer(
-    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
-) -> None:
-    """Handle the signal path for renegotiation of the WebRTC stream.
-
-    This signal path is used to route the offer created by the client to the
-    camera device through the integration for renegotiations.
-    The ws endpoint returns a subscription id, where ice candidates and the
-    final answer will be returned.
-    The actual streaming is handled entirely between the client and camera device.
-
-    Async friendly.
-    """
-    offer = msg["offer"]
-    session_id = msg["session_id"]
-    _async_subscribe_session(connection, msg["id"], camera, session_id)
-
-    connection.send_message(websocket_api.result_message(msg["id"]))
-
-    @callback
-    def send_message(message: WebRTCMessage) -> None:
-        """Push a value to websocket."""
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                message.as_dict(),
-            )
-        )
-
-    send_message(WebRTCSession(session_id))
-
-    try:
-        await camera.async_handle_async_webrtc_re_offer(offer, session_id, send_message)
     except HomeAssistantError as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         send_message(
@@ -442,7 +353,6 @@ def async_register_ws(hass: HomeAssistant) -> None:
     """Register camera webrtc ws endpoints."""
 
     websocket_api.async_register_command(hass, ws_webrtc_offer)
-    websocket_api.async_register_command(hass, ws_webrtc_re_offer)
     websocket_api.async_register_command(hass, ws_get_client_config)
     websocket_api.async_register_command(hass, ws_candidate)
 

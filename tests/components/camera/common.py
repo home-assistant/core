@@ -65,16 +65,6 @@ class SomeTestProvider(CameraWebRTCProvider):
         """
         send_message(WebRTCAnswer(answer="answer"))
 
-    async def async_handle_async_webrtc_re_offer(
-        self,
-        camera: Camera,
-        offer_sdp: str,
-        session_id: str,
-        send_message: WebRTCSendMessage,
-    ) -> None:
-        """Handle the WebRTC offer on renegotiation and return the answer."""
-        send_message(WebRTCAnswer(answer="answer"))
-
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
