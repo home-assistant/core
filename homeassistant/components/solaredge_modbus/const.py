@@ -32,6 +32,10 @@ SUBSYSTEM_METERS: Final = "meters"
 SUBSYSTEM_STORAGE_CAPACITY: Final = "storage_capacity"
 SUBSYSTEM_STORAGE_CONTROL: Final = "storage_control"
 
+# The blocks that bring a device of their own. Hardware wired in later is only
+# found by asking, so these stay worth a timeout however long they stay quiet.
+DEVICE_SUBSYSTEMS: Final = frozenset({SUBSYSTEM_BATTERIES, SUBSYSTEM_METERS})
+
 # The writable control blocks, as an UpdateReport names them. Export control's
 # read spans storage control, so the library reads and reports the two as one.
 SUBSYSTEM_ADVANCED_POWER_CONTROL: Final = "advanced_power_control"

@@ -1115,3 +1115,35 @@ async def test_a_block_that_blips_once_keeps_being_asked(
         await hass.async_block_till_done()
 
     assert "power_control" not in asked[1], "a blip settled a block that answered"
+
+
+async def test_a_silent_battery_block_keeps_being_asked(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A block that brings a device is asked about however quiet it stays.
+
+    Settling it would stop a battery wired in later being found, which is what
+    the dynamic-devices rule asks of this integration.
+    """
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        for _ in range(2):
+            freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert "batteries" not in asked[1], "a block that brings a device was settled"
