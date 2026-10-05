@@ -168,9 +168,11 @@ class SolarEdgeModbusRuntimeData:
     settings: SolarEdgeModbusDataUpdateCoordinator
     device_info: DeviceInfo
     inverter_device_id: str
+
     # What was attached when this entry was built, to notice a swap: a meter
     # replaced by another one leaves the count alone.
     attachments: frozenset[str]
+
     # Blocks that answered nothing while setting up and nothing again on the
     # first check after it. Asking costs a full timeout each, which on a shared
     # link is time every other inverter spends waiting, so they are taken for

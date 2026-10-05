@@ -1077,3 +1077,41 @@ async def test_a_block_that_stays_silent_stops_being_asked(
 
     assert asked[0] == frozenset(), "the first check still looks for it"
     assert "power_control" in asked[1], "a block still silent is not asked again"
+
+
+async def test_a_block_that_blips_once_keeps_being_asked(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A block that answered at setup is not settled by one timeout later.
+
+    Settling it would hide the block going away for good, since a block taken
+    for absent is reported back as though it had been silent again.
+    """
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        mock_modbus_unit.fail_read(
+            POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out")
+        )
+        freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, None)
+        freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "power_control" not in asked[1], "a blip settled a block that answered"

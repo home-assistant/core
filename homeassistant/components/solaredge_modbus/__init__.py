@@ -246,7 +246,12 @@ async def _async_reload_when_attachments_change(
         LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
         return
 
-    entry.runtime_data.settled_silent_blocks = probed.unresponsive_blocks
+    # Silent while setting up and silent again here. A block that answered at
+    # setup and merely blipped now is not settled, or one timeout would hide a
+    # later removal until the entry loads again.
+    entry.runtime_data.settled_silent_blocks = (
+        probed.unresponsive_blocks & solaredge.unresponsive_blocks
+    )
 
     known = _probed_blocks(solaredge)
     for name, found in _probed_blocks(probed).items():
