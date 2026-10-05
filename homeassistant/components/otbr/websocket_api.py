@@ -218,7 +218,7 @@ async def websocket_create_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/create_ephemeral_key",
-        vol.Required("extended_address"): str,
+        probatio.Required("extended_address"): str,
     }
 )
 @websocket_api.require_admin
@@ -268,8 +268,8 @@ async def websocket_create_ephemeral_key(
 @websocket_api.websocket_command(
     {
         "type": "otbr/delete_ephemeral_key",
-        vol.Required("extended_address"): str,
-        vol.Optional("ephemeral_key"): str,
+        probatio.Required("extended_address"): str,
+        probatio.Optional("ephemeral_key"): str,
     }
 )
 @websocket_api.require_admin
