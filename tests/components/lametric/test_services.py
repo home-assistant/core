@@ -28,7 +28,9 @@ from homeassistant.components.lametric.const import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -210,3 +212,30 @@ async def test_service_message(
         )
 
     assert len(mock_lametric.notify.mock_calls) == 3
+
+
+@pytest.mark.parametrize("device_fixture", ["device_sa5_bluetooth_unavailable"])
+async def test_service_message_without_audio(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test the sound is left out for a device that cannot play it.
+
+    A device without audio, like a SKY, would refuse the whole notification.
+    """
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SA52100000000TBNC"), mock_config_entry.entry_id
+    )
+    assert device
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MESSAGE,
+        {CONF_DEVICE_ID: device.id, CONF_MESSAGE: "Meow!", CONF_SOUND: "cat"},
+        blocking=True,
+    )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound is None

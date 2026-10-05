@@ -27,7 +27,11 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API_MAX_RETRIES, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
+from .coordinator import (
+    PortainerCoordinator,
+    PortainerDockerDiskSpaceCoordinator,
+    PortainerSystemVersionCoordinator,
+)
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
@@ -79,16 +83,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     )
     coordinator.docker_disk_space = docker_disk_space_coordinator
 
-    async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
+    system_version_coordinator = PortainerSystemVersionCoordinator(hass, entry, client)
+    coordinator.system_version = system_version_coordinator
+
+    async def _defer_initial_refreshes(_: HomeAssistant) -> None:
         """Defer the first refresh until Home Assistant has started."""
         hass.async_create_task(
             docker_disk_space_coordinator.async_refresh(),
             "portainer_docker_disk_space_initial_refresh",
         )
+        hass.async_create_task(
+            system_version_coordinator.async_refresh(),
+            "portainer_system_version_initial_refresh",
+        )
 
-    # On lower-end hardware, the DF endpoint can take long
-    # Do not block the setup, but defer the first refresh until HA is fully started
-    entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
+    # On lower-end hardware, the DF endpoint can take long, and the version check
+    # waits for GitHub. Do not block the setup, but defer both until HA has started
+    entry.async_on_unload(async_at_started(hass, _defer_initial_refreshes))
 
     entry.runtime_data = coordinator
 

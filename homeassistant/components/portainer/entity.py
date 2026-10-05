@@ -18,6 +18,7 @@ from .coordinator import (
     PortainerCoordinatorData,
     PortainerDockerDiskSpaceCoordinator,
     PortainerStackData,
+    PortainerSystemVersionCoordinator,
     PortainerVolumeData,
 )
 from .util import sanitize_container_name
@@ -35,6 +36,37 @@ class PortainerDockerDiskSpaceCoordinatorEntity(
     """Base class for Portainer entities using the Docker disk space coordinator."""
 
     _attr_has_entity_name = True
+
+
+class PortainerServerEntity(CoordinatorEntity[PortainerSystemVersionCoordinator]):
+    """Base implementation for the Portainer server itself."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: PortainerSystemVersionCoordinator,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize a Portainer server entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        entry = coordinator.config_entry
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            configuration_url=URL(entry.data[CONF_URL]),
+            manufacturer=DEFAULT_NAME,
+            model="Server",
+            name=entry.title,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the server data has been fetched."""
+        return super().available and self.coordinator.data is not None
 
 
 class PortainerEndpointEntity(PortainerCoordinatorEntity):
