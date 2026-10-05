@@ -16,10 +16,15 @@ from homeassistant.components.airthings_ble.const import (
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import (
     CORENTIUM_HOME_2_DEVICE_INFO,
@@ -592,6 +597,40 @@ async def test_connectivity_mode_issue_deleted_after_refresh_during_unload(
         await hass.async_block_till_done()
 
         assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert _issue_translation_keys(issue_registry) == []
+
+
+async def test_connectivity_mode_issue_not_created_by_update_after_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a manual update finishing after unload does not create an issue."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    entry = await _setup_corentium_home_2(hass, "Bluetooth")
+    release_update = asyncio.Event()
+
+    async def _delayed_update(*_):
+        await release_update.wait()
+        return _corentium_home_2_with_mode("SmartLink")
+
+    with patch_airthings_ble(side_effect=_delayed_update):
+        update = hass.async_create_task(
+            hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: "sensor.airthings_corentium_home_2_123456_battery"},
+                blocking=True,
+            )
+        )
+        await asyncio.sleep(0)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+        release_update.set()
+        await update
+        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert _issue_translation_keys(issue_registry) == []
