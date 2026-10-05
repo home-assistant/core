@@ -163,16 +163,15 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if entry is not None and entry.data[CONF_USER_ID] != response.user.id:
-                    errors["base"] = "account_change_not_allowed"
-                else:
-                    self._context[CONF_EMAIL] = user_input[CONF_EMAIL]
-                    self._context[CONF_USER_ID] = response.user.id
-                    self._context[CONF_ACCESS_TOKEN] = response.user_token.access_token
-                    self._context[CONF_CUSTOMER_ID] = response.customer_id
-                    if entry is None:
-                        await self.async_set_unique_id(str(response.user.id))
-                        self._abort_if_unique_id_configured()
-                    return await self.async_step_magic_link()
+                    return self.async_abort(reason="account_change_not_allowed")
+                self._context[CONF_EMAIL] = user_input[CONF_EMAIL]
+                self._context[CONF_USER_ID] = response.user.id
+                self._context[CONF_ACCESS_TOKEN] = response.user_token.access_token
+                self._context[CONF_CUSTOMER_ID] = response.customer_id
+                if entry is None:
+                    await self.async_set_unique_id(str(response.user.id))
+                    self._abort_if_unique_id_configured()
+                return await self.async_step_magic_link()
 
         data_schema = STEP_EMAIL_DATA_SCHEMA
         if entry is not None:
@@ -335,10 +334,10 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if success:
                 if entry.data[CONF_USER_ID] != self._context[CONF_USER_ID]:
-                    errors["base"] = "account_change_not_allowed"
-                elif self.source == SOURCE_REAUTH:
+                    return self.async_abort(reason="account_change_not_allowed")
+                if self.source == SOURCE_REAUTH:
                     return await self.async_step_reauth_sms_code()
-                elif self.source == SOURCE_RECONFIGURE:
+                if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_reconfigure_sms_code()
 
         return self.async_show_form(

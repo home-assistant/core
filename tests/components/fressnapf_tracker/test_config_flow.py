@@ -340,8 +340,9 @@ async def test_email_user_flow_request_errors(
 async def test_email_user_flow_timeout(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test timing out while waiting for the magic link."""
+    """Test recovery after timing out while waiting for the magic link."""
     result = await _start_user_flow(hass, "email")
 
     with patch(
@@ -355,6 +356,25 @@ async def test_email_user_flow_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email"
     assert result["errors"] == {"base": "magic_link_timeout"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], EMAIL_CREDENTIALS
+    )
+    result = await _complete_progress_flow(hass, result)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_EMAIL
+    assert result["data"] == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_USER_ID: MOCK_USER_ID,
+        CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
+    }
+    assert result["context"]["unique_id"] == str(MOCK_USER_ID)
+    assert mock_auth_client.request_magic_link.await_count == 2
+    mock_auth_client.complete_magic_link.assert_awaited_once_with(
+        MOCK_USER_ID, MOCK_ACCESS_TOKEN, MOCK_CUSTOMER_ID
+    )
+    mock_setup_entry.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -502,23 +522,37 @@ async def test_email_reconfigure_flow(
     assert mock_email_config_entry.data[CONF_ACCESS_TOKEN] == new_access_token
 
 
-async def test_email_reauth_account_change_not_allowed(
+@pytest.mark.parametrize(
+    "flow_starter",
+    [
+        pytest.param(MockConfigEntry.start_reauth_flow, id="reauth"),
+        pytest.param(MockConfigEntry.start_reconfigure_flow, id="reconfigure"),
+    ],
+)
+async def test_email_account_change_not_allowed(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
     mock_email_config_entry: MockConfigEntry,
+    flow_starter: Callable,
 ) -> None:
-    """Test email reauth rejects another account."""
+    """Test email reauth and reconfigure abort for another account."""
     mock_email_config_entry.add_to_hass(hass)
     mock_auth_client.request_magic_link.return_value.user.id = MOCK_USER_ID + 1
-    result = await mock_email_config_entry.start_reauth_flow(hass)
+    result = await flow_starter(mock_email_config_entry, hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], EMAIL_CREDENTIALS
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "account_change_not_allowed"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "account_change_not_allowed"
+    assert mock_email_config_entry.title == MOCK_EMAIL
+    assert mock_email_config_entry.data == {
+        CONF_EMAIL: MOCK_EMAIL,
+        CONF_USER_ID: MOCK_USER_ID,
+        CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
+    }
+    mock_auth_client.check_magic_link_was_clicked.assert_not_awaited()
     mock_auth_client.complete_magic_link.assert_not_awaited()
 
 
@@ -702,19 +736,15 @@ async def test_reauth_reconfigure_flow_invalid_sms_code(
 
 
 @pytest.mark.parametrize(
-    ("flow_starter", "expected_step_id", "expected_sms_step_id", "expected_reason"),
+    "flow_starter",
     [
-        (
-            lambda entry, hass: entry.start_reauth_flow(hass),
-            "reauth_confirm",
-            "reauth_sms_code",
-            "reauth_successful",
+        pytest.param(
+            MockConfigEntry.start_reauth_flow,
+            id="reauth",
         ),
-        (
+        pytest.param(
             lambda entry, hass: _start_reconfigure_flow(hass, entry, "sms"),
-            "sms",
-            "reconfigure_sms_code",
-            "reconfigure_successful",
+            id="reconfigure",
         ),
     ],
 )
@@ -724,11 +754,8 @@ async def test_reauth_reconfigure_flow_invalid_user_id(
     mock_auth_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     flow_starter: Callable,
-    expected_step_id: str,
-    expected_sms_step_id: str,
-    expected_reason: str,
 ) -> None:
-    """Test reauth and reconfigure flows do not allow changing to another account."""
+    """Test SMS reauth and reconfigure abort for another account."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -744,25 +771,12 @@ async def test_reauth_reconfigure_flow_invalid_user_id(
         {CONF_PHONE_NUMBER: f"{MOCK_PHONE_NUMBER}123"},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == expected_step_id
-    assert result["errors"] == {"base": "account_change_not_allowed"}
-
-    # Recover from error
-    mock_auth_client.request_sms_code = AsyncMock(
-        return_value=SmsCodeResponse(id=MOCK_USER_ID)
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == expected_sms_step_id
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SMS_CODE: "0123456"},
-    )
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == expected_reason
+    assert result["reason"] == "account_change_not_allowed"
+    assert mock_config_entry.title == MOCK_PHONE_NUMBER
+    assert mock_config_entry.data == {
+        CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER,
+        CONF_USER_ID: MOCK_USER_ID,
+        CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
+    }
+    mock_auth_client.verify_phone_number.assert_not_awaited()

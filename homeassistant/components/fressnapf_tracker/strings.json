@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
+      "account_change_not_allowed": "Switching to a different account is not allowed. Please create a new entry instead.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "account_change_not_allowed": "Reconfiguring to a different account is not allowed. Please create a new entry instead.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_phone_number": "Please enter a valid phone number.",
