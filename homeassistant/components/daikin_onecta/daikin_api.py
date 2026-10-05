@@ -128,6 +128,9 @@ class DaikinApi:
                     err.status,
                 )
                 return False
+            except TimeoutError:
+                _LOGGER.warning("Daikin request timed out")
+                return False
             self._last_patch_call = dt_util.utcnow()
             return True
 

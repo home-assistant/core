@@ -208,6 +208,20 @@ async def test_write_rate_limit(
     )
 
 
+async def test_write_timeout(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Return false when refreshing the OAuth token times out during a write."""
+    api = DaikinApi(hass, config_entry, MagicMock())
+    api.client.patch_characteristic = AsyncMock(side_effect=TimeoutError)
+
+    assert not await api.patch_characteristic("gateway", "point", "onOffMode", "on")
+    assert api.last_patch_call is None
+    assert "Daikin request timed out" in caplog.text
+
+
 async def test_rate_limits_preserve_unknown_values(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
