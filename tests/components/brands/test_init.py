@@ -770,6 +770,129 @@ async def test_custom_integration_no_fallback_match_falls_through_to_cdn(
 
 
 # ------------------------------------------------------------------
+# Brand view: /api/brands/brand/{domain}/{image}
+# ------------------------------------------------------------------
+
+
+async def test_brand_view_prefers_brand_over_integration(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the brand view serves the brand image for a shared domain."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/brands/google/icon.png",
+        content=BRAND_PNG,
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/brand/google/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/png"
+    assert await resp.read() == BRAND_PNG
+    assert aioclient_mock.call_count == 1
+
+
+async def test_brand_view_shares_cache_with_integration_view(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that both views reuse the same cached brand image."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/apple/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/brands/apple/icon.png",
+        content=BRAND_PNG,
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/integration/apple/icon.png")
+    assert resp.status == HTTPStatus.OK
+    assert aioclient_mock.call_count == 2
+
+    resp = await client.get("/api/brands/brand/apple/icon.png")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == BRAND_PNG
+    assert aioclient_mock.call_count == 2  # No additional CDN call
+
+
+async def test_brand_view_placeholder_fallback(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the brand view falls back to the placeholder."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/brands/nonexistent/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/_/_placeholder/icon.png",
+        content=FAKE_PNG,
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/brand/nonexistent/icon.png")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == FAKE_PNG
+
+    resp = await client.get("/api/brands/brand/nonexistent/icon.png?placeholder=no")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_brand_view_invalid_domain_and_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that the brand view validates domain and image."""
+    client = await hass_client()
+
+    resp = await client.get("/api/brands/brand/INVALID/icon.png")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    resp = await client.get("/api/brands/brand/hue/malicious.jpg")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_brand_view_custom_integration_served(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the brand view serves custom integration brand files."""
+    custom = _create_custom_integration(hass, "my_custom", has_branding=True)
+    brand_dir = Path(custom.file_path) / "brand"
+    brand_dir.mkdir(parents=True, exist_ok=True)
+    (brand_dir / "icon.png").write_bytes(BRAND_PNG)
+
+    with patch(
+        "homeassistant.components.brands.async_get_custom_components",
+        return_value={"my_custom": custom},
+    ):
+        client = await hass_client()
+        resp = await client.get("/api/brands/brand/my_custom/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == BRAND_PNG
+    assert aioclient_mock.call_count == 0
+
+
+async def test_brand_view_unauthenticated_forbidden(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test that the brand view requires authentication."""
+    client = await hass_client_no_auth()
+
+    resp = await client.get("/api/brands/brand/hue/icon.png")
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+
+# ------------------------------------------------------------------
 # Hardware view: /api/brands/hardware/{category}/{image:.+}
 # ------------------------------------------------------------------
 

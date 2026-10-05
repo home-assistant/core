@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from random import SystemRandom
 import time
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError, hdrs, web
 import probatio
@@ -55,6 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     hass.http.register_view(BrandsIntegrationView(hass))
+    hass.http.register_view(BrandsBrandView(hass))
     hass.http.register_view(BrandsHardwareView(hass))
     websocket_api.async_register_command(hass, ws_access_token)
     return True
@@ -240,11 +241,8 @@ class _BrandsBaseView(HomeAssistantView):
         )
 
 
-class BrandsIntegrationView(_BrandsBaseView):
-    """Serve integration brand images."""
-
-    name = "api:brands:integration"
-    url = "/api/brands/integration/{domain}/{image}"
+class _BrandsDomainView(_BrandsBaseView):
+    """Base view for serving images addressed by domain."""
 
     async def get(
         self,
@@ -252,22 +250,47 @@ class BrandsIntegrationView(_BrandsBaseView):
         domain: str,
         image: str,
     ) -> web.Response:
-        """Handle GET request for an integration brand image."""
+        """Handle GET request for a domain image."""
         self._authenticate(request)
 
         if not valid_domain(domain) or image not in ALLOWED_IMAGES:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        use_placeholder = request.query.get("placeholder") != "no"
-
-        # 1. Try custom integration local files
         if (
             response := await self._serve_from_custom_integration(domain, image)
         ) is not None:
             return response
 
-        # 2. Try the integration image. Direct paths are used instead of the
-        # "_/" namespace so real 404s can be cached as markers.
+        return await self._serve_domain_image(
+            domain,
+            image,
+            use_placeholder=request.query.get("placeholder") != "no",
+        )
+
+    async def _serve_domain_image(
+        self, domain: str, image: str, *, use_placeholder: bool
+    ) -> web.Response:
+        """Serve the image for a domain from the cache or CDN."""
+        raise NotImplementedError
+
+
+class BrandsIntegrationView(_BrandsDomainView):
+    """Serve integration images.
+
+    A domain can name both an integration and a brand, so the integration
+    image is resolved first and the brand image only serves as a fallback.
+    """
+
+    name = "api:brands:integration"
+    url = "/api/brands/integration/{domain}/{image}"
+
+    @override
+    async def _serve_domain_image(
+        self, domain: str, image: str, *, use_placeholder: bool
+    ) -> web.Response:
+        """Serve the integration image, falling back to the brand image."""
+        # Direct paths are used instead of the "_/" namespace so real 404s can
+        # be cached as markers.
         if (
             data := await self._get_image_data(
                 cdn_path=f"{domain}/{image}",
@@ -276,8 +299,29 @@ class BrandsIntegrationView(_BrandsBaseView):
         ) is not None:
             return self._build_response(data)
 
-        # 3. Fall back to the brand image, which is cached separately so the
-        # integration 404 marker is preserved.
+        # Cached separately so the integration 404 marker is preserved.
+        return await self._serve_from_cache_or_cdn(
+            cdn_path=f"brands/{domain}/{image}",
+            cache_subpath=f"brands/{domain}/{image}",
+            fallback_placeholder=use_placeholder,
+        )
+
+
+class BrandsBrandView(_BrandsDomainView):
+    """Serve brand images.
+
+    The CDN's brand namespace already falls back to the integration image, so
+    a domain that only names an integration still resolves.
+    """
+
+    name = "api:brands:brand"
+    url = "/api/brands/brand/{domain}/{image}"
+
+    @override
+    async def _serve_domain_image(
+        self, domain: str, image: str, *, use_placeholder: bool
+    ) -> web.Response:
+        """Serve the brand image."""
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"brands/{domain}/{image}",
             cache_subpath=f"brands/{domain}/{image}",
