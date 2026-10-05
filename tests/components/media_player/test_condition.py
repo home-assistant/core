@@ -12,16 +12,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
 )
 from homeassistant.components.media_player.condition import CONDITIONS
-from homeassistant.components.media_player.const import (
-    MediaPlayerEntityFeature,
-    MediaPlayerState,
-)
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
-)
+from homeassistant.components.media_player.const import MediaPlayerState
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import async_validate_condition_config
 
@@ -340,9 +332,11 @@ async def test_media_player_state_condition_behavior_all(
         other_states=[
             (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
         ],
-        required_filter_attributes={
-            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE
-        },
+        extra_excluded_states=[
+            # States without a source attribute — filtered by _should_include
+            MediaPlayerState.PLAYING,
+            MediaPlayerState.OFF,
+        ],
     ),
 )
 async def test_media_player_attribute_condition_behavior_any(
@@ -384,9 +378,11 @@ async def test_media_player_attribute_condition_behavior_any(
         other_states=[
             (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
         ],
-        required_filter_attributes={
-            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE
-        },
+        extra_excluded_states=[
+            # States without a source attribute — filtered by _should_include
+            MediaPlayerState.PLAYING,
+            MediaPlayerState.OFF,
+        ],
     ),
 )
 async def test_media_player_attribute_condition_behavior_all(

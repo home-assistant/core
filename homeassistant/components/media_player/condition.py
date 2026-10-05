@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
@@ -19,12 +18,10 @@ from homeassistant.helpers.condition import (
     EntityStateConditionBase,
     make_entity_state_condition,
 )
-from homeassistant.helpers.entity import get_supported_features
 
 from .const import (
     ATTR_INPUT_SOURCE,
     DOMAIN,
-    MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
     MediaPlayerState,
 )
@@ -119,14 +116,6 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         )
 
 
-def _supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool:
-    """Test if an entity supports the specified features."""
-    try:
-        return bool(get_supported_features(hass, entity_id) & features)
-    except HomeAssistantError:
-        return False
-
-
 IS_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         vol.Required(CONF_OPTIONS): {
@@ -152,16 +141,12 @@ class MediaPlayerIsSourceCondition(EntityStateConditionBase):
         self._states = set(config.options[ATTR_INPUT_SOURCE])
 
     @override
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Only include media players that support source selection."""
-        entities = super().entity_filter(entities)
-        return {
-            entity_id
-            for entity_id in entities
-            if _supports_feature(
-                self._hass, entity_id, MediaPlayerEntityFeature.SELECT_SOURCE
-            )
-        }
+    def _should_include(self, state: State) -> bool:
+        """Skip media players that do not expose a source attribute."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_INPUT_SOURCE) is not None
+        )
 
 
 CONDITIONS: dict[str, type[Condition]] = {
