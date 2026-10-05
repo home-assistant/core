@@ -43,7 +43,7 @@
     },
     "sensor": {
       "dali_line_status": {
-        "name": "Line status",
+        "name": "Status",
         "state": {
           "low_power": "Low bus power",
           "no_power": "Bus power failure",
