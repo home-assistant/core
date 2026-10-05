@@ -247,11 +247,7 @@ async def test_invalid_redirect_uri(
 
 @pytest.mark.parametrize(
     "authorization_data",
-    [
-        {},
-        {"response_type": "code", "state": "opaque+state/with=reserved&chars?"},
-        {"response_type": "code", "state": ""},
-    ],
+    [{}, {"response_type": "code"}],
 )
 async def test_login_exist_user(
     hass: HomeAssistant,
@@ -553,7 +549,7 @@ async def test_well_known_protected_resource_no_url(
             {
                 "response_type": "token",
             },
-            "Message format incorrect",
+            "Response type not supported",
         ),
     ],
     ids=[

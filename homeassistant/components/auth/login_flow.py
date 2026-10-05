@@ -365,8 +365,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     r"^[A-Za-z0-9_-]{43}\Z"
                 ),
                 probatio.Optional("code_challenge_method"): str,
-                probatio.Optional("response_type"): "code",
-                probatio.Optional("state"): str,
+                probatio.Optional("response_type"): str,
                 probatio.Optional(
                     "type", default="authorize"
                 ): str,  # not used, kept for backwards compatibility
@@ -381,6 +380,11 @@ class LoginFlowIndexView(LoginFlowBaseView):
 
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
+
+        if data.get("response_type", "code") != "code":
+            return self.json_message(
+                "Response type not supported", HTTPStatus.BAD_REQUEST
+            )
 
         code_challenge = data.get("code_challenge")
         code_challenge_method = data.get("code_challenge_method")
