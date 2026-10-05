@@ -135,7 +135,7 @@ async def _async_transport(command: Awaitable[bool]) -> None:
             translation_domain=DOMAIN,
             translation_key="unsupported_command",
         ) from err
-    # False means the request never reached the streaming module.
+    # False covers both a rejected request and one that never arrived.
     if not accepted:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

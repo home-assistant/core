@@ -111,7 +111,7 @@
   },
   "exceptions": {
     "command_failed": {
-      "message": "The command did not reach the device's streaming module"
+      "message": "The device did not accept the command"
     },
     "invalid_option": {
       "message": "{option} is not available on this device. It offers: {options}"
