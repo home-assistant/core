@@ -941,8 +941,6 @@ class SensorCapabilities(AlexaEntity):
     @override
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
-        # Only temperature and humidity sensors are exposed; other sensor
-        # kinds have no matching Alexa interface.
         if (
             self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             == sensor.SensorDeviceClass.HUMIDITY
