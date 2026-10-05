@@ -15,15 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.group import (
     expand_entity_ids as _expand_entity_ids,
-)
-from homeassistant.helpers.group import (
     get_entity_ids as _get_entity_ids,
-)
-from homeassistant.helpers.group import (
     get_group_entities,
 )
 from homeassistant.helpers.typing import ConfigType

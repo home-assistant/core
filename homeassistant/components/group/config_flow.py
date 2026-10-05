@@ -141,9 +141,9 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
     ["sensor", "number", "input_number"]
 ).extend(SENSOR_CONFIG_EXTENDS)
 
-SENSOR_IMPORT_SCHEMA = vol.Schema(
+SENSOR_IMPORT_SCHEMA = probatio.Schema(
     {
-        vol.Required("old_config_entry_id"): selector.TextSelector(),
+        probatio.Required("old_config_entry_id"): selector.TextSelector(),
     }
 ).extend(SENSOR_CONFIG_SCHEMA.schema)
 
@@ -220,7 +220,7 @@ async def validate_import(
 
     try:
         validated_input = SENSOR_IMPORT_SCHEMA(user_input)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         raise AbortFlow(
             reason="invalid_import", description_placeholders={"error": str(err)}
         ) from err

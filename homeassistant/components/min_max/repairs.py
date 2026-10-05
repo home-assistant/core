@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.group import CONF_HIDE_MEMBERS, DOMAIN as GROUP_DOMAIN
 from homeassistant.components.repairs import (
@@ -79,7 +79,7 @@ class MigrateToGroupSensorFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="migrate",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={"title": title},
         )
 

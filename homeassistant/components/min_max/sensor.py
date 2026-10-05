@@ -1,10 +1,10 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
+from datetime import datetime
 import hashlib
 import json
 import logging
 import statistics
-from datetime import datetime
 from typing import Any, override
 
 import probatio
@@ -12,8 +12,6 @@ import probatio
 from homeassistant.components.group import CONF_ENTITIES
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-)
-from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -31,8 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
