@@ -41,7 +41,6 @@ async def test_update_platfom(
 async def test_update_sensor_downgrade_upgrade(
     hass: HomeAssistant,
     mock_paperless: AsyncMock,
-    freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
 ) -> None:
     """Ensure update entities are updating properly on downgrade and upgrade."""
@@ -50,20 +49,16 @@ async def test_update_sensor_downgrade_upgrade(
     assert state.state == STATE_OFF
 
     # downgrade host version
-    mock_paperless.host_version = "2.2.0"
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_paperless.status.return_value.pngx_version = "2.2.0"
+    await init_integration.runtime_data.status.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_ON
 
     # upgrade host version
-    mock_paperless.host_version = "2.3.0"
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_paperless.status.return_value.pngx_version = "2.3.0"
+    await init_integration.runtime_data.status.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("update.paperless_ngx_software")
