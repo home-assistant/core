@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from skyfield.units import Angle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition
@@ -23,9 +24,10 @@ async def setup_moon(hass: HomeAssistant, mock_config_entry: MockConfigEntry) ->
 async def _evaluate(
     hass: HomeAssistant, config: ConfigType, phase_value: float
 ) -> bool | None:
-    """Validate and evaluate a condition for a mocked astral phase value."""
+    """Validate and evaluate a condition for a mocked phase value."""
     with patch(
-        "homeassistant.components.moon.helpers.moon.phase", return_value=phase_value
+        "homeassistant.components.moon.helpers.almanac.moon_phase",
+        return_value=Angle(degrees=phase_value * 360 / 28),
     ):
         config = await condition.async_validate_condition_config(hass, config)
         checker = await condition.async_from_config(hass, config)
