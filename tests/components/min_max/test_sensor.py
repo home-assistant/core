@@ -45,7 +45,7 @@ SUM_VALUE = sum(VALUES)
 async def test_deprecation_warning(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test deprecation issue."""
+    """Test deprecated YAML min/max sensor configs create warning issues."""
     config = {
         "sensor": [
             {
