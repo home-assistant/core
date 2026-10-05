@@ -51,7 +51,7 @@ async def test_async_setup_entry_connect_failure(
 async def test_async_setup_entry_scan_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
-    """Test setup proceeds even if scan_devices fails."""
+    """Test setup retries when scanning fails."""
     mock_tis_api.scan_devices.side_effect = ConnectionError("Scan failed")
 
     mock_config_entry.add_to_hass(hass)
@@ -60,9 +60,28 @@ async def test_async_setup_entry_scan_failure(
     ) as mock_forward:
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-        assert result is True
+        assert result is False
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
         mock_tis_api.scan_devices.assert_awaited_once()
-        mock_forward.assert_called_once()
+        mock_forward.assert_not_called()
+
+
+async def test_async_setup_entry_scan_no_devices(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
+) -> None:
+    """Test setup retries when no devices are found."""
+    mock_tis_api.devices = []
+
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as mock_forward:
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+        assert result is False
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        mock_tis_api.scan_devices.assert_awaited_once()
+        mock_forward.assert_not_called()
 
 
 async def test_async_setup_entry_forward_failure(

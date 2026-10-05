@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 from dataclasses import dataclass
 import logging
+from typing import NoReturn
 
 from TISApi.api import TISApi
 
@@ -31,6 +32,11 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 # Create a type alias for a ConfigEntry specific to this integration.
 type TISConfigEntry = ConfigEntry[TISData]
+
+
+def _raise_no_devices_found(port: int) -> NoReturn:
+    """Raise a retryable config entry error when no TIS devices are discovered."""
+    raise ConfigEntryNotReady(f"No TIS devices found while scanning on port {port}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
@@ -97,6 +103,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
                 entry.data[CONF_PORT],
                 e,
             )
+            raise ConfigEntryNotReady from e
+
+        if not tis_api.devices:
+            _LOGGER.warning(
+                "No TIS devices found while scanning on port %d",
+                entry.data[CONF_PORT],
+            )
+            _raise_no_devices_found(entry.data[CONF_PORT])
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
