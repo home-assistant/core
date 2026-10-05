@@ -2015,6 +2015,54 @@ async def test_ssl_profile_outdated_fix_flow_pending_config(
     assert len(restart_calls) == 0
 
 
+@pytest.mark.usefixtures("freezer")
+async def test_ssl_profile_outdated_fix_flow_pending_config_staged_meanwhile(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A pending config staged while the repair is open is not overwritten."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    ssl_conf = {
+        "ssl_certificate": str(cert_path),
+        "ssl_key": str(key_path),
+        "ssl_profile": "modern_v4",
+    }
+    hass_storage[DOMAIN] = _stable_http_storage(ssl_conf)
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": "confirm_modern_v6"}
+    )
+    assert data["type"] == "form"
+
+    # Another HTTP change is staged from the network panel meanwhile.
+    staged = HTTP_STORAGE_SCHEMA({**ssl_conf, "server_port": 9999})
+    store = await async_get_and_load_store(hass)
+    await store.async_set_pending(staged)
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    assert data["type"] == "abort"
+    assert data["reason"] == "pending_config"
+
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        {**ssl_conf, "server_port": 9999},
+        created_at=dt_util.utcnow().isoformat(),
+    )
+    assert len(restart_calls) == 0
+
+
 async def test_create_fix_flow(hass: HomeAssistant) -> None:
     """Each issue gets its own fix flow; unknown issues get a plain confirm flow."""
     assert isinstance(

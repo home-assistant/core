@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.ssl import SSLProfile
 
-from .config import HTTP_CONFIG_ERROR, ConfData, _strip_meta, async_get_and_load_store
+from .config import (
+    HTTP_CONFIG_ERROR,
+    ConfData,
+    HTTPConfigStore,
+    _strip_meta,
+    async_get_and_load_store,
+)
 from .const import (
     CONF_SSL_PROFILE,
     DOMAIN,
@@ -38,9 +44,7 @@ class SSLProfileOutdatedFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Offer the upgrades for the current profile, or ignoring the issue."""
         store = await async_get_and_load_store(self.hass)
-        if store.pending is not None and store.pending[HTTP_CONFIG_ERROR] is None:
-            # A pending config is under trial or waiting for its restart; the
-            # upgrade must not replace it.
+        if _pending_armed(store):
             return self.async_abort(reason="pending_config")
         upgrades = SSL_PROFILE_UPGRADES[SSLProfile(store.stable[CONF_SSL_PROFILE])]
         return self.async_show_menu(
@@ -80,11 +84,22 @@ class SSLProfileOutdatedFlow(RepairsFlow):
                 step_id=f"confirm_{upgrade}", data_schema=probatio.Schema({})
             )
         store = await async_get_and_load_store(self.hass)
+        if _pending_armed(store):
+            # Staged from the network panel while this flow was open.
+            return self.async_abort(reason="pending_config")
         await store.async_set_pending(
             cast(ConfData, {**_strip_meta(store.stable), CONF_SSL_PROFILE: upgrade})
         )
         await self.hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
         return self.async_create_entry(data={})
+
+
+def _pending_armed(store: HTTPConfigStore) -> bool:
+    """Return whether a pending config is under trial or waiting for its restart.
+
+    The upgrade must not replace such a config.
+    """
+    return store.pending is not None and store.pending[HTTP_CONFIG_ERROR] is None
 
 
 async def async_create_fix_flow(
