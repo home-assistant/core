@@ -1,7 +1,6 @@
 """Test Music Assistant dashboard display media player entities."""
 
 import dataclasses
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.dashboard import DashboardDevice, DashboardSession
@@ -21,6 +20,9 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.music_assistant.const import ATTR_URL, DOMAIN
+from homeassistant.components.music_assistant.media_player import (
+    MusicAssistantDashboardPlayer,
+)
 from homeassistant.components.music_assistant.services import SERVICE_PLAY_ANNOUNCEMENT
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -64,10 +66,14 @@ def _mock_provider_icon(
     return music_assistant_client.get_provider_icon
 
 
-def _get_dashboard_entity(hass: HomeAssistant, entity_id: str) -> Any:
+def _get_dashboard_entity(
+    hass: HomeAssistant, entity_id: str
+) -> MusicAssistantDashboardPlayer:
     """Return the dashboard entity instance for direct image method calls."""
     entity_component = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN]
-    return entity_component.get_entity(entity_id)
+    entity = entity_component.get_entity(entity_id)
+    assert isinstance(entity, MusicAssistantDashboardPlayer)
+    return entity
 
 
 def _dashboards_event_data(music_assistant_client: MagicMock) -> list[dict]:
