@@ -43,6 +43,7 @@ PARALLEL_UPDATES = 0
 class MideaSensorEntityDescription(SensorEntityDescription):
     """Describes Midea sensor entity."""
 
+    attribute: str | None = None
     models: list[DeviceType] | None = None
 
 
@@ -740,7 +741,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         models=[DeviceType.DA],
     ),
     MideaSensorEntityDescription(
-        key="dehydration_speed",
+        key="dehydration_level",
+        attribute="dehydration_speed",
         translation_key="dehydration_level",
         device_class=SensorDeviceClass.ENUM,
         options=["none", "low", "medium", "high"],
@@ -1024,7 +1026,7 @@ async def async_setup_entry(
     sensors: list[MideaSensor] = [
         MideaSensor(device, description)
         for description in SENSOR_ENTITIES
-        if device.attributes.get(description.key) is not None
+        if device.attributes.get(description.attribute or description.key) is not None
         and (not description.models or device.device_type in description.models)
     ]
 
@@ -1038,18 +1040,32 @@ class MideaSensor(MideaEntity, SensorEntity):
     @override
     def native_value(self) -> StateType | datetime:
         """Native value of the sensor."""
-        value = self._device.get_attribute(self.entity_description.key)
-        if value in ["unknown", "default"]:
+        description = cast(MideaSensorEntityDescription, self.entity_description)
+        value = self._device.get_attribute(description.attribute or description.key)
+        if value == "unknown":
+            return None
+        if (
+            description.key
+            in (
+                "dehydration_level",
+                "softener",
+                "detergent",
+                "temperature",
+                "water_level",
+                "program",
+            )
+            and value == "default"
+        ):
             return None
         if isinstance(value, str) and (
-            self.entity_description.translation_key == "dehydration_speed"
-            or self.entity_description.key == "temperature"
+            description.translation_key == "dehydration_speed"
+            or description.key == "temperature"
         ):
             try:
                 return cast("StateType", int(value))
             except ValueError:
                 return None
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+        if description.device_class == SensorDeviceClass.TIMESTAMP:
             if not isinstance(value, (int, float)) or value <= 0:
                 return None
             # round to the closest minute

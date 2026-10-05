@@ -445,7 +445,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dehydration_level',
-    'unique_id': '12345678_dehydration_speed',
+    'unique_id': '12345678_dehydration_level',
     'unit_of_measurement': None,
   })
 # ---
