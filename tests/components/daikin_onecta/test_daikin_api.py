@@ -1,6 +1,6 @@
 """Tests for the Daikin Onecta API client."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
@@ -71,11 +71,28 @@ async def test_get_device_details_respects_cooldown(
 ) -> None:
     """Do not fetch cloud data while a successful write is in its cooldown."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    api._last_patch_call = dt_util.now()
+    api._last_patch_call = dt_util.utcnow()
     api.client.get_gateway_devices = AsyncMock()
 
     assert await api.get_cloud_device_details(cooldown=timedelta(seconds=30)) is None
     api.client.get_gateway_devices.assert_not_awaited()
+
+
+@patch("homeassistant.components.daikin_onecta.daikin_api.dt_util.utcnow")
+async def test_get_device_details_uses_utc_across_dst_rollback(
+    mock_utcnow: MagicMock,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """End cooldown based on elapsed time, not the local DST clock."""
+    api = DaikinApi(hass, config_entry, MagicMock())
+    # In Amsterdam, local time moves from 02:59 CEST back to 02:01 CET here.
+    api._last_patch_call = datetime(2026, 10, 25, 0, 59, tzinfo=UTC)
+    mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
+    api.client.get_gateway_devices = AsyncMock(return_value=[])
+
+    assert await api.get_cloud_device_details(cooldown=timedelta(seconds=30)) == []
+    api.client.get_gateway_devices.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(

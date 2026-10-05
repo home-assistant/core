@@ -61,7 +61,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
         if (
             self.api.last_patch_call is not None
-            and (dt_util.now() - self.api.last_patch_call).total_seconds()
+            and (dt_util.utcnow() - self.api.last_patch_call).total_seconds()
             < scan_ignore_value
         ):
             self.update_interval = timedelta(seconds=scan_ignore_value)

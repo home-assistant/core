@@ -82,7 +82,7 @@ class DaikinApi:
             if (
                 cooldown is not None
                 and self._last_patch_call is not None
-                and dt_util.now() - self._last_patch_call < cooldown
+                and dt_util.utcnow() - self._last_patch_call < cooldown
             ):
                 return None
             return await self._client.get_gateway_devices()
@@ -128,7 +128,7 @@ class DaikinApi:
                     err.status,
                 )
                 return False
-            self._last_patch_call = dt_util.now()
+            self._last_patch_call = dt_util.utcnow()
             return True
 
     async def post_management_point(

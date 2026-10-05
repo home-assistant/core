@@ -1,6 +1,6 @@
 """Test the Daikin Onecta coordinator."""
 
-from datetime import datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import OnectaConnectionError, OnectaRateLimitError
@@ -210,16 +210,33 @@ class TestOnectaDataUpdateCoordinator:
         )
         assert coordinator.update_interval == timedelta(seconds=42)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    async def test_recent_write_skips_cloud_polling(self, mock_now, coordinator):
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_recent_write_skips_cloud_polling(self, mock_utcnow, coordinator):
         """Use the configured cooldown before polling after a recent write."""
-        mock_now.return_value = datetime(2023, 1, 1, 12, 0)
-        coordinator.api.last_patch_call = mock_now.return_value - timedelta(seconds=1)
+        mock_utcnow.return_value = datetime(2023, 1, 1, 12, 0)
+        coordinator.api.last_patch_call = mock_utcnow.return_value - timedelta(
+            seconds=1
+        )
         coordinator.api.get_cloud_device_details = AsyncMock()
 
         assert await coordinator._async_update_data_from_cloud() == {}
         assert coordinator.update_interval == timedelta(seconds=42)
         coordinator.api.get_cloud_device_details.assert_not_awaited()
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_post_write_cooldown_uses_utc_across_dst_rollback(
+        self, mock_utcnow, coordinator
+    ):
+        """Do not extend cooldown when local time moves backward."""
+        # In Amsterdam, local time moves from 02:59 CEST back to 02:01 CET here.
+        coordinator.api.last_patch_call = datetime(2026, 10, 25, 0, 59, tzinfo=UTC)
+        mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
+        coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+
+        assert await coordinator._async_update_data_from_cloud() == {}
+        coordinator.api.get_cloud_device_details.assert_awaited_once_with(
+            cooldown=timedelta(seconds=42)
+        )
 
     async def test_connection_error_uses_update_failed(self, coordinator):
         """A connection error should mark the coordinator update as failed."""
