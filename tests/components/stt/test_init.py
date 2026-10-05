@@ -465,6 +465,25 @@ async def test_partial_results_update_state(
     await results.aclose()
 
 
+async def test_partial_results_closed_when_consumer_stops_early(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test closing the stream early also closes the generator of the entity."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    results = mock_provider_partial_entity.internal_async_process_audio_stream_partial(
+        _TEST_METADATA, _one_chunk_stream()
+    )
+    assert await anext(results) == PartialSpeechResult("hello")
+    assert mock_provider_partial_entity.closed is False
+
+    await results.aclose()
+
+    assert mock_provider_partial_entity.closed is True
+
+
 @pytest.mark.parametrize(
     ("setup", "engine_id", "extra_data"),
     [

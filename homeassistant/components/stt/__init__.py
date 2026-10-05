@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from collections.abc import AsyncGenerator, AsyncIterable
+from contextlib import aclosing
 from dataclasses import asdict
 import logging
 from typing import Any, final, override
@@ -247,10 +248,12 @@ class SpeechToTextEntity(RestoreEntity):
         """
         self.__last_processed = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        async for result in self.async_process_audio_stream_partial(
-            metadata=metadata, stream=stream
-        ):
-            yield result
+        # aclosing so a consumer that stops early still closes the entity's generator.
+        async with aclosing(
+            self.async_process_audio_stream_partial(metadata=metadata, stream=stream)
+        ) as results:
+            async for result in results:
+                yield result
 
     @abstractmethod
     async def async_process_audio_stream(

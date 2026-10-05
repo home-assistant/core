@@ -116,16 +116,22 @@ class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
 
     url_path = "stt.test_partial"
     _attr_name = "test partial"
+    closed = False
 
     async def async_process_audio_stream_partial(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
         """Process an audio stream, yielding a partial per word."""
-        words = self.text.split()
-        for index in range(1, len(words)):
-            yield PartialSpeechResult(" ".join(words[:index]))
+        try:
+            words = self.text.split()
+            for index in range(1, len(words)):
+                yield PartialSpeechResult(" ".join(words[:index]))
 
-        yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
+            yield await self.async_process_audio_stream(
+                metadata=metadata, stream=stream
+            )
+        finally:
+            self.closed = True
 
 
 class MockSTTPlatform(MockPlatform):
