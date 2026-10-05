@@ -117,7 +117,7 @@ async def test_turn_on_off_with_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to connect to the device to turn the light on",
+        match=f"Unable to connect to the device and turn on {entity_id}",
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -130,7 +130,7 @@ async def test_turn_on_off_with_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to connect to the device to turn the light off",
+        match=f"Unable to connect to the device and turn off {entity_id}",
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -286,7 +286,7 @@ async def test_turn_on_off_broadcast_with_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to connect to the device to turn broadcast on",
+        match=f"Unable to connect to the device and turn on {entity_id}",
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -301,7 +301,7 @@ async def test_turn_on_off_broadcast_with_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to connect to the device to turn broadcast off",
+        match=f"Unable to connect to the device and turn off {entity_id}",
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,

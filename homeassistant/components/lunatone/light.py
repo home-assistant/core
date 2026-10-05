@@ -219,7 +219,9 @@ class LunatoneLight(
                 await self._device.switch_on()
         except aiohttp.ClientConnectionError as ex:
             raise HomeAssistantError(
-                "Unable to connect to the device to turn the light on"
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_on_light",
+                translation_placeholders={"entity": self.entity_id},
             ) from ex
         await self.coordinator.async_refresh()
 
@@ -235,7 +237,9 @@ class LunatoneLight(
                 await self._device.switch_off()
         except aiohttp.ClientConnectionError as ex:
             raise HomeAssistantError(
-                "Unable to connect to the device to turn the light off"
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_off_light",
+                translation_placeholders={"entity": self.entity_id},
             ) from ex
         await self.coordinator.async_refresh()
 
@@ -316,7 +320,9 @@ class LunatoneLineBroadcastLight(
             )
         except aiohttp.ClientConnectionError as ex:
             raise HomeAssistantError(
-                "Unable to connect to the device to turn broadcast on"
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_on_light",
+                translation_placeholders={"entity": self.entity_id},
             ) from ex
         await self.coordinator.async_refresh()
 
@@ -327,6 +333,8 @@ class LunatoneLineBroadcastLight(
             await self._broadcast.fade_to_brightness(0)
         except aiohttp.ClientConnectionError as ex:
             raise HomeAssistantError(
-                "Unable to connect to the device to turn broadcast off"
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_off_light",
+                translation_placeholders={"entity": self.entity_id},
             ) from ex
         await self.coordinator.async_refresh()
