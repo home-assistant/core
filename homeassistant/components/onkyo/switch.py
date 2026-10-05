@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import Channel, ChannelMutingCoordinator
+from .entity import OnkyoEntity
 
 if TYPE_CHECKING:
     from . import OnkyoConfigEntry
@@ -45,12 +46,11 @@ async def async_setup_entry(
     )
 
 
+# OnkyoEntity comes first, so that its availability wins over CoordinatorEntity's.
 class OnkyoChannelMutingSwitch(
-    CoordinatorEntity[ChannelMutingCoordinator], SwitchEntity
+    OnkyoEntity, CoordinatorEntity[ChannelMutingCoordinator], SwitchEntity
 ):
     """Onkyo Receiver Channel Muting Switch (one per channel)."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -58,21 +58,14 @@ class OnkyoChannelMutingSwitch(
         channel: Channel,
     ) -> None:
         """Initialize the switch entity."""
-        super().__init__(coordinator)
+        OnkyoEntity.__init__(self, coordinator.manager)
+        CoordinatorEntity.__init__(self, coordinator)
 
         self._channel = channel
 
-        name = coordinator.manager.info.model_name
-        channel_name = channel.replace("_", " ")
         identifier = coordinator.manager.info.identifier
-        self._attr_name = f"{name} Mute {channel_name}"
+        self._attr_translation_key = f"mute_{channel}"
         self._attr_unique_id = f"{identifier}-channel_muting-{channel}"
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.manager.connected
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -5,13 +5,18 @@ from unittest.mock import AsyncMock
 
 from aioonkyo import ReceiverInfo, Status
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.onkyo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import RECEIVER_INFO, mock_discovery, setup_integration
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("mock_receiver")
@@ -28,6 +33,82 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_receiver")
+async def test_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the receiver device."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, RECEIVER_INFO.identifier), mock_config_entry.entry_id
+    )
+    assert device == snapshot(name="receiver")
+    assert device is not None
+    assert dr.async_entries_for_parent_device(device_registry, device.id) == snapshot(
+        name="zones"
+    )
+
+
+@pytest.mark.usefixtures("mock_receiver")
+@pytest.mark.parametrize("initial_messages", [[]])
+async def test_device_without_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the device is created before the receiver reports any of its zones."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, RECEIVER_INFO.identifier), mock_config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("mock_receiver")
+@pytest.mark.parametrize(
+    ("identifier", "expected_success"),
+    [
+        pytest.param(f"{RECEIVER_INFO.identifier}_zone2", True, id="zone"),
+        pytest.param(RECEIVER_INFO.identifier, False, id="receiver"),
+    ],
+)
+async def test_remove_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    identifier: str,
+    expected_success: bool,
+) -> None:
+    """Test only zone child devices can be removed by the user."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+
+    entry_id = mock_config_entry.entry_id
+    device_id = next(
+        device.id
+        for device in (
+            *dr.async_entries_for_config_entry(device_registry, entry_id),
+            *dr.async_child_entries_for_config_entry(device_registry, entry_id),
+        )
+        if (DOMAIN, identifier) in device.identifiers
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_id)
+
+    assert response["success"] is expected_success
+    assert (device_registry.async_get(device_id) is None) is expected_success
 
 
 @pytest.mark.parametrize(
