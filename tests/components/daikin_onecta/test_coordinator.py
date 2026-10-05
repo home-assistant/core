@@ -8,6 +8,7 @@ from daikin_onecta import OnectaConnectionError, OnectaRateLimitError
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
+from homeassistant.components.daikin_onecta import coordinator as coordinator_module
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
@@ -19,13 +20,23 @@ from tests.common import MockConfigEntry
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
-POLLING_OPTIONS = {
-    "low_scan_interval": 47,
-    "high_scan_interval": 13,
-    "high_scan_start": "08:00:00",
-    "low_scan_start": "20:00:00",
-    "scan_ignore": 42,
-}
+
+
+def _patch_polling_schedule(
+    *,
+    low_interval: int = 240,
+    high_interval: int = 5,
+    high_start: time,
+    low_start: time,
+):
+    """Patch fixed polling defaults for boundary tests."""
+    return patch.multiple(
+        coordinator_module,
+        _LOW_SCAN_INTERVAL=timedelta(minutes=low_interval),
+        _HIGH_SCAN_INTERVAL=timedelta(minutes=high_interval),
+        _HIGH_SCAN_START=high_start,
+        _LOW_SCAN_START=low_start,
+    )
 
 
 @pytest.fixture
@@ -36,18 +47,18 @@ def mock_hass():
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a config entry with non-default polling options."""
+    """Return a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="daikin_onecta",
         unique_id="12345",
-        options=POLLING_OPTIONS,
+        options={},
     )
 
 
 @pytest.fixture
 def coordinator(mock_hass, mock_config_entry):
-    """Return a coordinator using the configured polling options."""
+    """Return a coordinator."""
     mock_config_entry.add_to_hass(mock_hass)
     return OnectaDataUpdateCoordinator(mock_hass, mock_config_entry, MagicMock())
 
@@ -76,191 +87,123 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator._in_between(time(23, 0, 0), start, end)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_high_scan_interval(self, mock_now, coordinator, mock_hass):
+    def test_high_scan_interval(self, mock_now, coordinator):
         """High scan interval should apply during high-frequency window."""
         mock_now.return_value = datetime(2023, 1, 1, 10, 0, 0)
 
-        expected = timedelta(minutes=13)
-        result = coordinator._determine_update_interval(mock_hass)
+        expected = timedelta(minutes=10)
+        result = coordinator._determine_update_interval()
         assert result == expected
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_low_scan_interval(self, mock_now, coordinator, mock_hass):
+    def test_low_scan_interval(self, mock_now, coordinator):
         """Low scan interval should apply outside transition windows."""
         mock_now.return_value = datetime(2023, 1, 1, 23, 0, 0)
 
         with patch.object(coordinator, "_in_between", side_effect=[False, False]):
-            expected = timedelta(minutes=47)
-            result = coordinator._determine_update_interval(mock_hass)
+            expected = timedelta(minutes=30)
+            result = coordinator._determine_update_interval()
             assert result == expected
 
     @pytest.mark.parametrize(
-        ("now", "options", "expected"),
+        ("now", "expected"),
         [
             (
-                datetime(2023, 1, 1, 7, 59),
-                {
-                    "low_scan_interval": 240,
-                    "high_scan_interval": 5,
-                    "high_scan_start": "08:00:00",
-                    "low_scan_start": "09:00:00",
-                },
-                timedelta(minutes=5),
-            ),
-            (
-                datetime(2023, 1, 1, 8, 58),
-                {
-                    "low_scan_interval": 240,
-                    "high_scan_interval": 5,
-                    "high_scan_start": "08:00:00",
-                    "low_scan_start": "09:00:00",
-                },
-                timedelta(minutes=5),
+                datetime(2023, 1, 1, 6, 59),
+                timedelta(minutes=10),
             ),
             (
                 datetime(2023, 1, 1, 21, 59),
-                {
-                    "low_scan_interval": 240,
-                    "high_scan_interval": 5,
-                    "high_scan_start": "22:00:00",
-                    "low_scan_start": "07:00:00",
-                },
-                timedelta(minutes=5),
+                timedelta(minutes=10),
             ),
             (
-                datetime(2023, 1, 1, 6, 58),
-                {
-                    "low_scan_interval": 240,
-                    "high_scan_interval": 5,
-                    "high_scan_start": "22:00:00",
-                    "low_scan_start": "07:00:00",
-                },
-                timedelta(minutes=5),
-            ),
-            (
-                datetime(2023, 1, 1, 7, 59, 59, 500000),
-                {
-                    "low_scan_interval": 240,
-                    "high_scan_interval": 5,
-                    "high_scan_start": "08:00:00",
-                    "low_scan_start": "09:00:00",
-                },
-                timedelta(minutes=5),
+                datetime(2023, 1, 1, 6, 59, 59, 500000),
+                timedelta(minutes=10),
             ),
         ],
     )
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_is_capped_at_window_boundary(
-        self, mock_now, coordinator, mock_hass, now, options, expected
+        self, mock_now, coordinator, now, expected
     ):
         """Use at least the high-frequency interval near a window boundary."""
         mock_now.return_value = now
-        coordinator.options = options
-
-        assert coordinator._determine_update_interval(mock_hass) == expected
+        assert coordinator._determine_update_interval() == expected
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_scan_interval_uses_utc_delay_across_dst_start(
-        self, mock_now, coordinator, mock_hass
-    ):
+    def test_scan_interval_uses_utc_delay_across_dst_start(self, mock_now, coordinator):
         """Use the next boundary's UTC offset when daylight saving time starts."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 3, 28, 23, 30, tzinfo=amsterdam)
-        coordinator.options = {
-            "low_scan_interval": 240,
-            "high_scan_interval": 5,
-            "high_scan_start": "03:00:00",
-            "low_scan_start": "22:00:00",
-        }
-
-        with patch(
-            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
-            amsterdam,
+        with (
+            _patch_polling_schedule(high_start=time(3), low_start=time(22)),
+            patch(
+                "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+                amsterdam,
+            ),
         ):
-            assert coordinator._determine_update_interval(mock_hass) == timedelta(
-                minutes=150
-            )
+            assert coordinator._determine_update_interval() == timedelta(minutes=150)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_uses_clock_transition_for_nonexistent_boundary(
-        self, mock_now, coordinator, mock_hass
+        self, mock_now, coordinator
     ):
         """Poll at the DST jump when it begins the high-frequency window."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 3, 29, 1, 59, tzinfo=amsterdam)
-        coordinator.options = {
-            "low_scan_interval": 240,
-            "high_scan_interval": 5,
-            "high_scan_start": "02:30:00",
-            "low_scan_start": "03:15:00",
-        }
-
-        with patch(
-            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
-            amsterdam,
+        with (
+            _patch_polling_schedule(high_start=time(2, 30), low_start=time(3, 15)),
+            patch(
+                "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+                amsterdam,
+            ),
         ):
-            assert coordinator._determine_update_interval(mock_hass) == timedelta(
-                minutes=1
-            )
+            assert coordinator._determine_update_interval() == timedelta(minutes=1)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_preserves_dst_fold_at_window_boundary(
-        self, mock_now, coordinator, mock_hass
+        self, mock_now, coordinator
     ):
         """Use the second occurrence of a boundary during daylight saving rollback."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 10, 25, 2, 15, tzinfo=amsterdam, fold=1)
-        coordinator.options = {
-            "low_scan_interval": 240,
-            "high_scan_interval": 5,
-            "high_scan_start": "02:30:00",
-            "low_scan_start": "03:00:00",
-        }
-
-        with patch(
-            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
-            amsterdam,
+        with (
+            _patch_polling_schedule(high_start=time(2, 30), low_start=time(3)),
+            patch(
+                "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+                amsterdam,
+            ),
         ):
-            assert coordinator._determine_update_interval(mock_hass) == timedelta(
-                minutes=15
-            )
+            assert coordinator._determine_update_interval() == timedelta(minutes=15)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_uses_repeated_dst_boundary_before_rollback(
-        self, mock_now, coordinator, mock_hass
+        self, mock_now, coordinator
     ):
         """Use today's repeated boundary before daylight saving rollback."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 10, 25, 2, 35, tzinfo=amsterdam)
-        coordinator.options = {
-            "low_scan_interval": 240,
-            "high_scan_interval": 5,
-            "high_scan_start": "02:00:00",
-            "low_scan_start": "02:30:00",
-        }
-
-        with patch(
-            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
-            amsterdam,
+        with (
+            _patch_polling_schedule(high_start=time(2), low_start=time(2, 30)),
+            patch(
+                "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+                amsterdam,
+            ),
         ):
-            assert coordinator._determine_update_interval(mock_hass) == timedelta(
-                minutes=25
-            )
+            assert coordinator._determine_update_interval() == timedelta(minutes=25)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
-    def test_transition_period_randomization(
-        self, mock_random, mock_now, coordinator, mock_hass
-    ):
+    def test_transition_period_randomization(self, mock_random, mock_now, coordinator):
         """During transition, interval is randomized between floor and low interval."""
         mock_now.return_value = datetime(2023, 1, 1, 22, 5, 0)
         mock_random.randint.return_value = 120  # 2 minutes
 
         with patch.object(coordinator, "_in_between", side_effect=[False, True]):
-            expected = timedelta(minutes=13)
-            result = coordinator._determine_update_interval(mock_hass)
+            expected = timedelta(minutes=10)
+            result = coordinator._determine_update_interval()
             assert result == expected
-            mock_random.randint.assert_called_once_with(60, 2820)
+            mock_random.randint.assert_called_once_with(60, 1800)
 
     async def test_rate_limit_uses_update_failed_retry_after(
         self, caplog, coordinator, mock_config_entry
@@ -295,9 +238,9 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator.api.get_cloud_device_details.assert_awaited_once_with(
-            cooldown=timedelta(seconds=42)
+            cooldown=timedelta(seconds=30)
         )
-        assert coordinator.update_interval == timedelta(seconds=42)
+        assert coordinator.update_interval == timedelta(seconds=30)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_recent_write_skips_cloud_polling(self, mock_utcnow, coordinator):
@@ -309,7 +252,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.api.get_cloud_device_details = AsyncMock()
 
         assert await coordinator._async_update_data_from_cloud() == {}
-        assert coordinator.update_interval == timedelta(seconds=42)
+        assert coordinator.update_interval == timedelta(seconds=30)
         coordinator.api.get_cloud_device_details.assert_not_awaited()
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
@@ -324,7 +267,7 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator.api.get_cloud_device_details.assert_awaited_once_with(
-            cooldown=timedelta(seconds=42)
+            cooldown=timedelta(seconds=30)
         )
 
     async def test_connection_error_uses_update_failed(self, coordinator):
@@ -355,35 +298,21 @@ class TestOnectaDataUpdateCoordinator:
 
         missing_device.mark_unavailable.assert_called_once_with()
 
-    def test_update_settings(self, coordinator, mock_config_entry, mock_hass):
-        """Apply changed polling options to the coordinator."""
-        options = {
-            "low_scan_interval": 45,
-            "high_scan_interval": 15,
-            "high_scan_start": "07:00:00",
-            "low_scan_start": "22:00:00",
-        }
+    def test_update_settings(self, coordinator):
+        """Apply changed entity options to the coordinator."""
+        options = {"homekit_fan_mode_aliases": True}
         updated_entry = MockConfigEntry(
             domain=DOMAIN, title="daikin_onecta", unique_id="12345", options=options
         )
 
-        with patch.object(
-            coordinator,
-            "_determine_update_interval",
-            return_value=timedelta(minutes=45),
-        ) as determine:
-            assert coordinator.update_settings(updated_entry)
+        assert coordinator.update_settings(updated_entry)
 
         assert coordinator.options == options
-        assert coordinator.update_interval == timedelta(minutes=45)
-        determine.assert_called_once_with(mock_hass)
 
     def test_update_settings_ignores_unchanged_options(
         self, coordinator, mock_config_entry
     ):
         """Do not apply settings when only config-entry data changed."""
-        with patch.object(coordinator, "_determine_update_interval") as determine:
-            assert not coordinator.update_settings(mock_config_entry)
+        assert not coordinator.update_settings(mock_config_entry)
 
-        assert coordinator.options == POLLING_OPTIONS
-        determine.assert_not_called()
+        assert coordinator.options == {}

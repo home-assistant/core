@@ -18,6 +18,12 @@ from .device import DaikinOnectaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+_HIGH_SCAN_INTERVAL = timedelta(minutes=10)
+_LOW_SCAN_INTERVAL = timedelta(minutes=30)
+_HIGH_SCAN_START = time(7)
+_LOW_SCAN_START = time(22)
+_POST_WRITE_COOLDOWN = timedelta(seconds=30)
+
 type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
 
 
@@ -41,7 +47,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=self._determine_update_interval(hass),
+            update_interval=self._determine_update_interval(),
         )
 
         _LOGGER.info(
@@ -54,30 +60,24 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Return the Daikin API client."""
         return self._daikin_api
 
-    def _scan_ignore(self) -> int:
-        """Return the delay after a write before polling resumes."""
-        return int(self.options.get("scan_ignore", 30))
-
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
         _LOGGER.debug("Daikin coordinator start _async_update_data")
 
         devices = self.data or {}
-        scan_ignore_value = self._scan_ignore()
-
         if (
             self.api.last_patch_call is not None
             and (dt_util.utcnow() - self.api.last_patch_call).total_seconds()
-            < scan_ignore_value
+            < _POST_WRITE_COOLDOWN.total_seconds()
         ):
-            self.update_interval = timedelta(seconds=scan_ignore_value)
+            self.update_interval = _POST_WRITE_COOLDOWN
             _LOGGER.debug(
                 "API UPDATE skipped (just updated from UI)",
             )
         else:
             try:
                 cloud_devices = await self.api.get_cloud_device_details(
-                    cooldown=timedelta(seconds=scan_ignore_value)
+                    cooldown=_POST_WRITE_COOLDOWN
                 )
             except OnectaRateLimitError as err:
                 _LOGGER.warning(
@@ -96,7 +96,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 ) from err
 
             if cloud_devices is None:
-                self.update_interval = timedelta(seconds=scan_ignore_value)
+                self.update_interval = _POST_WRITE_COOLDOWN
                 _LOGGER.debug("API UPDATE skipped (just updated from UI)")
             else:
                 cloud_device_ids = {device.id for device in cloud_devices}
@@ -114,7 +114,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         device.async_register_ha_device(self.hass, self.config_entry)
                         devices[dev_data.id] = device
 
-                self.update_interval = self._determine_update_interval(self.hass)
+                self.update_interval = self._determine_update_interval()
 
         _LOGGER.debug(
             "Daikin coordinator finished _async_update_data, next interval %s",
@@ -134,22 +134,15 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
         _LOGGER.debug("Daikin coordinator updating settings")
         self.options = config_entry.options
-        self.update_interval = self._determine_update_interval(self.hass)
-        _LOGGER.info(
-            "Daikin coordinator changed interval to '%s'", self.update_interval
-        )
         return True
 
-    def _determine_update_interval(self, hass: HomeAssistant) -> timedelta:
+    def _determine_update_interval(self) -> timedelta:
         """Determine the next polling interval."""
         now = dt_util.now()
-        # Default of low scan minutes interval
-        scan_interval = self.options.get("low_scan_interval", 30) * 60
-        high_scan_interval = self.options.get("high_scan_interval", 10) * 60
-        hs = dt_util.parse_time(self.options.get("high_scan_start", "07:00:00"))
-        ls = dt_util.parse_time(self.options.get("low_scan_start", "22:00:00"))
-        assert hs is not None
-        assert ls is not None
+        scan_interval = int(_LOW_SCAN_INTERVAL.total_seconds())
+        high_scan_interval = int(_HIGH_SCAN_INTERVAL.total_seconds())
+        hs = _HIGH_SCAN_START
+        ls = _LOW_SCAN_START
         in_high_frequency_window = self._in_between(now.time(), hs, ls)
         if in_high_frequency_window:
             scan_interval = high_scan_interval

@@ -10,12 +10,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.selector import (
-    BooleanSelector,
-    NumberSelector,
-    NumberSelectorConfig,
-    TimeSelector,
-)
+from homeassistant.helpers.selector import BooleanSelector
 
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN
 from .coordinator import DaikinOnectaConfigEntry
@@ -39,48 +34,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            if user_input["high_scan_interval"] <= user_input["low_scan_interval"]:
-                return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        "high_scan_interval",
-                        default=self.options.get("high_scan_interval", 10),
-                    ): NumberSelector(
-                        NumberSelectorConfig(min=5, max=240, step=1),
-                    ),
-                    probatio.Required(
-                        "low_scan_interval",
-                        default=self.options.get("low_scan_interval", 30),
-                    ): NumberSelector(
-                        NumberSelectorConfig(min=10, max=240, step=1),
-                    ),
-                    probatio.Required(
-                        "high_scan_start",
-                        default=self.options.get("high_scan_start", "07:00:00"),
-                    ): TimeSelector(),
-                    probatio.Required(
-                        "low_scan_start",
-                        default=self.options.get("low_scan_start", "22:00:00"),
-                    ): TimeSelector(),
-                    probatio.Required(
-                        "scan_ignore",
-                        default=self.options.get("scan_ignore", 30),
-                    ): NumberSelector(
-                        NumberSelectorConfig(min=20, max=300, step=1),
-                    ),
-                    probatio.Required(
                         CONF_HOMEKIT_FAN_MODE_ALIASES,
                         default=self.options.get(CONF_HOMEKIT_FAN_MODE_ALIASES, False),
                     ): BooleanSelector(),
                 }
             ),
-            errors={"base": "high_scan_interval_greater_than_low"}
-            if user_input is not None
-            else {},
         )
 
 
