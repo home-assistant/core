@@ -4,14 +4,14 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from ritualsgenie import Attribute, RitualsGenie, RoomSize
+from ritualsgenie import Attribute, RitualsGenie, RitualsGenieHub, RoomSize
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfArea
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import RitualsConfigEntry, RitualsData, RitualsDataUpdateCoordinator
+from .coordinator import RitualsConfigEntry, RitualsHubsCoordinator
 from .entity import DiffuserEntity
 
 PARALLEL_UPDATES = 1
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 1
 class RitualsSelectEntityDescription(SelectEntityDescription):
     """Class describing Rituals select entities."""
 
-    current_fn: Callable[[RitualsData], str | None]
+    current_fn: Callable[[RitualsGenieHub], str | None]
     select_fn: Callable[[RitualsGenie, str, str], Awaitable[None]]
 
 
@@ -37,8 +37,8 @@ ENTITY_DESCRIPTIONS = (
         unit_of_measurement=UnitOfArea.SQUARE_METERS,
         entity_category=EntityCategory.CONFIG,
         options=["15", "30", "60", "100"],
-        current_fn=lambda data: (
-            str(data.hub.room_size.square_meters) if data.hub.room_size else None
+        current_fn=lambda hub: (
+            str(hub.room_size.square_meters) if hub.room_size else None
         ),
         select_fn=lambda client, hub_hash, value: client.set_room_size_category(
             hub_hash, _room_size(value)
@@ -53,11 +53,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser select entities."""
-    coordinators = config_entry.runtime_data
+    hubs = config_entry.runtime_data.hubs
 
     async_add_entities(
-        RitualsSelectEntity(coordinator, description)
-        for coordinator in coordinators.values()
+        RitualsSelectEntity(hubs, hublot, description)
+        for hublot in hubs.data
         for description in ENTITY_DESCRIPTIONS
     )
 
@@ -69,29 +69,28 @@ class RitualsSelectEntity(DiffuserEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: RitualsDataUpdateCoordinator,
+        coordinator: RitualsHubsCoordinator,
+        hublot: str,
         description: RitualsSelectEntityDescription,
     ) -> None:
         """Initialize the diffuser room size select entity."""
-        super().__init__(coordinator, description)
-        self._attr_entity_registry_enabled_default = (
-            self.coordinator.data.hub.has_battery
-        )
+        super().__init__(coordinator, hublot, description)
+        self._attr_entity_registry_enabled_default = self.hub.has_battery
 
     @property
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self.entity_description.current_fn(self.coordinator.data)
+        return self.entity_description.current_fn(self.hub)
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(
-            self.coordinator.client, self.coordinator.hub_hash, option
+            self.coordinator.client, self.hub.hash, option
         )
 
         # Keep the new value until the next update, like the device has it now.
-        attribute_values = self.coordinator.data.hub.attribute_values
+        attribute_values = self.hub.attribute_values
         attribute_values[Attribute.ROOM_SIZE] = str(int(_room_size(option)))
         self.async_write_ha_state()

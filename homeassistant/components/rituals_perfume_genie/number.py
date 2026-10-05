@@ -4,13 +4,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from ritualsgenie import Attribute, RitualsGenie
+from ritualsgenie import Attribute, RitualsGenie, RitualsGenieHub
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import RitualsConfigEntry, RitualsData
+from .coordinator import RitualsConfigEntry
 from .entity import DiffuserEntity
 
 PARALLEL_UPDATES = 1
@@ -21,7 +21,7 @@ class RitualsNumberEntityDescription(NumberEntityDescription):
     """Class describing Rituals number entities."""
 
     attribute: Attribute
-    value_fn: Callable[[RitualsData], int | None]
+    value_fn: Callable[[RitualsGenieHub], int | None]
     set_value_fn: Callable[[RitualsGenie, str, int], Awaitable[None]]
 
 
@@ -32,7 +32,7 @@ ENTITY_DESCRIPTIONS = (
         attribute=Attribute.PERFUME_AMOUNT,
         native_min_value=1,
         native_max_value=3,
-        value_fn=lambda data: data.hub.perfume_amount,
+        value_fn=lambda hub: hub.perfume_amount,
         set_value_fn=lambda client, hub_hash, value: client.set_perfume_amount(
             hub_hash, value
         ),
@@ -46,10 +46,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser numbers."""
-    coordinators = config_entry.runtime_data
+    hubs = config_entry.runtime_data.hubs
+
     async_add_entities(
-        RitualsNumberEntity(coordinator, description)
-        for coordinator in coordinators.values()
+        RitualsNumberEntity(hubs, hublot, description)
+        for hublot in hubs.data
         for description in ENTITY_DESCRIPTIONS
     )
 
@@ -63,7 +64,7 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
     @override
     def native_value(self) -> int | None:
         """Return the number value."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.hub)
 
     @override
     async def async_set_native_value(self, value: float) -> None:
@@ -71,10 +72,10 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
         if not value.is_integer():
             raise ValueError(f"Can't set value to {value}. Value must be an integer.")
         await self.entity_description.set_value_fn(
-            self.coordinator.client, self.coordinator.hub_hash, int(value)
+            self.coordinator.client, self.hub.hash, int(value)
         )
 
         # Keep the new value until the next update, like the device has it now.
-        attribute_values = self.coordinator.data.hub.attribute_values
+        attribute_values = self.hub.attribute_values
         attribute_values[self.entity_description.attribute] = str(int(value))
         self.async_write_ha_state()

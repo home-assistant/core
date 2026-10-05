@@ -95,9 +95,9 @@ async def test_update_failed(
     """Test entities become unavailable when updating fails."""
     config_entry = mock_config_entry(unique_id="id_123_update_failed")
     client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
-    client.hub.side_effect = exception
+    client.hubs.side_effect = exception
 
-    freezer.tick(timedelta(minutes=3))
+    freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -112,9 +112,9 @@ async def test_update_auth_failed(
     """Test a reauth flow is started when the credentials stopped working."""
     config_entry = mock_config_entry(unique_id="id_123_update_auth_failed")
     client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
-    client.hub.side_effect = RitualsGenieAuthenticationError
+    client.hubs.side_effect = RitualsGenieAuthenticationError
 
-    freezer.tick(timedelta(minutes=3))
+    freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

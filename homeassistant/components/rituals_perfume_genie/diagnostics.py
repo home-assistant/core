@@ -18,15 +18,21 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: RitualsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    runtime_data = entry.runtime_data
+
     return {
         "diffusers": [
             async_redact_data(
                 {
-                    "hub": coordinator.data.hub.to_dict(),
-                    "sensors": asdict(coordinator.data.sensors),
+                    "hub": hub.to_dict(),
+                    "sensors": (
+                        asdict(sensors.data)
+                        if (sensors := runtime_data.sensors[hublot]).data
+                        else None
+                    ),
                 },
                 TO_REDACT,
             )
-            for coordinator in entry.runtime_data.values()
+            for hublot, hub in runtime_data.hubs.data.items()
         ]
     }
