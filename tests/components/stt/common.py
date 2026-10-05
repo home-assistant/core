@@ -1,6 +1,6 @@
 """Provide common test tools for STT."""
 
-from collections.abc import AsyncIterable, Callable, Coroutine
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +11,7 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    PartialSpeechResult,
     Provider,
     SpeechAudioProcessing,
     SpeechMetadata,
@@ -108,6 +109,23 @@ class MockSTTProviderEntity(BaseProvider, SpeechToTextEntity):
 
     url_path = "stt.test"
     _attr_name = "test"
+
+
+class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
+    """Mock provider entity that emits partial transcripts."""
+
+    url_path = "stt.test_partial"
+    _attr_name = "test partial"
+
+    async def async_process_audio_stream_partial(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream, yielding a partial per word."""
+        words = self.text.split()
+        for index in range(1, len(words)):
+            yield PartialSpeechResult(" ".join(words[:index]))
+
+        yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
 
 class MockSTTPlatform(MockPlatform):

@@ -1,7 +1,7 @@
 """Provide functionality to STT."""
 
 from abc import abstractmethod
-from collections.abc import AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable
 from dataclasses import asdict
 import logging
 from typing import Any, final, override
@@ -46,6 +46,7 @@ from .legacy import (
 )
 from .models import (
     DEFAULT_AUDIO_PROCESSING,
+    PartialSpeechResult,
     SpeechAudioProcessing,
     SpeechMetadata,
     SpeechResult,
@@ -58,6 +59,7 @@ __all__ = [
     "AudioCodecs",
     "AudioFormats",
     "AudioSampleRates",
+    "PartialSpeechResult",
     "Provider",
     "SpeechMetadata",
     "SpeechResult",
@@ -223,6 +225,14 @@ class SpeechToTextEntity(RestoreEntity):
         ):
             self.__last_processed = state.state
 
+    @callback
+    def async_supports_partial_results(self) -> bool:
+        """Return if the entity emits partial transcripts while transcribing."""
+        return (
+            type(self).async_process_audio_stream_partial
+            is not SpeechToTextEntity.async_process_audio_stream_partial
+        )
+
     @final
     async def internal_async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
@@ -235,6 +245,21 @@ class SpeechToTextEntity(RestoreEntity):
         self.async_write_ha_state()
         return await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
+    @final
+    async def internal_async_process_audio_stream_partial(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream to STT service, yielding partial transcripts.
+
+        Only streaming content is allowed!
+        """
+        self.__last_processed = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        async for result in self.async_process_audio_stream_partial(
+            metadata=metadata, stream=stream
+        ):
+            yield result
+
     @abstractmethod
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
@@ -243,6 +268,15 @@ class SpeechToTextEntity(RestoreEntity):
 
         Only streaming content is allowed!
         """
+
+    async def async_process_audio_stream_partial(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream with an STT service, yielding partial transcripts.
+
+        Use async_supports_partial_results to check for support.
+        """
+        yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:

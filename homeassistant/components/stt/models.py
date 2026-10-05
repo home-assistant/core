@@ -33,6 +33,14 @@ class SpeechResult:
 
 
 @dataclass
+class PartialSpeechResult:
+    """Partial result of audio Speech."""
+
+    text: str
+    """Full transcript up to this point. Words may change."""
+
+
+@dataclass
 class SpeechAudioProcessing:
     """Required and preferred input audio processing settings."""
 
