@@ -245,10 +245,14 @@ def snapshot_music_assistant_entities(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     platform: Platform,
+    *,
+    unique_id_prefix: str | None = None,
 ) -> None:
-    """Snapshot MusicAssistant entities."""
+    """Snapshot MusicAssistant entities, optionally only those with a unique id prefix."""
     entities = hass.states.async_all(platform)
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
+        if unique_id_prefix and not entity_entry.unique_id.startswith(unique_id_prefix):
+            continue
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")

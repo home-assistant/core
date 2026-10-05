@@ -847,8 +847,8 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     def __init__(self, mass: MusicAssistantClient, dashboard_id: str) -> None:
         """Initialize MusicAssistantDashboardPlayer."""
         super().__init__(mass, dashboard_id)
-        # successfully fetched provider icons per domain
-        self._provider_icon_cache: dict[str, tuple[bytes, str]] = {}
+        # fetched provider icons per domain, None when the provider has none
+        self._provider_icon_cache: dict[str, tuple[bytes, str] | None] = {}
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -1106,9 +1106,9 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
     async def _fetch_provider_icon(
         self, provider_domain: str
     ) -> tuple[bytes | None, str | None]:
-        """Fetch a provider icon, caching only successful results per domain."""
-        if (cached := self._provider_icon_cache.get(provider_domain)) is not None:
-            return cached
+        """Fetch a provider icon, caching definite answers but not transient errors."""
+        if provider_domain in self._provider_icon_cache:
+            return self._provider_icon_cache[provider_domain] or (None, None)
         try:
             icon = await self.mass.get_provider_icon(provider_domain)
         except MusicAssistantError:
@@ -1116,10 +1116,10 @@ class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEn
                 "Failed to fetch provider icon for %s", provider_domain, exc_info=True
             )
             return None, None
+        self._provider_icon_cache[provider_domain] = icon
         if icon is None:
             LOGGER.debug("No provider icon available for %s", provider_domain)
             return None, None
-        self._provider_icon_cache[provider_domain] = icon
         return icon
 
     def _build_root_listing(self, dashboard: DashboardDevice) -> BrowseMedia:

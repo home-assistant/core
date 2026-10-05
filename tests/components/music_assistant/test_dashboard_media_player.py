@@ -16,12 +16,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
-    BrowseError,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import ATTR_URL, DOMAIN
-from homeassistant.components.music_assistant.media_player import (
-    MusicAssistantDashboardPlayer,
+from homeassistant.components.music_assistant.const import (
+    ATTR_URL,
+    DASHBOARD_ID_PREFIX,
+    DOMAIN,
 )
 from homeassistant.components.music_assistant.services import SERVICE_PLAY_ANNOUNCEMENT
 from homeassistant.const import (
@@ -66,14 +66,22 @@ def _mock_provider_icon(
     return music_assistant_client.get_provider_icon
 
 
-def _get_dashboard_entity(
-    hass: HomeAssistant, entity_id: str
-) -> MusicAssistantDashboardPlayer:
-    """Return the dashboard entity instance for direct image method calls."""
-    entity_component = hass.data["entity_components"][MEDIA_PLAYER_DOMAIN]
-    entity = entity_component.get_entity(entity_id)
-    assert isinstance(entity, MusicAssistantDashboardPlayer)
-    return entity
+async def _get_party_thumbnail_url(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entity_id: str
+) -> str:
+    """Return the party icon's proxy url from the root browse listing."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "media_player/browse_media", "entity_id": entity_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    party_child = next(
+        child
+        for child in response["result"]["children"]
+        if child["media_content_id"] == "party"
+    )
+    return party_child["thumbnail"]
 
 
 def _dashboards_event_data(music_assistant_client: MagicMock) -> list[dict]:
@@ -476,61 +484,90 @@ async def test_dashboard_browse_media_now_playing_folder(
     assert other_child["thumbnail"] is None
 
 
-async def test_dashboard_async_get_browse_image(
-    hass: HomeAssistant, music_assistant_client: MagicMock
+async def test_dashboard_browse_image(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test async_get_browse_image returns the provider icon and caches it."""
+    """Test the browse thumbnail serves the provider icon and caches it."""
     setup_dashboards(music_assistant_client)
     get_provider_icon = _mock_provider_icon(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    thumbnail_url = await _get_party_thumbnail_url(
+        hass, hass_ws_client, KITCHEN_ENTITY_ID
+    )
 
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    data, content_type = await entity.async_get_browse_image("dashboard", "party")
-    assert data == PROVIDER_ICON_BYTES
-    assert content_type == PROVIDER_ICON_CONTENT_TYPE
+    client = await hass_client()
+    resp = await client.get(thumbnail_url)
+    assert resp.status == 200
+    assert await resp.read() == PROVIDER_ICON_BYTES
+    assert resp.content_type == PROVIDER_ICON_CONTENT_TYPE
 
     # a second fetch for the same provider domain must not re-hit the server
-    await entity.async_get_browse_image("dashboard", "party")
+    resp = await client.get(thumbnail_url)
+    assert resp.status == 200
     get_provider_icon.assert_awaited_once_with("party")
 
 
-async def test_dashboard_async_get_browse_image_no_icon_not_cached(
-    hass: HomeAssistant, music_assistant_client: MagicMock
+async def test_dashboard_browse_image_no_icon_cached(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test a missing provider icon returns (None, None) and is retried."""
+    """Test a missing provider icon returns 404 and is not fetched again."""
     setup_dashboards(music_assistant_client)
     get_provider_icon = _mock_provider_icon(music_assistant_client, None)
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    thumbnail_url = await _get_party_thumbnail_url(
+        hass, hass_ws_client, KITCHEN_ENTITY_ID
+    )
 
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
-    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
-    assert get_provider_icon.await_count == 2
+    client = await hass_client()
+    assert (await client.get(thumbnail_url)).status == 404
+    assert (await client.get(thumbnail_url)).status == 404
+    get_provider_icon.assert_awaited_once_with("party")
 
 
-async def test_dashboard_async_get_browse_image_error_not_cached(
-    hass: HomeAssistant, music_assistant_client: MagicMock
+async def test_dashboard_browse_image_error_not_cached(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test a failed provider icon fetch returns (None, None) and is retried."""
+    """Test a failed provider icon fetch returns 404 and is retried."""
     setup_dashboards(music_assistant_client)
     get_provider_icon = _mock_provider_icon(music_assistant_client)
     get_provider_icon.side_effect = MusicAssistantError("boom")
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    thumbnail_url = await _get_party_thumbnail_url(
+        hass, hass_ws_client, KITCHEN_ENTITY_ID
+    )
 
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    assert await entity.async_get_browse_image("dashboard", "party") == (None, None)
+    client = await hass_client()
+    assert (await client.get(thumbnail_url)).status == 404
 
     # the next request retries and caches the recovered result
     get_provider_icon.side_effect = None
-    data, content_type = await entity.async_get_browse_image("dashboard", "party")
-    assert (data, content_type) == (PROVIDER_ICON_BYTES, PROVIDER_ICON_CONTENT_TYPE)
+    resp = await client.get(thumbnail_url)
+    assert resp.status == 200
+    assert await resp.read() == PROVIDER_ICON_BYTES
+    assert resp.content_type == PROVIDER_ICON_CONTENT_TYPE
     assert get_provider_icon.await_count == 2
 
 
-async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
-    hass: HomeAssistant, music_assistant_client: MagicMock
+@pytest.mark.parametrize(
+    "media_content_id", ["not_a_real_id", "now_playing/00:00:00:00:00:01"]
+)
+async def test_dashboard_browse_image_rejects_unknown_content_id(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
+    media_content_id: str,
 ) -> None:
-    """Test async_get_browse_image rejects any id besides the two icon domains.
+    """Test the browse thumbnail rejects any id besides the two icon domains.
 
     This bounds the icon cache to the party/music_quiz keys it's sized for,
     and must reject before ever touching the cache or the server.
@@ -538,12 +575,15 @@ async def test_dashboard_async_get_browse_image_rejects_unknown_content_id(
     setup_dashboards(music_assistant_client)
     get_provider_icon = _mock_provider_icon(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    thumbnail_url = await _get_party_thumbnail_url(
+        hass, hass_ws_client, KITCHEN_ENTITY_ID
+    )
 
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    assert await entity.async_get_browse_image(
-        "dashboard", "now_playing/00:00:00:00:00:01"
-    ) == (None, None)
-    assert entity._provider_icon_cache == {}
+    client = await hass_client()
+    resp = await client.get(
+        thumbnail_url.replace("/dashboard/party?", f"/dashboard/{media_content_id}?")
+    )
+    assert resp.status == 404
     get_provider_icon.assert_not_awaited()
 
 
@@ -653,16 +693,17 @@ async def test_dashboard_session_mirroring(
 
 
 async def test_dashboard_session_media_image_party_and_music_quiz(
-    hass: HomeAssistant, music_assistant_client: MagicMock
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test party/music_quiz sessions serve the provider icon, hashed by session type."""
     setup_dashboards(music_assistant_client)
     _mock_provider_icon(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    entity = _get_dashboard_entity(hass, HALLWAY_ENTITY_ID)
-    assert entity.media_image_hash is None
-    assert await entity.async_get_media_image() == (None, None)
+    state = hass.states.get(HALLWAY_ENTITY_ID)
+    assert state.attributes.get("entity_picture") is None
 
     music_assistant_client.dashboard._sessions["fully_kiosk_hallway"] = (
         DashboardSession(
@@ -677,17 +718,15 @@ async def test_dashboard_session_media_image_party_and_music_quiz(
         EventType.DASHBOARD_SESSIONS_UPDATED,
         data=_sessions_event_data(music_assistant_client),
     )
-    party_hash = entity.media_image_hash
-    assert party_hash is not None
-    data, content_type = await entity.async_get_media_image()
-    assert data == PROVIDER_ICON_BYTES
-    assert content_type == PROVIDER_ICON_CONTENT_TYPE
-
     # the icon is served through the media proxy, not a direct media_image_url
     state = hass.states.get(HALLWAY_ENTITY_ID)
-    assert state.attributes["entity_picture"].startswith(
-        f"/api/media_player_proxy/{HALLWAY_ENTITY_ID}?"
-    )
+    party_picture = state.attributes["entity_picture"]
+    assert party_picture.startswith(f"/api/media_player_proxy/{HALLWAY_ENTITY_ID}?")
+    client = await hass_client()
+    resp = await client.get(party_picture)
+    assert resp.status == 200
+    assert await resp.read() == PROVIDER_ICON_BYTES
+    assert resp.content_type == PROVIDER_ICON_CONTENT_TYPE
 
     music_assistant_client.dashboard._sessions["fully_kiosk_hallway"] = (
         DashboardSession(
@@ -702,7 +741,8 @@ async def test_dashboard_session_media_image_party_and_music_quiz(
         EventType.DASHBOARD_SESSIONS_UPDATED,
         data=_sessions_event_data(music_assistant_client),
     )
-    assert entity.media_image_hash != party_hash
+    state = hass.states.get(HALLWAY_ENTITY_ID)
+    assert state.attributes["entity_picture"] != party_picture
 
     del music_assistant_client.dashboard._sessions["fully_kiosk_hallway"]
     await trigger_subscription_callback(
@@ -711,8 +751,8 @@ async def test_dashboard_session_media_image_party_and_music_quiz(
         EventType.DASHBOARD_SESSIONS_UPDATED,
         data=_sessions_event_data(music_assistant_client),
     )
-    assert entity.media_image_hash is None
-    assert await entity.async_get_media_image() == (None, None)
+    state = hass.states.get(HALLWAY_ENTITY_ID)
+    assert state.attributes.get("entity_picture") is None
 
 
 async def test_dashboard_now_playing_session_media_image(
@@ -726,10 +766,6 @@ async def test_dashboard_now_playing_session_media_image(
     # which starts without any media
     state = hass.states.get(KITCHEN_ENTITY_ID)
     assert state.attributes.get("entity_picture") is None
-
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    # not a party/music_quiz session, so no proxied provider icon either
-    assert entity.media_image_hash is None
 
     art_url = "https://example.com/art.jpg"
     music_assistant_client.players._players[
@@ -922,14 +958,7 @@ async def test_dashboard_browse_media_unknown_content_id(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]["code"] == "unknown_error"
-
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    with pytest.raises(BrowseError) as exc_info:
-        await entity.async_browse_media("dashboard", "not_a_real_id")
-    assert exc_info.value.translation_key == "dashboard_media_not_found"
-    assert exc_info.value.translation_placeholders == {
-        "media_content_id": "not_a_real_id"
-    }
+    assert response["error"]["message"] == "The media not_a_real_id was not found"
 
 
 async def test_dashboard_browse_media_display_gone_from_cache(
@@ -959,12 +988,10 @@ async def test_dashboard_browse_media_display_gone_from_cache(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]["code"] == "unknown_error"
-
-    entity = _get_dashboard_entity(hass, KITCHEN_ENTITY_ID)
-    with pytest.raises(BrowseError) as exc_info:
-        await entity.async_browse_media()
-    assert exc_info.value.translation_key == "dashboard_display_not_available"
-    assert exc_info.value.translation_placeholders == {"display": "chromecast_kitchen"}
+    assert (
+        response["error"]["message"]
+        == "The display chromecast_kitchen is not available"
+    )
 
 
 async def test_dashboard_browse_media_now_playing_folder_unsupported(
@@ -996,11 +1023,7 @@ async def test_dashboard_browse_media_now_playing_folder_unsupported(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]["code"] == "unknown_error"
-
-    entity = _get_dashboard_entity(hass, "media_player.party_only_display")
-    with pytest.raises(BrowseError) as exc_info:
-        await entity.async_browse_media("dashboard", "now_playing")
-    assert exc_info.value.translation_key == "dashboard_media_not_found"
+    assert response["error"]["message"] == "The media now_playing was not found"
 
 
 async def test_dashboard_media_player_snapshot(
@@ -1013,7 +1036,11 @@ async def test_dashboard_media_player_snapshot(
     setup_dashboards(music_assistant_client)
     await setup_integration_from_fixtures(hass, music_assistant_client)
     snapshot_music_assistant_entities(
-        hass, entity_registry, snapshot, Platform.MEDIA_PLAYER
+        hass,
+        entity_registry,
+        snapshot,
+        Platform.MEDIA_PLAYER,
+        unique_id_prefix=DASHBOARD_ID_PREFIX,
     )
 
 
