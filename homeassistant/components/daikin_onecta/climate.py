@@ -62,22 +62,18 @@ CLIMATE_ENTITY_DESCRIPTIONS = {
     "calculatedLeavingWaterTemperature": ClimateEntityDescription(
         key="calculated_leaving_water_temperature",
         translation_key="calculated_leaving_water_temperature",
-        has_entity_name=True,
     ),
     "leavingWaterOffset": ClimateEntityDescription(
         key="leaving_water_offset",
         translation_key="leaving_water_offset",
-        has_entity_name=True,
     ),
     "leavingWaterTemperature": ClimateEntityDescription(
         key="leaving_water_temperature",
         translation_key="leaving_water_temperature",
-        has_entity_name=True,
     ),
     "roomTemperature": ClimateEntityDescription(
         key="room_temperature",
         translation_key="roomtemperature",
-        has_entity_name=True,
     ),
 }
 
@@ -187,7 +183,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 key=setpoint,
                 translation_key="setpoint",
                 translation_placeholders={"setpoint": setpoint},
-                has_entity_name=True,
             ),
         )
         self._device.fill_gateway_device_info(self._attr_device_info)
