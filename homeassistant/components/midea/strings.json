@@ -412,7 +412,7 @@
           "less": "Less",
           "medium": "[%key:common::state::medium%]",
           "more": "More",
-          "no": "No"
+          "no": "None"
         }
       },
       "discharge_pipe_temperature": {
@@ -695,7 +695,7 @@
           "8": "8",
           "insufficient": "Insufficient",
           "intelligent": "Intelligent",
-          "no": "No",
+          "no": "None",
           "programed": "Programmed"
         }
       },
