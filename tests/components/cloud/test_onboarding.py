@@ -120,7 +120,7 @@ async def test_onboarding_cloud_login(
 
     assert req.status == HTTPStatus.OK
     data = await req.json()
-    assert data == {"cloud_pipeline": None, "success": True}
+    assert data == {"success": True}
     assert cloud.login.call_count == 1
 
 

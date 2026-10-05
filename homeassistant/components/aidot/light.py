@@ -92,13 +92,16 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on, applying brightness, color temperature, RGBW, or plain on."""
+        """Turn the light on, applying any requested brightness and color."""
+        # Brightness is independent of color: a scene sends both at once, and
+        # the color must not be dropped just because brightness came with it.
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
             await self.coordinator.device_client.async_set_brightness(brightness)
             self.coordinator.data.dimming = brightness
             self._attr_brightness = brightness
-        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
+
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
             color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
             await self.coordinator.device_client.async_set_cct(color_temp_kelvin)
             self.coordinator.data.cct = color_temp_kelvin
@@ -110,7 +113,8 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
             self.coordinator.data.rgbw = rgbw_color
             self._attr_rgbw_color = rgbw_color
             self._attr_color_mode = ColorMode.RGBW
-        else:
+        elif ATTR_BRIGHTNESS not in kwargs:
+            # Nothing was requested to apply, so just switch it on.
             await self.coordinator.device_client.async_turn_on()
 
         self.coordinator.data.on = True

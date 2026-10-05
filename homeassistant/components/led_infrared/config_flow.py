@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
@@ -28,8 +28,9 @@ from .const import (
 )
 
 DEVICE_NAMES = {
-    LEDIrDeviceType.GENERIC_24_KEY: "24-key remote",
+    LEDIrDeviceType.GENERIC_10_KEY: "10-key remote",
     LEDIrDeviceType.GENERIC_13_KEY: "13-key remote",
+    LEDIrDeviceType.GENERIC_24_KEY: "24-key remote",
     LEDIrDeviceType.GENERIC_40_KEY: "40-key remote",
     LEDIrDeviceType.GENERIC_44_KEY: "44-key remote",
 }
@@ -86,9 +87,9 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE_TYPE): SelectSelector(
+                    probatio.Required(CONF_DEVICE_TYPE): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 device_type.value for device_type in LEDIrDeviceType
@@ -97,13 +98,13 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                    probatio.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
                         )
                     ),
-                    vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
+                    probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=receiver_entity_ids,
@@ -158,15 +159,17 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                        probatio.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
                             EntitySelectorConfig(
                                 domain=INFRARED_DOMAIN,
                                 include_entities=emitter_entity_ids,
                             )
                         ),
-                        vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
+                        probatio.Optional(
+                            CONF_INFRARED_RECEIVER_ENTITY_ID
+                        ): EntitySelector(
                             EntitySelectorConfig(
                                 domain=INFRARED_DOMAIN,
                                 include_entities=receiver_entity_ids,

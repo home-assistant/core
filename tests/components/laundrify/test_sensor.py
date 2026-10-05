@@ -50,7 +50,9 @@ async def test_laundrify_sensor_init(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.state == STATE_UNKNOWN
 
-    device = device_registry.async_get_device({(DOMAIN, mock_device.id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), laundrify_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == mock_device.name
     assert device.identifiers == {(DOMAIN, mock_device.id)}

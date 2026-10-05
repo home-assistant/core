@@ -36,7 +36,9 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     fan_devices = bridge.get_devices_by_domain(FAN_DOMAIN)
-    async_add_entities(LutronCasetaFan(fan_device, data) for fan_device in fan_devices)
+    async_add_entities(
+        LutronCasetaFan(hass, fan_device, data) for fan_device in fan_devices
+    )
 
 
 class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):

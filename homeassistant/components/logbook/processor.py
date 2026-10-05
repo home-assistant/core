@@ -29,11 +29,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
@@ -544,7 +544,9 @@ class EntityNameCache:
         if entity_id in self._names:
             return self._names[entity_id]
         if (current_state := self._hass.states.get(entity_id)) and (
-            friendly_name := current_state.attributes.get(ATTR_FRIENDLY_NAME)
+            friendly_name := current_state.attributes.get(
+                EntityStateAttribute.FRIENDLY_NAME
+            )
         ):
             self._names[entity_id] = friendly_name
         else:

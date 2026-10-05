@@ -8,11 +8,10 @@ from typing import Any
 
 import attr
 import attrs
+import probatio
 from syrupy.extensions.amber import AmberDataSerializer, AmberSnapshotExtension
 from syrupy.location import PyTestLocation
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
-import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import State
@@ -104,6 +103,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_area_registry_entry(data)
         elif isinstance(data, dr.DeviceEntry):
             serializable_data = cls._serializable_device_registry_entry(data)
+        elif isinstance(data, dr.ChildDeviceEntry):
+            serializable_data = cls._serializable_child_device_registry_entry(data)
         elif isinstance(data, er.RegistryEntry):
             serializable_data = cls._serializable_entity_registry_entry(data)
         elif isinstance(data, ir.IssueEntry):
@@ -116,8 +117,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             "continue_conversation",
         }:
             serializable_data = cls._serializable_conversation_result(data)
-        elif isinstance(data, vol.Schema):
-            serializable_data = voluptuous_serialize.convert(data)
+        elif isinstance(data, probatio.Schema):
+            serializable_data = probatio.to_field_list(data)
         elif isinstance(data, ConfigEntry):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(type(data)):
@@ -179,6 +180,25 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
 
         serialized["config_entry_id"] = ANY
         serialized["config_subentry_id"] = ANY
+
+        return cls._remove_created_and_modified_at(serialized)
+
+    @classmethod
+    def _serializable_child_device_registry_entry(
+        cls, data: dr.ChildDeviceEntry
+    ) -> SerializableData:
+        """Prepare a Home Assistant child device registry entry for serialization."""
+        serialized = DeviceRegistryEntrySnapshot(
+            attr.asdict(
+                data,
+                retain_collection_types=True,
+                filter=lambda attribute, _: not attribute.name.startswith("_"),
+            )
+            | {"id": ANY}
+        )
+        serialized["config_entry_id"] = ANY
+        serialized["config_subentry_id"] = ANY
+        serialized["parent_device_id"] = ANY
 
         return cls._remove_created_and_modified_at(serialized)
 

@@ -7,11 +7,16 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
+from homeassistant.components.squeezebox.const import (
+    DOMAIN,
+    PLAYER_SENSOR_NEXT_ALARM,
+    PLAYER_UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import FAKE_QUERY_RESPONSE, TEST_ALARM_NEXT_TIME
+from .conftest import FAKE_QUERY_RESPONSE, TEST_ALARM_NEXT_TIME, TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -44,6 +49,7 @@ async def test_server_sensor(
 
 async def test_player_sensor_next_alarm(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     lms: MagicMock,
     freezer: FrozenDateTimeFactory,
@@ -59,8 +65,12 @@ async def test_player_sensor_next_alarm(
         await hass.async_block_till_done(wait_background_tasks=True)
     player = (await lms.async_get_players())[0]
 
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{TEST_MAC[0]}_{PLAYER_SENSOR_NEXT_ALARM}"
+    )
+
     # test alarm time is set from player
-    state = hass.states.get("sensor.next_alarm")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == TEST_ALARM_NEXT_TIME.isoformat()
 
@@ -70,6 +80,6 @@ async def test_player_sensor_next_alarm(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.next_alarm")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN

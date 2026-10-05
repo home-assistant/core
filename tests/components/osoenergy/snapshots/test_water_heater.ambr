@@ -50,7 +50,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 13>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 63,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 57,
-      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 60,
+      <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 60,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.test_device',

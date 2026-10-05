@@ -6,11 +6,11 @@ import logging
 import os
 
 from aio_ownet.definitions import OWServerCommonPath
-from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
+from aio_ownet.exceptions import OWServerError, OWServerReturnError
 from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -60,6 +60,7 @@ class OneWireHub:
     owproxy: OWServerStatelessProxy
     devices: list[OWDeviceDescription]
     _version: str | None = None
+    _last_scan_success = True
 
     def __init__(self, hass: HomeAssistant, config_entry: OneWireConfigEntry) -> None:
         """Initialize."""
@@ -93,6 +94,16 @@ class OneWireHub:
         device_registry = dr.async_get(self._hass)
         for device in devices:
             device.device_info["sw_version"] = self._version
+            if device.parent_id is not None:
+                # Devices are ordered parents-first, so a device's parent is
+                # already registered by the time we reach the device.
+                device.device_info["via_device_id"] = (
+                    dr.async_get_device_id_by_identifier(
+                        self._hass,
+                        (DOMAIN, device.parent_id),
+                        config_entry_id=self._config_entry.entry_id,
+                    )
+                )
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 **device.device_info,
@@ -108,7 +119,16 @@ class OneWireHub:
 
     async def _scan_for_new_devices(self, _: datetime) -> None:
         """Scan the bus for new devices."""
-        devices = await _discover_devices(self.owproxy)
+        try:
+            devices = await _discover_devices(self.owproxy)
+        except OWServerError as exc:
+            if self._last_scan_success:
+                _LOGGER.info("Error scanning for new devices: %s", exc)
+                self._last_scan_success = False
+            return
+        if not self._last_scan_success:
+            self._last_scan_success = True
+            _LOGGER.info("Scanning for new devices recovered")
         existing_device_ids = [device.id for device in self.devices]
         new_devices = [
             device for device in devices if device.id not in existing_device_ids
@@ -147,14 +167,13 @@ async def _discover_devices(
             name=device_id,
             serial_number=device_id[3:],
         )
-        if parent_id:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)
         device = OWDeviceDescription(
             device_info=device_info,
             id=device_id,
             family=device_family,
             path=device_path,
             type=device_type,
+            parent_id=parent_id,
         )
         devices.append(device)
         if device_branches := DEVICE_COUPLERS.get(device_family):
@@ -172,7 +191,7 @@ async def _get_device_type(
     """Get device model."""
     try:
         device_type = (await owproxy.read(f"{device_path}type")).decode()
-    except OWServerProtocolError as exc:
+    except OWServerReturnError as exc:
         _LOGGER.debug("Unable to read `%stype`: %s", device_path, exc)
         return None
     _LOGGER.debug("read `%stype`: %s", device_path, device_type)

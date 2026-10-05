@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["simplepush"],
-  "requirements": ["simplepush==2.2.3"]
+  "requirements": ["simplepush[legacy]==3.8.0"]
 }
