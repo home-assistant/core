@@ -1,5 +1,7 @@
 """The tests for the Netatmo climate platform."""
 
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -31,6 +33,25 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@contextmanager
+def modified_backend(
+    hass: HomeAssistant, modify: Callable[[dict[str, Any]], None]
+) -> Iterator[None]:
+    """Patch the API so the backend responses are modified by `modify`."""
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(hass, *args, msg_callback=modify, **kwargs)
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+    ) as mock_auth:
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        yield
 
 
 async def test_entity(
@@ -140,22 +161,10 @@ async def test_select_schedule_follows_temperature_control_mode(
             for schedule in home["schedules"]:
                 schedule["selected"] = schedule["id"] == "b1b54a2f45795764f59d50d8"
 
-    async def fake_post(*args: Any, **kwargs: Any):
-        """Return backend data, in heating mode once switched."""
-        return await fake_post_request(
-            hass, *args, msg_callback=set_heating_mode, **kwargs
-        )
-
     with (
         selected_platforms(["climate", "select"]),
-        patch(
-            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
-        ) as mock_auth,
+        modified_backend(hass, set_heating_mode),
     ):
-        mock_auth.return_value.async_post_request.side_effect = fake_post
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -181,6 +190,49 @@ async def test_select_schedule_follows_temperature_control_mode(
             {
                 ATTR_ENTITY_ID: select_entity,
                 ATTR_OPTION: "Winter",
+            },
+            blocking=True,
+        )
+        mock_switch_home_schedule.assert_called_once_with(
+            schedule_id="b1b54a2f45795764f59d50d8"
+        )
+
+
+async def test_select_schedule_with_name_shared_across_modes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test selecting a schedule whose name is also used by another mode."""
+
+    def set_heating_mode(payload: dict[str, Any]) -> None:
+        """Put the home in heating mode with a heating schedule named Default."""
+        for home in payload.get("body", {}).get("homes", []):
+            if home["id"] != "91763b24c43d3e344f424e8b":
+                continue
+            home["temperature_control_mode"] = "heating"
+            for schedule in home["schedules"]:
+                if schedule["id"] == "b1b54a2f45795764f59d50d8":
+                    schedule["name"] = "Default"
+                    schedule["selected"] = True
+
+    with (
+        selected_platforms(["climate", "select"]),
+        modified_backend(hass, set_heating_mode),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    select_entity = "select.myhome_schedule"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Default"]
+
+    # The cooling schedule named Default comes first, the heating one must be used
+    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: select_entity,
+                ATTR_OPTION: "Default",
             },
             blocking=True,
         )
