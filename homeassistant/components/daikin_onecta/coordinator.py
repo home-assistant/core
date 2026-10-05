@@ -18,15 +18,21 @@ from .device import DaikinOnectaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
+
 
 class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDevice]]):
     """Class to manage fetching data from the API."""
 
+    config_entry: DaikinOnectaConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, daikin_api: DaikinApi
+        self,
+        hass: HomeAssistant,
+        config_entry: DaikinOnectaConfigEntry,
+        daikin_api: DaikinApi,
     ) -> None:
         """Initialize."""
-        self.config_entry: ConfigEntry
         self.options = config_entry.options
         self._daikin_api = daikin_api
 

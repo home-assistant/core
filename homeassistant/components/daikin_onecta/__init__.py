@@ -4,7 +4,6 @@ import logging
 
 import aiohttp
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
@@ -14,12 +13,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import DOMAIN
-from .coordinator import OnectaDataUpdateCoordinator
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .daikin_api import DaikinApi
 
 _LOGGER = logging.getLogger(__name__)
-
-type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
 
 PLATFORMS = [
     Platform.CLIMATE,

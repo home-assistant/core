@@ -17,8 +17,8 @@ from homeassistant.helpers.selector import (
     TimeSelector,
 )
 
-from . import DaikinOnectaConfigEntry
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN
+from .coordinator import DaikinOnectaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 OAUTH_SCOPES = [
