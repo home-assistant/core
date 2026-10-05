@@ -776,9 +776,6 @@
       "filter_utilization": {
         "name": "Filter utilization"
       },
-      "flow_rate": {
-        "name": "[%key:component::sensor::entity_component::volume_flow_rate::name%]"
-      },
       "flow_temperature": {
         "name": "Flow temperature"
       },
@@ -985,6 +982,9 @@
       "precipitation_today": {
         "name": "Total precipitation today"
       },
+      "pump_speed": {
+        "name": "Speed"
+      },
       "pump_time": {
         "name": "Water pump duration"
       },
@@ -1019,9 +1019,6 @@
           "standby": "[%key:common::state::standby%]",
           "warm": "Heat preservation"
         }
-      },
-      "speed": {
-        "name": "[%key:component::sensor::entity_component::speed::name%]"
       },
       "status": {
         "name": "Status"

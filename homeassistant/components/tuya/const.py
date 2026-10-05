@@ -1241,17 +1241,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-        aliases={"gpm", "gal/m", "gal/min"},
-        device_classes={SensorDeviceClass.VOLUME_FLOW_RATE},
-    ),
-    UnitOfMeasurement(
-        unit=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        aliases={"m3/h", "m³/h"},
-        device_classes={SensorDeviceClass.VOLUME_FLOW_RATE},
-    ),
-    UnitOfMeasurement(
-        unit=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-        aliases={"l/min", "lpm", "L/min"},
+        aliases={"gpm"},
         device_classes={SensorDeviceClass.VOLUME_FLOW_RATE},
     ),
     UnitOfMeasurement(

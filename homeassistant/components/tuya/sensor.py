@@ -51,7 +51,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTime,
-    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -765,29 +764,24 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.HWSB: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
-            translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SPEED_CURRENT,
-            translation_key="speed",
+            translation_key="pump_speed",
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FLOW_RATE,
-            translation_key="flow_rate",
             device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ADD_ELE,
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
     ),
     DeviceCategory.JQBJ: (

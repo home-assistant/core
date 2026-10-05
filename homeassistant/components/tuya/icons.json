@@ -216,6 +216,9 @@
       "pm25": {
         "default": "mdi:molecule"
       },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
       "remaining_time": {
         "default": "mdi:timer"
       },
@@ -227,9 +230,6 @@
       },
       "smoke_amount": {
         "default": "mdi:smoke-detector"
-      },
-      "speed": {
-        "default": "mdi:speedometer"
       },
       "total_absorption_particles": {
         "default": "mdi:texture-box"

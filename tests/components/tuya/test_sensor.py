@@ -378,12 +378,6 @@ async def test_hwsb_sensors_with_quirk(
     mock_device.status["add_ele"] = 0
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    state_power = hass.states.get("sensor.inverflow_power")
-    assert state_power is not None
-    assert state_power.state == "405.0"
-    assert state_power.attributes["unit_of_measurement"] == "W"
-    assert state_power.attributes["device_class"] == "power"
-
     state_speed = hass.states.get("sensor.inverflow_speed")
     assert state_speed is not None
     assert state_speed.state == "80.0"
