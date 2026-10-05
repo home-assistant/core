@@ -64,11 +64,6 @@ CLIMATE_ENTITY_DESCRIPTIONS = {
         translation_key="calculated_leaving_water_temperature",
         has_entity_name=True,
     ),
-    "domesticHotWaterTemperature": ClimateEntityDescription(
-        key="domestic_hot_water_temperature",
-        translation_key="domestic_hot_water_temperature",
-        has_entity_name=True,
-    ),
     "leavingWaterOffset": ClimateEntityDescription(
         key="leaving_water_offset",
         translation_key="leaving_water_offset",

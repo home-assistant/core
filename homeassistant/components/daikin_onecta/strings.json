@@ -39,9 +39,6 @@
       "calculated_leaving_water_temperature": {
         "name": "Calculated Leaving Water Temperature"
       },
-      "domestic_hot_water_temperature": {
-        "name": "Domestic Hot Water Temperature"
-      },
       "leaving_water_offset": {
         "name": "Leaving Water Offset"
       },
