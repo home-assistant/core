@@ -385,8 +385,35 @@
       "current_energy_consumption": {
         "name": "Current energy consumption"
       },
+      "dehydration_level": {
+        "name": "Dehydration level",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "none": "None"
+        }
+      },
+      "dehydration_speed": {
+        "name": "Dehydration speed"
+      },
       "dehydration_time": {
         "name": "Dehydration time"
+      },
+      "detergent": {
+        "name": "Detergent",
+        "state": {
+          "4": "4",
+          "5": "5",
+          "6": "6",
+          "7": "7",
+          "8": "8",
+          "insufficient": "Insufficient",
+          "less": "Less",
+          "medium": "Medium",
+          "more": "More",
+          "no": "No"
+        }
       },
       "discharge_pipe_temperature": {
         "name": "Discharge pipe temperature"
@@ -602,6 +629,21 @@
       "soak_time": {
         "name": "Soak time"
       },
+      "softener": {
+        "name": "Softener",
+        "state": {
+          "3": "3",
+          "4": "4",
+          "5": "5",
+          "6": "6",
+          "7": "7",
+          "8": "8",
+          "insufficient": "Insufficient",
+          "intelligent": "Intelligent",
+          "no": "No",
+          "programed": "Programmed"
+        }
+      },
       "softwater_available": {
         "name": "Soft water available"
       },
@@ -609,10 +651,17 @@
         "name": "Status",
         "state": {
           "delay": "Delayed",
+          "delay_choosing": "Delay choosing",
+          "delay_pause": "Delay paused",
+          "end": "End",
+          "fault": "Fault",
           "finished": "Finished",
           "idle": "[%key:common::state::idle%]",
+          "pause": "[%key:common::state::paused%]",
           "paused": "[%key:common::state::paused%]",
+          "prevent_wrinkle_end": "Prevent wrinkle end",
           "standby": "[%key:common::state::standby%]",
+          "start": "Start",
           "working": "Working"
         }
       },
@@ -677,6 +726,160 @@
           "zero_fresh": "Zero fresh"
         }
       },
+      "wash_program": {
+        "name": "Wash program",
+        "state": {
+          "air_dry": "Air dry",
+          "air_wash": "Air wash",
+          "allergy_care": "Allergy care",
+          "aromatherapy": "Aromatherapy",
+          "baby_clothes": "Baby clothes",
+          "baby_clothes_min": "Baby clothes min",
+          "bath_towel": "Bath towel",
+          "bed_clothes": "Bedsheet",
+          "bedsheet": "Bedsheet",
+          "big": "Big",
+          "big_60": "Big 60",
+          "big_dry": "Big dry",
+          "blanket": "Blanket",
+          "bracket_dry": "Bracket dry",
+          "bucket_dry": "Bucket dry",
+          "bucket_self_clean": "Bucket self clean",
+          "bulky": "Bulky",
+          "child": "Child",
+          "cold_air_fresh_air": "Cold air fresh air",
+          "color": "Color",
+          "cook_wash": "Cook wash",
+          "cotton": "Cotton",
+          "dehumidification": "Dehumidification",
+          "dehumidify": "Dehumidify",
+          "dehydration_min": "Dehydration min",
+          "diy0": "DIY 0",
+          "diy2": "DIY 2",
+          "down_jacket": "Down jacket",
+          "eco": "Eco",
+          "eco_40_60": "Eco 40-60",
+          "eco_dry": "Eco dry",
+          "embathe": "Embathe",
+          "enzyme": "Enzyme",
+          "fast": "Fast",
+          "fast_dry": "Fast dry",
+          "fast_wash": "Fast wash",
+          "fast_wash_30": "Fast wash 30",
+          "fast_wash_60": "Fast wash 60",
+          "fast_wash_min": "Fast wash min",
+          "fiber": "Fiber",
+          "fitness_clothes": "Fitness clothes",
+          "fixed_time_dry": "Fixed time dry",
+          "four_piece_suit": "Four piece suit",
+          "fresh_air": "Fresh air",
+          "fresh_remove_smell": "Fresh remove smell",
+          "fresh_remove_wrinkle": "Fresh remove wrinkle",
+          "green_wool": "Green wool",
+          "heart_wash": "Heart wash",
+          "hot_air_dry": "Hot air dry",
+          "insight_wash": "Insight wash",
+          "intelligent": "Intelligent",
+          "intelligent_dry": "Intelligent dry",
+          "jacket": "Jacket",
+          "jean": "Jean",
+          "kids": "Kids",
+          "little_fast_dry": "Little fast dry",
+          "love": "Love",
+          "low_temp_dry": "Low temperature dry",
+          "memory": "Memory",
+          "mink": "Mink",
+          "mixed_wash": "Mixed wash",
+          "mixed_wash_min": "Mixed wash min",
+          "mute": "Mute",
+          "new_clothes_wash": "New clothes wash",
+          "new_water_cotton": "New water cotton",
+          "night_dry": "Night dry",
+          "night_fresh_wash": "Night fresh wash",
+          "outdoor": "Outdoor",
+          "plush": "Plush",
+          "prevent_allergy": "Prevent allery",
+          "quick_dry": "Quick dry",
+          "quick_dry_20": "Quick dry 20",
+          "quick_dry_30": "Quick dry 30",
+          "quick_wash": "Quick wash",
+          "remove_mite_wash": "Remove mite wash",
+          "rinsing_dehydration": "Rinsing dehydration",
+          "self_wash_5": "Self wash 5",
+          "self_wash_min": "Self wash min",
+          "shirt": "Shirt",
+          "silk": "Silk",
+          "silk_wash": "Silk wash",
+          "single_dehytration": "Single dehytration",
+          "single_drying": "Single drying",
+          "small_piece_dry": "Small piece dry",
+          "smart_dry": "Smart dry",
+          "soft_wash": "Soft wash",
+          "specialist": "Specialist",
+          "sport_clothes": "Sport clothes",
+          "spring_autumn_wash": "Spring autumn wash",
+          "ssp": "SSP",
+          "standard": "Standard",
+          "steam_care": "Steam care",
+          "steam_no_iron": "Steam no iron",
+          "steam_sterilize": "Steam sterilize",
+          "steam_sterilize_wash": "Steam sterilize wash",
+          "steep": "Steep",
+          "sterilize": "Sterilize",
+          "sterilize_wash": "Sterilize wash",
+          "stir": "Stir",
+          "summer_wash": "Summer wash",
+          "sun_quilt": "Sun quilt",
+          "time_dry": "Time dry",
+          "towel": "Towel",
+          "underwear": "Underwear",
+          "warm_clothes": "Warm clothes",
+          "wash_and_dry": "Wash and dry",
+          "wash_drying_60": "Wash and dry 60",
+          "water_cold_wash": "Water cold wash",
+          "water_cotton": "Water cotton",
+          "water_eco": "Water eco",
+          "water_fast_wash_30": "Water fast wash 30",
+          "water_fiber": "Water fiber",
+          "water_intelligent": "Water intelligent",
+          "water_intense_wash": "Water intense wash",
+          "water_kids": "Water kids",
+          "water_mixed_wash": "Water mixed wash",
+          "water_outdoor": "Water outdoor",
+          "water_prevent_allergy": "Water prevent allergy",
+          "water_remove_mite_wash": "Water remove mite wash",
+          "water_ssp": "Water SSP",
+          "water_steep": "Water steep",
+          "water_underwear": "Water underwear",
+          "western_trouser": "Western trouser",
+          "winter_wash": "Winter wash",
+          "wool": "Wool",
+          "wool_nurse": "Wool nurse"
+        }
+      },
+      "wash_progress": {
+        "name": "Wash progress",
+        "state": {
+          "dry": "Drying",
+          "hi_speed_spin": "High Speed Spinning",
+          "idle": "[%key:common::state::idle%]",
+          "pre_wash": "Pre-washing",
+          "rinse": "Rinsing",
+          "soak": "Soaking",
+          "spin": "Spinning",
+          "wash": "Washing",
+          "weight": "Weighting"
+        }
+      },
+      "wash_strength": {
+        "name": "Wash strength",
+        "state": {
+          "medium": "Medium",
+          "none": "None",
+          "strong": "Strong",
+          "weak": "Weak"
+        }
+      },
       "wash_time": {
         "name": "Wash time"
       },
@@ -688,6 +891,16 @@
       },
       "water_consumption_big": {
         "name": "Water consumption aggregated"
+      },
+      "water_level": {
+        "name": "Water level",
+        "state": {
+          "4": "4",
+          "auto": "Auto",
+          "high": "High",
+          "low": "Low",
+          "mid": "Medium"
+        }
       },
       "water_temperature": {
         "name": "Water temperature"

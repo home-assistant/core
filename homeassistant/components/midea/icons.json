@@ -44,6 +44,15 @@
       }
     },
     "sensor": {
+      "dehydration_level": {
+        "default": "mdi:tumble-dryer"
+      },
+      "dehydration_speed": {
+        "default": "mdi:speedometer"
+      },
+      "detergent": {
+        "default": "mdi:bottle-tonic"
+      },
       "filter_life": {
         "default": "mdi:air-filter"
       },
@@ -76,6 +85,18 @@
       },
       "time_remaining": {
         "default": "mdi:progress-clock"
+      },
+      "wash_program": {
+        "default": "mdi:washing-machine"
+      },
+      "wash_progress": {
+        "default": "mdi:rotate-360"
+      },
+      "wash_strength": {
+        "default": "mdi:network-strength-4-cog"
+      },
+      "water_level": {
+        "default": "mdi:cup-water"
       }
     },
     "switch": {

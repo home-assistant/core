@@ -9,7 +9,9 @@ from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.b1 import DeviceAttributes as B1Attributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.ca import MideaCADevice
+from midealocal.devices.da import DeviceAttributes as DAAttributes
 from midealocal.devices.db import DeviceAttributes as DBAttributes, MideaDBDevice
+from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e8 import DeviceAttributes as E8Attributes
 from midealocal.devices.ea import DeviceAttributes as EAAttributes, MideaEADevice
 from midealocal.devices.ec import DeviceAttributes as ECAttributes, MideaECDevice
@@ -99,6 +101,20 @@ from tests.common import MockConfigEntry, snapshot_platform
         ),
         pytest.param(
             DummyDevice(
+                DeviceType.DA,
+                attributes={
+                    DAAttributes.progress: "weight",
+                    DAAttributes.program: "wool",
+                    DAAttributes.dehydration_speed: "low",
+                    DAAttributes.detergent: "no",
+                    DAAttributes.softener: "default",
+                    DAAttributes.wash_strength: "weak",
+                },
+            ),
+            id="da",
+        ),
+        pytest.param(
+            DummyDevice(
                 DeviceType.DB,
                 attributes={
                     DBAttributes.power: True,
@@ -107,9 +123,24 @@ from tests.common import MockConfigEntry, snapshot_platform
                     DBAttributes.wash_time: 65,
                     DBAttributes.dehydration_time: 30,
                     DBAttributes.program: "cotton",
+                    DBAttributes.status: "pause",
+                    DBAttributes.dehydration_speed: "1400",
+                    DBAttributes.water_level: "low",
+                    DBAttributes.progress: "rinse",
                 },
             ),
             id="db",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.DC,
+                attributes={
+                    DCAttributes.power: True,
+                    DCAttributes.status: "prevent_wrinkle_end",
+                    DCAttributes.program: "bedsheet",
+                },
+            ),
+            id="dc",
         ),
         pytest.param(
             DummyDevice(
