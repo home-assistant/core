@@ -246,6 +246,12 @@ class ElectraClimateEntity(ClimateEntity):
         await self._async_operate_electra_ac()
 
     @override
+    async def async_turn_on(self) -> None:
+        """Turn on."""
+        self._electra_ac_device.turn_on()
+        await self._async_operate_electra_ac()
+
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
