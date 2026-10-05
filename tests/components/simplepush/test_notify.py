@@ -381,6 +381,12 @@ async def test_moved_entry_legacy_action(
             id="not_a_dict",
         ),
         pytest.param(
+            {"attachments": [{"image": "not a URL"}, {"video": VIDEO}]},
+            [VIDEO],
+            "Thumbnails and attachments without an image or video URL",
+            id="not_a_url",
+        ),
+        pytest.param(
             {"event": "event"},
             None,
             "Events are not supported by the Simplepush app",

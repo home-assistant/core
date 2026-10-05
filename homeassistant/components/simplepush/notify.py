@@ -3,6 +3,7 @@
 from functools import partial
 import logging
 from typing import Any, override
+from urllib.parse import urlparse
 
 from simplepush import ApiError, Client
 from simplepush.legacy import BadRequest, UnknownError, send
@@ -246,7 +247,7 @@ class SimplePushNotificationService(BaseNotificationService):
                     if isinstance(attachment, dict)
                     else None
                 )
-                if isinstance(url, str):
+                if isinstance(url, str) and urlparse(url).scheme:
                     links.append(url)
                     dropped = dropped or "thumbnail" in attachment
                 else:
