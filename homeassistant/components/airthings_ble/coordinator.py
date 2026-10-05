@@ -11,9 +11,9 @@ from bleak_retry_connector import close_stale_connections_by_address
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -21,9 +21,13 @@ from .const import (
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
+    connectivity_mode_issue_id,
+    get_connectivity_mode,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+UNSUPPORTED_CONNECTIVITY_MODES = {"smartlink", "not_configured"}
 
 type AirthingsBLEConfigEntry = ConfigEntry[AirthingsBLEDataUpdateCoordinator]
 
@@ -121,4 +125,32 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         ) and device.sw_version != data.sw_version:
             device_registry.async_update_device(device.id, sw_version=data.sw_version)
 
+        self._async_update_connectivity_mode_issue(data)
         return data
+
+    @callback
+    def _async_update_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
+        """Create or delete the issue for an unsupported connectivity mode."""
+        mode = get_connectivity_mode(data.sensors.get("connectivity_mode"))
+        if mode is None:
+            return
+
+        issue_id = connectivity_mode_issue_id(self.config_entry.entry_id)
+        if mode not in UNSUPPORTED_CONNECTIVITY_MODES:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        assert self.update_interval is not None
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=mode,
+            translation_placeholders={
+                "device_name": data.friendly_name(),
+                "serial_number": f"{data.model.value}{data.identifier}",
+                "update_interval": str(self.update_interval // timedelta(minutes=1)),
+            },
+        )

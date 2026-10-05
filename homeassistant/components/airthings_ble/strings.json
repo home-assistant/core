@@ -71,5 +71,15 @@
     "incomplete_read": {
       "message": "The Airthings device did not return complete data, retrying"
     }
+  },
+  "issues": {
+    "not_configured": {
+      "description": "The {device_name} ({serial_number}) has not been set up in the Airthings app yet. Until it is, the device only turns on Bluetooth for a short time after its button is pressed, so the Airthings BLE integration cannot read its measurements regularly.\n\nTo fix this:\n1. Open the Airthings app.\n2. Add your {device_name} and select Bluetooth as its connectivity.\n\nThis issue is resolved automatically the next time Home Assistant reads data from the device over Bluetooth, which it tries every {update_interval} minutes.",
+      "title": "{device_name} connectivity is not set up"
+    },
+    "smartlink": {
+      "description": "The {device_name} ({serial_number}) is using SmartLink (hub) connectivity, which is not supported by the Airthings BLE integration. In this mode, the device only turns on Bluetooth for a short time after its button is pressed, so the integration cannot read its measurements regularly.\n\nIf you want to keep using SmartLink:\n1. Set up the Airthings integration and sign in to your Airthings account.\n2. Delete this device from the Airthings BLE integration.\n\nIf you want to use Bluetooth instead:\n1. Open the Airthings app.\n2. Go to Settings > Devices.\n3. Select your {device_name}.\n4. Select 'Reset connectivity' to switch to Bluetooth.\n\nThis issue is resolved automatically the next time Home Assistant reads data from the device over Bluetooth, which it tries every {update_interval} minutes.",
+      "title": "{device_name} uses SmartLink connectivity"
+    }
   }
 }
