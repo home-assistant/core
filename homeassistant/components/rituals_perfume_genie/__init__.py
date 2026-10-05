@@ -52,14 +52,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> b
         for hublot in hubs.data
     }
 
-    # Not a first refresh on purpose: when the sensors fail, the diffusers
-    # can still be controlled. Rituals has blocked just the sensors before.
+    entry.runtime_data = RitualsRuntimeData(hubs=hubs, sensors=sensors)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Only now the entities are listening, so the coordinators know which
+    # sensors to fetch. Not a first refresh on purpose: when the sensors fail,
+    # the diffusers can still be controlled. Rituals has blocked just the
+    # sensors before.
     await asyncio.gather(
         *(coordinator.async_refresh() for coordinator in sensors.values())
     )
-
-    entry.runtime_data = RitualsRuntimeData(hubs=hubs, sensors=sensors)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

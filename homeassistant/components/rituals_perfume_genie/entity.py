@@ -2,7 +2,7 @@
 
 from typing import override
 
-from ritualsgenie import RitualsGenieHub
+from ritualsgenie import RitualsGenieHub, Sensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -77,9 +77,11 @@ class DiffuserSensorsEntity(CoordinatorEntity[RitualsSensorsCoordinator]):
         self,
         coordinator: RitualsSensorsCoordinator,
         description: EntityDescription,
+        sensor: Sensor,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
+        # The context tells the coordinator which sensor this entity needs.
+        super().__init__(coordinator, context=sensor)
         self.entity_description = description
 
         hub = coordinator.hubs.data[coordinator.hublot]

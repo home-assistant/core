@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from ritualsgenie import RitualsGenieHub, RitualsGenieSensors
+from ritualsgenie import RitualsGenieHub, RitualsGenieSensors, Sensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -27,6 +27,7 @@ class RitualsBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     is_on_fn: Callable[[RitualsGenieSensors], bool | None]
     has_fn: Callable[[RitualsGenieHub], bool]
+    sensor: Sensor
 
 
 ENTITY_DESCRIPTIONS = (
@@ -36,6 +37,7 @@ ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda sensors: sensors.battery_charging,
         has_fn=lambda hub: hub.has_battery,
+        sensor=Sensor.BATTERY,
     ),
 )
 
@@ -49,7 +51,7 @@ async def async_setup_entry(
     runtime_data = config_entry.runtime_data
 
     async_add_entities(
-        RitualsBinarySensorEntity(coordinator, description)
+        RitualsBinarySensorEntity(coordinator, description, description.sensor)
         for hublot, coordinator in runtime_data.sensors.items()
         for description in ENTITY_DESCRIPTIONS
         if description.has_fn(runtime_data.hubs.data[hublot])

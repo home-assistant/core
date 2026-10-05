@@ -90,6 +90,8 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
 class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None]):
     """Fetch the sensor readings of a single diffuser.
 
+    Every sensor is a request of its own, so only the sensors of enabled
+    entities are fetched: each entity listens with its sensor as context.
     The data is None until the first update succeeded: a failing sensor
     doesn't keep the integration from setting up.
     """
@@ -124,11 +126,19 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
         client = self.hubs.client
         previous = self.data
 
+        wanted = set(self.async_contexts())
+        fill_wanted = Sensor.FILL in wanted and Sensor.FILL in hub.supported_sensors
+        hourly = wanted.intersection(HOURLY_SENSORS)
+
+        # The perfume tells when the cartridge changed, and so the fill level.
+        if fill_wanted:
+            hourly.add(Sensor.PERFUME)
+
         try:
-            sensors = await client.sensors(hub, only=HOURLY_SENSORS)
+            sensors = await client.sensors(hub, only=hourly)
 
             fill = previous.fill if previous else None
-            if Sensor.FILL in hub.supported_sensors and self._fill_due(sensors):
+            if fill_wanted and self._fill_due(sensors):
                 fill = await client.sensor(hub.hash, Sensor.FILL)
                 self._fill_updated = dt_util.utcnow()
 

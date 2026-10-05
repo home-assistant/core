@@ -26,6 +26,7 @@ class RitualsSensorEntityDescription(SensorEntityDescription):
     """Class describing Rituals sensor entities."""
 
     has_fn: Callable[[RitualsGenieHub], bool] = lambda _: True
+    sensor: Sensor
     value_fn: Callable[[RitualsGenieSensors], int | str | None]
 
 
@@ -34,24 +35,29 @@ ENTITY_DESCRIPTIONS = (
         key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        sensor=Sensor.BATTERY,
         value_fn=lambda sensors: sensors.battery_percentage,
         has_fn=lambda hub: hub.has_battery,
     ),
     RitualsSensorEntityDescription(
         key="fill",
         translation_key="fill",
+        sensor=Sensor.FILL,
         value_fn=lambda sensors: sensors.fill.title if sensors.fill else None,
         has_fn=lambda hub: Sensor.FILL in hub.supported_sensors,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         translation_key="perfume",
+        sensor=Sensor.PERFUME,
         value_fn=lambda sensors: sensors.perfume.title if sensors.perfume else None,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
         translation_key="wifi_percentage",
         native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        sensor=Sensor.WIFI,
         value_fn=lambda sensors: sensors.wifi_percentage,
     ),
 )
@@ -66,7 +72,7 @@ async def async_setup_entry(
     runtime_data = config_entry.runtime_data
 
     async_add_entities(
-        RitualsSensorEntity(coordinator, description)
+        RitualsSensorEntity(coordinator, description, description.sensor)
         for hublot, coordinator in runtime_data.sensors.items()
         for description in ENTITY_DESCRIPTIONS
         if description.has_fn(runtime_data.hubs.data[hublot])
