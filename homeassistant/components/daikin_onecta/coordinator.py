@@ -1,6 +1,6 @@
 """Coordinator for Daikin Onecta integration."""
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, tzinfo
 import logging
 import random
 from typing import override
@@ -187,16 +187,28 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         boundary,
                         dt_util.DEFAULT_TIME_ZONE,
                     )
-            # Keep a valid polling interval when the next boundary is less
-            # than one high-frequency interval away. In particular, converting
-            # a fractional-second delay to an integer must not result in zero.
-            scan_interval = max(
-                high_scan_interval,
-                min(
-                    scan_interval,
-                    int((dt_util.as_utc(next_boundary) - now_utc).total_seconds()),
-                ),
-            )
+            next_boundary_utc = dt_util.as_utc(next_boundary)
+            boundary_delay = int((next_boundary_utc - now_utc).total_seconds())
+            if self._is_nonexistent_local_time(next_boundary):
+                # A local boundary in the spring-forward gap resolves later
+                # than the clock transition. Poll at the transition so the
+                # next calculation can apply the active window's interval.
+                boundary_delay = int(
+                    (
+                        self._next_clock_transition(
+                            now_utc, next_boundary_utc, next_boundary.tzinfo
+                        )
+                        - now_utc
+                    ).total_seconds()
+                )
+                scan_interval = min(scan_interval, max(1, boundary_delay))
+            else:
+                # Keep a valid polling interval when the next boundary is less
+                # than one high-frequency interval away. In particular, converting
+                # a fractional-second delay to an integer must not result in zero.
+                scan_interval = max(
+                    high_scan_interval, min(scan_interval, boundary_delay)
+                )
 
         return timedelta(seconds=scan_interval)
 
@@ -206,3 +218,28 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         if start <= end:
             return start <= now < end
         return start <= now or now < end
+
+    @staticmethod
+    def _is_nonexistent_local_time(value: datetime) -> bool:
+        """Return whether an aware datetime falls within a clock-forward gap."""
+        assert value.tzinfo is not None
+        return dt_util.as_utc(value).astimezone(value.tzinfo).replace(
+            tzinfo=None
+        ) != value.replace(tzinfo=None)
+
+    @staticmethod
+    def _next_clock_transition(
+        start: datetime, end: datetime, timezone: tzinfo | None
+    ) -> datetime:
+        """Return the first UTC offset transition between two UTC datetimes."""
+        assert timezone is not None
+        offset = start.astimezone(timezone).utcoffset()
+        assert end.astimezone(timezone).utcoffset() != offset
+
+        while end - start > timedelta(seconds=1):
+            midpoint = start + (end - start) / 2
+            if midpoint.astimezone(timezone).utcoffset() == offset:
+                start = midpoint
+            else:
+                end = midpoint
+        return end

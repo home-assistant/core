@@ -21,9 +21,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     HVACMode,
 )
-from homeassistant.components.daikin_onecta.climate import (
-    DaikinClimate,
-)
+from homeassistant.components.daikin_onecta.climate import DaikinClimate
 from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,

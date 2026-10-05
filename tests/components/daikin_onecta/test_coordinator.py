@@ -182,6 +182,28 @@ class TestOnectaDataUpdateCoordinator:
             )
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
+    def test_scan_interval_uses_clock_transition_for_nonexistent_boundary(
+        self, mock_now, coordinator, mock_hass
+    ):
+        """Poll at the DST jump when it begins the high-frequency window."""
+        amsterdam = ZoneInfo("Europe/Amsterdam")
+        mock_now.return_value = datetime(2026, 3, 29, 1, 59, tzinfo=amsterdam)
+        coordinator.options = {
+            "low_scan_interval": 240,
+            "high_scan_interval": 5,
+            "high_scan_start": "02:30:00",
+            "low_scan_start": "03:15:00",
+        }
+
+        with patch(
+            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+            amsterdam,
+        ):
+            assert coordinator._determine_update_interval(mock_hass) == timedelta(
+                minutes=1
+            )
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_preserves_dst_fold_at_window_boundary(
         self, mock_now, coordinator, mock_hass
     ):
