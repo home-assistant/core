@@ -33,6 +33,7 @@ from homeassistant.components.knx.storage.entity_store_schema import (
     WeatherKnxConfig,
 )
 from homeassistant.components.knx.storage.entity_store_validation import (
+    EntityStoreValidationException,
     validate_entity_data,
 )
 from homeassistant.components.knx.storage.serialize import get_serialized_schema
@@ -1069,3 +1070,31 @@ def test_typed_config_field_order_is_ui_order(
     assert [field["name"] for field in serialized] == [
         field.name for field in dataclasses.fields(config_type)
     ]
+
+
+@pytest.mark.parametrize(
+    "knx_data",
+    [
+        pytest.param({"ga_stop": {"write": "1/2/3"}}, id="no_control"),
+        pytest.param({"ga_up_down": {"passive": ["1/2/3"]}}, id="up_down_not_writable"),
+        pytest.param(
+            {"ga_position_set": {"passive": ["1/2/3"]}},
+            id="position_set_not_writable",
+        ),
+    ],
+)
+def test_cover_requires_writable_control(knx_data: dict[str, Any]) -> None:
+    """Test a cover needs a writable open/close or set position address."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {
+                CONF_PLATFORM: Platform.COVER,
+                CONF_DATA: {"entity": {"name": "test"}, "knx": knx_data},
+            }
+        )
+    errors = exc_info.value.validation_error["errors"]
+    assert len(errors) == 1
+    assert errors[0]["path"] == ["data", "knx"]
+    assert errors[0]["message"] == (
+        "At least one of 'Open/Close control' or 'Position - Set position' is required."
+    )
