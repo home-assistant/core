@@ -119,7 +119,7 @@ from tests.common import MockConfigEntry, snapshot_platform
                 attributes={
                     DBAttributes.power: True,
                     DBAttributes.mode: "normal",
-                    DBAttributes.temperature: 22.0,
+                    DBAttributes.temperature: "60",
                     DBAttributes.wash_time: 65,
                     DBAttributes.dehydration_time: 30,
                     DBAttributes.program: "cotton",
