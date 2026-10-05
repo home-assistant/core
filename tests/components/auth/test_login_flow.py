@@ -425,6 +425,9 @@ async def test_well_known_auth_info(
         "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "token_endpoint_auth_methods_supported": ["none"],
+        "revocation_endpoint_auth_methods_supported": ["none"],
         "client_id_metadata_document_supported": True,
         "code_challenge_methods_supported": ["S256"],
         "response_types_supported": ["code"],
@@ -564,3 +567,27 @@ async def test_login_flow_pkce_validation(
     assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert expected_message in result["message"]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(
+            "/.well-known/oauth-authorization-server", id="authorization-server"
+        ),
+        pytest.param("/.well-known/oauth-protected-resource", id="protected-resource"),
+    ],
+)
+async def test_well_known_auth_info_allows_cors(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, path: str
+) -> None:
+    """Test browser clients can discover authorization server capabilities."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+
+    resp = await client.get(
+        path,
+        headers={"origin": "https://client.example"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"
