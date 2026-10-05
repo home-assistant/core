@@ -37,6 +37,10 @@ class SSLProfile(StrEnum):
 
     A profile never changes once released: clients connect with it, so a
     newer guideline is a new profile and the user opts in to the upgrade.
+
+    A profile covers the protocol versions and cipher suites. The certificate
+    type and key size the guidelines also recommend come from the configured
+    certificate and are not enforced.
     """
 
     MODERN_V4 = "modern_v4"

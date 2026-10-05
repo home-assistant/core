@@ -1745,12 +1745,10 @@ async def test_setup_migrates_v1_storage_ssl_profile(
 
 
 @pytest.mark.parametrize(
-    ("ssl_profile", "use_ssl", "upgrade"),
+    ("ssl_profile", "upgrade"),
     [
-        ("modern_v4", True, "modern_v6"),
-        ("intermediate_v4", True, "intermediate_v6"),
-        ("modern_v6", True, None),
-        ("modern_v4", False, None),
+        ("modern_v4", "modern_v6"),
+        ("intermediate_v4", "intermediate_v6"),
     ],
 )
 async def test_ssl_profile_outdated_issue(
@@ -1759,18 +1757,38 @@ async def test_ssl_profile_outdated_issue(
     issue_registry: ir.IssueRegistry,
     tmp_path: Path,
     ssl_profile: str,
-    use_ssl: bool,
-    upgrade: str | None,
+    upgrade: str,
 ) -> None:
     """A server using SSL with a superseded profile gets a repair offering the upgrade."""
-    conf = {"ssl_profile": ssl_profile}
-    if use_ssl:
-        cert_path, key_path, _ = await hass.async_add_executor_job(
-            _setup_empty_ssl_pem_files, tmp_path
-        )
-        conf |= {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
-    hass_storage[DOMAIN] = _stable_http_storage(conf)
-    # A stale issue from a previous start is cleared when it no longer applies.
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": ssl_profile,
+        }
+    )
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated")
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == f"ssl_profile_outdated_{upgrade}"
+    assert issue.translation_placeholders == {
+        "profile": ssl_profile,
+        "upgrade": upgrade,
+    }
+
+
+def _create_stale_ssl_profile_issue(hass: HomeAssistant) -> None:
+    """Create the SSL profile issue as left behind by a previous start."""
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -1784,23 +1802,48 @@ async def test_ssl_profile_outdated_issue(
         },
     )
 
+
+async def test_ssl_profile_outdated_issue_cleared_with_current_profile(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """A stale issue is cleared when the server runs a current profile."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "modern_v6",
+        }
+    )
+    _create_stale_ssl_profile_issue(hass)
+
     with patch("ssl.SSLContext.load_cert_chain"):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated")
-    if upgrade is None:
-        assert issue is None
-        return
-    assert issue is not None
-    assert issue.is_fixable
-    assert issue.severity is ir.IssueSeverity.WARNING
-    assert issue.translation_key == f"ssl_profile_outdated_{upgrade}"
-    assert issue.translation_placeholders == {
-        "profile": ssl_profile,
-        "upgrade": upgrade,
-    }
+    assert issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated") is None
+
+
+async def test_ssl_profile_outdated_issue_cleared_without_ssl(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A stale issue is cleared when the server does not use SSL, whatever the profile."""
+    hass_storage[DOMAIN] = _stable_http_storage({"ssl_profile": "modern_v4"})
+    _create_stale_ssl_profile_issue(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated") is None
 
 
 @pytest.mark.usefixtures("freezer")
