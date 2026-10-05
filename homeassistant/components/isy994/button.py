@@ -127,6 +127,7 @@ class ISYNodeButtonEntity(ButtonEntity):
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._availability_handler.unsubscribe)
 
     @callback
     def async_on_update(self, event: NodeProperty, key: str) -> None:
