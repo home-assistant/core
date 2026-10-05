@@ -16,6 +16,23 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time("2021-11-24T03:00:00+00:00")
+async def test_current_weather(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_meteo: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test weather entity."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("weather.home")
+    assert entity_state is not None
+    assert entity_state == snapshot(name="current_weather")
+
+
+@pytest.mark.freeze_time("2021-11-24T03:00:00+00:00")
 async def test_forecast_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

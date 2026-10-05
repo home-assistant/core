@@ -5,13 +5,17 @@ import logging
 from typing import Final
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
     ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_POURING,
     ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
 )
 
@@ -23,7 +27,7 @@ SCAN_INTERVAL = timedelta(minutes=30)
 # World Meteorological Organization Weather Code
 # mapped to Home Assistant weather conditions.
 # https://www.weather.gov/tg/wmo
-WMO_TO_HA_CONDITION_MAP: dict[int | None, str] = {
+WMO_TO_HA_CONDITION_DEFAULT: dict[int | None, str] = {
     0: ATTR_CONDITION_SUNNY,  # Clear sky
     1: ATTR_CONDITION_SUNNY,  # Mainly clear
     2: ATTR_CONDITION_PARTLYCLOUDY,  # Partly cloudy
@@ -33,13 +37,13 @@ WMO_TO_HA_CONDITION_MAP: dict[int | None, str] = {
     51: ATTR_CONDITION_RAINY,  # Drizzle: Light intensity
     53: ATTR_CONDITION_RAINY,  # Drizzle: Moderate intensity
     55: ATTR_CONDITION_RAINY,  # Drizzle: Dense intensity
-    56: ATTR_CONDITION_RAINY,  # Freezing Drizzle: Light intensity
-    57: ATTR_CONDITION_RAINY,  # Freezing Drizzle: Dense intensity
+    56: ATTR_CONDITION_SNOWY_RAINY,  # Freezing Drizzle: Light intensity
+    57: ATTR_CONDITION_SNOWY_RAINY,  # Freezing Drizzle: Dense intensity
     61: ATTR_CONDITION_RAINY,  # Rain: Slight intensity
     63: ATTR_CONDITION_RAINY,  # Rain: Moderate intensity
     65: ATTR_CONDITION_POURING,  # Rain: Heavy intensity
-    66: ATTR_CONDITION_RAINY,  # Freezing Rain: Light intensity
-    67: ATTR_CONDITION_POURING,  # Freezing Rain: Heavy intensity
+    66: ATTR_CONDITION_SNOWY_RAINY,  # Freezing Rain: Light intensity
+    67: ATTR_CONDITION_SNOWY_RAINY,  # Freezing Rain: Heavy intensity
     71: ATTR_CONDITION_SNOWY,  # Snow fall: Slight intensity
     73: ATTR_CONDITION_SNOWY,  # Snow fall: Moderate intensity
     75: ATTR_CONDITION_SNOWY,  # Snow fall: Heavy intensity
@@ -50,6 +54,15 @@ WMO_TO_HA_CONDITION_MAP: dict[int | None, str] = {
     85: ATTR_CONDITION_SNOWY,  # Snow showers: Slight intensity
     86: ATTR_CONDITION_SNOWY,  # Snow showers: Heavy intensity
     95: ATTR_CONDITION_LIGHTNING,  # Thunderstorm: Slight and moderate intensity
-    96: ATTR_CONDITION_LIGHTNING,  # Thunderstorm with slight hail
-    99: ATTR_CONDITION_LIGHTNING,  # Thunderstorm with heavy hail
+    96: ATTR_CONDITION_LIGHTNING_RAINY,  # Thunderstorm with slight hail
+    99: ATTR_CONDITION_HAIL,  # Thunderstorm with heavy hail
+}
+
+# official WMO codes are augmented with 100 for night conditions
+# to allow a more accurate mapping to HA conditions
+WMO_TO_HA_CONDITION_MAP: Final[dict[int | None, str]] = {
+    **WMO_TO_HA_CONDITION_DEFAULT,
+    **{k + 100: v for k, v in WMO_TO_HA_CONDITION_DEFAULT.items() if k is not None},
+    100: ATTR_CONDITION_CLEAR_NIGHT,  # Clear sky (night)
+    101: ATTR_CONDITION_CLEAR_NIGHT,  # Mainly clear (night)
 }

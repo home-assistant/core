@@ -1,7 +1,7 @@
 """Support for Open-Meteo weather."""
 
 from datetime import datetime, time
-from typing import override
+from typing import cast, override
 
 from open_meteo import Forecast as OpenMeteoForecast
 
@@ -9,6 +9,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -17,12 +18,15 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.const import (
+    UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -60,6 +64,7 @@ class OpenMeteoWeatherEntity(
     # returns pressure_msl in hPa, so the native unit is safe to hardcode here.
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
@@ -86,9 +91,31 @@ class OpenMeteoWeatherEntity(
     @override
     def condition(self) -> str | None:
         """Return the current condition."""
+        if (
+            not self.coordinator.data.current
+            or not self.coordinator.data.current.weather_code
+        ):
+            return None
+        return WMO_TO_HA_CONDITION_MAP.get(
+            self.coordinator.data.current.weather_code
+            + (0 if self.coordinator.data.current.is_day else 100)
+        )
+
+    @property
+    @override
+    def cloud_coverage(self) -> int | None:
+        """Return the Cloud coverage in %."""
         if not self.coordinator.data.current:
             return None
-        return WMO_TO_HA_CONDITION_MAP.get(self.coordinator.data.current.weather_code)
+        return self.coordinator.data.current.cloud_cover
+
+    @property
+    @override
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.apparent_temperature
 
     @property
     @override
@@ -97,6 +124,38 @@ class OpenMeteoWeatherEntity(
         if not self.coordinator.data.current:
             return None
         return self.coordinator.data.current.temperature_2m
+
+    @property
+    @override
+    def native_pressure(self) -> float | None:
+        """Return the pressure."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.pressure_msl
+
+    @property
+    @override
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.dew_point_2m
+
+    @property
+    @override
+    def humidity(self) -> int | None:
+        """Return the humidity."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.relative_humidity_2m
+
+    @property
+    @override
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.wind_gusts_10m
 
     @property
     @override
@@ -113,6 +172,22 @@ class OpenMeteoWeatherEntity(
         if not self.coordinator.data.current:
             return None
         return self.coordinator.data.current.wind_direction_10m
+
+    @property
+    @override
+    def native_visibility(self) -> float | None:
+        """Return the visibility."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.visibility
+
+    @property
+    @override
+    def uv_index(self) -> float | None:
+        """Return the UV index."""
+        if not self.coordinator.data.current:
+            return None
+        return self.coordinator.data.current.uv_index
 
     @callback
     @override
@@ -140,8 +215,29 @@ class OpenMeteoWeatherEntity(
                     daily.apparent_temperature_max[index]
                 )
 
+            if daily.cloud_cover_mean is not None:
+                forecast[ATTR_FORECAST_CLOUD_COVERAGE] = daily.cloud_cover_mean[index]
+
+            if daily.dew_point_2m_mean is not None:
+                forecast[ATTR_FORECAST_NATIVE_DEW_POINT] = daily.dew_point_2m_mean[
+                    index
+                ]
+
+            if daily.precipitation_probability_mean is not None:
+                forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = cast(
+                    int, daily.precipitation_probability_mean[index]
+                )
+
             if daily.precipitation_sum is not None:
                 forecast[ATTR_FORECAST_NATIVE_PRECIPITATION] = daily.precipitation_sum[
+                    index
+                ]
+
+            if daily.pressure_msl_mean is not None:
+                forecast[ATTR_FORECAST_NATIVE_PRESSURE] = daily.pressure_msl_mean[index]
+
+            if daily.relative_humidity_2m_mean is not None:
+                forecast[ATTR_FORECAST_HUMIDITY] = daily.relative_humidity_2m_mean[
                     index
                 ]
 
@@ -152,6 +248,9 @@ class OpenMeteoWeatherEntity(
                 forecast[ATTR_FORECAST_NATIVE_TEMP_LOW] = daily.temperature_2m_min[
                     index
                 ]
+
+            if daily.uv_index_max is not None:
+                forecast[ATTR_FORECAST_UV_INDEX] = daily.uv_index_max[index]
 
             if daily.wind_direction_10m_dominant is not None:
                 forecast[ATTR_FORECAST_WIND_BEARING] = (
@@ -211,10 +310,18 @@ class OpenMeteoWeatherEntity(
             if hourly.dew_point_2m is not None:
                 forecast[ATTR_FORECAST_NATIVE_DEW_POINT] = hourly.dew_point_2m[index]
 
+            if hourly.is_day is not None:
+                forecast[ATTR_FORECAST_IS_DAYTIME] = hourly.is_day[index]
+
             if hourly.precipitation is not None:
                 forecast[ATTR_FORECAST_NATIVE_PRECIPITATION] = hourly.precipitation[
                     index
                 ]
+
+            if hourly.precipitation_probability is not None:
+                forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = (
+                    hourly.precipitation_probability[index]
+                )
 
             if hourly.pressure_msl is not None:
                 forecast[ATTR_FORECAST_NATIVE_PRESSURE] = hourly.pressure_msl[index]
@@ -224,6 +331,9 @@ class OpenMeteoWeatherEntity(
 
             if hourly.temperature_2m is not None:
                 forecast[ATTR_FORECAST_NATIVE_TEMP] = hourly.temperature_2m[index]
+
+            if hourly.uv_index is not None:
+                forecast[ATTR_FORECAST_UV_INDEX] = hourly.uv_index[index]
 
             if hourly.wind_direction_10m is not None:
                 forecast[ATTR_FORECAST_WIND_BEARING] = hourly.wind_direction_10m[index]
