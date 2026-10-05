@@ -397,11 +397,12 @@ class EnergyCostSensor(SensorEntity):
         self._attr_state_class = SensorStateClass.TOTAL
         self._config = config
         self._last_energy_sensor_state: State | None = None
-        # add_finished is set when either of async_added_to_hass
-        # or add_to_platform_abort is called
+        # SensorManager awaits add_finished; async_on_remove resolves it on the
+        # abort path too, since add_to_platform_abort fires on-remove callbacks.
         self.add_finished: asyncio.Future[None] = (
             asyncio.get_running_loop().create_future()
         )
+        self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
@@ -612,13 +613,6 @@ class EnergyCostSensor(SensorEntity):
         self._update_cost()
         self.async_write_ha_state()
 
-    @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        _set_result_unless_done(self.add_finished)
-        super().add_to_platform_abort()
-
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""
@@ -697,11 +691,12 @@ class EnergyPowerSensor(SensorEntity):
                 config["stat_rate_to"],
             ]
 
-        # add_finished is set when either async_added_to_hass or add_to_platform_abort
-        # is called
+        # SensorManager awaits add_finished; async_on_remove resolves it on the
+        # abort path too, since add_to_platform_abort fires on-remove callbacks.
         self.add_finished: asyncio.Future[None] = (
             asyncio.get_running_loop().create_future()
         )
+        self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
 
     @property
     @override
@@ -847,10 +842,3 @@ class EnergyPowerSensor(SensorEntity):
         """Handle source sensor state changes."""
         self._update_state()
         self.async_write_ha_state()
-
-    @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        _set_result_unless_done(self.add_finished)
-        super().add_to_platform_abort()

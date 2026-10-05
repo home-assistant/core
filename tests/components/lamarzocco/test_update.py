@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylamarzocco.const import FirmwareType, UpdateProgressInfo, UpdateStatus
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import UpdateDetails
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -100,10 +100,19 @@ async def test_update_process(
     mock_lamarzocco.update_firmware.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(RequestNotSuccessful("Boom"), id="request_not_successful"),
+        pytest.param(AuthFail("Boom"), id="auth_fail"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_update_error(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test error during update."""
 
@@ -112,7 +121,7 @@ async def test_update_error(
     state = hass.states.get(f"update.{mock_lamarzocco.serial_number}_gateway_firmware")
     assert state
 
-    mock_lamarzocco.update_firmware.side_effect = RequestNotSuccessful("Boom")
+    mock_lamarzocco.update_firmware.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(

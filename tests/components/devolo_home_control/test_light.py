@@ -2,8 +2,11 @@
 
 from unittest.mock import patch
 
+from devolo_home_control_api.exceptions import SwitchingProtected
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -14,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
@@ -78,6 +82,23 @@ async def test_light_without_binary_sensor(
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(round(50 / 255 * 100))
 
+    with (
+        patch(
+            "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test", ATTR_BRIGHTNESS: 50},
+            blocking=True,
+        )
+    assert error.value.translation_key == "set"
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "brightness"}
+
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
@@ -136,6 +157,39 @@ async def test_light_with_binary_sensor(
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(False)
+
+    with (
+        patch(
+            "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "set"
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "state"}
+
+    with (
+        patch(
+            "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",
+            side_effect=SwitchingProtected,
+        ),
+        pytest.raises(ServiceValidationError) as error,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "switch_protected"
+    assert error.value.translation_domain == DOMAIN
 
 
 async def test_remove_from_hass(hass: HomeAssistant) -> None:

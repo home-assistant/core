@@ -24,12 +24,12 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_DOMAIN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, suffix=".duckdns.org")
         ),
-        probatio.Required(CONF_ACCESS_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str,
     }
 )
 
 STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_ACCESS_TOKEN): str}
+    {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str}
 )
 
 

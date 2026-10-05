@@ -5,7 +5,6 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_device": "The device at this address is not the one this entry was set up for."
     },
     "error": {
@@ -103,6 +102,19 @@
     },
     "update_failed": {
       "message": "Error fetching the state of the LIFX device: {error}"
+    }
+  },
+  "issues": {
+    "invalid_serial": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot migrate the LIFX entry \"{title}\" because its stored identifier \"{unique_id}\" is not a valid LIFX serial number.\n\nClick **Submit** to delete the entry then either wait for it to be rediscovered automatically or add it manually.",
+            "title": "[%key:component::lifx::issues::invalid_serial::title%]"
+          }
+        }
+      },
+      "title": "LIFX entry {title} cannot be migrated"
     }
   },
   "services": {

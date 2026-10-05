@@ -368,8 +368,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
-/homeassistant/components/de_dietrich/ @DaanVervacke
-/tests/components/de_dietrich/ @DaanVervacke
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck
@@ -507,14 +505,16 @@ CLAUDE.md @home-assistant/core
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energenie_power_sockets/ @gnumpi
 /tests/components/energenie_power_sockets/ @gnumpi
-/homeassistant/components/energieleser/ @AjinkyaGokhale @amitkio
-/tests/components/energieleser/ @AjinkyaGokhale @amitkio
+/homeassistant/components/energieleser/ @AjinkyaGokhale @NiccoFink
+/tests/components/energieleser/ @AjinkyaGokhale @NiccoFink
 /homeassistant/components/energy/ @home-assistant/core
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyid/ @JrtPec @Molier
 /tests/components/energyid/ @JrtPec @Molier
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
+/homeassistant/components/engie_be/ @DaanVervacke
+/tests/components/engie_be/ @DaanVervacke
 /homeassistant/components/enigma2/ @autinerd
 /tests/components/enigma2/ @autinerd
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
@@ -535,8 +535,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/eq3btsmart/ @eulemitkeule @dbuezas
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco
-/tests/components/esphome/ @jesserockz @kbx81 @bdraco
+/homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco @arturpragacz
+/tests/components/esphome/ @jesserockz @kbx81 @bdraco @arturpragacz
 /homeassistant/components/essent/ @jaapp
 /tests/components/essent/ @jaapp
 /homeassistant/components/eufylife_ble/ @bdr99
@@ -1124,6 +1124,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/map_tiles/ @home-assistant/core
 /homeassistant/components/marantz_infrared/ @balloob
 /tests/components/marantz_infrared/ @balloob
+/homeassistant/components/marketplace/ @home-assistant/core
+/tests/components/marketplace/ @home-assistant/core
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
@@ -1394,9 +1396,10 @@ CLAUDE.md @home-assistant/core
 /tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
 /tests/components/oralb/ @bdraco @Lash-L
-/homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/osoenergy/ @osohotwateriot
 /tests/components/osoenergy/ @osohotwateriot
+/homeassistant/components/osram_infrared/ @freeDom-
+/tests/components/osram_infrared/ @freeDom-
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ouman_eh_800/ @Markus98
@@ -1538,7 +1541,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
 /tests/components/rainbird/ @konikvranik @allenporter
-/homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /homeassistant/components/rainforest_raven/ @cottsay
@@ -1764,7 +1766,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/sofar/ @darkrain-nl
 /homeassistant/components/solaredge/ @frenck @bdraco @tronikos
 /tests/components/solaredge/ @frenck @bdraco @tronikos
-/homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solaredge_modbus/ @frenck
 /tests/components/solaredge_modbus/ @frenck
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
@@ -2055,6 +2056,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vistapool/ @fdebrus
 /tests/components/vistapool/ @fdebrus
+/homeassistant/components/vitesy/ @chemelli74
+/tests/components/vitesy/ @chemelli74
 /homeassistant/components/vivotek/ @HarlemSquirrel
 /tests/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325

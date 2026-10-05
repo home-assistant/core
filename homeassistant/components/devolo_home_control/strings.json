@@ -64,6 +64,12 @@
     },
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."
+    },
+    "set": {
+      "message": "An error occurred while setting the {placeholder}."
+    },
+    "switch_protected": {
+      "message": "Switching is protected by configuration."
     }
   }
 }

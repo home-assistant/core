@@ -159,8 +159,10 @@ class ScriptIntentHandler(intent.IntentHandler):
 
     slot_schema = {
         probatio.Any("name", "area", "floor"): cv.string,
-        probatio.Optional("domain"): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Optional("device_class"): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional("preferred_area_id"): cv.string,
         probatio.Optional("preferred_floor_id"): cv.string,
     }

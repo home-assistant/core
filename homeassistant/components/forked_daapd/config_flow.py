@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA_DICT = {
     probatio.Required(CONF_HOST): str,
     probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-    probatio.Optional(CONF_PASSWORD, default=""): str,
+    probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str,
 }
 
 TEST_CONNECTION_ERROR_DICT = {

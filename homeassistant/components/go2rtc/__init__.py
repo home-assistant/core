@@ -103,11 +103,11 @@ CONFIG_SCHEMA = probatio.Schema(
                         CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
                     ): cv.boolean,
                     probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
-                        cv.string, probatio.Length(min=1)
+                        cv.string, probatio.NonEmpty()
                     ),
-                    probatio.Inclusive(CONF_PASSWORD, _AUTH): probatio.All(
-                        cv.string, probatio.Length(min=1)
-                    ),
+                    probatio.Inclusive(
+                        probatio.Secret(CONF_PASSWORD), _AUTH
+                    ): probatio.All(cv.string, probatio.NonEmpty()),
                 }
             ),
             _validate_auth,
@@ -238,12 +238,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
     except Go2RtcVersionError as err:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "unsupported_version",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_version",
+            translation_placeholders={"error": str(err)},
+        )
         raise ConfigEntryNotReady(
             f"The go2rtc server version is not supported, {err}"
         ) from err
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
+
+    ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
     await provider.initialize()

@@ -73,6 +73,7 @@ async def test_image(
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
     assert state and state.state == TEST_TIME
+    assert state.attributes["current_media_id"] == MOCK_MEDIA_IMAGE_URI_1
 
     await _verify_path_image(hass, hass_client)
 
@@ -300,6 +301,7 @@ async def test_unresolvable(
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
     assert state and state.state == STATE_UNKNOWN
+    assert state.attributes["current_media_id"] == MOCK_MEDIA_IMAGE_URI_1
 
     await hass.async_block_till_done(wait_background_tasks=True)
 

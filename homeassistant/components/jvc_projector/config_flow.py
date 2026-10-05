@@ -69,7 +69,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_HOST): str,
                     probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -106,7 +106,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Optional(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
         )
 
