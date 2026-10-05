@@ -1,7 +1,5 @@
 """The EARN-E P1 Meter integration."""
 
-import asyncio
-
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,7 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SERIAL, EARN_E_P1_DATA, EARN_E_P1_LOCK
+from .const import CONF_SERIAL, EARN_E_P1_DATA
 from .coordinator import EarnEP1Coordinator
 from .models import EarnEP1Data
 
@@ -24,9 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
     serial = entry.data[CONF_SERIAL]
     mac = entry.data.get(CONF_MAC)
 
-    lock = hass.data.setdefault(EARN_E_P1_LOCK, asyncio.Lock())
-    async with lock:
-        if (data := hass.data.get(EARN_E_P1_DATA)) is None:
+    data = hass.data.setdefault(EARN_E_P1_DATA, EarnEP1Data())
+    async with data.lock:
+        if (listener := data.listener) is None:
             listener = EarnEP1Listener()
             try:
                 await listener.start()
@@ -34,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
                 raise ConfigEntryNotReady(
                     f"Cannot start UDP listener on port {DEFAULT_PORT}: {err}"
                 ) from err
-            data = hass.data[EARN_E_P1_DATA] = EarnEP1Data(listener)
+            data.listener = listener
 
         # Claim the listener under the lock, so that another entry unloading
         # while this one sets up cannot stop it from under us.
@@ -42,15 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
 
     async def _release_listener() -> None:
         """Stop the shared listener once the last entry has released it."""
-        async with lock:
+        async with data.lock:
             data.entries.discard(entry.entry_id)
             if not data.entries:
-                del hass.data[EARN_E_P1_DATA]
-                await data.listener.stop()
+                data.listener = None
+                await listener.stop()
 
     entry.async_on_unload(_release_listener)
 
-    coordinator = EarnEP1Coordinator(hass, entry, host, serial, data.listener, mac)
+    coordinator = EarnEP1Coordinator(hass, entry, host, serial, listener, mac)
     coordinator.start()
     entry.async_on_unload(coordinator.stop)
 

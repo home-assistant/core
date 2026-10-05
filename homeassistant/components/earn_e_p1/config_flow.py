@@ -39,8 +39,8 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_discover(self) -> EarnEP1Device | None:
         """Discover an EARN-E device on the network."""
         data = self.hass.data.get(EARN_E_P1_DATA)
-        if data is not None:
-            devices = await data.listener.discover(timeout=DISCOVERY_TIMEOUT)
+        if data is not None and (listener := data.listener) is not None:
+            devices = await listener.discover(timeout=DISCOVERY_TIMEOUT)
         else:
             try:
                 devices = await discover(timeout=DISCOVERY_TIMEOUT)
@@ -55,8 +55,8 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns the device if serial is found, None on timeout.
         """
         data = self.hass.data.get(EARN_E_P1_DATA)
-        if data is not None:
-            return await data.listener.validate(host, timeout=VALIDATION_TIMEOUT)
+        if data is not None and (listener := data.listener) is not None:
+            return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
         return await validate(host, timeout=VALIDATION_TIMEOUT)
 
     @override
