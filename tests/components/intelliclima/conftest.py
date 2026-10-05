@@ -27,7 +27,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.intellifire.async_setup_entry", return_value=True
+        "homeassistant.components.intelliclima.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 

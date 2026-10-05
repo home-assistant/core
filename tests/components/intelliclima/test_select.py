@@ -178,6 +178,7 @@ async def test_select_option_triggers_coordinator_refresh(
         pytest.param("2", "3", "reverse", id="reverse"),
         pytest.param("3", str(0x40 | 3), "alternate", id="alternate_boost"),
         pytest.param("4", str(0x10 | 2), "sensor", id="auto"),
+        pytest.param("4", "3", "sensor", id="sensor_manual_speed"),
         pytest.param("7", "3", STATE_UNKNOWN, id="undefined"),
     ],
 )

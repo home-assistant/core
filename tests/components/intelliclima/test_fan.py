@@ -257,6 +257,7 @@ async def test_fan_turn_on_defaulting_behavior_auto_preset(
         pytest.param("1", str(0x10 | 3), STATE_ON, 75, None, id="program"),
         pytest.param("4", str(0x10 | 2), STATE_ON, 50, "auto", id="auto"),
         pytest.param("4", str(0x10), STATE_ON, 0, "auto", id="auto_idle"),
+        pytest.param("4", "3", STATE_ON, 75, None, id="sensor_manual_speed"),
         pytest.param("7", "3", STATE_UNKNOWN, None, None, id="undefined"),
     ],
 )
