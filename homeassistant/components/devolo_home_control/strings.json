@@ -65,11 +65,11 @@
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."
     },
-    "set": {
-      "message": "An error occurred while setting the {placeholder}."
+    "set_failed": {
+      "message": "The devolo Home Control central unit did not accept the command."
     },
     "switch_protected": {
-      "message": "Switching is protected by configuration."
+      "message": "Remote switching is disabled for this device. Please use the physical button."
     }
   }
 }

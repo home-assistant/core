@@ -2,27 +2,17 @@
 
 import logging
 
-from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, SERVICE_RELOAD
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.helper_integration import async_remove_helper_devices
-from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
 
-from .const import (
-    CONF_ADDITIONAL_OPTIONS,
-    CONF_MAX,
-    CONF_MIN,
-    CONF_STEP,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,35 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN in config:
         await process_config(hass, config)
 
-    async def _reload_config(call: Event | ServiceCall) -> None:
-        """Reload top-level + platforms."""
-
-        await async_get_blueprints(hass).async_reset_cache()
-        try:
-            unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_reload_template_entities",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        integration = await async_get_integration(hass, DOMAIN)
-        conf = await conf_util.async_process_component_and_handle_errors(
-            hass, unprocessed_conf, integration
-        )
-
-        if conf is None:
-            return
-
-        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
-
-        if DOMAIN in conf:
-            await process_config(hass, conf)
-
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+    async_setup_services(hass)
 
     return True
 

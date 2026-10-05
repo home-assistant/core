@@ -104,6 +104,5 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         if not self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set",
-                translation_placeholders={"placeholder": "temperature"},
+                translation_key="set_failed",
             )
