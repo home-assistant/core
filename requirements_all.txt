@@ -379,7 +379,7 @@ aiooui==0.1.9
 aiopegelonline==0.1.1
 
 # homeassistant.components.pjlink
-aiopjlink2==1.1.0
+aiopjlink2==1.2.0
 
 # homeassistant.components.opnsense
 aiopnsense==1.0.10
