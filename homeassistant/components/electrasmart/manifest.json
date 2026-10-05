@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/electrasmart",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["pyelectrasmart==1.0.0"]
+  "requirements": ["pyElectra==1.2.5"]
 }

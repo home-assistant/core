@@ -2029,6 +2029,9 @@ pyControl4==2.0.2
 # homeassistant.components.duotecno
 pyDuotecno==2024.10.1
 
+# homeassistant.components.electrasmart
+pyElectra==1.2.5
+
 # homeassistant.components.emby
 pyEmby==1.10
 
@@ -2206,9 +2209,6 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
-
-# homeassistant.components.electrasmart
-pyelectrasmart==1.0.0
 
 # homeassistant.components.emoncms
 # homeassistant.components.emoncms_history
