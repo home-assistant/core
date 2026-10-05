@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pyportainer import Portainer
 from pyportainer.models.docker import (
@@ -11,6 +11,7 @@ from pyportainer.models.docker import (
     LocalImageInformation,
     PortainerImageUpdateStatus,
 )
+from pyportainer.models.portainer import PortainerSystemVersion
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -27,7 +28,7 @@ from .coordinator import (
     PortainerCoordinator,
     PortainerCoordinatorData,
 )
-from .entity import PortainerContainerEntity
+from .entity import PortainerContainerEntity, PortainerServerEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -79,6 +80,32 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class PortainerServerUpdateEntityDescription(UpdateEntityDescription):
+    """Describes Portainer server update entity."""
+
+    installed_version: Callable[[PortainerSystemVersion], str | None]
+    latest_version: Callable[[PortainerSystemVersion], str | None]
+    release_url: Callable[[PortainerSystemVersion], str | None]
+
+
+SERVER_UPDATES: tuple[PortainerServerUpdateEntityDescription, ...] = (
+    PortainerServerUpdateEntityDescription(
+        key="server_update",
+        translation_key="server_update",
+        entity_category=EntityCategory.CONFIG,
+        installed_version=lambda data: data.server_version,
+        # Portainer only reports the latest version when it is newer
+        latest_version=lambda data: data.latest_version or data.server_version,
+        release_url=lambda data: (
+            f"https://github.com/portainer/portainer/releases/tag/{data.latest_version}"
+            if data.latest_version
+            else None
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PortainerConfigEntry,
@@ -86,6 +113,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer update entities based on a config entry."""
     coordinator = entry.runtime_data
+    if TYPE_CHECKING:
+        assert coordinator.system_version is not None
+    async_add_entities(
+        PortainerServerUpdateEntity(coordinator.system_version, entity_description)
+        for entity_description in SERVER_UPDATES
+    )
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
@@ -166,3 +199,29 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
             ),
         )
         await self.coordinator.async_request_refresh()
+
+
+class PortainerServerUpdateEntity(PortainerServerEntity, UpdateEntity):
+    """Representation of an update of Portainer itself."""
+
+    _attr_title = "Portainer"
+
+    entity_description: PortainerServerUpdateEntityDescription
+
+    @override
+    @property
+    def installed_version(self) -> str | None:
+        """Return the running Portainer version."""
+        return self.entity_description.installed_version(self.coordinator.data)
+
+    @override
+    @property
+    def latest_version(self) -> str | None:
+        """Return the latest Portainer version."""
+        return self.entity_description.latest_version(self.coordinator.data)
+
+    @override
+    @property
+    def release_url(self) -> str | None:
+        """Return the release notes of the latest version."""
+        return self.entity_description.release_url(self.coordinator.data)
