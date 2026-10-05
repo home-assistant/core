@@ -7,9 +7,11 @@ from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
+from .const import DOMAIN
 from .entity import DevoloMultiLevelSwitchDeviceEntity
 
 
@@ -67,14 +69,23 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device off."""
+        """Turn the device on."""
         tone = kwargs.get(ATTR_TONE) or self._default_tone
-        self._multi_level_switch_property.set(tone)
+        self._set_tone(tone)
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._multi_level_switch_property.set(0)
+        self._set_tone(0)
+
+    def _set_tone(self, tone: int) -> None:
+        """Set the siren's tone."""
+        if not self._multi_level_switch_property.set(tone):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set",
+                translation_placeholders={"placeholder": "siren's tone"},
+            )
 
     @override
     def _generic_message(self, message: tuple) -> None:
