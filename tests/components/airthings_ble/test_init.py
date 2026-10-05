@@ -1,5 +1,6 @@
 """Test the Airthings BLE integration init."""
 
+import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import patch
@@ -550,6 +551,47 @@ async def test_connectivity_mode_issue_deleted_on_unload(
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert _issue_translation_keys(issue_registry) == []
+
+
+async def test_connectivity_mode_issue_deleted_after_refresh_during_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a refresh finishing while the entry unloads leaves no issue behind."""
+    entry = await _setup_corentium_home_2(hass, "Bluetooth")
+    release_update = asyncio.Event()
+    update_done = asyncio.Event()
+    unload_platforms = hass.config_entries.async_unload_platforms
+
+    async def _delayed_update(*_):
+        await release_update.wait()
+        update_done.set()
+        return _corentium_home_2_with_mode("SmartLink")
+
+    async def _unload_platforms_during_update(*args):
+        release_update.set()
+        await update_done.wait()
+        return await unload_platforms(*args)
+
+    with (
+        patch_airthings_ble(side_effect=_delayed_update),
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            side_effect=_unload_platforms_during_update,
+        ),
+    ):
+        freezer.tick(
+            DEVICE_SPECIFIC_SCAN_INTERVAL[AirthingsDeviceType.CORENTIUM_HOME_2.value]
+        )
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert _issue_translation_keys(issue_registry) == []
