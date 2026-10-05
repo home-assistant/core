@@ -1,6 +1,8 @@
 """Commands part of Websocket API."""
 
+from collections import deque
 from collections.abc import Callable
+from contextvars import copy_context
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
@@ -13,7 +15,13 @@ from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_CONDITION,
     CONF_EXTERNAL_URL,
+    CONF_OPTIONS,
+    CONF_STATE,
+    CONF_TARGET,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -43,6 +51,7 @@ from homeassistant.helpers import (
     trace,
 )
 from homeassistant.helpers.condition import (
+    async_extract_entities as async_extract_condition_entities,
     async_from_config as async_condition_from_config,
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
@@ -57,6 +66,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
+    async_track_state_change_event,
     async_track_template_result,
     async_track_time_interval,
 )
@@ -76,6 +86,7 @@ from homeassistant.helpers.trigger import (
     async_subscribe_platform_events as async_subscribe_trigger_platform_events,
     async_validate_trigger_config,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
@@ -1146,6 +1157,61 @@ async def handle_test_condition(
         condition.async_unload()
 
 
+@callback
+def _async_extract_condition_dependencies(
+    config: ConfigType | template.Template,
+) -> tuple[set[str], list[ConfigType]]:
+    """Return the entities and targets whose state changes can change a condition."""
+    entity_ids: set[str] = set()
+    targets: list[ConfigType] = []
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        if isinstance(config, template.Template):
+            continue
+
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "not", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        leaf_entity_ids = async_extract_condition_entities(config)
+
+        if condition == "numeric_state":
+            leaf_entity_ids.update(
+                value
+                for key in (CONF_ABOVE, CONF_BELOW)
+                if isinstance(value := config.get(key), str)
+            )
+        elif condition == "state":
+            leaf_entity_ids.update(
+                value
+                for value in probatio.EnsureList()(config[CONF_STATE])
+                if isinstance(value, str) and cv.INPUT_ENTITY_ID.match(value)
+            )
+
+        if isinstance(options := config.get(CONF_OPTIONS), dict) and isinstance(
+            threshold := options.get("threshold"), dict
+        ):
+            leaf_entity_ids.update(
+                entry["entity"]
+                for key in ("value", "value_min", "value_max")
+                if isinstance(entry := threshold.get(key), dict) and "entity" in entry
+            )
+
+        if (target := config.get(CONF_TARGET)) and (
+            selection := target_helpers.TargetSelection(target)
+        ).has_any_target:
+            targets.append(target)
+            leaf_entity_ids -= selection.entity_ids
+
+        entity_ids |= leaf_entity_ids
+
+    return entity_ids, targets
+
+
 @decorators.websocket_command(
     {
         probatio.Required("type"): "subscribe_condition",
@@ -1206,16 +1272,35 @@ async def handle_subscribe_condition(
         connection.send_event(msg["id"], event_data)
 
     @callback
+    def state_changed(
+        _: Event[EventStateChangedData] | target_helpers.TargetStateChangedData,
+    ) -> None:
+        """Evaluate the condition when a referenced entity changes."""
+        # Run in a copied context so the trace of the run that changed the state is kept
+        copy_context().run(evaluate_condition, None)
+
+    @callback
     def unsubscribe() -> None:
         """Unsubscribe from condition updates."""
         condition.async_unload()
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
-    unsub = async_track_time_interval(
-        hass,
-        evaluate_condition,
-        timedelta(seconds=1),
-        name="websocket_api_condition_subscription",
+    entity_ids, targets = _async_extract_condition_dependencies(condition_config)
+    unsubs = [
+        await target_helpers.async_track_target_selector_state_change_event(
+            hass, target, state_changed, primary_entities_only=False
+        )
+        for target in targets
+    ]
+    unsubs.append(async_track_state_change_event(hass, entity_ids, state_changed))
+    unsubs.append(
+        async_track_time_interval(
+            hass,
+            evaluate_condition,
+            timedelta(seconds=1),
+            name="websocket_api_condition_subscription",
+        )
     )
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])

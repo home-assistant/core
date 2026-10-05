@@ -48,6 +48,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     label_registry as lr,
     system_state,
+    trace,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
@@ -3096,10 +3097,10 @@ async def test_test_condition_check_error_not_logged(
     assert "Error handling message" not in caplog.text
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_subscribe_condition(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test subscribing to a condition."""
     hass.states.async_set("hello.world", "paulus")
@@ -3124,14 +3125,15 @@ async def test_subscribe_condition(
     msg = await websocket_client.receive_json()
     assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
 
+    caller_trace = trace.trace_get()
     hass.states.async_set("hello.world", "frenck")
-    freezer.tick(1.1)
+    # The evaluation must not replace the trace of whoever changed the state
+    assert trace.trace_get(clear=False) is caller_trace
 
     msg = await websocket_client.receive_json()
     assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
 
     hass.states.async_remove("hello.world")
-    freezer.tick(1.1)
 
     msg = await websocket_client.receive_json()
     assert msg == {
@@ -3141,6 +3143,228 @@ async def test_subscribe_condition(
             "error": "In 'state':\n  In 'state' condition: unknown entity hello.world",
         },
     }
+
+
+async def test_subscribe_condition_untracked_entity(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test changes to entities not referenced by the condition are polled."""
+    hass.states.async_set("hello.world", "paulus")
+    hass.states.async_set("hello.other", "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "and",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "hello.world",
+                        "state": "paulus",
+                    },
+                    {
+                        "condition": "template",
+                        "value_template": "{{ is_state('hello.other', 'on') }}",
+                    },
+                ],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    hass.states.async_set("hello.other", "off")
+
+    # A pong as the next message shows the change did not send an event
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    freezer.tick(1.1)
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+
+@pytest.mark.usefixtures("freezer")
+@pytest.mark.parametrize(
+    ("condition", "threshold_before", "threshold_after"),
+    [
+        pytest.param(
+            {
+                "condition": "numeric_state",
+                "entity_id": "counter.value",
+                "above": "input_number.threshold",
+            },
+            "5",
+            "15",
+            id="numeric_state_above",
+        ),
+        pytest.param(
+            {
+                "condition": "numeric_state",
+                "entity_id": "counter.value",
+                "below": "input_number.threshold",
+            },
+            "15",
+            "5",
+            id="numeric_state_below",
+        ),
+        pytest.param(
+            {
+                "condition": "state",
+                "entity_id": "counter.value",
+                "state": "input_number.threshold",
+            },
+            "10",
+            "15",
+            id="state",
+        ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"entity": "input_number.threshold"},
+                    }
+                },
+            },
+            "5",
+            "15",
+            id="numerical_threshold",
+        ),
+    ],
+)
+async def test_subscribe_condition_comparison_entity(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    condition: dict[str, Any],
+    threshold_before: str,
+    threshold_after: str,
+) -> None:
+    """Test a change of an entity the condition compares against is pushed."""
+    hass.states.async_set("counter.value", "10")
+    hass.states.async_set("input_number.threshold", threshold_before)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    hass.states.async_set("input_number.threshold", threshold_after)
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_subscribe_condition_target_area(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a state change of an entity in a targeted area is pushed."""
+    area = area_registry.async_create("Kitchen")
+    light = entity_registry.async_get_or_create("light", "test", "kitchen")
+    entity_registry.async_update_entity(light.entity_id, area_id=area.id)
+    hass.states.async_set(light.entity_id, "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "light.is_on",
+                "target": {"area_id": area.id},
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    hass.states.async_set(light.entity_id, "off")
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+
+async def test_unsubscribe_condition(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test unsubscribing from a condition removes its listeners."""
+    area = area_registry.async_create("Kitchen")
+    light = entity_registry.async_get_or_create("light", "test", "kitchen")
+    entity_registry.async_update_entity(light.entity_id, area_id=area.id)
+    hass.states.async_set(light.entity_id, "on")
+    hass.states.async_set("hello.world", "paulus")
+    init_count = sum(hass.bus.async_listeners().values())
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "or",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "hello.world",
+                        "state": "paulus",
+                    },
+                    {"condition": "light.is_on", "target": {"area_id": area.id}},
+                ],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+    assert sum(hass.bus.async_listeners().values()) > init_count
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": subscription_id}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert sum(hass.bus.async_listeners().values()) == init_count
 
 
 async def test_subscribe_condition_non_admin(
