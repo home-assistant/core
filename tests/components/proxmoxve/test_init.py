@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -335,6 +336,9 @@ async def test_offline_node(
 
     state = hass.states.get("binary_sensor.pve3_status")
     assert state.state == STATE_OFF
+
+    state = hass.states.get("sensor.pve3_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_new_vm_creates_entity(
