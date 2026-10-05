@@ -409,8 +409,6 @@ async def test_default_entity_emits_no_partial_results(
     """Test an entity that does not override the partial method yields only the result."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
-    assert mock_provider_entity.async_supports_partial_results() is False
-
     results = [
         result
         async for result in mock_provider_entity.internal_async_process_audio_stream_partial(
@@ -429,8 +427,6 @@ async def test_entity_emits_partial_results(
 ) -> None:
     """Test an entity that overrides the partial method yields partials then the result."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
-
-    assert mock_provider_partial_entity.async_supports_partial_results() is True
 
     results = [
         result
@@ -458,14 +454,15 @@ async def test_partial_results_update_state(
     entity_id = "stt.test_partial"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    async for (
-        _result
-    ) in mock_provider_partial_entity.internal_async_process_audio_stream_partial(
+    results = mock_provider_partial_entity.internal_async_process_audio_stream_partial(
         _TEST_METADATA, _one_chunk_stream()
-    ):
-        pass
+    )
+    assert await anext(results) == PartialSpeechResult("hello")
 
+    # The timestamp is written when the stream starts, not when it completes.
     assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    await results.aclose()
 
 
 @pytest.mark.parametrize(

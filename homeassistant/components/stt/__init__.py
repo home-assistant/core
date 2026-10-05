@@ -225,14 +225,6 @@ class SpeechToTextEntity(RestoreEntity):
         ):
             self.__last_processed = state.state
 
-    @callback
-    def async_supports_partial_results(self) -> bool:
-        """Return if the entity emits partial transcripts while transcribing."""
-        return (
-            type(self).async_process_audio_stream_partial
-            is not SpeechToTextEntity.async_process_audio_stream_partial
-        )
-
     @final
     async def internal_async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
@@ -274,7 +266,13 @@ class SpeechToTextEntity(RestoreEntity):
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
         """Process an audio stream with an STT service, yielding partial transcripts.
 
-        Use async_supports_partial_results to check for support.
+        Any number of PartialSpeechResult may be yielded as the transcript is
+        refined, each one superseding the last. Implementations must finish with
+        exactly one SpeechResult and yield nothing after it, so consumers can tell
+        a complete transcription from an interrupted stream.
+
+        The default implementation falls back to async_process_audio_stream and
+        yields only the final result.
         """
         yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
