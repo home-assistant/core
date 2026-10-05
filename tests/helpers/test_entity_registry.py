@@ -7101,6 +7101,13 @@ async def test_migration_1_23(
                 "unique_id": "no_name",
             },
             {
+                "entity_id": "test.empty_name",
+                "id": "entity_empty_name",
+                "unique_id": "empty_name",
+                "name": "",
+                "options": {"conversation": {"should_expose": True}},
+            },
+            {
                 "entity_id": "test.no_device",
                 "id": "entity_no_device",
                 "unique_id": "no_device",
@@ -7154,6 +7161,13 @@ async def test_migration_1_23(
     assert entry.compat_name is None
     assert er.async_get_full_entity_name(hass, entry) == "My Device Temperature"
 
+    # An empty name is treated like no name, so there is nothing to preserve
+    entry = registry.async_get("test.empty_name")
+    assert entry.name == ""
+    assert entry.compat_name is None
+    assert entry.aliases == [er.COMPUTED_NAME]
+    assert er.async_get_full_entity_name(hass, entry) == "My Device"
+
     # Without a device there is nothing to strip
     entry = registry.async_get("test.no_device")
     assert entry.name == "My Device Custom"
@@ -7171,6 +7185,7 @@ async def test_migration_1_23(
         ("test.stripped", "My Device Temperature"),
         ("test.custom", "Custom"),
         ("test.no_name", "My Device Temperature"),
+        ("test.empty_name", "My Device"),
         ("test.no_device", "My Device Custom"),
     ):
         entry = registry.async_get(entity_id)
@@ -7242,6 +7257,15 @@ async def test_migration_1_23(
                     "unique_id": "no_name",
                     "name": None,
                     "compat_name": None,
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.empty_name",
+                    "id": "entity_empty_name",
+                    "unique_id": "empty_name",
+                    "name": "",
+                    "compat_name": None,
+                    "options": {"conversation": {"should_expose": True}},
                 },
                 {
                     **NAME_MIGRATION_ENTITY_BASE,

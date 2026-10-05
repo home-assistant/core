@@ -1043,7 +1043,7 @@ class EntityRegistryStore(storage.Store[dict[str, Any]]):
                     name = entity["name"]
 
                     if (
-                        name is None
+                        not name
                         or (device_id := entity["device_id"]) is None
                         or (device := device_registry.async_get(device_id)) is None
                         or not (device_name := device.name_by_user or device.name)
