@@ -321,7 +321,12 @@ async def test_options(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="NAME",
-        data={},
+        data={
+            CONF_USE_WEBHOOK: False,
+            CONF_TOKEN: "valid_token",
+            CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+            CONF_DEVICE_NAME: "device_name",
+        },
     )
     config_entry.add_to_hass(hass)
 
