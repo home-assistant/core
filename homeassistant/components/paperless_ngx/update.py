@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import override
 
-from pypaperless.exceptions import PaperlessConnectionError
+from pypaperless.exceptions import InitializationError, PaperlessConnectionError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -74,7 +74,14 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
     @override
     async def async_update(self) -> None:
         """Update the entity."""
-        remote_version = None
+        try:
+            await self.coordinator.api.initialize()
+        except InitializationError as err:
+            if self._attr_available:
+                LOGGER.warning("Could not refresh Paperless version: %s", err)
+                self._attr_available = False
+            return
+
         try:
             remote_version = await self.coordinator.api.remote_version()
         except PaperlessConnectionError as err:
