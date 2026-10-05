@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
