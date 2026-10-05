@@ -8,9 +8,9 @@ the entity store schemas defined in `entity_store_schema.py`.
 from collections import Counter
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from functools import cache
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, override
+from typing import TYPE_CHECKING, Any, Final, Literal, Required, TypedDict, override
 
 from awesomeversion import AwesomeVersion
 import probatio
@@ -25,8 +25,7 @@ from xknxproject.models import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from ..const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_WRITE
-from ..dpa import FUNCTIONAL_BLOCK_PLATFORMS
+from ..const import CONF_DPT, CONF_GA_PASSIVE
 from ..entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
 from ..knx_selector import (
     GASelector,
@@ -38,9 +37,9 @@ from ..knx_selector import (
 from ..util import dpt_string_to_dict
 from .base import SuggestionProvider
 from .const import (
-    EntitySuggestion,
     PlatformSuggestion,
     ProviderResult,
+    ProviderSuggestion,
     SuggestedGroupAddress,
 )
 
@@ -50,9 +49,38 @@ if TYPE_CHECKING:
 # first xknxproject version parsing KNX Information Model semantics
 MIN_SEMANTICS_PARSER_VERSION = AwesomeVersion("3.9.0")
 
+# default platform of functional blocks representable by multiple platforms
+FUNCTIONAL_BLOCK_DEFAULT_PLATFORM: Final = {"417": Platform.LIGHT}
+
+type ConfigPath = tuple[str, ...]
 type GaSlot = Literal["write", "state"]
-# config path of a group select and index of one of its options
-type GroupSelectOptionRef = tuple[tuple[str, ...], int]
+
+
+class SemanticsState(StrEnum):
+    """Availability of KNX Information Model semantics in the project data."""
+
+    NO_PROJECT = "no_project"
+    OUTDATED_PARSER = "outdated_parser"
+    NO_SEMANTICS = "no_semantics"
+    OK = "ok"
+
+
+class FunctionalBlockHints(TypedDict, total=False):
+    """Hints of the functional block provider."""
+
+    state: Required[SemanticsState]
+    parser_version: str
+    functional_blocks_found: list[str]
+
+
+@dataclass(frozen=True)
+class GroupSelectOptionRef:
+    """One option of a group select - options are mutually exclusive alternatives."""
+
+    # config path of the group select, eg. ("color",)
+    path: ConfigPath
+    # position in the group select - lower is preferred
+    index: int
 
 
 @dataclass(frozen=True)
@@ -60,7 +88,7 @@ class DpaSlotTarget:
     """A `write` or `state` key of a GASelector a DPA can be assigned to."""
 
     # config path to the group address selector, eg. ("color", "ga_color")
-    path: tuple[str, ...]
+    path: ConfigPath
     slot: GaSlot
     selector: GASelector
     # set when the selector is inside a group select option
@@ -81,9 +109,9 @@ class _SlotAssignment:
 
 def _iter_ga_selectors(
     validator: Any,
-    path: tuple[str, ...],
+    path: ConfigPath,
     group_select: GroupSelectOptionRef | None,
-) -> Iterator[tuple[tuple[str, ...], GASelector, GroupSelectOptionRef | None]]:
+) -> Iterator[tuple[ConfigPath, GASelector, GroupSelectOptionRef | None]]:
     """Yield GASelectors of a schema with their config path and group select scope."""
     if isinstance(validator, probatio.All):
         # AllSerializeFirst: only the first validator holds the UI schema
@@ -102,12 +130,10 @@ def _iter_ga_selectors(
             if isinstance(value, GASelector):
                 yield (key_path, value, group_select)
             elif isinstance(value, GroupSelect):
-                # group select options nest config under the group selects key
-                # and are mutually exclusive alternatives
                 assert isinstance(value.schema, GroupSelectSchema)
                 for index, option in enumerate(value.schema.validators):
                     yield from _iter_ga_selectors(
-                        option.schema, key_path, (key_path, index)
+                        option.schema, key_path, GroupSelectOptionRef(key_path, index)
                     )
             elif isinstance(value, KNXSection):
                 yield from _iter_ga_selectors(value.schema, key_path, group_select)
@@ -115,10 +141,7 @@ def _iter_ga_selectors(
 
 @cache
 def _collect_dpa_index(platform: Platform) -> dict[str, DpaSlotTarget]:
-    """Map DPA ids (eg. "417.52") to their target key in a platform schema.
-
-    First occurrence of a DPA wins.
-    """
+    """Map DPA ids (eg. "417.52") to their target key in a platform schema."""
     index: dict[str, DpaSlotTarget] = {}
     for path, selector, group_select in _iter_ga_selectors(
         KNX_SCHEMA_FOR_PLATFORM[platform], (), None
@@ -129,16 +152,39 @@ def _collect_dpa_index(platform: Platform) -> dict[str, DpaSlotTarget]:
         }
         for slot, dpas in slot_dpas.items():
             for dpa in dpas or ():
-                index.setdefault(
-                    dpa,
-                    DpaSlotTarget(
-                        path=path,
-                        slot=slot,
-                        selector=selector,
-                        group_select=group_select,
-                    ),
+                if dpa in index:
+                    raise ValueError(
+                        f"DPA {dpa} is annotated multiple times in the {platform} schema"
+                    )
+                index[str(dpa)] = DpaSlotTarget(
+                    path=path,
+                    slot=slot,
+                    selector=selector,
+                    group_select=group_select,
                 )
     return index
+
+
+@cache
+def _functional_block_platforms() -> dict[str, list[Platform]]:
+    """Map functional block numbers to platforms whose schema annotates DPAs of them.
+
+    The first platform of a functional block is the default suggestion.
+    """
+    platforms_by_block: dict[str, set[Platform]] = {}
+    for platform in KNX_SCHEMA_FOR_PLATFORM:
+        for dpa in _collect_dpa_index(platform):
+            block = dpa.partition(".")[0]
+            platforms_by_block.setdefault(block, set()).add(platform)
+
+    result: dict[str, list[Platform]] = {}
+    for block, platforms in platforms_by_block.items():
+        ordered = sorted(platforms)
+        if (default := FUNCTIONAL_BLOCK_DEFAULT_PLATFORM.get(block)) in ordered:
+            ordered.remove(default)
+            ordered.insert(0, default)
+        result[block] = ordered
+    return result
 
 
 def _selector_dpt_enum(selector: GASelector) -> type[Enum] | None:
@@ -190,7 +236,7 @@ def _try_assign_dpa(
     dpa: str,
     com_object: CommunicationObject,
     target: DpaSlotTarget,
-    assignments: dict[tuple[str, ...], _SlotAssignment],
+    assignments: dict[ConfigPath, _SlotAssignment],
 ) -> bool:
     """Assign a com objects group addresses to the config key targeted by a DPA.
 
@@ -230,51 +276,59 @@ def _try_assign_dpa(
 
 
 def _resolve_group_select_options(
-    assignments: dict[tuple[str, ...], _SlotAssignment],
+    assignments: dict[ConfigPath, _SlotAssignment],
     unmatched: set[str],
 ) -> None:
-    """Drop assignments of all but the first matched group select option.
+    """Drop assignments of all but the preferred matched group select option.
 
-    Group select options are mutually exclusive alternatives, but a device may
-    provide com objects matching multiple options (eg. combined and individual
-    colour addresses). Option order marks preference (eg. combined colour
-    addresses before individual ones).
+    A device may provide com objects matching multiple options (eg. combined
+    and individual colour addresses).
     """
     # group select path -> option index -> assignment paths
-    group_selects: dict[tuple[str, ...], dict[int, list[tuple[str, ...]]]] = {}
+    group_selects: dict[ConfigPath, dict[int, list[ConfigPath]]] = {}
     for path, assignment in assignments.items():
         if assignment.group_select is None:
             continue
-        gs_path, option = assignment.group_select
-        group_selects.setdefault(gs_path, {}).setdefault(option, []).append(path)
+        option = assignment.group_select
+        group_selects.setdefault(option.path, {}).setdefault(option.index, []).append(
+            path
+        )
     for options in group_selects.values():
         if len(options) <= 1:
             continue
         winning_option = min(options)
-        for option, paths in options.items():
-            if option == winning_option:
+        for option_index, paths in options.items():
+            if option_index == winning_option:
                 continue
             for path in paths:
                 unmatched.update(assignments[path].dpas)
                 del assignments[path]
 
 
-def _set_nested_value(
-    config: dict[str, Any], path: tuple[str, ...], value: Any
-) -> None:
+def _set_nested_value(config: dict[str, Any], path: ConfigPath, value: Any) -> None:
     """Set a value in a nested config dict, creating intermediate dicts."""
     for key in path[:-1]:
         config = config.setdefault(key, {})
     config[path[-1]] = value
 
 
+def _validates(platform: Platform, knx_config: dict[str, Any]) -> bool:
+    """Check whether a suggested `knx` config passes the platform schema."""
+    try:
+        KNX_SCHEMA_FOR_PLATFORM[platform](knx_config)
+    except probatio.Invalid:
+        return False
+    return True
+
+
 def _build_platform_suggestion(
     project: KNXProject,
     channel: ProjectChannel,
-    dpa_index: dict[str, DpaSlotTarget],
+    platform: Platform,
 ) -> PlatformSuggestion | None:
     """Build the suggested `knx` config for one channel and platform schema."""
-    assignments: dict[tuple[str, ...], _SlotAssignment] = {}
+    dpa_index = _collect_dpa_index(platform)
+    assignments: dict[ConfigPath, _SlotAssignment] = {}
     unmatched: set[str] = set()
 
     for com_object_id in channel["communication_object_ids"]:
@@ -290,15 +344,16 @@ def _build_platform_suggestion(
 
     _resolve_group_select_options(assignments, unmatched)
 
-    # a config without any write address can never validate for actuator platforms
-    if not any(CONF_GA_WRITE in a.ga_schema for a in assignments.values()):
-        return None
-
     knx_config: dict[str, Any] = {}
     matched_group_addresses: set[str] = set()
     for path, assignment in assignments.items():
         _set_nested_value(knx_config, path, assignment.ga_schema)
         matched_group_addresses.update(assignment.group_addresses)
+
+    # the schema decides what a complete configuration needs - eg. a write address
+    if not assignments or not _validates(platform, knx_config):
+        return None
+
     return PlatformSuggestion(
         knx=knx_config,
         # names carry the semantics a channel name often lacks
@@ -312,11 +367,78 @@ def _build_platform_suggestion(
     )
 
 
+def _build_channel_suggestion(
+    project: KNXProject,
+    device_address: str,
+    channel_id: str,
+    channel: ProjectChannel,
+) -> ProviderSuggestion | None:
+    """Build the suggestion for one channel, if it has supported functional blocks."""
+    functional_block_platforms = _functional_block_platforms()
+    functional_blocks = [
+        fb
+        for fb in channel["functional_blocks"] or ()
+        if fb in functional_block_platforms
+    ]
+    # platforms able to represent the channels functional blocks - ordered, deduplicated
+    platform_options = dict.fromkeys(
+        platform
+        for fb in functional_blocks
+        for platform in functional_block_platforms[fb]
+    )
+    suggestions = {
+        platform.value: suggestion
+        for platform in platform_options
+        if (suggestion := _build_platform_suggestion(project, channel, platform))
+        is not None
+    }
+    if not suggestions:
+        return None
+    device = project["devices"][device_address]
+    return ProviderSuggestion(
+        # channel ids are only unique within a device
+        id=f"{device_address}_{channel_id}",
+        suggested_name=channel["name"] or device["name"],
+        group_id=device_address,
+        group_name=device["name"],
+        secondary_info=channel["name"],
+        platform_options=list(suggestions),
+        suggestions=suggestions,
+        metadata={"functional_blocks": functional_blocks},
+    )
+
+
+def _disambiguate_names(candidates: list[ProviderSuggestion]) -> None:
+    """Prefix names used multiple times with their device name."""
+    name_counts = Counter(candidate["suggested_name"] for candidate in candidates)
+    for candidate in candidates:
+        if name_counts[candidate["suggested_name"]] > 1 and candidate["secondary_info"]:
+            candidate["suggested_name"] = (
+                f"{candidate['group_name']} {candidate['secondary_info']}"
+            )
+
+
+def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
+    """Build suggestions for all channels with supported functional blocks."""
+    candidates = [
+        candidate
+        for device_address, device in project["devices"].items()
+        for channel_id, channel in device["channels"].items()
+        if (
+            candidate := _build_channel_suggestion(
+                project, device_address, channel_id, channel
+            )
+        )
+        is not None
+    ]
+    _disambiguate_names(candidates)
+    return candidates
+
+
 class FunctionalBlockSuggestionProvider(SuggestionProvider):
     """Suggest entities from functional block semantics of imported project data."""
 
-    # marks suggestions of this provider for the frontend
-    provider_id: ClassVar[str] = "fb"
+    provider_id = "fb"
 
     @override
     async def async_get_suggestions(
@@ -325,13 +447,19 @@ class FunctionalBlockSuggestionProvider(SuggestionProvider):
         """Generate entity suggestions from project data."""
         project = await knx.project.get_knxproject()
         if project is None:
-            return ProviderResult(suggestions=[], hints={"state": "no_project"})
+            return ProviderResult(
+                suggestions=[],
+                hints=FunctionalBlockHints(state=SemanticsState.NO_PROJECT),
+            )
 
         parser_version = project["info"]["xknxproject_version"]
         if AwesomeVersion(parser_version) < MIN_SEMANTICS_PARSER_VERSION:
             return ProviderResult(
                 suggestions=[],
-                hints={"state": "outdated_parser", "parser_version": parser_version},
+                hints=FunctionalBlockHints(
+                    state=SemanticsState.OUTDATED_PARSER,
+                    parser_version=parser_version,
+                ),
             )
         functional_blocks_found = {
             fb
@@ -340,92 +468,15 @@ class FunctionalBlockSuggestionProvider(SuggestionProvider):
             for fb in channel["functional_blocks"] or ()
         }
         if not functional_blocks_found:
-            return ProviderResult(suggestions=[], hints={"state": "no_semantics"})
+            return ProviderResult(
+                suggestions=[],
+                hints=FunctionalBlockHints(state=SemanticsState.NO_SEMANTICS),
+            )
 
         return ProviderResult(
-            suggestions=self._build_suggestions(hass, knx, project),
-            hints={
-                "state": "ok",
-                "functional_blocks_found": sorted(functional_blocks_found),
-            },
+            suggestions=_build_suggestions(project),
+            hints=FunctionalBlockHints(
+                state=SemanticsState.OK,
+                functional_blocks_found=sorted(functional_blocks_found),
+            ),
         )
-
-    def _build_suggestions(
-        self, hass: HomeAssistant, knx: KNXModule, project: KNXProject
-    ) -> list[EntitySuggestion]:
-        """Build suggestions for all channels with supported functional blocks."""
-        candidates = [
-            candidate
-            for device_address, device in project["devices"].items()
-            for channel_id, channel in device["channels"].items()
-            if (
-                candidate := self._build_channel_suggestion(
-                    project, device_address, channel_id, channel
-                )
-            )
-            is not None
-        ]
-        self._disambiguate_names(project, candidates)
-        return candidates
-
-    def _build_channel_suggestion(
-        self,
-        project: KNXProject,
-        device_address: str,
-        channel_id: str,
-        channel: ProjectChannel,
-    ) -> EntitySuggestion | None:
-        """Build the suggestion for one channel, if it has supported functional blocks."""
-        functional_blocks = [
-            fb
-            for fb in channel["functional_blocks"] or ()
-            if fb in FUNCTIONAL_BLOCK_PLATFORMS
-        ]
-        # platforms able to represent the channels functional blocks - ordered, deduplicated
-        platform_options = dict.fromkeys(
-            platform
-            for fb in functional_blocks
-            for platform in FUNCTIONAL_BLOCK_PLATFORMS[fb]
-        )
-        suggestions = {
-            platform.value: suggestion
-            for platform in platform_options
-            if (
-                suggestion := _build_platform_suggestion(
-                    project, channel, _collect_dpa_index(platform)
-                )
-            )
-            is not None
-        }
-        if not suggestions:
-            return None
-        device = project["devices"][device_address]
-        return EntitySuggestion(
-            # channel ids are only unique within a device
-            id=f"{device_address}_{channel_id}",
-            source=self.provider_id,
-            suggested_name=channel["name"] or device["name"],
-            group_id=device_address,
-            group_name=device["name"],
-            secondary_info=channel["name"],
-            platform_options=list(suggestions),
-            suggestions=suggestions,
-            # filled by the orchestrator
-            existing_entity_ids=[],
-            metadata={"functional_blocks": functional_blocks},
-        )
-
-    def _disambiguate_names(
-        self, project: KNXProject, candidates: list[EntitySuggestion]
-    ) -> None:
-        """Prefix names used multiple times with their device name."""
-        name_counts = Counter(candidate["suggested_name"] for candidate in candidates)
-        for candidate in candidates:
-            if (
-                name_counts[candidate["suggested_name"]] > 1
-                and candidate["secondary_info"]
-            ):
-                device = project["devices"][candidate["group_id"]]
-                candidate["suggested_name"] = (
-                    f"{device['name']} {candidate['secondary_info']}"
-                )

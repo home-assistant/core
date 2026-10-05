@@ -1,7 +1,7 @@
 """Base class for KNX entity suggestion providers."""
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 
@@ -19,7 +19,10 @@ class SuggestionProvider(ABC):
     information for empty result hints in `ProviderResult["hints"]`.
     """
 
-    provider_id: ClassVar[str]
+    @property
+    @abstractmethod
+    def provider_id(self) -> str:
+        """Identify the provider - used as prefix of its suggestion ids."""
 
     @abstractmethod
     async def async_get_suggestions(
