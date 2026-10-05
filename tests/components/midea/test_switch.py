@@ -21,7 +21,13 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -329,7 +335,7 @@ async def test_washing_machine_switch_services(
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_{switch}"]
 
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
     await _assert_service_call(
         hass,
@@ -340,7 +346,7 @@ async def test_washing_machine_switch_services(
     )
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     await _assert_service_call(
         hass,
@@ -351,7 +357,7 @@ async def test_washing_machine_switch_services(
     )
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_a1_pump_services(
@@ -371,7 +377,7 @@ async def test_a1_pump_services(
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_pump"]
 
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
     await _assert_service_call(
         hass,
@@ -382,7 +388,7 @@ async def test_a1_pump_services(
     )
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     await _assert_service_call(
         hass,
@@ -393,7 +399,7 @@ async def test_a1_pump_services(
     )
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_a1_pump_not_created_without_capability(
@@ -434,21 +440,21 @@ async def test_switch_unknown_when_attribute_becomes_non_bool(
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_aux_heating"]
     assert (state := hass.states.get(entity_entry.entity_id))
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
     device.attributes[ACAttributes.aux_heating] = True
     device.notify_update({ACAttributes.aux_heating: True})
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_entry.entity_id))
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     device.attributes[ACAttributes.aux_heating] = None
     device.notify_update({ACAttributes.aux_heating: None})
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_entry.entity_id))
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_switch_turn_on_raises_on_device_communication_error(
