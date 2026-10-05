@@ -15,6 +15,7 @@
       "fix_flow": {
         "abort": {
           "could_not_import": "Failed to import the config entry for the Group helper\n**Error:** {error}\n\nPlease manually remove the Min/Max helper and create your new Group helper.",
+          "could_not_start_group_entity": "The new Group entity has errored and can not start. Remove the Min/Max helper to clear this repair, then create a Group sensor if needed.",
           "entity_not_found": "The Min/Max entity no longer exists. Remove the remaining Min/Max helper to clear this repair, then create a Group sensor if needed."
         },
         "step": {

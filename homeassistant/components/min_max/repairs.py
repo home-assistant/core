@@ -1,5 +1,6 @@
 """Repairs platform for the Min/Max integration."""
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 import probatio
@@ -11,7 +12,7 @@ from homeassistant.components.repairs import (
     RepairsFlowResult,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -71,6 +72,23 @@ class MigrateToGroupSensorFlow(RepairsFlow):
                         "error": import_result["description_placeholders"]["error"]
                     },
                 )
+            new_config_entry_id = import_result["result"].entry_id
+            # Wait for the new config entry to be fully set up
+            for i in range(10):
+                new_entry = self.hass.config_entries.async_get_entry(
+                    new_config_entry_id
+                )
+                if TYPE_CHECKING:
+                    assert new_entry
+                if new_entry.state is ConfigEntryState.LOADED:
+                    break
+                if i == 9:
+                    await self.hass.config_entries.async_remove(new_config_entry_id)
+                    return self.async_abort(
+                        reason="could_not_start_group_entity",
+                    )
+                await asyncio.sleep(1)
+
             return self.async_create_entry(data={})
 
         entity_info = entity_reg.async_get(old_entity)

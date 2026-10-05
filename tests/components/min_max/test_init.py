@@ -1,5 +1,7 @@
 """Test the Min/Max integration."""
 
+from unittest.mock import patch
+
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -289,3 +291,82 @@ async def test_issue_is_deleted_on_removal(
         DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
     )
     assert issue is None
+
+
+async def test_issue_is_aborted_on_could_not_start_group(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test migrating to group sensors fails when group setup fails."""
+    assert await async_setup_component(hass, "repairs", {})
+    hass.states.async_set("sensor.input_one", "10")
+    hass.states.async_set("sensor.input_two", "20")
+
+    input_sensors = ["sensor.input_one", "sensor.input_two"]
+
+    min_max_entity_id = "sensor.my_min_max"
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        entry_id="123",
+        options={
+            "entity_ids": input_sensors,
+            "name": "My min_max",
+            "round_digits": 2.0,
+            "type": "max",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get(min_max_entity_id)
+    assert entity is not None
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable is True
+    assert issue.breaks_in_ha_version == "2026.12.0"
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {"title": "My min_max"}
+    assert data["step_id"] == "migrate"
+
+    with (
+        patch(
+            "homeassistant.components.group.async_setup_entry", return_value=False
+        ) as mock_setup_entry,
+        patch("homeassistant.components.min_max.repairs.asyncio.sleep"),
+    ):
+        data = await process_repair_fix_flow(client, flow_id, json={})
+        await hass.async_block_till_done()
+
+    assert mock_setup_entry.called
+    assert data["type"] == FlowResultType.ABORT
+
+    entity = entity_registry.async_get(min_max_entity_id)
+    assert entity.config_entry_id is not None
+    assert entity.config_entry_id == config_entry.entry_id
+    assert entity.unique_id == config_entry.entry_id
+    assert entity.platform == DOMAIN
+
+    assert not hass.config_entries.async_has_entries(GROUP_DOMAIN)
