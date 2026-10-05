@@ -83,7 +83,8 @@ class MigrateToGroupSensorFlow(RepairsFlow):
                 if new_entry.state is ConfigEntryState.LOADED:
                     break
                 if i == 9:
-                    await self.hass.config_entries.async_remove(new_config_entry_id)
+                    if self.hass.config_entries.async_get_entry(self.entry_id):
+                        await self.hass.config_entries.async_remove(new_config_entry_id)
                     return self.async_abort(
                         reason="could_not_start_group_entity",
                     )
