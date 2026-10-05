@@ -31,6 +31,18 @@
       "appliance_state": {
         "default": "mdi:information-outline"
       },
+      "bottomoven_running_time": {
+        "default": "mdi:timer-outline"
+      },
+      "bottomoven_start_at": {
+        "default": "mdi:timer-play-outline"
+      },
+      "bottomoven_time_left": {
+        "default": "mdi:timer-outline"
+      },
+      "end_at": {
+        "default": "mdi:timer-pause-outline"
+      },
       "food_probe_state": {
         "default": "mdi:thermometer-probe"
       },
@@ -39,6 +51,24 @@
       },
       "remote_control": {
         "default": "mdi:remote"
+      },
+      "running_time": {
+        "default": "mdi:timer-outline"
+      },
+      "start_at": {
+        "default": "mdi:timer-play-outline"
+      },
+      "time_left": {
+        "default": "mdi:timer-outline"
+      },
+      "upperoven_running_time": {
+        "default": "mdi:timer-outline"
+      },
+      "upperoven_start_at": {
+        "default": "mdi:timer-play-outline"
+      },
+      "upperoven_time_left": {
+        "default": "mdi:timer-outline"
       }
     }
   }

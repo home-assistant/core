@@ -1,0 +1,5163 @@
+{
+  "applianceInfo": {
+    "serialNumber": "23300001",
+    "pnc": "999007132",
+    "brand": "AEG",
+    "deviceType": "WASHER_DRYER",
+    "model": "9000 Series",
+    "variant": "LWR9W80609",
+    "colour": "WHITE"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "CHECK_DOOR": {},
+        "CHECK_DRAIN_FILTER": {},
+        "CHECK_INLET_TAP": {},
+        "CLEAN_FLUFF_DRAWER": {},
+        "DETERGENT_OVERDOSING": {},
+        "DOOR": {},
+        "EMPTY_WATER_CONTAINER": {},
+        "MACHINE_RESTART": {},
+        "POWER_FAILURE": {},
+        "STEAM_TANK_FULL": {},
+        "TOP_UP_SALT": {},
+        "UNBALANCED_LAUNDRY": {},
+        "UNSTABLE_SUPPLY_VOLTAGE": {},
+        "WATER_CONTAINER": {},
+        "WATER_LEAK": {}
+      }
+    },
+    "applianceCareAndMaintenance0": {
+      "access": "readwrite",
+      "type": "careMaintenance"
+    },
+    "applianceCareAndMaintenance0/maint1_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint1_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint2_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint3_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint4_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance0/maint5_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1": {
+      "access": "readwrite",
+      "type": "careMaintenance"
+    },
+    "applianceCareAndMaintenance1/maint10_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint10_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint10_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint10_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint6_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint6_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint6_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint6_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint7_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint7_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint7_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint7_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint8_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint8_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint8_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint8_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint9_ID": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint9_mng_by_cloud": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint9_occured": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {}
+    },
+    "applianceCareAndMaintenance1/maint9_threshold": {
+      "access": "readwrite",
+      "type": "int",
+      "values": {}
+    },
+    "applianceFeatureFinishIn": {
+      "access": "constant",
+      "default": 1,
+      "type": "number"
+    },
+    "applianceMainBoardSwVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "applianceMode": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "DIAGNOSTIC": {},
+        "NORMAL": {},
+        "SERVICE": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "PAUSE": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "RESUME": {},
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "PAUSED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "PAUSE": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DELAYED_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "READY_TO_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "ne"
+          }
+        },
+        {
+          "action": {
+            "defaultExtraRinse": {
+              "access": "read"
+            },
+            "endOfCycleSound": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "RUNNING",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DELAYED_START",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "defaultExtraRinse": {
+              "access": "default"
+            },
+            "endOfCycleSound": {
+              "access": "default"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "READY_TO_START",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "IDLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "defaultExtraRinse": {
+              "access": "read"
+            },
+            "endOfCycleSound": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "PAUSED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "END_OF_CYCLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "ON": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "IDLE",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ALARM": {},
+        "DELAYED_START": {},
+        "END_OF_CYCLE": {},
+        "IDLE": {},
+        "OFF": {},
+        "PAUSED": {},
+        "READY_TO_START": {},
+        "RUNNING": {}
+      }
+    },
+    "applianceTotalWorkingTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "applianceUiSwVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "autoDosing": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "autoDosing/adLocalFineTuning": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "autoDosing/adTankAConfiguration": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "autoDosing/adTankBConfiguration": {
+              "default": "DISABLED"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "DISABLED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "autoDosing/adTankBConfiguration",
+              "operand_2": "SOFTENER",
+              "operator": "ne"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "DETERGENT_DUAL": {},
+        "DISABLED": {}
+      }
+    },
+    "autoDosing/adTankADetStandardDose": {
+      "access": "readwrite",
+      "default": 110,
+      "max": 200,
+      "min": 15,
+      "step": 1,
+      "type": "number"
+    },
+    "autoDosing/adTankBConfiguration": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "autoDosing/adTankBDetStandardDose": {
+              "disabled": false
+            },
+            "autoDosing/adTankBSoftStandardDose": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DETERGENT_DUAL",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "autoDosing/adTankBDetStandardDose": {
+              "disabled": true
+            },
+            "autoDosing/adTankBSoftStandardDose": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "SOFTENER",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "autoDosing/adTankBDetStandardDose": {
+              "disabled": true
+            },
+            "autoDosing/adTankBSoftStandardDose": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "LINK",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DISABLED",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "autoDosing/adTankAConfiguration": {
+              "default": "DETERGENT_DUAL"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "DETERGENT_DUAL",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "LINK",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "DETERGENT_DUAL": {},
+        "DISABLED": {},
+        "LINK": {},
+        "SOFTENER": {}
+      }
+    },
+    "autoDosing/adTankBDetStandardDose": {
+      "access": "readwrite",
+      "default": 110,
+      "max": 200,
+      "min": 15,
+      "step": 1,
+      "type": "number"
+    },
+    "autoDosing/adTankBSoftStandardDose": {
+      "access": "readwrite",
+      "default": 25,
+      "max": 100,
+      "min": 15,
+      "step": 1,
+      "type": "number"
+    },
+    "clearCyclePersonalizationCmd": {
+      "access": "write",
+      "type": "number",
+      "values": {
+        "0": {}
+      }
+    },
+    "cycleMemory1": {
+      "access": "readwrite",
+      "reference": "userSelections",
+      "type": "complex"
+    },
+    "cycleMemory2": {
+      "access": "readwrite",
+      "reference": "userSelections",
+      "type": "complex"
+    },
+    "cycleMemory3": {
+      "access": "readwrite",
+      "reference": "userSelections",
+      "type": "complex"
+    },
+    "cyclePersonalization": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "cyclePersonalization/EWX1493A_anticreaseNoSteam": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_dryMode": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "dryingNominalLoadWeight": {
+              "disabled": false
+            },
+            "washingNominalLoadWeight": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "dryingNominalLoadWeight": {
+              "disabled": true
+            },
+            "washingNominalLoadWeight": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": false,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_nightCycle": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_preWashPhase": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_rinseHold": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_stain": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_steamMode": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "cyclePersonalization/EWX1493A_wetMode": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "cyclePersonalization/adFineTuneDetLevel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "FINE_TUNE_DET_LEV_1": {},
+        "FINE_TUNE_DET_LEV_2": {},
+        "FINE_TUNE_DET_LEV_3": {},
+        "FINE_TUNE_DET_LEV_4": {},
+        "FINE_TUNE_DET_LEV_5": {},
+        "FINE_TUNE_DET_NOT_AVAILABLE": {}
+      }
+    },
+    "cyclePersonalization/adFineTuneSoftLevel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "FINE_TUNE_SOFT_LEV_1": {},
+        "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+      }
+    },
+    "cyclePersonalization/adTankASel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "AUTODOSE_DETERGENT_DUAL_OFF": {},
+        "AUTODOSE_DETERGENT_DUAL_ON": {},
+        "AUTODOSE_LINK_OFF": {},
+        "AUTODOSE_LINK_ON": {},
+        "AUTODOSE_OFF": {},
+        "AUTODOSE_SOFTENER_OFF": {},
+        "AUTODOSE_SOFTENER_ON": {}
+      }
+    },
+    "cyclePersonalization/adTankBSel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "AUTODOSE_DETERGENT_DUAL_OFF": {},
+        "AUTODOSE_DETERGENT_DUAL_ON": {},
+        "AUTODOSE_LINK_OFF": {},
+        "AUTODOSE_LINK_ON": {},
+        "AUTODOSE_OFF": {},
+        "AUTODOSE_SOFTENER_OFF": {},
+        "AUTODOSE_SOFTENER_ON": {}
+      }
+    },
+    "cyclePersonalization/analogSpinSpeed": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "0_RPM": {},
+        "1000_RPM": {},
+        "1200_RPM": {},
+        "1400_RPM": {},
+        "1600_RPM": {},
+        "400_RPM": {},
+        "600_RPM": {},
+        "800_RPM": {}
+      }
+    },
+    "cyclePersonalization/analogTemperature": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "20_CELSIUS": {},
+        "30_CELSIUS": {},
+        "40_CELSIUS": {},
+        "50_CELSIUS": {},
+        "60_CELSIUS": {},
+        "95_CELSIUS": {},
+        "COLD": {}
+      }
+    },
+    "cyclePersonalization/dryingTime": {
+      "access": "readwrite",
+      "default": 0,
+      "max": 300,
+      "min": 0,
+      "step": 10,
+      "type": "number"
+    },
+    "cyclePersonalization/humidityTarget": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "CUPBOARD": {},
+        "EXTRA": {},
+        "IRON": {},
+        "UNDEFINED": {
+          "disabled": true
+        }
+      }
+    },
+    "cyclePersonalization/programUID": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "BABY_PR_BABY_WM_WD": {},
+        "BEDLINEN_XL_PR_BEDLINENXL": {},
+        "BLANKET_PR_DUVET": {},
+        "COTTON_PR_COTTONS": {},
+        "COTTON_PR_ECO40-60": {},
+        "DELICATE_PR_DELICATES": {},
+        "DENIM_PR_DENIM": {},
+        "DRUM_CLEAN_PR_MACHINECLEAN": {},
+        "EXPRESS_PR_BUSINESSSHIRT": {},
+        "EXPRESS_PR_MIXLOAD": {},
+        "LINEN_PR_LINEN_WM_WD": {},
+        "MACHINE_SETTINGS_HIDDEN_TEST": {
+          "disabled": true
+        },
+        "ONE_ITEM_FAST_PR_1ITEMFAST": {},
+        "PET_HAIR_PR_PETHAIR": {},
+        "QUICK_WASH_DRY_PR_QUICK20WASH_DRY60": {},
+        "SANITISE60_PR_ANTIALLERGYVAPOUR": {},
+        "SANITISE60_PR_HYGIENE": {},
+        "SHOES_PR_RUNNINGSHOES": {},
+        "SOCCER_RUGBY_SOCCER_RUGBY": {},
+        "SOFTENER_PR_RINSE": {},
+        "SPIN_PR_DRAIN_SPIN": {},
+        "SPORTWEAR_PR_SPORTWEAR_WX": {},
+        "SPORT_JACKETS_PR_DOWN_JACKET": {},
+        "SPORT_JACKETS_PR_OUTDOOR": {},
+        "SPORT_JACKETS_PR_SKIING": {},
+        "STEAM_DEWRINKLER_PR_STEAMCASHMERE": {},
+        "SYNTHETIC_PR_EASYIRON": {},
+        "SYNTHETIC_PR_SYNTHETICS": {},
+        "TOWELS_PR_TOWELS_BASE": {},
+        "TRAINING_GEAR_PR_DAILYTRAINING": {},
+        "WOOL_PR_WOOL_HANDWASH": {}
+      }
+    },
+    "cyclePersonalization/timeManagerLevel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "DAILY": {},
+        "NORMAL": {},
+        "SUPER_QUICK": {}
+      }
+    },
+    "cyclePhase": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ANTICREASE",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ANTICREASE": {},
+        "COOL": {},
+        "CYCLE_PHASE_HIDDEN": {
+          "disabled": true
+        },
+        "DRAIN": {},
+        "DRY": {},
+        "PREWASH": {},
+        "RINSE": {},
+        "SPIN": {},
+        "STEAM": {},
+        "UNAVAILABLE": {},
+        "WASH": {}
+      }
+    },
+    "cycleSubPhase": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "ADD_GARMENT": {},
+        "NOT_AVAILABLE": {
+          "disabled": true
+        },
+        "RINSE": {},
+        "RINSE_HOLD": {},
+        "SAFETY_COOL_DOWN": {},
+        "SOAKING": {},
+        "WASH": {}
+      }
+    },
+    "defaultExtraRinse": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "EXTRA_RINSE_1": {},
+        "EXTRA_RINSE_OFF": {}
+      }
+    },
+    "doorState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "CLOSED": {},
+        "OPEN": {}
+      }
+    },
+    "dryingNominalLoadWeight": {
+      "access": "read",
+      "max": 20000,
+      "min": 0,
+      "step": 1,
+      "type": "number",
+      "values": {
+        "NOT_AVAILABLE": {
+          "disabled": true
+        }
+      }
+    },
+    "endOfCycleSound": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "NO_SOUND": {},
+        "SHORT_SOUND": {}
+      }
+    },
+    "executeCommand": {
+      "access": "write",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {},
+        "PAUSE": {},
+        "RESUME": {},
+        "START": {},
+        "STOPRESET": {}
+      }
+    },
+    "fCMiscellaneousState": {
+      "access": "read",
+      "type": "complex"
+    },
+    "fCMiscellaneousState/adTankADetLoaded": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/adTankBSoftLoaded": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/detergentExtradosage": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/ecoLevel": {
+      "access": "read",
+      "type": "number",
+      "values": {
+        "5": {},
+        "6": {}
+      }
+    },
+    "fCMiscellaneousState/optisenseResult": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/softenerExtradosage": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/tankADetLoadForNominalWeight": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/tankAReserve": {
+      "access": "read",
+      "type": "boolean"
+    },
+    "fCMiscellaneousState/tankBDetLoadForNominalWeight": {
+      "access": "read",
+      "type": "number"
+    },
+    "fCMiscellaneousState/tankBReserve": {
+      "access": "read",
+      "type": "boolean"
+    },
+    "fCMiscellaneousState/waterUsage": {
+      "access": "read",
+      "type": "number"
+    },
+    "fcOptisenseLoadWeight": {
+      "access": "read",
+      "type": "number",
+      "values": {
+        "65408": {},
+        "65409": {},
+        "65410": {},
+        "65411": {},
+        "65412": {},
+        "NOT_AVAILABLE": {
+          "disabled": true
+        },
+        "OVERLOAD": {}
+      }
+    },
+    "minFinishInTime": {
+      "access": "read",
+      "type": "number",
+      "values": {
+        "INVALID_OR_NOT_SET_TIME": {}
+      }
+    },
+    "miscellaneous": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "networkInterfaceAlwaysOn": {
+      "access": "readwrite",
+      "default": "OFF",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ENABLED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "NOT_SAFETY_RELEVANT_ENABLED",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "DISABLED",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "remoteNotificationPending": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "OFF": {
+          "disabled": true
+        },
+        "ON": {
+          "disabled": true
+        }
+      }
+    },
+    "stopTime": {
+      "access": "readwrite",
+      "default": 0,
+      "max": 86400,
+      "min": 0,
+      "step": 3600,
+      "type": "number",
+      "values": {
+        "-1": {}
+      }
+    },
+    "timeToEnd": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalCycleCounter": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalDryCyclesCount": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalDryingTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalWashCyclesCount": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalWashDryCyclesCount": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalWashingTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "uiLockMode": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "userSelections": {
+      "access": "readwrite",
+      "type": "complex"
+    },
+    "userSelections/EWX1493A_anticreaseNoSteam": {
+      "access": "readwrite",
+      "default": false,
+      "triggers": [
+        {
+          "action": {
+            "userSelections/EWX1493A_nightCycle": {
+              "default": false
+            },
+            "userSelections/EWX1493A_rinseHold": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_dryMode": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "dryingNominalLoadWeight": {
+              "disabled": false
+            },
+            "userSelections/EWX1493A_nightCycle": {
+              "access": "read",
+              "default": false,
+              "disabled": true
+            },
+            "userSelections/EWX1493A_rinseHold": {
+              "access": "read",
+              "default": false,
+              "disabled": true
+            },
+            "userSelections/dryingTime": {
+              "disabled": false
+            },
+            "userSelections/humidityTarget": {
+              "disabled": false
+            },
+            "washingNominalLoadWeight": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "dryingNominalLoadWeight": {
+              "disabled": true
+            },
+            "userSelections/EWX1493A_nightCycle": {
+              "access": "default",
+              "disabled": false
+            },
+            "userSelections/EWX1493A_rinseHold": {
+              "access": "default",
+              "disabled": false
+            },
+            "userSelections/EWX1493A_wetMode": {
+              "default": true
+            },
+            "userSelections/dryingTime": {
+              "disabled": true
+            },
+            "userSelections/humidityTarget": {
+              "disabled": true
+            },
+            "washingNominalLoadWeight": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": false,
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/analogSpinSpeed": {
+              "default": "1000_RPM"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": true,
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "userSelections/analogSpinSpeed",
+              "operand_2": "1000_RPM",
+              "operator": "lt"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_nightCycle": {
+      "access": "readwrite",
+      "default": false,
+      "triggers": [
+        {
+          "action": {
+            "userSelections/EWX1493A_anticreaseNoSteam": {
+              "default": false
+            },
+            "userSelections/EWX1493A_rinseHold": {
+              "default": false
+            },
+            "userSelections/analogSpinSpeed": {
+              "default": "255"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_preWashPhase": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_rinseHold": {
+      "access": "readwrite",
+      "default": false,
+      "triggers": [
+        {
+          "action": {
+            "userSelections/EWX1493A_anticreaseNoSteam": {
+              "default": false
+            },
+            "userSelections/EWX1493A_nightCycle": {
+              "default": false
+            },
+            "userSelections/analogSpinSpeed": {
+              "default": "255"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": true,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_stain": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_steamMode": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "userSelections/EWX1493A_wetMode": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "userSelections/adFineTuneDetLevel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "FINE_TUNE_DET_LEV_1": {},
+        "FINE_TUNE_DET_LEV_2": {},
+        "FINE_TUNE_DET_LEV_3": {},
+        "FINE_TUNE_DET_LEV_4": {},
+        "FINE_TUNE_DET_LEV_5": {},
+        "FINE_TUNE_DET_NOT_AVAILABLE": {}
+      }
+    },
+    "userSelections/adFineTuneSoftLevel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "FINE_TUNE_SOFT_LEV_1": {},
+        "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+      }
+    },
+    "userSelections/adTankASel": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/adFineTuneDetLevel": {
+              "default": "FINE_TUNE_DET_LEV_3"
+            },
+            "userSelections/adTankBSel": {
+              "default": "AUTODOSE_LINK_OFF"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_LINK_OFF",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adTankBSel": {
+              "default": "AUTODOSE_LINK_ON"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_LINK_ON",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adFineTuneDetLevel": {
+              "default": "FINE_TUNE_DET_LEV_3"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_DETERGENT_DUAL_OFF",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adTankBSel": {
+              "default": "AUTODOSE_DETERGENT_DUAL_OFF"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "AUTODOSE_DETERGENT_DUAL_ON",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "userSelections/adTankBSel",
+              "operand_2": "AUTODOSE_DETERGENT_DUAL_ON",
+              "operator": "eq"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "AUTODOSE_DETERGENT_DUAL_OFF": {},
+        "AUTODOSE_DETERGENT_DUAL_ON": {},
+        "AUTODOSE_LINK_OFF": {},
+        "AUTODOSE_LINK_ON": {},
+        "AUTODOSE_OFF": {},
+        "AUTODOSE_SOFTENER_OFF": {},
+        "AUTODOSE_SOFTENER_ON": {}
+      }
+    },
+    "userSelections/adTankBSel": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/adFineTuneDetLevel": {
+              "default": "FINE_TUNE_DET_LEV_3"
+            },
+            "userSelections/adTankASel": {
+              "default": "AUTODOSE_LINK_OFF"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_LINK_OFF",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adTankASel": {
+              "default": "AUTODOSE_LINK_ON"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_LINK_ON",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adTankASel": {
+              "default": "AUTODOSE_DETERGENT_DUAL_OFF"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_DETERGENT_DUAL_ON",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adFineTuneDetLevel": {
+              "default": "FINE_TUNE_DET_LEV_3"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_DETERGENT_DUAL_OFF",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "userSelections/adFineTuneSoftLevel": {
+              "default": "FINE_TUNE_SOFT_NOT_AVAILABLE"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "AUTODOSE_SOFTENER_OFF",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "AUTODOSE_DETERGENT_DUAL_OFF": {},
+        "AUTODOSE_DETERGENT_DUAL_ON": {},
+        "AUTODOSE_LINK_OFF": {},
+        "AUTODOSE_LINK_ON": {},
+        "AUTODOSE_OFF": {},
+        "AUTODOSE_SOFTENER_OFF": {},
+        "AUTODOSE_SOFTENER_ON": {}
+      }
+    },
+    "userSelections/analogSpinSpeed": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/EWX1493A_nightCycle": {
+              "default": false
+            },
+            "userSelections/EWX1493A_rinseHold": {
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "255",
+            "operator": "ne"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "0_RPM": {},
+        "1000_RPM": {},
+        "1200_RPM": {},
+        "1400_RPM": {},
+        "1600_RPM": {},
+        "400_RPM": {},
+        "600_RPM": {},
+        "800_RPM": {}
+      }
+    },
+    "userSelections/analogTemperature": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/EWX1493A_stain": {
+              "access": "read",
+              "default": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "40_CELSIUS",
+            "operator": "lt"
+          }
+        },
+        {
+          "action": {
+            "userSelections/EWX1493A_stain": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "40_CELSIUS",
+            "operator": "ge"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "20_CELSIUS": {},
+        "30_CELSIUS": {},
+        "40_CELSIUS": {},
+        "50_CELSIUS": {},
+        "60_CELSIUS": {},
+        "95_CELSIUS": {},
+        "COLD": {}
+      }
+    },
+    "userSelections/dryingTime": {
+      "access": "readwrite",
+      "default": 0,
+      "max": 300,
+      "min": 0,
+      "step": 10,
+      "triggers": [
+        {
+          "action": {
+            "userSelections/humidityTarget": {
+              "default": "UNDEFINED"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 0,
+            "operator": "ne"
+          }
+        }
+      ],
+      "type": "number"
+    },
+    "userSelections/humidityTarget": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "userSelections/dryingTime": {
+              "default": 0
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "UNDEFINED",
+            "operator": "ne"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "CUPBOARD": {},
+        "EXTRA": {},
+        "IRON": {},
+        "UNDEFINED": {
+          "disabled": true
+        }
+      }
+    },
+    "userSelections/memoryId": {
+      "access": "readwrite",
+      "type": "number",
+      "values": {
+        "10": {},
+        "20": {},
+        "30": {}
+      }
+    },
+    "userSelections/programUID": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "BABY_PR_BABY_WM_WD": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 210,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "BEDLINEN_XL_PR_BEDLINENXL": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 210,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "BLANKET_PR_DUVET": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "800_RPM",
+            "disabled": false,
+            "values": {
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "COTTON_PR_COTTONS": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "40_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "95_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 300,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "DAILY": {},
+              "NORMAL": {},
+              "SUPER_QUICK": {}
+            }
+          }
+        },
+        "COTTON_PR_ECO40-60": {
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "40_CELSIUS",
+            "disabled": false,
+            "values": {
+              "40_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 300,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          }
+        },
+        "DELICATE_PR_DELICATES": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 180,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {},
+              "SUPER_QUICK": {}
+            }
+          }
+        },
+        "DENIM_PR_DENIM": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 300,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "DRUM_CLEAN_PR_MACHINECLEAN": {
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "60_CELSIUS",
+            "disabled": false,
+            "values": {
+              "60_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "read",
+            "default": 0,
+            "disabled": false,
+            "max": 0,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "EXPRESS_PR_BUSINESSSHIRT": {
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 250,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          }
+        },
+        "EXPRESS_PR_MIXLOAD": {
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 210,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          }
+        },
+        "LINEN_PR_LINEN_WM_WD": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 180,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "MACHINE_SETTINGS_HIDDEN_TEST": {
+          "disabled": true
+        },
+        "ONE_ITEM_FAST_PR_1ITEMFAST": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "30_CELSIUS": {},
+              "40_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 150,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "PET_HAIR_PR_PETHAIR": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 150,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "QUICK_WASH_DRY_PR_QUICK20WASH_DRY60": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1200_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "30_CELSIUS": {},
+              "40_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "read",
+            "default": 0,
+            "disabled": false,
+            "max": 0,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "DAILY",
+            "disabled": false,
+            "values": {
+              "DAILY": {}
+            }
+          }
+        },
+        "SANITISE60_PR_ANTIALLERGYVAPOUR": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "60_CELSIUS",
+            "disabled": false,
+            "values": {
+              "60_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 300,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SANITISE60_PR_HYGIENE": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "60_CELSIUS",
+            "disabled": false,
+            "values": {
+              "60_CELSIUS": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 255,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SHOES_PR_RUNNINGSHOES": {
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1000_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 150,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SOCCER_RUGBY_SOCCER_RUGBY": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "read",
+            "default": true,
+            "disabled": true
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "40_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 200,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SOFTENER_PR_RINSE": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "COLD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          }
+        },
+        "SPIN_PR_DRAIN_SPIN": {
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "0_RPM": {},
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "COLD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          }
+        },
+        "SPORTWEAR_PR_SPORTWEAR_WX": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 250,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SPORT_JACKETS_PR_DOWN_JACKET": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 200,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SPORT_JACKETS_PR_OUTDOOR": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 200,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "SPORT_JACKETS_PR_SKIING": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 200,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "STEAM_DEWRINKLER_PR_STEAMCASHMERE": {
+          "userSelections/EWX1493A_steamMode": {
+            "access": "read",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "40_CELSIUS",
+            "disabled": true,
+            "values": {
+              "40_CELSIUS": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          }
+        },
+        "SYNTHETIC_PR_EASYIRON": {
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "800_RPM",
+            "disabled": false,
+            "values": {
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "DAILY": {},
+              "NORMAL": {},
+              "SUPER_QUICK": {}
+            }
+          }
+        },
+        "SYNTHETIC_PR_SYNTHETICS": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 250,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "DAILY": {},
+              "NORMAL": {},
+              "SUPER_QUICK": {}
+            }
+          }
+        },
+        "TOWELS_PR_TOWELS_BASE": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1600_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "1400_RPM": {},
+              "1600_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "40_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "95_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 300,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "EXTRA": {},
+              "IRON": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "DAILY",
+            "disabled": false,
+            "values": {
+              "DAILY": {},
+              "SUPER_QUICK": {}
+            }
+          }
+        },
+        "TRAINING_GEAR_PR_DAILYTRAINING": {
+          "userSelections/EWX1493A_anticreaseNoSteam": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_nightCycle": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_preWashPhase": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_stain": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankASel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "30_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "50_CELSIUS": {},
+              "60_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 250,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {},
+              "UNDEFINED": {
+                "disabled": true
+              }
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        },
+        "WOOL_PR_WOOL_HANDWASH": {
+          "userSelections/EWX1493A_dryMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_rinseHold": {
+            "access": "readwrite",
+            "default": false,
+            "disabled": false
+          },
+          "userSelections/EWX1493A_steamMode": {
+            "access": "readwrite",
+            "disabled": false
+          },
+          "userSelections/EWX1493A_wetMode": {
+            "access": "readwrite",
+            "default": true,
+            "disabled": false
+          },
+          "userSelections/adFineTuneDetLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_DET_LEV_1": {},
+              "FINE_TUNE_DET_LEV_2": {},
+              "FINE_TUNE_DET_LEV_3": {},
+              "FINE_TUNE_DET_LEV_4": {},
+              "FINE_TUNE_DET_LEV_5": {},
+              "FINE_TUNE_DET_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adFineTuneSoftLevel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "FINE_TUNE_SOFT_LEV_1": {},
+              "FINE_TUNE_SOFT_NOT_AVAILABLE": {}
+            }
+          },
+          "userSelections/adTankBSel": {
+            "access": "readwrite",
+            "disabled": false,
+            "values": {
+              "AUTODOSE_DETERGENT_DUAL_OFF": {},
+              "AUTODOSE_DETERGENT_DUAL_ON": {},
+              "AUTODOSE_LINK_OFF": {},
+              "AUTODOSE_LINK_ON": {},
+              "AUTODOSE_OFF": {},
+              "AUTODOSE_SOFTENER_OFF": {},
+              "AUTODOSE_SOFTENER_ON": {}
+            }
+          },
+          "userSelections/analogSpinSpeed": {
+            "access": "readwrite",
+            "default": "1200_RPM",
+            "disabled": false,
+            "values": {
+              "1000_RPM": {},
+              "1200_RPM": {},
+              "400_RPM": {},
+              "600_RPM": {},
+              "800_RPM": {}
+            }
+          },
+          "userSelections/analogTemperature": {
+            "access": "readwrite",
+            "default": "40_CELSIUS",
+            "disabled": false,
+            "values": {
+              "20_CELSIUS": {},
+              "30_CELSIUS": {},
+              "40_CELSIUS": {},
+              "COLD": {}
+            }
+          },
+          "userSelections/dryingTime": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": false,
+            "max": 150,
+            "min": 0,
+            "step": 10
+          },
+          "userSelections/humidityTarget": {
+            "access": "readwrite",
+            "default": "CUPBOARD",
+            "disabled": false,
+            "values": {
+              "CUPBOARD": {}
+            }
+          },
+          "userSelections/memoryId": {
+            "access": "readwrite",
+            "disabled": true,
+            "values": {
+              "10": {},
+              "20": {},
+              "30": {}
+            }
+          },
+          "userSelections/timeManagerLevel": {
+            "access": "readwrite",
+            "default": "NORMAL",
+            "disabled": false,
+            "values": {
+              "NORMAL": {}
+            }
+          }
+        }
+      }
+    },
+    "userSelections/programsOrder": {
+      "items": [
+        "MACHINE_SETTINGS_HIDDEN_TEST",
+        "COTTON_PR_ECO40-60",
+        "COTTON_PR_COTTONS",
+        "SYNTHETIC_PR_SYNTHETICS",
+        "DELICATE_PR_DELICATES",
+        "WOOL_PR_WOOL_HANDWASH",
+        "SPORT_JACKETS_PR_OUTDOOR",
+        "DRUM_CLEAN_PR_MACHINECLEAN",
+        "QUICK_WASH_DRY_PR_QUICK20WASH_DRY60",
+        "EXPRESS_PR_MIXLOAD",
+        "SANITISE60_PR_HYGIENE",
+        "SOFTENER_PR_RINSE",
+        "SPIN_PR_DRAIN_SPIN",
+        "SPORTWEAR_PR_SPORTWEAR_WX",
+        "TRAINING_GEAR_PR_DAILYTRAINING",
+        "SPORT_JACKETS_PR_DOWN_JACKET",
+        "SOCCER_RUGBY_SOCCER_RUGBY",
+        "SPORT_JACKETS_PR_SKIING",
+        "SHOES_PR_RUNNINGSHOES",
+        "BEDLINEN_XL_PR_BEDLINENXL",
+        "BLANKET_PR_DUVET",
+        "TOWELS_PR_TOWELS_BASE",
+        "PET_HAIR_PR_PETHAIR",
+        "SYNTHETIC_PR_EASYIRON",
+        "SANITISE60_PR_ANTIALLERGYVAPOUR",
+        "BABY_PR_BABY_WM_WD",
+        "DENIM_PR_DENIM",
+        "LINEN_PR_LINEN_WM_WD",
+        "ONE_ITEM_FAST_PR_1ITEMFAST",
+        "EXPRESS_PR_BUSINESSSHIRT",
+        "STEAM_DEWRINKLER_PR_STEAMCASHMERE"
+      ]
+    },
+    "userSelections/timeManagerLevel": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "DAILY": {},
+        "NORMAL": {},
+        "SUPER_QUICK": {}
+      }
+    },
+    "washingNominalLoadWeight": {
+      "access": "read",
+      "max": 20000,
+      "min": 0,
+      "step": 1,
+      "type": "number",
+      "values": {
+        "MAX_WASHING_LOAD": {
+          "disabled": true
+        }
+      }
+    }
+  }
+}
