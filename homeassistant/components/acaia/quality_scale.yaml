@@ -37,7 +37,12 @@ rules:
       Device is expected to be offline most of the time, but needs to connect quickly once available.
   unique-config-entry: done
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      Button actions only enqueue commands; aioacaia writes them in a background task,
+      and entities are unavailable while the scale is disconnected, so there is no
+      failure to raise from the action.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -82,7 +87,10 @@ rules:
     comment: |
       No noisy/non-essential entities.
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      No custom exceptions.
   icon-translations: done
   reconfiguration-flow:
     status: exempt
