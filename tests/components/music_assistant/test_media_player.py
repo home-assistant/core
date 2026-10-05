@@ -1,7 +1,9 @@
 """Test Music Assistant media player entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
+from music_assistant_client.helpers import LinkedUser
+from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
@@ -10,7 +12,7 @@ from music_assistant_models.enums import (
     QueueOption,
 )
 from music_assistant_models.errors import UserNotFoundError
-from music_assistant_models.media_items import Track
+from music_assistant_models.media_items import SearchResults, Track
 from music_assistant_models.player import PlayerMedia
 import probatio
 import pytest
@@ -24,6 +26,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEARCH_QUERY,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -33,6 +36,7 @@ from homeassistant.components.media_player import (
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SEARCH_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
@@ -101,6 +105,8 @@ from tests.components.tts.common import (
     MockTTSEntity,
     mock_config_entry_setup,
 )
+
+MOCK_USER_ID = "c7a700ca85784a458e210da573fab731"
 
 MOCK_TRACK = Track(
     item_id="1",
@@ -1479,3 +1485,54 @@ async def test_media_image_falls_back_to_queue_item(
     assert state.attributes["entity_picture"] == static_image_url
     # Verify the fallback path was actually taken
     music_assistant_client.get_media_item_image_url.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("schema_version", "user_id", "expected_user"),
+    [
+        pytest.param(
+            44,
+            MOCK_USER_ID,
+            LinkedUser(
+                provider=AuthProviderType.HOME_ASSISTANT,
+                user_id=MOCK_USER_ID,
+                required=False,
+            ),
+            id="calling user",
+        ),
+        pytest.param(44, None, None, id="no calling user"),
+        pytest.param(43, MOCK_USER_ID, None, id="server without user support"),
+    ],
+)
+async def test_search_media_acts_as_calling_user(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    user_id: str | None,
+    expected_user: LinkedUser | None,
+) -> None:
+    """Test that a search is performed on behalf of the user that asked for it.
+
+    A provider-link user reference needs a schema 44 server; being soft
+    (required=False), an older server is simply searched without impersonation.
+    """
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.server_info.schema_version = schema_version
+    MockUser(id=MOCK_USER_ID, is_owner=True).add_to_hass(hass)
+
+    with patch.object(
+        music_assistant_client.music, "search", return_value=SearchResults()
+    ) as search:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SEARCH_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                ATTR_MEDIA_SEARCH_QUERY: "nina chuba",
+            },
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=user_id),
+        )
+
+    assert search.call_args.kwargs["user"] == expected_user
