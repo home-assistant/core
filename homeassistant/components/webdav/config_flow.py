@@ -32,7 +32,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
             )
         ),
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             )

@@ -45,6 +45,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Class to manage fetching data from devolo Home Network devices."""
 
     config_entry: DevoloHomeNetworkConfigEntry
+    expensive = False
 
     def __init__(
         self,
@@ -274,6 +275,8 @@ class DevoloWifiNeighborAPsGetCoordinator(
     DevoloDataUpdateCoordinator[list[NeighborAPInfo]]
 ):
     """Class to manage fetching data from the WifiNeighborAPsGet endpoint."""
+
+    expensive = True
 
     def __init__(
         self,
