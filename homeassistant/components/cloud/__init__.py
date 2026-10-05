@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers import config_validation as cv, entityfilter, start
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
@@ -49,7 +49,9 @@ from homeassistant.util.signal_type import SignalType
 # startup
 from . import (
     account_link,
+    alexa_config,
     backup,  # noqa: F401
+    google_config,
     http_api,
 )
 from .assist_pipeline import async_create_cloud_pipeline
@@ -435,6 +437,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cloud.events.subscribe(event_type=CloudEventType.LOGOUT, handler=_on_cloud_logout)
 
     await cloud.initialize()
+
+    async def _async_migrate_assistant_settings(_: HomeAssistant) -> None:
+        """Migrate the assistant entity settings, connected or not."""
+        await alexa_config.async_migrate_entity_settings(hass, alexa_conf, prefs, cloud)
+        await google_config.async_migrate_entity_settings(
+            hass, google_conf, prefs, cloud
+        )
+
+    start.async_at_started(hass, _async_migrate_assistant_settings)
 
     if not cloud.is_logged_in:
         # Remove leftover config entries if the user is not logged in.

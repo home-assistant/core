@@ -221,7 +221,10 @@ CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+STORE_ENTITY_SETTINGS_VERSION = "entity_settings_version"
 STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
+
+ENTITY_SETTINGS_VERSION = 2
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"

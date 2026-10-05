@@ -6,7 +6,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, call, patch
 from uuid import uuid4
 
 import py
@@ -29,6 +29,7 @@ from homeassistant.components.google_assistant.http import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -700,3 +701,61 @@ async def test_async_get_users(
         assert await async_get_users(hass) == expected_users
 
         await hass.async_stop()
+
+
+@pytest.mark.parametrize(
+    ("stored_data", "expected_calls"),
+    [
+        pytest.param(
+            {"agent_user_ids": {"agent_1": {"local_webhook_id": "test_webhook"}}},
+            [call(ANY, "light.exposed")],
+            id="existing_store_migrates",
+        ),
+        pytest.param(None, [], id="new_store_has_nothing_to_migrate"),
+    ],
+)
+async def test_google_config_migrate_entity_names(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    stored_data: dict[str, Any] | None,
+    expected_calls: list[Any],
+) -> None:
+    """Test the entity settings migration preserves exposed entity names once."""
+    entity_registry.async_get_or_create(
+        "light", "test", "exposed", suggested_object_id="exposed"
+    )
+    entity_registry.async_get_or_create(
+        "light", "test", "yaml_name", suggested_object_id="yaml_name"
+    )
+    entity_registry.async_get_or_create(
+        "switch", "test", "not_exposed", suggested_object_id="not_exposed"
+    )
+    if stored_data is not None:
+        hass_storage["google_assistant"] = {
+            "version": 1,
+            "minor_version": 2,
+            "key": "google_assistant",
+            "data": stored_data,
+        }
+    config = GOOGLE_ASSISTANT_SCHEMA(
+        {
+            "project_id": "1234",
+            "exposed_domains": ["light"],
+            "entity_config": {"light.yaml_name": {"name": "Configured"}},
+        }
+    )
+
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await GoogleConfig(hass, config).async_initialize()
+    assert mock_preserve.mock_calls == expected_calls
+    assert hass_storage["google_assistant"]["data"]["entity_settings_version"] == 2
+
+    # The migration is not repeated
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await GoogleConfig(hass, config).async_initialize()
+    assert mock_preserve.mock_calls == []
