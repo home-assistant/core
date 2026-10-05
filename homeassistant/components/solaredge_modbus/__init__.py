@@ -33,7 +33,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ATTACHMENT_SCAN_INTERVAL,
     CONF_UNIT_ID,
-    DEVICE_SUBSYSTEMS,
+    DISCOVERY_SUBSYSTEMS,
     DOMAIN,
     LOGGER,
     SCAN_INTERVAL,
@@ -249,11 +249,12 @@ async def _async_reload_when_attachments_change(
 
     # Silent while setting up and silent again here. A block that answered at
     # setup and merely blipped now is not settled, or one timeout would hide a
-    # later removal until the entry loads again. Blocks that bring a device are
-    # never settled: finding one wired in later is what asking is for.
+    # later removal until the entry loads again. Blocks that finding hardware
+    # depends on are never settled: picking up what was wired in later is what
+    # asking is for.
     entry.runtime_data.settled_silent_blocks = (
         probed.unresponsive_blocks & solaredge.unresponsive_blocks
-    ) - DEVICE_SUBSYSTEMS
+    ) - DISCOVERY_SUBSYSTEMS
 
     known = _probed_blocks(solaredge)
     for name, found in _probed_blocks(probed).items():

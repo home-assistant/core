@@ -57,6 +57,9 @@ INVERTER_REGISTER = 40069
 # The register the probe counts meters by.
 METER_MODEL_REGISTER = 40188
 
+# The identifier the multiple-MPPT probe reads, which sets the meter offset.
+MMPPT_REGISTER = 40121
+
 # An address inside the pooled storage and export control read.
 SITE_CONTROL_REGISTER = 57348
 
@@ -1117,18 +1120,29 @@ async def test_a_block_that_blips_once_keeps_being_asked(
     assert "power_control" not in asked[1], "a blip settled a block that answered"
 
 
-async def test_a_silent_battery_block_keeps_being_asked(
+@pytest.mark.parametrize(
+    ("register", "subsystem"),
+    [
+        pytest.param(BATTERY_RATED_ENERGY, "batteries", id="batteries"),
+        pytest.param(METER_MODEL_REGISTER, "meters", id="meters"),
+        pytest.param(MMPPT_REGISTER, "mmppt", id="mmppt"),
+    ],
+)
+async def test_a_block_discovery_depends_on_keeps_being_asked(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    register: int,
+    subsystem: str,
 ) -> None:
-    """A block that brings a device is asked about however quiet it stays.
+    """A block that finding hardware depends on is asked however quiet it stays.
 
-    Settling it would stop a battery wired in later being found, which is what
-    the dynamic-devices rule asks of this integration.
+    Meters and batteries each bring a device. The multiple-MPPT block decides
+    the offset the meters are looked for at, so taking it for absent would look
+    for them at the wrong addresses for good.
     """
-    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(register, ModbusTimeoutError("timed out"))
     await _setup(hass, mock_config_entry)
 
     asked: list[frozenset[str]] = []
@@ -1146,4 +1160,4 @@ async def test_a_silent_battery_block_keeps_being_asked(
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
 
-    assert "batteries" not in asked[1], "a block that brings a device was settled"
+    assert subsystem not in asked[1], "a block discovery depends on was settled"
