@@ -96,6 +96,9 @@ async def test_load_config_entry_sensor_capability(
     if sensors_supported:
         mock_lunatone_sensors.async_refresh.assert_called()
         mock_lunatone_sensors.async_update.assert_called()
+    else:
+        mock_lunatone_sensors.async_refresh.assert_not_called()
+        mock_lunatone_sensors.async_update.assert_not_called()
 
 
 async def test_config_entry_not_ready_info_api_fail(
