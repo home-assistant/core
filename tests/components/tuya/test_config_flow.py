@@ -5,10 +5,16 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tuya.const import CONF_USER_CODE, DOMAIN
+from homeassistant.components.tuya.const import (
+    CONF_REFRESH_QR_CODE,
+    CONF_USER_CODE,
+    DOMAIN,
+    TUYA_CLIENT_ID,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import selector
 
 from tests.common import MockConfigEntry
 
@@ -170,6 +176,66 @@ async def test_reauth_flow(
     assert result3.get("reason") == "reauth_successful"
 
     assert mock_config_entry == snapshot
+
+
+async def test_reauth_flow_refresh_qr_code(
+    hass: HomeAssistant,
+    mock_tuya_login_control: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Refresh a stale QR without checking login, then complete reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    mock_tuya_login_control.qr_code.return_value = {
+        "success": False,
+        "msg": "oops",
+        "code": 42,
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REFRESH_QR_CODE: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert result["errors"] == {"base": "login_error"}
+    qr_selector = next(
+        field
+        for field in result["data_schema"].schema.values()
+        if isinstance(field, selector.QrCodeSelector)
+    )
+    assert qr_selector.config["data"] == "tuyaSmart--qrLogin?token=mocked_qr_code"
+    mock_tuya_login_control.login_result.assert_not_called()
+
+    mock_tuya_login_control.qr_code.return_value = {
+        "success": True,
+        "result": {"qrcode": "refreshed_qr_code"},
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REFRESH_QR_CODE: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert not result["errors"]
+    qr_selector = next(
+        field
+        for field in result["data_schema"].schema.values()
+        if isinstance(field, selector.QrCodeSelector)
+    )
+    assert qr_selector.config["data"] == "tuyaSmart--qrLogin?token=refreshed_qr_code"
+    assert mock_tuya_login_control.qr_code.call_count == 3
+    mock_tuya_login_control.login_result.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_tuya_login_control.login_result.assert_called_once_with(
+        "refreshed_qr_code", TUYA_CLIENT_ID, "test_user_code"
+    )
 
 
 async def test_reauth_flow_without_user_code(
