@@ -5,7 +5,7 @@ schedule is always built from scratch with exactly the keys its mode needs.
 """
 
 from collections.abc import Mapping
-from datetime import date, time
+from datetime import date, time, timedelta
 from typing import TYPE_CHECKING, Any, NoReturn
 
 from aiounifi.models.firewall_policy import (
@@ -108,17 +108,18 @@ def build_schedule(
     if new_mode in MODES_WITHOUT_SETTINGS:
         return schedule
 
-    today_str = today.isoformat()
     same_mode = new_mode is current_mode
     # Read through a Mapping: a TypedDict only accepts literal keys.
     current_values: Mapping[str, object] = current
 
-    def _date(changed: date | None, key: str, *, keep: bool) -> str:
+    def _date(
+        changed: date | None, key: str, *, keep: bool, default: date = today
+    ) -> str:
         if changed is not None:
             return changed.isoformat()
         if keep and isinstance(kept := current_values.get(key), str):
             return kept
-        return today_str
+        return default.isoformat()
 
     all_day = False
     if new_mode in MODES_WITH_DAYS:
@@ -137,7 +138,10 @@ def build_schedule(
         schedule["date"] = _date(start_date, "date", keep=mode is None)
     if new_mode is FirewallPolicyScheduleMode.CUSTOM:
         schedule["date_start"] = _date(start_date, "date_start", keep=same_mode)
-        schedule["date_end"] = _date(end_date, "date_end", keep=same_mode)
+        # The controller requires the range to end after the day it starts.
+        schedule["date_end"] = _date(
+            end_date, "date_end", keep=same_mode, default=today + timedelta(days=1)
+        )
     if not all_day:
         schedule["time_range_start"] = (
             start.strftime("%H:%M")

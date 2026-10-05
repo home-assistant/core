@@ -68,8 +68,11 @@ def async_firewall_policy_schedule_end_date_fn(
 
 
 def _raise_if_out_of_order(start: date | None, end: date | None) -> None:
-    """Raise if a custom schedule would end before it starts."""
-    if start is not None and end is not None and start > end:
+    """Raise unless a custom schedule ends after the day it starts.
+
+    The controller rejects a range that starts and ends on the same day.
+    """
+    if start is not None and end is not None and start >= end:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="schedule_dates_out_of_order",

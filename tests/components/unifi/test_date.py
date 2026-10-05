@@ -123,8 +123,6 @@ async def test_schedule_date_values(hass: HomeAssistant, start: str, end: str) -
         ([ONE_TIME_POLICY], START, "2026-02-01", {**ONE_TIME, "date": "2026-02-01"}),
         ([CUSTOM_POLICY], START, "2026-01-10", {**CUSTOM, "date_start": "2026-01-10"}),
         ([CUSTOM_POLICY], END, "2026-02-28", {**CUSTOM, "date_end": "2026-02-28"}),
-        # A single-day range is allowed.
-        ([CUSTOM_POLICY], START, "2026-01-30", {**CUSTOM, "date_start": "2026-01-30"}),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -182,7 +180,14 @@ async def test_set_schedule_date_unused(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "value"), [(START, "2026-01-31"), (END, "2026-01-04")]
+    ("entity_id", "value"),
+    [
+        (START, "2026-01-31"),
+        (END, "2026-01-04"),
+        # The controller rejects a range that starts and ends on the same day.
+        (START, "2026-01-30"),
+        (END, "2026-01-05"),
+    ],
 )
 @pytest.mark.parametrize("firewall_policy_payload", [[CUSTOM_POLICY]])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "config_entry_setup")
