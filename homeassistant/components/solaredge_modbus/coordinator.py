@@ -171,6 +171,12 @@ class SolarEdgeModbusRuntimeData:
     # What was attached when this entry was built, to notice a swap: a meter
     # replaced by another one leaves the count alone.
     attachments: frozenset[str]
+    # Blocks that answered nothing while setting up and nothing again on the
+    # first check after it. Asking costs a full timeout each, which on a shared
+    # link is time every other inverter spends waiting, so they are taken for
+    # absent until the entry loads again. Empty until that first check, so a
+    # block that was merely busy at setup still gets picked up.
+    settled_silent_blocks: frozenset[str] = frozenset()
 
     @property
     def solaredge(self) -> SolarEdge:

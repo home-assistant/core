@@ -237,12 +237,16 @@ async def _async_reload_when_attachments_change(
         return
 
     try:
-        probed = await SolarEdge.async_probe(unit)
+        probed = await SolarEdge.async_probe(
+            unit, assume_absent=entry.runtime_data.settled_silent_blocks
+        )
     except SolarEdgeError as err:
         # Nothing to conclude from a probe that did not finish; the coordinators
         # report an inverter that stopped answering.
         LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
         return
+
+    entry.runtime_data.settled_silent_blocks = probed.unresponsive_blocks
 
     known = _probed_blocks(solaredge)
     for name, found in _probed_blocks(probed).items():
