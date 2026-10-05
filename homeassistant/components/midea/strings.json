@@ -388,9 +388,9 @@
       "dehydration_level": {
         "name": "Dehydration level",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
           "none": "None"
         }
       },
@@ -410,7 +410,7 @@
           "8": "8",
           "insufficient": "Insufficient",
           "less": "Less",
-          "medium": "Medium",
+          "medium": "[%key:common::state::medium%]",
           "more": "More",
           "no": "No"
         }
@@ -709,7 +709,7 @@
           "delay_choosing": "Delay choosing",
           "delay_pause": "Delay paused",
           "end": "End",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "finished": "Finished",
           "idle": "[%key:common::state::idle%]",
           "pause": "[%key:common::state::paused%]",
@@ -898,7 +898,7 @@
       "wash_strength": {
         "name": "Wash strength",
         "state": {
-          "medium": "Medium",
+          "medium": "[%key:common::state::medium%]",
           "none": "None",
           "strong": "Strong",
           "weak": "Weak"
@@ -920,10 +920,10 @@
         "name": "Water level",
         "state": {
           "4": "4",
-          "auto": "Auto",
-          "high": "High",
-          "low": "Low",
-          "mid": "Medium"
+          "auto": "[%key:common::state::auto%]",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "[%key:common::state::medium%]"
         }
       },
       "water_temperature": {
