@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from open_meteo import OpenMeteoConnectionError
-import pytest
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -50,10 +49,7 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_entry_zone_removed(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_config_entry_zone_removed(hass: HomeAssistant) -> None:
     """Test the Open-Meteo configuration entry not ready."""
     mock_config_entry = MockConfigEntry(
         title="My Castle",
@@ -66,4 +62,7 @@ async def test_config_entry_zone_removed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Zone 'zone.castle' not found" in caplog.text
+    assert mock_config_entry.error_reason_translation_key == "zone_not_found"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "zone": "zone.castle"
+    }

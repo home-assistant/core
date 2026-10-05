@@ -11,5 +11,13 @@
         "description": "Select location to use for weather forecasting"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Open-Meteo API."
+    },
+    "zone_not_found": {
+      "message": "Zone {zone} not found."
+    }
   }
 }

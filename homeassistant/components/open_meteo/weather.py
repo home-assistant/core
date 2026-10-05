@@ -37,6 +37,8 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
 from .coordinator import OpenMeteoConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
