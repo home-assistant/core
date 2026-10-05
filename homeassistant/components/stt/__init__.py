@@ -266,10 +266,8 @@ class SpeechToTextEntity(RestoreEntity):
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
         """Process an audio stream with an STT service, yielding partial transcripts.
 
-        Any number of PartialSpeechResult may be yielded as the transcript is
-        refined, each one superseding the last. Implementations must finish with
-        exactly one SpeechResult and yield nothing after it, so consumers can tell
-        a complete transcription from an interrupted stream.
+        Yield zero or more partial transcripts followed by exactly one final
+        speech result. Each partial contains the complete transcript so far.
 
         The default implementation falls back to async_process_audio_stream and
         yields only the final result.
