@@ -135,10 +135,17 @@ async def test_text_camera_reads_public(
     assert state
     assert state.state == "Welcome"
 
-    public = make_public_camera(doorbell, lcd_message=lcd_message)
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
+    for message, value in (
+        (
+            PublicLcdMessage(type=DoorbellMessageType.CUSTOM_MESSAGE, text="Start"),
+            "Start",
+        ),
+        (lcd_message, expected),
+    ):
+        public = make_public_camera(doorbell, lcd_message=message)
+        ufp.devices_ws_subscription(public_device_ws_message(public))
+        await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == expected
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == value

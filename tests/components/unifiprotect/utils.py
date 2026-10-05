@@ -632,7 +632,7 @@ def make_public_camera(
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
     not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
-    the test.
+    the test. ``lcd_message`` defaults to none for the same reason.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
