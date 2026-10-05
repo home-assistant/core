@@ -6,7 +6,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 from mcp import McpError
-from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, Tool
+from mcp.types import (
+    CallToolResult,
+    ErrorData,
+    ListToolsResult,
+    TextContent,
+    Tool,
+    ToolAnnotations,
+)
 import probatio
 import pytest
 
@@ -315,6 +322,57 @@ async def test_llm_get_api_tools(
     assert tool.parameters({"context": {"fact": "User was born in February"}}) == {
         "context": {"fact": "User was born in February"}
     }
+
+
+@pytest.mark.parametrize(
+    ("remote_annotations", "expected_annotations"),
+    [
+        pytest.param(None, llm.ToolAnnotations(), id="unannotated"),
+        pytest.param(
+            ToolAnnotations(readOnlyHint=True, openWorldHint=False),
+            llm.ToolAnnotations(read_only=True, open_world=False),
+            id="partly-annotated",
+        ),
+        pytest.param(
+            ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=True,
+            ),
+            llm.ToolAnnotations(destructive=False, idempotent=True),
+            id="fully-annotated",
+        ),
+    ],
+)
+async def test_llm_tool_annotations(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    remote_annotations: ToolAnnotations | None,
+    expected_annotations: llm.ToolAnnotations,
+) -> None:
+    """Test the annotations the remote server declares are carried over."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[
+            SEARCH_MEMORY_TOOL.model_copy(
+                update={"title": "Search memory", "annotations": remote_annotations}
+            )
+        ]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    assert tool.integration == "mcp"
+    assert tool.title == "Search memory"
+    assert tool.annotations == expected_annotations
 
 
 @pytest.mark.parametrize(

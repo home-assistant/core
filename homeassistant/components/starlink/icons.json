@@ -25,6 +25,14 @@
       "upload": {
         "default": "mdi:upload"
       }
+    },
+    "switch": {
+      "starlink_positioning_exclusive": {
+        "default": "mdi:crosshairs-gps",
+        "state": {
+          "on": "mdi:crosshairs-off"
+        }
+      }
     }
   }
 }

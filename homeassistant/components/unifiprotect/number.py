@@ -7,11 +7,16 @@ import logging
 from typing import override
 
 from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
-from uiprotect.data.public_devices import PublicLight, SensorFeatureCapability
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicLight,
+    SensorFeatureCapability,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -79,7 +84,9 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=1,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field="has_mic",
+        # The public setter refuses a camera whose only microphone is a
+        # hot-plugged module, so the gate is the built-in flag in both modes.
+        ufp_required_field="feature_flags.has_mic",
         ufp_public_value="mic_volume",
         ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,
@@ -285,28 +292,42 @@ async def async_setup_entry(
             entities += _async_all_chime_ring_volume_entities(data, device)
         async_add_entities(entities)
 
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectNumbers,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                public_device=device,
+            )
+        )
+
     data.async_subscribe_adopt(_add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
     entities = async_all_device_entities(
         data,
         ProtectNumbers,
         model_descriptions=_MODEL_DESCRIPTIONS,
     )
-    # Add ring volume entities for all chimes
-    entities += _async_all_chime_ring_volume_entities(data)
+    if not data.api.is_public_only:
+        # The ring volume per paired camera is a private-only chime setting.
+        entities += _async_all_chime_ring_volume_entities(data)
     async_add_entities(entities)
 
 
 class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     """A UniFi Protect Number Entity."""
 
-    device: Camera | Light
     entity_description: ProtectNumberEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
     def __init__(
         self,
         data: ProtectData,
-        device: Camera | Light,
+        device: ProtectDeviceType,
         description: ProtectNumberEntityDescription,
     ) -> None:
         """Initialize the Number Entities."""

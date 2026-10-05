@@ -41,7 +41,7 @@ ALERT_SCHEMA = probatio.Schema(
         probatio.Required(CONF_ENTITY_ID): cv.entity_id,
         probatio.Optional(CONF_STATE, default=STATE_ON): cv.string,
         probatio.Required(CONF_REPEAT): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.Coerce(float)],
             # Minimum delay is 1 second = 0.016 minutes
             [probatio.Range(min=0.016)],
@@ -53,7 +53,7 @@ ALERT_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_TITLE): cv.template,
         probatio.Optional(CONF_DATA): dict,
         probatio.Optional(CONF_NOTIFIERS, default=list): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )

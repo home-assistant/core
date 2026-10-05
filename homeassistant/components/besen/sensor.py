@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Final, override
 
 from besen.models import BesenData
@@ -20,6 +21,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -113,7 +115,7 @@ def _enum_state(value: str | None, states: Mapping[str, str]) -> str | None:
 class BesenSensorEntityDescription(SensorEntityDescription):
     """Describe a Besen sensor entity."""
 
-    value_fn: Callable[[BesenData], StateType]
+    value_fn: Callable[[BesenData], StateType | datetime]
     three_phase_only: bool = False
 
 
@@ -195,6 +197,45 @@ SENSOR_DESCRIPTIONS: tuple[BesenSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         value_fn=lambda data: data.charge.session_energy,
+    ),
+    BesenSensorEntityDescription(
+        key="session_start",
+        translation_key="session_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.charge.session_start,
+    ),
+    BesenSensorEntityDescription(
+        key="session_duration",
+        translation_key="session_duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.charge.session_duration,
+    ),
+    BesenSensorEntityDescription(
+        key="session_current_limit",
+        translation_key="session_current_limit",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.charge.session_current_limit,
+    ),
+    BesenSensorEntityDescription(
+        key="scheduled_start",
+        translation_key="scheduled_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.charge.scheduled_start,
+    ),
+    BesenSensorEntityDescription(
+        key="charging_time_limit",
+        translation_key="charging_time_limit",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.charge.charging_time_limit,
     ),
     BesenSensorEntityDescription(
         key="internal_temperature",
@@ -321,7 +362,7 @@ class BesenSensor(BesenEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
 
         return self.entity_description.value_fn(self.coordinator.data)

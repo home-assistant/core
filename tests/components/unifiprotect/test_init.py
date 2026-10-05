@@ -708,6 +708,26 @@ async def test_public_only_setup(
     assert state.state == AlarmControlPanelState.DISARMED
 
 
+async def test_public_only_setup_nameless_nvr(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public NVR without name or type keeps a nameless device, not an empty name."""
+    nvr = ufp_public_only.api.public_bootstrap.nvr
+    nvr.name = nvr.device_type = nvr.type = None
+    nvr.display_name = ""
+
+    await setup_public_only()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert device is not None
+    assert device.name is None
+
+
 async def test_public_only_forwards_only_public_platforms(
     hass: HomeAssistant,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
