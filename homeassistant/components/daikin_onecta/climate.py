@@ -114,10 +114,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    for device in (coordinator.data or {}).values():
-        async_add_entities(
-            _create_climate_entities(device, coordinator), update_before_add=False
-        )
+    entities = [
+        entity
+        for device in (coordinator.data or {}).values()
+        for entity in _create_climate_entities(device, coordinator)
+    ]
+    async_add_entities(entities, update_before_add=False)
 
 
 def _create_climate_entities(
