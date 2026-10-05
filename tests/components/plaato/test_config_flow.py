@@ -12,7 +12,7 @@ from homeassistant.components.plaato.const import (
     CONF_USE_WEBHOOK,
     DOMAIN,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -322,32 +322,16 @@ async def test_options(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NAME",
         data={},
-        options={CONF_SCAN_INTERVAL: 5},
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.plaato.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_SCAN_INTERVAL: 10},
-        )
-
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_SCAN_INTERVAL] == 10
-
-        assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_options"
 
 
 async def test_options_webhook(hass: HomeAssistant, webhook_id) -> None:
@@ -356,7 +340,6 @@ async def test_options_webhook(hass: HomeAssistant, webhook_id) -> None:
         domain=DOMAIN,
         title="NAME",
         data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
-        options={CONF_SCAN_INTERVAL: 5},
     )
     config_entry.add_to_hass(hass)
 

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
         config_entry: PlaatoConfigEntry,
         auth_token: str,
         device_type: PlaatoDeviceType,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
@@ -56,7 +55,7 @@ class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
         )
 
     @override
