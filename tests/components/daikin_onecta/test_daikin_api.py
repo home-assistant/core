@@ -95,69 +95,33 @@ async def test_get_device_details_uses_utc_across_dst_rollback(
     api.client.get_gateway_devices.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize(
-    ("method", "arguments"),
-    [
-        ("patch_characteristic", ("gateway", "point", "onOffMode", "on")),
-        (
-            "post_management_point",
-            ("gateway", "point", "holiday-mode", {"enabled": False}),
-        ),
-        (
-            "put_management_point",
-            ("gateway", "point", "schedule/heating/current", {"enabled": False}),
-        ),
-    ],
-)
 async def test_write_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    method: str,
-    arguments: tuple,
 ) -> None:
     """Record successful writes."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    setattr(api.client, method, AsyncMock())
+    command = AsyncMock()
 
-    assert await getattr(api, method)(*arguments)
-    getattr(api.client, method).assert_awaited_once()
+    assert await api.async_execute_command(command)
+    command.assert_awaited_once_with(api.client)
     assert api.last_patch_call is not None
 
 
-@pytest.mark.parametrize(
-    ("method", "arguments"),
-    [
-        ("patch_characteristic", ("gateway", "point", "onOffMode", "on")),
-        (
-            "post_management_point",
-            ("gateway", "point", "holiday-mode", {"enabled": False}),
-        ),
-        (
-            "put_management_point",
-            ("gateway", "point", "schedule/heating/current", {"enabled": False}),
-        ),
-    ],
-)
 async def test_write_api_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    method: str,
-    arguments: tuple,
 ) -> None:
     """Return false for API write failures."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    setattr(
-        api.client,
-        method,
-        AsyncMock(
-            side_effect=OnectaApiError(
-                500, "failed", method="PATCH", path="/v1/management-points/point"
-            )
-        ),
+    command = AsyncMock(
+        side_effect=OnectaApiError(
+            500, "failed", method="PATCH", path="/v1/management-points/point"
+        )
     )
 
-    assert not await getattr(api, method)(*arguments)
+    assert not await api.async_execute_command(command)
     assert api.last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point failed with HTTP 500"
@@ -165,42 +129,22 @@ async def test_write_api_error(
     )
 
 
-@pytest.mark.parametrize(
-    ("method", "arguments"),
-    [
-        ("patch_characteristic", ("gateway", "point", "onOffMode", "on")),
-        (
-            "post_management_point",
-            ("gateway", "point", "holiday-mode", {"enabled": False}),
-        ),
-        (
-            "put_management_point",
-            ("gateway", "point", "schedule/heating/current", {"enabled": False}),
-        ),
-    ],
-)
 async def test_write_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    method: str,
-    arguments: tuple,
 ) -> None:
     """Return false for rate-limited writes."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    setattr(
-        api.client,
-        method,
-        AsyncMock(
-            side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=60),
-                method="PATCH",
-                path="/v1/management-points/point",
-            )
-        ),
+    command = AsyncMock(
+        side_effect=OnectaRateLimitError(
+            RateLimit(retry_after=60),
+            method="PATCH",
+            path="/v1/management-points/point",
+        )
     )
 
-    assert not await getattr(api, method)(*arguments)
+    assert not await api.async_execute_command(command)
     assert api.last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point was rate limited; "
@@ -215,9 +159,9 @@ async def test_write_timeout(
 ) -> None:
     """Return false when refreshing the OAuth token times out during a write."""
     api = DaikinApi(hass, config_entry, MagicMock())
-    api.client.patch_characteristic = AsyncMock(side_effect=TimeoutError)
+    command = AsyncMock(side_effect=TimeoutError)
 
-    assert not await api.patch_characteristic("gateway", "point", "onOffMode", "on")
+    assert not await api.async_execute_command(command)
     assert api.last_patch_call is None
     assert "Daikin request timed out" in caplog.text
 

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import cast
 
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaApiError, OnectaRateLimitError
@@ -87,31 +87,13 @@ class DaikinApi:
                 return None
             return await self._client.get_gateway_devices()
 
-    async def patch_characteristic(
-        self,
-        gateway_id: str,
-        management_point_id: str,
-        characteristic: str,
-        value: Any,
-        *,
-        path: str | None = None,
+    async def async_execute_command(
+        self, command: Callable[[OnectaClient], Awaitable[None]]
     ) -> bool:
-        """Patch a characteristic through the standalone library."""
-        return await self._async_write(
-            lambda: self._client.patch_characteristic(
-                gateway_id,
-                management_point_id,
-                characteristic,
-                value,
-                path=path,
-            )
-        )
-
-    async def _async_write(self, request: Callable[[], Awaitable[Any]]) -> bool:
         """Run a cloud command and log contextual expected failures."""
         async with self._cloud_lock:
             try:
-                await request()
+                await command(self._client)
             except OnectaRateLimitError as err:
                 _LOGGER.warning(
                     "Daikin request %s %s was rate limited; retry after %s seconds",
@@ -133,31 +115,3 @@ class DaikinApi:
                 return False
             self._last_patch_call = dt_util.utcnow()
             return True
-
-    async def post_management_point(
-        self,
-        gateway_id: str,
-        management_point_id: str,
-        resource: str,
-        value: Any,
-    ) -> bool:
-        """POST a management-point resource through the standalone library."""
-        return await self._async_write(
-            lambda: self._client.post_management_point(
-                gateway_id, management_point_id, resource, value
-            )
-        )
-
-    async def put_management_point(
-        self,
-        gateway_id: str,
-        management_point_id: str,
-        resource: str,
-        value: Any = None,
-    ) -> bool:
-        """PUT a management-point resource through the standalone library."""
-        return await self._async_write(
-            lambda: self._client.put_management_point(
-                gateway_id, management_point_id, resource, value
-            )
-        )

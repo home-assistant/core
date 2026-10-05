@@ -9,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["daikin-onecta==0.4.2"],
+  "requirements": ["daikin-onecta==0.4.3"],
   "zeroconf": [
     {
       "name": "altherma4-*._https._tcp.local.",

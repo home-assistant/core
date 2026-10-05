@@ -42,6 +42,20 @@ from .conftest import DOMAIN
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_climate_patch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep climate state tests focused on state changes, not cloud transport."""
+
+    async def _async_patch(
+        entity: DaikinClimate, characteristic: str, path: str | None, value: object
+    ) -> bool:
+        return await entity._device.patch(
+            entity._device.id, entity._embedded_id, characteristic, path or "", value
+        )
+
+    monkeypatch.setattr(DaikinClimate, "_async_patch", _async_patch)
+
+
 @pytest.mark.parametrize(
     ("last_update_success", "device_available", "management_point_exists", "expected"),
     [
