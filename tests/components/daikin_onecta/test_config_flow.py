@@ -19,7 +19,6 @@ from homeassistant.components.daikin_onecta.const import (
 )
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -246,26 +245,6 @@ async def test_invalid_oauth_token(
     assert result["reason"] == "invalid_token"
 
 
-async def test_reauth_confirm_form(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Show the reauthentication confirmation form."""
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "reauth_confirm"
-
-
 async def test_zeroconf_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -281,77 +260,6 @@ async def test_zeroconf_already_configured(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-
-
-async def test_reauth_oauth_create_entry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Update the existing entry after successful reauthentication."""
-    hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
-    flow = config_entries.HANDLERS[DOMAIN]()
-    flow.hass = hass
-    flow.context = {
-        "source": config_entries.SOURCE_REAUTH,
-        "entry_id": config_entry.entry_id,
-    }
-    data = {
-        "auth_implementation": "cloud",
-        "token": {
-            "access_token": FAKE_ACCESS_TOKEN,
-            "refresh_token": "new-refresh-token",
-        },
-    }
-
-    with patch.object(hass.config_entries, "async_reload") as reload_entry:
-        result = await flow.async_oauth_create_entry(data)
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "reauth_successful"
-    assert config_entry.data == data
-    reload_entry.assert_called_once_with(config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_reauth_oauth_create_entry_rejects_wrong_account(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Reject reauthentication with an OAuth token for another account."""
-    hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
-    original_data = config_entry.data
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["type"] == "form"
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    state = oauth_state(result)
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == HTTP_OK
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "wrong-account-refresh-token",
-            "access_token": config_entry_oauth2_flow._encode_jwt(
-                hass, {"sub": "another-account"}
-            ),
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    with patch.object(hass.config_entries, "async_reload") as reload_entry:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "wrong_account"
-    assert config_entry.data == original_data
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    reload_entry.assert_not_called()
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -390,19 +298,3 @@ async def test_oauth_create_entry_rejects_duplicate_account(
     assert config_entry.data == original_data
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     reload_entry.assert_not_called()
-
-
-async def test_reauth_confirm_continue(
-    hass: HomeAssistant,
-) -> None:
-    """Continue reauthentication through the user OAuth step."""
-    flow = config_entries.HANDLERS[DOMAIN]()
-    flow.hass = hass
-
-    with patch.object(
-        flow, "async_step_user", return_value={"type": "external"}
-    ) as step_user:
-        result = await flow.async_step_reauth_confirm({})
-
-    assert result == {"type": "external"}
-    step_user.assert_awaited_once()

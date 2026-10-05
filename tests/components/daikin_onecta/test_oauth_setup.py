@@ -8,13 +8,9 @@ from yarl import URL
 
 from homeassistant.components.daikin_onecta import _async_update_listener
 from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.components.daikin_onecta.coordinator import (
-    OnectaDataUpdateCoordinator,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -49,11 +45,11 @@ def _token_error() -> OAuth2TokenRequestError:
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_reauth_on_token_request(
+async def test_setup_entry_not_ready_on_rejected_token(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Token reauth errors during ensure must raise ConfigEntryAuthFailed."""
+    """Rejected OAuth tokens must retry setup until reauth is supported."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -66,7 +62,7 @@ async def test_setup_entry_reauth_on_token_request(
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.asyncio
@@ -153,31 +149,3 @@ async def test_update_listener_ignores_oauth_token_renewal() -> None:
     coordinator.update_settings.assert_called_once_with(config_entry)
     coordinator.async_request_refresh.assert_not_awaited()
     coordinator.async_update_listeners.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_setup_entry_preserves_reauth_from_first_refresh(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """First refresh reauth must not be converted into ConfigEntryNotReady."""
-    # A broad Exception handler around async_config_entry_first_refresh would
-    # swallow ConfigEntryAuthFailed and prevent the reauth UI from starting.
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
-            new=AsyncMock(return_value="token"),
-        ),
-        patch.object(
-            OnectaDataUpdateCoordinator,
-            "async_config_entry_first_refresh",
-            side_effect=ConfigEntryAuthFailed("token expired"),
-        ),
-    ):
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
