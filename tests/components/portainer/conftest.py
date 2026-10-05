@@ -13,7 +13,11 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
+from pyportainer.models.portainer import (
+    Endpoint,
+    PortainerSystemStatus,
+    PortainerSystemVersion,
+)
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
@@ -123,6 +127,9 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         client.portainer_system_status.return_value = PortainerSystemStatus.from_dict(
             load_json_value_fixture("portainer_system_status.json", DOMAIN)
         )
+        client.portainer_system_version.return_value = PortainerSystemVersion.from_dict(
+            load_json_value_fixture("portainer_system_version.json", DOMAIN)
+        )
         client.get_volumes.return_value = [
             DockerVolume.from_dict(volume)
             for volume in load_json_array_fixture("volumes.json", DOMAIN)
@@ -139,9 +146,18 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         yield client
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Enable all entities when they are registered."""
+
+
+@pytest.fixture(autouse=True)
 def mock_portainer_event_listeners() -> Generator[dict[int, MagicMock]]:
-    """Mock PortainerEventListener; one MagicMock instance per endpoint_id."""
+    """Mock PortainerEventListener; one MagicMock instance per endpoint_id.
+
+    Autouse because the real listener reconnects in a tight loop when its
+    event stream ends immediately, as the mocked client's does.
+    """
     instances: dict[int, MagicMock] = {}
 
     def _factory(

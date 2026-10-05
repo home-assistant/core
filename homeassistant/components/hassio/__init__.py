@@ -18,6 +18,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, HASSIO_USER_NAME, Platform
@@ -57,7 +58,6 @@ from .const import (
     ADDONS_COORDINATOR,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
-    DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
@@ -187,14 +187,27 @@ async def _async_get_or_create_supervisor_user(
         user = await hass.auth.async_get_user(legacy_user_id)
 
     if user is None:
+        # The storage naming the Supervisor user may have been lost. Reuse an
+        # existing Supervisor system user instead of creating a duplicate.
+        user = next(
+            (
+                existing
+                for existing in await hass.auth.async_get_users()
+                if existing.system_generated and existing.name == HASSIO_USER_NAME
+            ),
+            None,
+        )
+
+    if user is None:
         user = await hass.auth.async_create_system_user(
             HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
-        if entry is not None:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={**entry.data, ENTRY_DATA_USER: user.id},
-            )
+
+    if entry is not None and entry.data.get(ENTRY_DATA_USER) != user.id:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, ENTRY_DATA_USER: user.id},
+        )
 
     # Migrate old Hass.io users to be admin.
     if not user.is_admin:
@@ -327,7 +340,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if legacy_data is not None:
         legacy_user_id = legacy_data.get("hassio_user")
 
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
+    hass.data[DATA_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
         hass, entry, legacy_user_id
     )
 
@@ -373,7 +386,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_legacy_store = True
 
     # Async setup runs first unconditionally and always populates this field
-    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    user = hass.data[DATA_SUPERVISOR_USER]
     if entry.data.get(ENTRY_DATA_USER) != user.id:
         hass.config_entries.async_update_entry(
             entry,

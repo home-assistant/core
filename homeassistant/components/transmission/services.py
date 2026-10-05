@@ -5,8 +5,8 @@ from functools import partial
 import logging
 from typing import Any
 
+import probatio
 from transmission_rpc import Torrent
-import voluptuous as vol
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -46,51 +46,53 @@ class TorrentFilter(StrEnum):
     ACTIVE = "active"
 
 
-SERVICE_BASE_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
 )
 
-SERVICE_ADD_TORRENT_SCHEMA = vol.All(
+SERVICE_ADD_TORRENT_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            vol.Required(ATTR_TORRENT): cv.string,
-            vol.Optional(ATTR_DOWNLOAD_PATH): cv.string,
-            vol.Optional(ATTR_LABELS): cv.string,
+            probatio.Required(ATTR_TORRENT): cv.string,
+            probatio.Optional(ATTR_DOWNLOAD_PATH): cv.string,
+            probatio.Optional(ATTR_LABELS): cv.string,
         }
     ),
 )
 
-SERVICE_GET_TORRENTS_SCHEMA = vol.All(
+SERVICE_GET_TORRENTS_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            vol.Required(ATTR_TORRENT_FILTER): vol.In(
+            probatio.Required(ATTR_TORRENT_FILTER): probatio.In(
                 [x.lower() for x in TorrentFilter]
             ),
         }
     ),
 )
 
-SERVICE_REMOVE_TORRENT_SCHEMA = vol.All(
+SERVICE_REMOVE_TORRENT_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ID): cv.positive_int,
-            vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
+            probatio.Required(CONF_ID): cv.positive_int,
+            probatio.Optional(
+                ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA
+            ): cv.boolean,
         }
     )
 )
 
-SERVICE_START_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend({vol.Required(CONF_ID): cv.positive_int}),
+SERVICE_START_TORRENT_SCHEMA = probatio.All(
+    SERVICE_BASE_SCHEMA.extend({probatio.Required(CONF_ID): cv.positive_int}),
 )
 
-SERVICE_STOP_TORRENT_SCHEMA = vol.All(
+SERVICE_STOP_TORRENT_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ID): cv.positive_int,
+            probatio.Required(CONF_ID): cv.positive_int,
         }
     )
 )

@@ -1,8 +1,19 @@
 """Constants for cover entity platform."""
 
 from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
-DOMAIN = "cover"
+import probatio
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import CoverEntity
+
+DOMAIN: Final = "cover"
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
@@ -67,3 +78,6 @@ class CoverDeviceClass(StrEnum):
     SHADE = "shade"
     SHUTTER = "shutter"
     WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))

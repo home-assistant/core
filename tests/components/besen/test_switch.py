@@ -1,6 +1,6 @@
 """Tests for the Besen switch platform."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from besen.exceptions import CommandFailed
 import pytest
@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -38,7 +39,7 @@ async def test_switch_state(
 ) -> None:
     """Test switch entity state and registry data."""
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
     mock_besen_client.async_start.assert_awaited_once()
@@ -51,7 +52,7 @@ async def test_switch_updates_from_client(
 ) -> None:
     """Test switch state updates from client push data."""
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     publish_besen_state(mock_besen_client, charger_state(charger_status=False))
     await hass.async_block_till_done()
@@ -68,7 +69,7 @@ async def test_switch_updates_on_refresh(
 ) -> None:
     """Test switch state updates when the coordinator refreshes."""
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     mock_besen_client.state = charger_state(charger_status=False)
     await async_update_entity(hass, ENTITY_ID)
@@ -95,7 +96,7 @@ async def test_switch_unavailable_from_client_state(
 ) -> None:
     """Test switch availability follows client availability and authentication."""
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     publish_besen_state(
         mock_besen_client,
@@ -115,7 +116,7 @@ async def test_switch_services(
 ) -> None:
     """Test switch turn on and turn off services."""
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -144,26 +145,43 @@ async def test_switch_services(
     mock_besen_client.async_start_charging.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("service", "command", "initial_state"),
+    [
+        (SERVICE_TURN_ON, "async_start_charging", STATE_OFF),
+        (SERVICE_TURN_OFF, "async_stop_charging", STATE_ON),
+    ],
+)
 async def test_switch_command_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_besen_client: Mock,
+    service: str,
+    command: str,
+    initial_state: str,
 ) -> None:
-    """Test command failures are translated to Home Assistant errors."""
+    """Test failed switch commands raise translated errors without changing state."""
 
-    mock_besen_client.async_start_charging = AsyncMock(
-        side_effect=CommandFailed("failed")
-    )
+    mock_besen_client.state = charger_state(charger_status=initial_state == STATE_ON)
+    failure = CommandFailed("failed")
+    mock_command = getattr(mock_besen_client, command)
+    mock_command.side_effect = failure
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            service,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
+    mock_command.assert_awaited_once_with()
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "command_failed"
+    assert err.value.__cause__ is failure
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == initial_state

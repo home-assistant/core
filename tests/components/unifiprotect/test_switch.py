@@ -1,7 +1,9 @@
 """Test the UniFi Protect switch platform."""
 
+from collections.abc import Callable, Coroutine
+from functools import partial
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from uiprotect.data import (
@@ -10,21 +12,26 @@ from uiprotect.data import (
     Permission,
     PublicHdrMode,
     RecordingMode,
+    Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
     VideoMode,
+    WSAction,
 )
+from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.exceptions import ClientError, NotAuthorized
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.switch import (
     ATTR_PREV_MIC,
     ATTR_PREV_RECORD,
     CAMERA_SWITCHES,
     LIGHT_SWITCHES,
     PRIVACY_MODE_SWITCH,
+    SENSE_SWITCHES,
     ProtectSwitchEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
@@ -35,9 +42,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import patch_ufp_method
+from .conftest import UNIFI_MAC
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -47,10 +56,14 @@ from .utils import (
     init_entry,
     make_public_camera,
     make_public_light,
+    make_public_sensor,
+    make_streamless_public_camera,
     public_device_ws_message,
+    registered_keys,
     remove_entities,
     setup_public_camera,
     setup_public_light,
+    setup_public_sensor,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -73,6 +86,8 @@ CAMERA_SWITCHES_NO_EXTRA = [
     for d in CAMERA_SWITCHES_BASIC
     if d.key not in ("high_fps", "privacy_mode", "hdr_mode")
 ]
+CAMERA_SWITCHES_PRIVATE = [d for d in CAMERA_SWITCHES_NO_EXTRA if not d.is_public_value]
+CAMERA_SWITCHES_PUBLIC = [d for d in CAMERA_SWITCHES_NO_EXTRA if d.is_public_value]
 
 
 async def test_switch_camera_remove(
@@ -295,8 +310,12 @@ async def test_switch_light_status(
         hass, Platform.SWITCH, light, description
     )
 
-    with patch_ufp_method(
-        light, "set_status_light_public", new_callable=AsyncMock
+    public = make_public_light(light)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(
+        public, "set_status_light", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -374,14 +393,14 @@ async def test_switch_camera_ssh(
         mock_method.assert_called_with(False)
 
 
-@pytest.mark.parametrize("description", CAMERA_SWITCHES_NO_EXTRA)
+@pytest.mark.parametrize("description", CAMERA_SWITCHES_PRIVATE)
 async def test_switch_camera_simple(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     description: ProtectSwitchEntityDescription,
 ) -> None:
-    """Tests all simple switches for cameras."""
+    """Tests the private-API camera switches."""
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
@@ -391,6 +410,44 @@ async def test_switch_camera_simple(
 
     with patch_ufp_method(
         doorbell, description.ufp_set_method, new_callable=AsyncMock
+    ) as mock_method:
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, doorbell, description
+        )
+
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_called_once_with(True)
+
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_called_with(False)
+
+
+@pytest.mark.parametrize("description", CAMERA_SWITCHES_PUBLIC)
+async def test_switch_camera_simple_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    description: ProtectSwitchEntityDescription,
+) -> None:
+    """The migrated camera switches write through the public object."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    assert description.ufp_set_method is not None
+
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(
+        public, description.ufp_set_method, new_callable=AsyncMock
     ) as mock_method:
         _, entity_id = await ids_from_device_description(
             hass, Platform.SWITCH, doorbell, description
@@ -424,9 +481,11 @@ async def test_switch_camera_highfps(
         hass, Platform.SWITCH, doorbell, description
     )
 
-    with patch_ufp_method(
-        doorbell, "set_video_mode_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_video_mode", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -517,14 +576,18 @@ async def test_switch_camera_detections_public_api(
     await init_entry(hass, ufp, [doorbell])
 
     assert description.ufp_set_method is not None
-    assert description.ufp_set_method.endswith("_public")
+    assert description.ufp_capability is not None
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
 
-    with patch_ufp_method(
-        doorbell, description.ufp_set_method, new_callable=AsyncMock
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(
+        public, description.ufp_set_method, new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -831,10 +894,14 @@ async def test_switch_turn_on_client_error(
         hass, Platform.SWITCH, light, description
     )
 
+    public = make_public_light(light)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
     with (
-        patch_ufp_method(
-            light,
-            "set_status_light_public",
+        patch.object(
+            public,
+            "set_status_light",
             new_callable=AsyncMock,
             side_effect=ClientError("Test error"),
         ),
@@ -859,10 +926,14 @@ async def test_switch_turn_on_not_authorized(
         hass, Platform.SWITCH, light, description
     )
 
+    public = make_public_light(light)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
     with (
-        patch_ufp_method(
-            light,
-            "set_status_light_public",
+        patch.object(
+            public,
+            "set_status_light",
             new_callable=AsyncMock,
             side_effect=NotAuthorized("Not authorized"),
         ),
@@ -871,3 +942,526 @@ async def test_switch_turn_on_not_authorized(
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
+
+
+# A USL Environmental reports these four and neither motion nor alarm-sound
+# detection, so none of its capabilities back a motion or alarm switch.
+_ENV_CAPABILITIES = {
+    SensorFeatureCapability.TEMPERATURE,
+    SensorFeatureCapability.HUMIDITY,
+    SensorFeatureCapability.LIGHT,
+    SensorFeatureCapability.WATER_LEAK,
+}
+
+
+async def test_switch_sense_capability_creation_filter(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A capability map limits the config switches to the advertised capabilities."""
+    setup_public_sensor(ufp, capabilities=_ENV_CAPABILITIES)
+    await init_entry(hass, ufp, [sensor_all])
+
+    for key, created in (
+        ("status_light", True),
+        ("temperature", True),
+        ("humidity", True),
+        ("light", True),
+        ("motion", False),
+        ("alarm", False),
+    ):
+        description = next(d for d in SENSE_SWITCHES if d.key == key)
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, sensor_all, description
+        )
+        assert (entity_registry.async_get(entity_id) is not None) is created, key
+
+
+async def test_switch_sense_capability_registry_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A console upgrade removes registry entries for unsupported capabilities."""
+    stale = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{sensor_all.mac}_motion",
+        config_entry=ufp.entry,
+    )
+    setup_public_sensor(ufp, capabilities=_ENV_CAPABILITIES)
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_switch_sense_no_capability_map_creates_none(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A sensor without a capability map gets no capability-gated config switch."""
+    setup_public_sensor(ufp, capabilities=set())
+    await init_entry(hass, ufp, [sensor_all])
+
+    gated = [desc for desc in SENSE_SWITCHES if desc.ufp_capability is not None]
+    assert gated
+    for description in gated:
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_{description.key}"
+            )
+            is None
+        ), description.key
+
+
+async def test_switch_sense_no_capability_map_removes_existing(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A switch created before its sensor reported no capability map is removed."""
+    existing = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{sensor_all.mac}_motion",
+        config_entry=ufp.entry,
+    )
+    setup_public_sensor(ufp, capabilities=set())
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(existing.entity_id) is None
+
+
+# The five sense settings the public API exposes, with the public-mock override
+# that flips them and the public setter each switch must write through.
+MIGRATED_SENSE_SWITCHES = [
+    ("motion", "motion_enabled", "set_motion_status"),
+    ("temperature", "temperature_enabled", "set_temperature_status"),
+    ("humidity", "humidity_enabled", "set_humidity_status"),
+    ("light", "light_enabled", "set_light_status"),
+    ("alarm", "alarm_enabled", "set_alarm"),
+]
+
+
+@pytest.mark.parametrize(("key", "public_kwarg", "set_method"), MIGRATED_SENSE_SWITCHES)
+async def test_switch_sense_public_value(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    key: str,
+    public_kwarg: str,
+    set_method: str,
+) -> None:
+    """Each migrated sense switch reads its state from the public object."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == key)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # every setting is enabled on the private fixture, so a public OFF can only
+    # come from the public object
+    public = make_public_sensor(sensor_all, **{public_kwarg: False})
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(("key", "public_kwarg", "set_method"), MIGRATED_SENSE_SWITCHES)
+async def test_switch_sense_set_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    key: str,
+    public_kwarg: str,
+    set_method: str,
+) -> None:
+    """Each migrated sense switch writes through the public API."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == key)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+
+    public = make_public_sensor(sensor_all)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, set_method, new_callable=AsyncMock) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_method.assert_called_once_with(False)
+
+
+async def test_switch_sense_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """A migrated sense switch is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == "motion")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_switch_sense_status_light_stays_private(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The status light has no public counterpart, so it reads the private object.
+
+    Unlike the migrated switches it must stay usable without a public object.
+    """
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == "status_light")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    with patch_ufp_method(
+        sensor_all, "set_status_light", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_method.assert_called_once_with(False)
+
+
+async def test_switch_sense_public_switches_ignore_local_permissions(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A read-only local user keeps the migrated switches but not the private one.
+
+    The migrated switches write through the API key, so the local user's write
+    bit must not gate them; the status light still uses a private setter and
+    stays behind PermRequired.WRITE.
+    """
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
+    ]
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    for key, _public_kwarg, _set_method in MIGRATED_SENSE_SWITCHES:
+        description = next(d for d in SENSE_SWITCHES if d.key == key)
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, sensor_all, description
+        )
+        assert entity_registry.async_get(entity_id) is not None, key
+
+    description = next(d for d in SENSE_SWITCHES if d.key == "status_light")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert entity_registry.async_get(entity_id) is None
+
+
+_SMART_KEYS = {key for key, _, _ in CAMERA_SWITCHES_DETECTION_READ}
+
+
+@pytest.mark.parametrize(
+    ("key", "object_types", "audio_types"), CAMERA_SWITCHES_DETECTION_READ
+)
+async def test_switch_camera_detection_capability_gating(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+    object_types: list[SmartDetectObjectType],
+    audio_types: list[SmartDetectAudioType],
+) -> None:
+    """A detection switch exists only for a capability the camera advertises."""
+    doorbell.feature_flags.smart_detect_types = object_types
+    doorbell.feature_flags.smart_detect_audio_types = audio_types
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    assert registered_keys(
+        entity_registry, Platform.SWITCH, doorbell.mac
+    ) & _SMART_KEYS == {key}
+
+
+async def test_switch_command_when_public_object_vanishes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_all: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A switch deleted mid-call raises a translated error, not AttributeError.
+
+    Service calls filter unavailable entities once up front and then run the
+    entity coroutines, so a delete frame landing after that check must not
+    reach the command path as a missing public object.
+    """
+    public = make_public_sensor(
+        sensor_all, capabilities={SensorFeatureCapability.MOTION}
+    )
+    pb = ufp_public_only.api.public_bootstrap
+    pb.sensors = {public.id: public}
+
+    await setup_public_only()
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{public.mac}_motion"
+    )
+    assert entity_id
+    platform = next(
+        p for p in async_get_platforms(hass, DOMAIN) if p.domain == Platform.SWITCH
+    )
+    entity = platform.entities[entity_id]
+    request_call = entity.async_request_call
+
+    async def _delete_then_run(coro: Coroutine[Any, Any, Any]) -> Any:
+        """Drop the sensor after the availability filter, before the command."""
+        pb.sensors.pop(public.id)
+        msg = public_device_ws_message(public)
+        msg.new_obj = None
+        msg.old_obj = public
+        ufp_public_only.devices_ws_subscription(msg)
+        return await request_call(coro)
+
+    with (
+        patch.object(entity, "async_request_call", _delete_then_run),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    public.set_motion_status.assert_not_called()
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "device_not_available"
+    assert err.value.translation_placeholders == {"device_name": public.display_name}
+
+
+async def test_switch_hybrid_public_sensor_without_private_deferred(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Hybrid leaves a public sensor without a private object to the adopt path.
+
+    It gets no entities from the public object alone, and the capability
+    cleanup does not touch its registry entries either.
+    """
+    setup_public_sensor(ufp, capabilities=_ENV_CAPABILITIES)
+    orphan = make_public_sensor(sensor_all, capabilities=_ENV_CAPABILITIES)
+    orphan.id = "orphan-sensor"
+    orphan.mac = "FFEEDDCCBB03"
+    ufp.api.public_bootstrap.sensors[orphan.id] = orphan
+    stale = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{orphan.mac}_motion", config_entry=ufp.entry
+    )
+
+    await init_entry(hass, ufp, [])
+
+    assert registered_keys(entity_registry, Platform.SWITCH, orphan.mac) == {"motion"}
+    assert entity_registry.async_get(stale.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "make", "key", "setter", "present_keys", "absent_keys"),
+    [
+        pytest.param(
+            "doorbell",
+            make_streamless_public_camera,
+            "smart_person",
+            "set_person_detection",
+            {"high_fps"},
+            {"ssh", "motion", "privacy_mode", "color_night_vision"},
+            id="camera",
+        ),
+        pytest.param(
+            "sensor_all",
+            partial(
+                make_public_sensor,
+                motion_enabled=True,
+                capabilities={SensorFeatureCapability.MOTION},
+            ),
+            "motion",
+            "set_motion_status",
+            set(),
+            {"status_light", "temperature"},
+            id="sensor",
+        ),
+        pytest.param(
+            "light",
+            partial(make_public_light, is_indicator_enabled=True),
+            "status_light",
+            "set_status_light",
+            set(),
+            {"ssh"},
+            id="light",
+        ),
+    ],
+)
+async def test_public_only_switch_end_to_end(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    fixture_name: str,
+    make: Callable[[Any], Mock],
+    key: str,
+    setter: str,
+    present_keys: set[str],
+    absent_keys: set[str],
+) -> None:
+    """A public-only entry builds the migrated switches from the public object.
+
+    Private-only switches and the NVR switches are absent, the device is
+    registered from public identity and commands go to the public setter.
+    """
+    device = request.getfixturevalue(fixture_name)
+    public = make(device)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = public
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    keys = registered_keys(entity_registry, Platform.SWITCH, device.mac)
+    assert key in keys
+    assert present_keys <= keys
+    assert not keys & absent_keys
+    assert hass.states.get("switch.unifiprotect_insights_enabled") is None
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{device.mac}_{key}"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.model == public.type
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert nvr_device
+    assert device_entry.via_device_id == nvr_device.id
+
+    await hass.services.async_call(
+        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    getattr(public, setter).assert_awaited_once_with(False)
+
+
+async def test_public_only_switch_camera_capability_gating(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    doorbell: Camera,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Without a private object the detection switches gate on the public capability."""
+    doorbell.feature_flags.smart_detect_types = [SmartDetectObjectType.PERSON]
+    doorbell.feature_flags.smart_detect_audio_types = []
+    public = make_streamless_public_camera(doorbell)
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
+
+    await setup_public_only()
+
+    assert registered_keys(
+        entity_registry, Platform.SWITCH, doorbell.mac
+    ) & _SMART_KEYS == {"smart_person"}
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "make", "key"),
+    [
+        pytest.param(
+            "sensor_all",
+            partial(make_public_sensor, capabilities={SensorFeatureCapability.MOTION}),
+            "motion",
+            id="sensor",
+        ),
+        pytest.param(
+            "doorbell", make_streamless_public_camera, "smart_person", id="camera"
+        ),
+    ],
+)
+async def test_public_only_switch_added_after_setup(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    caplog: pytest.LogCaptureFixture,
+    fixture_name: str,
+    make: Callable[[Any], Mock],
+    key: str,
+) -> None:
+    """In public-only mode a device added later gets its switches from its add frame.
+
+    The public devices websocket ``add`` frame is the only discovery signal
+    without a local user; a re-delivered frame must not add a second time.
+    """
+    await setup_public_only()
+    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
+
+    device = request.getfixturevalue(fixture_name)
+    public = make(device)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = public
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert key in registered_keys(entity_registry, Platform.SWITCH, device.mac)
+    count = len(hass.states.async_entity_ids(Platform.SWITCH.value))
+
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(Platform.SWITCH.value)) == count
+    assert "already exists" not in caplog.text
+
+
+async def test_public_only_switch_sense_registry_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_all: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The capability cleanup runs without a private bootstrap."""
+    stale = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{sensor_all.mac}_temperature",
+        config_entry=ufp_public_only.entry,
+    )
+    ufp_public_only.api.public_bootstrap.sensors[sensor_all.id] = make_public_sensor(
+        sensor_all, capabilities={SensorFeatureCapability.MOTION}
+    )
+
+    await setup_public_only()
+
+    assert entity_registry.async_get(stale.entity_id) is None

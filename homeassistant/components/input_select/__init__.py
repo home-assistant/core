@@ -1,12 +1,12 @@
 """Support to select an option from a list."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, cast, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.select import (
-    ATTR_CYCLE,
+from homeassistant.components.select import (  # noqa: F401
     ATTR_OPTION,
     ATTR_OPTIONS,
     SERVICE_SELECT_FIRST,
@@ -25,24 +25,27 @@ from homeassistant.const import (  # noqa: F401
     CONF_OPTIONS,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputSelectEntityStateAttribute
+from .const import (  # noqa: F401
+    DATA_INPUT_SELECT,
+    DOMAIN,
+    SERVICE_SET_OPTIONS,
+    InputSelectEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
 
-SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
@@ -50,18 +53,18 @@ STORAGE_VERSION_MINOR = 2
 
 def _unique(options: Any) -> Any:
     try:
-        return vol.Unique()(options)
-    except vol.Invalid as exc:
+        return probatio.Unique()(options)
+    except probatio.Invalid as exc:
         raise HomeAssistantError("Duplicate options are not allowed") from exc
 
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Required(CONF_OPTIONS): vol.All(
-        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Required(CONF_OPTIONS): probatio.All(
+        probatio.EnsureList(), probatio.NonEmpty(), _unique, [cv.string]
     ),
-    vol.Optional(CONF_INITIAL): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_INITIAL): cv.string,
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 
@@ -83,36 +86,35 @@ def _remove_duplicates(options: list[str], name: str | None) -> list[str]:
 
 
 def _cv_input_select(cfg: dict[str, Any]) -> dict[str, Any]:
-    """Configure validation helper for input select (voluptuous)."""
+    """Configure validation helper for input select (probatio)."""
     options = cfg[CONF_OPTIONS]
     initial = cfg.get(CONF_INITIAL)
     if initial is not None and initial not in options:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"initial state {initial} is not part of the options: {','.join(options)}"
         )
     cfg[CONF_OPTIONS] = _remove_duplicates(options, cfg.get(CONF_NAME))
     return cfg
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Required(CONF_OPTIONS): vol.All(
-                        cv.ensure_list, vol.Length(min=1), [cv.string]
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Required(CONF_OPTIONS): probatio.All(
+                        probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
                     ),
-                    vol.Optional(CONF_INITIAL): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_INITIAL): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
                 },
                 _cv_input_select,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 class InputSelectStore(Store):
@@ -131,6 +133,14 @@ class InputSelectStore(Store):
                         options, item.get(CONF_NAME)
                     )
         return old_data
+
+
+@dataclass(slots=True)
+class InputSelectData:
+    """Runtime data for the input_select integration."""
+
+    component: EntityComponent[InputSelect]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -165,68 +175,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_SELECT] = InputSelectData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_FIRST,
-        None,
-        InputSelect.async_first.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_LAST,
-        None,
-        InputSelect.async_last.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
-        InputSelect.async_next.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
-        InputSelect.async_select_option.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
-        InputSelect.async_previous.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_OPTIONS,
-        {
-            vol.Required(ATTR_OPTIONS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            )
-        },
-        "async_set_options",
-    )
-
+    async_setup_services(hass)
     return True
 
 
 class InputSelectStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_select))
+    CREATE_UPDATE_SCHEMA = probatio.Schema(
+        probatio.All(STORAGE_FIELDS, _cv_input_select)
+    )
 
     @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:

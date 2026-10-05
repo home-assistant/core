@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.time_date.const import DOMAIN
@@ -44,7 +44,7 @@ async def test_user_flow_does_not_allow_beat(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"display_options": ["beat"]},

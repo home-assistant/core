@@ -1,7 +1,7 @@
 """Set up some common test helper things."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
@@ -33,6 +33,7 @@ from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import bcrypt
 from bleak_retry_connector import bleak_manager
+import execnet
 import freezegun
 import multidict
 import pytest
@@ -59,6 +60,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
@@ -151,12 +153,15 @@ _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
-# Disable fixtures overriding our beautiful policy
-asyncio.set_event_loop_policy = lambda policy: None
 
 # Capture the real socket functions before any test patches them
 _real_getaddrinfo = socket.getaddrinfo
+
+# Guard for CI jobs that pin the SQLite version via tests.sqlite3_shim
+if expected_sqlite := os.environ.get("EXPECTED_SQLITE_VERSION"):
+    assert sqlite3.sqlite_version == expected_sqlite, (
+        f"Expected SQLite {expected_sqlite}, got {sqlite3.sqlite_version}"
+    )
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -172,6 +177,15 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_setupnodes(
+    config: pytest.Config, specs: Sequence[execnet.XSpec]
+) -> None:
+    """Log the number of xdist workers, also when running with -qq."""
+    if reporter := config.pluginmanager.get_plugin("terminalreporter"):
+        reporter.write_line(f"xdist workers: {len(specs)}")
 
 
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
@@ -386,6 +400,18 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
+async def configure_event_loop() -> None:
+    """Configure the loop the way Home Assistant configures its own."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def configure_session_event_loop() -> None:
+    """Configure the session loop, which session scoped fixtures run on."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
+@pytest.fixture(autouse=True)
 async def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
     asyncio.get_running_loop().set_debug(True)
@@ -447,7 +473,7 @@ def verify_cleanup(
     for thread in threads:
         assert (
             isinstance(thread, threading._DummyThread)
-            or thread.name.startswith("waitpid-")
+            or thread.name.startswith("asyncio-waitpid-")
             or "_run_safe_shutdown_loop" in thread.name
         )
 
@@ -877,11 +903,17 @@ async def hass_read_only_access_token(
 async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return the Home Assistant Supervisor user."""
+    """Return the Home Assistant Supervisor user.
+
+    The user is published the same way the hassio integration does, so
+    commands restricted to the Supervisor accept it.
+    """
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
-    return MockUser(
+    user = MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
     ).add_to_hass(hass)
+    hass.data[DATA_SUPERVISOR_USER] = user
+    return user
 
 
 @pytest.fixture

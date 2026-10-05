@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import CookieJar
+import probatio
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
@@ -16,7 +17,6 @@ from pyanglianwater.exceptions import (
     SmartMeterUnavailableError,
     UnknownEndpointError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -32,18 +32,18 @@ from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_USERNAME): selector.TextSelector(),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
 )
 
-STEP_MFA_DATA_SCHEMA = vol.Schema(
+STEP_MFA_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CODE): selector.TextSelector(),
+        probatio.Required(CONF_CODE): selector.TextSelector(),
     }
 )
 
@@ -212,9 +212,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = validation_result
         return self.async_show_form(
             step_id="select_account",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ACCOUNT_NUMBER): selector.SelectSelector(
+                    probatio.Required(CONF_ACCOUNT_NUMBER): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=self.accounts,
                             multiple=False,

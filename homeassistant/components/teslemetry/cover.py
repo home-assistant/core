@@ -1,7 +1,8 @@
 """Cover platform for Teslemetry integration."""
 
+from dataclasses import asdict, dataclass
 from itertools import chain
-from typing import Any, override
+from typing import Any, Self, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import (
@@ -11,6 +12,7 @@ from tesla_fleet_api.const import (
     Trunk,
     WindowCommand,
 )
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import Signal
 from teslemetry_stream.const import WindowState
@@ -22,7 +24,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .entity import (
@@ -96,8 +98,7 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 if not vehicle.poll
                 and firmware_at_least(vehicle.firmware, "2024.44.25")
-                and vehicle.coordinator.data.get("vehicle_config_car_type")
-                == "cybertruck"
+                and vehicle.api.model == "Cybertruck"
             ),
         )
     )
@@ -120,7 +121,7 @@ class CoverRestoreEntity(RestoreEntity, CoverEntity):
 class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for window cover entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -175,6 +176,26 @@ class TeslemetryVehiclePollingWindowEntity(
             self._attr_is_closed = True
 
 
+@dataclass
+class TeslemetryWindowsExtraStoredData(ExtraStoredData):
+    """Per-window closed flags stored with the windows cover state."""
+
+    fd: bool | None
+    fp: bool | None
+    rd: bool | None
+    rp: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the window flags."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self:
+        """Initialize the window flags from a dict."""
+        return cls(restored["fd"], restored["fp"], restored["rd"], restored["rp"])
+
+
 class TeslemetryStreamingWindowEntity(
     TeslemetryVehicleStreamEntity, TeslemetryWindowEntity, CoverRestoreEntity
 ):
@@ -200,6 +221,15 @@ class TeslemetryStreamingWindowEntity(
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            windows = TeslemetryWindowsExtraStoredData.from_dict(extra_data.as_dict())
+            self.fd = windows.fd
+            self.fp = windows.fp
+            self.rd = windows.rd
+            self.rp = windows.rp
+        elif self._attr_is_closed:
+            # Without stored flags, closed still means every window was closed
+            self.fd = self.fp = self.rd = self.rp = True
         self.async_on_remove(
             self.stream.async_add_listener(
                 self._handle_stream_update,
@@ -217,6 +247,12 @@ class TeslemetryStreamingWindowEntity(
                 self.add_field(signal),
                 f"Adding field {signal} to {self.vehicle.vin}",
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> TeslemetryWindowsExtraStoredData:
+        """Return the per-window flags to restore."""
+        return TeslemetryWindowsExtraStoredData(self.fd, self.fp, self.rd, self.rp)
 
     def _handle_stream_update(self, data: dict[str, Any]) -> None:
         """Update the entity attributes."""
@@ -254,7 +290,7 @@ class TeslemetryChargePortEntity(
 ):
     """Base class for for charge port cover entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -340,7 +376,7 @@ class TeslemetryStreamingChargePortEntity(
 class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the front trunk cover entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
@@ -407,7 +443,7 @@ class TeslemetryStreamingFrontTrunkEntity(
 class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Cover entity for the rear trunk."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -482,7 +518,7 @@ class TeslemetryStreamingRearTrunkEntity(
 class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
     """Cover entity for the sunroof."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
@@ -538,7 +574,7 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
 class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the Cybertruck tonneau cover entity."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
