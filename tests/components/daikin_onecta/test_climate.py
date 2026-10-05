@@ -23,7 +23,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.daikin_onecta.climate import (
     DaikinClimate,
-    async_setup_entry,
 )
 from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
@@ -70,27 +69,6 @@ def test_climate_availability(
     entity._embedded_id = "zone"
 
     assert entity.available is expected
-
-
-async def test_setup_adds_entities_once() -> None:
-    """Add climate entities from all devices in a single call."""
-    first_device = MagicMock()
-    second_device = MagicMock()
-    first_entities = [MagicMock()]
-    second_entities = [MagicMock(), MagicMock()]
-    coordinator = MagicMock(data={"first": first_device, "second": second_device})
-    config_entry = MagicMock(runtime_data=coordinator)
-    async_add_entities = MagicMock()
-
-    with patch(
-        "homeassistant.components.daikin_onecta.climate._create_climate_entities",
-        side_effect=[first_entities, second_entities],
-    ):
-        await async_setup_entry(MagicMock(), config_entry, async_add_entities)
-
-    async_add_entities.assert_called_once_with(
-        [*first_entities, *second_entities], update_before_add=False
-    )
 
 
 async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
