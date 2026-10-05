@@ -165,15 +165,25 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
         if hs != ls:
             boundary = ls if in_high_frequency_window else hs
-            next_boundary = datetime.combine(now.date(), boundary, now.tzinfo)
-            if next_boundary <= now:
-                next_boundary += timedelta(days=1)
+            now_utc = dt_util.as_utc(now)
+            next_boundary = datetime.combine(
+                now.date(), boundary, dt_util.DEFAULT_TIME_ZONE
+            )
+            if dt_util.as_utc(next_boundary) <= now_utc:
+                next_boundary = datetime.combine(
+                    now.date() + timedelta(days=1),
+                    boundary,
+                    dt_util.DEFAULT_TIME_ZONE,
+                )
             # Keep a valid polling interval when the next boundary is less
             # than one high-frequency interval away. In particular, converting
             # a fractional-second delay to an integer must not result in zero.
             scan_interval = max(
                 high_scan_interval,
-                min(scan_interval, int((next_boundary - now).total_seconds())),
+                min(
+                    scan_interval,
+                    int((dt_util.as_utc(next_boundary) - now_utc).total_seconds()),
+                ),
             )
 
         return timedelta(seconds=scan_interval)

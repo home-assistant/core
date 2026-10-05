@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
 from daikin_onecta import OnectaConnectionError, OnectaRateLimitError
 from daikin_onecta.rate_limit import RateLimit
@@ -157,6 +158,28 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.options = options
 
         assert coordinator._determine_update_interval(mock_hass) == expected
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
+    def test_scan_interval_uses_utc_delay_across_dst_start(
+        self, mock_now, coordinator, mock_hass
+    ):
+        """Use the next boundary's UTC offset when daylight saving time starts."""
+        amsterdam = ZoneInfo("Europe/Amsterdam")
+        mock_now.return_value = datetime(2026, 3, 28, 23, 30, tzinfo=amsterdam)
+        coordinator.options = {
+            "low_scan_interval": 240,
+            "high_scan_interval": 5,
+            "high_scan_start": "03:00:00",
+            "low_scan_start": "22:00:00",
+        }
+
+        with patch(
+            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+            amsterdam,
+        ):
+            assert coordinator._determine_update_interval(mock_hass) == timedelta(
+                minutes=150
+            )
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
