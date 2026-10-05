@@ -133,6 +133,24 @@ from tests.common import MockConfigEntry, snapshot_platform
         ),
         pytest.param(
             DummyDevice(
+                DeviceType.DB,
+                attributes={
+                    DBAttributes.power: True,
+                    DBAttributes.mode: "normal",
+                    DBAttributes.temperature: 22.0,
+                    DBAttributes.wash_time: 65,
+                    DBAttributes.dehydration_time: 30,
+                    DBAttributes.program: "cotton",
+                    DBAttributes.status: "pause",
+                    DBAttributes.dehydration_speed: "-",
+                    DBAttributes.water_level: "low",
+                    DBAttributes.progress: "rinse",
+                },
+            ),
+            id="db_invalid_dehydration_speed",
+        ),
+        pytest.param(
+            DummyDevice(
                 DeviceType.DC,
                 attributes={
                     DCAttributes.power: True,

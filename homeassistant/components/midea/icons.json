@@ -53,6 +53,9 @@
       "detergent": {
         "default": "mdi:bottle-tonic"
       },
+      "dry_program": {
+        "default": "mdi:tumble-dryer"
+      },
       "filter_life": {
         "default": "mdi:air-filter"
       },

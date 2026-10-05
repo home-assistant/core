@@ -851,7 +851,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
             "kids",
             "water_cotton",
             "single_drying",
-            "single_drying",
             "fast_wash_30",
             "fast_wash_60",
             "water_intelligent",
@@ -956,7 +955,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="program",
-        translation_key="wash_program",
+        translation_key="dry_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "cotton",
@@ -1043,10 +1042,10 @@ class MideaSensor(MideaEntity, SensorEntity):
         value = self._device.get_attribute(self.entity_description.key)
         if value in ["unknown", "default"]:
             return None
-        if isinstance(value, str) and self.entity_description.key in [
-            "dehydration_speed",
-            "temperature",
-        ]:
+        if isinstance(value, str) and (
+            self.entity_description.translation_key == "dehydration_speed"
+            or self.entity_description.key == "temperature"
+        ):
             try:
                 return cast("StateType", int(value))
             except ValueError:
