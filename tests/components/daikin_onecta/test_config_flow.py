@@ -321,6 +321,7 @@ async def test_reauth_oauth_create_entry_rejects_wrong_account(
 ) -> None:
     """Reject reauthentication with an OAuth token for another account."""
     hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
+    original_data = config_entry.data
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
@@ -343,10 +344,14 @@ async def test_reauth_oauth_create_entry_rejects_wrong_account(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch.object(hass.config_entries, "async_reload") as reload_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == "abort"
     assert result["reason"] == "wrong_account"
+    assert config_entry.data == original_data
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    reload_entry.assert_not_called()
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -358,6 +363,7 @@ async def test_oauth_create_entry_rejects_duplicate_account(
 ) -> None:
     """Reject setup when the OAuth account is already configured."""
     hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
+    original_data = config_entry.data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -376,10 +382,14 @@ async def test_oauth_create_entry_rejects_duplicate_account(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch.object(hass.config_entries, "async_reload") as reload_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert config_entry.data == original_data
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    reload_entry.assert_not_called()
 
 
 async def test_reauth_confirm_continue(

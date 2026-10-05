@@ -168,7 +168,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             now_utc = dt_util.as_utc(now)
             next_boundary = datetime.combine(
                 now.date(), boundary, dt_util.DEFAULT_TIME_ZONE
-            )
+            ).replace(fold=now.fold)
             if dt_util.as_utc(next_boundary) <= now_utc:
                 next_boundary = datetime.combine(
                     now.date() + timedelta(days=1),

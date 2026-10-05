@@ -182,6 +182,28 @@ class TestOnectaDataUpdateCoordinator:
             )
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
+    def test_scan_interval_preserves_dst_fold_at_window_boundary(
+        self, mock_now, coordinator, mock_hass
+    ):
+        """Use the second occurrence of a boundary during daylight saving rollback."""
+        amsterdam = ZoneInfo("Europe/Amsterdam")
+        mock_now.return_value = datetime(2026, 10, 25, 2, 15, tzinfo=amsterdam, fold=1)
+        coordinator.options = {
+            "low_scan_interval": 240,
+            "high_scan_interval": 5,
+            "high_scan_start": "02:30:00",
+            "low_scan_start": "03:00:00",
+        }
+
+        with patch(
+            "homeassistant.components.daikin_onecta.coordinator.dt_util.DEFAULT_TIME_ZONE",
+            amsterdam,
+        ):
+            assert coordinator._determine_update_interval(mock_hass) == timedelta(
+                minutes=15
+            )
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
     def test_transition_period_randomization(
         self, mock_random, mock_now, coordinator, mock_hass
