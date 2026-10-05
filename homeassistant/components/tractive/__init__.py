@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Remove sensor entities that are no longer supported
+    # Remove sensor entities that are no longer supported by the Tractive API
     entity_reg = er.async_get(hass)
     for trackable in coordinator.trackables:
         for key in ("activity_label", "calories", "sleep_label"):
