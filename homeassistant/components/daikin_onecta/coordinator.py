@@ -170,11 +170,17 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 now.date(), boundary, dt_util.DEFAULT_TIME_ZONE
             ).replace(fold=now.fold)
             if dt_util.as_utc(next_boundary) <= now_utc:
-                next_boundary = datetime.combine(
-                    now.date() + timedelta(days=1),
-                    boundary,
-                    dt_util.DEFAULT_TIME_ZONE,
-                )
+                # During the first occurrence of the daylight-saving rollback
+                # hour, the same local boundary can occur once more today.
+                repeated_boundary = next_boundary.replace(fold=1)
+                if dt_util.as_utc(repeated_boundary) > now_utc:
+                    next_boundary = repeated_boundary
+                else:
+                    next_boundary = datetime.combine(
+                        now.date() + timedelta(days=1),
+                        boundary,
+                        dt_util.DEFAULT_TIME_ZONE,
+                    )
             # Keep a valid polling interval when the next boundary is less
             # than one high-frequency interval away. In particular, converting
             # a fractional-second delay to an integer must not result in zero.
