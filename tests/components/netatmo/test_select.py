@@ -1,12 +1,13 @@
 """The tests for the Netatmo climate platform."""
 
+from collections.abc import Iterator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from pyatmo import Home
+from pyatmo.room import Room
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.netatmo.coordinator import NetatmoDataHandler
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -21,7 +22,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
+from .common import (
+    HOME_ID,
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 from tests.common import MockConfigEntry
 
@@ -130,35 +137,69 @@ async def test_select_schedule_unknown_schedule_id(
     assert hass.states.get(select_entity).state == original_state
 
 
+class _ClimateLastFeatures(set[str]):
+    """Room features iterating with the climate feature last."""
+
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over the features with climate last."""
+        return iter(
+            sorted(super().__iter__(), key=lambda feature: feature == "climate")
+        )
+
+
+class _ClimateLastRoom(Room):
+    """Netatmo room iterating over its features with climate last.
+
+    pyatmo keeps the room features in a set, so their iteration order
+    changes with the hash seed of the process.
+    """
+
+    def evaluate_device_type(self) -> None:
+        """Evaluate the device type keeping the features ordered."""
+        self.features = _ClimateLastFeatures(self.features)
+        super().evaluate_device_type()
+
+
 async def test_select_created_when_climate_is_not_first_room_feature(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
 ) -> None:
     """Test the schedule select does not depend on the room features order.
 
-    Room features are a set, so their iteration order changes with the hash
-    seed of the process. Simulate climate rooms that also have a humidity
-    sensor and iterate with the humidity feature first.
+    Simulate a home whose only climate room has a Smarther (BNS), which also
+    reports humidity, with the climate feature iterated last.
     """
-    original = NetatmoDataHandler.setup_climate_schedule_select
 
-    def _setup_climate_schedule_select(
-        self: NetatmoDataHandler, home: Home, signal_home: str
-    ) -> None:
-        for room in home.rooms.values():
-            if "climate" in room.features:
-                room.features = ["humidity", "climate"]
-        original(self, home, signal_home)
+    def keep_only_smarther_climate_room(payload: dict[str, Any]) -> None:
+        body = payload.get("body")
+        if not isinstance(body, dict):
+            return
+        for home in body.get("homes", []):
+            if home["id"] != HOME_ID:
+                continue
+            module_types = {module["id"]: module["type"] for module in home["modules"]}
+            for room in home["rooms"]:
+                room["module_ids"] = [
+                    module_id
+                    for module_id in room.get("module_ids", [])
+                    if module_types[module_id] not in {"NATherm1", "NRV", "OTH", "OTM"}
+                ]
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(
+            hass, *args, msg_callback=keep_only_smarther_climate_room, **kwargs
+        )
 
     with (
-        selected_platforms(["climate", "select"]),
-        patch.object(
-            NetatmoDataHandler,
-            "setup_climate_schedule_select",
-            _setup_climate_schedule_select,
-        ),
+        selected_platforms([Platform.SELECT]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("pyatmo.home.Room", _ClimateLastRoom),
     ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
