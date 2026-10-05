@@ -893,7 +893,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
             "jacket",
             "bath_towel",
             "night_fresh_wash",
-            "water_fiber",
             "diy0",
             "diy2",
             "heart_wash",
