@@ -16,7 +16,7 @@ from pytest_homeassistant.test_util.aiohttp import (
 )
 from yarl import URL
 
-from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.firewall_policy_schedule import (
     build_schedule,
@@ -26,6 +26,7 @@ from homeassistant.components.unifi.firewall_policy_schedule import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import ConfigEntryFactoryType
 from .test_sensor import FIREWALL_POLICY
@@ -458,3 +459,58 @@ async def test_simultaneous_writes_are_not_lost(
     assert controller.policy["schedule"]["time_range_start"] == "22:15"
     assert hass.states.get(START_TIME).state == "22:15:00"
     assert hass.states.get(SWITCH).state == "off"
+
+
+REJECTION = {
+    "code": "api.err.InvalidDateRange",
+    "details": {},
+    "errorCode": 400,
+    "message": "Start date must be before the end date",
+}
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "entity_id", "data"),
+    [
+        ("select", "select_option", SELECT, {"option": "always"}),
+        ("time", "set_value", START_TIME, {"time": "20:30:00"}),
+        (
+            "date",
+            "set_value",
+            "date.unifi_network_block_streaming_schedule_end_date",
+            {"date": "2026-02-28"},
+        ),
+        ("switch", "turn_off", SWITCH, {}),
+    ],
+)
+@pytest.mark.parametrize(
+    "firewall_policy_payload", [[{**FIREWALL_POLICY, "schedule": CUSTOM}]]
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rejected_write_shows_the_controllers_reason(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    domain: str,
+    service: str,
+    entity_id: str,
+    data: dict[str, Any],
+) -> None:
+    """When UniFi Network rejects a write, its reason reaches the user."""
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/firewall-policies/{FIREWALL_POLICY['_id']}",
+        status=400,
+        json=REJECTION,
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call(hass, domain, service, entity_id, **data)
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_rejected"
+    assert exc_info.value.translation_placeholders == {
+        "reason": "Start date must be before the end date"
+    }

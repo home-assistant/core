@@ -17,12 +17,12 @@ from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicySchedu
 from homeassistant.components.date import DateEntity, DateEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
-from .entity import UnifiEntity, UnifiEntityDescription
+from .entity import UnifiEntity, UnifiEntityDescription, request_failed_error
 from .firewall_policy_schedule import (
     MODES_WITH_START_DATE,
     async_save_schedule,
@@ -174,10 +174,7 @@ class UnifiDateEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                     self.hub, self._obj_id, value
                 )
             except aiounifi.AiounifiException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_request_failed",
-                ) from err
+                raise request_failed_error(err) from err
             await self.async_refresh_after_control()
 
     @callback

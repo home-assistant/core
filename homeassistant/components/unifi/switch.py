@@ -56,12 +56,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_MANUFACTURER
 from .entity import (
     SubscriptionType,
     UnifiEntity,
@@ -74,6 +73,7 @@ from .entity import (
     async_port_poe_supported_fn,
     async_unifi_network_device_info_fn,
     async_wlan_device_info_fn,
+    request_failed_error,
 )
 from .hub import UnifiHub
 
@@ -440,10 +440,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             try:
                 await self.entity_description.control_fn(self.hub, self._obj_id, True)
             except aiounifi.AiounifiException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_request_failed",
-                ) from err
+                raise request_failed_error(err) from err
             await self.async_refresh_after_control()
 
     @override
@@ -453,10 +450,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             try:
                 await self.entity_description.control_fn(self.hub, self._obj_id, False)
             except aiounifi.AiounifiException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_request_failed",
-                ) from err
+                raise request_failed_error(err) from err
             await self.async_refresh_after_control()
 
     @callback

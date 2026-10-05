@@ -230,6 +230,9 @@
     "action_request_failed": {
       "message": "Failed to send action request to UniFi Network"
     },
+    "action_request_rejected": {
+      "message": "UniFi Network rejected the change: {reason}"
+    },
     "reconnect_client_device_not_found": {
       "message": "Unable to reconnect client: device not found"
     },
