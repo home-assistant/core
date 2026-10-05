@@ -32,7 +32,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 STEP_DEVICE_CONFIG_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(
-            CONF_PIN,
+            probatio.Secret(CONF_PIN),
             default=DEFAULT_PIN,
         ): str,
     }

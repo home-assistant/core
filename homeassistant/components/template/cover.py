@@ -27,8 +27,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -107,12 +108,12 @@ COVER_YAML_SCHEMA = probatio.All(
             COVER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
         ).schema
     ),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+    probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
 )
 
 COVER_CONFIG_ENTRY_SCHEMA = probatio.All(
     COVER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+    probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
 )
 
 
