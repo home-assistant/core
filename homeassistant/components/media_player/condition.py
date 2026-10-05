@@ -3,11 +3,10 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
@@ -118,9 +117,9 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
 
 IS_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(ATTR_INPUT_SOURCE): vol.All(
-                cv.ensure_list, vol.Length(min=1), [str]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(ATTR_INPUT_SOURCE): probatio.All(
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
             ),
         },
     }

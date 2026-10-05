@@ -3,8 +3,8 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -427,13 +427,13 @@ async def test_media_player_attribute_condition_behavior_all(
             "media_player.is_source",
             # Empty source list
             {ATTR_INPUT_SOURCE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "media_player.is_source",
             # Missing source
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
