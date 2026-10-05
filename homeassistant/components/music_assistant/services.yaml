@@ -109,6 +109,7 @@ transfer_queue:
         entity:
           domain: media_player
           integration: music_assistant
+          device_class: speaker
     auto_play:
       example: "true"
       selector:
