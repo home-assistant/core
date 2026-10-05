@@ -12,33 +12,45 @@
       "description": "Home Assistant detected that SSL has been set up on your instance, however, no custom external internet URL has been set.\n\nThis may result in unexpected behavior. Text-to-speech may fail, and integrations may not be able to connect back to your instance correctly.\n\nTo address this issue, go to Settings > System > Network; under the \"Home Assistant URL\" section, configure your new \"Internet\" and \"Local network\" addresses that match your new SSL configuration.",
       "title": "SSL is configured without an external URL or internal URL"
     },
-    "ssl_profile_outdated_intermediate_v6": {
+    "ssl_profile_outdated_intermediate_v4": {
       "fix_flow": {
         "abort": {
           "pending_config": "A new HTTP configuration is already waiting to be applied or confirmed. Confirm or revert it first."
         },
         "step": {
-          "confirm": {
-            "description": "The HTTP server uses the SSL profile `{profile}`, which follows outdated Mozilla TLS guidelines. The `{upgrade}` profile follows the current guidelines and only accepts TLS 1.2 or newer connections with authenticated encryption ciphers (AES-GCM or ChaCha20).\n\nBrowsers and operating systems gained support for these around 2013 to 2016, for example Firefox 31, Chrome 49, Safari 9 (iOS 9), Android 4.4 and Internet Explorer 11 on Windows 10. Windows 7 and 8.1 clients using Internet Explorer or other system TLS can only connect with an ECDSA certificate, and devices that stopped receiving updates before then can no longer connect.\n\nThe upgrade is applied as a trial: Home Assistant restarts with the `{upgrade}` profile and asks you to confirm the new configuration. Unless you confirm within 5 minutes, it restores the `{profile}` profile automatically.",
-            "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::title%]"
+          "confirm_intermediate_v6": {
+            "description": "The HTTP server uses the SSL profile **Intermediate v4**, which follows outdated Mozilla TLS guidelines: it still accepts TLS 1.0 and 1.1 and many legacy ciphers. We recommend upgrading to **Intermediate v6**, which accepts TLS 1.2 and newer with current ciphers.\n\nBrowsers and operating systems gained support for these around 2013 to 2016, for example Firefox 31, Chrome 49, Safari 9 (iOS 9), Android 4.4, and Internet Explorer 11 on Windows 10. Windows 7 and 8.1 clients using Internet Explorer or other system TLS can only connect with an ECDSA certificate, and devices that stopped receiving updates before then can no longer connect. If such a device still needs to connect, keep **Intermediate v4** for now and ignore this repair. You can change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.\n\nThe upgrade is applied as a trial: Home Assistant restarts with the **Intermediate v6** profile and asks you to confirm the new configuration. Unless you confirm within 5 minutes, it restores the **Intermediate v4** profile automatically.",
+            "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v4::title%]"
           }
         }
       },
-      "title": "The SSL profile {profile} is outdated"
+      "title": "The SSL profile Intermediate v4 is outdated"
     },
-    "ssl_profile_outdated_modern_v6": {
+    "ssl_profile_outdated_modern_v4": {
       "fix_flow": {
         "abort": {
-          "pending_config": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::fix_flow::abort::pending_config%]"
+          "pending_config": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v4::fix_flow::abort::pending_config%]"
         },
         "step": {
-          "confirm": {
-            "description": "The HTTP server uses the SSL profile `{profile}`, which follows outdated Mozilla TLS guidelines. The `{upgrade}` profile follows the current guidelines and only accepts TLS 1.3 connections.\n\nBrowsers and operating systems gained TLS 1.3 support around 2018 to 2019, for example Chrome 70, Firefox 63, Safari 12.1 (iOS 12.2), Android 10 and Windows 11 (current browsers on Windows 10 support it as well). Devices that stopped receiving updates before then, such as older smart TVs, cameras or hubs that connect to Home Assistant directly, can no longer connect.\n\nThe upgrade is applied as a trial: Home Assistant restarts with the `{upgrade}` profile and asks you to confirm the new configuration. Unless you confirm within 5 minutes, it restores the `{profile}` profile automatically.",
-            "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::title%]"
+          "confirm_intermediate_v6": {
+            "description": "Home Assistant restarts with the **Intermediate v6** profile and asks you to confirm the new configuration. Compared to **Modern v4**, only the older CBC ciphers are removed, so Windows 7 and 8.1 clients using Internet Explorer or other system TLS can only connect with an ECDSA certificate. Unless you confirm within 5 minutes, it restores the **Modern v4** profile automatically.",
+            "title": "[%key:component::http::issues::ssl_profile_outdated_modern_v4::title%]"
+          },
+          "confirm_modern_v6": {
+            "description": "Home Assistant restarts with the **Modern v6** profile and asks you to confirm the new configuration. Clients without TLS 1.3 support can no longer connect. Unless you confirm within 5 minutes, it restores the **Modern v4** profile automatically.",
+            "title": "[%key:component::http::issues::ssl_profile_outdated_modern_v4::title%]"
+          },
+          "init": {
+            "description": "The HTTP server uses the SSL profile **Modern v4**, which follows outdated Mozilla TLS guidelines: it still accepts TLS 1.2 and some older ciphers, while the current modern profile accepts TLS 1.3 only.\n\nWe recommend **Modern v6**. Browsers, mobile apps, and operating systems have supported TLS 1.3 since around 2018 to 2019, for example Chrome 70, Firefox 63, Safari 12.1 (iOS 12.2), and Android 10, so most setups are not affected.\n\nChoose **Intermediate v6** instead if devices that stopped receiving updates before then, such as older smart TVs, cameras, or hubs, connect to Home Assistant directly. It accepts TLS 1.2 and newer with current ciphers.\n\nEither upgrade is applied as a trial and reverts automatically unless you confirm the new configuration within 5 minutes. You can close this dialog to decide later, or change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
+            "menu_options": {
+              "confirm_intermediate_v6": "Intermediate v6 (keeps TLS 1.2)",
+              "confirm_modern_v6": "Modern v6 (recommended)"
+            },
+            "title": "[%key:component::http::issues::ssl_profile_outdated_modern_v4::title%]"
           }
         }
       },
-      "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v6::title%]"
+      "title": "The SSL profile Modern v4 is outdated"
     },
     "yaml_still_present_after_migration": {
       "description": "The HTTP configuration in `configuration.yaml` has already been migrated and is now being ignored. Please remove the `http:` block from your `configuration.yaml`. Manage the HTTP configuration from the UI under **Settings** > **System** > **Network**.",

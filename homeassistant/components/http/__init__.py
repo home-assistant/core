@@ -49,7 +49,6 @@ from .const import (  # noqa: F401
     DEFAULT_CORS,
     DOMAIN,
     ISSUE_SSL_PROFILE_OUTDATED,
-    ISSUE_SSL_PROFILE_OUTDATED_TRANSLATION_KEYS,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     NO_LOGIN_ATTEMPT_THRESHOLD,
@@ -130,23 +129,20 @@ class ApiConfig:
 @callback
 def _async_update_ssl_profile_issue(hass: HomeAssistant, conf: ConfData) -> None:
     """Offer upgrading a superseded SSL profile the server is running with."""
-    upgrade = None
-    if CONF_SSL_CERTIFICATE in conf:
-        upgrade = SSL_PROFILE_UPGRADES.get(SSLProfile(conf[CONF_SSL_PROFILE]))
-    if upgrade is None:
+    if (
+        CONF_SSL_CERTIFICATE not in conf
+        or SSLProfile(conf[CONF_SSL_PROFILE]) not in SSL_PROFILE_UPGRADES
+    ):
         ir.async_delete_issue(hass, DOMAIN, ISSUE_SSL_PROFILE_OUTDATED)
         return
+    # Each superseded profile has its own text with the recommended upgrade.
     ir.async_create_issue(
         hass,
         DOMAIN,
         ISSUE_SSL_PROFILE_OUTDATED,
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key=ISSUE_SSL_PROFILE_OUTDATED_TRANSLATION_KEYS[upgrade],
-        translation_placeholders={
-            "profile": conf[CONF_SSL_PROFILE],
-            "upgrade": upgrade,
-        },
+        translation_key=f"{ISSUE_SSL_PROFILE_OUTDATED}_{conf[CONF_SSL_PROFILE]}",
     )
 
 

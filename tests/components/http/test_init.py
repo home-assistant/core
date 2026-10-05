@@ -1744,20 +1744,13 @@ async def test_setup_migrates_v1_storage_ssl_profile(
     assert hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] == "intermediate_v4"
 
 
-@pytest.mark.parametrize(
-    ("ssl_profile", "upgrade"),
-    [
-        ("modern_v4", "modern_v6"),
-        ("intermediate_v4", "intermediate_v6"),
-    ],
-)
+@pytest.mark.parametrize("ssl_profile", ["modern_v4", "intermediate_v4"])
 async def test_ssl_profile_outdated_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
     tmp_path: Path,
     ssl_profile: str,
-    upgrade: str,
 ) -> None:
     """A server using SSL with a superseded profile gets a repair offering the upgrade."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
@@ -1780,11 +1773,8 @@ async def test_ssl_profile_outdated_issue(
     assert issue is not None
     assert issue.is_fixable
     assert issue.severity is ir.IssueSeverity.WARNING
-    assert issue.translation_key == f"ssl_profile_outdated_{upgrade}"
-    assert issue.translation_placeholders == {
-        "profile": ssl_profile,
-        "upgrade": upgrade,
-    }
+    assert issue.translation_key == f"ssl_profile_outdated_{ssl_profile}"
+    assert issue.translation_placeholders is None
 
 
 def _create_stale_ssl_profile_issue(hass: HomeAssistant) -> None:
@@ -1795,11 +1785,7 @@ def _create_stale_ssl_profile_issue(hass: HomeAssistant) -> None:
         "ssl_profile_outdated",
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="ssl_profile_outdated_intermediate_v6",
-        translation_placeholders={
-            "profile": "intermediate_v4",
-            "upgrade": "intermediate_v6",
-        },
+        translation_key="ssl_profile_outdated_intermediate_v4",
     )
 
 
@@ -1847,13 +1833,15 @@ async def test_ssl_profile_outdated_issue_cleared_without_ssl(
 
 
 @pytest.mark.usefixtures("freezer")
+@pytest.mark.parametrize("upgrade", ["modern_v6", "intermediate_v6"])
 async def test_ssl_profile_outdated_fix_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_storage: dict[str, Any],
     tmp_path: Path,
+    upgrade: str,
 ) -> None:
-    """The repair stages the stable config with the upgraded profile and restarts."""
+    """The repair lets modern_v4 pick its upgrade and stages it as a pending trial."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
@@ -1873,12 +1861,15 @@ async def test_ssl_profile_outdated_fix_flow(
 
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    assert data["type"] == "menu"
+    assert data["step_id"] == "init"
+    assert data["menu_options"] == ["confirm_modern_v6", "confirm_intermediate_v6"]
+
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": f"confirm_{upgrade}"}
+    )
     assert data["type"] == "form"
-    assert data["step_id"] == "confirm"
-    assert data["description_placeholders"] == {
-        "profile": "modern_v4",
-        "upgrade": "modern_v6",
-    }
+    assert data["step_id"] == f"confirm_{upgrade}"
 
     data = await process_repair_fix_flow(client, data["flow_id"])
     assert data["type"] == "create_entry"
@@ -1890,7 +1881,48 @@ async def test_ssl_profile_outdated_fix_flow(
         ssl_conf, created_at=STABLE_CREATED_AT
     )
     assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
-        {**ssl_conf, "ssl_profile": "modern_v6"},
+        {**ssl_conf, "ssl_profile": upgrade},
+        created_at=dt_util.utcnow().isoformat(),
+    )
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_ssl_profile_outdated_fix_flow_single_upgrade(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """intermediate_v4 has one upgrade, so the repair skips the menu."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    ssl_conf = {
+        "ssl_certificate": str(cert_path),
+        "ssl_key": str(key_path),
+        "ssl_profile": "intermediate_v4",
+    }
+    hass_storage[DOMAIN] = _stable_http_storage(ssl_conf)
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    assert data["type"] == "form"
+    assert data["step_id"] == "confirm_intermediate_v6"
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        {**ssl_conf, "ssl_profile": "intermediate_v6"},
         created_at=dt_util.utcnow().isoformat(),
     )
     assert len(restart_calls) == 1

@@ -44,21 +44,16 @@ UNVERSIONED_SSL_PROFILES: Final = {
     SSL_MODERN: SSLProfile.MODERN_V4,
     SSL_INTERMEDIATE: SSLProfile.INTERMEDIATE_V4,
 }
-# Superseded profiles and the current profile to upgrade them to. A server
-# running a superseded profile gets a repair offering the upgrade.
+# Superseded profiles and the current profiles they can be upgraded to, the
+# preferred one first. A server running a superseded profile gets a repair
+# offering the upgrade.
 SSL_PROFILE_UPGRADES: Final = {
-    SSLProfile.MODERN_V4: SSLProfile.MODERN_V6,
-    SSLProfile.INTERMEDIATE_V4: SSLProfile.INTERMEDIATE_V6,
+    SSLProfile.MODERN_V4: (SSLProfile.MODERN_V6, SSLProfile.INTERMEDIATE_V6),
+    SSLProfile.INTERMEDIATE_V4: (SSLProfile.INTERMEDIATE_V6,),
 }
 DEFAULT_SSL_PROFILE: Final = SSLProfile.MODERN_V6
 
 ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"
-# Repair translation key per upgrade target; each text describes which
-# clients that upgrade leaves behind.
-ISSUE_SSL_PROFILE_OUTDATED_TRANSLATION_KEYS: Final = {
-    SSLProfile.MODERN_V6: "ssl_profile_outdated_modern_v6",
-    SSLProfile.INTERMEDIATE_V6: "ssl_profile_outdated_intermediate_v6",
-}
 
 ENV_SETUP_PORT: Final = "SETUP_PORT"
 ENV_SUPERVISOR: Final = "SUPERVISOR"

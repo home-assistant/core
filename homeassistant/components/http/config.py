@@ -194,7 +194,7 @@ def _migrate_ssl_profile(config: dict[str, Any]) -> None:
     if name is None or (profile := UNVERSIONED_SSL_PROFILES.get(name)) is None:
         return
     if CONF_SSL_CERTIFICATE not in config:
-        profile = SSL_PROFILE_UPGRADES[profile]
+        profile = SSL_PROFILE_UPGRADES[profile][0]
     config[CONF_SSL_PROFILE] = profile
 
 

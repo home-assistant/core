@@ -21,7 +21,7 @@ from .const import CONF_SSL_PROFILE, ISSUE_SSL_PROFILE_OUTDATED, SSL_PROFILE_UPG
 
 
 class SSLProfileOutdatedFlow(RepairsFlow):
-    """Stage the stable config with the upgraded SSL profile and restart.
+    """Stage the stable config with an upgraded SSL profile and restart.
 
     The upgrade goes through the regular pending config trial: if the new
     profile locks the user out, it auto-reverts to the stable config.
@@ -30,26 +30,41 @@ class SSLProfileOutdatedFlow(RepairsFlow):
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
-        """Handle the first step of a fix flow."""
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> RepairsFlowResult:
-        """Handle the confirm step of a fix flow."""
+        """Let the user pick the upgrade when there is more than one."""
         store = await async_get_and_load_store(self.hass)
         if store.pending is not None and store.pending[HTTP_CONFIG_ERROR] is None:
             # A pending config is under trial or waiting for its restart; the
             # upgrade must not replace it.
             return self.async_abort(reason="pending_config")
-        profile = store.stable[CONF_SSL_PROFILE]
-        upgrade = SSL_PROFILE_UPGRADES[SSLProfile(profile)]
+        upgrades = SSL_PROFILE_UPGRADES[SSLProfile(store.stable[CONF_SSL_PROFILE])]
+        if len(upgrades) == 1:
+            return await self._async_step_confirm(upgrades[0])
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=[f"confirm_{upgrade}" for upgrade in upgrades],
+        )
+
+    async def async_step_confirm_modern_v6(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Confirm the upgrade to the modern v6 profile."""
+        return await self._async_step_confirm(SSLProfile.MODERN_V6, user_input)
+
+    async def async_step_confirm_intermediate_v6(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Confirm the upgrade to the intermediate v6 profile."""
+        return await self._async_step_confirm(SSLProfile.INTERMEDIATE_V6, user_input)
+
+    async def _async_step_confirm(
+        self, upgrade: SSLProfile, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Describe the upgrade and stage it once confirmed."""
         if user_input is None:
             return self.async_show_form(
-                step_id="confirm",
-                data_schema=probatio.Schema({}),
-                description_placeholders={"profile": profile, "upgrade": upgrade},
+                step_id=f"confirm_{upgrade}", data_schema=probatio.Schema({})
             )
+        store = await async_get_and_load_store(self.hass)
         await store.async_set_pending(
             cast(ConfData, {**_strip_meta(store.stable), CONF_SSL_PROFILE: upgrade})
         )
