@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_REQUEST_TIMEOUT, DOMAIN
 from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -25,7 +25,11 @@ _PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> bool:
     """Set up Zinvolt from a config entry."""
     session = async_get_clientsession(hass)
-    client = ZinvoltClient(entry.data[CONF_ACCESS_TOKEN], session=session)
+    client = ZinvoltClient(
+        entry.data[CONF_ACCESS_TOKEN],
+        session=session,
+        request_timeout=DEFAULT_REQUEST_TIMEOUT,
+    )
 
     try:
         batteries = await client.get_batteries()

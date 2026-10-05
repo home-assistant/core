@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_REQUEST_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,9 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            client = ZinvoltClient(session=session)
+            client = ZinvoltClient(
+                session=session, request_timeout=DEFAULT_REQUEST_TIMEOUT
+            )
             try:
                 token = await client.login(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
