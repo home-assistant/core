@@ -238,7 +238,7 @@ async def test_migrate_helper_broken_config(
     assert data["description_placeholders"]["error"] == (
         "Entity switch.input_two belongs to domain switch"
         ", expected ['sensor', 'number', 'input_number']"
-        " @ data['entities'][1]"
+        " at 'entities[1]'"
     )
     await hass.async_block_till_done()
 
