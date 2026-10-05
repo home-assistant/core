@@ -42,7 +42,7 @@ Additional sources:
 
 ## 4. Run the checks (mandatory for executable rules)
 
-Set up the dev environment once (see the repo `CLAUDE.md`): run `script/setup`. If uv reports no download for the required Python, upgrade uv first (`pip install -U uv` from PyPI, since `astral.sh` may be blocked) and re-run `script/setup`.
+Set up the dev environment once (see the repo `AGENTS.md`): run `script/setup`. If uv reports no download for the required Python, upgrade uv first (`pip install -U uv` from PyPI, since `astral.sh` may be blocked) and re-run `script/setup`.
 
 Match the PR's pinned versions before linting or testing — version drift and missing packages produce both false failures and false passes. Read the pins from the PR head and install them:
 - `ruff` pin from `requirements_test_pre_commit.txt` (and `.pre-commit-config.yaml`); install it (`uv pip install "ruff==<pin>"`). hassfest calls `ruff format`, so install this before hassfest too.
