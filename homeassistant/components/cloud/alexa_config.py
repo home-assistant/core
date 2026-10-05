@@ -35,6 +35,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.const import CONF_NAME
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
@@ -133,6 +134,127 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
     return False
 
 
+@callback
+def _async_enabled(cloud: Cloud[CloudClient], prefs: CloudPreferences) -> bool:
+    """Return if Alexa is enabled."""
+    return cloud.is_logged_in and not cloud.subscription_expired and prefs.alexa_enabled
+
+
+@callback
+def _async_should_expose(
+    hass: HomeAssistant, config: dict[str, Any], entity_id: str
+) -> bool:
+    """Return if an entity should be exposed."""
+    entity_filter: EntityFilter = config[CONF_FILTER]
+    if not entity_filter.empty_filter:
+        return entity_filter(entity_id)
+
+    return async_should_expose(hass, CLOUD_ALEXA, entity_id)
+
+
+@callback
+def _async_should_expose_legacy(
+    hass: HomeAssistant, prefs: CloudPreferences, entity_id: str
+) -> bool:
+    """Return if an entity should be exposed according to the legacy settings."""
+    entity_configs = prefs.alexa_entity_configs
+    entity_config = entity_configs.get(entity_id, {})
+    entity_expose: bool | None = entity_config.get(PREF_SHOULD_EXPOSE)
+    if entity_expose is not None:
+        return entity_expose
+
+    entity_registry = er.async_get(hass)
+    if registry_entry := entity_registry.async_get(entity_id):
+        auxiliary_entity = (
+            registry_entry.entity_category is not None
+            or registry_entry.hidden_by is not None
+        )
+    else:
+        auxiliary_entity = False
+
+    # Backwards compat
+    if (default_expose := prefs.alexa_default_expose) is None:
+        return not auxiliary_entity and entity_supported(hass, entity_id)
+
+    return (
+        not auxiliary_entity
+        and split_entity_id(entity_id)[0] in default_expose
+        and entity_supported(hass, entity_id)
+    )
+
+
+@callback
+def _async_migrate_entity_settings_v1(
+    hass: HomeAssistant, config: dict[str, Any], prefs: CloudPreferences
+) -> None:
+    """Migrate alexa entity settings to entity registry options."""
+    if not config[CONF_FILTER].empty_filter:
+        # Don't migrate if there's a YAML config
+        return
+
+    for entity_id in {
+        *hass.states.async_entity_ids(),
+        *prefs.alexa_entity_configs,
+    }:
+        async_expose_entity(
+            hass,
+            CLOUD_ALEXA,
+            entity_id,
+            _async_should_expose_legacy(hass, prefs, entity_id),
+        )
+
+
+@callback
+def _async_migrate_entity_settings_v2(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
+    """Preserve the pre-migration name of exposed entities as an alias."""
+    entity_config = config.get(CONF_ENTITY_CONFIG) or {}
+    for entity_id in list(er.async_get(hass).entities):
+        if CONF_NAME in entity_config.get(entity_id, {}):
+            continue
+        if _async_should_expose(hass, config, entity_id):
+            er.async_preserve_compat_name_as_alias(hass, entity_id)
+
+
+async def async_migrate_entity_settings(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    prefs: CloudPreferences,
+    cloud: Cloud[CloudClient],
+) -> None:
+    """Migrate the Alexa entity settings to the current version."""
+    if prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION:
+        return
+
+    _LOGGER.info(
+        "Start migration of Alexa settings from v%s to v%s",
+        prefs.alexa_settings_version,
+        ALEXA_SETTINGS_VERSION,
+    )
+    if prefs.alexa_settings_version < 2 or (
+        # Recover from a bug we had in 2023.5.0
+        # where entities didn't get exposed
+        prefs.alexa_settings_version < 3
+        and not any(
+            settings.get("should_expose", False)
+            for settings in async_get_assistant_settings(hass, CLOUD_ALEXA).values()
+        )
+    ):
+        _async_migrate_entity_settings_v1(hass, config, prefs)
+
+    # A disabled Alexa exposed nothing by name, so there is nothing to preserve
+    if prefs.alexa_settings_version < 4 and _async_enabled(cloud, prefs):
+        _async_migrate_entity_settings_v2(hass, config)
+
+    _LOGGER.info(
+        "Finished migration of Alexa settings from v%s to v%s",
+        prefs.alexa_settings_version,
+        ALEXA_SETTINGS_VERSION,
+    )
+    await prefs.async_update(alexa_settings_version=ALEXA_SETTINGS_VERSION)
+
+
 class CloudAlexaConfig(alexa_config.AbstractConfig):
     """Alexa Configuration."""
 
@@ -159,11 +281,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     @property
     def enabled(self) -> bool:
         """Return if Alexa is enabled."""
-        return (
-            self._cloud.is_logged_in
-            and not self._cloud.subscription_expired
-            and self._prefs.alexa_enabled
-        )
+        return _async_enabled(self._cloud, self._prefs)
 
     @property
     @override
@@ -209,56 +327,12 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """Return an identifier for the user that represents this config."""
         return self._cloud_user
 
-    def _migrate_alexa_entity_settings_v1(self) -> None:
-        """Migrate alexa entity settings to entity registry options."""
-        if not self._config[CONF_FILTER].empty_filter:
-            # Don't migrate if there's a YAML config
-            return
-
-        for entity_id in {
-            *self.hass.states.async_entity_ids(),
-            *self._prefs.alexa_entity_configs,
-        }:
-            async_expose_entity(
-                self.hass,
-                CLOUD_ALEXA,
-                entity_id,
-                self._should_expose_legacy(entity_id),
-            )
-
     @override
     async def async_initialize(self) -> None:
         """Initialize the Alexa config."""
         await super().async_initialize()
 
         async def on_hass_started(hass: HomeAssistant) -> None:
-            if self._prefs.alexa_settings_version != ALEXA_SETTINGS_VERSION:
-                _LOGGER.info(
-                    "Start migration of Alexa settings from v%s to v%s",
-                    self._prefs.alexa_settings_version,
-                    ALEXA_SETTINGS_VERSION,
-                )
-                if self._prefs.alexa_settings_version < 2 or (
-                    # Recover from a bug we had in 2023.5.0
-                    # where entities didn't get exposed
-                    self._prefs.alexa_settings_version < 3
-                    and not any(
-                        settings.get("should_expose", False)
-                        for settings in async_get_assistant_settings(
-                            hass, CLOUD_ALEXA
-                        ).values()
-                    )
-                ):
-                    self._migrate_alexa_entity_settings_v1()
-
-                _LOGGER.info(
-                    "Finished migration of Alexa settings from v%s to v%s",
-                    self._prefs.alexa_settings_version,
-                    ALEXA_SETTINGS_VERSION,
-                )
-                await self._prefs.async_update(
-                    alexa_settings_version=ALEXA_SETTINGS_VERSION
-                )
             self._on_deinitialize.append(
                 async_listen_entity_updates(
                     self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
@@ -282,42 +356,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             )
         )
 
-    def _should_expose_legacy(self, entity_id: str) -> bool:
-        """If an entity should be exposed."""
-        entity_configs = self._prefs.alexa_entity_configs
-        entity_config = entity_configs.get(entity_id, {})
-        entity_expose: bool | None = entity_config.get(PREF_SHOULD_EXPOSE)
-        if entity_expose is not None:
-            return entity_expose
-
-        entity_registry = er.async_get(self.hass)
-        if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = (
-                registry_entry.entity_category is not None
-                or registry_entry.hidden_by is not None
-            )
-        else:
-            auxiliary_entity = False
-
-        # Backwards compat
-        if (default_expose := self._prefs.alexa_default_expose) is None:
-            return not auxiliary_entity and entity_supported(self.hass, entity_id)
-
-        return (
-            not auxiliary_entity
-            and split_entity_id(entity_id)[0] in default_expose
-            and entity_supported(self.hass, entity_id)
-        )
-
     @callback
     @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
-        entity_filter: EntityFilter = self._config[CONF_FILTER]
-        if not entity_filter.empty_filter:
-            return entity_filter(entity_id)
-
-        return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
+        return _async_should_expose(self.hass, self._config, entity_id)
 
     @callback
     @override

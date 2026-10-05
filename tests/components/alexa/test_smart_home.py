@@ -1,7 +1,7 @@
 """Test for smart home alexa support."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 
@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import entityfilter
+from homeassistant.helpers import entity_registry as er, entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
@@ -5917,3 +5917,32 @@ async def test_alexa_config(
         assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")
+
+
+async def test_alexa_config_migrate_entity_names(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entity settings migration preserves exposed entity names once."""
+    exposed = entity_registry.async_get_or_create("light", "test", "exposed")
+    yaml_name = entity_registry.async_get_or_create("light", "test", "yaml_name")
+    entity_registry.async_get_or_create("switch", "test", "not_exposed")
+    config = {
+        "filter": entityfilter.FILTER_SCHEMA({"include_domains": ["light"]}),
+        "entity_config": {yaml_name.entity_id: {"name": "Configured"}},
+    }
+
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await smart_home.AlexaConfig(hass, config).async_initialize()
+    assert mock_preserve.mock_calls == [call(hass, exposed.entity_id)]
+    assert hass_storage["alexa"]["data"]["entity_settings_version"] == 2
+
+    # The migration is not repeated
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await smart_home.AlexaConfig(hass, config).async_initialize()
+    assert mock_preserve.mock_calls == []

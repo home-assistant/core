@@ -13,13 +13,13 @@ from homeassistant.components.http import (
     HomeAssistantRequest,
     HomeAssistantView,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .auth import Auth
-from .config import AbstractConfig
+from .config import ENTITY_SETTINGS_VERSION, AbstractConfig
 from .const import (
     API_DIRECTIVE,
     API_ENDPOINT,
@@ -53,6 +53,24 @@ class AlexaConfig(AbstractConfig):
             self._auth = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
         else:
             self._auth = None
+
+    @override
+    async def async_initialize(self) -> None:
+        """Initialize the config and migrate the entity settings."""
+        await super().async_initialize()
+        await self._async_migrate_entity_settings()
+
+    async def _async_migrate_entity_settings(self) -> None:
+        """Migrate the entity settings to the current version."""
+        if self._store.entity_settings_version == ENTITY_SETTINGS_VERSION:
+            return
+        # v2: preserve the pre-migration name of exposed entities as an alias
+        for entity_id in list(er.async_get(self.hass).entities):
+            if CONF_NAME in self.entity_config.get(entity_id, {}):
+                continue
+            if self.should_expose(entity_id):
+                er.async_preserve_compat_name_as_alias(self.hass, entity_id)
+        await self._store.async_set_entity_settings_version(ENTITY_SETTINGS_VERSION)
 
     @property
     @override
