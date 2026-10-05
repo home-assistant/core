@@ -37,6 +37,8 @@ from .helpers import cleanup_device_tracker
 from .utils import async_client_session
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
+MAX_UPDATE_ATTEMPTS = 5
+RETRY_DELAY_SECONDS = 2
 
 type VodafoneConfigEntry = ConfigEntry[VodafoneStationRouter]
 
@@ -135,23 +137,53 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "Session cookies missing for host %s, re-login",
                     self.api.base_url.host,
                 )
-                await self.api.login()
-            for attempt in range(3):
+                await self._async_login()
+            auth_failures = 0
+            login_required = False
+            recovery = "existing session"
+            for attempt in range(1, MAX_UPDATE_ATTEMPTS + 1):
                 try:
+                    if login_required:
+                        LOGGER.debug(
+                            "Re-login before data recovery attempt %s", attempt
+                        )
+                        await self._async_login()
+                        login_required = False
+                        recovery = "re-login"
                     raw_data_devices = await self.api.get_devices_data()
                     data_sensors = await self.api.get_sensor_data()
                     data_wifi = await self.api.get_wifi_data()
                 except (
+                    exceptions.AlreadyLogged,
                     exceptions.CannotAuthenticate,
                     exceptions.GenericResponseError,
                 ) as err:
-                    if attempt == 2:
+                    if attempt == MAX_UPDATE_ATTEMPTS:
+                        LOGGER.debug(
+                            "Data recovery exhausted after %s attempts (%s)",
+                            MAX_UPDATE_ATTEMPTS,
+                            recovery,
+                        )
                         raise
-                    LOGGER.debug("Data request failed, retrying in 2 seconds: %s", err)
-                    await asyncio.sleep(2)
-                    LOGGER.debug("Re-login before retrying data update")
-                    await self.api.login()
+                    if isinstance(err, exceptions.CannotAuthenticate):
+                        auth_failures += 1
+                        login_required = auth_failures >= 2
+                    delay = RETRY_DELAY_SECONDS * attempt
+                    LOGGER.debug(
+                        "Data recovery attempt %s failed; retrying in %s seconds with %s: %s",
+                        attempt,
+                        delay,
+                        "re-login" if login_required else "existing session",
+                        err,
+                    )
+                    await asyncio.sleep(delay)
                 else:
+                    if attempt > 1:
+                        LOGGER.debug(
+                            "Data recovery succeeded on attempt %s using %s",
+                            attempt,
+                            recovery,
+                        )
                     break
         except exceptions.CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
@@ -198,6 +230,13 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.previous_devices = current_devices
 
         return UpdateCoordinatorDataType(data_devices, data_sensors, data_wifi)
+
+    async def _async_login(self) -> None:
+        """Log in, replacing an existing session when necessary."""
+        try:
+            await self.api.login()
+        except exceptions.AlreadyLogged:
+            await self.api.login(force_logout=True)
 
     @property
     def signal_device_new(self) -> str:
