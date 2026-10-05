@@ -560,6 +560,39 @@ async def test_emergency_ssl_certificate_when_invalid(
     assert hass.http._server is not None
 
 
+async def test_emergency_ssl_certificate_uses_configured_profile(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    hass_storage: dict[str, Any],
+) -> None:
+    """The emergency certificate keeps the configured SSL profile."""
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "intermediate_v4",
+        }
+    )
+    hass.config.recovery_mode = True
+
+    with patch(
+        "homeassistant.util.ssl.server_context", side_effect=server_context
+    ) as mock_context:
+        assert await async_setup_component(hass, DOMAIN, {}) is True
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Once for the unusable configured certificate, once for the emergency one.
+    assert mock_context.mock_calls == [
+        call(SSLProfile.INTERMEDIATE_V4),
+        call(SSLProfile.INTERMEDIATE_V4),
+    ]
+    assert hass.http._server is not None
+
+
 async def test_emergency_ssl_certificate_not_used_when_not_recovery_mode(
     hass: HomeAssistant,
     tmp_path: Path,
