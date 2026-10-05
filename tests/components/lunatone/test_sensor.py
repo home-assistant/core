@@ -60,18 +60,18 @@ async def test_sensor_value_update(
     mock_lunatone_sensors.async_update.side_effect = fake_update
 
     entities = hass.states.async_all(Platform.SENSOR)
-    assert entities[0].state == "unknown"
-    assert entities[1].state == "unknown"
     assert entities[2].state == "unknown"
+    assert entities[3].state == "unknown"
+    assert entities[4].state == "unknown"
 
     freezer.tick(timedelta(seconds=40))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entities = hass.states.async_all(Platform.SENSOR)
-    assert entities[0].state == "22"
-    assert entities[1].state == "55"
-    assert entities[2].state == "20"
+    assert entities[2].state == "22"
+    assert entities[3].state == "55"
+    assert entities[4].state == "20"
 
 
 async def test_dali_line_status_value_update(
