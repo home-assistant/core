@@ -22,7 +22,6 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import TriggerUpdateCoordinator  # noqa: F401
 from .helpers import async_get_blueprints, process_config
 
 _LOGGER = logging.getLogger(__name__)
