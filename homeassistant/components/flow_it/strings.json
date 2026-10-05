@@ -51,7 +51,7 @@
         "name": "Service required"
       },
       "update_reboot": {
-        "name": "Update reboot pending"
+        "name": "Reboot pending"
       },
       "warmup": {
         "name": "Warmup mode"

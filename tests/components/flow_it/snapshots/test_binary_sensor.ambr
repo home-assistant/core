@@ -202,6 +202,56 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor_setup[binary_sensor.001122334455_reboot_pending-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.001122334455_reboot_pending',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reboot pending',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reboot pending',
+    'platform': 'flow_it',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'update_reboot',
+    'unique_id': '001122334455_update_reboot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.001122334455_reboot_pending-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '001122334455 Reboot pending',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.001122334455_reboot_pending',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensor_setup[binary_sensor.001122334455_service_required-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -247,56 +297,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.001122334455_service_required',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor_setup[binary_sensor.001122334455_update_reboot_pending-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.001122334455_update_reboot_pending',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Update reboot pending',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Update reboot pending',
-    'platform': 'flow_it',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'update_reboot',
-    'unique_id': '001122334455_update_reboot',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor_setup[binary_sensor.001122334455_update_reboot_pending-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '001122334455 Update reboot pending',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.001122334455_update_reboot_pending',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

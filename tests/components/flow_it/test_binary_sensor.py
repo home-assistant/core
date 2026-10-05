@@ -1,25 +1,36 @@
 """Test Flow-it binary sensor platform."""
 
+from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.flow_it.coordinator import FlowItCoordinator
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 BYPASS_ENTITY_ID = "binary_sensor.001122334455_bypass_active"
 CONDENSATION_ENTITY_ID = "binary_sensor.001122334455_condensation_alert"
 ICE_ENTITY_ID = "binary_sensor.001122334455_ice_alert"
+REBOOT_PENDING_ENTITY_ID = "binary_sensor.001122334455_reboot_pending"
 SERVICE_ENTITY_ID = "binary_sensor.001122334455_service_required"
-UPDATE_REBOOT_ENTITY_ID = "binary_sensor.001122334455_update_reboot_pending"
 WARMUP_ENTITY_ID = "binary_sensor.001122334455_warmup_mode"
 WORRIES_ENTITY_ID = "binary_sensor.001122334455_general_issue"
 
 
+@pytest.fixture(autouse=True)
+def binary_sensor_only() -> Generator[None]:
+    """Only setup binary sensor platform."""
+    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_setup(
     hass: HomeAssistant,
     mock_flow_it: AsyncMock,
@@ -28,39 +39,33 @@ async def test_binary_sensor_setup(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test binary sensor platform setup and entity registry."""
-    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.BINARY_SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        disabled_entries = [
-            entity_entry
-            for entity_entry in er.async_entries_for_config_entry(
-                entity_registry, mock_config_entry.entry_id
-            )
-            if entity_entry.disabled_by is not None
-        ]
-        assert len(disabled_entries) == 1
-        assert disabled_entries[0].entity_id == WARMUP_ENTITY_ID
-        assert disabled_entries[0].disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-        for entity_entry in disabled_entries:
-            entity_registry.async_update_entity(
-                entity_entry.entity_id, disabled_by=None
-            )
-
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_binary_sensor_none_values(
+async def test_binary_sensor_warmup_disabled_by_default(
     hass: HomeAssistant,
     mock_flow_it: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+) -> None:
+    """Test warmup binary sensor is disabled by default."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(WARMUP_ENTITY_ID)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(WARMUP_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_binary_sensor_none_values(
+    hass: HomeAssistant,
+    mock_flow_it: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test binary sensor state when values are None."""
     mock_flow_it.return_value.state.data.alert.ice = None
@@ -71,20 +76,15 @@ async def test_binary_sensor_none_values(
     mock_flow_it.return_value.state.data.alert.warmup = None
     mock_flow_it.return_value.state.data.mode.bypassOn = None
 
-    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.BINARY_SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        entity_registry.async_update_entity(WARMUP_ENTITY_ID, disabled_by=None)
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     for entity_id in (
         ICE_ENTITY_ID,
         CONDENSATION_ENTITY_ID,
         SERVICE_ENTITY_ID,
         WORRIES_ENTITY_ID,
-        UPDATE_REBOOT_ENTITY_ID,
+        REBOOT_PENDING_ENTITY_ID,
         BYPASS_ENTITY_ID,
         WARMUP_ENTITY_ID,
     ):
@@ -93,34 +93,49 @@ async def test_binary_sensor_none_values(
         assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "field", "is_mode"),
+    [
+        pytest.param(BYPASS_ENTITY_ID, "bypassOn", True, id="bypass_on"),
+        pytest.param(CONDENSATION_ENTITY_ID, "condensation", False, id="condensation"),
+        pytest.param(ICE_ENTITY_ID, "ice", False, id="ice"),
+        pytest.param(
+            REBOOT_PENDING_ENTITY_ID, "update_reboot", False, id="update_reboot"
+        ),
+        pytest.param(SERVICE_ENTITY_ID, "service", False, id="service"),
+        pytest.param(WARMUP_ENTITY_ID, "warmup", False, id="warmup"),
+        pytest.param(WORRIES_ENTITY_ID, "worries", False, id="worries"),
+    ],
+)
 async def test_binary_sensor_update(
     hass: HomeAssistant,
     mock_flow_it: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    field: str,
+    is_mode: bool,
 ) -> None:
-    """Test binary sensor state updates via coordinator."""
-    with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.BINARY_SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(ICE_ENTITY_ID)
-    assert state
-    assert state.state == STATE_OFF
-
-    state = hass.states.get(BYPASS_ENTITY_ID)
-    assert state
-    assert state.state == STATE_OFF
-
-    mock_flow_it.return_value.state.data.alert.ice = True
-    mock_flow_it.return_value.state.data.mode.bypassOn = True
-    coordinator: FlowItCoordinator = mock_config_entry.runtime_data.coordinator
-    await coordinator.async_refresh()
+    """Test binary sensor state updates via periodic coordinator refresh."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ICE_ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF
 
-    state = hass.states.get(BYPASS_ENTITY_ID)
+    target = (
+        mock_flow_it.return_value.state.data.mode
+        if is_mode
+        else mock_flow_it.return_value.state.data.alert
+    )
+    setattr(target, field, True)
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
