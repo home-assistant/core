@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyintelliclima import FanState, IntelliClimaC800, IntelliClimaECO2
+from pyintelliclima import IntelliClimaC800, IntelliClimaECO2
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -73,14 +73,6 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
     @property
     def _device_data(self) -> IntelliClimaECO2:
         return self.coordinator.data.ecocomfort2_devices[self._device_id]
-
-    @property
-    def _fan_state(self) -> FanState | None:
-        """Return the running state, or None if the device reports an undefined one."""
-        try:
-            return self._device_data.fan_state
-        except ValueError:
-            return None
 
     @property
     @override

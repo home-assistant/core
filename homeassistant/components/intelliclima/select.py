@@ -63,9 +63,20 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the current fan mode."""
-        if (fan_state := self._fan_state) is None:
+        device_data = self._device_data
+
+        if device_data.mode_set == FanMode.off:
             return None
-        return INTELLICLIMA_MODE_TO_FAN_MODE.get(fan_state.direction)
+
+        # If in auto mode (sensor mode with auto speed),
+        # return None (handled by fan entity preset mode)
+        if (
+            device_data.speed_set == FanSpeed.auto
+            and device_data.mode_set == FanMode.sensor
+        ):
+            return None
+
+        return INTELLICLIMA_MODE_TO_FAN_MODE.get(device_data.mode_set)
 
     @override
     async def async_select_option(self, option: str) -> None:
