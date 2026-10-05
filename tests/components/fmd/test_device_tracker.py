@@ -71,7 +71,7 @@ async def test_refresh_updates_location(
     assert state.attributes["battery"] == 42
 
 
-async def test_accuracy_preference_plumbs_through_to_client(
+async def test_accuracy_filtering_requested_from_client(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_fmd_client: MagicMock,
@@ -84,8 +84,8 @@ async def test_accuracy_preference_plumbs_through_to_client(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # The coordinator passes filter_inaccurate=True by default; provider
-    # filtering itself is covered by fmd-api's own test suite.
+    # The coordinator always requests provider-side accuracy filtering;
+    # provider filtering itself is covered by fmd-api's own test suite.
     assert mock_fmd_client.get_latest_location.await_count >= 1
     kwargs = mock_fmd_client.get_latest_location.await_args.kwargs
     assert kwargs.get("filter_inaccurate") is True

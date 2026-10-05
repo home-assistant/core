@@ -30,7 +30,6 @@ class FmdCoordinator(DataUpdateCoordinator[Location]):
     ) -> None:
         """Initialize the coordinator."""
         self.api = api
-        self.filter_inaccurate = not bool(entry.data.get("allow_inaccurate_locations"))
         super().__init__(
             hass,
             _LOGGER,
@@ -43,9 +42,8 @@ class FmdCoordinator(DataUpdateCoordinator[Location]):
     async def _async_update_data(self) -> Location:
         """Fetch the latest validated location fix from the FMD server."""
         try:
-            location = await self.api.get_latest_location(
-                filter_inaccurate=self.filter_inaccurate
-            )
+            # Explicit so the contract does not depend on the fmd-api default.
+            location = await self.api.get_latest_location(filter_inaccurate=True)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
