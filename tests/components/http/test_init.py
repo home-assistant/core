@@ -1865,23 +1865,36 @@ async def test_ssl_profile_outdated_issue_cleared_without_ssl(
     assert issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated") is None
 
 
+MODERN_V4_MENU = ["confirm_modern_v6", "confirm_intermediate_v6", "ignore"]
+INTERMEDIATE_V4_MENU = ["confirm_intermediate_v6", "ignore"]
+
+
 @pytest.mark.usefixtures("freezer")
-@pytest.mark.parametrize("upgrade", ["modern_v6", "intermediate_v6"])
+@pytest.mark.parametrize(
+    ("ssl_profile", "menu_options", "upgrade"),
+    [
+        ("modern_v4", MODERN_V4_MENU, "modern_v6"),
+        ("modern_v4", MODERN_V4_MENU, "intermediate_v6"),
+        ("intermediate_v4", INTERMEDIATE_V4_MENU, "intermediate_v6"),
+    ],
+)
 async def test_ssl_profile_outdated_fix_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_storage: dict[str, Any],
     tmp_path: Path,
+    ssl_profile: str,
+    menu_options: list[str],
     upgrade: str,
 ) -> None:
-    """The repair lets modern_v4 pick its upgrade and stages it as a pending trial."""
+    """The repair offers the upgrades for the profile and stages the chosen one."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
     ssl_conf = {
         "ssl_certificate": str(cert_path),
         "ssl_key": str(key_path),
-        "ssl_profile": "modern_v4",
+        "ssl_profile": ssl_profile,
     }
     hass_storage[DOMAIN] = _stable_http_storage(ssl_conf)
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
@@ -1896,7 +1909,7 @@ async def test_ssl_profile_outdated_fix_flow(
     data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
     assert data["type"] == "menu"
     assert data["step_id"] == "init"
-    assert data["menu_options"] == ["confirm_modern_v6", "confirm_intermediate_v6"]
+    assert data["menu_options"] == menu_options
 
     data = await process_repair_fix_flow(
         client, data["flow_id"], json={"next_step_id": f"confirm_{upgrade}"}
@@ -1920,23 +1933,24 @@ async def test_ssl_profile_outdated_fix_flow(
     assert len(restart_calls) == 1
 
 
-@pytest.mark.usefixtures("freezer")
-async def test_ssl_profile_outdated_fix_flow_single_upgrade(
+async def test_ssl_profile_outdated_fix_flow_ignore(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
     tmp_path: Path,
 ) -> None:
-    """intermediate_v4 has one upgrade, so the repair skips the menu."""
+    """The repair can be ignored, keeping the current profile."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
-    ssl_conf = {
-        "ssl_certificate": str(cert_path),
-        "ssl_key": str(key_path),
-        "ssl_profile": "intermediate_v4",
-    }
-    hass_storage[DOMAIN] = _stable_http_storage(ssl_conf)
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "intermediate_v4",
+        }
+    )
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
 
     with patch("ssl.SSLContext.load_cert_chain"):
@@ -1947,18 +1961,21 @@ async def test_ssl_profile_outdated_fix_flow_single_upgrade(
 
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": "ignore"}
+    )
     assert data["type"] == "form"
-    assert data["step_id"] == "confirm_intermediate_v6"
+    assert data["step_id"] == "ignore"
 
     data = await process_repair_fix_flow(client, data["flow_id"])
-    assert data["type"] == "create_entry"
-    await hass.async_block_till_done()
+    assert data["type"] == "abort"
+    assert data["reason"] == "issue_ignored"
 
-    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
-        {**ssl_conf, "ssl_profile": "intermediate_v6"},
-        created_at=dt_util.utcnow().isoformat(),
-    )
-    assert len(restart_calls) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
 
 
 async def test_ssl_profile_outdated_fix_flow_pending_config(
