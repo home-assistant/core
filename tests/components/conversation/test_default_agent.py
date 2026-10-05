@@ -2170,7 +2170,6 @@ async def test_no_states_matched_default_error(
 async def test_empty_aliases(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     floor_registry: fr.FloorRegistry,
     empty_alias: str,
@@ -2184,19 +2183,10 @@ async def test_empty_aliases(
         area_kitchen.id, aliases={" "}, floor_id=floor_1.floor_id
     )
 
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
-    kitchen_device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("demo", "id-1234")},
-    )
-    device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
-
     kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
     kitchen_light = entity_registry.async_update_entity(
         kitchen_light.entity_id,
-        device_id=kitchen_device.id,
+        area_id=area_kitchen.id,
         name="kitchen light",
         # Area and floor aliases are only guarded against whitespace, so the
         # punctuation case is exercised on the entity.

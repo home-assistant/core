@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     EntityCategory,
@@ -829,8 +830,8 @@ def test_get_available_entity_id_considers_existing_entities(
             None,
             "Lamp Sensor",
             "sensor.lamp_temperature",
-            "sensor.lamp_sensor",
-            id="user_name_unprefixed",
+            "sensor.lamp_lamp_sensor",
+            id="user_name_with_device_prefix",
         ),
         pytest.param(
             "Lamp",
@@ -1089,8 +1090,8 @@ def test_generate_entity_id(
             None,
             "Lamp Humidity",
             "sensor.temperature_lamp",
-            "sensor.humidity_lamp",
-            id="user_name_unprefixed",
+            "sensor.lamp_humidity_lamp",
+            id="user_name_with_device_prefix",
         ),
         pytest.param(
             [er.EntityNamePart.ENTITY, er.EntityNamePart.DEVICE],
@@ -1100,7 +1101,7 @@ def test_generate_entity_id(
             True,
             "Temperature",
             "custom_id",
-            "Lamp Humidity",
+            "Humidity",
             "sensor.custom_id",
             "sensor.humidity_lamp",
             id="user_name_over_suggested_object_id",
@@ -1648,6 +1649,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "compat_name": None,
                     "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
@@ -1682,6 +1684,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "compat_name": None,
                     "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
@@ -2160,6 +2163,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "compat_name": None,
                     "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
@@ -2362,6 +2366,7 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "compat_name": None,
                     "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
@@ -2533,6 +2538,7 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "compat_name": None,
                     "object_id_base": "Test Entity",
                     "options": {},
                     "original_device_class": "best_class",
@@ -2592,7 +2598,9 @@ async def test_migration_1_21(
 ) -> None:
     """Test migration from version 1.21.
 
-    Version 1.21 stored entity names in a new format, but was reverted.
+    Version 1.21 stored entity names in a new format, was reverted in 1.22, and
+    re-applied in 1.24. Names stored by 1.21 are restored to legacy form by the
+    1.22 reversal and then re-stripped by the 1.24 migration.
     """
     hass_storage[dr.STORAGE_KEY] = {
         "version": dr.STORAGE_VERSION_MAJOR,
@@ -2709,12 +2717,12 @@ async def test_migration_1_21(
     assert entry.name == "My Custom Name"
 
     entry = registry.async_get_or_create("test", "super_platform", "stripped")
-    assert entry.name == "My Device Temperature"
+    assert entry.name == "Temperature"
 
     entry = registry.async_get_or_create(
         "test", "super_platform", "stripped_and_renamed"
     )
-    assert entry.name == "My Device Heat"
+    assert entry.name == "Heat"
 
     # Check migrated data
     await flush_store(registry._store)
@@ -2762,20 +2770,23 @@ async def test_migration_1_21(
                     "id": "entity_custom_name",
                     "unique_id": "custom_name",
                     "name": "My Custom Name",
+                    "compat_name": "My Custom Name",
                 },
                 {
                     **migrated_entity_base,
                     "entity_id": "test.stripped",
                     "id": "entity_stripped",
                     "unique_id": "stripped",
-                    "name": "My Device Temperature",
+                    "name": "Temperature",
+                    "compat_name": None,
                 },
                 {
                     **migrated_entity_base,
                     "entity_id": "test.stripped_and_renamed",
                     "id": "entity_stripped_and_renamed",
                     "unique_id": "stripped_and_renamed",
-                    "name": "My Device Heat",
+                    "name": "Heat",
+                    "compat_name": None,
                 },
             ],
             "deleted_entities": [],
@@ -3695,7 +3706,11 @@ async def test_restore_states(
             id="entity_name_prefixed_with_device_name",
         ),
         pytest.param(
-            "Pedestal Fan", "Angle", None, "Angle", id="user_rename_replaces_full_name"
+            "Pedestal Fan",
+            "Angle",
+            None,
+            "Pedestal Fan Angle",
+            id="user_rename_prefixed_with_device_name",
         ),
         pytest.param(
             None, None, "Living Room Fan", "Living Room Fan", id="device_rename_applied"
@@ -4328,7 +4343,8 @@ async def test_has_entity_name_false_device_name_changes(
     assert updated.original_name_unprefixed == "Light Temperature"
 
     updated2 = entity_registry.async_get(entry2.entity_id)
-    assert updated2.name == "Hue Brightness"
+    assert updated2.name == "Brightness"
+    assert er.async_get_full_entity_name(hass, updated2) == "Hue Brightness"
     assert updated2.original_name_unprefixed is None
 
     updated3 = entity_registry.async_get(entry3.entity_id)
@@ -6904,3 +6920,498 @@ async def test_remove_child_device_orphans_foreign_entry_entities(
     foreign_entity = entity_registry.async_get(foreign_entry_entity.entity_id)
     assert foreign_entity is not None
     assert foreign_entity.device_id is None
+
+
+def _setup_name_migration_storage(
+    hass_storage: dict[str, Any],
+    entities: list[dict[str, Any]],
+    deleted_entities: list[dict[str, Any]] | None = None,
+) -> None:
+    """Populate version 1.23 registry storage with a device named "My Device"."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "child_devices": [],
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["mock_entry"],
+                    "config_entries_subentries": {"mock_entry": [None]},
+                    "config_entry_id": "mock_entry",
+                    "config_subentry_id": None,
+                    "composite_device_id": None,
+                    "composite_primary_config_entry": None,
+                    "split_at": None,
+                    "has_composite_identifiers": False,
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "device_1234",
+                    "identifiers": [["test", "device_1"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "My Device",
+                    "primary_config_entry": "mock_entry",
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 23,
+        "data": {
+            "entities": [
+                {**NAME_MIGRATION_ENTITY_BASE, **entity} for entity in entities
+            ],
+            "deleted_entities": [
+                {**NAME_MIGRATION_DELETED_ENTITY_BASE, **entity}
+                for entity in deleted_entities or []
+            ],
+            "settings": {"entity_id_parts": None},
+        },
+    }
+
+
+NAME_MIGRATION_ENTITY_BASE = {
+    "aliases": [],
+    "aliases_v2": [None],
+    "area_id": None,
+    "capabilities": {},
+    "categories": {},
+    "config_entry_id": None,
+    "config_subentry_id": None,
+    "created_at": "1970-01-01T00:00:00+00:00",
+    "device_class": None,
+    "device_id": "device_1234",
+    "disabled_by": None,
+    "entity_category": None,
+    "has_entity_name": False,
+    "hidden_by": None,
+    "icon": None,
+    "labels": [],
+    "modified_at": "1970-01-01T00:00:00+00:00",
+    "name": None,
+    "object_id_base": "Temperature",
+    "options": {},
+    "original_device_class": None,
+    "original_icon": None,
+    "original_name": "Temperature",
+    "platform": "super_platform",
+    "previous_unique_id": None,
+    "suggested_object_id": None,
+    "supported_features": 0,
+    "translation_key": None,
+    "unit_of_measurement": None,
+}
+
+NAME_MIGRATION_DELETED_ENTITY_BASE = {
+    "aliases": [],
+    "aliases_v2": [None],
+    "area_id": None,
+    "categories": {},
+    "config_entry_id": None,
+    "config_subentry_id": None,
+    "created_at": "1970-01-01T00:00:00+00:00",
+    "device_class": None,
+    "disabled_by": None,
+    "disabled_by_undefined": False,
+    "hidden_by": None,
+    "hidden_by_undefined": False,
+    "icon": None,
+    "labels": [],
+    "modified_at": "1970-01-01T00:00:00+00:00",
+    "name": None,
+    "options": {},
+    "options_undefined": False,
+    "orphaned_timestamp": None,
+    "platform": "super_platform",
+}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_23(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from version 1.23.
+
+    Version 1.24 computes the full name dynamically: the device name prefix is
+    stripped from the stored name. Where the full name changes, the old name is
+    kept as compat name, and preserved as the computed name alias for entities
+    exposed to the conversation agent.
+    """
+    # Load before start, so restored states are written on start
+    hass.set_state(CoreState.not_running)
+    _setup_name_migration_storage(
+        hass_storage,
+        [
+            {
+                "entity_id": "test.stripped",
+                "id": "entity_stripped",
+                "unique_id": "stripped",
+                "name": "My Device Temperature",
+                "options": {"conversation": {"should_expose": True}},
+            },
+            {
+                "entity_id": "test.custom",
+                "id": "entity_custom",
+                "unique_id": "custom",
+                "name": "Custom",
+            },
+            {
+                "entity_id": "test.exposed_custom",
+                "id": "entity_exposed_custom",
+                "unique_id": "exposed_custom",
+                "name": "Custom",
+                "aliases_v2": [None, "Other"],
+                "options": {"conversation": {"should_expose": True}},
+            },
+            {
+                "entity_id": "test.exposed_user_alias",
+                "id": "entity_exposed_user_alias",
+                "unique_id": "exposed_user_alias",
+                "name": "Custom",
+                "aliases_v2": ["User alias"],
+                "options": {"conversation": {"should_expose": True}},
+            },
+            {
+                "entity_id": "test.exposed_no_aliases",
+                "id": "entity_exposed_no_aliases",
+                "unique_id": "exposed_no_aliases",
+                "name": "Custom",
+                "aliases_v2": [],
+                "options": {"conversation": {"should_expose": True}},
+            },
+            {
+                "entity_id": "test.no_name",
+                "id": "entity_no_name",
+                "unique_id": "no_name",
+            },
+            {
+                "entity_id": "test.no_device",
+                "id": "entity_no_device",
+                "unique_id": "no_device",
+                "device_id": None,
+                "name": "My Device Custom",
+            },
+        ],
+        [
+            {
+                "entity_id": "test.deleted",
+                "id": "entity_deleted",
+                "unique_id": "deleted",
+                "name": "My Device Deleted",
+            },
+        ],
+    )
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    # The device name prefix is stripped, the full name is unchanged
+    entry = registry.async_get("test.stripped")
+    assert entry.name == "Temperature"
+    assert entry.compat_name is None
+    assert entry.aliases == [er.COMPUTED_NAME]
+    assert er.async_get_full_entity_name(hass, entry) == "My Device Temperature"
+
+    # Without the prefix the name is kept, so the full name changes
+    entry = registry.async_get("test.custom")
+    assert entry.name == "Custom"
+    assert entry.compat_name == "Custom"
+    assert entry.aliases == [er.COMPUTED_NAME]
+    assert er.async_get_full_entity_name(hass, entry) == "My Device Custom"
+
+    # Exposed to conversation: the old name replaces the computed name alias
+    entry = registry.async_get("test.exposed_custom")
+    assert entry.name == "Custom"
+    assert entry.compat_name == "Custom"
+    assert entry.aliases == ["Custom", "Other"]
+
+    # A user-given primary alias or no aliases at all are left alone
+    entry = registry.async_get("test.exposed_user_alias")
+    assert entry.aliases == ["User alias"]
+    entry = registry.async_get("test.exposed_no_aliases")
+    assert entry.aliases == []
+
+    entry = registry.async_get("test.no_name")
+    assert entry.name is None
+    assert entry.compat_name is None
+    assert er.async_get_full_entity_name(hass, entry) == "My Device Temperature"
+
+    # Without a device there is nothing to strip
+    entry = registry.async_get("test.no_device")
+    assert entry.name == "My Device Custom"
+    assert entry.compat_name is None
+    assert er.async_get_full_entity_name(hass, entry) == "My Device Custom"
+
+    # The device name of a deleted entity is unknown, so its name is cleared
+    deleted_entry = registry.deleted_entities[("test", "super_platform", "deleted")]
+    assert deleted_entry.name is None
+
+    # The friendly name keeps the old name while the compat name is set
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+    for entity_id, friendly_name in (
+        ("test.stripped", "My Device Temperature"),
+        ("test.custom", "Custom"),
+        ("test.no_name", "My Device Temperature"),
+        ("test.no_device", "My Device Custom"),
+    ):
+        entry = registry.async_get(entity_id)
+        assert er.async_get_legacy_friendly_name(hass, entry) == friendly_name
+        assert (
+            hass.states.get(entity_id).attributes[ATTR_FRIENDLY_NAME] == friendly_name
+        )
+
+    # Check migrated data
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "Temperature",
+                    "compat_name": None,
+                    "options": {"conversation": {"should_expose": True}},
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.custom",
+                    "id": "entity_custom",
+                    "unique_id": "custom",
+                    "name": "Custom",
+                    "compat_name": "Custom",
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.exposed_custom",
+                    "id": "entity_exposed_custom",
+                    "unique_id": "exposed_custom",
+                    "name": "Custom",
+                    "compat_name": "Custom",
+                    "aliases_v2": ["Custom", "Other"],
+                    "options": {"conversation": {"should_expose": True}},
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.exposed_user_alias",
+                    "id": "entity_exposed_user_alias",
+                    "unique_id": "exposed_user_alias",
+                    "name": "Custom",
+                    "compat_name": "Custom",
+                    "aliases_v2": ["User alias"],
+                    "options": {"conversation": {"should_expose": True}},
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.exposed_no_aliases",
+                    "id": "entity_exposed_no_aliases",
+                    "unique_id": "exposed_no_aliases",
+                    "name": "Custom",
+                    "compat_name": "Custom",
+                    "aliases_v2": [],
+                    "options": {"conversation": {"should_expose": True}},
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.no_name",
+                    "id": "entity_no_name",
+                    "unique_id": "no_name",
+                    "name": None,
+                    "compat_name": None,
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.no_device",
+                    "id": "entity_no_device",
+                    "unique_id": "no_device",
+                    "device_id": None,
+                    "name": "My Device Custom",
+                    "compat_name": None,
+                },
+            ],
+            "deleted_entities": [
+                {
+                    **NAME_MIGRATION_DELETED_ENTITY_BASE,
+                    "entity_id": "test.deleted",
+                    "id": "entity_deleted",
+                    "unique_id": "deleted",
+                    "name": None,
+                },
+            ],
+            "settings": {"entity_id_parts": None},
+        },
+    }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_preserve_compat_name_as_alias(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test preserving the pre-migration name as the primary alias."""
+    _setup_name_migration_storage(
+        hass_storage,
+        [
+            {
+                "entity_id": "test.stripped",
+                "id": "entity_stripped",
+                "unique_id": "stripped",
+                "name": "My Device Temperature",
+            },
+            {
+                "entity_id": "test.custom",
+                "id": "entity_custom",
+                "unique_id": "custom",
+                "name": "Custom",
+                "aliases_v2": [None, "Other"],
+            },
+            {
+                "entity_id": "test.custom_no_aliases",
+                "id": "entity_custom_no_aliases",
+                "unique_id": "custom_no_aliases",
+                "name": "Custom",
+                "aliases_v2": [],
+            },
+            {
+                "entity_id": "test.custom_user_alias",
+                "id": "entity_custom_user_alias",
+                "unique_id": "custom_user_alias",
+                "name": "Custom",
+                "aliases_v2": ["User alias", None],
+            },
+        ],
+    )
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    # Unknown entities are ignored
+    er.async_preserve_compat_name_as_alias(hass, "test.unknown")
+
+    # A name that was only stripped did not change, nothing to preserve
+    entry = registry.async_get("test.stripped")
+    er.async_preserve_compat_name_as_alias(hass, "test.stripped")
+    assert registry.async_get("test.stripped") is entry
+
+    # The old name replaces the computed name as the primary alias, the compat
+    # name is kept for the friendly name
+    er.async_preserve_compat_name_as_alias(hass, "test.custom")
+    entry = registry.async_get("test.custom")
+    assert entry.aliases == ["Custom", "Other"]
+    assert entry.compat_name == "Custom"
+
+    # Repeated calls are no-ops
+    er.async_preserve_compat_name_as_alias(hass, "test.custom")
+    assert registry.async_get("test.custom") is entry
+
+    er.async_preserve_compat_name_as_alias(hass, "test.custom_no_aliases")
+    entry = registry.async_get("test.custom_no_aliases")
+    assert entry.aliases == ["Custom"]
+
+    # A user-given primary alias is kept
+    entry = registry.async_get("test.custom_user_alias")
+    er.async_preserve_compat_name_as_alias(hass, "test.custom_user_alias")
+    assert registry.async_get("test.custom_user_alias") is entry
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_compat_name_cleared_on_name_changes(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the compat name is dropped once the name of the entity changes."""
+    # Load before start, so the device change does not trigger the device cleanup
+    hass.set_state(CoreState.not_running)
+    _setup_name_migration_storage(
+        hass_storage,
+        [
+            {
+                "entity_id": "test.renamed",
+                "id": "entity_renamed",
+                "unique_id": "renamed",
+                "name": "Custom",
+            },
+            {
+                "entity_id": "test.moved",
+                "id": "entity_moved",
+                "unique_id": "moved",
+                "name": "Custom",
+            },
+            {
+                "entity_id": "test.device_renamed",
+                "id": "entity_device_renamed",
+                "unique_id": "device_renamed",
+                "has_entity_name": True,
+                "name": "Custom",
+            },
+            {
+                "entity_id": "test.unrelated_change",
+                "id": "entity_unrelated_change",
+                "unique_id": "unrelated_change",
+                "name": "Custom",
+            },
+        ],
+    )
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+    events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+    entry = registry.async_update_entity("test.renamed", name="Other")
+    assert entry.compat_name is None
+    assert er.async_get_legacy_friendly_name(hass, entry) == "My Device Other"
+
+    entry = registry.async_update_entity("test.moved", device_id=None)
+    assert entry.compat_name is None
+
+    # Changes unrelated to the name keep the compat name
+    entry = registry.async_update_entity("test.unrelated_change", icon="mdi:test")
+    assert entry.compat_name == "Custom"
+
+    # Renaming the device clears the compat name of all its entities
+    device_registry = dr.async_get(hass)
+    device_registry.async_update_device("device_1234", name_by_user="Renamed")
+    await hass.async_block_till_done()
+    assert registry.async_get("test.device_renamed").compat_name is None
+    assert registry.async_get("test.unrelated_change").compat_name is None
+
+    # The compat name is internal and not reported as a change
+    assert events
+    assert all(
+        "compat_name" not in event.data["changes"]
+        for event in events
+        if event.data["action"] == "update"
+    )
