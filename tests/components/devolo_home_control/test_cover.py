@@ -95,7 +95,7 @@ async def test_cover(
             {ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test", ATTR_POSITION: 50},
             blocking=True,
         )
-    assert error.value.translation_key == "set_cover"
+    assert error.value.translation_key == "set_failed"
     assert error.value.translation_domain == DOMAIN
 
     # Emulate websocket message: device went offline

@@ -95,7 +95,7 @@ async def test_light_without_binary_sensor(
             {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test", ATTR_BRIGHTNESS: 50},
             blocking=True,
         )
-    assert error.value.translation_key == "set_brightness"
+    assert error.value.translation_key == "set_failed"
     assert error.value.translation_domain == DOMAIN
 
     # Emulate websocket message: device went offline
@@ -170,7 +170,7 @@ async def test_light_with_binary_sensor(
             {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )
-    assert error.value.translation_key == "set_switch"
+    assert error.value.translation_key == "set_failed"
     assert error.value.translation_domain == DOMAIN
 
     with (

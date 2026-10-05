@@ -114,7 +114,7 @@ async def test_siren_switching(
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
-    assert error.value.translation_key == "set_tone"
+    assert error.value.translation_key == "set_failed"
     assert error.value.translation_domain == DOMAIN
 
 
