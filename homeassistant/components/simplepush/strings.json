@@ -11,8 +11,7 @@
     "step": {
       "app": {
         "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
           "api_token": "[%key:component::simplepush::config::step::reconfigure::data_description::api_token%]"
@@ -34,7 +33,7 @@
         "data_description": {
           "api_token": "Find it in the Simplepush app under Settings > API Token."
         },
-        "description": "Enter an API token for {name}. An entry of the old Simplepush app moves to the current app: the device key of the old app becomes a topic there, and notifications are sent to that topic. The encryption password of the old app isn't used anymore."
+        "description": "Enter an API token for {name}. An entry of the old Simplepush app moves to the current app: the device key of the old app becomes a topic there, and messages are sent to that topic. The entry gets a notify entity, and its notify action keeps working until Home Assistant 2027.4. The encryption password of the old app isn't used anymore."
       },
       "user": {
         "menu_options": {
@@ -47,9 +46,6 @@
   "exceptions": {
     "invalid_api_token": {
       "message": "Simplepush rejected the API token. Reconfigure the entry with a new API token."
-    },
-    "invalid_links": {
-      "message": "The links must be a URL or a list of URLs."
     },
     "send_message_failed": {
       "message": "Failed to send the Simplepush notification."

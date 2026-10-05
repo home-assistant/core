@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_PASSWORD
 
 from .const import (
+    APP_TITLE,
     ATTR_ENCRYPTED,
     CONF_DEVICE_KEY,
     CONF_SALT,
@@ -31,7 +32,7 @@ def validate_input(api_token: str, topic: str | None) -> dict[str, str] | None:
     except ApiError as err:
         if err.status == 401:
             return {"base": "invalid_auth"}
-        if err.status in (403, 404):
+        if topic is not None and err.status in (403, 404):
             return {"base": "topic_not_joined"}
         return {"base": "cannot_connect"}
     except OSError:
@@ -86,32 +87,16 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(_token_unique_id(user_input[CONF_API_TOKEN]))
             self._abort_if_unique_id_configured()
 
-            self._async_abort_entries_match(
-                {
-                    CONF_NAME: user_input[CONF_NAME],
-                }
-            )
-
             if not (
                 errors := await self.hass.async_add_executor_job(
                     validate_input, user_input[CONF_API_TOKEN], None
                 )
             ):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
-                )
+                return self.async_create_entry(title=APP_TITLE, data=user_input)
 
         return self.async_show_form(
             step_id="app",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_API_TOKEN): str,
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    probatio.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                }
-            ),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )
 
@@ -180,10 +165,9 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
                     validate_input, api_token, topic
                 )
             ):
-                data: dict[str, Any] = {
-                    CONF_API_TOKEN: api_token,
-                    CONF_NAME: entry.data[CONF_NAME],
-                }
+                data: dict[str, Any] = {CONF_API_TOKEN: api_token}
+                if CONF_NAME in entry.data:
+                    data[CONF_NAME] = entry.data[CONF_NAME]
                 if topic:
                     data[CONF_TOPIC] = topic
                 return self.async_update_reload_and_abort(

@@ -21,10 +21,7 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from tests.common import MockConfigEntry
 
-MOCK_CONFIG = {
-    CONF_API_TOKEN: "token",
-    CONF_NAME: "simplepush",
-}
+MOCK_CONFIG = {CONF_API_TOKEN: "token"}
 
 LEGACY_CONFIG = {
     CONF_DEVICE_KEY: "abc",
@@ -81,7 +78,7 @@ async def test_flow_successful(hass: HomeAssistant, mock_client: MagicMock) -> N
         user_input=MOCK_CONFIG,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "simplepush"
+    assert result["title"] == "Simplepush"
     assert result["data"] == MOCK_CONFIG
     assert result["result"].unique_id == TOKEN_UNIQUE_ID
     mock_client.assert_called_once_with(api_token="token")
@@ -94,25 +91,8 @@ async def test_flow_user_api_token_already_configured(hass: HomeAssistant) -> No
     """Test user initialized flow with duplicate API token."""
     MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_NAME: "other"},
+        data=MOCK_CONFIG,
         unique_id=TOKEN_UNIQUE_ID,
-    ).add_to_hass(hass)
-
-    result = await start_flow(hass, "app")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_CONFIG,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_flow_user_name_already_configured(hass: HomeAssistant) -> None:
-    """Test user initialized flow with duplicate name."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=LEGACY_CONFIG,
-        unique_id="abc",
     ).add_to_hass(hass)
 
     result = await start_flow(hass, "app")
@@ -128,7 +108,7 @@ async def test_flow_user_name_already_configured(hass: HomeAssistant) -> None:
     ("side_effect", "error"),
     [
         pytest.param(ApiError(401, ""), "invalid_auth", id="invalid_auth"),
-        pytest.param(ApiError(403, ""), "topic_not_joined", id="not_holder"),
+        pytest.param(ApiError(403, ""), "cannot_connect", id="forbidden"),
         pytest.param(ApiError(500, ""), "cannot_connect", id="server_error"),
         pytest.param(OSError, "cannot_connect", id="network_error"),
     ],
@@ -251,7 +231,7 @@ async def test_legacy_flow_cannot_connect(
             id="moved_entry",
         ),
         pytest.param(
-            {CONF_API_TOKEN: "old", CONF_NAME: "simplepush"},
+            {CONF_API_TOKEN: "old"},
             "old-unique-id",
             MOCK_CONFIG,
             TOKEN_UNIQUE_ID,
@@ -318,12 +298,12 @@ async def test_reconfigure_already_configured(
     """Test reconfiguring with the API token of another entry."""
     MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_NAME: "other"},
+        data=MOCK_CONFIG,
         unique_id=TOKEN_UNIQUE_ID,
     ).add_to_hass(hass)
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_TOKEN: "old", CONF_NAME: "simplepush"},
+        data={CONF_API_TOKEN: "old"},
         unique_id="old-unique-id",
     )
     entry.add_to_hass(hass)
