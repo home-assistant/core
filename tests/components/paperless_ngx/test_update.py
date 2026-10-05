@@ -65,6 +65,35 @@ async def test_update_sensor_downgrade_upgrade(
     assert state.state == STATE_OFF
 
 
+async def test_update_sensor_status_unavailable_on_initial_refresh_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paperless: AsyncMock,
+) -> None:
+    """Test the update entity remains unavailable without initial status data."""
+    mock_paperless.status.side_effect = PaperlessConnectionError
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.paperless_ngx_software")
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_update_sensor_status_unavailable_after_refresh_failure(
+    hass: HomeAssistant,
+    mock_paperless: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test stale status data is not reported after a coordinator failure."""
+    mock_paperless.status.side_effect = PaperlessConnectionError
+    await init_integration.runtime_data.status.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.paperless_ngx_software")
+    assert state.state == STATE_UNAVAILABLE
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_update_sensor_state_on_error(
     hass: HomeAssistant,

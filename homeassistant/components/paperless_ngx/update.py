@@ -63,12 +63,15 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available
+        return self._attr_available and self.coordinator.last_update_success
 
     @property
     @override
     def installed_version(self) -> str | None:
         """Return the installed version."""
+        if not self.coordinator.last_update_success or self.coordinator.data is None:
+            return None
+
         return self.coordinator.data.pngx_version
 
     @override
