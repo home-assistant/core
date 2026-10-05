@@ -133,24 +133,6 @@ from tests.common import MockConfigEntry, snapshot_platform
         ),
         pytest.param(
             DummyDevice(
-                DeviceType.DB,
-                attributes={
-                    DBAttributes.power: True,
-                    DBAttributes.mode: "normal",
-                    DBAttributes.temperature: 22.0,
-                    DBAttributes.wash_time: 65,
-                    DBAttributes.dehydration_time: 30,
-                    DBAttributes.program: "cotton",
-                    DBAttributes.status: "pause",
-                    DBAttributes.dehydration_speed: "-",
-                    DBAttributes.water_level: "low",
-                    DBAttributes.progress: "rinse",
-                },
-            ),
-            id="db_invalid_dehydration_speed",
-        ),
-        pytest.param(
-            DummyDevice(
                 DeviceType.DC,
                 attributes={
                     DCAttributes.power: True,
@@ -309,6 +291,39 @@ async def test_sensor_state_update(
     assert state.state == "45"
 
     await set_device_attribute(device, ACAttributes.indoor_humidity, None)
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_db_sensor_with_invalid_dehydration_speed(
+    hass: HomeAssistant,
+    set_device_attribute: SetDeviceAttribute,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test DB sensor with invalid dehydration_speed."""
+    device = DummyDevice(
+        DeviceType.DB,
+        attributes={
+            DBAttributes.power: True,
+            DBAttributes.mode: "normal",
+            DBAttributes.temperature: 22.0,
+            DBAttributes.wash_time: 65,
+            DBAttributes.dehydration_time: 30,
+            DBAttributes.program: "cotton",
+            DBAttributes.status: "pause",
+            DBAttributes.dehydration_speed: "-",
+            DBAttributes.water_level: "low",
+            DBAttributes.progress: "rinse",
+        },
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_dehydration_speed"
+    ]
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "unknown"
