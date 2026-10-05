@@ -179,6 +179,32 @@ async def test_relay_activation_delay_uses_dedicated_lib_method(
     mock_neopool_client.async_set_config_option.assert_not_awaited()
 
 
+async def test_relay_activation_delay_reads_back_user_facing_value(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A poll surfaces the user-facing value, so current_option round-trips.
+
+    The library applies the firmware +10 s offset on reads, so
+    MBF_PAR_RELAY_ACTIVATION_DELAY already holds the user-facing seconds; the
+    generic mapped-register reader must map it straight back to its option.
+    """
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(
+        hass, mock_config_entry_timers, "mbf_par_relay_activation_delay"
+    )
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_RELAY_ACTIVATION_DELAY": 20,
+    }
+    await mock_config_entry_timers.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "20"
+
+
 async def test_filtvalve_interval_current_option_reads_register(
     hass: HomeAssistant,
     mock_config_entry_timers: MockConfigEntry,
