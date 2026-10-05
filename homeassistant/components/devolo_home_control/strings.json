@@ -65,11 +65,23 @@
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."
     },
-    "set": {
-      "message": "An error occurred while setting the {placeholder}."
+    "set_brightness": {
+      "message": "An error occurred while setting the brightness."
+    },
+    "set_cover": {
+      "message": "An error occurred while setting the cover position."
+    },
+    "set_switch": {
+      "message": "An error occurred while setting the state."
+    },
+    "set_temperature": {
+      "message": "An error occurred while setting the temperature."
+    },
+    "set_tone": {
+      "message": "An error occurred while setting the siren's tone."
     },
     "switch_protected": {
-      "message": "Switching is protected by configuration."
+      "message": "Remote switching is disabled for this device. Please use the physical button."
     }
   }
 }

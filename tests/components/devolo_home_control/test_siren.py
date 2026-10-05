@@ -114,9 +114,8 @@ async def test_siren_switching(
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
-    assert error.value.translation_key == "set"
+    assert error.value.translation_key == "set_tone"
     assert error.value.translation_domain == DOMAIN
-    assert error.value.translation_placeholders == {"placeholder": "siren's tone"}
 
 
 async def test_siren_change_default_tone(

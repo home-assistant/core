@@ -79,9 +79,8 @@ async def test_climate(
             },
             blocking=True,
         )
-    assert error.value.translation_key == "set"
+    assert error.value.translation_key == "set_temperature"
     assert error.value.translation_domain == DOMAIN
-    assert error.value.translation_placeholders == {"placeholder": "temperature"}
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1

@@ -88,8 +88,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
         if not self._multi_level_switch_property.set(value):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set",
-                translation_placeholders={"placeholder": "brightness"},
+                translation_key="set_brightness",
             )
 
     def _set_switch(self, state: bool) -> None:
@@ -102,8 +101,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             if not self._binary_switch_property.set(state):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="set",
-                    translation_placeholders={"placeholder": "state"},
+                    translation_key="set_switch",
                 )
         except SwitchingProtected as err:
             raise ServiceValidationError(
