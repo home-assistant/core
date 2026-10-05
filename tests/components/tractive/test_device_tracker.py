@@ -29,8 +29,15 @@ async def test_device_tracker(
     ):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_position_event()
-        mock_tractive_client.send_hardware_event()
+        mock_tractive_client.set_tracker_status(
+            latitude=22.333, longitude=44.555, accuracy=99, sensor_used="GPS"
+        )
+        mock_tractive_client.set_tracker_status(
+            battery_level=88,
+            tracker_state="operational",
+            power_saving=True,
+            battery_charging=True,
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -43,17 +50,15 @@ async def test_source_type_phone(
     """Test the device tracker with source type phone."""
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_position_event(
-        {
-            "tracker_id": "device_id_123",
-            "position": {
-                "latlong": [22.333, 44.555],
-                "accuracy": 99,
-                "sensor_used": "PHONE",
-            },
-        },
+    mock_tractive_client.set_tracker_status(
+        latitude=22.333, longitude=44.555, accuracy=99, sensor_used="PHONE"
     )
-    mock_tractive_client.send_hardware_event()
+    mock_tractive_client.set_tracker_status(
+        battery_level=88,
+        tracker_state="operational",
+        power_saving=True,
+        battery_charging=True,
+    )
     await hass.async_block_till_done()
 
     assert (
@@ -72,17 +77,15 @@ async def test_source_type_gps(
     """Test if the source type is GPS when the location sensor is KNOWN WIFI."""
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_position_event(
-        {
-            "tracker_id": "device_id_123",
-            "position": {
-                "latlong": [22.333, 44.555],
-                "accuracy": 99,
-                "sensor_used": "KNOWN_WIFI",
-            },
-        },
+    mock_tractive_client.set_tracker_status(
+        latitude=22.333, longitude=44.555, accuracy=99, sensor_used="KNOWN_WIFI"
     )
-    mock_tractive_client.send_hardware_event()
+    mock_tractive_client.set_tracker_status(
+        battery_level=88,
+        tracker_state="operational",
+        power_saving=True,
+        battery_charging=True,
+    )
     await hass.async_block_till_done()
 
     assert (

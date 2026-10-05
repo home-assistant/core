@@ -25,8 +25,19 @@ async def test_sensor(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_hardware_event()
-        mock_tractive_client.send_health_overview_event()
+        mock_tractive_client.set_tracker_status(
+            battery_level=88,
+            tracker_state="operational",
+            power_saving=True,
+            battery_charging=True,
+        )
+        mock_tractive_client.set_pet_status(
+            daily_goal=200,
+            minutes_active=150,
+            minutes_day_sleep=100,
+            minutes_night_sleep=300,
+            minutes_rest=122,
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

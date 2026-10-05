@@ -75,8 +75,6 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         """Initialize switch entity."""
         super().__init__(coordinator, trackable)
         self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
-        # The tracker shares its status with the coordinator data and updates
-        # it optimistically when a command is accepted
         self._tracker = coordinator.client.tracker(trackable.tracker_id)
         self._method = getattr(self, description.method)
         self.entity_description = description

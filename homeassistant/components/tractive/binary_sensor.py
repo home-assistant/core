@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import override
 
 from aiotractive import Trackable
 
@@ -21,7 +21,7 @@ from .entity import TractiveEntity
 
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
-    """Tractive binary sensor."""
+    """Tractive sensor."""
 
     def __init__(
         self,
@@ -52,7 +52,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 class TractiveBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing Tractive binary sensor entities."""
 
-    supported: Callable[[dict[str, Any]], bool] = lambda _: True
+    supported: Callable[[dict], bool] = lambda _: True
 
 
 SENSOR_TYPES = [
@@ -75,7 +75,7 @@ async def async_setup_entry(
     entry: TractiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Tractive binary sensors."""
+    """Set up Tractive device trackers."""
     coordinator = entry.runtime_data
 
     async_add_entities(

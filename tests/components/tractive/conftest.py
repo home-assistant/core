@@ -4,12 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiotractive import PetStatus, Trackable, TractiveStatus
-from aiotractive.models import (
-    tracker_status_from_rest,
-    update_pet_from_health_overview,
-    update_tracker_from_event,
-)
+from aiotractive import PetStatus, Trackable, TrackerStatus, TractiveStatus
 from aiotractive.tracker import Tracker
 import pytest
 
@@ -21,84 +16,54 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 TRACKER_ID = "device_id_123"
 PET_ID = "pet_id_123"
 
-HEALTH_OVERVIEW = {
-    "petId": PET_ID,
-    "sleep": {"minutesDaySleep": 100, "minutesNightSleep": 300, "minutesCalm": 122},
-    "activity": {"minutesGoal": 200, "minutesActive": 150},
-}
-
 
 @pytest.fixture
 def mock_tractive_client() -> Generator[AsyncMock]:
     """Mock a Tractive client."""
     trackable_object = load_json_object_fixture("trackable_object.json", DOMAIN)
     tracker_details = load_json_object_fixture("tracker_details.json", DOMAIN)
-    tracker_hw_info = load_json_object_fixture("tracker_hw_info.json", DOMAIN)
-    tracker_pos_report = load_json_object_fixture("tracker_pos_report.json", DOMAIN)
 
     status = TractiveStatus(
         trackers={
-            TRACKER_ID: tracker_status_from_rest(
-                tracker_details, tracker_hw_info, tracker_pos_report
+            TRACKER_ID: TrackerStatus(
+                battery_level=96,
+                tracker_state="operational",
+                battery_charging=False,
+                power_saving=True,
+                power_saving_zone=False,
+                latitude=33.222222,
+                longitude=44.555555,
+                accuracy=30,
+                sensor_used="KNOWN_WIFI",
             )
         },
-        pets={PET_ID: PetStatus()},
+        pets={
+            PET_ID: PetStatus(
+                daily_goal=200,
+                minutes_active=150,
+                minutes_day_sleep=100,
+                minutes_night_sleep=300,
+                minutes_rest=122,
+            )
+        },
     )
-    update_pet_from_health_overview(status.pets[PET_ID], HEALTH_OVERVIEW)
 
     def notify(error: Exception | None = None) -> None:
         """Call the update listener registered by the coordinator."""
         client.subscribe_updates.call_args.args[0](error)
 
-    def send_tracker_event(event: dict[str, Any]) -> None:
-        """Apply a tracker event to the status and notify the coordinator."""
-        update_tracker_from_event(status.trackers[event["tracker_id"]], event)
+    def set_tracker_status(**fields: Any) -> None:
+        """Update the tracker status and notify the coordinator."""
+        for key, value in fields.items():
+            setattr(status.trackers[TRACKER_ID], key, value)
         notify()
 
-    def send_hardware_event(event: dict[str, Any] | None = None) -> None:
-        """Send hardware event."""
-        if event is None:
-            event = {
-                "tracker_id": TRACKER_ID,
-                "hardware": {"battery_level": 88},
-                "tracker_state": "operational",
-                "tracker_state_reason": "POWER_SAVING",
-                "charging_state": "CHARGING",
-            }
-        send_tracker_event(event)
-
-    def send_health_overview_event(event: dict[str, Any] | None = None) -> None:
-        """Send health overview event."""
-        if event is None:
-            event = HEALTH_OVERVIEW
-        update_pet_from_health_overview(
-            status.pets.setdefault(event["petId"], PetStatus()), event
-        )
+    def set_pet_status(**fields: Any) -> None:
+        """Update the pet status and notify the coordinator."""
+        pet = status.pets.setdefault(PET_ID, PetStatus())
+        for key, value in fields.items():
+            setattr(pet, key, value)
         notify()
-
-    def send_position_event(event: dict[str, Any] | None = None) -> None:
-        """Send position event."""
-        if event is None:
-            event = {
-                "tracker_id": TRACKER_ID,
-                "position": {
-                    "latlong": [22.333, 44.555],
-                    "accuracy": 99,
-                    "sensor_used": "GPS",
-                },
-            }
-        send_tracker_event(event)
-
-    def send_switch_event(event: dict[str, Any] | None = None) -> None:
-        """Send switch event."""
-        if event is None:
-            event = {
-                "tracker_id": TRACKER_ID,
-                "buzzer_control": {"active": True},
-                "led_control": {"active": False},
-                "live_tracking": {"active": True},
-            }
-        send_tracker_event(event)
 
     def set_switch(key: str) -> AsyncMock:
         """Mock a switch command that updates the status like the library does."""
@@ -128,10 +93,8 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             set_led_active=set_switch("led"),
         )
 
-        client.send_hardware_event = send_hardware_event
-        client.send_health_overview_event = send_health_overview_event
-        client.send_position_event = send_position_event
-        client.send_switch_event = send_switch_event
+        client.set_tracker_status = set_tracker_status
+        client.set_pet_status = set_pet_status
         client.send_error_event = notify
 
         yield client

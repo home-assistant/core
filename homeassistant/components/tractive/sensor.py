@@ -134,7 +134,7 @@ async def async_setup_entry(
     entry: TractiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Tractive sensors."""
+    """Set up Tractive device trackers."""
     coordinator = entry.runtime_data
 
     async_add_entities(

@@ -1,6 +1,5 @@
 """Test init of Tractive integration."""
 
-from typing import Any
 from unittest.mock import AsyncMock
 
 from aiotractive.exceptions import TractiveError, UnauthorizedError
@@ -64,7 +63,7 @@ async def test_setup_failed(
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     method: str,
-    exc: type[Exception],
+    exc: Exception,
     entry_state: ConfigEntryState,
 ) -> None:
     """Test for setup failure."""
@@ -97,7 +96,12 @@ async def test_server_unavailable(
 
     assert hass.states.get(BATTERY_ENTITY_ID).state == "96"
 
-    mock_tractive_client.send_hardware_event()
+    mock_tractive_client.set_tracker_status(
+        battery_level=88,
+        tracker_state="operational",
+        power_saving=True,
+        battery_charging=True,
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get(BATTERY_ENTITY_ID).state == "88"
@@ -115,7 +119,13 @@ async def test_pet_without_health_data(
 
     assert hass.states.get(ACTIVITY_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    mock_tractive_client.send_health_overview_event()
+    mock_tractive_client.set_pet_status(
+        daily_goal=200,
+        minutes_active=150,
+        minutes_day_sleep=100,
+        minutes_night_sleep=300,
+        minutes_rest=122,
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get(ACTIVITY_ENTITY_ID).state == "150"
@@ -137,48 +147,6 @@ async def test_reauth_on_unauthorized(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
-
-
-@pytest.mark.parametrize(("sleep_data"), [None, {}, {"unexpected": 123}])
-async def test_missing_sleep_data(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    sleep_data: dict[str, Any] | None,
-) -> None:
-    """Test for missing sleep data."""
-    event = {"petId": "pet_id_123", "sleep": sleep_data}
-
-    await init_integration(hass, mock_config_entry)
-
-    mock_tractive_client.send_health_overview_event(event)
-    await hass.async_block_till_done()
-
-    for entity_id in (
-        "sensor.test_pet_day_sleep",
-        "sensor.test_pet_night_sleep",
-        "sensor.test_pet_rest_time",
-    ):
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(("activity_data"), [None, {}, {"unexpected": 123}])
-async def test_missing_activity_data(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    activity_data: dict[str, Any] | None,
-) -> None:
-    """Test for missing activity data."""
-    event = {"petId": "pet_id_123", "activity": activity_data}
-
-    await init_integration(hass, mock_config_entry)
-
-    mock_tractive_client.send_health_overview_event(event)
-    await hass.async_block_till_done()
-
-    for entity_id in ("sensor.test_pet_daily_goal", "sensor.test_pet_activity_time"):
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])
