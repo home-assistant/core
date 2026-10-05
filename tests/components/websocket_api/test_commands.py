@@ -3278,25 +3278,34 @@ async def test_subscribe_condition_comparison_entity(
 
 
 @pytest.mark.usefixtures("freezer")
-async def test_subscribe_condition_target_area(
+@pytest.mark.parametrize(
+    ("target", "registry_listeners"),
+    [
+        pytest.param({"entity_id": "light.kitchen"}, 0, id="entity"),
+        pytest.param({"area_id": "kitchen"}, 1, id="area"),
+    ],
+)
+async def test_subscribe_condition_target(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
+    target: dict[str, str],
+    registry_listeners: int,
 ) -> None:
-    """Test a state change of an entity in a targeted area is pushed."""
+    """Test a state change of a targeted entity is pushed."""
     area = area_registry.async_create("Kitchen")
-    light = entity_registry.async_get_or_create("light", "test", "kitchen")
+    light = entity_registry.async_get_or_create(
+        "light", "test", "kitchen", suggested_object_id="kitchen"
+    )
     entity_registry.async_update_entity(light.entity_id, area_id=area.id)
     hass.states.async_set(light.entity_id, "on")
+    init_count = hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED]
 
     await websocket_client.send_json_auto_id(
         {
             "type": "subscribe_condition",
-            "condition": {
-                "condition": "light.is_on",
-                "target": {"area_id": area.id},
-            },
+            "condition": {"condition": "light.is_on", "target": target},
         }
     )
 
@@ -3305,6 +3314,10 @@ async def test_subscribe_condition_target_area(
     assert msg["success"]
 
     subscription_id = msg["id"]
+    assert (
+        hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED]
+        == init_count + registry_listeners
+    )
 
     msg = await websocket_client.receive_json()
     assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}

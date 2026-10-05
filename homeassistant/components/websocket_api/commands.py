@@ -1202,8 +1202,11 @@ def _async_extract_condition_dependencies(
             )
 
         if (target := config.get(CONF_TARGET)) and (
-            selection := target_helpers.TargetSelection(target)
-        ).has_any_target:
+            (selection := target_helpers.TargetSelection(target)).area_ids
+            or selection.device_ids
+            or selection.floor_ids
+            or selection.label_ids
+        ):
             targets.append(target)
             leaf_entity_ids -= selection.entity_ids
 
