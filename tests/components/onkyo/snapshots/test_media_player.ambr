@@ -33,7 +33,7 @@
     'object_id_base': 'TX-NR7100',
     'options': dict({
     }),
-    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver',
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
     'original_icon': None,
     'original_name': 'TX-NR7100',
     'platform': 'onkyo',
@@ -111,7 +111,7 @@
     'object_id_base': 'TX-NR7100 Zone 2',
     'options': dict({
     }),
-    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver',
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
     'original_icon': None,
     'original_name': 'TX-NR7100 Zone 2',
     'platform': 'onkyo',
@@ -177,7 +177,7 @@
     'object_id_base': 'TX-NR7100 Zone 3',
     'options': dict({
     }),
-    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver',
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
     'original_icon': None,
     'original_name': 'TX-NR7100 Zone 3',
     'platform': 'onkyo',
