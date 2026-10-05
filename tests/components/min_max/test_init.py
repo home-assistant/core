@@ -34,7 +34,6 @@ async def test_setup_migrates_to_groups(
 
     min_max_entity_id = "sensor.my_min_max"
 
-    # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -51,7 +50,6 @@ async def test_setup_migrates_to_groups(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check the entity is registered in the entity registry
     entity = entity_registry.async_get(min_max_entity_id)
     assert entity is not None
 
@@ -87,12 +85,10 @@ async def test_setup_migrates_to_groups(
     assert entity.unique_id != config_entry.entry_id
     assert entity.platform == GROUP_DOMAIN
 
-    # Check the platform is setup correctly
     assert len(hass.states.async_all()) == 3
     state = hass.states.get(min_max_entity_id)
     assert state.state == "20.0"
 
-    # Assert min/max config entry is removed
     min_max_config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(min_max_config_entries) == 0
 
@@ -126,7 +122,6 @@ async def test_migrate_helper_is_manually_removed(
 
     min_max_entity_id = "sensor.my_min_max"
 
-    # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -143,7 +138,6 @@ async def test_migrate_helper_is_manually_removed(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check the entity is registered in the entity registry
     entity = entity_registry.async_get(min_max_entity_id)
     assert entity is not None
 
@@ -168,7 +162,6 @@ async def test_migrate_helper_is_manually_removed(
     assert data["description_placeholders"] == {"title": "My min_max"}
     assert data["step_id"] == "migrate"
 
-    # Manually remove the Min/Max helper before repairing
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -198,7 +191,6 @@ async def test_migrate_helper_broken_config(
 
     min_max_entity_id = "sensor.my_min_max"
 
-    # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -215,7 +207,6 @@ async def test_migrate_helper_broken_config(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check the entity is registered in the entity registry
     entity = entity_registry.async_get(min_max_entity_id)
     assert entity is not None
 
@@ -251,7 +242,6 @@ async def test_migrate_helper_broken_config(
     )
     await hass.async_block_till_done()
 
-    # Entity still exists as Min/Max helper as repair failed
     entity = entity_registry.async_get(min_max_entity_id)
     assert entity
     assert entity.config_entry_id == config_entry.entry_id
@@ -269,7 +259,6 @@ async def test_issue_is_deleted_on_removal(
 
     input_sensors = ["sensor.input_one", "sensor.input_two"]
 
-    # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
