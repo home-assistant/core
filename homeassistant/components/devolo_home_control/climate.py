@@ -13,9 +13,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
+from .const import DOMAIN
 from .entity import DevoloMultiLevelSwitchDeviceEntity
 
 
@@ -99,4 +101,8 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])
+        if not self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE]):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature",
+            )

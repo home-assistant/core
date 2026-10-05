@@ -2,11 +2,18 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
@@ -65,8 +72,8 @@ async def test_siren_switching(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as property_set:
         await hass.services.async_call(
-            "siren",
-            "turn_on",
+            SIREN_DOMAIN,
+            SERVICE_TURN_ON,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
@@ -81,8 +88,8 @@ async def test_siren_switching(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as property_set:
         await hass.services.async_call(
-            "siren",
-            "turn_off",
+            SIREN_DOMAIN,
+            SERVICE_TURN_OFF,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
@@ -93,6 +100,23 @@ async def test_siren_switching(
         await hass.async_block_till_done()
         assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_OFF
         property_set.assert_called_once_with(0)
+
+    # Test failing tone set
+    with (
+        patch(
+            "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            SIREN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "set_tone"
+    assert error.value.translation_domain == DOMAIN
 
 
 async def test_siren_change_default_tone(
@@ -118,8 +142,8 @@ async def test_siren_change_default_tone(
     ) as property_set:
         test_gateway.publisher.dispatch("Test", ("mss:Test", 2))
         await hass.services.async_call(
-            "siren",
-            "turn_on",
+            SIREN_DOMAIN,
+            SERVICE_TURN_ON,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )

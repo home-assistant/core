@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -10,8 +11,10 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
@@ -58,6 +61,27 @@ async def test_climate(
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(20.0)
+
+    # Test failing temperature set
+    with (
+        patch(
+            "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: f"{CLIMATE_DOMAIN}.test_test",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+                ATTR_TEMPERATURE: 20.0,
+            },
+            blocking=True,
+        )
+    assert error.value.translation_key == "set_temperature"
+    assert error.value.translation_domain == DOMAIN
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
