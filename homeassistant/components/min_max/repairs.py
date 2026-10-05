@@ -50,6 +50,7 @@ class MigrateToGroupSensorFlow(RepairsFlow):
 
         if user_input is not None:
             config = dict(entry.options)
+            config["name"] = entry.title
             config[CONF_ENTITIES] = config.pop(CONF_ENTITY_IDS)
             config.pop(CONF_ROUND_DIGITS)
             config[CONF_HIDE_MEMBERS] = False
