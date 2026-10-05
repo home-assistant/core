@@ -79,5 +79,6 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
         if not self._multi_level_switch_property.set(position):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_cover",
+                translation_key="set",
+                translation_placeholders={"placeholder": "cover position"},
             )

@@ -82,7 +82,6 @@ async def test_cover(
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(50)
 
-    # Test failing cover position set
     with (
         patch(
             "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
@@ -96,8 +95,9 @@ async def test_cover(
             {ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test", ATTR_POSITION: 50},
             blocking=True,
         )
-    assert error.value.translation_key == "set_cover"
+    assert error.value.translation_key == "set"
     assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "cover position"}
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1

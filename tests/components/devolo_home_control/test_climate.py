@@ -62,7 +62,6 @@ async def test_climate(
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(20.0)
 
-    # Test failing temperature set
     with (
         patch(
             "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
@@ -80,8 +79,9 @@ async def test_climate(
             },
             blocking=True,
         )
-    assert error.value.translation_key == "set_temperature"
+    assert error.value.translation_key == "set"
     assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "temperature"}
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1

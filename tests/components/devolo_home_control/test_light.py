@@ -82,7 +82,6 @@ async def test_light_without_binary_sensor(
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(round(50 / 255 * 100))
 
-    # Test failing brightness set
     with (
         patch(
             "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
@@ -96,8 +95,9 @@ async def test_light_without_binary_sensor(
             {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test", ATTR_BRIGHTNESS: 50},
             blocking=True,
         )
-    assert error.value.translation_key == "set_brightness"
+    assert error.value.translation_key == "set"
     assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "brightness"}
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
@@ -158,7 +158,6 @@ async def test_light_with_binary_sensor(
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(False)
 
-    # Test failing switch set
     with (
         patch(
             "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",
@@ -172,10 +171,10 @@ async def test_light_with_binary_sensor(
             {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )
-    assert error.value.translation_key == "set_switch"
+    assert error.value.translation_key == "set"
     assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "state"}
 
-    # Test protected switch set
     with (
         patch(
             "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",

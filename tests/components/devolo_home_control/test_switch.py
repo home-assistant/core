@@ -71,7 +71,6 @@ async def test_switch(
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(state=False)
 
-    # Test failing switching
     with (
         patch(
             "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",
@@ -85,10 +84,10 @@ async def test_switch(
             {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )
-    assert error.value.translation_key == "set_switch"
+    assert error.value.translation_key == "set"
     assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_placeholders == {"placeholder": "state"}
 
-    # Test protected switching
     with (
         patch(
             "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set",

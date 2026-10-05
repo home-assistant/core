@@ -84,7 +84,8 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             if not self._binary_switch_property.set(state=state):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="set_switch",
+                    translation_key="set",
+                    translation_placeholders={"placeholder": "state"},
                 )
         except SwitchingProtected as err:
             raise ServiceValidationError(
