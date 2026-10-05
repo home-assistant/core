@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any, cast, override
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
+from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
+from habluetooth.const import STRONG_OWNER_STALE_RSSI
 import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -41,6 +43,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.bluetooth import (
     async_discovered_service_info,
+    async_last_service_info,
     async_request_active_scan,
     async_scanner_count,
 )
@@ -324,7 +327,27 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                     except (BleakError, TeslaFleetError, TimeoutError) as err:
                         LOGGER.error("Failed to connect over Bluetooth: %s", err)
                         await self._async_disconnect()
-                        errors["base"] = "cannot_connect"
+                        cause = err.__cause__
+                        last_info = async_last_service_info(
+                            self.hass, device.address, connectable=True
+                        )
+                        if not isinstance(
+                            cause, BleakNotFoundError | BleakOutOfConnectionSlotsError
+                        ):
+                            errors["base"] = "cannot_connect"
+                        # bleak-retry-connector also raises BleakNotFoundError from a final connect timeout.
+                        elif last_info is None or (
+                            isinstance(cause, BleakNotFoundError)
+                            and not isinstance(cause.__cause__, TimeoutError)
+                        ):
+                            errors["base"] = "device_not_found"
+                        elif isinstance(cause, BleakOutOfConnectionSlotsError):
+                            errors["base"] = "no_connection_slot"
+                        # habluetooth treats this signal as a close device, so the timeout is not about range.
+                        elif last_info.rssi >= STRONG_OWNER_STALE_RSSI:
+                            errors["base"] = "vehicle_busy"
+                        else:
+                            errors["base"] = "weak_signal"
                     else:
                         return await self.async_step_pair()
 
