@@ -322,6 +322,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
 
+        self.update_interval = ENERGY_HISTORY_INTERVAL
+
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
@@ -357,15 +359,14 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 translation_key="invalid_data",
             )
 
-        # Add all time periods together
-        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in time_series:
+        # Tesla omits a field instead of sending zero, so an omitted field is zero
+        # only when the response has a reading; without one it stays unknown
+        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS)
+        if any(
+            key in period for period in time_series for key in ENERGY_HISTORY_FIELDS
+        ):
             for key in ENERGY_HISTORY_FIELDS:
-                if key in period:
-                    if output[key] is None:
-                        output[key] = period[key]
-                    else:
-                        output[key] += period[key]
+                output[key] = sum(period.get(key, 0) for period in time_series)
 
         output["_period_start"] = period_start
 

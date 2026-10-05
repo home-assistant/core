@@ -23,7 +23,9 @@ from .const import CONF_TARGET_ID, DOMAIN, SUBENTRY_TYPE_TARGET, URL_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+)
 
 # Discord IDs are unsigned 64-bit snowflakes that exceed JavaScript's safe
 # integer range, so they are kept as strings and only cast to int at the

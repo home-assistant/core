@@ -44,7 +44,7 @@ CONFIG_SCHEMA: Final = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): cv.string,
-                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 probatio.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
                 probatio.Optional(
                     CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT

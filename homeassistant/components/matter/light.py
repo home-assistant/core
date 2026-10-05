@@ -84,6 +84,19 @@ TRANSITION_BLOCKLIST = (
 )
 
 
+def _level_range(level_control: clusters.LevelControl) -> tuple[int, int]:
+    """Return the level range of the device.
+
+    Brightness scaling divides by the width of the range, so a device that
+    reports a range without width gets the default range instead.
+    """
+    min_level = level_control.minLevel or 1
+    max_level = level_control.maxLevel or 254
+    if max_level <= min_level:
+        return (1, 254)
+    return (min_level, max_level)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MatterConfigEntry,
@@ -177,13 +190,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(
-            renormalize(
-                brightness,
-                (0, 255),
-                (level_control.minLevel or 1, level_control.maxLevel or 254),
-            )
-        )
+        level = round(renormalize(brightness, (0, 255), _level_range(level_control)))
 
         await self.send_device_command(
             clusters.LevelControl.Commands.MoveToLevelWithOnOff(
@@ -280,9 +287,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return round(
             renormalize(
-                level_control.currentLevel,
-                (level_control.minLevel or 1, level_control.maxLevel or 254),
-                (0, 255),
+                level_control.currentLevel, _level_range(level_control), (0, 255)
             )
         )
 

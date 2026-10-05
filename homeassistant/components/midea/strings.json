@@ -118,6 +118,9 @@
       "arofene_link": {
         "name": "Methanal"
       },
+      "door_warn": {
+        "name": "Door warning"
+      },
       "fall_asleep_status": {
         "name": "Fall asleep"
       },
@@ -601,6 +604,17 @@
       },
       "softwater_available": {
         "name": "Soft water available"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "delay": "Delayed",
+          "finished": "Finished",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
+          "standby": "[%key:common::state::standby%]",
+          "working": "Working"
+        }
       },
       "tank_actual_temperature": {
         "name": "Tank temperature"
