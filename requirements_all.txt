@@ -1385,7 +1385,7 @@ iglo==1.2.7
 igloohome-api==0.1.1
 
 # homeassistant.components.ihc
-ihcsdk==2.8.12
+ihcsdk==2.8.13
 
 # homeassistant.components.imeon_inverter
 imeon_inverter_api==0.4.0
