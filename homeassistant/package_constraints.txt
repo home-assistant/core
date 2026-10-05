@@ -17,7 +17,7 @@ async-upnp-client==0.48.2
 atomicwrites-homeassistant==1.4.1
 attrs==26.1.0
 audioop-lts==0.2.2
-av==17.0.1
+av==19.0.0
 awesomeversion==25.8.0
 bcrypt==5.0.0
 bleak-retry-connector==4.7.1
@@ -40,7 +40,7 @@ habluetooth==7.1.2
 hass-nabucasa==2.7.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260930.0
+home-assistant-frontend==20260930.1
 home-assistant-intents==2026.9.30
 httpx==0.28.1
 ifaddr==0.2.0
@@ -55,7 +55,7 @@ Pillow==12.3.0
 probatio==0.13.0
 propcache==0.5.4
 psutil-home-assistant==0.0.1
-PyJWT==2.13.0
+PyJWT==2.15.1
 pymicro-vad==1.0.1
 PyNaCl==1.6.2
 pyopenssl==26.4.0
