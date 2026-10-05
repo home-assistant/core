@@ -26,6 +26,39 @@ from homeassistant.util.json import JsonValueType
 from . import SERVICE_GET_FORECASTS, Forecast, WeatherEntityFeature
 from .const import DOMAIN
 
+# Forecast cadence (daily/hourly/twice_daily) is an implementation detail of the
+# weather entity, not something a conversational request expresses. Letting the
+# model guess it means a plausible-sounding but wrong guess (e.g. "hourly" for an
+# entity that only supports "daily") surfaces to the user as a tool failure
+# instead of being resolved deterministically. Home Assistant selects the most
+# appropriate, supported cadence for the requested period instead.
+FORECAST_FEATURE_BY_TYPE = {
+    "daily": WeatherEntityFeature.FORECAST_DAILY,
+    "hourly": WeatherEntityFeature.FORECAST_HOURLY,
+    "twice_daily": WeatherEntityFeature.FORECAST_TWICE_DAILY,
+}
+
+# Periods that describe part of a day are best served by the most granular
+# forecast available; whole-day and multi-day periods are best served by the
+# coarsest. Each tuple is a fallback order, most preferred first, used when the
+# entity doesn't support the top choice.
+_PARTIAL_DAY_PERIODS = {"this_afternoon", "tonight", "next_24_hours"}
+_PARTIAL_DAY_PREFERENCE = ("hourly", "twice_daily", "daily")
+_WHOLE_DAY_PREFERENCE = ("daily", "twice_daily", "hourly")
+
+
+def _select_forecast_type(period: str, supported_features: int) -> str | None:
+    """Return the best supported forecast cadence for the requested period."""
+    preference = (
+        _PARTIAL_DAY_PREFERENCE
+        if period in _PARTIAL_DAY_PERIODS
+        else _WHOLE_DAY_PREFERENCE
+    )
+    for forecast_type in preference:
+        if supported_features & FORECAST_FEATURE_BY_TYPE[forecast_type]:
+            return forecast_type
+    return None
+
 
 class GetForecastTool(Tool):
     """LLM tool to retrieve weather forecasts."""
@@ -34,10 +67,9 @@ class GetForecastTool(Tool):
     title = "Get weather forecast for a time window"
     description = (
         "Get forecast data for an exposed weather entity within a requested time "
-        "window. Use hourly or twice_daily forecasts for part of a day and daily "
-        "forecasts for whole days. The returned entries can be summarized to answer "
-        "the user. Map conversational dates like 'tomorrow' or 'this Thursday' to "
-        "the matching period."
+        "window. The returned entries can be summarized to answer the user. Map "
+        "conversational dates like 'tomorrow' or 'this Thursday' to the matching "
+        "period."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -49,9 +81,6 @@ class GetForecastTool(Tool):
         self.parameters = probatio.Schema(
             {
                 probatio.Required("weather"): probatio.In(names),
-                probatio.Required("forecast_type"): probatio.In(
-                    ["daily", "hourly", "twice_daily"]
-                ),
                 probatio.Required(
                     "period",
                     description=(
@@ -89,7 +118,7 @@ class GetForecastTool(Tool):
         """Retrieve the requested forecast."""
         data = self.parameters(tool_input.tool_args)
         if not llm_context.assistant:
-            raise HomeAssistantError("Weather entity not found")
+            return ToolResult(data={"error": "Weather entity not found"}, error=True)
 
         start, end = _get_forecast_window(data["period"])
 
@@ -107,21 +136,20 @@ class GetForecastTool(Tool):
                 if result.no_match_reason is MatchFailedReason.DUPLICATE_NAME
                 else "Weather entity not found"
             )
-            raise HomeAssistantError(message)
+            return ToolResult(data={"error": message}, error=True)
 
         weather_state = result.states[0]
-        forecast_type = data["forecast_type"]
-        supported_feature = {
-            "daily": WeatherEntityFeature.FORECAST_DAILY,
-            "hourly": WeatherEntityFeature.FORECAST_HOURLY,
-            "twice_daily": WeatherEntityFeature.FORECAST_TWICE_DAILY,
-        }[forecast_type]
-        if (
-            not weather_state.attributes.get("supported_features", 0)
-            & supported_feature
-        ):
-            raise HomeAssistantError(
-                f"Weather entity does not support {forecast_type} forecasts"
+        supported_features = weather_state.attributes.get("supported_features", 0)
+        forecast_type = _select_forecast_type(data["period"], supported_features)
+        if forecast_type is None:
+            return ToolResult(
+                data={
+                    "error": (
+                        "Weather entity does not support forecasts for the "
+                        "requested period"
+                    )
+                },
+                error=True,
             )
 
         response = await hass.services.async_call(
