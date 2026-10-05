@@ -156,11 +156,6 @@ async def async_clean_import(hass: HomeAssistant, entry: ConfigEntry) -> None:
     entities = er.async_entries_for_config_entry(entity_reg, old_config_entry_id)
     old_entity_entry = entities[0] if entities else None
 
-    # Update options to not run migration again
-    new_options = dict(entry.options)
-    new_options.pop("old_config_entry_id")
-    hass.config_entries.async_update_entry(entry, options=new_options)
-
     if not old_config_entry or not old_entity_entry:
         # User has manually removed the entry or entity before we came here
         # Skip the migration and just continue with setting up the group sensor
@@ -187,6 +182,11 @@ async def async_clean_import(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "Failed to migrate Min/Max entity to group platform; entity is still loaded"
         ) from err
     await hass.config_entries.async_remove(old_entity_entry.config_entry_id)
+
+    # Update options to not run migration again
+    new_options = dict(entry.options)
+    new_options.pop("old_config_entry_id")
+    hass.config_entries.async_update_entry(entry, options=new_options)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
