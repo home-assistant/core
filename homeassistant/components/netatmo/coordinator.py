@@ -444,7 +444,10 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
-            NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
+            NetatmoDeviceCategory.dimmer: [
+                NETATMO_CREATE_LIGHT,
+                NETATMO_CREATE_LEGACY_SENSOR,
+            ],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
                 NETATMO_CREATE_BUTTON,
