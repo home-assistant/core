@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import PKCE_CODE_CHALLENGE, PKCE_CODE_VERIFIER, async_setup_auth
+from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -196,73 +196,6 @@ def test_auth_code_store_expiration(
     entry = retrieve(client_id, code)
     assert entry is not None
     assert entry.credentials == mock_credential
-
-
-@pytest.mark.parametrize(
-    "parameter", ["client_id", "grant_type", "code", "redirect_uri", "code_verifier"]
-)
-async def test_pkce_token_request_rejects_duplicate_parameters(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    parameter: str,
-) -> None:
-    """Test ambiguous token parameters are rejected without consuming the code."""
-    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-    code = await _async_login_for_code(client, PKCE_CODE_CHALLENGE)
-    token_data = MultiDict(
-        {
-            "client_id": CLIENT_ID,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": CLIENT_REDIRECT_URI,
-            "code_verifier": PKCE_CODE_VERIFIER,
-        }
-    )
-    token_data.add(parameter, "other")
-
-    resp = await client.post("/auth/token", data=token_data)
-
-    assert resp.status == HTTPStatus.BAD_REQUEST
-    assert (await resp.json())["error"] == "invalid_request"
-
-    resp = await client.post("/auth/token", data=dict(token_data))
-    assert resp.status == HTTPStatus.OK
-
-
-async def test_pkce_token_request_rejects_file_verifier(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
-) -> None:
-    """Test a multipart file cannot be used as a code verifier."""
-    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-    code = await _async_login_for_code(client, PKCE_CODE_CHALLENGE)
-    token_data = FormData(
-        {
-            "client_id": CLIENT_ID,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": CLIENT_REDIRECT_URI,
-        }
-    )
-    token_data.add_field(
-        "code_verifier", PKCE_CODE_VERIFIER.encode(), filename="verifier"
-    )
-
-    resp = await client.post("/auth/token", data=token_data)
-
-    assert resp.status == HTTPStatus.BAD_REQUEST
-    assert (await resp.json())["error"] == "invalid_request"
-
-    resp = await client.post(
-        "/auth/token",
-        data={
-            "client_id": CLIENT_ID,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": CLIENT_REDIRECT_URI,
-            "code_verifier": PKCE_CODE_VERIFIER,
-        },
-    )
-    assert resp.status == HTTPStatus.OK
 
 
 def test_auth_code_store_requires_credentials(mock_credential) -> None:
@@ -867,6 +800,63 @@ async def _async_login_for_code(
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
     return step["result"]
+
+
+@pytest.mark.parametrize(
+    "parameter", ["client_id", "grant_type", "code", "redirect_uri", "code_verifier"]
+)
+async def test_pkce_token_request_rejects_duplicate_parameters(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    parameter: str,
+) -> None:
+    """Test ambiguous token parameters are rejected without consuming the code."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    code = await _async_login_for_code(client, RFC7636_CHALLENGE)
+    token_data = MultiDict(
+        {
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            "code_verifier": RFC7636_VERIFIER,
+        }
+    )
+    token_data.add(parameter, "other")
+
+    resp = await client.post("/auth/token", data=token_data)
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["error"] == "invalid_request"
+
+    resp = await client.post("/auth/token", data=dict(token_data))
+    assert resp.status == HTTPStatus.OK
+
+
+async def test_pkce_token_request_rejects_file_verifier(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a multipart file cannot be used as a code verifier."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    code = await _async_login_for_code(client, RFC7636_CHALLENGE)
+    token_data = {
+        "client_id": CLIENT_ID,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": CLIENT_REDIRECT_URI,
+    }
+    form_data = FormData(token_data)
+    form_data.add_field("code_verifier", RFC7636_VERIFIER.encode(), filename="verifier")
+
+    resp = await client.post("/auth/token", data=form_data)
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["error"] == "invalid_request"
+
+    resp = await client.post(
+        "/auth/token", data={**token_data, "code_verifier": RFC7636_VERIFIER}
+    )
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_auth_code_pkce_success(

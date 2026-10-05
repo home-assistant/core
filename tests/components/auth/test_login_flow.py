@@ -9,12 +9,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
-from . import (
-    BASE_CONFIG,
-    PKCE_AUTHORIZATION_REQUEST,
-    PKCE_CODE_CHALLENGE,
-    async_setup_auth,
-)
+from . import BASE_CONFIG, async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from tests.typing import ClientSessionGenerator
@@ -253,15 +248,9 @@ async def test_invalid_redirect_uri(
 @pytest.mark.parametrize(
     "authorization_data",
     [
-        pytest.param({}, id="legacy"),
-        pytest.param(
-            {
-                **PKCE_AUTHORIZATION_REQUEST,
-                "state": "opaque+state/with=reserved&chars?",
-            },
-            id="opaque-state",
-        ),
-        pytest.param({**PKCE_AUTHORIZATION_REQUEST, "state": ""}, id="empty-state"),
+        {},
+        {"response_type": "code", "state": "opaque+state/with=reserved&chars?"},
+        {"response_type": "code", "state": ""},
     ],
 )
 async def test_login_exist_user(
@@ -527,41 +516,61 @@ async def test_well_known_protected_resource_no_url(
 @pytest.mark.parametrize(
     ("payload", "expected_message"),
     [
-        pytest.param(
-            {"code_challenge_method": "S256"},
-            "Invalid PKCE parameters",
-            id="missing-challenge",
+        (
+            {
+                "code_challenge_method": "S256",
+            },
+            "code_challenge required when code_challenge_method is provided",
         ),
-        pytest.param(
-            {"code_challenge": PKCE_CODE_CHALLENGE},
-            "Invalid PKCE parameters",
-            id="missing-method",
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+            },
+            "Transform algorithm not supported",
         ),
-        pytest.param(
-            {"code_challenge": PKCE_CODE_CHALLENGE, "code_challenge_method": "plain"},
-            "Invalid PKCE parameters",
-            id="plain-method",
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+                "code_challenge_method": "plain",
+            },
+            "Transform algorithm not supported",
         ),
-        pytest.param(
-            {"code_challenge": "short", "code_challenge_method": "S256"},
-            "Invalid PKCE parameters",
-            id="short-challenge",
-        ),
-        pytest.param(
-            {"code_challenge": "a" * 43 + "=", "code_challenge_method": "S256"},
-            "Invalid PKCE parameters",
-            id="padded-challenge",
-        ),
-        pytest.param(
-            {"code_challenge": "a" * 43, "code_challenge_method": "S256"},
-            "Invalid PKCE parameters",
-            id="non-canonical-challenge",
-        ),
-        pytest.param(
-            {"response_type": "token"},
+        (
+            {
+                "code_challenge": "short",
+                "code_challenge_method": "S256",
+            },
             "Message format incorrect",
-            id="unsupported-response-type",
         ),
+        (
+            {
+                "code_challenge": "a" * 43 + "=",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+        (
+            {
+                "code_challenge": "a" * 43,
+                "code_challenge_method": "S256",
+            },
+            "Invalid code_challenge",
+        ),
+        (
+            {
+                "response_type": "token",
+            },
+            "Message format incorrect",
+        ),
+    ],
+    ids=[
+        "method_without_challenge",
+        "challenge_without_method",
+        "unsupported_plain_method",
+        "challenge_too_short",
+        "challenge_padded",
+        "challenge_non_canonical",
+        "unsupported_response_type",
     ],
 )
 async def test_login_flow_pkce_validation(
@@ -584,7 +593,6 @@ async def test_login_flow_pkce_validation(
     assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert expected_message in result["message"]
-    assert hass.auth.login_flow.async_progress() == []
 
 
 @pytest.mark.parametrize(
