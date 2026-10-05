@@ -215,7 +215,7 @@ aioasuswrt==1.5.4
 aioautomower==3.0.0
 
 # homeassistant.components.axle_energy
-aioaxlevpp==0.1.1
+aioaxlevpp==0.2.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -2374,7 +2374,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.5.0
+pylamarzocco==2.5.1
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2745,7 +2745,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==3.0.1
+python-hotspring==3.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3330,7 +3330,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==20.2.1
+uiprotect==23.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
