@@ -2443,6 +2443,96 @@ async def test_power_sensor_combined_invalid_value(
     assert state.state == "unknown"
 
 
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("invalid_source", "value"),
+    [
+        pytest.param("sensor.battery_discharge", "150.0", id="discharge"),
+        pytest.param("sensor.battery_charge", "50.0", id="charge"),
+    ],
+)
+async def test_power_sensor_combined_invalid_unit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    invalid_source: str,
+    value: str,
+) -> None:
+    """Test combined power sensor with a source in a non-power unit."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # The sensor is still added when a source has a non-power unit at setup
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert (
+        "Unable to combine sensor.battery_discharge and sensor.battery_charge: "
+        "kWh is not a recognized power unit" in caplog.text
+    )
+
+    hass.states.async_set(
+        invalid_source, value, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "100.0"
+
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert caplog.text.count("kWh is not a recognized power unit") == 1
+
+
 async def test_power_sensor_naming_fallback(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:

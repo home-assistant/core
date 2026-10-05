@@ -658,6 +658,7 @@ class EnergyPowerSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
+    _wrong_unit_reported = False
 
     def __init__(
         self,
@@ -767,14 +768,26 @@ class EnergyPowerSensor(SensorEntity):
             )
 
             # Convert to Watts if units are present
-            if discharge_unit:
-                discharge = unit_conversion.PowerConverter.convert(
-                    discharge, discharge_unit, UnitOfPower.WATT
-                )
-            if charge_unit:
-                charge = unit_conversion.PowerConverter.convert(
-                    charge, charge_unit, UnitOfPower.WATT
-                )
+            try:
+                if discharge_unit:
+                    discharge = unit_conversion.PowerConverter.convert(
+                        discharge, discharge_unit, UnitOfPower.WATT
+                    )
+                if charge_unit:
+                    charge = unit_conversion.PowerConverter.convert(
+                        charge, charge_unit, UnitOfPower.WATT
+                    )
+            except HomeAssistantError as err:
+                if not self._wrong_unit_reported:
+                    self._wrong_unit_reported = True
+                    _LOGGER.warning(
+                        "Unable to combine %s and %s: %s",
+                        discharge_state.entity_id,
+                        charge_state.entity_id,
+                        err,
+                    )
+                self._attr_native_value = None
+                return
 
             self._attr_native_value = discharge - charge
 
