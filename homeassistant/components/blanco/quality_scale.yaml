@@ -1,5 +1,4 @@
 rules:
-  # Bronze
   action-setup:
     status: exempt
     comment: This integration does not provide any service actions.
@@ -29,7 +28,6 @@ rules:
   test-before-setup: done
   unique-config-entry: done
 
-  # Silver
   action-exceptions:
     status: exempt
     comment: This integration does not provide any service actions.
@@ -45,7 +43,6 @@ rules:
     comment: Deferred to a follow-up PR per reviewer request
   test-coverage: done
 
-  # Gold
   devices: done
   diagnostics:
     status: todo
@@ -74,7 +71,6 @@ rules:
     comment: Deferred to a follow-up PR per reviewer request
   stale-devices: done
 
-  # Platinum
   async-dependency: done
   inject-websession: done
   strict-typing:
