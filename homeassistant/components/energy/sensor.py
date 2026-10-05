@@ -382,6 +382,7 @@ class EnergyCostSensor(SensorEntity):
 
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
+    _wrong_price_unit_reported = False
 
     def __init__(
         self,
@@ -497,6 +498,23 @@ class EnergyCostSensor(SensorEntity):
                 )
             return
 
+        try:
+            converted_energy_price = self._convert_energy_price(
+                energy_price, energy_price_unit, energy_unit
+            )
+        except HomeAssistantError:
+            if not self._wrong_price_unit_reported:
+                self._wrong_price_unit_reported = True
+                _LOGGER.warning(
+                    "Not updating cost of %s: unit %s does not match price unit"
+                    " per %s of %s",
+                    energy_state.entity_id,
+                    energy_unit,
+                    energy_price_unit,
+                    self._config["entity_energy_price"],
+                )
+            return
+
         if (
             state_class != SensorStateClass.TOTAL_INCREASING
             and energy_state.attributes.get(SensorEntityStateAttribute.LAST_RESET)
@@ -521,10 +539,6 @@ class EnergyCostSensor(SensorEntity):
         # Update with newly incurred cost
         old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
-
-        converted_energy_price = self._convert_energy_price(
-            energy_price, energy_price_unit, energy_unit
-        )
 
         self._attr_native_value = (
             cur_value + (energy - old_energy_value) * converted_energy_price
