@@ -8,6 +8,7 @@ from pypaperless.models import RemoteVersion
 import pytest
 
 from homeassistant.components.paperless_ngx.update import SCAN_INTERVAL
+from homeassistant.components.update import DATA_COMPONENT
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -78,6 +79,10 @@ async def test_update_sensor_status_unavailable_on_initial_refresh_failure(
     state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_UNAVAILABLE
 
+    entity = hass.data[DATA_COMPONENT].get_entity("update.paperless_ngx_software")
+    assert entity is not None
+    assert entity.installed_version is None
+
 
 @pytest.mark.usefixtures("init_integration")
 async def test_update_sensor_status_unavailable_after_refresh_failure(
@@ -92,6 +97,10 @@ async def test_update_sensor_status_unavailable_after_refresh_failure(
 
     state = hass.states.get("update.paperless_ngx_software")
     assert state.state == STATE_UNAVAILABLE
+
+    entity = hass.data[DATA_COMPONENT].get_entity("update.paperless_ngx_software")
+    assert entity is not None
+    assert entity.installed_version is None
 
 
 @pytest.mark.usefixtures("init_integration")
