@@ -61,7 +61,7 @@
   },
   "issues": {
     "share_unavailable": {
-      "description": "ScorpionTrack can no longer read the share for {name}. Vehicle updates are unavailable.\n\n1. Open ScorpionTrack and check whether the share has expired or been revoked.\n2. If you restore access to the same share, go to Settings > Devices & services in Home Assistant and reload its ScorpionTrack entry.\n3. If you need a different share, add it as a new ScorpionTrack integration, then remove the old integration.\n\nThe repair clears after a successful update or when you remove the affected integration.",
+      "description": "ScorpionTrack can no longer read the share for {name}. Vehicle updates are unavailable.\n\n1. Open ScorpionTrack and check whether the share has expired or been revoked.\n2. Go to Settings > Devices & services in Home Assistant. If ScorpionTrack provides an updated link for the same share, reconfigure its entry with that link. If the existing link works again, reload the entry instead.\n3. If you need a different share, add it as a new ScorpionTrack integration, then remove the old integration.\n\nThe repair clears after a successful update or when you remove the affected integration.",
       "title": "ScorpionTrack share is unavailable"
     }
   }
