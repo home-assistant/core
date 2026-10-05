@@ -52,7 +52,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
 - Define shared mocks as fixtures in `conftest.py` so every platform test can reuse them, including a `mock_config_entry`. Give it a `unique_id` when the integration's config entries have one.
-- Load mock API data from JSON fixture files instead of building it inline with `json.dumps()`.
+- Load substantial or reused mock API data from JSON fixture files instead of building it inline with `json.dumps()`.
 - Do not manually assert values that a snapshot test already covers.
 - When a `Platform` member or an `ATTR_*` constant exists for a value, use it instead of a string literal.
 - Patch objects where they are used, not where they are defined.
