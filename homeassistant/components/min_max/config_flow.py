@@ -50,12 +50,6 @@ OPTIONS_SCHEMA = probatio.Schema(
     }
 )
 
-CONFIG_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("name"): selector.TextSelector(),
-    }
-).extend(OPTIONS_SCHEMA.schema)
-
 
 async def migrate_to_groups(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Abort flow as migrate to groups."""
