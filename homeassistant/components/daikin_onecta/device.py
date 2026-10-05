@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from daikin_onecta.models import GatewayDevice
+from daikin_onecta.models import GatewayDevice, ManagementPoint
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -54,7 +54,7 @@ class DaikinOnectaDevice:
         gateway = self.device.management_point_by_type("gateway")
         return gateway.embedded_id if gateway is not None else None
 
-    def management_point(self, embedded_id: str):
+    def management_point(self, embedded_id: str) -> ManagementPoint | None:
         """Return a management point by embedded id."""
         return self.device.management_point(embedded_id)
 

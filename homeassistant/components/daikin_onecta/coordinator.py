@@ -50,7 +50,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     def _scan_ignore(self) -> int:
         """Return the delay after a write before polling resumes."""
-        return self.options.get("scan_ignore", 30)
+        return int(self.options.get("scan_ignore", 30))
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""

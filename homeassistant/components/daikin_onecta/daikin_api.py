@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaApiError, OnectaRateLimitError
@@ -72,7 +72,7 @@ class DaikinApi:
     async def async_get_access_token(self) -> str:
         """Return a valid OAuth access token."""
         await self.session.async_ensure_token_valid()
-        return self.session.token["access_token"]
+        return cast("str", self.session.token["access_token"])
 
     async def get_cloud_device_details(
         self, *, cooldown: timedelta | None = None
