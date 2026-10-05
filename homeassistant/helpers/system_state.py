@@ -22,7 +22,6 @@ SIGNAL_SYSTEM_STATE_UPDATED: SignalType[SystemState] = SignalType(
 @dataclass(slots=True, frozen=True)
 class SystemState:
     """Snapshot of the pending restart state of the running instance."""
-    """
 
     home_assistant_restart_sources: frozenset[str] = frozenset()
 
