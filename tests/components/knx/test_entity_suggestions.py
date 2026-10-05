@@ -3,13 +3,15 @@
 from typing import Any, override
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.knx.storage.entity_suggestions.base import (
     SuggestionProvider,
 )
 from homeassistant.components.knx.storage.entity_suggestions.const import (
-    EntitySuggestion,
     PlatformSuggestion,
     ProviderResult,
+    ProviderSuggestion,
     SuggestedGroupAddress,
 )
 from homeassistant.const import Platform
@@ -52,11 +54,10 @@ def _suggestion(
     platform: Platform,
     address: str,
     group_id: str = "1.1.1",
-) -> EntitySuggestion:
-    """Build a suggestion as a provider would return it - id not yet prefixed."""
-    return EntitySuggestion(
+) -> ProviderSuggestion:
+    """Build a suggestion as a provider would return it."""
+    return ProviderSuggestion(
         id=suggestion_id,
-        source=_StubProvider.provider_id,
         suggested_name=f"Entity {suggestion_id}",
         group_id=group_id,
         group_name="Device",
@@ -71,8 +72,6 @@ def _suggestion(
                 unmatched=[],
             )
         },
-        # filled by the orchestrator
-        existing_entity_ids=[],
         metadata={},
     )
 
@@ -97,6 +96,20 @@ class _StubProvider(SuggestionProvider):
         )
 
 
+def test_provider_requires_provider_id() -> None:
+    """Test a provider without `provider_id` can not be instantiated."""
+
+    class _IncompleteProvider(SuggestionProvider):
+        @override
+        async def async_get_suggestions(
+            self, hass: HomeAssistant, knx: Any
+        ) -> ProviderResult:
+            return ProviderResult(suggestions=[], hints={})
+
+    with pytest.raises(TypeError):
+        _IncompleteProvider()  # type: ignore[abstract]
+
+
 async def _get_suggestions(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, **filters: Any
 ) -> dict:
@@ -116,7 +129,7 @@ async def test_ws_get_entity_suggestions(
     await knx.setup_integration()
     with patch(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
-        [_StubProvider],
+        [_StubProvider()],
     ):
         result = await _get_suggestions(hass, hass_ws_client)
 
@@ -127,6 +140,7 @@ async def test_ws_get_entity_suggestions(
         "stub_configured",
     ]
     assert result["providers"] == {"stub": {"state": "ok"}}
+    assert all(s["source"] == "stub" for s in result["suggestions"])
     # no entity uses these addresses yet
     assert all(not s["existing_entity_ids"] for s in result["suggestions"])
 
@@ -141,7 +155,7 @@ async def test_ws_get_entity_suggestions_existing_entities(
     entity_id = await _create_entity(hass, hass_ws_client, CONFIGURED_ADDRESS)
     with patch(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
-        [_StubProvider],
+        [_StubProvider()],
     ):
         result = await _get_suggestions(hass, hass_ws_client)
 
@@ -176,7 +190,7 @@ async def test_ws_get_entity_suggestions_filtered(
     await _create_entity(hass, hass_ws_client, CONFIGURED_ADDRESS)
     with patch(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
-        [_StubProvider],
+        [_StubProvider()],
     ):
         by_platform = await _get_suggestions(
             hass, hass_ws_client, platform=Platform.COVER
