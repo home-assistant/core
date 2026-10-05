@@ -83,8 +83,7 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
         if not self._multi_level_switch_property.set(tone):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set",
-                translation_placeholders={"placeholder": "siren's tone"},
+                translation_key="set_failed",
             )
 
     @override
