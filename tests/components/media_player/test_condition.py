@@ -118,6 +118,7 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
     "is_on": TargetSupport.STANDARD,
     "is_paused": TargetSupport.STANDARD,
     "is_playing": TargetSupport.STANDARD,
+    "is_source": TargetSupport.STANDARD,
     "is_unmuted": TargetSupport.STANDARD,
     "is_volume": TargetSupport.STANDARD,
 }
