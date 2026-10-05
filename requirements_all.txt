@@ -1823,7 +1823,7 @@ onvif_parsers==2.5.0
 open-garage==0.3.1
 
 # homeassistant.components.open_meteo
-open-meteo==0.3.2
+open-meteo==1.0.1
 
 # homeassistant.components.cloud
 # homeassistant.components.litellm
