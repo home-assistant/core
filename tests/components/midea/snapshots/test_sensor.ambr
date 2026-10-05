@@ -1740,7 +1740,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22.0',
+    'state': '70',
   })
 # ---
 # name: test_all_entities[db_unknown_attributes][sensor.front_load_washer_wash_program-entry]

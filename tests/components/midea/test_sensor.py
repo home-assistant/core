@@ -148,7 +148,7 @@ from tests.common import MockConfigEntry, snapshot_platform
                 attributes={
                     DBAttributes.power: False,
                     DBAttributes.mode: "unknown",
-                    DBAttributes.temperature: 22.0,
+                    DBAttributes.temperature: "70",
                     DBAttributes.wash_time: 65,
                     DBAttributes.dehydration_time: 30,
                     DBAttributes.program: "unknown",
@@ -307,7 +307,7 @@ async def test_db_sensor_with_invalid_dehydration_speed(
         attributes={
             DBAttributes.power: True,
             DBAttributes.mode: "normal",
-            DBAttributes.temperature: 22.0,
+            DBAttributes.temperature: "40",
             DBAttributes.wash_time: 65,
             DBAttributes.dehydration_time: 30,
             DBAttributes.program: "cotton",
