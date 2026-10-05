@@ -1,12 +1,23 @@
 """Test KNX entity suggestions generated from functional block semantics."""
 
 from typing import Any
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
+from homeassistant.components.knx.storage.dpa import FB417, FB418
+from homeassistant.components.knx.storage.entity_store_schema import (
+    KNX_SCHEMA_FOR_PLATFORM,
+    LIGHT_KNX_SCHEMA,
+)
 from homeassistant.components.knx.storage.entity_suggestions.functional_blocks import (
+    GroupSelectOptionRef,
     _build_platform_suggestion,
     _collect_dpa_index,
+    _functional_block_platforms,
 )
+from homeassistant.components.knx.storage.knx_selector import GASelector
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -179,6 +190,10 @@ def _test_channel(device: str, channel: str) -> dict:
 
 def test_collect_dpa_index() -> None:
     """Test DPA index generation from entity store schemas."""
+    # every platform schema shall be indexable - raises on duplicate annotations
+    for platform in KNX_SCHEMA_FOR_PLATFORM:
+        _collect_dpa_index(platform)
+
     light_index = _collect_dpa_index(Platform.LIGHT)
     target = light_index["417.52"]
     assert target.path == ("ga_switch",)
@@ -193,43 +208,62 @@ def test_collect_dpa_index() -> None:
     target = light_index["423.52"]
     assert target.path == ("color", "ga_color")
     assert target.slot == "write"
-    assert target.group_select == (("color",), 0)
+    assert target.group_select == GroupSelectOptionRef(("color",), 0)
 
     target = light_index["423.84"]
     assert target.path == ("color", "ga_green_brightness")
     assert target.slot == "state"
-    assert target.group_select == (("color",), 1)
+    assert target.group_select == GroupSelectOptionRef(("color",), 1)
 
     assert "999.99" not in light_index
 
 
-def test_switch_and_light_suggestion() -> None:
+def test_collect_dpa_index_duplicate_annotation() -> None:
+    """Test that a DPA annotated on multiple keys of one schema is rejected."""
+    duplicate = GASelector(dpa_write=[FB417.SWITCH_ON_OFF, FB418.SWITCH_ON_OFF])
+    with (
+        patch.dict(LIGHT_KNX_SCHEMA.validators[0].schema, {"ga_duplicate": duplicate}),
+        pytest.raises(ValueError, match="417.52"),
+    ):
+        _collect_dpa_index.__wrapped__(Platform.LIGHT)
+
+
+def test_functional_block_platforms() -> None:
+    """Test the functional block to platform map derived from schema annotations."""
+    assert _functional_block_platforms() == {
+        # light is the default for FB 417
+        "417": [Platform.LIGHT, Platform.SWITCH],
+        "418": [Platform.LIGHT],
+        "422": [Platform.LIGHT],
+        "423": [Platform.LIGHT],
+        "427": [Platform.LIGHT],
+        "800": [Platform.COVER],
+    }
+
+
+@pytest.mark.parametrize("platform", [Platform.LIGHT, Platform.SWITCH])
+def test_switch_and_light_suggestion(platform: Platform) -> None:
     """Test FB 417 suggestions with state, passive and unmatched DPAs."""
     channel = _test_channel("1.1.1", "CH-1")
-    for platform in (Platform.LIGHT, Platform.SWITCH):
-        suggestion = _build_platform_suggestion(
-            TEST_PROJECT, channel, _collect_dpa_index(platform)
-        )
-        assert suggestion is not None
-        assert suggestion["knx"] == {
-            "ga_switch": {"write": "1/0/1", "state": "1/0/3", "passive": ["1/0/2"]}
-        }
-        # missing com objects are skipped; DPAs without config key are reported
-        assert suggestion["unmatched"] == ["417.69"]
-        # group addresses carry their project name
-        assert suggestion["matched_group_addresses"] == [
-            {"address": "1/0/1", "name": "GA 1/0/1"},
-            {"address": "1/0/2", "name": "GA 1/0/2"},
-            {"address": "1/0/3", "name": "GA 1/0/3"},
-        ]
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, platform)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "ga_switch": {"write": "1/0/1", "state": "1/0/3", "passive": ["1/0/2"]}
+    }
+    # missing com objects are skipped; DPAs without config key are reported
+    assert suggestion["unmatched"] == ["417.69"]
+    # group addresses carry their project name
+    assert suggestion["matched_group_addresses"] == [
+        {"address": "1/0/1", "name": "GA 1/0/1"},
+        {"address": "1/0/2", "name": "GA 1/0/2"},
+        {"address": "1/0/3", "name": "GA 1/0/3"},
+    ]
 
 
 def test_cover_suggestion() -> None:
     """Test FB 800 suggestion."""
     channel = _test_channel("1.1.2", "CH-1")
-    suggestion = _build_platform_suggestion(
-        TEST_PROJECT, channel, _collect_dpa_index(Platform.COVER)
-    )
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.COVER)
     assert suggestion is not None
     assert suggestion["knx"] == {
         "ga_up_down": {"write": "2/0/1"},
@@ -244,20 +278,13 @@ def test_cover_suggestion() -> None:
 def test_invalid_dpt_dropped() -> None:
     """Test that a write GA with non-matching DPT yields no suggestion."""
     channel = _test_channel("1.1.3", "CH-2")
-    assert (
-        _build_platform_suggestion(
-            TEST_PROJECT, channel, _collect_dpa_index(Platform.SWITCH)
-        )
-        is None
-    )
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.SWITCH) is None
 
 
 def test_tunable_white_suggestion() -> None:
     """Test FB 427 suggestion with `dpt` derived from the group address."""
     channel = _test_channel("1.2.1", "CH-1")
-    suggestion = _build_platform_suggestion(
-        TEST_PROJECT, channel, _collect_dpa_index(Platform.LIGHT)
-    )
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT)
     assert suggestion is not None
     assert suggestion["knx"] == {
         "ga_switch": {"write": "5/0/1", "state": "5/0/2"},
@@ -269,9 +296,7 @@ def test_tunable_white_suggestion() -> None:
 def test_combined_color_preferred() -> None:
     """Test that the first matched group select option wins."""
     channel = _test_channel("1.2.2", "CH-1")
-    suggestion = _build_platform_suggestion(
-        TEST_PROJECT, channel, _collect_dpa_index(Platform.LIGHT)
-    )
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT)
     assert suggestion is not None
     assert suggestion["knx"] == {
         "ga_switch": {"write": "6/0/1", "state": "6/0/2"},
@@ -298,9 +323,7 @@ def test_individual_color_without_combined() -> None:
         ["423"],
         ["co-60", "co-61", "co-70", "co-71", "co-72", "co-73", "co-74", "co-75"],
     )
-    suggestion = _build_platform_suggestion(
-        TEST_PROJECT, channel, _collect_dpa_index(Platform.LIGHT)
-    )
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT)
     assert suggestion is not None
     assert suggestion["knx"] == {
         "ga_switch": {"write": "6/0/1", "state": "6/0/2"},
@@ -310,6 +333,13 @@ def test_individual_color_without_combined() -> None:
             "ga_blue_brightness": {"write": "6/1/5", "state": "6/1/6"},
         },
     }
+
+
+def test_incomplete_config_dropped() -> None:
+    """Test that a config failing the platform schema yields no suggestion."""
+    # individual colour addresses without the required blue channel
+    channel = _channel("RGB unvollständig", ["423"], ["co-60", "co-70", "co-72"])
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
 async def _get_suggestions(
