@@ -271,9 +271,33 @@ async def test_filtvalve_mode_manual_to_manual_is_noop(
     mock_neopool_client.async_set_filtvalve_mode.assert_not_awaited()
 
 
+async def test_filtvalve_mode_disabled_is_read_only(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Mode 0 surfaces 'disabled' as a read-only option that offers no write."""
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILTVALVE_MODE": 0,
+    }
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(
+        hass, mock_config_entry_timers, "mbf_par_filtvalve_mode"
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "disabled"
+    assert "disabled" in state.attributes["options"]
+    mock_neopool_client.async_set_filtvalve_mode = AsyncMock(return_value={})
+    await _select_option(hass, entity_id, "disabled")
+    mock_neopool_client.async_set_filtvalve_mode.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
+        (0, "disabled"),
         (FiltValveMode.AUTO.value, "auto"),
         (FiltValveMode.ALWAYS_ON.value, "manual"),
         (FiltValveMode.ALWAYS_OFF.value, "manual"),
@@ -286,9 +310,9 @@ async def test_filtvalve_mode_current_option_maps_register(
     raw: int,
     expected: str,
 ) -> None:
-    """current_option reduces the 3 register values to auto / manual.
+    """current_option reduces the register values to disabled / auto / manual.
 
-    AUTO (1) -> 'auto'; ALWAYS_ON (3) and ALWAYS_OFF (4) -> 'manual'.
+    0 -> 'disabled'; AUTO (1) -> 'auto'; ALWAYS_ON (3) and ALWAYS_OFF (4) -> 'manual'.
     """
     await setup_integration(hass, mock_config_entry_timers)
     entity_id = _select_entity_id(

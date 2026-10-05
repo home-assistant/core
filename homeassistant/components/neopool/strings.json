@@ -234,6 +234,7 @@
         "name": "Backwash valve mode",
         "state": {
           "auto": "[%key:component::neopool::entity::select::relay_light_mode::state::auto%]",
+          "disabled": "[%key:common::state::disabled%]",
           "manual": "[%key:common::state::manual%]"
         }
       },

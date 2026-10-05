@@ -223,6 +223,9 @@ async def _write_filtvalve_mode(
     entity: NeoPoolSelect, client: NeoPoolModbusClient, option: str
 ) -> None:
     """Switch the filter valve between automatic and manual modes."""
+    if option not in ("auto", "manual"):
+        # disabled is a read-only state (uninitialised valve), not a writable target.
+        return
     current = int(entity.coordinator.data.get("MBF_PAR_FILTVALVE_MODE", 0) or 0)
     if option == "manual" and current in (
         FiltValveMode.ALWAYS_ON,
@@ -697,6 +700,14 @@ class NeoPoolSelect(NeoPoolEntity, SelectEntity):
                 return [f"{value}{suffix}", *options]
             return options
 
+        if desc.select_type == "filtvalve_mode":
+            # An uninitialised valve reports mode 0; expose it as a read-only
+            # "disabled" option, mirroring the relay selects.
+            options = list(desc.options_map.values())
+            if data.get(self._key) == 0 and "disabled" not in options:
+                return ["disabled", *options]
+            return options
+
         return list(desc.options_map.values())
 
     def apply_optimistic_update(self, value: int | None) -> dict[str, Any]:
@@ -750,6 +761,8 @@ class NeoPoolSelect(NeoPoolEntity, SelectEntity):
             if value is None:  # pragma: no cover - register present once polled
                 return None
             int_value = int(value)
+            if int_value == 0:
+                return "disabled"
             if int_value in (FiltValveMode.ALWAYS_ON, FiltValveMode.ALWAYS_OFF):
                 return "manual"
             return desc.options_map.get(int_value)

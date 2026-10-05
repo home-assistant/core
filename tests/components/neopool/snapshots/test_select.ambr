@@ -151,6 +151,7 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
         'auto',
         'manual',
       ]),
@@ -190,6 +191,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Backwash valve mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
         'auto',
         'manual',
       ]),
@@ -199,7 +201,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disabled',
   })
 # ---
 # name: test_all_entities[select.neopool_boost_mode-entry]
