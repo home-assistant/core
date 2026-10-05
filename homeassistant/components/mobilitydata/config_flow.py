@@ -751,7 +751,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         subentry: ConfigSubentry = self._get_reconfigure_subentry()
         self._stop_ids = list(subentry.data[CONF_STOP_IDS])
         self._stop_name = subentry.data[CONF_STOP_NAME]
-        self._route_ids = list(subentry.data.get(CONF_ROUTE_IDS) or [])
-        self._headsigns = list(subentry.data.get(CONF_HEADSIGNS) or [])
+        self._route_ids = list(subentry.data[CONF_ROUTE_IDS])
+        self._headsigns = list(subentry.data[CONF_HEADSIGNS])
         self._group_key = subentry.data[CONF_STATION_ID]
         return await self.async_step_routes()

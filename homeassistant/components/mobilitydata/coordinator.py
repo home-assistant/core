@@ -195,8 +195,10 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
         queries = [
             ArrivalsQuery(
                 stop_ids=subentry.data[CONF_STOP_IDS],
-                route_ids=subentry.data.get(CONF_ROUTE_IDS) or None,
-                headsigns=subentry.data.get(CONF_HEADSIGNS) or None,
+                # The flow always writes both, so a missing key is a bug
+                # worth surfacing; an empty list means "no narrowing".
+                route_ids=subentry.data[CONF_ROUTE_IDS] or None,
+                headsigns=subentry.data[CONF_HEADSIGNS] or None,
                 limit=DEPARTURE_SENSOR_COUNT,
             )
             for subentry in subentries.values()
