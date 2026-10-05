@@ -4818,6 +4818,77 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("entity_id", "supported_features", "position_attr", "instance", "service"),
+    [
+        (
+            "cover.test_closed",
+            CoverEntityFeature.SET_POSITION,
+            "current_position",
+            "cover.position",
+            "cover.set_cover_position",
+        ),
+        (
+            "cover.test_closed",
+            CoverEntityFeature.SET_TILT_POSITION,
+            "tilt_position",
+            "cover.tilt",
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            "valve.test_closed",
+            ValveEntityFeature.SET_POSITION,
+            "position",
+            "valve.position",
+            "valve.set_valve_position",
+        ),
+    ],
+    ids=["cover_position", "cover_tilt", "valve_position"],
+)
+async def test_adjust_range_from_closed_position(
+    hass: HomeAssistant,
+    entity_id: str,
+    supported_features: int,
+    position_attr: str,
+    instance: str,
+    service: str,
+) -> None:
+    """Test AdjustRangeValue treats position 0 as known and a missing one as unknown."""
+    endpoint = entity_id.replace(".", "#")
+    hass.states.async_set(
+        entity_id,
+        "closed",
+        {"supported_features": supported_features, position_attr: 0},
+    )
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        endpoint,
+        service,
+        hass,
+        payload={"rangeValueDelta": 10, "rangeValueDeltaDefault": False},
+        instance=instance,
+    )
+    assert call.data[position_attr.removeprefix("current_")] == 10
+    assert msg["context"]["properties"][0]["value"] == 10
+
+    hass.states.async_set(
+        entity_id, "closed", {"supported_features": supported_features}
+    )
+
+    msg = await assert_request_fails(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        endpoint,
+        service,
+        hass,
+        payload={"rangeValueDelta": 10, "rangeValueDeltaDefault": False},
+        instance=instance,
+    )
+    assert msg["event"]["payload"]["type"] == "INVALID_VALUE"
+
+
+@pytest.mark.parametrize(
     ("supported_stop_features", "cover_stop_calls", "cover_stop_tilt_calls"),
     [
         (CoverEntityFeature(0), 0, 0),

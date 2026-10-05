@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import pytest
 
 from homeassistant import config_entries
@@ -88,6 +88,32 @@ async def test_step_user_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_step_user_unsupported_device(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test if we get the local setup form with error if the device is not supported."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
 
 
 async def test_step_user_cannot_connect(
@@ -312,6 +338,41 @@ async def test_step_discovery_already_configured(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_my_pv_client")
+async def test_step_discovery_unsupported_device(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    source: str,
+    data: BaseServiceInfo,
+) -> None:
+    """Test discovery of an unsupported device."""
+    mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": source,
+        },
+        data=data,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+
+
+@pytest.mark.parametrize(
+    ("source", "data"),
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            DHCP_DISCOVERY,
+        ),
+        (
+            config_entries.SOURCE_ZEROCONF,
+            ZEROCONF_DISCOVERY,
+        ),
+    ],
+)
 async def test_step_discovery_cannot_connect(
     hass: HomeAssistant,
     mock_my_pv_client: AsyncMock,
@@ -442,3 +503,107 @@ async def test_step_discovery_auth_wrong_password(
         CONF_PASSWORD: "test-password",
     }
     assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reauth(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reauth_wrong_password(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth with an incorrect password."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result["errors"]
+
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["password"] == "invalid_password"
+
+    mock_my_pv_client.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reauth_cannot_connect(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for reauth if we can not connect to device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result["errors"]
+
+    mock_my_pv_client.connect.return_value = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "cannot_connect"
+
+    mock_my_pv_client.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == "new-password"

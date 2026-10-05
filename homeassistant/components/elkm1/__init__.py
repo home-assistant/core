@@ -144,7 +144,7 @@ DEVICE_SCHEMA = probatio.All(
                 cv.string, probatio.Lower
             ),
             probatio.Optional(CONF_USERNAME, default=""): cv.string,
-            probatio.Optional(CONF_PASSWORD, default=""): cv.string,
+            probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): cv.string,
             probatio.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
             probatio.Optional(CONF_TEMPERATURE_UNIT, default="F"): cv.temperature_unit,
             probatio.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
@@ -162,7 +162,11 @@ DEVICE_SCHEMA = probatio.All(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
+    {
+        DOMAIN: probatio.All(
+            probatio.EnsureList(), [DEVICE_SCHEMA], _has_all_unique_prefixes
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 

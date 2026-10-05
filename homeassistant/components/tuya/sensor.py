@@ -13,16 +13,22 @@ from tuya_device_handlers.device_wrapper.common import (
 )
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
+    ElectricityApparentPowerHexStringWrapper,
     ElectricityApparentPowerJsonWrapper,
     ElectricityApparentPowerRawWrapper,
+    ElectricityCurrentHexStringWrapper,
     ElectricityCurrentJsonWrapper,
     ElectricityCurrentRawWrapper,
+    ElectricityPowerFactorHexStringWrapper,
     ElectricityPowerFactorJsonWrapper,
     ElectricityPowerFactorRawWrapper,
+    ElectricityPowerHexStringWrapper,
     ElectricityPowerJsonWrapper,
     ElectricityPowerRawWrapper,
+    ElectricityReactivePowerHexStringWrapper,
     ElectricityReactivePowerJsonWrapper,
     ElectricityReactivePowerRawWrapper,
+    ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
@@ -59,12 +65,12 @@ from .const import (
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_device_temp_unit_convert
 
 
 @dataclass(frozen=True)
-class TuyaSensorEntityDescription(SensorEntityDescription):
+class TuyaSensorEntityDescription(TuyaEntityDescription, SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     dpcode: DPCode | None = None
@@ -133,6 +139,68 @@ def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]
                 ElectricityPowerFactorRawWrapper,
                 ElectricityPowerFactorJsonWrapper,
             ),
+        ),
+    )
+
+
+def _indexed_electricity_data(
+    dpcode: DPCode, index: int
+) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build sensors extracted from an indexed hex-string electricity DPCode."""
+    return (
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}electriccurrent",
+            dpcode=dpcode,
+            translation_key="indexed_current",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityCurrentHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}power",
+            dpcode=dpcode,
+            translation_key="indexed_power",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}voltage",
+            dpcode=dpcode,
+            translation_key="indexed_voltage",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityVoltageHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}reactivepower",
+            dpcode=dpcode,
+            translation_key="indexed_reactive_power",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityReactivePowerHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}apparentpower",
+            dpcode=dpcode,
+            translation_key="indexed_apparent_power",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityApparentPowerHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}powerfactor",
+            dpcode=dpcode,
+            translation_key="indexed_power_factor",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerFactorHexStringWrapper,),
         ),
     )
 
@@ -1253,6 +1321,24 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="irrigation_status",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_ONCE,
+            translation_key="water_once",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TOTAL,
+            translation_key="water_total",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
         *BATTERY_SENSORS,
     ),
     DeviceCategory.SGBJ: BATTERY_SENSORS,
@@ -1687,6 +1773,13 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *_electricity_data(DPCode.PHASE_A),
         *_electricity_data(DPCode.PHASE_B),
         *_electricity_data(DPCode.PHASE_C),
+        *(
+            description
+            for index in range(1, 21)
+            for description in _indexed_electricity_data(
+                DPCode(f"phase_s{index}"), index
+            )
+        ),
     ),
     DeviceCategory.ZNJDQ: (
         TuyaSensorEntityDescription(

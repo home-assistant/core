@@ -1,12 +1,12 @@
 """Support to select an option from a list."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, cast, override
 
 import probatio
 
-from homeassistant.components.select import (
-    ATTR_CYCLE,
+from homeassistant.components.select import (  # noqa: F401
     ATTR_OPTION,
     ATTR_OPTIONS,
     SERVICE_SELECT_FIRST,
@@ -25,24 +25,27 @@ from homeassistant.const import (  # noqa: F401
     CONF_OPTIONS,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputSelectEntityStateAttribute
+from .const import (  # noqa: F401
+    DATA_INPUT_SELECT,
+    DOMAIN,
+    SERVICE_SET_OPTIONS,
+    InputSelectEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
 
-SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
@@ -56,9 +59,9 @@ def _unique(options: Any) -> Any:
 
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Required(CONF_OPTIONS): probatio.All(
-        cv.ensure_list, probatio.Length(min=1), _unique, [cv.string]
+        probatio.EnsureList(), probatio.NonEmpty(), _unique, [cv.string]
     ),
     probatio.Optional(CONF_INITIAL): cv.string,
     probatio.Optional(CONF_ICON): cv.icon,
@@ -101,7 +104,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 {
                     probatio.Optional(CONF_NAME): cv.string,
                     probatio.Required(CONF_OPTIONS): probatio.All(
-                        cv.ensure_list, probatio.Length(min=1), [cv.string]
+                        probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
                     ),
                     probatio.Optional(CONF_INITIAL): cv.string,
                     probatio.Optional(CONF_ICON): cv.icon,
@@ -112,7 +115,6 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 class InputSelectStore(Store):
@@ -131,6 +133,14 @@ class InputSelectStore(Store):
                         options, item.get(CONF_NAME)
                     )
         return old_data
+
+
+@dataclass(slots=True)
+class InputSelectData:
+    """Runtime data for the input_select integration."""
+
+    component: EntityComponent[InputSelect]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -165,61 +175,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_SELECT] = InputSelectData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_FIRST,
-        None,
-        InputSelect.async_first.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_LAST,
-        None,
-        InputSelect.async_last.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        {probatio.Optional(ATTR_CYCLE, default=True): bool},
-        InputSelect.async_next.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {probatio.Required(ATTR_OPTION): cv.string},
-        InputSelect.async_select_option.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        {probatio.Optional(ATTR_CYCLE, default=True): bool},
-        InputSelect.async_previous.__name__,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_OPTIONS,
-        {
-            probatio.Required(ATTR_OPTIONS): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
-            )
-        },
-        "async_set_options",
-    )
-
+    async_setup_services(hass)
     return True
 
 

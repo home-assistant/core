@@ -110,6 +110,12 @@ def _is_gemini_3_model(model: str) -> bool:
     return name.startswith("gemini-3")
 
 
+def _is_gemma_4_model(model: str) -> bool:
+    """Check if the model is a Gemma 4 series model."""
+    name = model.removeprefix("models/")
+    return name.startswith("gemma-4")
+
+
 def _create_thinking_config(
     model: str,
     thinking_budget: int,
@@ -123,10 +129,21 @@ def _create_thinking_config(
             -1 = automatic (default behavior),
             0 = disable thinking,
             >0 = custom token budget (Gemini 2.5 only).
-        thinking_level: The user-configured thinking level for Gemini 3 models:
-            "auto" = automatic (default), "minimal", "low", "medium", "high".
+        thinking_level: The user-configured thinking level for Gemini 3 and
+            Gemma 4 models: "auto" = automatic (default), "minimal", "low",
+            "medium", "high".
 
     """
+    if _is_gemma_4_model(model):
+        # Gemma 4 only supports the minimal and high thinking levels
+        gemma_level_map: dict[str, ThinkingLevel] = {
+            "minimal": ThinkingLevel.MINIMAL,
+            "high": ThinkingLevel.HIGH,
+        }
+        if thinking_level and thinking_level in gemma_level_map:
+            return ThinkingConfig(thinking_level=gemma_level_map[thinking_level])
+        return None
+
     if not _is_thinking_model(model):
         return None
 
@@ -271,7 +288,12 @@ def _create_google_tool_response_parts(
     return [
         Part.from_function_response(
             name=tool_result.tool_name,
-            response=_validate_tool_results(tool_result.tool_result),
+            response=_validate_tool_results(
+                {
+                    "data": tool_result.result.data,
+                    "error": tool_result.result.error,
+                }
+            ),
         )
         for tool_result in parts
     ]
