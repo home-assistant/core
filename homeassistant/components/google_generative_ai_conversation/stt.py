@@ -1,5 +1,6 @@
 """Speech to text support for Google Generative AI."""
 
+import asyncio
 from collections.abc import AsyncIterable
 from typing import override
 
@@ -15,6 +16,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, LOGGER, RECOMMENDED_STT_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
+
+# The runtime genai client has no default HTTP timeout, so without this a
+# stalled request blocks the whole Assist pipeline (e.g. a VoIP call sits in
+# dead air) with no error and nothing logged.
+STT_TIMEOUT_SECONDS = 30
 
 
 async def async_setup_entry(
@@ -247,16 +253,23 @@ class GoogleGenerativeAISttEntity(
             )
 
         try:
-            response = await self._genai_client.aio.models.generate_content(
-                model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
-                contents=[
-                    prompt,
-                    Part.from_bytes(
-                        data=audio_data,
-                        mime_type=f"audio/{metadata.format.value}",
+            async with asyncio.timeout(STT_TIMEOUT_SECONDS):
+                response = await self._genai_client.aio.models.generate_content(
+                    model=self.subentry.data.get(
+                        CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL
                     ),
-                ],
-                config=self.create_generate_content_config(),
+                    contents=[
+                        prompt,
+                        Part.from_bytes(
+                            data=audio_data,
+                            mime_type=f"audio/{metadata.format.value}",
+                        ),
+                    ],
+                    config=self.create_generate_content_config(),
+                )
+        except TimeoutError:
+            LOGGER.error(
+                "Timed out after %s seconds waiting for STT", STT_TIMEOUT_SECONDS
             )
         except (APIError, ClientError, ValueError) as err:
             LOGGER.error("Error during STT: %s", err)
