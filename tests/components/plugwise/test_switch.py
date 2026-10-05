@@ -123,6 +123,41 @@ async def test_stretch_switch_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.parametrize("platforms", [(SWITCH_DOMAIN,)])
+@pytest.mark.usefixtures("mock_smile_anna")
+async def test_deprecated_dhw_comfort_switch_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_smile_anna: MagicMock,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test warning when using the deprecated DHW comfort switch."""
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "36b937e44ad145bab165fa0fe99d742d-dhw_cm_switch"
+    )
+    assert entity_id
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert any(
+        "The deprecated function async_turn_on was called" in record.message
+        and "DHW mode select" in record.message
+        and "2027.4.0" in record.message
+        for record in caplog.records
+    )
+    mock_smile_anna.set_switch_state.assert_called_once_with(
+        "36b937e44ad145bab165fa0fe99d742d", None, "dhw_cm_switch", STATE_ON
+    )
+
+
 async def test_stretch_switch_changes(
     hass: HomeAssistant, mock_stretch: MagicMock, init_integration: MockConfigEntry
 ) -> None:

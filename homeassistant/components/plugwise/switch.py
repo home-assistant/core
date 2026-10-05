@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
@@ -67,7 +68,11 @@ async def async_setup_entry(
             return
 
         async_add_entities(
-            PlugwiseSwitchEntity(coordinator, device_id, description)
+            (
+                PlugwiseDhwCmSwitchEntity(coordinator, device_id, description)
+                if description.key == "dhw_cm_switch"
+                else PlugwiseSwitchEntity(coordinator, device_id, description)
+            )
             for device_id in coordinator.new_devices
             if (switches := coordinator.data[device_id].get("switches"))
             for description in SWITCHES
@@ -121,3 +126,19 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
             self.entity_description.key,
             "off",
         )
+
+
+class PlugwiseDhwCmSwitchEntity(PlugwiseSwitchEntity):
+    """Represent the deprecated DHW comfort switch."""
+
+    @deprecated_function("the DHW mode select", breaks_in_ha_version="2027.4.0")
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the deprecated DHW comfort switch on."""
+        await super().async_turn_on(**kwargs)
+
+    @deprecated_function("the DHW mode select", breaks_in_ha_version="2027.4.0")
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the deprecated DHW comfort switch off."""
+        await super().async_turn_off(**kwargs)
