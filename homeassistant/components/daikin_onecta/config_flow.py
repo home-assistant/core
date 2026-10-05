@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import jwt
+from daikin_onecta import OnectaAccessTokenError, get_account_id
 import probatio
 
 from homeassistant import config_entries
@@ -20,7 +20,6 @@ from homeassistant.helpers.selector import (
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN
 from .coordinator import DaikinOnectaConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 OAUTH_SCOPES = [
     "openid",
     "onecta:basic.integration",
@@ -106,11 +105,8 @@ class FlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an OAuth config entry."""
         try:
-            unique_id = jwt.decode(
-                data["token"]["access_token"], options={"verify_signature": False}
-            )["sub"]
-        except jwt.DecodeError, KeyError:
-            _LOGGER.exception("Failed to decode JWT")
+            unique_id = get_account_id(data["token"]["access_token"])
+        except OnectaAccessTokenError:
             return self.async_abort(reason="invalid_token")
 
         await self.async_set_unique_id(unique_id)
