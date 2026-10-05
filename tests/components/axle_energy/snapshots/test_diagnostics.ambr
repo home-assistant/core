@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_diagnostics[healthy-empty]
+  dict({
+    'data': None,
+    'last_update_success': True,
+  })
+# ---
+# name: test_diagnostics[healthy-scheduled]
+  dict({
+    'data': dict({
+      'direction': 'export',
+      'end': '2026-09-11T18:00:00+00:00',
+      'opted_out': False,
+      'start': '2026-09-11T17:00:00+00:00',
+      'updated_at': '2026-09-11T08:00:00+00:00',
+    }),
+    'last_update_success': True,
+  })
+# ---
+# name: test_diagnostics[unavailable-empty]
+  dict({
+    'data': None,
+    'last_update_success': False,
+  })
+# ---
+# name: test_diagnostics[unavailable-scheduled]
+  dict({
+    'data': dict({
+      'direction': 'export',
+      'end': '2026-09-11T18:00:00+00:00',
+      'opted_out': False,
+      'start': '2026-09-11T17:00:00+00:00',
+      'updated_at': '2026-09-11T08:00:00+00:00',
+    }),
+    'last_update_success': False,
+  })
+# ---

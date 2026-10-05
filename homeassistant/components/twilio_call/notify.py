@@ -24,7 +24,7 @@ CONF_FROM_NUMBER = "from_number"
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_FROM_NUMBER): probatio.All(
-            cv.string, probatio.Match(r"^\+?[1-9]\d{1,14}$")
+            cv.string, probatio.E164(normalize=False)
         )
     }
 )

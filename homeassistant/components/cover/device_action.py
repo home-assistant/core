@@ -40,7 +40,7 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         probatio.Required(CONF_TYPE): probatio.In(POSITION_ACTION_TYPES),
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Optional("position", default=0): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=100)
+            probatio.Coerce(int), probatio.Percentage()
         ),
     }
 )
@@ -106,7 +106,7 @@ async def async_get_action_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(ATTR_POSITION, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 )
             }
         )
