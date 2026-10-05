@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -169,6 +170,7 @@ async def async_setup_entry(
 class OnkyoMediaPlayer(MediaPlayerEntity):
     """Onkyo Receiver Media Player (one per each zone)."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_should_poll = False
     _attr_has_entity_name = True
 
