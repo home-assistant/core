@@ -69,7 +69,6 @@ an authorization code.
 }
 """
 
-import base64
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
@@ -395,15 +394,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
             return self.json_message(
                 "Transform algorithm not supported", HTTPStatus.BAD_REQUEST
             )
-        # An S256 challenge encodes 32 bytes. Reject encodings with nonzero
-        # padding bits, because no code_verifier can produce them.
-        if code_challenge is not None and (
-            base64.urlsafe_b64encode(base64.urlsafe_b64decode(f"{code_challenge}="))
-            .decode("ascii")
-            .rstrip("=")
-            != code_challenge
-        ):
-            return self.json_message("Invalid code_challenge", HTTPStatus.BAD_REQUEST)
 
         handler: tuple[str, str] = tuple(data["handler"])
 

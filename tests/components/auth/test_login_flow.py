@@ -551,13 +551,6 @@ async def test_well_known_protected_resource_no_url(
         ),
         (
             {
-                "code_challenge": "a" * 43,
-                "code_challenge_method": "S256",
-            },
-            "Invalid code_challenge",
-        ),
-        (
-            {
                 "response_type": "token",
             },
             "Message format incorrect",
@@ -569,7 +562,6 @@ async def test_well_known_protected_resource_no_url(
         "unsupported_plain_method",
         "challenge_too_short",
         "challenge_padded",
-        "challenge_non_canonical",
         "unsupported_response_type",
     ],
 )
