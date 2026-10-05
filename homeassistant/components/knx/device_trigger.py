@@ -24,6 +24,7 @@ from .trigger import (
     CONF_KNX_OUTGOING,
     TELEGRAM_TRIGGER_SCHEMA,
     async_subscribe_telegrams,
+    group_address_select_selector,
 )
 
 TRIGGER_TELEGRAM: Final = "telegram"
@@ -63,21 +64,11 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
-    project = hass.data[KNX_MODULE_KEY].project
-    options = [
-        selector.SelectOptionDict(value=ga.address, label=f"{ga.address} - {ga.name}")
-        for ga in project.group_addresses.values()
-    ]
     return {
         "extra_fields": probatio.Schema(
             {
-                probatio.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        multiple=True,
-                        custom_value=True,
-                        options=options,
-                    ),
+                probatio.Optional(CONF_KNX_DESTINATION): group_address_select_selector(
+                    hass
                 ),
                 probatio.Optional(
                     CONF_KNX_GROUP_VALUE_WRITE, default=True

@@ -40,16 +40,29 @@ from homeassistant.const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    State,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
+    selector,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
@@ -1199,6 +1212,170 @@ async def test_subscribe_triggers(
     }
 
     assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+
+_TEST_TRIGGER_DESCRIPTIONS = """
+static:
+  fields:
+    name:
+      selector:
+        text:
+dynamic:
+  fields:
+    destination:
+      required: true
+      example: "1/2/3"
+      selector:
+        text:
+          multiple: true
+"""
+
+
+async def _setup_test_trigger_platform(hass: HomeAssistant) -> None:
+    """Set up a test integration with a static and a dynamic trigger."""
+
+    class MockTrigger(Trigger):
+        """Trigger without dynamic fields."""
+
+        async def async_attach_runner(
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
+        ) -> CALLBACK_TYPE:
+            """Attach the trigger."""
+            return lambda: None
+
+    class MockDynamicTrigger(MockTrigger):
+        """Trigger with dynamic fields."""
+
+        @classmethod
+        async def async_get_fields_schema(cls, hass: HomeAssistant) -> probatio.Schema:
+            """Return the dynamic fields schema."""
+            return probatio.Schema(
+                {
+                    probatio.Required("destination"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[{"value": "1/2/3", "label": "1/2/3 - Light"}],
+                            multiple=True,
+                            custom_value=True,
+                        )
+                    )
+                }
+            )
+
+    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
+    mock_platform(
+        hass,
+        "test.trigger",
+        Mock(
+            async_get_triggers=AsyncMock(
+                return_value={"static": MockTrigger, "dynamic": MockDynamicTrigger}
+            )
+        ),
+    )
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+
+def _load_test_triggers_yaml(fname: str, secrets: Any = None) -> JSON_TYPE:
+    """Load the mocked triggers.yaml of the test integration."""
+    if not fname.endswith("test/triggers.yaml"):
+        raise FileNotFoundError
+    with io.StringIO(_TEST_TRIGGER_DESCRIPTIONS) as file:
+        return parse_yaml(file)
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "expected_result"),
+    [
+        pytest.param(
+            "test.dynamic",
+            {
+                "fields": {
+                    "destination": {
+                        "required": True,
+                        "example": "1/2/3",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    {"value": "1/2/3", "label": "1/2/3 - Light"}
+                                ],
+                                "multiple": True,
+                                "custom_value": True,
+                                "sort": False,
+                            }
+                        },
+                    }
+                },
+                "has_dynamic_fields": True,
+            },
+            id="dynamic",
+        ),
+        pytest.param(
+            "test.static",
+            {
+                "fields": {
+                    "name": {
+                        "selector": {"text": {"multiline": False, "multiple": False}}
+                    }
+                }
+            },
+            id="static",
+        ),
+    ],
+)
+@patch("annotatedyaml.loader.load_yaml", side_effect=_load_test_triggers_yaml)
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_trigger_platforms_description(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    trigger_key: str,
+    expected_result: dict[str, Any],
+) -> None:
+    """Test trigger_platforms/description command."""
+    await _setup_test_trigger_platform(hass)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "trigger_platforms/description", "trigger": trigger_key}
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg == {
+        "id": 1,
+        "result": expected_result,
+        "success": True,
+        "type": "result",
+    }
+
+
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        pytest.param("test.unknown", id="unknown_trigger"),
+        pytest.param("nonexistent.telegram", id="unknown_integration"),
+    ],
+)
+@patch("annotatedyaml.loader.load_yaml", side_effect=_load_test_triggers_yaml)
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_trigger_platforms_description_not_found(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    trigger_key: str,
+) -> None:
+    """Test trigger_platforms/description command with an unknown trigger."""
+    await _setup_test_trigger_platform(hass)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "trigger_platforms/description", "trigger": trigger_key}
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["success"] is False
+    assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
 @pytest.mark.parametrize(
