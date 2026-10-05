@@ -1,8 +1,10 @@
 """The tests for the Netatmo climate platform."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -28,7 +30,7 @@ from .common import (
     snapshot_platform_entities,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_entity(
@@ -122,11 +124,15 @@ async def test_select_schedule_thermostats(
 async def test_select_schedule_follows_temperature_control_mode(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the offered schedules follow the home temperature control mode."""
+    """Test the offered schedules follow a change of temperature control mode."""
+    heating = False
 
     def set_heating_mode(payload: dict[str, Any]) -> None:
         """Put the home in heating mode with the heating schedule selected."""
+        if not heating:
+            return
         for home in payload.get("body", {}).get("homes", []):
             if home["id"] != "91763b24c43d3e344f424e8b":
                 continue
@@ -135,7 +141,7 @@ async def test_select_schedule_follows_temperature_control_mode(
                 schedule["selected"] = schedule["id"] == "b1b54a2f45795764f59d50d8"
 
     async def fake_post(*args: Any, **kwargs: Any):
-        """Return backend data for a home in heating mode."""
+        """Return backend data, in heating mode once switched."""
         return await fake_post_request(
             hass, *args, msg_callback=set_heating_mode, **kwargs
         )
@@ -153,7 +159,18 @@ async def test_select_schedule_follows_temperature_control_mode(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    select_entity = "select.myhome_schedule"
+        select_entity = "select.myhome_schedule"
+        assert hass.states.get(select_entity).state == "Default"
+        assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Default"]
+
+        # The home switches from cooling to heating in the backend
+        heating = True
+        freezer.tick(timedelta(hours=3))
+        for _ in range(5):
+            freezer.tick(timedelta(minutes=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
     assert hass.states.get(select_entity).state == "Winter"
     assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == ["Winter"]
 
