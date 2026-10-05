@@ -3,7 +3,12 @@
 import re
 from typing import Any, override
 
-from bizkaibus import BizkaibusAPI, BizkaibusConnectionError, BizkaibusLanguages
+from bizkaibus import (
+    BizkaibusAPI,
+    BizkaibusConnectionError,
+    BizkaibusLanguages,
+    BizkaibusParseError,
+)
 import probatio
 
 from homeassistant.config_entries import (
@@ -138,7 +143,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._stop_id,
                         session=async_get_clientsession(self.hass),
                     )
-                except BizkaibusConnectionError:
+                except BizkaibusConnectionError, BizkaibusParseError:
                     errors["base"] = "cannot_connect"
                     return self.async_show_form(
                         step_id="user",
@@ -216,7 +221,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         stop_id,
                         session=async_get_clientsession(self.hass),
                     )
-                except BizkaibusConnectionError:
+                except BizkaibusConnectionError, BizkaibusParseError:
                     errors["base"] = "cannot_connect"
                     return self.async_show_form(
                         step_id="reconfigure",
@@ -258,7 +263,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 stop_id,
                 session=async_get_clientsession(self.hass),
             )
-        except BizkaibusConnectionError:
+        except BizkaibusConnectionError, BizkaibusParseError:
             return self.async_abort(reason="cannot_connect")
         line_ids, lines = await _async_get_lines(api)
         if line_ids == []:
@@ -342,7 +347,7 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
                 self.config_entry.data[CONF_STOP_ID],
                 session=async_get_clientsession(self.hass),
             )
-        except BizkaibusConnectionError:
+        except BizkaibusConnectionError, BizkaibusParseError:
             return self.async_abort(reason="cannot_connect")
         self._line_ids, self._lines = await _async_get_lines(api)
         if self._line_ids == []:

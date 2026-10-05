@@ -3,8 +3,9 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from bizkaibus import BizkaibusConnectionError, BizkaibusLanguages
+from bizkaibus import BizkaibusConnectionError, BizkaibusLanguages, BizkaibusParseError
 from probatio import to_field_list
+import pytest
 
 from homeassistant.components.bizkaibus.const import (
     CONF_LINE_IDS,
@@ -115,6 +116,24 @@ async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "lines"
+
+
+async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
+    """Test the user flow handles a parse error from the API factory."""
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api_class.create = AsyncMock(side_effect=BizkaibusParseError())
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
@@ -504,6 +523,35 @@ async def test_reconfigure_step_with_title_connection_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_reconfigure_step_with_parse_error(hass: HomeAssistant) -> None:
+    """Test reconfiguration handles a parse error from the API factory."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "0252"},
+        unique_id="0252",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api_class.create = AsyncMock(side_effect=BizkaibusParseError())
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_RECONFIGURE,
+                "entry_id": config_entry.entry_id,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "9999"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
     """Test reconfiguration recovers when the stop comes back online."""
     config_entry = MockConfigEntry(
@@ -613,6 +661,26 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         mock_api.test_connection.assert_awaited_once()
 
 
+async def test_options_flow_parse_error(hass: HomeAssistant) -> None:
+    """Test the options flow handles a parse error from the API factory."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "1234"},
+        options={CONF_LINE_IDS: ["A"], CONF_LINES: {"A": "Route A"}},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api_class.create = AsyncMock(side_effect=BizkaibusParseError())
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_import_flow(hass: HomeAssistant) -> None:
     """Test importing a stop creates a config entry."""
     with (
@@ -631,14 +699,24 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
-    """Test importing a stop aborts when the service returns an error."""
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            BizkaibusConnectionError("Bizkaibus service returned NOINFO"),
+            id="connection",
+        ),
+        pytest.param(BizkaibusParseError(), id="parse"),
+    ],
+)
+async def test_import_flow_factory_error(
+    hass: HomeAssistant, error: BizkaibusConnectionError | BizkaibusParseError
+) -> None:
+    """Test importing a stop aborts when the API factory returns an error."""
     with patch(
         "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
     ) as mock_api_class:
-        mock_api_class.create = AsyncMock(
-            side_effect=BizkaibusConnectionError("Bizkaibus service returned NOINFO")
-        )
+        mock_api_class.create = AsyncMock(side_effect=error)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_STOP_ID: "1234"}
         )
