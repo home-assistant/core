@@ -845,7 +845,7 @@
           "shirt": "Shirt",
           "silk": "Silk",
           "silk_wash": "Silk wash",
-          "single_dehytration": "Single dehytration",
+          "single_dehytration": "Single dehydration",
           "single_drying": "Single drying",
           "soft_wash": "Soft wash",
           "specialist": "Specialist",
@@ -892,7 +892,7 @@
           "soak": "Soaking",
           "spin": "Spinning",
           "wash": "Washing",
-          "weight": "Weighting"
+          "weight": "Weighing"
         }
       },
       "wash_strength": {
