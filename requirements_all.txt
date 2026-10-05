@@ -2573,9 +2573,6 @@ pyrepetierng==0.1.0
 # homeassistant.components.risco
 pyrisco==0.8.1
 
-# homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.7
-
 # homeassistant.components.thread
 pyroute2==0.9.6
 
@@ -2988,6 +2985,9 @@ ring-doorbell==0.9.14
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
+
+# homeassistant.components.rituals_perfume_genie
+ritualsgenie==0.1.0
 
 # homeassistant.components.rocketchat
 rocketchat-API==0.6.1
