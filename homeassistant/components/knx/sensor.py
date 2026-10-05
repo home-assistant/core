@@ -7,7 +7,7 @@ from functools import partial
 from typing import override
 
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
-from xknx.devices import Device as XknxDevice, DeviceUpdate, Sensor as XknxSensor
+from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -188,14 +188,14 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
         await super().async_added_to_hass()
 
     @override
-    def after_update_callback(self, device: XknxDevice, update: DeviceUpdate) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._attr_native_value = self._device.resolve_state()
         if telegram := self._device.last_telegram:
             self._attr_extra_state_attributes[ATTR_SOURCE] = str(
                 telegram.source_address
             )
-        super().after_update_callback(device, update)
+        super().after_update_callback(device)
 
 
 class KnxYamlSensor(_KnxSensor, KnxYamlEntity):

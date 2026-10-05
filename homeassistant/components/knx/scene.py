@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from xknx.devices import Device as XknxDevice, DeviceUpdate, Scene as XknxScene
+from xknx.devices import Device as XknxDevice, Scene as XknxScene
 
 from homeassistant import config_entries
 from homeassistant.components.scene import BaseScene
@@ -72,10 +72,10 @@ class _KnxScene(BaseScene, _KnxEntityBase):
         await self._device.run()
 
     @override
-    def after_update_callback(self, device: XknxDevice, update: DeviceUpdate) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._async_record_activation()
-        super().after_update_callback(device, update)
+        super().after_update_callback(device)
 
 
 class KnxYamlScene(_KnxScene, KnxYamlEntity):

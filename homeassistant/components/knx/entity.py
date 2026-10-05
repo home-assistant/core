@@ -5,8 +5,9 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from xknx.devices import Device as XknxDevice, DeviceUpdate
+from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
+from xknx.telegram.apci import GroupValueWrite
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -152,13 +153,14 @@ class _KnxEntityBase(Entity):
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    def after_update_callback(self, device: XknxDevice, update: DeviceUpdate) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Apply the explicit cause and record relevant actor state transitions."""
         if self.platform_data.domain in (
             Platform.LIGHT,
             Platform.SWITCH,
             Platform.COVER,
         ):
+            update = device.last_update
             context = (
                 update.context if isinstance(update.context, Context) else Context()
             )
@@ -166,7 +168,13 @@ class _KnxEntityBase(Entity):
             if (
                 isinstance(context, KnxTelegramContext)
                 and (old_state := self.hass.states.get(self.entity_id)) is not None
-                and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and (
+                    old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                    or (
+                        update.telegram is not None
+                        and isinstance(update.telegram.payload, GroupValueWrite)
+                    )
+                )
                 and self.state is not None
                 and old_state.state != self.state
             ):

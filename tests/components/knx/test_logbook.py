@@ -10,8 +10,9 @@ from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx.const import EVENT_KNX_STATE_CHANGED, KNX_MODULE_KEY
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -268,3 +269,73 @@ async def test_light_recorded_activity(
     assert entries[0]["context_domain"] == "knx"
     assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
     assert "context_user_id" not in entries[0]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("platform", "config", "expected_state"),
+    [
+        pytest.param("switch", {"address": "1/1/1"}, "on", id="switch"),
+        pytest.param("cover", {"move_long_address": "1/1/1"}, "closed", id="cover"),
+    ],
+)
+async def test_first_command_sender(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    platform: str,
+    config: ConfigType,
+    expected_state: str,
+) -> None:
+    """A first bus command has a sender even before the initial state is known."""
+    start = dt_util.utcnow() - timedelta(seconds=1)
+    assert await async_setup_component(hass, "logbook", {})
+    await knx.setup_integration(
+        {platform: {"name": "test", **config}}, state_updater=False
+    )
+    entity_id = f"{platform}.test"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+
+    await knx.receive_write("1/1/1", True, source="1.1.23")
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+    assert len(events) == 1
+    assert events[0].data["source"] == "1.1.23"
+    assert state.context is events[0].context
+
+    await async_wait_recording_done(hass)
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": start.isoformat(),
+            "entity_ids": [entity_id],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    entries = [
+        entry for entry in response["result"] if entry.get("state") == expected_state
+    ]
+    assert len(entries) == 1
+    assert entries[0]["context_name"] == "1.1.23"
+    assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
+
+
+async def test_initial_response_has_no_sender_event(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Learning an initial state from a read response is not an actor action."""
+    await knx.setup_integration(
+        {"switch": {"name": "test", "address": "1/1/1"}}, state_updater=False
+    )
+    assert hass.states.get("switch.test").state == STATE_UNKNOWN
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+
+    await knx.receive_response("1/1/1", True)
+
+    assert hass.states.get("switch.test").state == STATE_ON
+    assert not events
