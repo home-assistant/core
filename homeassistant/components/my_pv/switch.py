@@ -1,6 +1,6 @@
 """Creates Switch entities for the my-PV Home Assistant integration."""
 
-from typing import Any, override
+from typing import Any, Final, override
 
 from my_pv import MyPVDeviceMainMode
 
@@ -18,6 +18,19 @@ from . import MyPVConfigEntry
 from .const import DOMAIN
 from .entity import MyPVBaseEntity, MyPVSetupEntity
 
+ENTITY_DESCRIPTIONS: Final[dict[str, SwitchEntityDescription]] = {
+    "bstmode": SwitchEntityDescription(
+        key="bstmode",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        translation_key="bstmode",
+    ),
+    "devmode": SwitchEntityDescription(
+        key="devmode",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,16 +43,10 @@ async def async_setup_entry(
 
     config = coordinator.device.get_setup_configuration("bstmode")
     if config and config.get("type") == "boolean":
-        entity_description = SwitchEntityDescription(
-            key="bstmode",
-            entity_category=EntityCategory.CONFIG,
-            device_class=SwitchDeviceClass.SWITCH,
-            translation_key="bstmode",
-        )
         entities.append(
             MyPVSwitch(
                 coordinator,
-                entity_description,
+                ENTITY_DESCRIPTIONS["bstmode"],
                 coordinator.device.serial_number,
             )
         )
@@ -48,14 +55,10 @@ async def async_setup_entry(
         coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
         and coordinator.device.current_temperature is None
     ):
-        entity_description = SwitchEntityDescription(
-            key="devmode",
-            device_class=SwitchDeviceClass.SWITCH,
-        )
         entities.append(
             MyPVWaterHeaterSwitch(
                 coordinator,
-                entity_description,
+                ENTITY_DESCRIPTIONS["devmode"],
                 coordinator.device.serial_number,
             )
         )
