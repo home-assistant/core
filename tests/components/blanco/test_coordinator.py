@@ -111,7 +111,7 @@ SYSTEM_RESPONSE = {
 }
 ERRORS_RESPONSE = {"results": [], "info": {}}
 AUTH_RESPONSE = {
-    "results": [{"token": "renewed-token", "token_type": "Bearer"}],
+    "results": [{"token": "renewed-token", "token_type": "Bearer", "dev_type": 2}],
     "info": {},
 }
 

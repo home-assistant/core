@@ -8,7 +8,6 @@ from blanco_smart_home_api_client import (
     BlancoApiClient,
     BlancoApiError,
     BlancoConnectionError,
-    BlancoDeviceType,
     HttpStatus,
 )
 
@@ -41,7 +40,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         token: str,
         token_type: str,
         dev_id: str,
-        dev_type: int | None,
+        dev_type: int,
         serial: str,
         app_id: str,
         app_version: str = "",
@@ -57,10 +56,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.dev_id = dev_id
         self.serial = serial
-        try:
-            self.dev_type = BlancoDeviceType(dev_type) if dev_type is not None else None
-        except ValueError:
-            self.dev_type = None
+        self.dev_type = dev_type
 
         self._api = BlancoApiClient(
             async_get_clientsession(hass),

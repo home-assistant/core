@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from blanco_smart_home_api_client import BLANCO_DEVICE_NAMES, BlancoErrorType
+from blanco_smart_home_api_client import BlancoErrorType, device_model_name
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -93,11 +93,7 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
             identifiers={(DOMAIN, coordinator.dev_id)},
             name=system_params.get("dev_name", "BLANCO"),
             manufacturer="BLANCO",
-            model=(
-                BLANCO_DEVICE_NAMES.get(coordinator.dev_type)
-                if coordinator.dev_type is not None
-                else None
-            ),
+            model=device_model_name(coordinator.dev_type),
             serial_number=coordinator.serial,
             sw_version=system_params.get("sw_ver_main_con"),
         )
