@@ -37,7 +37,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, async_get_loaded_integration
+from homeassistant.loader import async_get_loaded_integration
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 
@@ -111,8 +111,10 @@ from .subscription import (
     async_unsubscribe_topics,
 )
 from .util import (
+    async_check_config_schema,
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
+    async_remove_mqtt_issues,
     async_wait_for_mqtt_client,
     mqtt_config_entry_enabled,
     platforms_from_config,
@@ -262,46 +264,6 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
-@callback
-def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
-    """Unregister open config issues."""
-    issue_registry = ir.async_get(hass)
-    open_issues = [
-        issue_id
-        for (domain, issue_id), issue_entry in issue_registry.issues.items()
-        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
-    ]
-    for issue in open_issues:
-        ir.async_delete_issue(hass, DOMAIN, issue)
-
-
-async def async_check_config_schema(
-    hass: HomeAssistant, config_yaml: ConfigType
-) -> None:
-    """Validate manually configured MQTT items."""
-    mqtt_data = hass.data[DATA_MQTT]
-    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
-    for mqtt_config_item in mqtt_config:
-        for domain, config_items in mqtt_config_item.items():
-            schema = mqtt_data.reload_schema[domain]
-            for config in config_items:
-                try:
-                    schema(config)
-                except probatio.Invalid as exc:
-                    integration = await async_get_integration(hass, DOMAIN)
-                    message = conf_util.format_schema_error(
-                        hass, exc, domain, config, integration.documentation
-                    )
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_platform_config_message",
-                        translation_placeholders={
-                            "domain": domain,
-                            "message": message,
-                        },
-                    ) from exc
-
-
 def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Platform]:
     """Return a set of platforms in use."""
     domains: set[str | Platform] = {
@@ -439,7 +401,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_check_config_schema(hass, config_yaml)
 
         # Remove repair issues
-        _async_remove_mqtt_issues(hass, mqtt_data)
+        async_remove_mqtt_issues(hass, mqtt_data)
 
         mqtt_data.config = new_config
 
@@ -734,6 +696,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mqtt_data.subscriptions_to_restore = subscriptions
 
     # Remove repair issues
-    _async_remove_mqtt_issues(hass, mqtt_data)
+    async_remove_mqtt_issues(hass, mqtt_data)
 
     return True
