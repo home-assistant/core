@@ -169,7 +169,7 @@ async def async_setup_entry(
 
 class OnkyoMediaPlayer(MediaPlayerEntity):
     """Onkyo Receiver Media Player (one per each zone)."""
-    
+
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_should_poll = False
     _attr_has_entity_name = True
