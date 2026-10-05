@@ -269,7 +269,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         if self.fritz_status.has_wan_support:
             self.device_conn_type = self.fritz_status.connection_service
-            self.device_is_router = self.fritz_status.has_wan_enabled
+            try:
+                self.device_is_router = self.fritz_status.has_wan_enabled
+            except FritzActionError:
+                LOGGER.debug("assume that device has no wan enabled", exc_info=True)
+                self.device_is_router = False
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 
@@ -450,11 +454,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ),
                 )
         except Exception as ex:
-            if not self.hass.is_stopping:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="error_refresh_hosts_info",
-                ) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_refresh_hosts_info",
+            ) from ex
 
         hosts: dict[str, Device] = {}
         if hosts_attributes:
@@ -546,9 +549,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            default_manufacturer="FRITZ!",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
+            manufacturer="FRITZ!",
+            model="FRITZ!Box Tracked device",
+            name=device.hostname,
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self.unique_id),
@@ -576,10 +579,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new network devices."""
 
-        if self.hass.is_stopping:
-            ha_is_stopping("scan devices")
-            return
-
         LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
@@ -601,6 +600,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
+                # The box lists its own LAN MAC in the Hosts table; skip it so it
+                # is not tracked as a child of itself, as the mesh path does.
+                if dr.format_mac(mac) == self.mac:
+                    continue
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             await self.async_send_signal_device_update(new_device)

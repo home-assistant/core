@@ -28,6 +28,7 @@ def _mock_pizone_service() -> Mock:
     service.close = AsyncMock()
     service.discover_all = AsyncMock(return_value=[])
     service.discover_by_uid = AsyncMock(return_value=None)
+    service.discover_by_host = AsyncMock(return_value=None)
     return service
 
 
@@ -519,6 +520,22 @@ async def test_discover_all_endpoints(
     mock_service.discover_all.assert_awaited_once()
 
 
+async def test_scan(
+    hass: HomeAssistant,
+    mock_pizone_create_discovery: tuple[AsyncMock, Mock],
+) -> None:
+    """User Search broadcasts on an already-running service, not discover_all."""
+    _, mock_service = mock_pizone_create_discovery
+
+    await izone_discovery.async_ensure_discovery(hass)
+    mock_service.scan.reset_mock()
+
+    await izone_discovery.async_scan(hass)
+
+    mock_service.scan.assert_awaited_once()
+    mock_service.discover_all.assert_not_called()
+
+
 async def test_discover_endpoint_by_uid(
     hass: HomeAssistant,
     mock_pizone_create_discovery: tuple[AsyncMock, Mock],
@@ -532,3 +549,18 @@ async def test_discover_endpoint_by_uid(
 
     assert result == endpoint
     mock_service.discover_by_uid.assert_awaited_once_with("000000001")
+
+
+async def test_discover_by_host(
+    hass: HomeAssistant,
+    mock_pizone_create_discovery: tuple[AsyncMock, Mock],
+) -> None:
+    """Manual host lookup returns a single endpoint from discover_by_host."""
+    _, mock_service = mock_pizone_create_discovery
+    endpoint = create_mock_endpoint("000000001", "192.0.2.1")
+    mock_service.discover_by_host = AsyncMock(return_value=endpoint)
+
+    result = await izone_discovery.async_discover_by_host(hass, "192.0.2.1")
+
+    assert result == endpoint
+    mock_service.discover_by_host.assert_awaited_once_with("192.0.2.1")

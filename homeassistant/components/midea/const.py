@@ -12,6 +12,9 @@ CONF_KEY = "key"
 CONF_SUBTYPE = "subtype"
 CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
+CONF_SN = "sn"
+
+PRESET_MODE_NONE = "none"
 
 
 class FanSpeed(IntEnum):

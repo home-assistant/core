@@ -19,7 +19,12 @@ from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import ERROR_REQUEST_RETRY
 from homeassistant.components.songpal.services import SET_SOUND_SETTING
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -147,7 +152,9 @@ async def test_state(
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, MAC), entry.entry_id
+    )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
     assert device.manufacturer == "Sony Corporation"
     assert device.name == FRIENDLY_NAME
@@ -184,7 +191,9 @@ async def test_state_nosoundmode(
     assert "sound_mode" not in attributes
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, MAC), entry.entry_id
+    )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
     assert device.manufacturer == "Sony Corporation"
     assert device.name == FRIENDLY_NAME
@@ -221,8 +230,8 @@ async def test_state_wireless(
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(
-        identifiers={(songpal.DOMAIN, WIRELESS_MAC)}
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, WIRELESS_MAC), entry.entry_id
     )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, WIRELESS_MAC)}
     assert device.manufacturer == "Sony Corporation"
@@ -260,7 +269,9 @@ async def test_state_both(
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, MAC), entry.entry_id
+    )
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, MAC),
         (dr.CONNECTION_NETWORK_MAC, WIRELESS_MAC),
@@ -402,6 +413,23 @@ async def test_websocket_events(hass: HomeAssistant) -> None:
     power_change.status = False
     await notification_callbacks[PowerChange](power_change)
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+async def test_stop_listener_removed_on_unload(hass: HomeAssistant) -> None:
+    """Test the stop listener is removed when the entity is removed."""
+    mocked_device = _create_mocked_device()
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    stop_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP] == stop_listeners - 1
 
 
 async def test_disconnected(

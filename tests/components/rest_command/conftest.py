@@ -23,7 +23,7 @@ TEST_CONFIG = {
     "auth_test": {
         "url": TEST_URL,
         "method": "get",
-        "username": "test",
+        "username": "tøst",
         "password": "123456",
     },
 }

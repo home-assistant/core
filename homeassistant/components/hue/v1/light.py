@@ -29,6 +29,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -545,7 +546,11 @@ class HueLight(CoordinatorEntity, LightEntity):
             name=self.name,
             sw_version=self.light.swversion,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.bridge.hass,
+                (DOMAIN, self.bridge.api.config.bridgeid),
+                config_entry_id=self.bridge.config_entry.entry_id,
+            ),
         )
 
     @override
