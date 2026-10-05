@@ -1,12 +1,15 @@
 """Selectors for KNX."""
 
 from collections.abc import Iterable
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, override
 
 import probatio
+from xknx.telegram.address import DeviceAddressableType
 
 from homeassistant.const import CONF_PAYLOAD
+from homeassistant.helpers import selector
 
 from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE, SelectConf
 from ..dpt import HaDptClass, get_supported_dpts
@@ -298,6 +301,99 @@ class GASelector(KNXSelectorBase):
                 )
         else:
             schema[probatio.Remove(CONF_DPT)] = object
+
+
+@dataclass(kw_only=True, slots=True)
+class GroupAddressConfig:
+    """Validated group address configuration of a `GASelector`."""
+
+    write: str | int | None = None
+    state: str | int | None = None
+    passive: list[str | int] = field(default_factory=list)
+    dpt: str | None = None
+
+    def write_and_passive(self) -> list[DeviceAddressableType | None]:
+        """Return the write address followed by the passive addresses."""
+        return [self.write, *self.passive]
+
+    def state_and_passive(self) -> list[DeviceAddressableType | None]:
+        """Return the state address followed by the passive addresses."""
+        return [self.state, *self.passive]
+
+
+class GroupAddressSelector(GASelector):
+    """`GASelector` yielding a `GroupAddressConfig` instead of a dict.
+
+    Temporary: fold into `GASelector` once all platforms use typed configs.
+    """
+
+    @override
+    def __call__(self, data: Any) -> GroupAddressConfig | None:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return GroupAddressConfig(**self.schema(data))
+
+    def to_storage(self, value: GroupAddressConfig | None) -> dict[str, Any] | None:
+        """Render a validated value to exactly the keys its schema emits."""
+        if value is None:
+            return None
+        data: dict[str, Any] = {}
+        if self.write:
+            data[CONF_GA_WRITE] = value.write
+        if self.state:
+            data[CONF_GA_STATE] = value.state
+        if self.passive:
+            data[CONF_GA_PASSIVE] = value.passive
+        if value.dpt is not None:
+            data[CONF_DPT] = value.dpt
+        return data
+
+
+def ga(
+    write: bool = True,
+    state: bool = True,
+    passive: bool = True,
+    write_required: bool = False,
+    state_required: bool = False,
+    dpt: type[Enum] | list[HaDptClass] | None = None,
+    dpt_required: bool = True,
+    valid_dpt: str | Iterable[str] | None = None,
+) -> probatio.Coerce:
+    """Annotate a dataclass field with a group address selector.
+
+    `Coerce` makes probatio run the selector before the field type check, so
+    the selector receives the raw mapping instead of a constructed instance.
+    """
+    return probatio.Coerce(
+        GroupAddressSelector(
+            write=write,
+            state=state,
+            passive=passive,
+            write_required=write_required,
+            state_required=state_required,
+            dpt=dpt,
+            dpt_required=dpt_required,
+            valid_dpt=valid_dpt,
+        )
+    )
+
+
+def knx_selector_in(
+    nodes: Iterable[Any],
+) -> KNXSelectorBase | selector.Selector | None:
+    """Return the first KNX or HA selector in `nodes`.
+
+    Looks into `Coerce` and `Maybe`, the wrappers used in field annotations.
+    """
+    for node in nodes:
+        if isinstance(node, probatio.Coerce):
+            node = node.type
+        elif isinstance(node, probatio.Maybe):
+            node = node.validator
+        if isinstance(node, (KNXSelectorBase, selector.Selector)):
+            return node
+    return None
 
 
 class SyncStateSelector(KNXSelectorBase):

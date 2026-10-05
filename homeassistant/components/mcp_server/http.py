@@ -33,9 +33,10 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
+from typing import get_args
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
+from aiohttp.web_exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound
 from aiohttp_sse import sse_response
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -47,10 +48,9 @@ from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
 
-from .const import CONF_REQUIRE_ADMIN, DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
@@ -60,6 +60,12 @@ _LOGGER = logging.getLogger(__name__)
 # Streamable HTTP endpoint
 STREAMABLE_API = "/api/mcp"
 TIMEOUT = 60  # Seconds
+
+KNOWN_MCP_METHODS: frozenset[str] = frozenset(
+    req_cls.model_fields["method"].default
+    for req_cls in get_args(types.ClientRequestType)
+    if "method" in req_cls.model_fields
+)
 
 # Legacy SSE endpoint
 SSE_API = f"/{DOMAIN}/sse"
@@ -93,10 +99,20 @@ def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
     return config_entries[0]
 
 
+def _entry_llm_api_ids(
+    hass: HomeAssistant, entry: MCPServerConfigEntry
+) -> str | list[str]:
+    """Return the LLM APIs served by the config entry."""
+    if entry.data[CONF_ALL_LLM_APIS]:
+        return [api.id for api in llm.async_get_apis(hass)]
+    api_ids: str | list[str] = entry.data[CONF_LLM_HASS_API]
+    return api_ids
+
+
 def _validate_admin(request: web.Request, entry: MCPServerConfigEntry) -> None:
     """Verify the user may use the endpoints serving the configured LLM APIs."""
     if entry.data[CONF_REQUIRE_ADMIN] and not request["hass_user"].is_admin:
-        raise Unauthorized
+        raise HTTPForbidden
 
 
 @dataclass
@@ -183,7 +199,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(
-            hass, self.context(request), entry.data[CONF_LLM_HASS_API]
+            hass, self.context(request), _entry_llm_api_ids(hass, entry)
         )
 
         async with (
@@ -276,6 +292,20 @@ async def _async_handle_streamable_message(
         _LOGGER.debug("Notification or response received, returning 202")
         return web.Response(status=HTTPStatus.ACCEPTED)
 
+    if message.root.method not in KNOWN_MCP_METHODS:
+        error_response = types.JSONRPCError(
+            jsonrpc="2.0",
+            id=message.root.id,
+            error=types.ErrorData(
+                code=types.METHOD_NOT_FOUND,
+                message="Method not found",
+                data=message.root.method,
+            ),
+        )
+        return web.json_response(
+            data=error_response.model_dump(by_alias=True, exclude_none=True),
+        )
+
     # The MCP server runs as a background task for the duration of the
     # request. We open a buffered stream pair to communicate with it. The
     # request is sent to the MCP server and we wait for a single response
@@ -318,7 +348,7 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
         entry = async_get_config_entry(hass)
         _validate_admin(request, entry)
         return await _async_handle_streamable_message(
-            request, self.context(request), entry.data[CONF_LLM_HASS_API]
+            request, self.context(request), _entry_llm_api_ids(hass, entry)
         )
 
 
@@ -336,7 +366,7 @@ class ModelContextProtocolStreamableApiView(HomeAssistantView):
         """Process JSON-RPC messages for the LLM API identified by api_id."""
         hass = request.app[KEY_HASS]
         if api_id != llm.LLM_API_ASSIST and not request["hass_user"].is_admin:
-            raise Unauthorized
+            raise HTTPForbidden
         if api_id not in {api.id for api in llm.async_get_apis(hass)}:
             raise HTTPNotFound(text=f"Unknown LLM API '{api_id}'")
         return await _async_handle_streamable_message(

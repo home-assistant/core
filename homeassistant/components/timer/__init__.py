@@ -1,11 +1,12 @@
 """Support for Timers."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
@@ -15,28 +16,36 @@ from homeassistant.const import (  # noqa: F401
     CONF_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import TimerEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_DURATION,
+    DATA_TIMER,
+    DEFAULT_DURATION,
+    DOMAIN,
+    SERVICE_CANCEL,
+    SERVICE_CHANGE,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
+    TimerEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEFAULT_DURATION = 0
 DEFAULT_RESTORE = False
 
-ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_RESTORE = "restore"
@@ -57,20 +66,15 @@ EVENT_TIMER_STARTED = "timer.started"
 EVENT_TIMER_RESTARTED = "timer.restarted"
 EVENT_TIMER_PAUSED = "timer.paused"
 
-SERVICE_START = "start"
-SERVICE_PAUSE = "pause"
-SERVICE_CANCEL = "cancel"
-SERVICE_CHANGE = "change"
-SERVICE_FINISH = "finish"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
-    vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
+    probatio.Required(CONF_NAME): cv.string,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
+    probatio.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
 }
 
 
@@ -87,26 +91,34 @@ def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[Any, Any]:
     return value
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 _none_to_empty_dict,
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.All(
-                        cv.time_period, _format_timedelta
-                    ),
-                    vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(
+                        CONF_DURATION, default=DEFAULT_DURATION
+                    ): probatio.All(cv.time_period, _format_timedelta),
+                    probatio.Optional(
+                        CONF_RESTORE, default=DEFAULT_RESTORE
+                    ): cv.boolean,
                 },
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
+@dataclass(slots=True)
+class TimerData:
+    """Runtime data for the timer integration."""
+
+    component: EntityComponent[Timer]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -138,41 +150,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_TIMER] = TimerData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-    component.async_register_entity_service(
-        SERVICE_START,
-        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
-        "async_start",
-    )
-    component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
-    component.async_register_entity_service(SERVICE_CANCEL, None, "async_cancel")
-    component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
-    component.async_register_entity_service(
-        SERVICE_CHANGE,
-        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
-        "async_change",
-    )
-
+    async_setup_services(hass)
     return True
 
 
 class TimerStorageCollection(collection.DictStorageCollection):
     """Timer storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = probatio.Schema(STORAGE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
@@ -446,6 +433,13 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._fire_event_and_write_state(
             EVENT_TIMER_FINISHED, extra_attrs={ATTR_FINISHED_AT: end.isoformat()}
         )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the running timer when the entity is removed."""
+        if self._listener:
+            self._listener()
+            self._listener = None
 
     @override
     async def async_update_config(self, config: ConfigType) -> None:

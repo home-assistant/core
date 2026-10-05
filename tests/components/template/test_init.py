@@ -446,7 +446,7 @@ async def test_change_device(
     # and that the entities are linked to device 1
     for device_id in (device_id1, device_id2):
         device = device_registry.async_get(device_id=device_id)
-        assert template_config_entry.entry_id not in device.config_entries
+        assert device.config_entry_id != template_config_entry.entry_id
     check_template_entities(template_entity_id, device_id1)
 
     # Change config options to use device 2 and reload the integration
@@ -463,7 +463,7 @@ async def test_change_device(
     # and that the entities are linked to device 2
     for device_id in (device_id1, device_id2):
         device = device_registry.async_get(device_id=device_id)
-        assert template_config_entry.entry_id not in device.config_entries
+        assert device.config_entry_id != template_config_entry.entry_id
     check_template_entities(template_entity_id, device_id2)
 
     # Change the config options to remove the device and reload the integration
@@ -480,7 +480,7 @@ async def test_change_device(
     # and that the entities are not linked to any device
     for device_id in (device_id1, device_id2):
         device = device_registry.async_get(device_id=device_id)
-        assert template_config_entry.entry_id not in device.config_entries
+        assert device.config_entry_id != template_config_entry.entry_id
     check_template_entities(template_entity_id, None)
 
     # Confirm that there is no device with the helper config entry
@@ -727,7 +727,7 @@ async def test_migration_1_1(
     # Check that the helper config entry is not in the device and the helper
     # entity is linked to the source device
     device_entry = device_registry.async_get(device_entry.id)
-    assert template_config_entry.entry_id not in device_entry.config_entries
+    assert device_entry.config_entry_id != template_config_entry.entry_id
     template_entity_entry = entity_registry.async_get("sensor.mock_title_my_template")
     assert template_entity_entry.device_id == device_entry.id
 

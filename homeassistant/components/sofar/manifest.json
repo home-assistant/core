@@ -3,10 +3,11 @@
   "name": "Sofar",
   "codeowners": ["@darkrain-nl"],
   "config_flow": true,
-  "dependencies": ["modbus"],
+  "dependencies": ["modbus", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/sofar",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "silver",
-  "requirements": ["sofar-modbus==0.8.0"]
+  "loggers": ["modbus_connection", "sofar_modbus", "tmodbus"],
+  "quality_scale": "platinum",
+  "requirements": ["sofar-modbus==0.17.0"]
 }

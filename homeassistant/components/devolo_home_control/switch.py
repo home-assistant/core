@@ -3,13 +3,16 @@
 from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.exceptions import SwitchingProtected
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
+from .const import DOMAIN
 from .entity import DevoloDeviceEntity
 
 
@@ -57,12 +60,12 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""
-        self._binary_switch_property.set(state=True)
+        self._set_switch(state=True)
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Switch off the device."""
-        self._binary_switch_property.set(state=False)
+        self._set_switch(state=False)
 
     @override
     def sync_callback(self, message: tuple) -> None:
@@ -74,3 +77,18 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()
+
+    def _set_switch(self, state: bool) -> None:
+        """Set the switch to the given state."""
+        try:
+            if not self._binary_switch_property.set(state=state):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set",
+                    translation_placeholders={"placeholder": "state"},
+                )
+        except SwitchingProtected as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="switch_protected",
+            ) from err

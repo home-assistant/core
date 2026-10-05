@@ -31,5 +31,19 @@
         "default": "mdi:battery-heart"
       }
     }
+  },
+  "services": {
+    "set_active_power_limit": {
+      "service": "mdi:speedometer-slow"
+    },
+    "set_feed_in_limit": {
+      "service": "mdi:transmission-tower-export"
+    },
+    "set_passive_mode_power": {
+      "service": "mdi:home-battery"
+    },
+    "set_passive_mode_timeout": {
+      "service": "mdi:timer-cog-outline"
+    }
   }
 }

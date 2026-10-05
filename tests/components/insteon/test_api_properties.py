@@ -1,7 +1,7 @@
 """Test the Insteon properties APIs."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyinsteon.config import MOMENTARY_DELAY, RELAY_MODE, TOGGLE_BUTTON
 from pyinsteon.config.extended_property import ExtendedProperty
@@ -125,7 +125,9 @@ async def test_get_read_only_properties(
     mock_read_only = ExtendedProperty(
         "44.44.44", "mock_read_only", bool, is_read_only=True
     )
-    mock_read_only.set_value(False)
+    # Publishing the change would spawn status handler tasks that outlive the test
+    with patch("pyinsteon.subscriber_base.publish_topic", MagicMock()):
+        mock_read_only.set_value(False)
 
     ws_client, devices = await _setup(
         hass, hass_ws_client, "44.44.44", iolinc_properties_data

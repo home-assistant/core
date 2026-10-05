@@ -272,7 +272,7 @@ async def test_remove_config_entry_device(
     stale_device_after = device_registry.async_get(stale_device.id)
     assert (
         stale_device_after is None
-        or config_entry.entry_id not in stale_device_after.config_entries
+        or stale_device_after.config_entry_id != config_entry.entry_id
     )
 
 
@@ -305,7 +305,7 @@ async def test_remove_config_entry_device_detaches_subdevices(
 
     sub_device_after = device_registry.async_get(sub_device.id)
     assert sub_device_after is None or (
-        config_entry.entry_id not in sub_device_after.config_entries
+        sub_device_after.config_entry_id != config_entry.entry_id
         and sub_device_after.via_device_id is None
     )
 

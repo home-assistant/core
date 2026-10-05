@@ -4,7 +4,7 @@ import asyncio
 from typing import override
 from urllib.parse import quote
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -56,7 +56,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PTZ,
         {
-            vol.Required(ATTR_MOVEMENT): vol.In(
+            probatio.Required(ATTR_MOVEMENT): probatio.In(
                 [
                     DIR_UP,
                     DIR_DOWN,
@@ -68,7 +68,9 @@ async def async_setup_entry(
                     DIR_BOTTOMRIGHT,
                 ]
             ),
-            vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
+            probatio.Optional(
+                ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME
+            ): cv.small_float,
         },
         "async_perform_ptz",
     )
@@ -76,7 +78,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PTZ_PRESET,
         {
-            vol.Required(ATTR_PRESET_NAME): cv.string,
+            probatio.Required(ATTR_PRESET_NAME): cv.string,
         },
         "async_perform_ptz_preset",
     )

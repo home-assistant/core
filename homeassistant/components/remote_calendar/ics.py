@@ -39,6 +39,6 @@ async def parse_calendar(hass: HomeAssistant, ics: str) -> Calendar:
     try:
         return await hass.async_add_executor_job(_compat_calendar_from_ics, ics)
     except CalendarParseError as err:
-        _LOGGER.error("Error parsing calendar information: %s", err.message)
+        _LOGGER.error("The remote calendar feed contains invalid data: %s", err.message)
         _LOGGER.debug("Additional calendar error detail: %s", str(err.detailed_error))
         raise InvalidIcsException(err.message) from err

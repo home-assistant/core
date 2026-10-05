@@ -94,9 +94,6 @@
   },
   "config_subentries": {
     "observation": {
-      "abort": {
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-      },
       "entry_type": "Observation",
       "error": {
         "above_below": "[%key:component::bayesian::config::error::above_below%]",

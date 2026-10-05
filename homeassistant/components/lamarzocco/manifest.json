@@ -9,10 +9,19 @@
       "local_name": "MINI_*"
     },
     {
+      "local_name": "LINEA_*"
+    },
+    {
+      "local_name": "LINEAR_*"
+    },
+    {
       "local_name": "GS3_*"
     },
     {
       "local_name": "GS3AV_*"
+    },
+    {
+      "local_name": "GS3MP_*"
     }
   ],
   "codeowners": ["@zweckj"],
@@ -37,5 +46,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylamarzocco"],
   "quality_scale": "platinum",
-  "requirements": ["pylamarzocco==2.4.3"]
+  "requirements": ["pylamarzocco==2.5.1"]
 }

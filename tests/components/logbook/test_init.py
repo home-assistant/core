@@ -7,8 +7,8 @@ from http import HTTPStatus
 from unittest.mock import Mock
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
@@ -171,7 +171,7 @@ async def test_service_call_create_log_book_entry_no_message(
     """Test if service call create log book entry without message."""
     calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass_.services.async_call(logbook.DOMAIN, "log", {}, True)
 
     # Logbook entry service call results in firing an event.
