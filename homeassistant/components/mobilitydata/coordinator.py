@@ -1,7 +1,6 @@
 """Coordinators for the MobilityData integration."""
 
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 from typing import override
 
@@ -11,6 +10,7 @@ from aiomobilitydatabase import (
     MobilityDatabaseError,
 )
 from aiomobilitydatabase.feeds import (
+    ArrivalsQuery,
     MobilityFeedsClient,
     MobilityFeedsError,
     SourceAuthenticationError,
@@ -33,9 +33,11 @@ from .const import (
     CONF_ROUTE_IDS,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
+    DEPARTURE_SENSOR_COUNT,
     DOMAIN,
     ISSUE_STOP_MISSING,
     STATIC_REFRESH_INTERVAL,
+    STATIC_RETRY_INTERVAL,
     SUBENTRY_TYPE_STOP,
 )
 
@@ -70,6 +72,10 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
     rebuild only when a new dataset is published. On dataset change, every
     configured stop is re-validated and repair issues raised for stops that
     vanished from the feed.
+
+    Polls on a short retry interval until the first refresh succeeds, then
+    settles to the daily one: with no index every entity is unavailable, so
+    a transient outage at startup must not cost a full day of data.
     """
 
     config_entry: MobilityDataConfigEntry
@@ -86,7 +92,7 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
             logger=_LOGGER,
             config_entry=config_entry,
             name=f"{config_entry.title} static feed",
-            update_interval=STATIC_REFRESH_INTERVAL,
+            update_interval=STATIC_RETRY_INTERVAL,
         )
         self.client = client
         self.stop_ids: set[str] = set()
@@ -114,6 +120,7 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
                 translation_key="static_refresh_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        self.update_interval = STATIC_REFRESH_INTERVAL
         self.stop_ids = {stop.id for stop in handle.stops}
         self._validate_stops()
         return handle
@@ -142,9 +149,11 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
 class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
     """Fetch upcoming departures for all stop subentries in one batched call.
 
-    Data maps subentry id to that stop's arrivals, already filtered by the
-    subentry's route and headsign selections. Polls every minute when the
-    feed family has a trip-updates capable realtime source, else every five.
+    Data maps subentry id to that board's arrivals. Each subentry becomes one
+    ``ArrivalsQuery``, so the library applies that board's route and headsign
+    filters BEFORE its limit and the whole batch costs a single realtime
+    fetch. Polls every minute when the feed family has a trip-updates capable
+    realtime source, else every five.
     """
 
     config_entry: MobilityDataConfigEntry
@@ -183,15 +192,17 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
         subentries = stop_subentries(self.config_entry)
         if not subentries:
             return {}
-        all_stop_ids = sorted(
-            {
-                stop_id
-                for subentry in subentries.values()
-                for stop_id in subentry.data[CONF_STOP_IDS]
-            }
-        )
+        queries = [
+            ArrivalsQuery(
+                stop_ids=subentry.data[CONF_STOP_IDS],
+                route_ids=subentry.data.get(CONF_ROUTE_IDS) or None,
+                headsigns=subentry.data.get(CONF_HEADSIGNS) or None,
+                limit=DEPARTURE_SENSOR_COUNT,
+            )
+            for subentry in subentries.values()
+        ]
         try:
-            arrivals = await handle.get_arrivals(all_stop_ids)
+            boards = await handle.get_arrivals(queries)
         except (MobilityDatabaseAuthenticationError, SourceAuthenticationError) as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -204,38 +215,4 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
                 translation_key="arrivals_refresh_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return {
-            subentry_id: _filter_arrivals(arrivals, subentry)
-            for subentry_id, subentry in subentries.items()
-        }
-
-
-def _departure_key(arrival: StopArrival) -> datetime:
-    """Sort key: the effective departure time."""
-    departure = arrival.predicted_departure or arrival.scheduled_departure
-    assert departure is not None  # upcoming departures always carry one
-    return departure
-
-
-def _filter_arrivals(
-    arrivals: list[StopArrival], subentry: ConfigSubentry
-) -> list[StopArrival]:
-    """Apply a stop subentry's stop, route, and headsign filters.
-
-    A subentry covers one logical station, which may span several GTFS
-    stops (platforms, direction pairs); their arrivals are merged and
-    sorted by effective departure.
-    """
-    stop_ids: list[str] = subentry.data[CONF_STOP_IDS]
-    route_ids: list[str] = subentry.data.get(CONF_ROUTE_IDS) or []
-    headsigns: list[str] = subentry.data.get(CONF_HEADSIGNS) or []
-    return sorted(
-        (
-            arrival
-            for arrival in arrivals
-            if arrival.stop_id in stop_ids
-            and (not route_ids or arrival.route_id in route_ids)
-            and (not headsigns or arrival.headsign in headsigns)
-        ),
-        key=_departure_key,
-    )
+        return dict(zip(subentries, boards, strict=True))

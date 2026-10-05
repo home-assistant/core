@@ -9,12 +9,16 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.mobilitydata.const import (
+    ARRIVALS_INTERVAL_SCHEDULE,
     CONF_HEADSIGNS,
     CONF_ROUTE_IDS,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
+    DEPARTURE_SENSOR_COUNT,
     DOMAIN,
     ISSUE_STOP_MISSING,
+    STATIC_REFRESH_INTERVAL,
+    STATIC_RETRY_INTERVAL,
     SUBENTRY_TYPE_STOP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigSubentryDataWithId
@@ -55,7 +59,7 @@ async def test_arrivals_batched_across_stops(
     mock_feeds_client: MagicMock,
     mock_handle: MagicMock,
 ) -> None:
-    """Test one get_arrivals call covers every configured stop."""
+    """Test one get_arrivals call carries one query per configured stop."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="LADOT",
@@ -78,7 +82,11 @@ async def test_arrivals_batched_across_stops(
         ],
     )
     await setup_integration(hass, entry)
-    mock_handle.get_arrivals.assert_awaited_once_with(["S1", "S2"])
+    mock_handle.get_arrivals.assert_awaited_once()
+    (queries,), _ = mock_handle.get_arrivals.await_args
+    assert [list(query.stop_ids) for query in queries] == [["S1"], ["S2"]]
+    # Asking for more rows than there are sensors would only discard them.
+    assert {query.limit for query in queries} == {DEPARTURE_SENSOR_COUNT}
     assert hass.states.get(NEXT_S1).state == "2026-08-01T08:05:30+00:00"
     assert hass.states.get(NEXT_S2).state == "2026-08-01T08:07:30+00:00"
 
@@ -217,3 +225,39 @@ async def test_vanished_stop_raises_repair_issue(
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
     assert hass.states.get(NEXT_S1).state != "unavailable"
+
+
+async def test_static_retries_quickly_until_the_first_success(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a startup outage costs minutes, not a day.
+
+    With no index every entity is unavailable, so retrying on the daily
+    refresh interval would strand the entry until tomorrow.
+    """
+    mock_feeds_client.get_transit_feed.side_effect = SourceConnectionError("offline")
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(NEXT_S1).state == "unavailable"
+
+    static = mock_config_entry.runtime_data.static_coordinator
+    assert static.update_interval == STATIC_RETRY_INTERVAL
+
+    # Well inside the daily interval: the retry only happens on the short one.
+    mock_feeds_client.get_transit_feed.side_effect = None
+    mock_feeds_client.get_transit_feed.return_value = mock_handle
+    freezer.tick(STATIC_RETRY_INTERVAL + timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert static.data is mock_handle
+    # Having recovered, it settles to the daily cadence.
+    assert static.update_interval == STATIC_REFRESH_INTERVAL
+
+    # The next arrivals poll then finds an index and the sensors fill in.
+    freezer.tick(ARRIVALS_INTERVAL_SCHEDULE + timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(NEXT_S1).state == "2026-08-01T08:05:30+00:00"

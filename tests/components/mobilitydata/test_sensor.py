@@ -34,7 +34,10 @@ async def test_second_departure_unknown_with_single_arrival(
     mock_handle: MagicMock,
 ) -> None:
     """Test the following sensor is unknown when only one departure exists."""
-    mock_handle.get_arrivals.return_value = [make_arrival("S1", 5)]
+    # One board carrying one departure; the fixture's query-aware side
+    # effect has to step aside for a pinned result.
+    mock_handle.get_arrivals.side_effect = None
+    mock_handle.get_arrivals.return_value = [[make_arrival("S1", 5)]]
     await setup_integration(hass, mock_config_entry)
     assert (
         hass.states.get("sensor.1st_grand_next_departure").state

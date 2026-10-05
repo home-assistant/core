@@ -18,6 +18,7 @@ from aiomobilitydatabase import (
     SourceInfo,
 )
 from aiomobilitydatabase.feeds import (
+    ArrivalsQuery,
     Route,
     StationGroup,
     Stop,
@@ -31,6 +32,7 @@ from homeassistant.components.mobilitydata.const import (
     CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
     CONF_ROUTE_IDS,
+    CONF_STATION_ID,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
@@ -202,10 +204,36 @@ def mock_handle() -> MagicMock:
     )
     handle.routes_serving = AsyncMock(return_value=[ROUTE_A, ROUTE_B])
     handle.headsigns_serving = AsyncMock(return_value=["Downtown", "Uptown"])
-    handle.get_arrivals = AsyncMock(return_value=list(ARRIVALS))
+    handle.get_arrivals = AsyncMock(side_effect=_boards_for_queries)
     handle.refresh_static = AsyncMock(return_value=False)
     handle.close = MagicMock()
     return handle
+
+
+def _boards_for_queries(
+    queries: list[ArrivalsQuery], **kwargs: object
+) -> list[list[StopArrival]]:
+    """Return one board per query, filtered and limited as the library does.
+
+    Mirroring the real per-query semantics keeps the coordinator tests about
+    the integration's wiring: a mock returning canned boards would pass even
+    if the integration stopped passing the subentry's filters through.
+    """
+    boards: list[list[StopArrival]] = []
+    for query in queries:
+        stop_ids = set(query.stop_ids)
+        route_ids = set(query.route_ids) if query.route_ids else None
+        headsigns = set(query.headsigns) if query.headsigns else None
+        rows = [
+            arrival
+            for arrival in ARRIVALS
+            if arrival.stop_id in stop_ids
+            and (route_ids is None or arrival.route_id in route_ids)
+            and (headsigns is None or arrival.headsign in headsigns)
+        ]
+        rows.sort(key=lambda a: a.predicted_departure or a.scheduled_departure)
+        boards.append(rows[: query.limit])
+    return boards
 
 
 @pytest.fixture
@@ -252,6 +280,7 @@ def mock_config_entry() -> MockConfigEntry:
         subentries_data=[
             ConfigSubentryDataWithId(
                 data={
+                    CONF_STATION_ID: "1st & grand",
                     CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: [],
@@ -260,7 +289,7 @@ def mock_config_entry() -> MockConfigEntry:
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
                 title="1st & Grand",
-                unique_id="1st & grand",
+                unique_id="1st & grand#[[],[]]",
             )
         ],
     )

@@ -15,6 +15,8 @@ from aiomobilitydatabase import (
     SourceInfo,
 )
 from aiomobilitydatabase.feeds import (
+    SourceAuthenticationError,
+    SourceConnectionError,
     StaticBuildProgress,
     StaticDataUnavailableError,
     StationGroup,
@@ -29,6 +31,7 @@ from homeassistant.components.mobilitydata.const import (
     CONF_REFRESH_TOKEN,
     CONF_ROUTE_IDS,
     CONF_SEARCH_QUERY,
+    CONF_STATION_ID,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
@@ -358,6 +361,53 @@ async def test_reauth_api_key(
     assert mock_config_entry.data[CONF_API_KEY] == "new-key"
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(SourceAuthenticationError("rejected"), "invalid_auth", id="auth"),
+        pytest.param(SourceConnectionError("offline"), "cannot_connect", id="offline"),
+    ],
+)
+async def test_reauth_api_key_is_probed_before_saving(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test a key the producer rejects is reported, not saved.
+
+    Without the probe any typo is accepted and the entry simply fails again
+    after the reload, with nothing in the flow to say why.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_API_KEY: "old-key"},
+    )
+    # The key authenticates realtime fetches, so that is what must fail.
+    mock_handle.get_arrivals.side_effect = side_effect
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "typo"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_api_key"
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_API_KEY] == "old-key"
+
+    # Correcting it then succeeds.
+    mock_handle.get_arrivals.side_effect = None
+    mock_handle.get_arrivals.return_value = []
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "good-key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "good-key"
+
+
 async def _start_stop_flow(hass: HomeAssistant, entry: MockConfigEntry) -> dict:
     """Start the stop subentry flow and return the first step."""
     return await hass.config_entries.subentries.async_init(
@@ -411,15 +461,18 @@ async def test_add_stop_via_zone(
     subentry = next(
         subentry
         for subentry in mock_config_entry.subentries.values()
-        if subentry.unique_id == "2nd & spring"
+        if subentry.data[CONF_STOP_NAME] == "2nd & Spring"
     )
     assert subentry.data == {
+        # The station is stored, not parsed back out of the unique id.
+        CONF_STATION_ID: "2nd & spring",
         CONF_STOP_IDS: ["S2"],
         CONF_STOP_NAME: "2nd & Spring",
         CONF_ROUTE_IDS: ["R1"],
         CONF_HEADSIGNS: ["Downtown"],
     }
-    assert subentry.title == "2nd & Spring"
+    # A filtered board names what it shows, so several at one station differ.
+    assert subentry.title == "2nd & Spring (Downtown)"
 
     # Creating a subentry reloads the entry so its sensors appear immediately.
     await hass.async_block_till_done()
@@ -531,8 +584,54 @@ async def test_add_stop_duplicate_aborts(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_STOP: "1st & grand"}
     )
+    # Picking an already-configured station is fine -- it is the identical
+    # SELECTION that is the duplicate, so the abort comes at the end.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "routes"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: []}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_HEADSIGNS: []}
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_add_second_board_at_same_stop(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test one station can carry several boards with different filters."""
+    await setup_integration(hass, mock_config_entry)
+    result = await _start_stop_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP: "1st & grand"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_HEADSIGNS: ["Uptown"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    boards = [
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.data[CONF_STOP_NAME] == "1st & Grand"
+    ]
+    assert len(boards) == 2
+    # Distinct identities, and titles a user can tell apart in the UI.
+    assert len({board.unique_id for board in boards}) == 2
+    assert sorted(board.title for board in boards) == [
+        "1st & Grand",
+        "1st & Grand (Uptown)",
+    ]
 
 
 async def test_add_stop_not_ready(
@@ -572,7 +671,7 @@ async def test_add_stop_without_routes_or_headsigns(
     subentry = next(
         subentry
         for subentry in mock_config_entry.subentries.values()
-        if subentry.unique_id == "2nd & spring"
+        if subentry.data[CONF_STOP_NAME] == "2nd & Spring"
     )
     assert subentry.data[CONF_STOP_IDS] == ["S2"]
     assert subentry.data[CONF_ROUTE_IDS] == []
@@ -605,6 +704,42 @@ async def test_reconfigure_stop_filters(
     assert subentry.data[CONF_STOP_IDS] == ["S1"]
     assert subentry.data[CONF_ROUTE_IDS] == ["R2"]
     assert subentry.data[CONF_HEADSIGNS] == ["Uptown"]
+
+
+async def test_reconfigure_offers_the_existing_headsigns(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring does not silently clear the headsign filter.
+
+    The form defaulted to empty, so a user who reconfigured anything at all
+    lost their destination selection without being told.
+    """
+    await setup_integration(hass, mock_config_entry)
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        mock_config_entry.subentries[SUBENTRY_ID],
+        data={
+            **mock_config_entry.subentries[SUBENTRY_ID].data,
+            CONF_ROUTE_IDS: ["R2"],
+            CONF_HEADSIGNS: ["Uptown"],
+        },
+    )
+    await hass.async_block_till_done()
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, SUBENTRY_ID)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
+    )
+    assert result["step_id"] == "headsigns"
+    assert result["data_schema"]({}) == {CONF_HEADSIGNS: ["Uptown"]}
+
+    # Accepting the offered default keeps the filter rather than clearing it.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_HEADSIGNS: ["Uptown"]}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.subentries[SUBENTRY_ID].data[CONF_HEADSIGNS] == ["Uptown"]
 
 
 @pytest.mark.parametrize(
@@ -901,7 +1036,7 @@ async def test_station_hierarchy_grouped(
     subentry = next(
         subentry
         for subentry in mock_config_entry.subentries.values()
-        if subentry.unique_id == "ST1"
+        if subentry.data[CONF_STOP_NAME] == "Metro Center"
     )
     assert subentry.data[CONF_STOP_IDS] == ["P1", "P2"]
     assert subentry.title == "Metro Center"

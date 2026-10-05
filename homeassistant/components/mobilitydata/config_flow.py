@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+import json
 import logging
 from statistics import median
 from typing import Any, override
@@ -15,9 +16,11 @@ from aiomobilitydatabase import (
     MobilityDatabaseError,
 )
 from aiomobilitydatabase.feeds import (
+    ArrivalsQuery,
     Circle,
     MobilityFeedsClient,
     MobilityFeedsError,
+    SourceAuthenticationError,
     StaticBuildProgress,
     StationGroup,
     TransitFeedHandle,
@@ -58,6 +61,7 @@ from .const import (
     CONF_REFRESH_TOKEN,
     CONF_ROUTE_IDS,
     CONF_SEARCH_QUERY,
+    CONF_STATION_ID,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
@@ -124,6 +128,11 @@ def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
                 or f"{ACCOUNT_URL}/feeds/{feed_id}"
             )
     return None
+
+
+# A station id comes from the feed and never contains this, so it cleanly
+# separates the station from the JSON-encoded filters in a board's id.
+_BOARD_ID_SEPARATOR = "#"
 
 
 class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -448,18 +457,66 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_api_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Prompt for a new producer API key."""
+        """Prompt for a new producer API key, and prove it works first."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
-            )
+            entry = self._get_reauth_entry()
+            api_key: str = user_input[CONF_API_KEY]
+            if error := await self._async_probe_api_key(entry, api_key):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_API_KEY: api_key}
+                )
         assert self._auth_url is not None
         return self.async_show_form(
             step_id="reauth_api_key",
             data_schema=API_KEY_SCHEMA,
+            errors=errors,
             description_placeholders={"authentication_info_url": self._auth_url},
         )
+
+    async def _async_probe_api_key(
+        self, entry: MobilityDataConfigEntry, api_key: str
+    ) -> str | None:
+        """Return an error key if the producer rejects this key, else None.
+
+        The key authenticates REALTIME fetches, not the catalog or the static
+        download, so opening the feed proves nothing -- only an actual
+        realtime request does. One arrivals query over a single stop is the
+        smallest call that makes one; the static index is already cached, so
+        this costs a catalog check and one producer request.
+        """
+        # Reauth for the producer key starts at this step, so the flow has no
+        # token of its own yet; the entry's is the one that reaches the catalog.
+        self._refresh_token = entry.data[CONF_REFRESH_TOKEN]
+        client = self._get_client()
+        handle: TransitFeedHandle | None = None
+        try:
+            handle = await client.get_transit_feed(entry.data[CONF_FEED_ID], api_key)
+            if handle.stops:
+                await handle.get_arrivals([ArrivalsQuery([handle.stops[0].id])])
+        except MobilityDatabaseAuthenticationError, SourceAuthenticationError:
+            return "invalid_auth"
+        except MobilityDatabaseError, MobilityFeedsError:
+            return "cannot_connect"
+        finally:
+            if handle is not None:
+                handle.close()
+        return None
+
+
+def _board_unique_id(group_key: str, route_ids: list[str], headsigns: list[str]) -> str:
+    """Identify a board by its station AND its filters.
+
+    A station can carry several boards, so the station alone cannot be the
+    identity -- only an identical selection is a duplicate. The filters are
+    JSON-encoded rather than joined, because a headsign legitimately
+    contains commas ("Downtown, via Main") and would otherwise make two
+    different selections collide.
+    """
+    filters = json.dumps([sorted(route_ids), sorted(headsigns)], separators=(",", ":"))
+    return f"{group_key}{_BOARD_ID_SEPARATOR}{filters}"
 
 
 class StopSubentryFlowHandler(ConfigSubentryFlow):
@@ -471,6 +528,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         self._stop_ids: list[str] = []
         self._stop_name: str | None = None
         self._route_ids: list[str] = []
+        self._headsigns: list[str] = []
+        self._route_names: dict[str, str] = {}
         self._groups: dict[str, StationGroup] = {}
 
     def _get_handle(self) -> TransitFeedHandle | None:
@@ -535,9 +594,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         """Pick a stop from those inside the search area."""
         if user_input is not None:
             group_key: str = user_input[CONF_STOP]
-            for subentry in self._get_entry().subentries.values():
-                if subentry.unique_id == group_key:
-                    return self.async_abort(reason="already_configured")
+            # Several boards at one station is the useful case ("downtown bus"
+            # and "airport train" are different sensors), so the duplicate
+            # check belongs at the end, once the filters are known.
             group = self._groups[group_key]
             self._group_key = group_key
             self._stop_name = group.name
@@ -576,6 +635,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             for route in await handle.routes_serving(stop_id)
         }
         routes = sorted(routes_by_id.values(), key=lambda route: route.display_name)
+        self._route_names = {route.id: route.display_name for route in routes}
         if not routes:
             return await self.async_step_headsigns()
         return self.async_show_form(
@@ -620,11 +680,14 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         )
         if not headsigns:
             return self._async_finish([])
+        # Narrowing the routes can retire a previously chosen headsign; keep
+        # the ones still on offer rather than silently clearing the filter.
+        current = [headsign for headsign in self._headsigns if headsign in headsigns]
         return self.async_show_form(
             step_id="headsigns",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_HEADSIGNS, default=[]): SelectSelector(
+                    vol.Optional(CONF_HEADSIGNS, default=current): SelectSelector(
                         SelectSelectorConfig(
                             options=headsigns,
                             multiple=True,
@@ -635,29 +698,50 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
+    def _board_title(self, headsigns: list[str]) -> str:
+        """Name the board by what it shows, so several at one station differ."""
+        assert self._stop_name is not None
+        summary = headsigns or [
+            self._route_names.get(route_id, route_id) for route_id in self._route_ids
+        ]
+        if not summary:
+            return self._stop_name
+        return f"{self._stop_name} ({', '.join(summary)})"
+
     @callback
     def _async_finish(self, headsigns: list[str]) -> SubentryFlowResult:
         assert self._stop_name is not None
-        if self.source == SOURCE_RECONFIGURE:
+        assert self._group_key is not None
+        unique_id = _board_unique_id(self._group_key, self._route_ids, headsigns)
+        reconfigure = self.source == SOURCE_RECONFIGURE
+        current = self._get_reconfigure_subentry() if reconfigure else None
+        # Home Assistant raises on a duplicate subentry unique_id, so catch
+        # the collision here and report it as the flow error it is.
+        for subentry in self._get_entry().subentries.values():
+            if subentry.unique_id == unique_id and subentry is not current:
+                return self.async_abort(reason="already_configured")
+        if current is not None:
             # The entry's update listener reloads; must not reload here too.
             return self.async_update_and_abort(
                 self._get_entry(),
-                self._get_reconfigure_subentry(),
+                current,
+                title=self._board_title(headsigns),
+                unique_id=unique_id,
                 data_updates={
                     CONF_ROUTE_IDS: self._route_ids,
                     CONF_HEADSIGNS: headsigns,
                 },
             )
-        assert self._group_key is not None
         return self.async_create_entry(
-            title=self._stop_name,
+            title=self._board_title(headsigns),
             data={
+                CONF_STATION_ID: self._group_key,
                 CONF_STOP_IDS: self._stop_ids,
                 CONF_STOP_NAME: self._stop_name,
                 CONF_ROUTE_IDS: self._route_ids,
                 CONF_HEADSIGNS: headsigns,
             },
-            unique_id=self._group_key,
+            unique_id=unique_id,
         )
 
     async def async_step_reconfigure(
@@ -668,4 +752,6 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         self._stop_ids = list(subentry.data[CONF_STOP_IDS])
         self._stop_name = subentry.data[CONF_STOP_NAME]
         self._route_ids = list(subentry.data.get(CONF_ROUTE_IDS) or [])
+        self._headsigns = list(subentry.data.get(CONF_HEADSIGNS) or [])
+        self._group_key = subentry.data[CONF_STATION_ID]
         return await self.async_step_routes()
