@@ -2,10 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "This stop is already configured.",
+      "api_parse_error": "Error parsing the Bizkaibus response.",
       "cannot_connect": "Failed to connect to Bizkaibus.",
+      "import_updated": "The existing stop was updated.",
       "invalid_line_id": "The line identifier is not valid.",
       "invalid_stop_id": "The stop identifier is not valid.",
-      "reconfigure_successful": "Reconfiguration was successful."
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "stop_not_found": "The stop was not found."
     },
     "error": {
       "cannot_connect": "Failed to connect to Bizkaibus.",
@@ -75,7 +78,9 @@
   },
   "options": {
     "abort": {
-      "cannot_connect": "Failed to connect to Bizkaibus."
+      "api_parse_error": "Error parsing the Bizkaibus response.",
+      "cannot_connect": "Failed to connect to Bizkaibus.",
+      "stop_not_found": "The stop was not found."
     },
     "error": {
       "cannot_connect": "Failed to connect to Bizkaibus."

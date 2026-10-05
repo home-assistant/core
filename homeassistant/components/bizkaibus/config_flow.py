@@ -8,6 +8,7 @@ from bizkaibus import (
     BizkaibusConnectionError,
     BizkaibusLanguages,
     BizkaibusParseError,
+    BizkaibusStopNotFoundError,
 )
 import probatio
 
@@ -221,7 +222,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         stop_id,
                         session=async_get_clientsession(self.hass),
                     )
-                except BizkaibusConnectionError, BizkaibusParseError:
+                except BizkaibusStopNotFoundError:
+                    return self.async_abort(reason="stop_not_found")
+                except BizkaibusConnectionError:
                     errors["base"] = "cannot_connect"
                     return self.async_show_form(
                         step_id="reconfigure",
@@ -230,6 +233,16 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         ),
                         errors=errors,
                     )
+                except BizkaibusParseError:
+                    errors["base"] = "api_parse_error"
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, reconfigure_entry.data
+                        ),
+                        errors=errors,
+                    )
+
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
@@ -263,8 +276,13 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                 stop_id,
                 session=async_get_clientsession(self.hass),
             )
-        except BizkaibusConnectionError, BizkaibusParseError:
+        except BizkaibusStopNotFoundError:
+            return self.async_abort(reason="stop_not_found")
+        except BizkaibusConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except BizkaibusParseError:
+            return self.async_abort(reason="api_parse_error")
+
         line_ids, lines = await _async_get_lines(api)
         if line_ids == []:
             return self.async_abort(reason="cannot_connect")
@@ -347,8 +365,13 @@ class BizkaibusOptionsFlow(OptionsFlowWithReload):
                 self.config_entry.data[CONF_STOP_ID],
                 session=async_get_clientsession(self.hass),
             )
-        except BizkaibusConnectionError, BizkaibusParseError:
+        except BizkaibusStopNotFoundError:
+            return self.async_abort(reason="stop_not_found")
+        except BizkaibusConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except BizkaibusParseError:
+            return self.async_abort(reason="api_parse_error")
+
         self._line_ids, self._lines = await _async_get_lines(api)
         if self._line_ids == []:
             return self.async_abort(reason="cannot_connect")
