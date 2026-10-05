@@ -86,6 +86,8 @@ async def test_setup_entry_removes_obsolete_entities_and_devices(
     )
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api_class.create = AsyncMock(return_value=mock_api)
         mock_api_class.return_value.get_timetable = AsyncMock(return_value=None)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -237,6 +239,8 @@ async def test_setup_entry_creates_sensors(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api_class.create = AsyncMock(return_value=mock_api)
         mock_api_class.return_value.get_timetable = AsyncMock(return_value=timetable)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -307,6 +311,8 @@ async def test_setup_entry_without_lines_creates_no_sensors(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bizkaibus.BizkaibusAPI") as mock_api_class:
+        mock_api = mock_api_class.return_value
+        mock_api_class.create = AsyncMock(return_value=mock_api)
         mock_api_class.return_value.get_timetable = AsyncMock(return_value=timetable)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
