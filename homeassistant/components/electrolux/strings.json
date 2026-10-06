@@ -1,4 +1,11 @@
 {
+  "common": {
+    "alarm": "Alarm",
+    "delayed_start": "Delayed start",
+    "end_of_cycle": "Cycle ended",
+    "ready_to_start": "Ready to start",
+    "running": "Running"
+  },
   "config": {
     "abort": {
       "already_configured": "This Electrolux account is already configured.",
@@ -190,18 +197,102 @@
       "appliance_state": {
         "name": "Appliance state",
         "state": {
-          "alarm": "Alarm",
-          "delayed_start": "Delayed start",
-          "end_of_cycle": "Cycle ended",
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
           "idle": "[%key:common::state::idle%]",
           "off": "[%key:common::state::off%]",
           "paused": "[%key:common::state::paused%]",
-          "ready_to_start": "Ready to start",
-          "running": "Running"
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "battery_percentage": {
+        "name": "Battery"
+      },
+      "bottomoven_appliance_state": {
+        "name": "Lower cavity appliance state",
+        "state": {
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "bottomoven_display_temperature": {
+        "name": "Lower cavity current temperature"
+      },
+      "bottomoven_food_probe_state": {
+        "name": "Lower food probe state",
+        "state": {
+          "inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::inserted%]",
+          "not_inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::not_inserted%]"
+        }
+      },
+      "bottomoven_food_probe_temperature": {
+        "name": "Lower food probe temperature"
+      },
+      "cycle_phase": {
+        "name": "Cycle phase",
+        "state": {
+          "ado_drying": "Dry",
+          "anticrease": "Anti-crease",
+          "coldrinse": "Rinse",
+          "cool": "Cooling down",
+          "drain": "Drain",
+          "dry": "Dry",
+          "drying": "Dry",
+          "extrarinse": "Rinse",
+          "hotrinse": "Rinse",
+          "mainwash": "Wash",
+          "prewash": "Prewash",
+          "rinse": "Rinse",
+          "spin": "Spin",
+          "steam": "Steam",
+          "unavailable": "Unavailable",
+          "wash": "Wash"
         }
       },
       "display_temperature": {
         "name": "Current temperature"
+      },
+      "extracavity_appliance_state": {
+        "name": "Extra cavity appliance state",
+        "state": {
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "extracavity_target_temperature": {
+        "name": "Extra cavity target temperature"
+      },
+      "filter_state_air": {
+        "name": "Air filter state",
+        "state": {
+          "buy": "Buy new filter",
+          "change": "Needs changing",
+          "clean": "Needs cleaning",
+          "good": "Good"
+        }
+      },
+      "filter_state_water": {
+        "name": "Water filter state",
+        "state": {
+          "buy": "Buy new filter",
+          "change": "Needs changing",
+          "clean": "Needs cleaning",
+          "good": "Good"
+        }
       },
       "food_probe_state": {
         "name": "Food probe state",
@@ -213,6 +304,100 @@
       "food_probe_temperature": {
         "name": "Food probe temperature"
       },
+      "freezer_appliance_state": {
+        "name": "Freezer appliance state",
+        "state": {
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "fridge_appliance_state": {
+        "name": "Fridge appliance state",
+        "state": {
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "hob_hood_window_notification": {
+        "name": "Window notification",
+        "state": {
+          "none": "No notification",
+          "opening_required": "Window opening required"
+        }
+      },
+      "hobzone1_zone_residual_heat_state": {
+        "name": "Zone 1 residual heat state",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]",
+          "no": "None"
+        }
+      },
+      "hobzone2_zone_residual_heat_state": {
+        "name": "Zone 2 residual heat state",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]",
+          "no": "[%key:component::electrolux::entity::sensor::hobzone1_zone_residual_heat_state::state::no%]"
+        }
+      },
+      "hobzone3_zone_residual_heat_state": {
+        "name": "Zone 3 residual heat state",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]",
+          "no": "[%key:component::electrolux::entity::sensor::hobzone1_zone_residual_heat_state::state::no%]"
+        }
+      },
+      "hobzone4_zone_residual_heat_state": {
+        "name": "Zone 4 residual heat state",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]",
+          "no": "[%key:component::electrolux::entity::sensor::hobzone1_zone_residual_heat_state::state::no%]"
+        }
+      },
+      "icemaker_appliance_state": {
+        "name": "Ice maker appliance state",
+        "state": {
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "icemaker_target_temperature": {
+        "name": "Ice maker target temperature"
+      },
+      "pm_1": {
+        "name": "PM1"
+      },
+      "pm_10": {
+        "name": "PM10"
+      },
+      "pm_2_5": {
+        "name": "PM2.5"
+      },
       "remote_control": {
         "name": "Remote control",
         "state": {
@@ -221,6 +406,73 @@
           "not_safety_relevant_enabled": "Not safety relevant enabled",
           "temporary_locked": "Temporarily locked"
         }
+      },
+      "sound_volume": {
+        "name": "Sound volume"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "upperoven_appliance_state": {
+        "name": "Upper cavity appliance state",
+        "state": {
+          "alarm": "[%key:component::electrolux::common::alarm%]",
+          "delayed_start": "[%key:component::electrolux::common::delayed_start%]",
+          "end_of_cycle": "[%key:component::electrolux::common::end_of_cycle%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready_to_start": "[%key:component::electrolux::common::ready_to_start%]",
+          "running": "[%key:component::electrolux::common::running%]"
+        }
+      },
+      "upperoven_display_temperature": {
+        "name": "Upper cavity current temperature"
+      },
+      "upperoven_food_probe_state": {
+        "name": "Upper food probe state",
+        "state": {
+          "inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::inserted%]",
+          "not_inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::not_inserted%]"
+        }
+      },
+      "upperoven_food_probe_temperature": {
+        "name": "Upper food probe temperature"
+      },
+      "water_hardness": {
+        "name": "Water hardness",
+        "state": {
+          "hard": "Hard",
+          "medium": "Medium",
+          "soft": "Soft"
+        }
+      },
+      "wm_ad_tank_a_det_loaded": {
+        "name": "AD Tank A Detergent Loaded"
+      },
+      "wm_ad_tank_b_det_loaded": {
+        "name": "AD Tank B Detergent Loaded"
+      },
+      "wm_ad_tank_b_soft_loaded": {
+        "name": "AD Tank B Softener Loaded"
+      },
+      "wm_eco_level": {
+        "name": "Eco Level"
+      },
+      "wm_tank_a_det_load_for_nominal_weight": {
+        "name": "Tank A Detergent Load (Nominal Weight)"
+      },
+      "wm_tank_a_reserve": {
+        "name": "Tank A Reserve"
+      },
+      "wm_tank_b_det_load_for_nominal_weight": {
+        "name": "Tank B Detergent Load (Nominal Weight)"
+      },
+      "wm_tank_b_reserve": {
+        "name": "Tank B Reserve"
+      },
+      "wm_water_usage": {
+        "name": "Water Usage"
       }
     }
   },
