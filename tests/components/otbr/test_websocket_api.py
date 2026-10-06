@@ -1151,6 +1151,60 @@ async def test_create_ephemeral_key_concurrently(
     assert len([call for call in aioclient_mock.mock_calls if call[0] == "POST"]) == 1
 
 
+async def test_unload_revokes_ephemeral_key_being_created(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test unloading waits for a key being created and then revokes it."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key")
+    activating = asyncio.Event()
+    release = asyncio.Event()
+
+    async def activate(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        activating.set()
+        await release.wait()
+        return AiohttpClientMockResponse(
+            "POST",
+            URL(f"{BASE_URL}/node/ba-epskc/key"),
+            json={"tap": "700855744", "port": 49154},
+        )
+
+    aioclient_mock.post(f"{BASE_URL}/node/ba-epskc/key", side_effect=activate)
+    entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    assert entry is not None
+    otbrdata = entry.runtime_data
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        await activating.wait()
+        unload = hass.async_create_task(
+            hass.config_entries.async_unload(otbr_config_entry_multipan)
+        )
+        await asyncio.sleep(0)
+        # Unloading started while the router was still activating the key, so
+        # it has to wait for the key to know what to revoke
+        assert otbrdata.unloading
+        assert not unload.done()
+        release.set()
+        msg = await websocket_client.receive_json()
+        assert await unload
+
+    assert msg["success"]
+    assert [call[0] for call in aioclient_mock.mock_calls[-2:]] == ["POST", "DELETE"]
+    assert otbrdata.active_ephemeral_key is None
+
+
 @pytest.mark.parametrize("state", ["connected", "accepted"])
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
 async def test_create_ephemeral_key_in_use(
