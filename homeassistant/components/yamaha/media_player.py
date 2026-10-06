@@ -90,7 +90,6 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-
     def __init__(
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
     ) -> None:
