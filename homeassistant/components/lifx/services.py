@@ -164,8 +164,9 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
             probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
+        # The library refuses a change of 0 or of 180 degrees and more
         ATTR_CHANGE: probatio.All(
-            probatio.Coerce(float), probatio.Clamp(min=0, max=360)
+            probatio.Coerce(float), probatio.Clamp(min=1, max=179)
         ),
         ATTR_SPREAD: probatio.All(
             probatio.Coerce(float), probatio.Clamp(min=0, max=360)
