@@ -118,12 +118,19 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        # Abort quick if the mac address is provided by discovery info
+        # Abort quick if the mac address is provided by discovery info, and
+        # the device is already configured on this address. A different
+        # address is checked below first: only an address that answers as
+        # this device may replace the one that's configured.
         if mac := discovery_info.properties.get(CONF_MAC):
-            await self.async_set_unique_id(normalize_mac_address(mac))
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: discovery_info.host}
-            )
+            unique_id = normalize_mac_address(mac)
+            await self.async_set_unique_id(unique_id)
+            if (
+                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, unique_id
+                )
+            ) and entry.data[CONF_HOST] == discovery_info.host:
+                return self.async_abort(reason="already_configured")
 
         self.discovered_host = discovery_info.host
         try:
