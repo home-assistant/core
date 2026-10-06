@@ -13,6 +13,7 @@ from uiprotect.data import (
     Bootstrap,
     Camera,
     ChannelQuality,
+    Chime,
     DeviceState,
     Event,
     EventType,
@@ -35,12 +36,14 @@ from uiprotect.data.public_devices import (
     PublicCamera,
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
+    PublicChime,
     PublicHdrMode,
     PublicLcdMessage,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
     PublicOsdSettings,
+    PublicRingSettings,
     PublicSensor,
     PublicSensorAlarmSettingsRead,
     PublicSensorLeakSettings,
@@ -810,6 +813,64 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def make_public_chime(
+    chime: Chime,
+    *,
+    state: DeviceState | None = None,
+    ring_settings: list[PublicRingSettings] | None = None,
+) -> Mock:
+    """Build a public-API chime mirroring the private fixture's ring settings."""
+    public = Mock(spec=PublicChime)
+    public.id = chime.id
+    public.mac = chime.mac
+    public.name = chime.name
+    public.display_name = chime.display_name
+    public.type = chime.type
+    public.model = ModelType.CHIME
+    public.state = DeviceState[chime.state.name] if state is None else state
+    public.ring_settings = (
+        [
+            PublicRingSettings(
+                camera_id=setting.camera_id,
+                repeat_times=setting.repeat_times,
+                ringtone_id=setting.ringtone_id,
+                volume=setting.volume,
+            )
+            for setting in chime.ring_settings
+        ]
+        if ring_settings is None
+        else ring_settings
+    )
+    return public
+
+
+def setup_public_chime(ufp: MockUFPFixture) -> None:
+    """Expose private chimes over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_light`` for ``ModelType.CHIME`` so the ring volume
+    numbers read from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = make_public_bootstrap(chimes=public_bootstrap.chimes)
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        # One mock per id so command assertions hit the entity's cached object.
+        if (
+            model is ModelType.CHIME
+            and obj_id not in public_bootstrap.chimes
+            and (private := ufp.api.bootstrap.chimes.get(obj_id)) is not None
+        ):
+            public_bootstrap.chimes[obj_id] = make_public_chime(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    _mirror_on_update_public(
+        ufp, "chimes", public_bootstrap.chimes, make_public_chime, keep_existing=True
+    )
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
