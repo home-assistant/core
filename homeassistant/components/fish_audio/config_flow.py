@@ -64,7 +64,11 @@ _LOGGER = logging.getLogger(__name__)
 def get_api_key_schema(default: str | None = None) -> probatio.Schema:
     """Return the schema for API key input."""
     return probatio.Schema(
-        {probatio.Required(CONF_API_KEY, default=default or probatio.UNDEFINED): str}
+        {
+            probatio.Required(
+                probatio.Secret(CONF_API_KEY), default=default or probatio.UNDEFINED
+            ): str
+        }
     )
 
 

@@ -110,7 +110,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         probatio.Required(CONF_IP_ADDRESS): str,
                         probatio.Required(CONF_PORT, default="49090"): str,
-                        probatio.Required(CONF_API_KEY): str,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                     }
                 ),
                 user_input,

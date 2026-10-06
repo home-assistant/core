@@ -27,7 +27,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         # "maker" is currently hardcoded in the firmware
         # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
         probatio.Required(CONF_USERNAME, default="maker"): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

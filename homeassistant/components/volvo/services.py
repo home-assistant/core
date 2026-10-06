@@ -10,7 +10,7 @@ import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import service
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
@@ -24,7 +24,7 @@ SERVICE_GET_IMAGE_URL = "get_image_url"
 SERVICE_GET_IMAGE_URL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CONFIG_ENTRY_ID): str,
-        probatio.Optional(CONF_IMAGE_TYPES): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(CONF_IMAGE_TYPES): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 

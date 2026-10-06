@@ -605,6 +605,17 @@
       "softwater_available": {
         "name": "Soft water available"
       },
+      "status": {
+        "name": "Status",
+        "state": {
+          "delay": "Delayed",
+          "finished": "Finished",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
+          "standby": "[%key:common::state::standby%]",
+          "working": "Working"
+        }
+      },
       "tank_actual_temperature": {
         "name": "Tank temperature"
       },
@@ -704,11 +715,17 @@
       "out_silent": {
         "name": "Outdoor silent mode"
       },
+      "power": {
+        "name": "Power"
+      },
       "prompt_tone": {
         "name": "Prompt tone"
       },
       "pump": {
         "name": "Pump"
+      },
+      "running": {
+        "name": "Running"
       },
       "screen_display": {
         "name": "Screen display"

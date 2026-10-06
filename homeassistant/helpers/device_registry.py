@@ -59,7 +59,7 @@ from .json import (
     find_paths_unserializable_data,
     json_fragment,
 )
-from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .registry import BaseRegistry, BaseRegistryItems, NextNamePart, RegistryIndexType
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -572,6 +572,11 @@ class DeviceEntry(BaseDeviceEntry):
         return {self.config_entry_id: {self.config_subentry_id}}
 
     @property
+    def next_name_part(self) -> NextNamePart | None:
+        """Next name part of the device."""
+        return NextNamePart.AREA if self.area_id is not None else None
+
+    @property
     @override
     def is_composite_device(self) -> bool:
         """Return if this entry is a restored composite device.
@@ -615,6 +620,7 @@ class DeviceEntry(BaseDeviceEntry):
             "modified_at": self.modified_at.timestamp(),
             "name_by_user": self.name_by_user,
             "name": self.name,
+            "next_name_part": self.next_name_part,
             "parent_device_id": None,
             # primary_config_entry is deprecated, it can be removed in HA Core 2027.10.
             "primary_config_entry": self.config_entry_id,
@@ -724,6 +730,13 @@ class ChildDeviceEntry(BaseDeviceEntry):
             return set() if name == "connections" else None
 
     @property
+    def next_name_part(self) -> NextNamePart:
+        """Next name part of the child device."""
+        if self.area_id is not None:
+            return NextNamePart.AREA
+        return NextNamePart.PARENT_DEVICE
+
+    @property
     @override
     def dict_repr(self) -> dict[str, Any]:
         """Return a dict representation of the entry."""
@@ -740,6 +753,7 @@ class ChildDeviceEntry(BaseDeviceEntry):
             "modified_at": self.modified_at.timestamp(),
             "name_by_user": self.name_by_user,
             "name": self.name,
+            "next_name_part": self.next_name_part,
             "parent_device_id": self.parent_device_id,
         }
 

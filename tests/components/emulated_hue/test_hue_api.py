@@ -965,6 +965,7 @@ async def test_put_light_state_media_player(
     assert walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL] == level
 
 
+@patch.object(hue_api, "STATE_CHANGE_WAIT_TIMEOUT", 0.000001)
 async def test_open_cover_without_position(
     hass_hue: HomeAssistant, hue_client: TestClient
 ) -> None:
@@ -1030,6 +1031,7 @@ async def test_open_cover_without_position(
     assert cover_test_2.attributes.get("current_position") == 0
 
 
+@patch.object(hue_api, "STATE_CHANGE_WAIT_TIMEOUT", 0.000001)
 async def test_set_position_cover(
     hass_hue: HomeAssistant, hue_client: TestClient
 ) -> None:

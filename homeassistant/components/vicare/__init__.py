@@ -289,6 +289,9 @@ def _setup_vicare_api(
         devices.append(
             ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
         )
+    if device_config_list and not devices:
+        # Offline devices get no entities, and nothing would set them up later.
+        raise ConfigEntryNotReady("No ViCare device is online")
     return ViCareData(client=client, devices=devices)
 
 

@@ -97,17 +97,21 @@ async def test_button_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
 ) -> None:
-    """Tests that the press action starts re-auth flow."""
+    """Tests that the press action raises an error and starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
     mock_nextdns_client.clear_logs.side_effect = InvalidApiKeyError
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for NextDNS, please update your API key",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

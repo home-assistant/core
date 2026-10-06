@@ -36,6 +36,7 @@ from uiprotect.data.public_devices import (
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
     PublicHdrMode,
+    PublicLcdMessage,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
@@ -136,6 +137,25 @@ def assert_entity_counts(
 
     assert len(entities) == total
     assert len(hass.states.async_all(platform.value)) == enabled
+
+
+def registered_keys(
+    entity_registry: er.EntityRegistry, platform: Platform, mac: str
+) -> set[str]:
+    """Return the description keys registered for a device on a platform."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == platform and entry.unique_id.startswith(prefix)
+    }
+
+
+def make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
 
 
 def normalize_name(name: str) -> str:
@@ -473,6 +493,7 @@ def make_public_sensor(
     for name in (
         "is_contact_sensor_enabled",
         "is_leak_sensor_enabled",
+        "is_leak_detection_enabled",
         "is_motion_sensor_enabled",
         "is_alarm_sensor_enabled",
         "is_temperature_sensor_enabled",
@@ -597,6 +618,8 @@ def make_public_camera(
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
+    lcd_message: PublicLcdMessage | None = None,
+    active_patrol_slot: int | None = None,
 ) -> Mock:
     """Build a public-API camera for a private camera's migrated fields.
 
@@ -610,7 +633,7 @@ def make_public_camera(
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
     not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
-    the test.
+    the test. ``lcd_message`` defaults to none for the same reason.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -629,6 +652,11 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.lcd_message = lcd_message
+    public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
+    # The doorbell text falls back to the default message of the private NVR.
+    public.api = camera._api
+    public.active_patrol_slot = active_patrol_slot
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected

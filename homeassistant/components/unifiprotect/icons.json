@@ -126,6 +126,9 @@
       "person_detected": {
         "default": "mdi:walk"
       },
+      "relay_input": {
+        "default": "mdi:import"
+      },
       "siren_detected": {
         "default": "mdi:alarm-bell"
       },
@@ -401,9 +404,6 @@
       },
       "detections_vehicle": {
         "default": "mdi:car"
-      },
-      "hdr_mode": {
-        "default": "mdi:brightness-7"
       },
       "high_fps": {
         "default": "mdi:video-high-definition"
