@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError
+from adguardhome import AdGuardHome, AdGuardHomeAuthenticationError, AdGuardHomeError
 import probatio
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +19,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -76,33 +81,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def add_url(call: ServiceCall) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
         for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.add_url(
-                allowlist=False, name=call.data[CONF_NAME], url=call.data[CONF_URL]
+            await adguard.filtering.blocklists.add(
+                call.data[CONF_URL], name=call.data[CONF_NAME]
             )
 
     async def remove_url(call: ServiceCall) -> None:
         """Service call to remove a filter subscription from AdGuard Home."""
         for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
+            await adguard.filtering.blocklists.remove(call.data[CONF_URL])
 
     async def enable_url(call: ServiceCall) -> None:
         """Service call to enable a filter subscription in AdGuard Home."""
         for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.enable_url(allowlist=False, url=call.data[CONF_URL])
+            await adguard.filtering.blocklists.enable(call.data[CONF_URL])
 
     async def disable_url(call: ServiceCall) -> None:
         """Service call to disable a filter subscription in AdGuard Home."""
         for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.disable_url(
-                allowlist=False, url=call.data[CONF_URL]
-            )
+            await adguard.filtering.blocklists.disable(call.data[CONF_URL])
 
     async def refresh(call: ServiceCall) -> None:
         """Service call to refresh the filter subscriptions in AdGuard Home."""
         for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.refresh(
-                allowlist=False, force=call.data[CONF_FORCE]
-            )
+            # AdGuard Home always forces a refresh, so the force option does
+            # nothing, but is kept so existing automations keep working.
+            await adguard.filtering.blocklists.refresh()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
@@ -155,19 +158,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
 
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
-        entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
+        URL.build(
+            scheme="https" if entry.data[CONF_SSL] else "http",
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+        ),
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        tls=entry.data[CONF_SSL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         session=session,
     )
 
     try:
-        version = await adguard.version()
-    except AdGuardHomeConnectionError as exception:
-        raise ConfigEntryNotReady from exception
+        version = str((await adguard.status()).version)
+    except AdGuardHomeAuthenticationError as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exception
+    except AdGuardHomeError as exception:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from exception
 
     entry.runtime_data = AdGuardData(adguard, version)
 

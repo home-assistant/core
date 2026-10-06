@@ -84,5 +84,10 @@ SPRITE_NAME_RE: Final = re.compile(r"^sprites(?:@2x)?$")
 # Bytes of entropy per access token.
 TOKEN_SIZE: Final = 32
 
+# Read as an alternative to the query parameter, which is part of the browser's
+# cache key and so empties the tile cache on every rotation. An <img>, which is
+# how raster tiles are asked for, can carry no header and still needs the query.
+TOKEN_HEADER: Final = "X-Map-Tiles-Token"
+
 # Two tokens are live at a time, so one stays valid for 30 to 60 minutes.
 TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=30)

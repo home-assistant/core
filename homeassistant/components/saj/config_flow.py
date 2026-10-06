@@ -187,7 +187,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONNECTION_TYPES
                 ),
                 probatio.Optional(CONF_USERNAME, default=""): str,
-                probatio.Optional(CONF_PASSWORD, default=""): str,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str,
             }
         )
 
@@ -240,6 +240,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         return probatio.Schema(
             {
                 probatio.Optional(CONF_USERNAME, default=self._pending_username): str,
-                probatio.Optional(CONF_PASSWORD, default=self._pending_password): str,
+                probatio.Optional(
+                    probatio.Secret(CONF_PASSWORD), default=self._pending_password
+                ): str,
             }
         )

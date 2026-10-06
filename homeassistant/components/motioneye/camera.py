@@ -76,7 +76,7 @@ SCHEMA_SERVICE_SET_TEXT = probatio.Schema(
                 probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
             },
         ),
-        cv.has_at_least_one_key(
+        probatio.AtLeastOne(
             KEY_TEXT_OVERLAY_LEFT,
             KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
             KEY_TEXT_OVERLAY_RIGHT,

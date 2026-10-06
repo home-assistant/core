@@ -28,7 +28,7 @@ from homeassistant.components.tts import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -427,7 +427,7 @@ async def test_service_wrong_language(
     """Set up a TTS platform and call service."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match="Language lang is not supported"):
         await hass.services.async_call(
             tts.DOMAIN,
             tts_service,
@@ -706,7 +706,7 @@ async def test_service_wrong_options(
     """Set up a TTS platform and call service with wrong options."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match="Unsupported options: "):
         await hass.services.async_call(
             tts.DOMAIN,
             tts_service,
@@ -1386,11 +1386,21 @@ async def test_generate_media_source_id(
     indirect=["setup"],
 )
 @pytest.mark.parametrize(
-    ("engine", "language", "options"),
+    ("engine", "language", "options", "message"),
     [
-        ("not-loaded-engine", None, None),
-        (None, "unsupported-language", None),
-        (None, None, {"option": "not-supported"}),
+        (
+            "not-loaded-engine",
+            None,
+            None,
+            "The selected text-to-speech provider is not available",
+        ),
+        (
+            None,
+            "unsupported-language",
+            None,
+            "Language unsupported-language is not supported",
+        ),
+        (None, None, {"option": "not-supported"}, "Unsupported options: option"),
     ],
 )
 async def test_generate_media_source_id_invalid_options(
@@ -1399,9 +1409,10 @@ async def test_generate_media_source_id_invalid_options(
     engine: str | None,
     language: str | None,
     options: dict[str, Any] | None,
+    message: str,
 ) -> None:
     """Test generating a media source ID."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match=message):
         tts.generate_media_source_id(hass, "msg", engine, language, options, None)
 
 

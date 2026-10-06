@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -578,8 +578,8 @@ async def test_timeout_cancelled(
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     respx.get("http://example.com").side_effect = [
-        httpx.RequestError,
-        httpx.TimeoutException,
+        httpx2.RequestError,
+        httpx2.TimeoutException,
     ]
 
     for total_calls in range(2, 4):
