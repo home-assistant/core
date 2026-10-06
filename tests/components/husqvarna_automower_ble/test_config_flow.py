@@ -537,16 +537,25 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "probe_side_effect",
+    [
+        pytest.param(BleakError, id="bleak_error"),
+        # The library returns None for the values it failed to read
+        pytest.param([(None, None, None)], id="no_device_info"),
+    ],
+)
 async def test_exception_probe(
     hass: HomeAssistant,
     mock_automower_client: Mock,
+    probe_side_effect: type[Exception] | list[tuple[None, None, None]],
 ) -> None:
-    """Test we can select a device."""
+    """Test a failing probe shows an error."""
 
     inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.probe_gatts.side_effect = BleakError
+    mock_automower_client.probe_gatts.side_effect = probe_side_effect
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
