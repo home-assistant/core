@@ -1,7 +1,7 @@
 {
   "domain": "electrasmart",
   "name": "Electra Smart",
-  "codeowners": ["@jafar-atili"],
+  "codeowners": ["@jafar-atili", "@noamokman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/electrasmart",
   "integration_type": "hub",
