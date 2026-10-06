@@ -32,9 +32,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ONVIF camera video stream."""
-
-    # Create PTZ service
-
     device = config_entry.runtime_data
     async_add_entities(
         [ONVIFCameraEntity(device, profile) for profile in device.profiles]
