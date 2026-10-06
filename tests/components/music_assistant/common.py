@@ -5,7 +5,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.api import MassEvent
-from music_assistant_models.enums import EventType
+from music_assistant_models.dashboard import DashboardDevice, DashboardSession
+from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.media_items import (
     Album,
     Artist,
@@ -197,15 +198,61 @@ async def trigger_subscription_callback(
     await hass.async_block_till_done()
 
 
+def setup_dashboards(music_assistant_client: MagicMock) -> None:
+    """Seed the mocked client with dashboard endpoints and two active sessions."""
+    music_assistant_client.dashboard._dashboards = {
+        "chromecast_kitchen": DashboardDevice(
+            dashboard_id="chromecast_kitchen",
+            name="Kitchen Display",
+            supported_types={DashboardType.PARTY, DashboardType.NOW_PLAYING},
+            provider_domain_hint="chromecast",
+        ),
+        "fully_kiosk_hallway": DashboardDevice(
+            dashboard_id="fully_kiosk_hallway",
+            name="Hallway Display",
+            supported_types={
+                DashboardType.PARTY,
+                DashboardType.NOW_PLAYING,
+                DashboardType.MUSIC_QUIZ,
+                DashboardType.UNKNOWN,
+            },
+            provider_domain_hint="fully_kiosk",
+        ),
+        "unmapped_player_display": DashboardDevice(
+            dashboard_id="unmapped_player_display",
+            name="Unmapped Player Display",
+            supported_types={DashboardType.NOW_PLAYING},
+        ),
+    }
+    music_assistant_client.dashboard._sessions = {
+        "chromecast_kitchen": DashboardSession(
+            dashboard_id="chromecast_kitchen",
+            name="Kitchen Display",
+            dashboard=DashboardType.NOW_PLAYING,
+            player_id="00:00:00:00:00:01",
+        ),
+        "unmapped_player_display": DashboardSession(
+            dashboard_id="unmapped_player_display",
+            name="Unmapped Player Display",
+            dashboard=DashboardType.NOW_PLAYING,
+            player_id="not-exposed-player",
+        ),
+    }
+
+
 def snapshot_music_assistant_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     platform: Platform,
+    *,
+    unique_id_prefix: str | None = None,
 ) -> None:
-    """Snapshot MusicAssistant entities."""
+    """Snapshot MusicAssistant entities, optionally only those with a unique id prefix."""
     entities = hass.states.async_all(platform)
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
+        if unique_id_prefix and not entity_entry.unique_id.startswith(unique_id_prefix):
+            continue
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")

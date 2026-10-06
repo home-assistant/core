@@ -5,7 +5,10 @@ from typing import Any, override
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -33,6 +36,7 @@ from .const import (
     CONF_SYNC_STATE,
     KNX_MODULE_KEY,
 )
+from .dpt import get_binary_sensor_device_class
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -81,6 +85,16 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
     """Representation of a KNX binary sensor."""
 
     _device: XknxBinarySensor
+    _knx_module: KNXModule
+
+    def _project_device_class(self) -> BinarySensorDeviceClass | None:
+        """Return the device class derived from the state address DPT of the KNX project."""
+        if (address := self._device.remote_value.group_address_state) is None:
+            return None
+        ga_info = self._knx_module.project.group_addresses.get(str(address))
+        if ga_info is None or ga_info.transcoder is None:
+            return None
+        return get_binary_sensor_device_class(ga_info.transcoder)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -136,7 +150,9 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
             entity_config=config,
         )
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_device_class = config.get(
+            CONF_DEVICE_CLASS, self._project_device_class()
+        )
         self._attr_force_update = self._device.ignore_internal_state
 
 
@@ -169,4 +185,5 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
             reset_after=knx_conf.reset_after,
             always_callback=True,
         )
+        self._attr_device_class = self._project_device_class()
         self._attr_force_update = self._device.ignore_internal_state

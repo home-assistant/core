@@ -80,4 +80,9 @@ ATTR_USERNAME = "username"
 
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
+# prefix of dashboard device identifiers and entity unique ids, which tells
+# them apart from player ids (a display may share its id with a player)
+DASHBOARD_ID_PREFIX = "dashboard:"
+DASHBOARD_DEVICE_MODEL = "Dashboard display"
+
 LOGGER = logging.getLogger(__package__)

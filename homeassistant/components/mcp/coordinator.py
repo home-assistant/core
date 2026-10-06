@@ -7,7 +7,7 @@ import datetime
 import logging
 from typing import override
 
-import httpx
+import httpx2
 from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
@@ -44,16 +44,16 @@ type TokenManager = Callable[[], Awaitable[str]]
 
 def _create_sse_httpx_client(
     headers: dict[str, str] | None = None,
-    timeout: httpx.Timeout | None = None,
-    auth: httpx.Auth | None = None,
-) -> httpx.AsyncClient:
+    timeout: httpx2.Timeout | None = None,
+    auth: httpx2.Auth | None = None,
+) -> httpx2.AsyncClient:
     """Create the httpx client used by the SSE transport.
 
     The SSE transport closes the client itself, so it cannot be handed one of
     the Home Assistant managed clients. Building it here keeps it off the SDK
     default, which reads the CA bundle from disk inside the event loop.
     """
-    return httpx.AsyncClient(
+    return httpx2.AsyncClient(
         verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
         follow_redirects=True,
         headers=headers,
@@ -96,7 +96,7 @@ async def mcp_client(
         # We also handle other generic McpErrors since proxies may not respond
         # consistently with a 405.
         if (
-            isinstance(main_error, httpx.HTTPStatusError)
+            isinstance(main_error, httpx2.HTTPStatusError)
             and main_error.response.status_code == 405
         ) or isinstance(main_error, McpError):
             _LOGGER.debug(
@@ -193,7 +193,7 @@ class ModelContextProtocolTool(llm.Tool):
             raise ConfigEntryAuthFailed(
                 "OAuth token request failed when calling tool"
             ) from error
-        except httpx.HTTPStatusError as error:
+        except httpx2.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             if error.response.status_code == 401:
                 auth_header = AuthenticateHeader.from_header(
@@ -206,7 +206,7 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        except httpx.HTTPError as error:
+        except httpx2.HTTPError as error:
             _LOGGER.debug(
                 "Error communicating with MCP server when calling tool: %s", error
             )
@@ -259,7 +259,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         except OAuth2TokenRequestReauthError as error:
             _LOGGER.debug("OAuth token request failed: %s", error)
             raise ConfigEntryAuthFailed("OAuth token request failed") from error
-        except httpx.HTTPStatusError as error:
+        except httpx2.HTTPStatusError as error:
             _LOGGER.debug("Error communicating with API: %s", error)
             if error.response.status_code == 401:
                 auth_header = AuthenticateHeader.from_header(
@@ -272,7 +272,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     "The MCP server requires authentication"
                 ) from error
             raise UpdateFailed(f"Error communicating with API: {error}") from error
-        except httpx.HTTPError as err:
+        except httpx2.HTTPError as err:
             _LOGGER.debug("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
