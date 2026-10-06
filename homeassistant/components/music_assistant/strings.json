@@ -459,6 +459,10 @@
           "description": "Enable radio mode to auto-generate a playlist based on the selection.",
           "name": "Enable radio mode"
         },
+        "start_item": {
+          "description": "Item to start playback from, instead of the first one. Use `latest` to play a podcast from its newest episode, or give the URI, ID or part of the name of the track or episode to start from.",
+          "name": "Start item"
+        },
         "username": {
           "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured. Defaults to the Home Assistant user that made the request, when the username matches a Music Assistant user.",
           "name": "Username"
