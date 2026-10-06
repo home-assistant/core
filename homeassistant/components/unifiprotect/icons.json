@@ -316,6 +316,9 @@
       "resolution_hd_video": {
         "default": "mdi:cctv"
       },
+      "signal_quality": {
+        "default": "mdi:signal"
+      },
       "storage_utilization": {
         "default": "mdi:harddisk"
       },
