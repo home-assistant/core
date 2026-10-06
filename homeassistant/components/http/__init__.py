@@ -28,7 +28,6 @@ from homeassistant.setup import (
     async_when_setup_or_start,
 )
 from homeassistant.util.async_ import create_eager_task
-from homeassistant.util.ssl import SSLProfile
 
 from .config import ConfData, async_get_and_load_store, async_load_config
 from .const import (  # noqa: F401
@@ -131,7 +130,7 @@ def _async_update_ssl_profile_issue(hass: HomeAssistant, conf: ConfData) -> None
     """Offer upgrading a superseded SSL profile the server is running with."""
     if (
         CONF_SSL_CERTIFICATE not in conf
-        or SSLProfile(conf[CONF_SSL_PROFILE]) not in SSL_PROFILE_UPGRADES
+        or conf[CONF_SSL_PROFILE] not in SSL_PROFILE_UPGRADES
     ):
         ir.async_delete_issue(hass, DOMAIN, ISSUE_SSL_PROFILE_OUTDATED)
         return

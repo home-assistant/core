@@ -108,7 +108,7 @@ class ConfData(TypedDict, total=False):
     trusted_proxies: list[str]
     login_attempts_threshold: int
     ip_ban_enabled: bool
-    ssl_profile: str
+    ssl_profile: SSLProfile
     use_x_frame_options: bool
     created_at: str
     error: str | None
@@ -162,9 +162,9 @@ HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): probatio.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
         probatio.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        probatio.Optional(CONF_SSL_PROFILE, default=DEFAULT_SSL_PROFILE): probatio.In(
-            list(SSLProfile)
-        ),
+        probatio.Optional(
+            CONF_SSL_PROFILE, default=DEFAULT_SSL_PROFILE
+        ): probatio.Coerce(SSLProfile),
         probatio.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
     }
 )
@@ -381,6 +381,10 @@ class HTTPConfigStore:
                 return  # type: ignore[unreachable]
             raw = await self._store.async_load()
             if raw is not None:
+                # Stored configs do not pass the schema; restore the enum member.
+                for config in (raw[KEY_STABLE], raw[KEY_PENDING]):
+                    if config is not None:
+                        config[CONF_SSL_PROFILE] = SSLProfile(config[CONF_SSL_PROFILE])
                 self._stable = raw[KEY_STABLE]
                 self._pending = raw[KEY_PENDING]
                 self._yaml_migration_done = raw[KEY_YAML_MIGRATION_DONE]

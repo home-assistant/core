@@ -46,7 +46,7 @@ class SSLProfileOutdatedFlow(RepairsFlow):
         store = await async_get_and_load_store(self.hass)
         if _pending_armed(store):
             return self.async_abort(reason="pending_config")
-        upgrades = SSL_PROFILE_UPGRADES[SSLProfile(store.stable[CONF_SSL_PROFILE])]
+        upgrades = SSL_PROFILE_UPGRADES[store.stable[CONF_SSL_PROFILE]]
         return self.async_show_menu(
             step_id="init",
             menu_options=[*(f"confirm_{upgrade}" for upgrade in upgrades), "ignore"],

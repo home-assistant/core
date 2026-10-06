@@ -201,7 +201,7 @@ class HomeAssistantHTTP:
         server_host: list[str] | None,
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
-        ssl_profile: str,
+        ssl_profile: SSLProfile,
         supervisor_unix_socket_path: Path | None = None,
         port_transition: bool = False,
     ) -> None:
@@ -400,7 +400,7 @@ class HomeAssistantHTTP:
         context: ssl.SSLContext | None = None
         assert self.ssl_certificate is not None
         try:
-            context = ssl_util.server_context(SSLProfile(self.ssl_profile))
+            context = ssl_util.server_context(self.ssl_profile)
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
             if not self.hass.config.recovery_mode:
@@ -452,7 +452,7 @@ class HomeAssistantHTTP:
 
     def _create_emergency_ssl_context(self) -> ssl.SSLContext:
         """Create an emergency ssl certificate so we can still startup."""
-        context = ssl_util.server_context(SSLProfile(self.ssl_profile))
+        context = ssl_util.server_context(self.ssl_profile)
         host: str
         try:
             host = cast(str, URL(get_url(self.hass, prefer_external=True)).host)

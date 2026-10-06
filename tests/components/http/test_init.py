@@ -763,7 +763,7 @@ async def test_create_server_passes_configuration(hass: HomeAssistant) -> None:
         ssl_peer_certificate=None,
         ssl_key=None,
         trusted_proxies=[],
-        ssl_profile=http.SSL_MODERN,
+        ssl_profile=SSLProfile.MODERN_V6,
     )
 
     with patch.object(
@@ -3217,7 +3217,7 @@ async def test_create_server_normalizes_unencodable_host(
         ssl_peer_certificate=None,
         ssl_key=None,
         trusted_proxies=[],
-        ssl_profile=http.SSL_MODERN,
+        ssl_profile=SSLProfile.MODERN_V6,
     )
     with (
         patch.object(
