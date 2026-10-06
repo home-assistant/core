@@ -24,6 +24,7 @@ from bleak_retry_connector import (
 )
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
@@ -69,6 +70,7 @@ from homeassistant.components.teslemetry.const import (
     TOKEN_URL,
     VEHICLE_KEY_FILE,
 )
+from homeassistant.components.teslemetry.coordinator import METADATA_INTERVAL
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
@@ -89,7 +91,7 @@ from homeassistant.setup import async_setup_component
 from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     FakeScanner,
     generate_advertisement_data,
@@ -1901,6 +1903,90 @@ async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> N
 @pytest.mark.usefixtures("enable_bluetooth", "mock_energy_only")
 async def test_subentry_add_flow_account_has_no_vehicles(hass: HomeAssistant) -> None:
     """The add flow aborts when the account has no vehicles to add."""
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_vehicles"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_hides_unsupported_vehicles(
+    hass: HomeAssistant, mock_products: AsyncMock, mock_metadata: AsyncMock
+) -> None:
+    """Only vehicles that report no command protocol support are left out."""
+    products = deepcopy(PRODUCTS)
+    metadata = deepcopy(METADATA)
+    vehicle_product = products["response"][0]
+    vehicle_metadata = metadata["vehicles"][VIN]
+    products["response"] = products["response"][1:]
+    metadata["vehicles"] = {}
+    for vin, name, proxy in (
+        ("LRW3F7EK4NC700001", "Supported", True),
+        ("LRW3F7EK4NC700002", "Unsupported", False),
+        ("LRW3F7EK4NC700003", "Unknown", None),
+    ):
+        products["response"].append(
+            {**vehicle_product, "vin": vin, "display_name": name}
+        )
+        metadata["vehicles"][vin] = {**vehicle_metadata, "proxy": proxy}
+    mock_products.return_value = products
+    mock_metadata.return_value = metadata
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_VIN].container == {
+        "LRW3F7EK4NC700001": "Supported",
+        "LRW3F7EK4NC700003": "Unknown",
+    }
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_keeps_vehicle_without_metadata(
+    hass: HomeAssistant, mock_metadata: AsyncMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A vehicle missing from refreshed metadata is offered as unknown support."""
+    entry = await _setup_account_entry(hass)
+    metadata = deepcopy(METADATA)
+    del metadata["vehicles"][VIN]
+    mock_metadata.return_value = metadata
+
+    # The flow can open after the metadata refresh but before its reload runs.
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+            context={"source": "user"},
+        )
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_VIN].container == {VIN: "Test"}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_only_unsupported_vehicles(
+    hass: HomeAssistant, mock_metadata: AsyncMock
+) -> None:
+    """The add flow aborts when no account vehicle supports the command protocol."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["proxy"] = False
+    mock_metadata.return_value = metadata
     entry = await _setup_account_entry(hass)
 
     result = await hass.config_entries.subentries.async_init(
