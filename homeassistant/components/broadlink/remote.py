@@ -46,7 +46,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
-from .helpers import RF_PACKET_TYPE_RM4, data_packet, fix_rf_packet_alignment
+from .helpers import data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -246,7 +246,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        rf_flags = {RF_PACKET_TYPE_RM4, 0xB2, 0xB4, 0xD7}
+        # 0xB1 is what an RM4 Pro returns for a learned 433 MHz code.
+        rf_flags = {0xB1, 0xB2, 0xB4, 0xD7}
         if not hasattr(device.api, "sweep_frequency") and any(
             c and c[0] in rf_flags for codes in code_list for c in codes
         ):
@@ -381,7 +382,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     code = await device.async_request(device.api.check_data)
                 except ReadError, StorageError:
                     continue
-                return b64encode(fix_rf_packet_alignment(code)).decode("utf8")
+                return b64encode(code).decode("utf8")
 
             raise TimeoutError(
                 "No infrared code received within "
@@ -462,7 +463,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     code = await device.async_request(device.api.check_data)
                 except ReadError, StorageError:
                     continue
-                return b64encode(fix_rf_packet_alignment(code)).decode("utf8")
+                return b64encode(code).decode("utf8")
 
             raise TimeoutError(
                 "No radiofrequency code received within "

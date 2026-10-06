@@ -272,45 +272,6 @@ async def test_remote_learn_rf_command(
     assert mock_api.send_data.call_args == call(RF_PACKET)
 
 
-@pytest.mark.usefixtures("mock_sleep")
-async def test_remote_learn_rf_command_realigns_packet(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    hass_storage: dict[str, Any],
-) -> None:
-    """Test an RM4 Pro RF capture shifted by one duration is stored realigned."""
-    misaligned = bytes.fromhex("b1c01600b09e0600350d00019a280c0d280d00019a280c0d280d")
-    aligned = bytes.fromhex("b1c01500b09e06000d00019a280c0d280d00019a280c0d280d")
-    device = get_device("Garage")
-    mock_api = device.get_mock_api()
-    mock_api.check_frequency.return_value = (True, 433.84)
-    mock_api.check_data.return_value = misaligned
-    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
-    entity_id = _get_remote_entity_id(
-        hass,
-        device_registry,
-        entity_registry,
-        mock_setup.entry.unique_id,
-        mock_setup.entry.entry_id,
-    )
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_LEARN_COMMAND,
-        {
-            "entity_id": entity_id,
-            "device": "patio_heater",
-            "command": "power",
-            "command_type": "rf",
-        },
-        blocking=True,
-    )
-
-    codes = hass_storage[f"broadlink_remote_{device.mac}_codes"]["data"]
-    assert codes == {"patio_heater": {"power": b64encode(aligned).decode()}}
-
-
 @pytest.mark.parametrize(
     (
         "api_method",
