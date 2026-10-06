@@ -175,8 +175,8 @@ async def test_setup_retries_on_failed_read(
 ) -> None:
     """Test setup is retried when reading the device fails or is incomplete.
 
-    In every case Home Assistant should retry the setup later, leave the
-    config entry data untouched, create no entities and log why.
+    In every case Home Assistant should retry the setup later, create no
+    entities and log why. A failed migration read stores no device model.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
