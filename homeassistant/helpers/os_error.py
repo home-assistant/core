@@ -1,17 +1,25 @@
-"""Helpers to translate OSError from file operations."""
+"""Helpers to raise translated errors for failed file operations."""
 
 import errno
 
-# Integrations reference the matching common::exceptions messages in strings.json
-OS_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
-    errno.EACCES: "os_error_permission_denied",
-    errno.EPERM: "os_error_permission_denied",
-    errno.ENOSPC: "os_error_no_space",
-    errno.EROFS: "os_error_read_only",
-    errno.ENOENT: "os_error_not_found",
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.exceptions import HomeAssistantError
+
+# OS error texts aren't translatable, so the common causes get their own message
+_WRITE_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
+    errno.EACCES: "os_write_permission_denied",
+    errno.EPERM: "os_write_permission_denied",
+    errno.ENOSPC: "os_write_no_space",
+    errno.EROFS: "os_write_read_only",
+    # On a write, ENOENT means the parent folder is missing
+    errno.ENOENT: "os_write_dir_not_found",
 }
 
 
-def os_error_translation_key(err: OSError) -> str:
-    """Return the translation key for an OSError, os_error if it has no own key."""
-    return OS_ERROR_TRANSLATION_KEYS.get(err.errno, "os_error")
+def os_write_error(err: OSError, path: str) -> HomeAssistantError:
+    """Return a translated error for an OSError raised while writing path."""
+    return HomeAssistantError(
+        translation_domain=HOMEASSISTANT_DOMAIN,
+        translation_key=_WRITE_ERROR_TRANSLATION_KEYS.get(err.errno, "os_write_error"),
+        translation_placeholders={"path": path},
+    )

@@ -225,21 +225,6 @@
     "exceptions": {
       "oauth2_implementation_unavailable": {
         "message": "OAuth2 implementation unavailable, will retry"
-      },
-      "os_error": {
-        "message": "Cannot access {path}."
-      },
-      "os_error_no_space": {
-        "message": "Not enough disk space to write {path}."
-      },
-      "os_error_not_found": {
-        "message": "{path} does not exist."
-      },
-      "os_error_permission_denied": {
-        "message": "Permission denied for {path}."
-      },
-      "os_error_read_only": {
-        "message": "Cannot write {path} because the file system is read-only."
       }
     },
     "generic": {

@@ -5,21 +5,6 @@
     }
   },
   "exceptions": {
-    "os_error": {
-      "message": "[%key:common::exceptions::os_error::message%]"
-    },
-    "os_error_no_space": {
-      "message": "[%key:common::exceptions::os_error_no_space::message%]"
-    },
-    "os_error_not_found": {
-      "message": "[%key:common::exceptions::os_error_not_found::message%]"
-    },
-    "os_error_permission_denied": {
-      "message": "[%key:common::exceptions::os_error_permission_denied::message%]"
-    },
-    "os_error_read_only": {
-      "message": "[%key:common::exceptions::os_error_read_only::message%]"
-    },
     "path_not_allowed": {
       "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
     }

@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.os_error import os_error_translation_key
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -56,11 +56,7 @@ async def _async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image_data)
     except OSError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=os_error_translation_key(err),
-            translation_placeholders={"path": snapshot_file},
-        ) from err
+        raise os_write_error(err, snapshot_file) from err
 
 
 @callback
