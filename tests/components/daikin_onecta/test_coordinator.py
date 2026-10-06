@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
 
-from daikin_onecta import OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
@@ -302,6 +302,24 @@ class TestOnectaDataUpdateCoordinator:
         assert (
             "Daikin API rate limit reached; retrying after 3060 seconds" in caplog.text
         )
+
+    async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
+        """Turn a Daikin HTTP error into a translatable polling failure."""
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            side_effect=OnectaApiError(
+                500,
+                "Internal Server Error",
+                method="GET",
+                path="/v1/gateway-devices",
+            )
+        )
+
+        with pytest.raises(UpdateFailed) as exc_info:
+            await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value.translation_key == "api_error"
+        assert exc_info.value.translation_placeholders == {"status": "500"}
 
     async def test_post_write_cooldown_is_checked_under_cloud_lock(self, coordinator):
         """Keep cached data when a write completes while polling waits for the lock."""

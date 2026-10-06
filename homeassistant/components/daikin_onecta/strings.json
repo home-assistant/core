@@ -80,6 +80,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Daikin API returned HTTP {status}"
+    },
     "connection_failed": {
       "message": "Unable to connect to the Daikin API"
     },

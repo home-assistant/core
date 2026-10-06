@@ -6,7 +6,11 @@ from math import ceil
 import random
 from typing import override
 
-from daikin_onecta.exceptions import OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta.exceptions import (
+    OnectaApiError,
+    OnectaConnectionError,
+    OnectaRateLimitError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -99,6 +103,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="connection_failed",
+                ) from err
+            except OnectaApiError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"status": str(err.status)},
                 ) from err
 
             if cloud_devices is None:
