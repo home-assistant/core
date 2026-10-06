@@ -7,7 +7,7 @@ import prowlpy
 import pytest
 
 from homeassistant.components import notify
-from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAMES, DOMAIN
+from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -99,7 +99,7 @@ async def test_yaml_import(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.data == {
         CONF_API_KEY: TEST_API_KEY,
-        CONF_LEGACY_SERVICE_NAMES: [DOMAIN],
+        CONF_LEGACY_SERVICE_NAME: DOMAIN,
     }
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
@@ -140,7 +140,8 @@ async def test_yaml_import_existing_config_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_prowlpy_config_entry.state is ConfigEntryState.LOADED
-    assert mock_prowlpy_config_entry.data[CONF_LEGACY_SERVICE_NAMES] == [DOMAIN]
+    # The existing entry is not changed: YAML keeps providing the legacy action
+    assert CONF_LEGACY_SERVICE_NAME not in mock_prowlpy_config_entry.data
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.states.get(ENTITY_ID) is not None
 
@@ -241,37 +242,47 @@ async def test_config_entry_setup_yaml_deprecation_issue(
     ) is issue_expected
 
 
-async def test_legacy_services_from_config_entry(
+@pytest.mark.parametrize(
+    ("legacy_service_name", "service"),
+    [
+        pytest.param(DOMAIN, DOMAIN, id="with_name"),
+        pytest.param(None, notify.SERVICE_NOTIFY, id="without_name"),
+    ],
+)
+async def test_legacy_service_from_config_entry(
     hass: HomeAssistant,
     mock_prowlpy: AsyncMock,
+    legacy_service_name: str | None,
+    service: str,
 ) -> None:
-    """Test an imported entry sets up the legacy actions after YAML is removed."""
+    """Test an imported entry sets up the legacy action after YAML is removed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="prowl",
-        data={CONF_API_KEY: TEST_API_KEY, CONF_LEGACY_SERVICE_NAMES: [DOMAIN, None]},
+        data={
+            CONF_API_KEY: TEST_API_KEY,
+            CONF_LEGACY_SERVICE_NAME: legacy_service_name,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
-    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_NOTIFY)
+    assert hass.services.has_service(notify.DOMAIN, service)
     await hass.services.async_call(
-        notify.DOMAIN, DOMAIN, {notify.ATTR_MESSAGE: "Test"}, blocking=True
+        notify.DOMAIN, service, {notify.ATTR_MESSAGE: "Test"}, blocking=True
     )
     mock_prowlpy.post.assert_called_once()
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
-    assert not hass.services.has_service(notify.DOMAIN, notify.SERVICE_NOTIFY)
+    assert not hass.services.has_service(notify.DOMAIN, service)
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
 async def test_yaml_import_multiple_names(hass: HomeAssistant) -> None:
-    """Test several YAML notifiers with the same API key keep their actions."""
+    """Test several YAML notifiers with the same API key create one entry."""
     await async_setup_component(
         hass,
         notify.DOMAIN,
@@ -286,6 +297,7 @@ async def test_yaml_import_multiple_names(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert sorted(entries[0].data[CONF_LEGACY_SERVICE_NAMES]) == ["one", "two"]
+    assert entries[0].data[CONF_LEGACY_SERVICE_NAME] in ("one", "two")
+    # YAML provides both legacy actions while it is present
     assert hass.services.has_service(notify.DOMAIN, "one")
     assert hass.services.has_service(notify.DOMAIN, "two")

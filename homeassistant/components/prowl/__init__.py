@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAMES, DOMAIN, PLATFORMS
+from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME, DOMAIN, PLATFORMS
 from .helpers import async_verify_key
 from .issue import async_create_yaml_deprecated_issue
 
@@ -53,18 +53,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady("Prowl API rate limit exceeded") from ex
         raise ConfigEntryError(f"Failed to validate Prowl API key ({ex})") from ex
 
-    # While YAML for this API key is present, YAML sets up the legacy services
-    if entry.data[CONF_API_KEY] not in yaml_api_keys:
-        for name in entry.data.get(CONF_LEGACY_SERVICE_NAMES, []):
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass,
-                    Platform.NOTIFY,
-                    DOMAIN,
-                    {CONF_NAME: name, CONF_ENTRY: entry},
-                    {},
-                )
+    # While YAML for this API key is present, YAML sets up the legacy service
+    if (
+        CONF_LEGACY_SERVICE_NAME in entry.data
+        and entry.data[CONF_API_KEY] not in yaml_api_keys
+    ):
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass,
+                Platform.NOTIFY,
+                DOMAIN,
+                {CONF_NAME: entry.data[CONF_LEGACY_SERVICE_NAME], CONF_ENTRY: entry},
+                {},
             )
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
