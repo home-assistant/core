@@ -1096,6 +1096,15 @@ ZEROCONF = {
             "domain": "wled",
         },
     ],
+    "_workstation._tcp.local.": [
+        {
+            "domain": "hr_energy_qube",
+            "properties": {
+                "ProjectName": "deqsihpb*",
+                "Vendor": "000a5c",
+            },
+        },
+    ],
     "_ws._tcp.local.": [
         {
             "domain": "hotspring",

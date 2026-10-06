@@ -1,12 +1,14 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_qube_device": "The discovered device is not a Qube heat pump."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_qube_device": "Could not verify this is a Qube heat pump. Check the host address."
     },
+    "flow_title": "Qube heat pump ({host})",
     "step": {
       "user": {
         "data": {
@@ -16,6 +18,9 @@
           "host": "The IP address or hostname of your Qube heat pump."
         },
         "description": "Enter the IP address or hostname of your Qube heat pump."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up the Qube heat pump at {host}?"
       }
     }
   },
