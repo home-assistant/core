@@ -26,12 +26,10 @@ from homeassistant.util.json import JsonValueType
 from . import SERVICE_GET_FORECASTS, Forecast, WeatherEntityFeature
 from .const import DOMAIN
 
-# Forecast cadence (daily/hourly/twice_daily) is an implementation detail of the
-# weather entity, not something a conversational request expresses. Letting the
-# model guess it means a plausible-sounding but wrong guess (e.g. "hourly" for an
-# entity that only supports "daily") surfaces to the user as a tool failure
-# instead of being resolved deterministically. Home Assistant selects the most
-# appropriate, supported cadence for the requested period instead.
+# Forecast cadence (daily/hourly/twice_daily) is an implementation detail the
+# model must not guess: a wrong guess surfaces as a tool failure instead of
+# being resolved deterministically. Home Assistant selects the best supported
+# cadence for the requested period instead.
 FORECAST_FEATURE_BY_TYPE = {
     "daily": WeatherEntityFeature.FORECAST_DAILY,
     "hourly": WeatherEntityFeature.FORECAST_HOURLY,
@@ -137,16 +135,21 @@ class GetForecastTool(Tool):
 
         start, end = _get_forecast_window(data["period"])
 
-        # Restrict matching to forecast-capable entities. Tool discovery only
-        # advertises aliases from these entities, so a current-conditions-only
-        # entity sharing the same name/alias would otherwise create an
-        # unresolvable ambiguous match for a name that is actually unique among
-        # forecast-capable entities.
+        # Tool discovery only advertises aliases from forecast-capable
+        # entities, so matching must be restricted the same way or a
+        # same-named current-conditions-only entity could create a false
+        # ambiguous match.
         forecast_capable_states = [
             state
             for state in hass.states.async_all(DOMAIN)
             if state.attributes.get("supported_features", 0) & FORECAST_FEATURES
         ]
+        if not forecast_capable_states:
+            # async_match_targets treats an empty states list as "no
+            # override" and searches every entity in the domain instead, so
+            # this case must be handled explicitly rather than passed through.
+            return ToolResult(data={"error": "Weather entity not found"}, error=True)
+
         result = intent.async_match_targets(
             hass,
             intent.MatchTargetsConstraints(
