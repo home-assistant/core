@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import cast, override
 
+from uiprotect import ChimeRingtoneNotSetError
 from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
 from uiprotect.data.public_devices import (
     PublicChime,
@@ -17,9 +18,11 @@ from uiprotect.data.public_devices import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     PermRequired,
@@ -377,7 +380,8 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
         super().__init__(data, chime)
         self._attr_unique_id = f"{chime.mac}_ring_volume_{camera.id}"
         self._attr_translation_key = "chime_ring_volume"
-        self._attr_translation_placeholders = {"camera_name": camera.display_name}
+        self._camera_name = camera.display_name
+        self._attr_translation_placeholders = {"camera_name": self._camera_name}
         # BaseProtectEntity sets _attr_name = None when no description is passed,
         # which prevents translation_key from being used. Delete to enable translations.
         del self._attr_name
@@ -410,4 +414,11 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new ring volume value."""
         public = cast("PublicChime", self._ufp_set_target())
-        await public.set_volume_for_camera(self._camera_id, int(value))
+        try:
+            await public.set_volume_for_camera(self._camera_id, int(value))
+        except ChimeRingtoneNotSetError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="chime_ringtone_not_set",
+                translation_placeholders={"camera_name": self._camera_name},
+            ) from err

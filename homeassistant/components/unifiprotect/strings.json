@@ -838,6 +838,9 @@
     "cannot_connect": {
       "message": "Could not connect to the UniFi Protect console"
     },
+    "chime_ringtone_not_set": {
+      "message": "Select a ringtone for {camera_name} on the chime in the UniFi Protect app before changing its ring volume."
+    },
     "command_error": {
       "message": "Error communicating with UniFi Protect while sending command: {error}"
     },

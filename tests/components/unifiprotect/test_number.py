@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from uiprotect import ChimeRingtoneNotSetError
 from uiprotect.data import (
     Camera,
     Chime,
@@ -43,6 +44,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
@@ -666,6 +668,36 @@ async def test_chime_ring_volume_set_value(
     )
 
     public.set_volume_for_camera.assert_awaited_once_with(doorbell.id, 80)
+
+
+async def test_chime_ring_volume_set_value_without_ringtone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """A ring setting without a ringtone asks the user to pick one in the app."""
+    _setup_chime_with_doorbell(chime, doorbell)
+    setup_public_chime(ufp)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    public = ufp.api.public_bootstrap.get(ModelType.CHIME, chime.id)
+    public.set_volume_for_camera.side_effect = ChimeRingtoneNotSetError(doorbell.id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                ATTR_ENTITY_ID: "number.test_chime_ring_volume_test_camera",
+                "value": 80.0,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "chime_ringtone_not_set"
+    assert exc_info.value.translation_placeholders == {"camera_name": "Test Camera"}
 
 
 async def test_chime_volume_set_value(
