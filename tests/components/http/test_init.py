@@ -1729,7 +1729,7 @@ async def test_setup_migrates_v2_2_storage_to_v3(
     ssl_conf = {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     hass_storage[DOMAIN] = _stable_http_storage(
         {**ssl_conf, "ssl_profile": "modern_v4"},
-        pending={"server_port": 9999, "ssl_profile": "intermediate_v6"},
+        pending={"server_port": 9999, "ssl_profile": "modern_v6"},
     )
     hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] = "modern"
     hass_storage[DOMAIN]["data"]["pending"]["ssl_profile"] = "intermediate"
@@ -1743,9 +1743,7 @@ async def test_setup_migrates_v2_2_storage_to_v3(
         "stable": _stored_config(
             {**ssl_conf, "ssl_profile": "modern_v4"}, created_at=STABLE_CREATED_AT
         ),
-        "pending": _stored_config(
-            {"server_port": 9999, "ssl_profile": "intermediate_v6"}
-        ),
+        "pending": _stored_config({"server_port": 9999, "ssl_profile": "modern_v6"}),
         "yaml_migration_done": True,
     }
 
@@ -1777,13 +1775,17 @@ async def test_setup_migrates_v1_storage_ssl_profile(
     assert hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] == "intermediate_v4"
 
 
-@pytest.mark.parametrize("ssl_profile", ["modern_v4", "intermediate_v4"])
+@pytest.mark.parametrize(
+    ("ssl_profile", "profile_name"),
+    [("modern_v4", "modern_v4"), ("intermediate_v4", "intermediate_v4")],
+)
 async def test_ssl_profile_outdated_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
     tmp_path: Path,
     ssl_profile: str,
+    profile_name: str,
 ) -> None:
     """A server using SSL with a superseded profile gets a repair offering the upgrade."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
@@ -1806,8 +1808,8 @@ async def test_ssl_profile_outdated_issue(
     assert issue is not None
     assert issue.is_fixable
     assert issue.severity is ir.IssueSeverity.WARNING
-    assert issue.translation_key == f"ssl_profile_outdated_{ssl_profile}"
-    assert issue.translation_placeholders is None
+    assert issue.translation_key == "ssl_profile_outdated"
+    assert issue.translation_placeholders == {"profile": profile_name}
 
 
 def _create_stale_ssl_profile_issue(hass: HomeAssistant) -> None:
@@ -1818,7 +1820,8 @@ def _create_stale_ssl_profile_issue(hass: HomeAssistant) -> None:
         "ssl_profile_outdated",
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="ssl_profile_outdated_intermediate_v4",
+        translation_key="ssl_profile_outdated",
+        translation_placeholders={"profile": "intermediate_v4"},
     )
 
 
@@ -1865,17 +1868,14 @@ async def test_ssl_profile_outdated_issue_cleared_without_ssl(
     assert issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated") is None
 
 
-MODERN_V4_MENU = ["confirm_modern_v6", "confirm_intermediate_v6", "ignore"]
-INTERMEDIATE_V4_MENU = ["confirm_intermediate_v6", "ignore"]
-
-
 @pytest.mark.usefixtures("freezer")
 @pytest.mark.parametrize(
-    ("ssl_profile", "menu_options", "upgrade"),
+    ("ssl_profile", "profile_name", "upgrade"),
     [
-        ("modern_v4", MODERN_V4_MENU, "modern_v6"),
-        ("modern_v4", MODERN_V4_MENU, "intermediate_v6"),
-        ("intermediate_v4", INTERMEDIATE_V4_MENU, "intermediate_v6"),
+        ("modern_v4", "modern_v4", "modern_v6"),
+        ("modern_v4", "modern_v4", "intermediate_v6"),
+        ("intermediate_v4", "intermediate_v4", "modern_v6"),
+        ("intermediate_v4", "intermediate_v4", "intermediate_v6"),
     ],
 )
 async def test_ssl_profile_outdated_fix_flow(
@@ -1884,10 +1884,10 @@ async def test_ssl_profile_outdated_fix_flow(
     hass_storage: dict[str, Any],
     tmp_path: Path,
     ssl_profile: str,
-    menu_options: list[str],
+    profile_name: str,
     upgrade: str,
 ) -> None:
-    """The repair offers the upgrades for the profile and stages the chosen one."""
+    """The repair offers both current profiles and stages the chosen one."""
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
@@ -1909,13 +1909,19 @@ async def test_ssl_profile_outdated_fix_flow(
     data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
     assert data["type"] == "menu"
     assert data["step_id"] == "init"
-    assert data["menu_options"] == menu_options
+    assert data["menu_options"] == [
+        "confirm_modern_v6",
+        "confirm_intermediate_v6",
+        "ignore",
+    ]
+    assert data["description_placeholders"] == {"profile": profile_name}
 
     data = await process_repair_fix_flow(
         client, data["flow_id"], json={"next_step_id": f"confirm_{upgrade}"}
     )
     assert data["type"] == "form"
     assert data["step_id"] == f"confirm_{upgrade}"
+    assert data["description_placeholders"] == {"profile": profile_name}
 
     data = await process_repair_fix_flow(client, data["flow_id"])
     assert data["type"] == "create_entry"

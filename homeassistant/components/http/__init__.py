@@ -44,6 +44,7 @@ from .const import (  # noqa: F401
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
     CONF_USE_X_FRAME_OPTIONS,
+    CURRENT_SSL_PROFILES,
     DATA_SUPERVISOR_USER,
     DEFAULT_CORS,
     DOMAIN,
@@ -53,7 +54,6 @@ from .const import (  # noqa: F401
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
-    SSL_PROFILE_UPGRADES,
 )
 from .decorators import require_admin  # noqa: F401
 from .server import (
@@ -130,18 +130,18 @@ def _async_update_ssl_profile_issue(hass: HomeAssistant, conf: ConfData) -> None
     """Offer upgrading a superseded SSL profile the server is running with."""
     if (
         CONF_SSL_CERTIFICATE not in conf
-        or conf[CONF_SSL_PROFILE] not in SSL_PROFILE_UPGRADES
+        or conf[CONF_SSL_PROFILE] in CURRENT_SSL_PROFILES
     ):
         ir.async_delete_issue(hass, DOMAIN, ISSUE_SSL_PROFILE_OUTDATED)
         return
-    # Each superseded profile has its own text with the recommended upgrade.
     ir.async_create_issue(
         hass,
         DOMAIN,
         ISSUE_SSL_PROFILE_OUTDATED,
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key=f"{ISSUE_SSL_PROFILE_OUTDATED}_{conf[CONF_SSL_PROFILE]}",
+        translation_key=ISSUE_SSL_PROFILE_OUTDATED,
+        translation_placeholders={"profile": conf[CONF_SSL_PROFILE]},
     )
 
 

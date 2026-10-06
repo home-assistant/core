@@ -41,7 +41,6 @@ from .const import (
     ENV_SETUP_PORT,
     ENV_SUPERVISOR,
     NO_LOGIN_ATTEMPT_THRESHOLD,
-    SSL_PROFILE_UPGRADES,
     SUPERVISOR_DEFAULT_PORT,
     UNVERSIONED_SSL_PROFILES,
 )
@@ -188,13 +187,13 @@ def _migrate_ssl_profile(config: dict[str, Any]) -> None:
     The unversioned names (YAML and storage before version 3) stood for the v4
     profiles. A config with a certificate keeps that profile so the upgrade
     changes nothing for connecting clients; without a certificate the profile
-    is not in use, so the config moves to the current profile right away.
+    is not in use, so the config moves to the default profile right away.
     """
     name: str | None = config.get(CONF_SSL_PROFILE)
     if name is None or (profile := UNVERSIONED_SSL_PROFILES.get(name)) is None:
         return
     if CONF_SSL_CERTIFICATE not in config:
-        profile = SSL_PROFILE_UPGRADES[profile][0]
+        profile = DEFAULT_SSL_PROFILE
     config[CONF_SSL_PROFILE] = profile
 
 

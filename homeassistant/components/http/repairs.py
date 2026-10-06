@@ -26,14 +26,14 @@ from .config import (
 )
 from .const import (
     CONF_SSL_PROFILE,
+    CURRENT_SSL_PROFILES,
     DOMAIN,
     ISSUE_SSL_PROFILE_OUTDATED,
-    SSL_PROFILE_UPGRADES,
 )
 
 
 class SSLProfileOutdatedFlow(RepairsFlow):
-    """Stage the stable config with an upgraded SSL profile and restart.
+    """Stage the stable config with a current SSL profile and restart.
 
     The upgrade goes through the regular pending config trial: if the new
     profile locks the user out, it auto-reverts to the stable config.
@@ -42,14 +42,17 @@ class SSLProfileOutdatedFlow(RepairsFlow):
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
-        """Offer the upgrades for the current profile, or ignoring the issue."""
+        """Offer the current profiles, or ignoring the issue."""
         store = await async_get_and_load_store(self.hass)
         if _pending_armed(store):
             return self.async_abort(reason="pending_config")
-        upgrades = SSL_PROFILE_UPGRADES[store.stable[CONF_SSL_PROFILE]]
         return self.async_show_menu(
             step_id="init",
-            menu_options=[*(f"confirm_{upgrade}" for upgrade in upgrades), "ignore"],
+            menu_options=[
+                *(f"confirm_{profile}" for profile in CURRENT_SSL_PROFILES),
+                "ignore",
+            ],
+            description_placeholders=_placeholders(store),
         )
 
     async def async_step_confirm_modern_v6(
@@ -68,22 +71,29 @@ class SSLProfileOutdatedFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Keep the current profile and ignore the issue once confirmed."""
+        store = await async_get_and_load_store(self.hass)
         if user_input is None:
             return self.async_show_form(
-                step_id="ignore", data_schema=probatio.Schema({})
+                step_id="ignore",
+                data_schema=probatio.Schema({}),
+                description_placeholders=_placeholders(store),
             )
         ir.async_ignore_issue(self.hass, DOMAIN, ISSUE_SSL_PROFILE_OUTDATED, True)
-        return self.async_abort(reason="issue_ignored")
+        return self.async_abort(
+            reason="issue_ignored", description_placeholders=_placeholders(store)
+        )
 
     async def _async_step_confirm(
         self, upgrade: SSLProfile, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Describe the upgrade and stage it once confirmed."""
+        store = await async_get_and_load_store(self.hass)
         if user_input is None:
             return self.async_show_form(
-                step_id=f"confirm_{upgrade}", data_schema=probatio.Schema({})
+                step_id=f"confirm_{upgrade}",
+                data_schema=probatio.Schema({}),
+                description_placeholders=_placeholders(store),
             )
-        store = await async_get_and_load_store(self.hass)
         if _pending_armed(store):
             # Staged from the network panel while this flow was open.
             return self.async_abort(reason="pending_config")
@@ -100,6 +110,11 @@ def _pending_armed(store: HTTPConfigStore) -> bool:
     The upgrade must not replace such a config.
     """
     return store.pending is not None and store.pending[HTTP_CONFIG_ERROR] is None
+
+
+def _placeholders(store: HTTPConfigStore) -> dict[str, str]:
+    """Return the translation placeholders naming the current profile."""
+    return {"profile": store.stable[CONF_SSL_PROFILE]}
 
 
 async def async_create_fix_flow(
