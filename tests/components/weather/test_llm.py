@@ -79,6 +79,16 @@ def _tool_args(period: str = "today") -> dict[str, str]:
     return {"weather": "Testing", "period": period}
 
 
+# The forecast tool always reports these units alongside forecast data so the
+# model knows how to interpret bare numbers like a temperature or pressure.
+FORECAST_UNIT_KEYS = {
+    "temperature_unit",
+    "pressure_unit",
+    "wind_speed_unit",
+    "precipitation_unit",
+}
+
+
 async def test_get_forecast_tool(hass: HomeAssistant) -> None:
     """Test the exposed weather forecast tool returns forecast data."""
     await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
@@ -100,15 +110,14 @@ async def test_get_forecast_tool(hass: HomeAssistant) -> None:
         context,
     )
     today = dt_util.start_of_local_day()
-    assert response.data == {
-        "forecast": [
-            {
-                "datetime": today.isoformat(),
-                "condition": "sunny",
-                "temperature": None,
-            }
-        ]
-    }
+    assert response.data["forecast"] == [
+        {
+            "datetime": today.isoformat(),
+            "condition": "sunny",
+            "temperature": None,
+        }
+    ]
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
 
 
 async def test_get_forecast_tool_auto_selects_supported_cadence(
@@ -254,6 +263,30 @@ async def test_get_forecast_tool_normalizes_native_datetime(
     assert isinstance(response.data["forecast"][0]["datetime"], str)
 
 
+async def test_get_forecast_tool_includes_units(hass: HomeAssistant) -> None:
+    """Test the tool reports the entity's configured units alongside the forecast.
+
+    Bare forecast numbers (e.g. 20 for temperature) are ambiguous without a
+    unit, so the model needs the entity's configured units to interpret them.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    weather_state = hass.states.get(entity.entity_id)
+    assert weather_state is not None
+    assert response.data["units"] == {
+        key: weather_state.attributes[key] for key in FORECAST_UNIT_KEYS
+    }
+
+
 async def test_get_forecast_tool_ambiguous_target(hass: HomeAssistant) -> None:
     """Test the tool reports duplicate weather names instead of choosing one."""
     await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
@@ -313,7 +346,8 @@ async def test_get_forecast_tool_no_forecast_data(hass: HomeAssistant) -> None:
         _llm_context(),
     )
 
-    assert response.data == {"forecast": []}
+    assert response.data["forecast"] == []
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
 
 
 async def test_get_forecast_tool_not_offered_without_exposed_forecast(
@@ -366,20 +400,19 @@ async def test_get_forecast_tool_limits_requested_time_window(
         _llm_context(),
     )
 
-    assert response.data == {
-        "forecast": [
-            {
-                "datetime": today.replace(hour=12).isoformat(),
-                "condition": "rainy",
-                "temperature": None,
-            },
-            {
-                "datetime": today.replace(hour=14).isoformat(),
-                "condition": "sunny",
-                "temperature": None,
-            },
-        ]
-    }
+    assert response.data["forecast"] == [
+        {
+            "datetime": today.replace(hour=12).isoformat(),
+            "condition": "rainy",
+            "temperature": None,
+        },
+        {
+            "datetime": today.replace(hour=14).isoformat(),
+            "condition": "sunny",
+            "temperature": None,
+        },
+    ]
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
 
 
 async def test_get_forecast_tool_maps_weekday_to_next_occurrence(
@@ -514,6 +547,39 @@ async def test_get_forecast_tool_next_7_days_window_boundaries(
     assert conditions == ["rainy", "sunny"]
 
 
+async def test_get_forecast_tool_caps_interval_at_skipped_entry_gap(
+    hass: HomeAssistant,
+) -> None:
+    """Test a gap left by a skipped entry isn't stretched to cover stale data.
+
+    An entry's interval is normally capped by the next entry's start, but if
+    the provider skips an entry the gap to the next one is wider than a
+    single cadence step. The interval must still be capped at its own
+    cadence-derived end rather than stretched across the whole gap, or the
+    preceding day's forecast would be wrongly returned for a day with no
+    actual forecast data.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [
+        {"datetime": today.isoformat(), "condition": "rainy"},
+        # Day `today + 1` is skipped entirely by the provider.
+        {"datetime": (today + timedelta(days=2)).isoformat(), "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    assert response.data["forecast"] == []
+
+
+
 @pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
 async def test_get_forecast_tool_derives_interval_end_from_next_entry(
     hass: HomeAssistant,
@@ -576,7 +642,8 @@ async def test_get_forecast_tool_final_entry_fallback_uses_local_calendar_time(
     )
 
     assert not response.error
-    assert response.data == {"forecast": []}
+    assert response.data["forecast"] == []
+    assert response.data["units"].keys() == FORECAST_UNIT_KEYS
 
 
 @pytest.mark.freeze_time("2024-11-23T10:00:00+00:00")

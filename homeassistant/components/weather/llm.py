@@ -24,7 +24,17 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from . import SERVICE_GET_FORECASTS, Forecast, WeatherEntityFeature
-from .const import DOMAIN
+from .const import DOMAIN, WeatherEntityStateAttribute
+
+# Forecast fields whose values are reported in the entity's configured units;
+# the model can't reliably interpret a bare number (e.g. 20 may be °C or °F)
+# without being told which unit it's in.
+FORECAST_UNIT_ATTRIBUTES = (
+    WeatherEntityStateAttribute.TEMPERATURE_UNIT,
+    WeatherEntityStateAttribute.PRESSURE_UNIT,
+    WeatherEntityStateAttribute.WIND_SPEED_UNIT,
+    WeatherEntityStateAttribute.PRECIPITATION_UNIT,
+)
 
 # Forecast cadence (daily/hourly/twice_daily) is an implementation detail the
 # model must not guess: a wrong guess surfaces as a tool failure instead of
@@ -209,26 +219,40 @@ class GetForecastTool(Tool):
         matching_forecast: list[Forecast] = []
         for index, entry in enumerate(forecast):
             entry_start = _forecast_datetime(entry["datetime"])
-            # Prefer the next entry's own start as the end of this interval:
-            # adding a fixed duration can land on the wrong local wall-clock
-            # time across a DST change (e.g. a daily entry starting just
-            # before the clocks change). Only the last entry, which has no
-            # follow-up to derive an end from, falls back to the duration.
+            # Apply the duration in local wall-clock time rather than to the
+            # entry's (possibly fixed-offset) tzinfo directly: a provider's
+            # fixed UTC offset doesn't account for a DST change between the
+            # entry and its computed end, which would otherwise over- or
+            # under-shoot the real calendar boundary.
+            cadence_end = dt_util.as_local(entry_start) + duration
             if index + 1 < len(forecast):
-                entry_end = _forecast_datetime(forecast[index + 1]["datetime"])
+                # Prefer the next entry's own start as the end of this
+                # interval, since it reflects the provider's actual cadence
+                # (which may not exactly equal `duration`, e.g. across a DST
+                # change). Still cap it at the cadence-derived end: if the
+                # provider skipped an entry, the gap to the next one is
+                # larger than this entry's real coverage, and treating it as
+                # covering the whole gap would return stale data for the
+                # uncovered window in between.
+                entry_end = min(
+                    _forecast_datetime(forecast[index + 1]["datetime"]), cadence_end
+                )
             else:
-                # Apply the duration in local wall-clock time rather than to
-                # the entry's (possibly fixed-offset) tzinfo directly: a
-                # provider's fixed UTC offset doesn't account for a DST change
-                # between the entry and its computed end, which would
-                # otherwise over- or under-shoot the real calendar boundary.
-                entry_end = dt_util.as_local(entry_start) + duration
+                entry_end = cadence_end
             if entry_start < end and entry_end > start:
                 # Normalize to an ISO string: some providers (e.g. IPMA) put a
                 # native datetime object in this field, which isn't JSON-safe.
                 matching_forecast.append({**entry, "datetime": entry_start.isoformat()})
+        units = {
+            attribute: weather_state.attributes[attribute]
+            for attribute in FORECAST_UNIT_ATTRIBUTES
+            if attribute in weather_state.attributes
+        }
         return ToolResult(
-            data=cast(dict[str, JsonValueType], {"forecast": matching_forecast})
+            data=cast(
+                dict[str, JsonValueType],
+                {"forecast": matching_forecast, "units": units},
+            )
         )
 
 
