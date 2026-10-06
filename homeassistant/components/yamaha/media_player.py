@@ -10,6 +10,7 @@ from rxv import RXV
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -88,6 +89,8 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
+
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def __init__(
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
