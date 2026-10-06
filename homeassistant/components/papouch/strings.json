@@ -78,9 +78,6 @@
     "cannot_connect_device": {
       "message": "Failed to connect to device {name} ({location})."
     },
-    "command_failed": {
-      "message": "Failed to execute command {cmd} on {name}."
-    },
     "invalid_auth": {
       "message": "Invalid password of device {name} ({location})"
     },

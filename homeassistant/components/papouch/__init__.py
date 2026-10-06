@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 import aiohttp
-from aiopapouch import PapouchHTTPClient, create_device
+from aiopapouch import PapouchHTTPClient, create_network_device
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,14 +13,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    AUTH_FAILED_ERROR,
-    DEFAULT_WEB_PORT,
-    DOMAIN,
-    UNKNOWN_LOCATION,
-    UNKNOWN_NAME,
-)
-from .coordinator import PapouchDataUpdateCoordinator
+from .const import DEFAULT_WEB_PORT, DOMAIN, UNKNOWN_LOCATION, UNKNOWN_NAME
+from .coordinator import PapouchNetworkDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -28,11 +22,12 @@ if TYPE_CHECKING:
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
 
-type PapouchConfigEntry = ConfigEntry[PapouchDataUpdateCoordinator]
+type PapouchConfigEntry = ConfigEntry[PapouchNetworkDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> bool:
     """Set up Papouch device from a config entry."""
+
     session = async_get_clientsession(hass)
     password = entry.data.get(CONF_PASSWORD, "")
     web_port = entry.data.get(CONF_PORT, DEFAULT_WEB_PORT)
@@ -47,23 +42,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
 
-    name, location = await api_client.get_device_info()
     safe_name = name or UNKNOWN_NAME
     safe_location = location or UNKNOWN_LOCATION
 
     try:
-        device = await create_device(api_client)
-    except aiohttp.ClientError as err:
-        if (
-            isinstance(err, aiohttp.ClientResponseError)
-            and err.status == AUTH_FAILED_ERROR
-        ):
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"name": safe_name, "location": safe_location},
-            ) from err
+        device = await create_network_device(api_client)
+    except aiohttp.ClientResponseError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"name": safe_name, "location": safe_location},
+        ) from err
 
+    except aiohttp.ClientError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect_device",
@@ -80,15 +71,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
-        identifiers={(DOMAIN, device.mac_address)},
-        name=device.name,
-        manufacturer=device.manufacturer,
-        model=device.name,
-        suggested_area=device.location,
+        # MAC address is stored in identifier field
+        connections={(dr.CONNECTION_NETWORK_MAC, device.conf.identifier)},
+        identifiers={(DOMAIN, device.conf.identifier)},
+        name=device.conf.name,
+        manufacturer=device.conf.manufacturer,
+        model=device.conf.name,
+        suggested_area=device.conf.location,
     )
 
-    coordinator = PapouchDataUpdateCoordinator(hass, api_client, entry, device)
+    coordinator = PapouchNetworkDataUpdateCoordinator(hass, api_client, entry, device)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

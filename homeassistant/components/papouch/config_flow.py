@@ -10,7 +10,7 @@ from aiopapouch.exceptions import (
     DeviceConnectionError,
     DeviceLogicError,
 )
-import voluptuous as vol
+import probatio as prob
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
@@ -56,8 +56,8 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             TimeoutError,
         ):
             return {"base": "cannot_connect"}, None
-        else:
-            return {}, mode_device
+
+        return {}, mode_device
 
     async def _async_process_user_input(
         self, user_input: dict[str, Any]
@@ -94,7 +94,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             password=password or "",
             web_port=web_port,
         )
-        title_name = await _get_device_name(self.hass, ip_address, password or "")
+        title_name = await _get_device_name(
+            session, ip_address, password or "", web_port
+        )
 
         try:
             mac_address = await client.get_device_mac()
@@ -141,13 +143,13 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input and CONF_PORT in user_input:
             default_web_port = user_input[CONF_PORT]
 
-        schema = vol.Schema(
+        schema = prob.Schema(
             {
-                vol.Required(CONF_IP_ADDRESS, default=default_ip): str,
-                vol.Optional(CONF_PORT, default=default_web_port): vol.All(
-                    int, vol.Range(min=1, max=65536)
+                prob.Required(CONF_IP_ADDRESS, default=default_ip): str,
+                prob.Optional(CONF_PORT, default=default_web_port): prob.All(
+                    int, prob.Range(min=1, max=65536)
                 ),
-                vol.Optional(CONF_PASSWORD): str,
+                prob.Optional(CONF_PASSWORD): str,
             }
         )
 

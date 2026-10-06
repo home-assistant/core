@@ -1,10 +1,12 @@
 """Data update coordinator for the Papouch integration."""
 
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
-from aiopapouch import PapouchDevice, PapouchTransport
+from aiopapouch import PapouchDevice, PapouchHTTPClient, PapouchNetworkDevice
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,43 +18,57 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type PapouchConfigEntry = ConfigEntry[PapouchDataUpdateCoordinator]
+
+class PapouchBaseCoordinator(DataUpdateCoordinator, ABC):
+    """Base class for Papouch data update coordinators."""
+
+    @abstractmethod
+    def get_devices(self) -> Sequence[PapouchDevice]:
+        """Return a list of all managed devices."""
+        raise NotImplementedError
 
 
-class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Papouch data."""
+class PapouchNetworkDataUpdateCoordinator(PapouchBaseCoordinator):
+    """Class to manage fetching Papouch network data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        api_client: PapouchTransport,
-        entry: PapouchConfigEntry,
-        device: PapouchDevice,
+        api_client: PapouchHTTPClient,
+        entry: ConfigEntry,
+        device: PapouchNetworkDevice,
     ) -> None:
         """Initialize the coordinator."""
+
+        interval = entry.options.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=interval),
         )
         self.api_client = api_client
         self.device = device
 
     @override
-    async def _async_update_data(self) -> dict:
+    def get_devices(self) -> Sequence[PapouchNetworkDevice]:
+        """Return the single network device as a list."""
+        return [self.device]
+
+    @override
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
+
         try:
-            fresh_data = await self.api_client.fetch_data()
-            return await self.device.parse_fresh_data(fresh_data)
+            parsed_data = await self.device.get_fresh_data()
         except DeviceAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={
-                    "name": self.device.name,
-                    "location": self.device.location,
+                    "name": self.device.conf.name,
+                    "location": self.device.conf.location,
                 },
             ) from err
         except DeviceConnectionError as err:
@@ -60,7 +76,9 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_device",
                 translation_placeholders={
-                    "name": self.device.name,
-                    "location": self.device.location,
+                    "name": self.device.conf.name,
+                    "location": self.device.conf.location,
                 },
             ) from err
+
+        return {self.device.conf.identifier: parsed_data}
