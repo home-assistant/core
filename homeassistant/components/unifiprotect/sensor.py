@@ -384,9 +384,9 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     # Sensors connect over Bluetooth or SuperLink, which the public API does
-    # not tell apart, so the name stays generic; the key keeps the unique ID.
+    # not tell apart, so the name stays generic.
     ProtectSensorEntityDescription(
-        key="ble_signal",
+        key="signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,

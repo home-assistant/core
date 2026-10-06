@@ -199,7 +199,7 @@ async def test_sensor_setup_sensor(
         hass,
         Platform.SENSOR,
         sensor_all,
-        get_sensor_by_key(SENSE_SENSORS, "ble_signal"),
+        get_sensor_by_key(SENSE_SENSORS, "signal_strength"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -831,7 +831,7 @@ async def test_public_only_sensor_sense_end_to_end(
         "battery_level",
         "temperature_level",
         "motion_last_trip_time",
-        "ble_signal",
+        "signal_strength",
     } <= keys
     assert not keys & {"alarm_sound", "sensitivity", "mount_type", "paired_camera"}
     assert "humidity_level" not in keys

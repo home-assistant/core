@@ -8,6 +8,7 @@ from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.migrate import (
     SENSE_SETTING_MIRROR_BREAKS_IN,
     async_deprecate_sense_setting_mirrors,
+    async_migrate_sensor_signal_strength,
     async_remove_hdr_switch,
 )
 from homeassistant.const import Platform
@@ -554,3 +555,50 @@ async def test_migrate_hdr_switch_clears_deprecation_issue(
     async_remove_hdr_switch(hass, ufp.entry)
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecate_hdr_switch") is None
+
+
+async def test_migrate_sensor_signal_strength_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The ``ble_signal`` unique_id moves to ``signal_strength``, keeping the entity."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_ble_signal",
+        config_entry=ufp.entry,
+        suggested_object_id="old_signal",
+    )
+
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    migrated = entity_registry.async_get(entity.entity_id)
+    assert migrated is not None
+    assert migrated.id == entity.id
+    assert migrated.entity_id == "sensor.old_signal"
+    assert migrated.unique_id == f"{sensor_all.mac}_signal_strength"
+
+
+async def test_migrate_sensor_signal_strength_drops_duplicate(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """An old ``ble_signal`` entry is dropped when the new one already exists."""
+    old = entity_registry.async_get_or_create(
+        Platform.SENSOR, DOMAIN, f"{sensor_all.mac}_ble_signal", config_entry=ufp.entry
+    )
+    new = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_signal_strength",
+        config_entry=ufp.entry,
+    )
+
+    async_migrate_sensor_signal_strength(hass, ufp.entry)
+
+    assert entity_registry.async_get(old.entity_id) is None
+    assert entity_registry.async_get(new.entity_id) is not None
