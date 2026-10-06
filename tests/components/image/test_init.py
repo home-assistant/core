@@ -14,7 +14,7 @@ from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -533,7 +533,10 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Cannot write to /test/snapshot.jpg, no access to this path",
+    ):
         await hass.services.async_call(
             image.DOMAIN,
             image.SERVICE_SNAPSHOT,
@@ -556,8 +559,11 @@ async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("os.makedirs", side_effect=OSError),
-        pytest.raises(HomeAssistantError),
+        patch("os.makedirs", side_effect=OSError("Disk full")),
+        pytest.raises(
+            HomeAssistantError,
+            match="Cannot write image to /test/snapshot.jpg: Disk full",
+        ),
     ):
         await hass.services.async_call(
             image.DOMAIN,

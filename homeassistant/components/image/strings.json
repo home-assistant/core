@@ -4,6 +4,14 @@
       "name": "[%key:component::image::title%]"
     }
   },
+  "exceptions": {
+    "path_not_allowed": {
+      "message": "Cannot write to {filename}, no access to this path. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
+    },
+    "write_failed": {
+      "message": "Cannot write image to {filename}: {error}"
+    }
+  },
   "services": {
     "snapshot": {
       "description": "Takes a snapshot from an image.",
