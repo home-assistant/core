@@ -86,6 +86,8 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             self._raise_if_unclaimed()
             resources = await self.client.get_directives()
         except PermissionError:
+            # A denied list can also come from a re-authentication that lost the claim.
+            self._raise_if_unclaimed()
             return EnergyIDDirectivesData(resources={}, schedules={})
         except ClientResponseError as err:
             if err.status in (401, 403):
