@@ -43,6 +43,11 @@
     }
   },
   "entity": {
+    "button": {
+      "smoke_test": {
+        "name": "Start self-test"
+      }
+    },
     "event": {
       "smoke_detector_alarm": {
         "state_attributes": {
@@ -85,6 +90,16 @@
           "high": "Loud",
           "low": "Reduced",
           "medium": "Medium"
+        }
+      },
+      "vibration_sensitivity": {
+        "name": "Vibration sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "very_high": "Very high",
+          "very_low": "Very low"
         }
       }
     },
