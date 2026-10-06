@@ -6,10 +6,19 @@
   },
   "exceptions": {
     "path_not_allowed": {
-      "message": "Cannot write to {filename}, no access to this path. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
+      "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
     },
     "write_failed": {
-      "message": "Cannot write image to {filename}: {error}"
+      "message": "Cannot write image to {filename}."
+    },
+    "write_no_space": {
+      "message": "Cannot write image to {filename}: no space left on the device."
+    },
+    "write_permission_denied": {
+      "message": "Cannot write image to {filename}: permission denied."
+    },
+    "write_read_only": {
+      "message": "Cannot write image to {filename}: the file system is read-only."
     }
   },
   "services": {

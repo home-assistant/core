@@ -1,5 +1,6 @@
 """The tests for the image component."""
 
+import errno
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, mock_open, patch
@@ -535,7 +536,7 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         ServiceValidationError,
-        match="Cannot write to /test/snapshot.jpg, no access to this path",
+        match="Cannot write to /test/snapshot.jpg because access to this path is not allowed",
     ):
         await hass.services.async_call(
             image.DOMAIN,
@@ -548,7 +549,34 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
         )
 
 
-async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        (
+            OSError(errno.EACCES, "Permission denied"),
+            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        ),
+        (
+            OSError(errno.EPERM, "Operation not permitted"),
+            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        ),
+        (
+            OSError(errno.ENOSPC, "No space left on device"),
+            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
+        ),
+        (
+            OSError(errno.EROFS, "Read-only file system"),
+            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
+        ),
+        (
+            OSError(errno.EIO, "Input/output error"),
+            "Cannot write image to /test/snapshot.jpg$",
+        ),
+    ],
+)
+async def test_snapshot_service_os_error(
+    hass: HomeAssistant, side_effect: OSError, message: str
+) -> None:
     """Test snapshot service with os error."""
     mock_integration(hass, MockModule(domain="test"))
     mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
@@ -559,11 +587,8 @@ async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("os.makedirs", side_effect=OSError("Disk full")),
-        pytest.raises(
-            HomeAssistantError,
-            match="Cannot write image to /test/snapshot.jpg: Disk full",
-        ),
+        patch("os.makedirs", side_effect=side_effect),
+        pytest.raises(HomeAssistantError, match=message),
     ):
         await hass.services.async_call(
             image.DOMAIN,
