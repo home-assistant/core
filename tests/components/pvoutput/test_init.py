@@ -72,6 +72,7 @@ async def test_config_entry_authentication_failed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "authentication_failed"
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

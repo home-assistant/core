@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -324,7 +325,7 @@ async def test_offline_node(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that an offline node doesn't cause the entire update to fail."""
+    """Test that an offline or unknown state node doesn't cause the entire update to fail."""
     mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
     await setup_integration(hass, mock_config_entry)
 
@@ -335,6 +336,12 @@ async def test_offline_node(
 
     state = hass.states.get("binary_sensor.pve3_status")
     assert state.state == STATE_OFF
+
+    state = hass.states.get("sensor.pve3_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.pve4_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_new_vm_creates_entity(

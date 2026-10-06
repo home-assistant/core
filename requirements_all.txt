@@ -142,7 +142,7 @@ adb-shell[async]==0.4.4
 adext==0.4.7
 
 # homeassistant.components.adguard
-adguardhome==0.8.1
+adguardhome==1.0.0
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -1313,7 +1313,7 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.104
+holidays==0.106
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260930.1
@@ -1364,7 +1364,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==14.2.0
+ical==14.3.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -2033,7 +2033,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.4
+pyElectra==1.2.5
 
 # homeassistant.components.emby
 pyEmby==1.10
@@ -2532,7 +2532,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.48
+pyportainer==1.0.49
 
 # homeassistant.components.probe_plus
 pyprobeplus==2.1.0
@@ -2667,7 +2667,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.8.0
+pystiebeleltron==0.9.0
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -3231,7 +3231,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.17.2
+tesla-fleet-api==1.17.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3461,7 +3461,7 @@ wiim==0.1.7
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.23.0
+wled==1.0.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.52

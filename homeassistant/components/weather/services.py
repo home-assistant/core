@@ -11,9 +11,9 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 
-from .const import DATA_COMPONENT, SERVICE_GET_FORECASTS, WeatherEntityFeature
+from .const import DATA_COMPONENT, DOMAIN, SERVICE_GET_FORECASTS, WeatherEntityFeature
 
 if TYPE_CHECKING:
     from . import WeatherEntity
@@ -21,8 +21,13 @@ if TYPE_CHECKING:
 
 def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
     """Raise error on attempt to get an unsupported forecast."""
-    raise HomeAssistantError(
-        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="unsupported_forecast_type",
+        translation_placeholders={
+            "entity_id": entity_id,
+            "forecast_type": forecast_type,
+        },
     )
 
 
