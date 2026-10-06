@@ -29,7 +29,7 @@ from .const import (
     SOURCE_CLOUD,
 )
 from .http import GoogleAssistantView, GoogleConfig
-from .services import async_setup_reload_service, async_setup_services
+from .services import async_setup_services
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
 
@@ -107,9 +107,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     hass.data[DATA_CONFIG] = yaml_config[DOMAIN]
 
-    if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
-        async_setup_services(hass)
-    async_setup_reload_service(hass)
+    async_setup_services(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
