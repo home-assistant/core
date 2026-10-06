@@ -29,6 +29,7 @@ import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
+    KEY_REJECTED_FAULTS,
     BadGateway,
     BluetoothTimeout,
     BluetoothTransportError,
@@ -2146,6 +2147,40 @@ async def test_subentry_reconfigure_requires_key_approval(hass: HomeAssistant) -
     }
     vehicle.pair.assert_awaited_once()
     mock_reload.assert_called_once_with(entry.entry_id)
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+@pytest.mark.parametrize(
+    "key_fault",
+    [pytest.param(fault(), id=fault.__name__) for fault in KEY_REJECTED_FAULTS],
+)
+async def test_subentry_reconfigure_key_rejected_fault_offers_pairing(
+    hass: HomeAssistant, key_fault: TeslaFleetError
+) -> None:
+    """Every key-rejected handshake fault offers re-approval instead of cannot_connect."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+    vehicle = _mock_vehicle()
+    vehicle.handshakeVehicleSecurity = AsyncMock(side_effect=key_fault)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instructions"
 
 
 async def test_subentry_reconfigure_no_bluetooth(hass: HomeAssistant) -> None:

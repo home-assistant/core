@@ -22,7 +22,6 @@ from tesla_fleet_api.exceptions import (
     BluetoothTransportError,
     EnergyGatewayUnreachable,
     InvalidToken,
-    NotOnWhitelistFault,
     PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
@@ -32,6 +31,7 @@ from tesla_fleet_api.exceptions import (
     WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
     WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
     WhitelistOperationLocalEntityAuthFailedUIDenied,
+    is_key_rejected,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
@@ -417,9 +417,10 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             assert self._vehicle is not None
         try:
             await self._vehicle.handshakeVehicleSecurity()
-        except NotOnWhitelistFault:
-            return await self.async_step_instructions()
         except (BleakError, TeslaFleetError, TimeoutError) as err:
+            # Re-approval clears every fault is_key_rejected() reports.
+            if is_key_rejected(err):
+                return await self.async_step_instructions()
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
             return self.async_show_form(
