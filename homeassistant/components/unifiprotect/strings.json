@@ -687,6 +687,9 @@
       "resolution_hd_video": {
         "name": "Resolution: HD video"
       },
+      "signal_quality": {
+        "name": "Signal quality"
+      },
       "storage_used": {
         "name": "Storage used"
       },
@@ -834,6 +837,9 @@
     },
     "cannot_connect": {
       "message": "Could not connect to the UniFi Protect console"
+    },
+    "chime_ringtone_not_set": {
+      "message": "No ringtone is selected for {camera_name} on this chime, so its ring volumes cannot be changed. Select one in the UniFi Protect app."
     },
     "command_error": {
       "message": "Error communicating with UniFi Protect while sending command: {error}"
