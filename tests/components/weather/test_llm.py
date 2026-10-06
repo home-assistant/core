@@ -494,6 +494,37 @@ async def test_get_forecast_tool_derives_interval_end_from_next_entry(
     assert conditions == ["sunny"]
 
 
+@pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
+async def test_get_forecast_tool_final_entry_fallback_uses_local_calendar_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test the final entry's duration fallback doesn't overshoot across DST.
+
+    When there's no following entry to derive an end from, the fallback must
+    still respect the real calendar boundary: a truncated forecast whose last
+    entry is the DST-shortened 2024-03-10 (America/New_York) must not leak
+    into "tomorrow" just because adding a fixed 24-hour duration to its
+    fixed-offset timestamp overshoots local midnight by an hour.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = [
+        {"datetime": "2024-03-09T00:00:00-05:00", "condition": "cloudy"},
+        {"datetime": "2024-03-10T00:00:00-05:00", "condition": "foggy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    assert response.data == {"forecast": []}
+
+
 @pytest.mark.freeze_time("2024-11-23T10:00:00+00:00")
 async def test_get_forecast_tool_next_24_hours_window_boundaries(
     hass: HomeAssistant,

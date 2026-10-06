@@ -217,7 +217,12 @@ class GetForecastTool(Tool):
             if index + 1 < len(forecast):
                 entry_end = _forecast_datetime(forecast[index + 1]["datetime"])
             else:
-                entry_end = entry_start + duration
+                # Apply the duration in local wall-clock time rather than to
+                # the entry's (possibly fixed-offset) tzinfo directly: a
+                # provider's fixed UTC offset doesn't account for a DST change
+                # between the entry and its computed end, which would
+                # otherwise over- or under-shoot the real calendar boundary.
+                entry_end = dt_util.as_local(entry_start) + duration
             if entry_start < end and entry_end > start:
                 # Normalize to an ISO string: some providers (e.g. IPMA) put a
                 # native datetime object in this field, which isn't JSON-safe.
