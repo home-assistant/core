@@ -16,7 +16,8 @@ from ritualsgenie import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -84,7 +85,25 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
         except RitualsGenieError as err:
             raise _update_failed(err) from err
 
+        self._async_store_token()
+
         return {hub.hublot: hub for hub in hubs}
+
+    @callback
+    def _async_store_token(self) -> None:
+        """Store a new token, so a restart doesn't need another login.
+
+        Rituals locks an account after about a dozen logins in an hour, which
+        a few restarts in a row would otherwise get close to. The client logs
+        in by itself; this update runs often enough to pick up any new token.
+        """
+        token = self.client.token
+        if token is None or token == self.config_entry.data.get(CONF_TOKEN):
+            return
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data={**self.config_entry.data, CONF_TOKEN: token}
+        )
 
 
 class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None]):
