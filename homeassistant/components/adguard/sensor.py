@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, override
 
-from adguardhome import AdGuardHome
+from adguardhome import AdGuardHome, Stats
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,54 +27,75 @@ class AdGuardHomeEntityDescription(SensorEntityDescription):
     value_fn: Callable[[AdGuardHome], Coroutine[Any, Any, int | float]]
 
 
+async def _stat(
+    adguard: AdGuardHome, value: Callable[[Stats], int | float]
+) -> int | float:
+    """Return a value from the statistics of AdGuard Home."""
+    return value(await adguard.stats.get())
+
+
+async def _rules_count(adguard: AdGuardHome) -> int:
+    """Return the number of rules in the blocklists of AdGuard Home."""
+    return sum(
+        blocklist.rules_count for blocklist in await adguard.filtering.blocklists.list()
+    )
+
+
 SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
     AdGuardHomeEntityDescription(
         key="dns_queries",
         translation_key="dns_queries",
         native_unit_of_measurement="queries",
-        value_fn=lambda adguard: adguard.stats.dns_queries(),
+        value_fn=lambda adguard: _stat(adguard, lambda stats: stats.dns_queries),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_filtering",
         translation_key="dns_queries_blocked",
         native_unit_of_measurement="queries",
-        value_fn=lambda adguard: adguard.stats.blocked_filtering(),
+        value_fn=lambda adguard: _stat(adguard, lambda stats: stats.blocked_filtering),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_percentage",
         translation_key="dns_queries_blocked_ratio",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda adguard: adguard.stats.blocked_percentage(),
+        value_fn=lambda adguard: _stat(adguard, lambda stats: stats.blocked_percentage),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_parental",
         translation_key="parental_control_blocked",
         native_unit_of_measurement="requests",
-        value_fn=lambda adguard: adguard.stats.replaced_parental(),
+        value_fn=lambda adguard: _stat(adguard, lambda stats: stats.blocked_parental),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_safebrowsing",
         translation_key="safe_browsing_blocked",
         native_unit_of_measurement="requests",
-        value_fn=lambda adguard: adguard.stats.replaced_safebrowsing(),
+        value_fn=lambda adguard: _stat(
+            adguard, lambda stats: stats.blocked_safebrowsing
+        ),
     ),
     AdGuardHomeEntityDescription(
         key="enforced_safesearch",
         translation_key="safe_searches_enforced",
         native_unit_of_measurement="requests",
-        value_fn=lambda adguard: adguard.stats.replaced_safesearch(),
+        value_fn=lambda adguard: _stat(
+            adguard, lambda stats: stats.enforced_safesearch
+        ),
     ),
     AdGuardHomeEntityDescription(
         key="average_speed",
         translation_key="average_processing_speed",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        value_fn=lambda adguard: adguard.stats.avg_processing_time(),
+        value_fn=lambda adguard: _stat(
+            adguard,
+            lambda stats: stats.avg_processing_time / timedelta(milliseconds=1),
+        ),
     ),
     AdGuardHomeEntityDescription(
         key="rules_count",
         translation_key="rules_count",
         native_unit_of_measurement="rules",
-        value_fn=lambda adguard: adguard.filtering.rules_count(allowlist=False),
+        value_fn=_rules_count,
         entity_registry_enabled_default=False,
     ),
 )
@@ -112,8 +133,8 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
         self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
             [
                 DOMAIN,
-                self.adguard.host,
-                str(self.adguard.port),
+                entry.data[CONF_HOST],
+                str(entry.data[CONF_PORT]),
                 "sensor",
                 description.key,
             ]
