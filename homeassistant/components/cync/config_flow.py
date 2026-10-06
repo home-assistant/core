@@ -72,6 +72,16 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return await self._create_config_entry(self.cync_auth.username)
 
+            if self.source == SOURCE_REAUTH:
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors=errors,
+                    description_placeholders={
+                        CONF_EMAIL: self._get_reauth_entry().title
+                    },
+                )
+
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
@@ -114,7 +124,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         """Attempt to log in with user email and password, and return the error dict."""
         errors: dict[str, str] = {}
 
-        if not self.cync_auth:
+        if CONF_EMAIL in user_input:
             self.cync_auth = Auth(
                 async_get_clientsession(self.hass),
                 username=user_input[CONF_EMAIL],
