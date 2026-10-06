@@ -1,8 +1,10 @@
 """Test KNX DPT default attributes."""
 
 import pytest
+from xknx.dpt import DPTBase
 
 from homeassistant.components.knx.dpt import (
+    _binary_sensor_device_classes,
     _sensor_device_classes,
     _sensor_state_class_overrides,
     _sensor_unit_overrides,
@@ -40,3 +42,12 @@ def test_dpt_default_device_classes(dpt: str) -> None:
         # this test shall still check for correct device_class and unit_of_measurement
         number_config |= {"min": -500000, "max": 500000}
     assert _number_limit_sub_validator(number_config)
+
+
+@pytest.mark.parametrize("dpt", sorted(_binary_sensor_device_classes))
+def test_binary_sensor_default_device_classes(dpt: str) -> None:
+    """Test binary sensor default device classes are keyed by DPT 1 sub-types."""
+    transcoder = DPTBase.parse_transcoder(dpt)
+    assert transcoder is not None
+    assert transcoder.dpt_main_number == 1
+    assert transcoder.dpt_number_str() == dpt
