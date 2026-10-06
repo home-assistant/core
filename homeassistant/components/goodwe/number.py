@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 class GoodweNumberEntityDescription(NumberEntityDescription):
     """Class describing Goodwe number entities."""
 
-    getter: Callable[[Inverter], Awaitable[int]]
+    getter: Callable[[Inverter], Awaitable[int | None]]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
 
@@ -101,6 +101,10 @@ async def async_setup_entry(
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
+        if current_value is None:
+            # Inverter rejected the setting (e.g. register not available on this model)
+            _LOGGER.debug("Inverter setting %s is not available", description.key)
+            continue
 
         entities.append(
             InverterNumberEntity(device_info, description, inverter, current_value)
@@ -134,6 +138,8 @@ class InverterNumberEntity(NumberEntity):
     async def async_update(self) -> None:
         """Get the current value from inverter."""
         value = await self.entity_description.getter(self._inverter)
+        if value is None:
+            return
         self._attr_native_value = float(value)
 
     @override
