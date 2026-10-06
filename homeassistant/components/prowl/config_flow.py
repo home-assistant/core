@@ -9,7 +9,7 @@ import prowlpy
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 
-from .const import CONF_LEGACY_SERVICE_NAME, DOMAIN
+from .const import DOMAIN
 from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,10 +57,10 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_API_KEY: api_key})
 
         # Not validated: API key or connection problems surface on entry setup
-        name = import_data.get(CONF_NAME)
+        # The title is the name of the legacy notify service
         return self.async_create_entry(
-            title=name or "Prowl",
-            data={CONF_API_KEY: api_key, CONF_LEGACY_SERVICE_NAME: name},
+            title=import_data.get(CONF_NAME) or "Prowl",
+            data={CONF_API_KEY: api_key},
         )
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:

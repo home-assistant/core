@@ -6,7 +6,7 @@ import prowlpy
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config import config_per_platform
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME, DOMAIN, PLATFORMS
+from .const import CONF_ENTRY, DOMAIN, PLATFORMS
 from .helpers import async_verify_key
 from .issue import async_create_yaml_deprecated_issue
 
@@ -54,16 +54,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError(f"Failed to validate Prowl API key ({ex})") from ex
 
     # While YAML for this API key is present, YAML sets up the legacy service
-    if (
-        CONF_LEGACY_SERVICE_NAME in entry.data
-        and entry.data[CONF_API_KEY] not in yaml_api_keys
-    ):
+    if entry.source == SOURCE_IMPORT and entry.data[CONF_API_KEY] not in yaml_api_keys:
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,
                 Platform.NOTIFY,
                 DOMAIN,
-                {CONF_NAME: entry.data[CONF_LEGACY_SERVICE_NAME], CONF_ENTRY: entry},
+                {CONF_NAME: entry.title, CONF_ENTRY: entry},
                 {},
             )
         )

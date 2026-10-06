@@ -1,13 +1,12 @@
 """Test Prowl config flow."""
 
-from typing import Any
 from unittest.mock import AsyncMock
 
 import prowlpy
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAME, DOMAIN
+from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -121,15 +120,14 @@ async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) ->
 
 
 @pytest.mark.parametrize(
-    ("import_data", "expected_title", "expected_legacy_service_name"),
+    ("import_data", "expected_title"),
     [
         pytest.param(
             {CONF_API_KEY: TEST_API_KEY, CONF_NAME: "My Prowl"},
             "My Prowl",
-            "My Prowl",
             id="with_name",
         ),
-        pytest.param({CONF_API_KEY: TEST_API_KEY}, "Prowl", None, id="without_name"),
+        pytest.param({CONF_API_KEY: TEST_API_KEY}, "Prowl", id="without_name"),
     ],
 )
 @pytest.mark.usefixtures("mock_prowlpy")
@@ -137,7 +135,6 @@ async def test_flow_import(
     hass: HomeAssistant,
     import_data: dict[str, str],
     expected_title: str,
-    expected_legacy_service_name: str | None,
 ) -> None:
     """Test importing a YAML configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -148,28 +145,25 @@ async def test_flow_import(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    assert result["data"] == {
-        CONF_API_KEY: TEST_API_KEY,
-        CONF_LEGACY_SERVICE_NAME: expected_legacy_service_name,
-    }
+    assert result["data"] == {CONF_API_KEY: TEST_API_KEY}
 
 
 @pytest.mark.parametrize(
-    "entry_data",
+    "source",
     [
-        pytest.param(CONF_INPUT, id="set_up_in_ui"),
-        pytest.param(
-            {**CONF_INPUT, CONF_LEGACY_SERVICE_NAME: "other"}, id="imported_before"
-        ),
+        pytest.param(config_entries.SOURCE_USER, id="set_up_in_ui"),
+        pytest.param(config_entries.SOURCE_IMPORT, id="imported_before"),
     ],
 )
 async def test_flow_import_existing_entry(
     hass: HomeAssistant,
     mock_prowlpy: AsyncMock,
-    entry_data: dict[str, Any],
+    source: str,
 ) -> None:
     """Test importing YAML for an API key that already has an entry."""
-    entry = MockConfigEntry(domain=DOMAIN, title="Prowl", data=entry_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Prowl", data=CONF_INPUT, source=source
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -180,6 +174,7 @@ async def test_flow_import_existing_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == entry_data
+    assert entry.title == "Prowl"
+    assert entry.data == CONF_INPUT
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     mock_prowlpy.verify_key.assert_not_called()
