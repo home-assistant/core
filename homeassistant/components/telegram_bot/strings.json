@@ -198,6 +198,9 @@
     "failed_to_load_url": {
       "message": "Failed to load URL: {error}"
     },
+    "invalid_api_key": {
+      "message": "The Telegram bot API token is invalid."
+    },
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },

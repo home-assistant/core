@@ -14,6 +14,7 @@ async def test_home_assistant_restart_not_required(hass: HomeAssistant) -> None:
 
     assert not state.home_assistant_restart_required
     assert state.as_dict() == {
+        "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": False,
         "home_assistant_restart_sources": [],
         "host_reboot_required": False,
@@ -37,11 +38,13 @@ async def test_set_home_assistant_restart_required(hass: HomeAssistant) -> None:
     assert system_state.async_get(hass).home_assistant_restart_required
     assert updates == [
         {
+            "home_assistant_restart_dismissed": False,
             "home_assistant_restart_required": True,
             "home_assistant_restart_sources": ["hacs"],
             "host_reboot_required": False,
         },
         {
+            "home_assistant_restart_dismissed": False,
             "home_assistant_restart_required": True,
             "home_assistant_restart_sources": ["demo", "hacs"],
             "host_reboot_required": False,
@@ -95,3 +98,33 @@ async def test_set_host_reboot_required(hass: HomeAssistant) -> None:
 
     assert updates == [True, False]
     assert not system_state.async_get(hass).host_reboot_required
+
+
+async def test_dismiss(hass: HomeAssistant) -> None:
+    """Test a dismissed restart stays required, until another integration asks."""
+    updates: list[bool] = []
+    system_state.async_subscribe(
+        hass,
+        callback(lambda state: updates.append(state.home_assistant_restart_dismissed)),
+    )
+
+    # Nothing pending, so nothing to put off.
+    system_state.async_dismiss(hass)
+
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+    system_state.async_dismiss(hass)
+    system_state.async_dismiss(hass)
+
+    state = system_state.async_get(hass)
+    assert state.home_assistant_restart_required
+    assert state.home_assistant_restart_dismissed
+
+    # The same integration asking again is not news.
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+    assert system_state.async_get(hass).home_assistant_restart_dismissed
+
+    system_state.async_set_home_assistant_restart_required(hass, "demo")
+    await hass.async_block_till_done()
+
+    assert not system_state.async_get(hass).home_assistant_restart_dismissed
+    assert updates == [False, True, False]

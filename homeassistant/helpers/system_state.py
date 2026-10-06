@@ -5,6 +5,9 @@ Home Assistant creates a fresh instance, and that is what clears it.
 
 The reboot flag is owned by Supervisor, which keeps it across restarts of
 Home Assistant. The hassio integration mirrors it here.
+
+An admin can put off a pending restart. That only hides it from the
+interface until another integration asks; the restart stays required.
 """
 
 from collections.abc import Callable
@@ -27,6 +30,7 @@ class SystemState:
     """Snapshot of the pending restart and reboot state of the running instance."""
 
     home_assistant_restart_sources: frozenset[str] = frozenset()
+    home_assistant_restart_dismissed_sources: frozenset[str] = frozenset()
     host_reboot_required: bool = False
 
     @property
@@ -34,9 +38,18 @@ class SystemState:
         """Return if a restart of Home Assistant is required."""
         return bool(self.home_assistant_restart_sources)
 
+    @property
+    def home_assistant_restart_dismissed(self) -> bool:
+        """Return if the pending restart was put off by an admin."""
+        return self.home_assistant_restart_required and (
+            self.home_assistant_restart_sources
+            <= self.home_assistant_restart_dismissed_sources
+        )
+
     def as_dict(self) -> dict[str, bool | list[str]]:
         """Return a JSON serializable representation."""
         return {
+            "home_assistant_restart_dismissed": self.home_assistant_restart_dismissed,
             "home_assistant_restart_required": self.home_assistant_restart_required,
             "home_assistant_restart_sources": sorted(
                 self.home_assistant_restart_sources
@@ -49,6 +62,13 @@ class SystemState:
 def async_get(hass: HomeAssistant) -> SystemState:
     """Return the system state of the running instance."""
     return hass.data.get(DATA_SYSTEM_STATE) or SystemState()
+
+
+@callback
+def _async_update(hass: HomeAssistant, system_state: SystemState) -> None:
+    """Store a new snapshot and tell the subscribers."""
+    hass.data[DATA_SYSTEM_STATE] = system_state
+    async_dispatcher_send_internal(hass, SIGNAL_SYSTEM_STATE_UPDATED, system_state)
 
 
 @callback
@@ -66,13 +86,15 @@ def async_set_home_assistant_restart_required(hass: HomeAssistant, domain: str) 
     if domain in system_state.home_assistant_restart_sources:
         return
 
-    system_state = hass.data[DATA_SYSTEM_STATE] = replace(
-        system_state,
-        home_assistant_restart_sources=(
-            system_state.home_assistant_restart_sources | {domain}
+    _async_update(
+        hass,
+        replace(
+            system_state,
+            home_assistant_restart_sources=(
+                system_state.home_assistant_restart_sources | {domain}
+            ),
         ),
     )
-    async_dispatcher_send_internal(hass, SIGNAL_SYSTEM_STATE_UPDATED, system_state)
 
 
 @callback
@@ -96,7 +118,22 @@ def async_set_host_reboot_required(hass: HomeAssistant, required: bool) -> None:
     if system_state.host_reboot_required is required:
         return
 
-    system_state = hass.data[DATA_SYSTEM_STATE] = replace(
-        system_state, host_reboot_required=required
+    _async_update(hass, replace(system_state, host_reboot_required=required))
+
+
+@callback
+def async_dismiss(hass: HomeAssistant) -> None:
+    """Put off what is pending right now, until something new asks."""
+    hass.verify_event_loop_thread("system_state.async_dismiss")
+
+    system_state = async_get(hass)
+    dismissed = replace(
+        system_state,
+        home_assistant_restart_dismissed_sources=(
+            system_state.home_assistant_restart_sources
+        ),
     )
-    async_dispatcher_send_internal(hass, SIGNAL_SYSTEM_STATE_UPDATED, system_state)
+    if dismissed == system_state:
+        return
+
+    _async_update(hass, dismissed)
