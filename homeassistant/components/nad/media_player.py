@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -82,6 +83,7 @@ def setup_platform(
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_icon = "mdi:speaker-multiple"
     _attr_supported_features = SUPPORT_NAD
 
