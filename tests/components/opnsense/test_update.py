@@ -714,6 +714,37 @@ async def test_firmware_privilege_missing_issue_cleared_on_unload(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_firmware_privilege_missing_issue_cleared_when_update_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Clear the privilege repair when the update entity is disabled."""
+    issue_id = get_firmware_privilege_issue_id(mock_config_entry.entry_id)
+    mock_opnsense_client.get_firmware_update_info.side_effect = (
+        OPNsensePrivilegeMissing("missing System: Firmware privilege")
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    entity_id = entity_registry.async_get_entity_id(
+        "update", DOMAIN, "mocked_unique_id"
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert hass.states.get(entity_id) is None
+    mock_opnsense_client.get_firmware_update_info.assert_awaited_once()
+
+
 async def test_disabled_update_does_not_fetch_firmware_status(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -17,14 +17,14 @@ from homeassistant.components.update import (
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, get_firmware_privilege_issue_id
 from .coordinator import OPNsenseFirmwareCoordinator
 from .types import OPNsenseConfigEntry
 
@@ -108,6 +108,11 @@ class OPNsenseFirmwareUpdate(
     def _stop_upgrade_tracking(self) -> None:
         """Stop polling firmware upgrade status."""
         self._upgrade_status_generation += 1
+        ir.async_delete_issue(
+            self.hass,
+            DOMAIN,
+            get_firmware_privilege_issue_id(self.coordinator.entry.entry_id),
+        )
         if self._unsub_upgrade_status is not None:
             self._unsub_upgrade_status()
             self._unsub_upgrade_status = None
