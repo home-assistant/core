@@ -61,6 +61,7 @@ from homeassistant.components.teslemetry.const import (
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
     TOKEN_URL,
+    VEHICLE_KEY_FILE,
 )
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -1568,7 +1569,12 @@ async def test_subentry_scan_key_load_recovers(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "scan"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"base": "key_load_failed"}
+        # The error names the key file so the user knows what to fix.
+        assert result["description_placeholders"] == {
+            "vin": VIN,
+            "key_file": hass.config.path(VEHICLE_KEY_FILE),
+        }
         assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
         result = await hass.config_entries.subentries.async_configure(
@@ -1736,6 +1742,20 @@ async def test_subentry_add_flow_keeps_device_on_parent(
 async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> None:
     """The add flow aborts when every account vehicle is already added."""
     entry = await _setup_paired_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "all_vehicles_added"
+
+
+@pytest.mark.usefixtures("enable_bluetooth", "mock_energy_only")
+async def test_subentry_add_flow_account_has_no_vehicles(hass: HomeAssistant) -> None:
+    """The add flow aborts when the account has no vehicles to add."""
+    entry = await _setup_account_entry(hass)
 
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_VEHICLE),

@@ -1476,6 +1476,7 @@ async def test_async_setup_entry_failed(
 
     await hass.async_block_till_done()
     assert mock_broadcast_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_broadcast_config_entry.error_reason_translation_key == "invalid_api_key"
 
 
 async def test_answer_callback_query(

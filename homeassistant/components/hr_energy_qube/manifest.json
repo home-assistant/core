@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["python_qube_heatpump"],
   "quality_scale": "silver",
-  "requirements": ["python-qube-heatpump==1.15.0"]
+  "requirements": ["python-qube-heatpump==1.16.0"]
 }

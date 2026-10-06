@@ -1,6 +1,7 @@
 """The tests for the camera component."""
 
 from collections.abc import Callable
+import errno
 from http import HTTPStatus
 import io
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
@@ -25,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -274,8 +275,8 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
             "homeassistant.components.camera.services.os.makedirs",
         ),
         pytest.raises(
-            HomeAssistantError,
-            match="Cannot write `/test/snapshot.jpg`, no access to path",
+            ServiceValidationError,
+            match="Cannot write to /test/snapshot.jpg because access to this path is not allowed",
         ),
     ):
         await hass.services.async_call(
@@ -291,23 +292,48 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_camera")
 @pytest.mark.parametrize(
-    ("target", "side_effect"),
+    ("target", "side_effect", "message"),
     [
-        ("homeassistant.components.camera.services.os.makedirs", OSError),
+        (
+            "homeassistant.components.camera.services.os.makedirs",
+            OSError(errno.EACCES, "Permission denied"),
+            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        ),
+        (
+            "homeassistant.components.camera.services.os.makedirs",
+            OSError(errno.EPERM, "Operation not permitted"),
+            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        ),
+        (
+            "homeassistant.components.camera.services.os.makedirs",
+            OSError(errno.ENOSPC, "No space left on device"),
+            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
+        ),
+        (
+            "homeassistant.components.camera.services.os.makedirs",
+            OSError(errno.EROFS, "Read-only file system"),
+            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
+        ),
+        (
+            "homeassistant.components.camera.services.os.makedirs",
+            OSError(errno.EIO, "Input/output error"),
+            "Cannot write image to /test/snapshot.jpg$",
+        ),
         (
             "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
             TimeoutError,
+            "Unable to get snapshot: timed out after 10 seconds",
         ),
     ],
 )
 async def test_snapshot_service_error(
-    hass: HomeAssistant, target: str, side_effect: Exception
+    hass: HomeAssistant, target: str, side_effect: Exception, message: str
 ) -> None:
     """Test snapshot service with error."""
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
         patch(target, side_effect=side_effect),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match=message),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -587,19 +613,18 @@ async def test_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> 
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_record_service_invalid_path(hass: HomeAssistant) -> None:
-    """Test record service with invalid path."""
-    with (
-        patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(HomeAssistantError),
+async def test_record_service_not_supported(hass: HomeAssistant) -> None:
+    """Test record service on a camera without stream support."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="Camera camera.demo_camera does not support recording",
     ):
-        # Call service
         await hass.services.async_call(
             camera.DOMAIN,
             camera.SERVICE_RECORD,
             {
                 ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.CONF_FILENAME: "/my/invalid/path",
+                camera.CONF_FILENAME: "/test/recording.mp4",
             },
             blocking=True,
         )

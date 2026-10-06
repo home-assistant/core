@@ -469,7 +469,7 @@ aiotedee==0.3.0
 aiothreema==0.1.0
 
 # homeassistant.components.tractive
-aiotractive==1.0.3
+aiotractive==1.1.0
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -2535,7 +2535,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.48
+pyportainer==1.0.49
 
 # homeassistant.components.probe_plus
 pyprobeplus==2.1.0
@@ -2800,7 +2800,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.15.0
+python-qube-heatpump==1.16.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
