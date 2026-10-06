@@ -24,6 +24,9 @@ APPLIANCE_FIXTURES = [
     "electrolux_dehumidifier",
     "electrolux_ac",
     "electrolux_dam_ac",
+    "electrolux_dishwasher",
+    "electrolux_washer_dryer",
+    "electrolux_washing_machine",
 ]
 
 

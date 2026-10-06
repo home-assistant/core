@@ -200,8 +200,20 @@
           "running": "Running"
         }
       },
+      "bottomoven_running_time": {
+        "name": "Lower cavity running time"
+      },
+      "bottomoven_start_at": {
+        "name": "Lower cavity start at"
+      },
+      "bottomoven_time_left": {
+        "name": "Lower cavity time left"
+      },
       "display_temperature": {
         "name": "Current temperature"
+      },
+      "end_at": {
+        "name": "End at"
       },
       "food_probe_state": {
         "name": "Food probe state",
@@ -221,6 +233,24 @@
           "not_safety_relevant_enabled": "Not safety relevant enabled",
           "temporary_locked": "Temporarily locked"
         }
+      },
+      "running_time": {
+        "name": "Running time"
+      },
+      "start_at": {
+        "name": "Start at"
+      },
+      "time_left": {
+        "name": "Time left"
+      },
+      "upperoven_running_time": {
+        "name": "Upper cavity running time"
+      },
+      "upperoven_start_at": {
+        "name": "Upper cavity start at"
+      },
+      "upperoven_time_left": {
+        "name": "Upper cavity time left"
       }
     }
   },
