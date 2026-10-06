@@ -11,8 +11,10 @@
       "stop_not_found": "The stop was not found."
     },
     "error": {
+      "api_parse_error": "Error parsing the Bizkaibus response.",
       "cannot_connect": "Failed to connect to Bizkaibus.",
-      "invalid_stop_id": "The stop identifier is not valid."
+      "invalid_stop_id": "The stop identifier is not valid.",
+      "stop_not_found": "The stop was not found."
     },
     "flow_title": "Adding Bizkaibus integration",
     "step": {

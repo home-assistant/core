@@ -133,7 +133,7 @@ async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "api_parse_error"}
 
 
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
@@ -549,7 +549,7 @@ async def test_reconfigure_step_with_parse_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "api_parse_error"}
 
 
 async def test_reconfigure_step_with_offline_stop(hass: HomeAssistant) -> None:
@@ -678,7 +678,7 @@ async def test_options_flow_parse_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "api_parse_error"
 
 
 async def test_import_flow(hass: HomeAssistant) -> None:
@@ -700,17 +700,19 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "expected_reason"),
     [
-        pytest.param(
+        (
             BizkaibusConnectionError("Bizkaibus service returned NOINFO"),
-            id="connection",
+            "cannot_connect",
         ),
-        pytest.param(BizkaibusParseError(), id="parse"),
+        (BizkaibusParseError(), "api_parse_error"),
     ],
 )
 async def test_import_flow_factory_error(
-    hass: HomeAssistant, error: BizkaibusConnectionError | BizkaibusParseError
+    hass: HomeAssistant,
+    error: BizkaibusConnectionError | BizkaibusParseError,
+    expected_reason: str,
 ) -> None:
     """Test importing a stop aborts when the API factory returns an error."""
     with patch(
@@ -722,7 +724,7 @@ async def test_import_flow_factory_error(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason
 
 
 async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:
