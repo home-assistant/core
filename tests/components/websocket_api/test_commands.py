@@ -47,6 +47,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
+    system_state,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
@@ -3573,6 +3574,50 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["id"] == subscription
     assert msg["type"] == "event"
     assert msg["event"] == message
+
+
+async def test_subscribe_system_state(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test subscribing to the system state."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["hacs"],
+    }
+
+    system_state.async_set_home_assistant_restart_required(hass, "demo")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["demo", "hacs"],
+    }
+
+
+async def test_subscribe_system_state_requires_admin(
+    websocket_client: MockHAClientWebSocket, hass_admin_user: MockUser
+) -> None:
+    """Test subscribing to the system state without being admin."""
+    hass_admin_user.groups = []
+    await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
 
 
 async def test_integration_setup_info(
