@@ -142,3 +142,21 @@ async def test_unavailable(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID).state == "unavailable"
+
+
+async def test_push_update(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pushed SHC state change updates the panel state."""
+    device = intrusion_system_device()
+    mock_session.intrusion_system = device
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    device.alarm_state = AlarmState.ALARM_ON
+    device.subscribe_callback.call_args.args[1]()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
