@@ -55,10 +55,11 @@ async def test_coordinator_returns_empty_data_without_timetable(
     assert coordinator.data == []
 
 
-async def test_coordinator_uses_current_time_for_missing_nearest_arrival(
+async def test_coordinator_skips_arrivals_without_nearest_arrival(
     hass: HomeAssistant,
 ) -> None:
-    """Test an arrival without a nearest time remains usable."""
+    """Test arrivals without a nearest time are skipped."""
+    nearest_arrival = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
     timetable = SimpleNamespace(
         name=None,
         arrivals={
@@ -66,7 +67,12 @@ async def test_coordinator_uses_current_time_for_missing_nearest_arrival(
                 line=SimpleNamespace(id="A", route="Route A"),
                 nearest_arrival=None,
                 next_arrival=None,
-            )
+            ),
+            "B": SimpleNamespace(
+                line=SimpleNamespace(id="B", route="Route B"),
+                nearest_arrival=SimpleNamespace(get_utc=nearest_arrival.isoformat),
+                next_arrival=None,
+            ),
         },
     )
     api = SimpleNamespace(get_timetable=AsyncMock(return_value=timetable))
@@ -77,6 +83,6 @@ async def test_coordinator_uses_current_time_for_missing_nearest_arrival(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success
-    assert coordinator.data[0].bus_id == "A"
-    assert coordinator.data[0].nearest_arrival is not None
-    assert coordinator.data[0].next_arrival is None
+    assert len(coordinator.data) == 1
+    assert coordinator.data[0].bus_id == "B"
+    assert coordinator.data[0].nearest_arrival == nearest_arrival

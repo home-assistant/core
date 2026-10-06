@@ -792,6 +792,30 @@ async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> No
     }
 
 
+async def test_import_flow_ignores_unknown_lines(hass: HomeAssistant) -> None:
+    """Test importing only retains lines available at the stop."""
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+        )
+        mock_setup.return_value = True
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: ["A", "UNKNOWN"]},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_LINE_IDS] == ["A"]
+
+
 async def test_import_flow_aborts_for_existing_line(hass: HomeAssistant) -> None:
     """Test importing an existing line is rejected."""
     config_entry = MockConfigEntry(
