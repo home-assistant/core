@@ -5,7 +5,7 @@ import logging
 
 import probatio
 
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
@@ -39,6 +39,7 @@ class TadoServiceArgument(StrEnum):
     OFFSET = "offset"
     READING = "reading"
     REQUESTED_OVERLAY = "requested_overlay"
+    TEMPERATURE = "temperature"
     TIME_PERIOD = "time_period"
 
 
@@ -57,7 +58,7 @@ SCHEMA_ADD_METER_READING = probatio.Schema(
 
 
 CLIMATE_TIMER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_TEMPERATURE): probatio.Coerce(float),
+    probatio.Required(TadoServiceArgument.TEMPERATURE): probatio.Coerce(float),
     probatio.Exclusive(
         TadoServiceArgument.TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP
     ): probatio.All(
@@ -78,7 +79,7 @@ WATER_HEATER_TIMER_SCHEMA: VolDictType = {
     ): probatio.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
-    probatio.Optional(ATTR_TEMPERATURE): probatio.Coerce(float),
+    probatio.Optional(TadoServiceArgument.TEMPERATURE): probatio.Coerce(float),
 }
 
 
