@@ -43,8 +43,14 @@ async def async_setup_entry(
 
     try:
         await daikin_api.async_get_access_token()
-    except (OAuth2TokenRequestError, TimeoutError, aiohttp.ClientError) as err:
-        raise ConfigEntryNotReady from err
+    except OAuth2TokenRequestError:
+        raise
+    except (TimeoutError, aiohttp.ClientError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_token_request_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     config_entry.runtime_data = OnectaDataUpdateCoordinator(
         hass, config_entry, daikin_api

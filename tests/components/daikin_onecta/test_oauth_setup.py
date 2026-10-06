@@ -45,11 +45,11 @@ def _token_error() -> OAuth2TokenRequestError:
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_not_ready_on_rejected_token(
+async def test_setup_entry_rejected_token_requires_authentication(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Rejected OAuth tokens must retry setup until reauth is supported."""
+    """Rejected OAuth tokens require authentication, not a setup retry."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -62,15 +62,14 @@ async def test_setup_entry_not_ready_on_rejected_token(
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.asyncio
-async def test_setup_entry_not_ready_on_transient_token_error(
+async def test_setup_entry_retries_token_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Recoverable OAuth token errors must raise ConfigEntryNotReady."""
+    """Transient OAuth token errors retry setup."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -86,11 +85,11 @@ async def test_setup_entry_not_ready_on_transient_token_error(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_not_ready_on_token_timeout(
+async def test_setup_entry_retries_token_timeout(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Token validation timeouts must retry setup."""
+    """Token validation timeouts preserve a translated retry reason."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -104,6 +103,7 @@ async def test_setup_entry_not_ready_on_token_timeout(
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == "oauth2_token_request_failed"
 
 
 @pytest.mark.asyncio

@@ -89,6 +89,9 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
+    "oauth2_token_request_failed": {
+      "message": "Unable to obtain Daikin OAuth token: {error}"
+    },
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
     },
