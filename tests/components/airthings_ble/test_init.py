@@ -201,10 +201,27 @@ async def test_setup_retries_on_failed_read(
     assert message in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("device_info", "side_effect", "message"),
+    [
+        pytest.param(
+            None, BleakError("boom"), "Unable to fetch data: boom", id="bleak_error"
+        ),
+        pytest.param(
+            INCOMPLETE_WAVE_DEVICE_INFO,
+            None,
+            "The Airthings device did not return complete data, retrying",
+            id="incomplete_read",
+        ),
+    ],
+)
 async def test_sensors_unavailable_while_update_fails(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    device_info: AirthingsDevice | None,
+    side_effect: Exception | None,
+    message: str,
 ) -> None:
     """Test sensors become unavailable when an update fails and recover after.
 
@@ -230,12 +247,12 @@ async def test_sensors_unavailable_while_update_fails(
     entity_id = "sensor.airthings_wave_123456_battery"
     assert hass.states.get(entity_id).state == "85"
 
-    with patch_airthings_ble(side_effect=BleakError("boom")):
+    with patch_airthings_ble(device_info, side_effect=side_effect):
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert "Unable to fetch data: boom" in caplog.text
+    assert message in caplog.text
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
