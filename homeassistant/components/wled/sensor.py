@@ -8,6 +8,7 @@ from typing import override
 from wled import Device as WLEDDevice
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -137,6 +139,17 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     added: set[str] = set()
 
+    # Sensors added before stay, even when the device doesn't report what they
+    # need right now, like the current while the light is off.
+    registered = {
+        registry_entry.unique_id
+        for registry_entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+        if registry_entry.domain == SENSOR_DOMAIN
+    }
+    mac_address = coordinator.data.info.mac_address
+
     @callback
     def _async_add_sensors() -> None:
         """Add the sensors the device reports, as soon as it does.
@@ -147,7 +160,11 @@ async def async_setup_entry(
         sensors = [
             WLEDSensorEntity(coordinator, description)
             for description in SENSORS
-            if description.key not in added and description.exists_fn(coordinator.data)
+            if description.key not in added
+            and (
+                description.exists_fn(coordinator.data)
+                or f"{mac_address}_{description.key}" in registered
+            )
         ]
         added.update(sensor.entity_description.key for sensor in sensors)
         if sensors:

@@ -110,6 +110,7 @@ async def test_current_measurement_once_reported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the current sensors are added once the device reports a current."""
     # WLED reports no current while the light is off.
@@ -133,6 +134,35 @@ async def test_current_measurement_once_reported(
     assert state.state == "850"
     assert (state := hass.states.get("sensor.wled_rgb_light_estimated_current"))
     assert state.state == "470"
+
+    # Later updates don't add them again.
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_current_measurement_kept_when_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test current sensors added before stay while the device reports none."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wled_rgb_light_estimated_current")
+
+    # The light is off when Home Assistant starts again.
+    device = mock_wled.update.return_value
+    device.info.leds.max_power = 0
+    device.info.leds.power = 0
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_max_current"))
+    assert state.state == "0"
+    assert (state := hass.states.get("sensor.wled_rgb_light_estimated_current"))
+    assert state.state == "0"
 
 
 async def test_current_measurement_with_per_output_limiters(
