@@ -10,7 +10,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
 
-import httpx
+import httpx2
 from telegram import (
     Bot,
     CallbackQuery,
@@ -1164,7 +1164,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
-        proxy = httpx.Proxy(proxy_url)
+        proxy = httpx2.Proxy(proxy_url)
         request = HTTPXRequest(
             connection_pool_size=8,
             proxy=proxy,
@@ -1210,9 +1210,9 @@ async def load_data(
         if authentication == HTTP_BEARER_AUTHENTICATION:
             headers = {"Authorization": f"Bearer {password}"}
         elif authentication == HTTP_DIGEST_AUTHENTICATION:
-            params["auth"] = httpx.DigestAuth(username, password)
+            params["auth"] = httpx2.DigestAuth(username, password)
         elif authentication == HTTP_BASIC_AUTHENTICATION:
-            params["auth"] = httpx.BasicAuth(username, password)
+            params["auth"] = httpx2.BasicAuth(username, password)
 
         retry_num = 0
         async with get_async_client(hass, verify_ssl) as client:
@@ -1221,7 +1221,7 @@ async def load_data(
                     response = await client.get(
                         url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
                     )
-                except (httpx.HTTPError, httpx.InvalidURL) as err:
+                except (httpx2.HTTPError, httpx2.InvalidURL) as err:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
