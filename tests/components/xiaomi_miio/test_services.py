@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+from miio.integrations.airpurifier.zhimi.airpurifier import OperationMode
 from miio.powerstrip import PowerMode
 import pytest
 
@@ -133,7 +134,7 @@ def mock_switch_fixture() -> Generator[MagicMock]:
 def mock_fan_fixture() -> Generator[MagicMock]:
     """Mock an air purifier, which implements every fan service."""
     mock_fan = MagicMock()
-    mock_fan.status = Mock(return_value=Mock(is_on=True))
+    mock_fan.status = Mock(return_value=Mock(is_on=True, mode=OperationMode.Auto))
     with patch(
         "homeassistant.components.xiaomi_miio.AirPurifier", return_value=mock_fan
     ):
