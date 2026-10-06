@@ -46,11 +46,16 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import create_client_session
-from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import (
+    BT_MODEL_PREFIXES,
+    CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -356,7 +361,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                             ),
                         ),
                         probatio.Required(
-                            CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
+                            probatio.Secret(CONF_PASSWORD),
+                            default=reconfigure_entry.data[CONF_PASSWORD],
                         ): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.PASSWORD,

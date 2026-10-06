@@ -62,6 +62,7 @@ from .conditions import (
     LegacyConditionChecker,
     NotConditionChecker,
     OrConditionChecker,
+    _StateDependentChecker,
     async_numeric_state,
     async_template,
     numeric_state,
@@ -469,7 +470,11 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
 
         return True
 
-    return if_numeric_state
+    return _StateDependentChecker(
+        if_numeric_state,
+        {*entity_ids, *(value for value in (below, above) if isinstance(value, str))},
+        needs_polling=value_template is not None,
+    )
 
 
 def state_from_config(config: ConfigType) -> ConditionCheckerType:
@@ -509,7 +514,18 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
 
         return result
 
-    return if_state
+    return _StateDependentChecker(
+        if_state,
+        {
+            *entity_ids,
+            *(
+                req_state
+                for req_state in req_states
+                if isinstance(req_state, str) and cv.INPUT_ENTITY_ID.match(req_state)
+            ),
+        },
+        needs_polling=for_period is not None,
+    )
 
 
 def async_template_from_config(config: ConfigType) -> ConditionCheckerType:

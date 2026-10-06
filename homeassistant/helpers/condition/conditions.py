@@ -1,6 +1,7 @@
 """Common condition classes and constants."""
 
-from collections.abc import Container
+from collections.abc import Callable, Container
+from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 from typing import Any, Unpack, override
 
@@ -12,7 +13,14 @@ from homeassistant.const import (
     WEEKDAYS,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -21,14 +29,33 @@ from homeassistant.exceptions import (
     TemplateError,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template, render_complex
 from homeassistant.helpers.trace import trace_path
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
-from .models import ConditionChecker, ConditionCheckerType, ConditionCheckParams
+from .models import (
+    ConditionChecker,
+    ConditionCheckerType,
+    ConditionCheckParams,
+    _async_noop,
+)
 from .tracing import condition_trace_set_result, condition_trace_update_result
+
+
+@dataclass(slots=True)
+class _StateDependentChecker:
+    """Legacy condition checker whose result depends on entity states."""
+
+    checker: ConditionCheckerType
+    entity_ids: set[str]
+    needs_polling: bool
+
+    def __call__(self, hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Check the condition."""
+        return self.checker(hass, variables)
 
 
 class LegacyConditionChecker(ConditionChecker):
@@ -43,6 +70,27 @@ class LegacyConditionChecker(ConditionChecker):
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return (
+            not isinstance(self._checker, _StateDependentChecker)
+            or self._checker.needs_polling
+        )
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        if not isinstance(self._checker, _StateDependentChecker):
+            return _async_noop
+
+        @callback
+        def state_changed(_: Event[EventStateChangedData]) -> None:
+            action()
+
+        return async_track_state_change_event(
+            self._hass, self._checker.entity_ids, state_changed
+        )
+
 
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
@@ -50,6 +98,11 @@ class DisabledConditionChecker(ConditionChecker):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return False
 
 
 class CompoundConditionChecker(ConditionChecker):
@@ -59,6 +112,25 @@ class CompoundConditionChecker(ConditionChecker):
         """Initialize condition checker."""
         super().__init__(hass)
         self._conditions = conditions
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return any(condition.needs_polling for condition in self._conditions)
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        unsubs = [
+            await condition.async_track_changes(action)
+            for condition in self._conditions
+        ]
+
+        @callback
+        def unsubscribe() -> None:
+            for unsub in unsubs:
+                unsub()
+
+        return unsubscribe
 
     @override
     def _async_unload(self) -> None:

@@ -2,6 +2,7 @@
 
 import abc
 from collections.abc import Callable
+from contextvars import copy_context
 from dataclasses import dataclass
 import logging
 from typing import Any, Never, TypedDict, Unpack, final
@@ -9,7 +10,7 @@ from typing import Any, Never, TypedDict, Unpack, final
 import probatio
 
 from homeassistant.const import CONF_CONDITION, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -60,6 +61,11 @@ type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 type ConditionCheckerTypeOptional = Callable[
     [HomeAssistant, TemplateVarsType], bool | None
 ]
+
+
+@callback
+def _async_noop() -> None:
+    """Do nothing."""
 
 
 class ConditionChecker(abc.ABC):
@@ -121,6 +127,35 @@ class ConditionChecker(abc.ABC):
 
         Intended to be overridden in derived classes that need to do unloading.
         """
+
+    @property
+    def needs_polling(self) -> bool:
+        """Return if the result can change without async_track_changes reporting it."""
+        return True
+
+    @final
+    async def async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call action when the result of the condition may have changed.
+
+        Returns a callback to stop tracking. When needs_polling is True, the
+        result can also change without action being called (time, templates).
+        """
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
+
+        @callback
+        def isolated_action() -> None:
+            # Run in a copied context so the trace of the run that changed the state is kept
+            copy_context().run(action)
+
+        return await self._async_track_changes(isolated_action)
+
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call action when the result of the condition may have changed.
+
+        Intended to be overridden in derived classes that can track changes.
+        """
+        return _async_noop
 
     @final
     def async_check(

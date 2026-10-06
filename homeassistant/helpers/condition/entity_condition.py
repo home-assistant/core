@@ -18,7 +18,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import (
@@ -26,6 +34,7 @@ from homeassistant.helpers.automation import (
     ThresholdConfig,
     filter_by_domain_specs,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.recorder import get_instance
 from homeassistant.helpers.selector import (
     NumericThresholdMode,
@@ -173,6 +182,63 @@ class EntityConditionBase(Condition):
             # entity is now stale; stop priming it and let live tracking own it.
             self._priming.discard(entity_id)
             self._valid_since.pop(entity_id, None)
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        """Return if the result can change without async_track_changes reporting it.
+
+        Subclasses whose result depends on anything else than the states of the
+        targeted entities must override this.
+        """
+        return self._duration is not None
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        @callback
+        def state_changed(
+            _: Event[EventStateChangedData] | TargetStateChangedData,
+        ) -> None:
+            action()
+
+        selection = self._target_selection
+        # Explicit entity ids don't depend on the registries, skip the target tracker
+        if not (
+            selection.area_ids
+            or selection.device_ids
+            or selection.floor_ids
+            or selection.label_ids
+        ):
+            return async_track_state_change_event(
+                self._hass,
+                {
+                    entity_id
+                    for entity_id in selection.entity_ids
+                    if split_entity_id(entity_id)[0] in self._domain_specs
+                },
+                state_changed,
+            )
+
+        tracking = False
+
+        @callback
+        def entities_updated(
+            _added: set[str], _removed: set[str], _states: Mapping[str, State | None]
+        ) -> None:
+            # The tracker also reports the initial entities while it is set up
+            if tracking:
+                action()
+
+        unsub = await async_track_target_selector_state_change_event(
+            self._hass,
+            self._target,
+            state_changed,
+            self.entity_filter,
+            entities_updated,
+            primary_entities_only=self._primary_entities_only,
+        )
+        tracking = True
+        return unsub
 
     @override
     async def _async_setup(self) -> None:
@@ -519,6 +585,34 @@ class EntityNumericalConditionBase(EntityConditionBase):
             threshold_options.get("value_max")
         )
         self._threshold_type = threshold_options["type"]
+        self._threshold_entity_ids = {
+            threshold.entity
+            for threshold in (
+                self.threshold,
+                self.lower_threshold,
+                self.upper_threshold,
+            )
+            if threshold is not None and threshold.entity is not None
+        }
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        unsub_target = await super()._async_track_changes(action)
+
+        @callback
+        def threshold_changed(_: Event[EventStateChangedData]) -> None:
+            action()
+
+        unsub_thresholds = async_track_state_change_event(
+            self._hass, self._threshold_entity_ids, threshold_changed
+        )
+
+        @callback
+        def unsubscribe() -> None:
+            unsub_target()
+            unsub_thresholds()
+
+        return unsubscribe
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""

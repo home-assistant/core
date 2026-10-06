@@ -134,7 +134,7 @@ CONFIG_SCHEMA = probatio.Schema(
                             CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
                         probatio.Optional(
-                            CONF_PASSWORD, default=DEFAULT_PASSWORD
+                            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
                         ): cv.string,
                         probatio.Optional(CONF_CALLBACK_IP): cv.string,
                         probatio.Optional(CONF_CALLBACK_PORT): probatio.Port(),
@@ -154,7 +154,7 @@ CONFIG_SCHEMA = probatio.Schema(
                             CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
                         probatio.Optional(
-                            CONF_PASSWORD, default=DEFAULT_PASSWORD
+                            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
                         ): cv.string,
                     }
                 },
