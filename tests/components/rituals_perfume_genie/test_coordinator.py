@@ -216,3 +216,21 @@ async def test_perfume_fetched_for_fill(
     state = hass.states.get("sensor.genie_fill")
     assert state
     assert state.state == "90-100%"
+
+
+async def test_diffuser_offline_sensors_unavailable(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test sensors follow the diffuser state, without waiting for their update."""
+    config_entry = mock_config_entry(unique_id="id_123_diffuser_offline")
+    diffuser = mock_diffuser_v1_battery_cartridge()
+    client = await init_integration(hass, config_entry, [diffuser])
+
+    diffuser.available = False
+    await _tick(hass, freezer, timedelta(minutes=5))
+
+    assert client.sensors.call_count == 1
+    for entity_id in ("sensor.genie_perfume", "binary_sensor.genie_charging"):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
