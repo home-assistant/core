@@ -28,4 +28,10 @@ async def test_diagnostics(
     assert diagnostics["config_entry"]["data"]["token"] == REDACTED
     assert diagnostics["devices"]
     assert diagnostics["devices"][0]["id"] == REDACTED
+    gateway = next(
+        point
+        for point in diagnostics["devices"][0]["management_points"]
+        if point["management_point_type"] == "gateway"
+    )
+    assert gateway["characteristics"]["ipAddress"] == REDACTED
     config_entry.runtime_data.api.client.get_gateway_devices.assert_not_awaited()

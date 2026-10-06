@@ -13,6 +13,7 @@ TO_REDACT = {
     "embedded_id",
     "entry_id",
     "id",
+    "ipAddress",
     "macAddress",
     "mac_address",
     "name",
