@@ -1198,6 +1198,36 @@ async def test_light_ui_create(
 
 
 @pytest.mark.parametrize(
+    ("color_dpt", "color_mode"),
+    [
+        ("232.600", ColorMode.RGB),
+        ("251.600", ColorMode.RGBW),
+        ("242.600", ColorMode.XY),
+    ],
+)
+async def test_light_ui_single_color_address(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    color_dpt: str,
+    color_mode: ColorMode,
+) -> None:
+    """Test the color mode of a light with a single color address."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1"},
+            "color": {"ga_color": {"write": "1/1/2", "dpt": color_dpt}},
+        },
+    )
+    state = hass.states.get("light.test")
+    assert state is not None
+    assert state.attributes["supported_color_modes"] == [color_mode]
+
+
+@pytest.mark.parametrize(
     ("color_temp_mode", "raw_ct"),
     [
         ("7.600", (0x10, 0x68)),

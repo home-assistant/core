@@ -19,10 +19,13 @@ from homeassistant.components.knx.storage.const import CONF_DATA
 from homeassistant.components.knx.storage.entity_store_schema import (
     BaseEntityConfig,
     BinarySensorKnxConfig,
+    ClimateKnxConfig,
     CoverKnxConfig,
     DateKnxConfig,
     DatetimeKnxConfig,
+    FanKnxConfig,
     KnxEntityData,
+    LightKnxConfig,
     NotifyKnxConfig,
     NumberKnxConfig,
     SceneKnxConfig,
@@ -757,8 +760,8 @@ async def test_load_applies_schema_defaults_and_coercion(
     assert hass.states.get("light.missing_defaults") is not None
     config_store = hass.data[KNX_MODULE_KEY].config_store
     light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID].knx
-    assert light_config["color_temp_min"] == 2700
-    assert light_config["color_temp_max"] == 6000
+    assert light_config.color_temp_min == 2700
+    assert light_config.color_temp_max == 6000
 
     switch_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, VALID_SWITCH_UID
@@ -1018,6 +1021,166 @@ TYPED_CONFIG_CASES = [
         },
         id="cover",
     ),
+    pytest.param(
+        Platform.FAN,
+        FanKnxConfig,
+        {"speed": {"ga_step": {"write": "1/2/3"}, "max_step": 4.0}},
+        {
+            "ga_switch": None,
+            "speed": {
+                "ga_step": {"write": "1/2/3", "state": None, "passive": []},
+                "max_step": 4,
+            },
+            "ga_oscillation": None,
+            "sync_state": True,
+        },
+        id="fan_step",
+    ),
+    pytest.param(
+        Platform.FAN,
+        FanKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}, "speed": {"ga_speed": {"write": "1/2/4"}}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "speed": {"ga_speed": {"write": "1/2/4", "state": None, "passive": []}},
+            "ga_oscillation": None,
+            "sync_state": True,
+        },
+        id="fan_percentage",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {
+            "ga_switch": {"write": "1/2/3"},
+            "color": {"ga_color": {"write": "1/2/4", "dpt": "251.600"}},
+        },
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "ga_brightness": None,
+            "ga_color_temp": None,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "color": {
+                "ga_color": {
+                    "write": "1/2/4",
+                    "state": None,
+                    "passive": [],
+                    "dpt": "251.600",
+                }
+            },
+            "sync_state": True,
+        },
+        id="light_single_address",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {
+            "color": {
+                "ga_red_brightness": {"write": "1/2/1"},
+                "ga_green_brightness": {"write": "1/2/2"},
+                "ga_blue_brightness": {"write": "1/2/3"},
+                "ga_white_switch": {"write": "1/2/4"},
+            }
+        },
+        {
+            "ga_switch": None,
+            "ga_brightness": None,
+            "ga_color_temp": None,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "color": {
+                "ga_red_switch": None,
+                "ga_red_brightness": {"write": "1/2/1", "state": None, "passive": []},
+                "ga_green_switch": None,
+                "ga_green_brightness": {"write": "1/2/2", "state": None, "passive": []},
+                "ga_blue_switch": None,
+                "ga_blue_brightness": {"write": "1/2/3", "state": None, "passive": []},
+                "ga_white_switch": {"write": "1/2/4", "state": None, "passive": []},
+                "ga_white_brightness": None,
+            },
+            "sync_state": True,
+        },
+        id="light_individual_addresses",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {
+            "ga_switch": {"write": "1/2/3"},
+            "ga_brightness": {"write": "1/2/4"},
+            "color": {
+                "ga_hue": {"write": "1/2/5"},
+                "ga_saturation": {"write": "1/2/6"},
+            },
+        },
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "ga_brightness": {"write": "1/2/4", "state": None, "passive": []},
+            "ga_color_temp": None,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "color": {
+                "ga_hue": {"write": "1/2/5", "state": None, "passive": []},
+                "ga_saturation": {"write": "1/2/6", "state": None, "passive": []},
+            },
+            "sync_state": True,
+        },
+        id="light_hsv_addresses",
+    ),
+    pytest.param(
+        Platform.CLIMATE,
+        ClimateKnxConfig,
+        {
+            "ga_temperature_current": {"state": "1/2/1"},
+            "target_temperature": {
+                "ga_temperature_target": {"state": "1/2/2"},
+                "ga_setpoint_shift": {
+                    "write": "1/2/3",
+                    "state": "1/2/4",
+                    "dpt": "6.010",
+                },
+            },
+        },
+        {
+            "ga_temperature_current": {"state": "1/2/1", "passive": []},
+            "ga_humidity_current": None,
+            "target_temperature": {
+                "ga_temperature_target": {"state": "1/2/2", "passive": []},
+                "ga_setpoint_shift": {
+                    "write": "1/2/3",
+                    "state": "1/2/4",
+                    "passive": [],
+                    "dpt": "6.010",
+                },
+                "setpoint_shift_min": -6,
+                "setpoint_shift_max": 6,
+                "temperature_step": 0.1,
+            },
+            "ga_active": None,
+            "ga_valve": None,
+            "ga_operation_mode": None,
+            "ignore_auto_mode": False,
+            "ga_operation_mode_comfort": None,
+            "ga_operation_mode_economy": None,
+            "ga_operation_mode_standby": None,
+            "ga_operation_mode_protection": None,
+            "ga_heat_cool": None,
+            "ga_on_off": None,
+            "on_off_invert": False,
+            "ga_controller_mode": None,
+            "ga_controller_status": None,
+            "default_controller_mode": "heat",
+            "ga_fan_speed": None,
+            "fan_max_step": 3,
+            "fan_zero_mode": "off",
+            "ga_fan_swing": None,
+            "ga_fan_swing_horizontal": None,
+            "sync_state": True,
+        },
+        id="climate_setpoint_shift",
+    ),
 ]
 
 
@@ -1098,3 +1261,55 @@ def test_cover_requires_writable_control(knx_data: dict[str, Any]) -> None:
     assert errors[0]["message"] == (
         "At least one of 'Open/Close control' or 'Position - Set position' is required."
     )
+
+
+_HSV_MSG = (
+    "'Hue', 'Saturation' and 'Brightness' addresses are required for HSV configuration"
+)
+
+
+@pytest.mark.parametrize(
+    ("platform", "knx_data", "message"),
+    [
+        pytest.param(
+            Platform.FAN,
+            {"ga_oscillation": {"write": "1/2/3"}},
+            "At least one of 'Switch' or 'Fan speed' is required.",
+            id="fan_no_switch_or_speed",
+        ),
+        pytest.param(
+            Platform.LIGHT,
+            {"ga_brightness": {"write": "1/2/3"}},
+            "either 'address' or 'individual_colors' is required",
+            id="light_no_switch_or_individual_colors",
+        ),
+        pytest.param(
+            Platform.LIGHT,
+            {
+                "ga_switch": {"write": "1/2/3"},
+                "color": {
+                    "ga_hue": {"write": "1/2/4"},
+                    "ga_saturation": {"write": "1/2/5"},
+                },
+            },
+            _HSV_MSG,
+            id="light_hsv_without_brightness",
+        ),
+    ],
+)
+def test_cross_field_rules(
+    platform: Platform, knx_data: dict[str, Any], message: str
+) -> None:
+    """Test cross field rules report on the platform config."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {
+                CONF_PLATFORM: platform,
+                CONF_DATA: {"entity": {"name": "test"}, "knx": knx_data},
+            }
+        )
+    errors = exc_info.value.validation_error["errors"]
+    assert len(errors) == 1
+    assert errors[0]["path"] == ["data", "knx"]
+    assert errors[0]["message"] == message
+    assert errors[0]["code"] == "no_match"
