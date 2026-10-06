@@ -74,6 +74,7 @@ from .const import (
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_KEY_FILE,
 )
 from .helpers import (
     PowerwallKeyRejectedError,
@@ -257,6 +258,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if vehicle.vin not in already_added
         }
         if not choices:
+            if entry.runtime_data.vehicles:
+                return self.async_abort(reason="all_vehicles_added")
             return self.async_abort(reason="no_vehicles")
 
         if user_input is not None:
@@ -288,13 +291,15 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._vin is not None
         errors: dict[str, str] = {}
+        placeholders = {"vin": self._vin}
 
         if user_input is not None:
             try:
                 parent = await async_get_ble_parent(self.hass)
             except _BLE_KEY_ERRORS as err:
                 LOGGER.debug("Bluetooth key load failed: %s", err)
-                errors["base"] = "cannot_connect"
+                errors["base"] = "key_load_failed"
+                placeholders["key_file"] = self.hass.config.path(VEHICLE_KEY_FILE)
             else:
                 # The advertised BLE name is a hash of the VIN; match on its prefix.
                 expected = parent.get_name(self._vin)[:17]
@@ -326,7 +331,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="scan",
             errors=errors,
-            description_placeholders={"vin": self._vin},
+            description_placeholders=placeholders,
         )
 
     async def async_step_pair(
