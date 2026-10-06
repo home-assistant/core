@@ -579,6 +579,40 @@ async def test_get_forecast_tool_caps_interval_at_skipped_entry_gap(
     assert response.data["forecast"] == []
 
 
+async def test_get_forecast_tool_matches_daily_entries_by_calendar_date(
+    hass: HomeAssistant,
+) -> None:
+    """Test non-midnight daily entries are matched by calendar date.
+
+    Daily forecast entries aren't guaranteed to start at local midnight
+    (e.g. Google Weather's daily entries start at 07:00 local for the
+    daytime interval), so a day's entry must be matched by its calendar
+    date rather than by treating its timestamp as the literal start of a
+    24-hour coverage interval, or it would bleed into the following day's
+    window.
+    """
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=7).isoformat(), "condition": "rainy"},
+        {
+            "datetime": (today + timedelta(days=1)).replace(hour=7).isoformat(),
+            "condition": "sunny",
+        },
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["sunny"]
+
 
 @pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
 async def test_get_forecast_tool_derives_interval_end_from_next_entry(

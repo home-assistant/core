@@ -220,12 +220,15 @@ class GetForecastTool(Tool):
         for index, entry in enumerate(forecast):
             entry_start = _forecast_datetime(entry["datetime"])
             if forecast_type == "daily":
-                # Apply the duration in local wall-clock time: a daily entry
-                # represents a calendar day, so its end must be the next
-                # local midnight, which (via zoneinfo) correctly accounts for
-                # a DST change between the entry and its computed end rather
-                # than over- or under-shooting the real calendar boundary.
-                cadence_end = dt_util.as_local(entry_start) + duration
+                # Daily entries aren't guaranteed to start at local midnight
+                # (e.g. Google Weather's daytime entries start at 07:00), so
+                # match by calendar date rather than by the literal
+                # timestamp: otherwise a non-midnight entry's interval would
+                # bleed into the following day's window. Apply the duration
+                # in local wall-clock time so the end is the next local
+                # midnight, correctly accounting for a DST change in between.
+                match_start = dt_util.start_of_local_day(dt_util.as_local(entry_start))
+                cadence_end = match_start + duration
             else:
                 # Hourly/twice-daily entries represent a fixed elapsed
                 # duration, not a calendar boundary, so the end must be
@@ -234,22 +237,18 @@ class GetForecastTool(Tool):
                 # elapsed hours (the repeated 01:00-01:59 hour), which would
                 # return the final entry for an hour after its actual
                 # coverage ends.
+                match_start = entry_start
                 cadence_end = dt_util.as_utc(entry_start) + duration
             if index + 1 < len(forecast):
-                # Prefer the next entry's own start as the end of this
-                # interval, since it reflects the provider's actual cadence
-                # (which may not exactly equal `duration`, e.g. across a DST
-                # change). Still cap it at the cadence-derived end: if the
-                # provider skipped an entry, the gap to the next one is
-                # larger than this entry's real coverage, and treating it as
-                # covering the whole gap would return stale data for the
-                # uncovered window in between.
+                # Cap at the cadence-derived end in case the provider skipped
+                # an entry, which would otherwise stretch this entry's stale
+                # data across the whole (larger) gap to the next one.
                 entry_end = min(
                     _forecast_datetime(forecast[index + 1]["datetime"]), cadence_end
                 )
             else:
                 entry_end = cadence_end
-            if entry_start < end and entry_end > start:
+            if match_start < end and entry_end > start:
                 # Normalize to an ISO string: some providers (e.g. IPMA) put a
                 # native datetime object in this field, which isn't JSON-safe.
                 matching_forecast.append({**entry, "datetime": entry_start.isoformat()})
