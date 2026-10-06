@@ -91,9 +91,10 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
         """Return the device class derived from the state address DPT of the KNX project."""
         if (address := self._device.remote_value.group_address_state) is None:
             return None
-        if (transcoder := self._knx_module.xknx.group_address_dpt.get(address)) is None:
+        ga_info = self._knx_module.project.group_addresses.get(str(address))
+        if ga_info is None or ga_info.transcoder is None:
             return None
-        return get_binary_sensor_device_class(transcoder)
+        return get_binary_sensor_device_class(ga_info.transcoder)
 
     @override
     async def async_added_to_hass(self) -> None:
