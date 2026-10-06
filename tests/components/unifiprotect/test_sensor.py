@@ -99,11 +99,11 @@ async def test_sensor_sensor_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
     await remove_entities(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
 
 async def test_sensor_sense_capability_creation_filter(
@@ -166,9 +166,9 @@ async def test_sensor_setup_sensor(
 ) -> None:
     """Test sensor entity setup for sensor devices."""
 
-    setup_public_sensor(ufp)
+    setup_public_sensor(ufp, signal_quality=87)
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
     expected_values = (
         "10",
@@ -213,6 +213,16 @@ async def test_sensor_setup_sensor(
     assert state.state == "-50"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
+    # Signal quality
+    _, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "signal_quality"),
+    )
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
+    assert hass.states.get(entity_id).state == "87"
+
 
 async def test_sensor_setup_sensor_none(
     hass: HomeAssistant,
@@ -224,7 +234,7 @@ async def test_sensor_setup_sensor_none(
 
     setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
     expected_values = (
         "10",
@@ -633,7 +643,7 @@ async def test_sensor_update_alarm(
     """Test sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -687,7 +697,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
     setup_public_sensor(ufp, tampering_detected_at=fixed_now - timedelta(hours=3))
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 22)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 23)
 
     # Last Trip Time
     unique_id, entity_id = await ids_from_device_description(
@@ -744,7 +754,7 @@ async def test_sensor_precision(
     """Test sensor precision value is respected."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
     nvr: NVR = ufp.api.bootstrap.nvr
 
     _, entity_id = await ids_from_device_description(
@@ -821,7 +831,12 @@ async def test_public_only_sensor_sense_end_to_end(
 
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
     keys = registered_keys(entity_registry, Platform.SENSOR, sensor_all.mac)
-    assert {"battery_level", "temperature_level", "motion_last_trip_time"} <= keys
+    assert {
+        "battery_level",
+        "temperature_level",
+        "motion_last_trip_time",
+        "signal_quality",
+    } <= keys
     assert not keys & {"alarm_sound", "sensitivity", "mount_type", "paired_camera"}
     assert "humidity_level" not in keys
 

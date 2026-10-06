@@ -371,6 +371,15 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
+        key="signal_quality",
+        translation_key="signal_quality",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_public_value="wireless_connection_state.signal_state.signal_quality",
+    ),
+    ProtectSensorEntityDescription(
         key="sensitivity",
         translation_key="sensitivity",
         native_unit_of_measurement=PERCENTAGE,
@@ -601,6 +610,13 @@ def _fob_signal_strength(fob: Fob) -> int | None:
     return None
 
 
+def _fob_signal_quality(fob: Fob) -> int | None:
+    """Return the key fob signal quality, if it has been reported."""
+    if (signal := fob.wireless_connection_state.signal_state) is not None:
+        return signal.signal_quality
+    return None
+
+
 def _fob_status(fob: Fob) -> str | None:
     """Return the key fob presence state.
 
@@ -637,6 +653,15 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_fob_signal_strength,
+    ),
+    ProtectFobSensorEntityDescription(
+        key="signal_quality",
+        translation_key="signal_quality",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_fob_signal_quality,
     ),
     ProtectFobSensorEntityDescription(
         key="status",
