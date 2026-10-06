@@ -690,6 +690,9 @@
       "resolution_hd_video": {
         "name": "Resolution: HD video"
       },
+      "signal_quality": {
+        "name": "Signal quality"
+      },
       "storage_used": {
         "name": "Storage used"
       },
