@@ -1,41 +1,26 @@
 """Handle intents with scripts."""
 
-import logging
-from typing import Any, TypedDict, override
-
 import probatio
 
 from homeassistant.components.script import CONF_MODE
 from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    intent,
-    script,
-    service,
-    template,
-)
-from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.script import async_validate_actions_config
+from homeassistant.helpers import config_validation as cv, script, service
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "intent_script"
-
-CONF_PLATFORMS = "platforms"
-CONF_INTENTS = "intents"
-CONF_SPEECH = "speech"
-CONF_REPROMPT = "reprompt"
-
-CONF_CARD = "card"
-CONF_TITLE = "title"
-CONF_CONTENT = "content"
-CONF_TEXT = "text"
-CONF_ASYNC_ACTION = "async_action"
-
-DEFAULT_CONF_ASYNC_ACTION = False
+from .const import (
+    CONF_ASYNC_ACTION,
+    CONF_CARD,
+    CONF_CONTENT,
+    CONF_PLATFORMS,
+    CONF_REPROMPT,
+    CONF_SPEECH,
+    CONF_TEXT,
+    CONF_TITLE,
+    DEFAULT_CONF_ASYNC_ACTION,
+    DOMAIN,
+)
+from .helpers import ScriptIntentHandler, async_load_intents, async_reload  # noqa: F401
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -72,52 +57,6 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
-    """Handle reload Intent Script service call."""
-    new_config = await async_integration_yaml_config(hass, DOMAIN)
-    existing_intents = hass.data[DOMAIN]
-
-    for intent_type, conf in existing_intents.items():
-        intent.async_remove(hass, intent_type)
-        if isinstance(conf.get(CONF_ACTION), script.Script):
-            await conf[CONF_ACTION].async_unload()
-
-    if not new_config or DOMAIN not in new_config:
-        hass.data[DOMAIN] = {}
-        return
-
-    new_intents = new_config[DOMAIN]
-
-    await async_load_intents(hass, new_intents)
-
-
-async def async_load_intents(
-    hass: HomeAssistant, intents: dict[str, ConfigType]
-) -> None:
-    """Load YAML intents into the intent system."""
-    hass.data[DOMAIN] = intents
-
-    for intent_type, conf in intents.items():
-        if CONF_ACTION in conf:
-            try:
-                actions = await async_validate_actions_config(hass, conf[CONF_ACTION])
-            except (probatio.Invalid, HomeAssistantError) as exc:
-                _LOGGER.error(
-                    "Failed to validate actions for intent %s: %s", intent_type, exc
-                )
-                continue  # Skip this intent
-
-            script_mode: str = conf.get(CONF_MODE, script.DEFAULT_SCRIPT_MODE)
-            conf[CONF_ACTION] = script.Script(
-                hass,
-                actions,
-                f"Intent Script {intent_type}",
-                DOMAIN,
-                script_mode=script_mode,
-            )
-        intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the intent script component."""
     intents = config[DOMAIN]
@@ -135,155 +74,3 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-class _IntentSpeechRepromptData(TypedDict):
-    """Intent config data type for speech or reprompt info."""
-
-    content: template.Template
-    title: template.Template
-    text: template.Template
-    type: str
-
-
-class _IntentCardData(TypedDict):
-    """Intent config data type for card info."""
-
-    type: str
-    title: template.Template
-    content: template.Template
-
-
-class ScriptIntentHandler(intent.IntentHandler):
-    """Respond to an intent with a script."""
-
-    slot_schema = {
-        probatio.Any("name", "area", "floor"): cv.string,
-        probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [cv.string]),
-        probatio.Optional("device_class"): probatio.All(
-            probatio.EnsureList(), [cv.string]
-        ),
-        probatio.Optional("preferred_area_id"): cv.string,
-        probatio.Optional("preferred_floor_id"): cv.string,
-    }
-
-    def __init__(self, intent_type: str, config: ConfigType) -> None:
-        """Initialize the script intent handler."""
-        self.intent_type = intent_type
-        self.config = config
-        self.description = config.get(CONF_DESCRIPTION)
-        self.platforms = config.get(CONF_PLATFORMS)
-
-    @override
-    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
-        """Handle the intent."""
-        speech: _IntentSpeechRepromptData | None = self.config.get(CONF_SPEECH)
-        reprompt: _IntentSpeechRepromptData | None = self.config.get(CONF_REPROMPT)
-        card: _IntentCardData | None = self.config.get(CONF_CARD)
-        action: script.Script | None = self.config.get(CONF_ACTION)
-        is_async_action: bool = self.config[CONF_ASYNC_ACTION]
-        hass: HomeAssistant = intent_obj.hass
-        intent_slots = self.async_validate_slots(intent_obj.slots)
-        slots: dict[str, Any] = {
-            key: value["value"] for key, value in intent_slots.items()
-        }
-
-        _LOGGER.debug(
-            "Intent named %s received with slots: %s",
-            intent_obj.intent_type,
-            {
-                key: value
-                for key, value in slots.items()
-                if not key.startswith("_") and not key.endswith("_raw_value")
-            },
-        )
-
-        entity_name = slots.get("name")
-        area_name = slots.get("area")
-        floor_name = slots.get("floor")
-
-        # Optional domain/device class filters.
-        # Convert to sets for speed.
-        domains: set[str] | None = None
-        device_classes: set[str] | None = None
-
-        if "domain" in slots:
-            domains = set(slots["domain"])
-
-        if "device_class" in slots:
-            device_classes = set(slots["device_class"])
-
-        match_constraints = intent.MatchTargetsConstraints(
-            name=entity_name,
-            area_name=area_name,
-            floor_name=floor_name,
-            domains=domains,
-            device_classes=device_classes,
-            assistant=intent_obj.assistant,
-        )
-
-        if match_constraints.has_constraints:
-            match_preferences = intent.MatchTargetsPreferences(
-                area_id=slots.get("preferred_area_id"),
-                floor_id=slots.get("preferred_floor_id"),
-            )
-
-            match_result = intent.async_match_targets(
-                hass, match_constraints, match_preferences
-            )
-            if match_result.is_match:
-                targets = {}
-
-                if match_result.states:
-                    targets["entities"] = [
-                        state.entity_id for state in match_result.states
-                    ]
-
-                if match_result.areas:
-                    targets["areas"] = [area.id for area in match_result.areas]
-
-                if match_result.floors:
-                    targets["floors"] = [
-                        floor.floor_id for floor in match_result.floors
-                    ]
-
-                if targets:
-                    slots["targets"] = targets
-
-        if action is not None:
-            if is_async_action:
-                intent_obj.hass.async_create_task(
-                    action.async_run(slots, intent_obj.context)
-                )
-            else:
-                action_res = await action.async_run(slots, intent_obj.context)
-
-                # if the action returns a response, make it
-                # available to the speech/reprompt templates below
-                if action_res and action_res.service_response is not None:
-                    slots["action_response"] = action_res.service_response
-
-        response = intent_obj.create_response()
-
-        if speech is not None:
-            response.async_set_speech(
-                speech["text"].async_render(slots, parse_result=False),
-                speech["type"],
-            )
-
-        if reprompt is not None:
-            text_reprompt = reprompt["text"].async_render(slots, parse_result=False)
-            if text_reprompt:
-                response.async_set_reprompt(
-                    text_reprompt,
-                    reprompt["type"],
-                )
-
-        if card is not None:
-            response.async_set_card(
-                card["title"].async_render(slots, parse_result=False),
-                card["content"].async_render(slots, parse_result=False),
-                card["type"],
-            )
-
-        return response
