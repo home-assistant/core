@@ -81,7 +81,9 @@ def mock_ephemeral_key_state(
 ) -> None:
     """Mock the /node/ba-epskc/state probe used to detect ephemeral key support."""
     aioclient_mock.get(
-        re.compile(r".*/node/ba-epskc/state$"), status=ephemeral_key_probe_status
+        re.compile(r".*/node/ba-epskc/state$"),
+        status=ephemeral_key_probe_status,
+        json="disabled",
     )
 
 

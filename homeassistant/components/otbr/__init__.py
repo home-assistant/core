@@ -67,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     try:
-        otbrdata.ephemeral_key_supported = await otbrdata.get_ephemeral_key_supported(
-            hass
-        )
+        otbrdata.ephemeral_key_supported = await otbrdata.get_ephemeral_key_supported()
     except HomeAssistantError:
         # Optional feature, it is probed again when the Thread panel asks for it
         _LOGGER.debug("Could not probe %s for ephemeral key support", otbrdata.url)
@@ -100,7 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> boo
     # The key outlives this entry's memory of it, so revoke it rather than
     # leaving the credential active until it expires
     try:
-        await otbrdata.deactivate_ephemeral_key(hass, only_if_active=True)
+        await otbrdata.deactivate_ephemeral_key(only_if_active=True)
     except HomeAssistantError:
         _LOGGER.warning("Could not deactivate the ephemeral key on %s", otbrdata.url)
     return True

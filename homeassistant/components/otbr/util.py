@@ -5,7 +5,6 @@ from collections.abc import Callable, Coroutine
 import dataclasses
 from datetime import datetime, timedelta
 from functools import wraps
-from http import HTTPStatus
 import logging
 import random
 from typing import TYPE_CHECKING, Any, Concatenate, cast
@@ -25,7 +24,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -61,15 +59,11 @@ class EphemeralKeyInUse(HomeAssistantError):
     """Raised when a device is connected through the active ephemeral key."""
 
 
-# A router without the ephemeral key routes answers with 404, but ot-br-posix
-# builds between #2733 and #3524 report failed PUT requests as 405 (ot-br-posix#3522)
-EPHEMERAL_KEY_UNSUPPORTED_STATUS = (
-    HTTPStatus.NOT_FOUND,
-    HTTPStatus.METHOD_NOT_ALLOWED,
-)
-
 # Deactivating the key in these states drops a commissioner mid-session
-EPHEMERAL_KEY_IN_USE_STATES = ("connected", "accepted")
+EPHEMERAL_KEY_IN_USE_STATES = (
+    python_otbr_api.EphemeralKeyState.CONNECTED,
+    python_otbr_api.EphemeralKeyState.ACCEPTED,
+)
 
 
 def compose_default_network_name(pan_id: int) -> str:
@@ -193,34 +187,28 @@ class OTBRData:
         return await self.api.get_coprocessor_version()
 
     @_handle_otbr_error
-    async def get_ephemeral_key_supported(self, hass: HomeAssistant) -> bool:
+    async def get_ephemeral_key_supported(self) -> bool:
         """Return whether the router supports ephemeral key mode."""
-        session = async_get_clientsession(hass)
-        response = await session.get(
-            f"{self.url}/node/ba-epskc/state",
-            timeout=aiohttp.ClientTimeout(total=10),
-        )
-        if response.status == HTTPStatus.OK:
-            return True
-        if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
+        try:
+            await self.api.get_ephemeral_key_enabled()
+        except python_otbr_api.EphemeralKeyNotSupportedError:
             return False
-        raise python_otbr_api.OTBRError(f"unexpected http status {response.status}")
+        return True
 
     @_handle_otbr_error
-    async def activate_ephemeral_key(
-        self, hass: HomeAssistant, lifetime: int
-    ) -> tuple[str, int]:
+    async def activate_ephemeral_key(self, lifetime: int) -> tuple[str, int]:
         """Activate ephemeral key mode, returning the passcode and its UDP port.
 
         The lifetime is in milliseconds, as the OpenThread border agent API
         takes it.
         """
         async with self.ephemeral_key_lock:
-            return await self._activate_ephemeral_key(hass, lifetime)
+            try:
+                return await self._activate_ephemeral_key(lifetime)
+            except python_otbr_api.EphemeralKeyNotSupportedError as exc:
+                raise EphemeralKeyNotSupported from exc
 
-    async def _activate_ephemeral_key(
-        self, hass: HomeAssistant, lifetime: int
-    ) -> tuple[str, int]:
+    async def _activate_ephemeral_key(self, lifetime: int) -> tuple[str, int]:
         """Activate ephemeral key mode while holding the lock."""
         if self.unloading:
             raise HomeAssistantError("OTBR entry is unloading")
@@ -233,74 +221,27 @@ class OTBRData:
         ):
             raise EphemeralKeyInUse
 
-        session = async_get_clientsession(hass)
-        timeout = aiohttp.ClientTimeout(total=10)
-
         # The feature has to be enabled before a key can be activated
-        response = await session.put(
-            f"{self.url}/node/ba-epskc/state",
-            json="enable",
-            timeout=timeout,
-        )
-        if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
-            raise EphemeralKeyNotSupported
-        if response.status != HTTPStatus.OK:
-            raise python_otbr_api.OTBRError(f"unexpected http status {response.status}")
-
-        async def activate() -> aiohttp.ClientResponse:
-            return await session.post(
-                f"{self.url}/node/ba-epskc/key",
-                json={"lifetime": lifetime},
-                timeout=timeout,
-            )
-
-        response = await activate()
-        if response.status == HTTPStatus.CONFLICT:
+        await self.api.set_ephemeral_key_enabled(True)
+        try:
+            activation = await self.api.activate_ephemeral_key(lifetime)
+        except python_otbr_api.EphemeralKeyConflictError as err:
             # A key is already active, and one can only be started from the
             # stopped state, so replace it unless a device is using it right now
-            status_response = await session.get(
-                f"{self.url}/node/ba-epskc/key", timeout=timeout
-            )
-            if status_response.status != HTTPStatus.OK:
-                raise python_otbr_api.OTBRError(
-                    f"unexpected http status {status_response.status}"
-                )
-            try:
-                state = (await status_response.json())["state"]
-            except (ValueError, KeyError, TypeError) as exc:
-                raise python_otbr_api.OTBRError("unexpected API response") from exc
-            if state in EPHEMERAL_KEY_IN_USE_STATES:
-                raise EphemeralKeyInUse
-            delete_response = await session.delete(
-                f"{self.url}/node/ba-epskc/key", timeout=timeout
-            )
-            if delete_response.status != HTTPStatus.OK:
-                raise python_otbr_api.OTBRError(
-                    "failed to replace the active ephemeral key: "
-                    f"unexpected http status {delete_response.status}"
-                )
-            response = await activate()
-
-        if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
-            raise EphemeralKeyNotSupported
-        if response.status != HTTPStatus.OK:
-            raise python_otbr_api.OTBRError(f"unexpected http status {response.status}")
-
-        try:
-            activation = await response.json()
-            ephemeral_key, port = activation["tap"], activation["port"]
-        except (ValueError, KeyError, TypeError) as exc:
-            raise python_otbr_api.OTBRError("unexpected API response") from exc
-        self.active_ephemeral_key = ephemeral_key
+            status = await self.api.get_ephemeral_key_status()
+            if status.state in EPHEMERAL_KEY_IN_USE_STATES:
+                raise EphemeralKeyInUse from err
+            await self.api.deactivate_ephemeral_key()
+            activation = await self.api.activate_ephemeral_key(lifetime)
+        self.active_ephemeral_key = activation.tap
         self.active_ephemeral_key_expires = dt_util.utcnow() + timedelta(
             milliseconds=lifetime
         )
-        return ephemeral_key, port
+        return activation.tap, activation.port
 
     @_handle_otbr_error
     async def deactivate_ephemeral_key(
         self,
-        hass: HomeAssistant,
         ephemeral_key: str | None = None,
         only_if_active: bool = False,
     ) -> bool:
@@ -322,17 +263,10 @@ class OTBRData:
                 return False
             if ephemeral_key is not None and ephemeral_key != self.active_ephemeral_key:
                 return False
-            session = async_get_clientsession(hass)
-            response = await session.delete(
-                f"{self.url}/node/ba-epskc/key",
-                timeout=aiohttp.ClientTimeout(total=10),
-            )
-            if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
-                raise EphemeralKeyNotSupported
-            if response.status != HTTPStatus.OK:
-                raise python_otbr_api.OTBRError(
-                    f"unexpected http status {response.status}"
-                )
+            try:
+                await self.api.deactivate_ephemeral_key()
+            except python_otbr_api.EphemeralKeyNotSupportedError as exc:
+                raise EphemeralKeyNotSupported from exc
             # Only forget the key once the router confirmed it is gone
             self.active_ephemeral_key = None
             self.active_ephemeral_key_expires = None

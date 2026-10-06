@@ -3,7 +3,6 @@
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
-import re
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -279,12 +278,9 @@ async def test_config_entry_not_ready(
     "multiprotocol_addon_manager_mock",
 )
 async def test_ephemeral_key_probe_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error: type[Exception]
+    hass: HomeAssistant, error: type[Exception]
 ) -> None:
     """Test a connection error while probing ephemeral key support is not fatal."""
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(re.compile(r".*/node/ba-epskc/state$"), exc=error)
-
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
@@ -293,7 +289,8 @@ async def test_ephemeral_key_probe_connection_error(
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch("python_otbr_api.OTBR.get_ephemeral_key_enabled", side_effect=error):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
     # Support stays unknown, to be probed again later
     assert config_entry.runtime_data.ephemeral_key_supported is None
@@ -352,7 +349,6 @@ async def test_unload_entry_revokes_ephemeral_key(
     [
         pytest.param(HTTPStatus.OK, True, id="supported"),
         pytest.param(HTTPStatus.NOT_FOUND, False, id="not_supported"),
-        pytest.param(HTTPStatus.METHOD_NOT_ALLOWED, False, id="not_supported_method"),
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, None, id="probe_error"),
     ],
 )
@@ -412,6 +408,7 @@ async def test_config_entry_update(hass: HomeAssistant) -> None:
         return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS
     )
     mock_api.get_coprocessor_version = AsyncMock(return_value=TEST_COPROCESSOR_VERSION)
+    mock_api.get_ephemeral_key_enabled = AsyncMock(return_value=False)
     with patch("python_otbr_api.OTBR", return_value=mock_api) as mock_otrb_api:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 

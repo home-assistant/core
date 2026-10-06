@@ -79,9 +79,7 @@ async def websocket_info(
 
         if data.ephemeral_key_supported is None:
             try:
-                data.ephemeral_key_supported = await data.get_ephemeral_key_supported(
-                    hass
-                )
+                data.ephemeral_key_supported = await data.get_ephemeral_key_supported()
             except HomeAssistantError:
                 _LOGGER.debug("Could not probe %s for ephemeral key support", data.url)
 
@@ -233,7 +231,7 @@ async def websocket_create_ephemeral_key(
     """Create an ephemeral key for sharing the Thread network credentials."""
     try:
         ephemeral_key, port = await data.activate_ephemeral_key(
-            hass, EPHEMERAL_KEY_LIFETIME_MS
+            EPHEMERAL_KEY_LIFETIME_MS
         )
     except EphemeralKeyNotSupported:
         connection.send_error(
@@ -283,7 +281,7 @@ async def websocket_delete_ephemeral_key(
 ) -> None:
     """Deactivate the active ephemeral key, revoking the shared credentials."""
     try:
-        deleted = await data.deactivate_ephemeral_key(hass, msg.get("ephemeral_key"))
+        deleted = await data.deactivate_ephemeral_key(msg.get("ephemeral_key"))
     except EphemeralKeyNotSupported:
         connection.send_error(
             msg["id"],

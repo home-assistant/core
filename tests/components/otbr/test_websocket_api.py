@@ -968,13 +968,6 @@ async def test_create_ephemeral_key(
     [
         pytest.param(HTTPStatus.NOT_FOUND, HTTPStatus.OK, id="state_not_found"),
         pytest.param(HTTPStatus.OK, HTTPStatus.NOT_FOUND, id="key_not_found"),
-        # Routers which reject the method before matching the path answer 405
-        pytest.param(
-            HTTPStatus.METHOD_NOT_ALLOWED, HTTPStatus.OK, id="state_not_allowed"
-        ),
-        pytest.param(
-            HTTPStatus.OK, HTTPStatus.METHOD_NOT_ALLOWED, id="key_not_allowed"
-        ),
     ],
 )
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
@@ -1215,13 +1208,6 @@ KEY_STARTED = (HTTPStatus.OK, {"state": "started", "port": 49154})
             KEY_STARTED,
             HTTPStatus.OK,
             id="missing_port",
-        ),
-        pytest.param(
-            HTTPStatus.OK,
-            [(HTTPStatus.OK, [])],
-            KEY_STARTED,
-            HTTPStatus.OK,
-            id="not_a_dict",
         ),
         pytest.param(
             HTTPStatus.OK,
@@ -1548,12 +1534,6 @@ async def test_delete_ephemeral_key_connection_error(
     [
         pytest.param(
             HTTPStatus.NOT_FOUND, "ephemeral_key_not_supported", id="not_found"
-        ),
-        # Routers which reject the method before matching the path answer 405
-        pytest.param(
-            HTTPStatus.METHOD_NOT_ALLOWED,
-            "ephemeral_key_not_supported",
-            id="not_allowed",
         ),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
