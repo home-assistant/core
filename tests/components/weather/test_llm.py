@@ -131,6 +131,32 @@ async def test_get_forecast_tool_auto_selects_supported_cadence(
     assert response.data["forecast"][0]["condition"] == "sunny"
 
 
+async def test_get_forecast_tool_selects_twice_daily_cadence(
+    hass: HomeAssistant,
+) -> None:
+    """Test twice-daily is a fallback for both partial- and whole-day periods."""
+    entity = await _create_weather_entity(
+        hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
+    today = dt_util.start_of_local_day()
+    entity.forecast_list = [{"datetime": today.isoformat(), "condition": "sunny"}]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    # "this_afternoon" (partial-day) would normally prefer hourly, and "today"
+    # (whole-day) would normally prefer daily, but only twice_daily is
+    # supported, so both fall back to it.
+    for period in ("this_afternoon", "today"):
+        response = await tool.async_call(
+            hass,
+            llm_helper.ToolInput("weather__get_forecast", _tool_args(period)),
+            _llm_context(),
+        )
+        assert not response.error
+        assert response.data["forecast"][0]["condition"] == "sunny"
+
+
 async def test_get_forecast_tool_prefers_granular_cadence_for_partial_day(
     hass: HomeAssistant,
 ) -> None:
@@ -433,6 +459,34 @@ async def test_get_forecast_tool_tonight_window_boundaries(
 
     conditions = [entry["condition"] for entry in response.data["forecast"]]
     assert conditions == ["rainy", "sunny", "foggy"]
+
+
+async def test_get_forecast_tool_twice_daily_window_boundaries(
+    hass: HomeAssistant,
+) -> None:
+    """Test twice-daily entries use the 12-hour overlap, not just a start match."""
+    entity = await _create_weather_entity(
+        hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
+    today = dt_util.start_of_local_day()
+    tomorrow = today + timedelta(days=1)
+    entity.forecast_list = [
+        {"datetime": (today - timedelta(hours=12)).isoformat(), "condition": "foggy"},
+        {"datetime": today.isoformat(), "condition": "rainy"},
+        {"datetime": today.replace(hour=12).isoformat(), "condition": "sunny"},
+        {"datetime": tomorrow.isoformat(), "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["rainy", "sunny"]
 
 
 async def test_get_forecast_tool_next_7_days_window_boundaries(
