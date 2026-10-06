@@ -20,7 +20,6 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
-    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 
@@ -750,7 +749,6 @@ class DPCode(StrEnum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
-    FLOW_RATE = "flow_rate"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
     FROST = "frost"  # Frost protection
     GAS_SENSOR_STATE = "gas_sensor_state"
@@ -1238,11 +1236,6 @@ UNITS = (
         device_classes={
             SensorDeviceClass.PH,
         },
-    ),
-    UnitOfMeasurement(
-        unit=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-        aliases={"gpm"},
-        device_classes={SensorDeviceClass.VOLUME_FLOW_RATE},
     ),
     UnitOfMeasurement(
         unit=UnitOfConductivity.MICROSIEMENS_PER_CM,

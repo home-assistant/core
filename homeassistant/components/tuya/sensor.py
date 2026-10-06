@@ -773,11 +773,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.FLOW_RATE,
-            device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.ADD_ELE,
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,

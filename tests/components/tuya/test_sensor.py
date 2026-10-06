@@ -374,7 +374,6 @@ async def test_hwsb_sensors_with_quirk(
 ) -> None:
     """Test HWSB outdoor equipment sensors with quirk applied."""
     mock_device.status["speed_current"] = 80
-    mock_device.status["flow_rate"] = 45
     mock_device.status["add_ele"] = 0
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -382,12 +381,6 @@ async def test_hwsb_sensors_with_quirk(
     assert state_speed is not None
     assert state_speed.state == "80.0"
     assert state_speed.attributes["unit_of_measurement"] == "%"
-
-    state_flow = hass.states.get("sensor.inverflow_volume_flow_rate")
-    assert state_flow is not None
-    assert state_flow.state == "45.0"
-    assert state_flow.attributes["unit_of_measurement"] == "gal/min"
-    assert state_flow.attributes["device_class"] == "volume_flow_rate"
 
     state_energy = hass.states.get("sensor.inverflow_total_energy")
     assert state_energy is not None
