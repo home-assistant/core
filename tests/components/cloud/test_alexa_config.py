@@ -964,18 +964,27 @@ async def test_alexa_config_prefs_update_without_linked_skill(
 
 
 @pytest.mark.parametrize(
-    "enabled", [pytest.param(True, id="enabled"), pytest.param(False, id="disabled")]
+    ("enabled", "logged_in", "subscription_expired", "preserved"),
+    [
+        pytest.param(True, True, False, True, id="enabled"),
+        pytest.param(False, True, False, False, id="disabled"),
+        pytest.param(True, False, False, False, id="logged_out"),
+        pytest.param(True, True, True, True, id="subscription_expired"),
+    ],
 )
 async def test_alexa_config_migrate_entity_names(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
-    cloud_stub: Mock,
     entity_registry: er.EntityRegistry,
     enabled: bool,
+    logged_in: bool,
+    subscription_expired: bool,
+    preserved: bool,
 ) -> None:
     """Test the v4 migration preserves the names of exposed entities as aliases.
 
-    Nothing is preserved for a disabled Alexa, it exposed nothing by name.
+    Nothing is preserved for a disabled or logged out Alexa, it exposed nothing
+    by name. An expired subscription still did, so its names are preserved.
     """
     hass.set_state(CoreState.starting)
 
@@ -1007,9 +1016,9 @@ async def test_alexa_config_migrate_entity_names(
                 {"entity_config": {entity_yaml_name.entity_id: {"name": "Configured"}}}
             ),
             cloud_prefs,
-            cloud_stub,
+            Mock(is_logged_in=logged_in, subscription_expired=subscription_expired),
         )
 
-    expected_calls = [call(hass, entity_exposed.entity_id)] if enabled else []
+    expected_calls = [call(hass, entity_exposed.entity_id)] if preserved else []
     assert mock_preserve.mock_calls == expected_calls
     assert cloud_prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION

@@ -131,14 +131,6 @@ def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 @callback
-def _async_enabled(cloud: Cloud[CloudClient], prefs: CloudPreferences) -> bool:
-    """Return if Google is enabled."""
-    return (
-        cloud.is_logged_in and not cloud.subscription_expired and prefs.google_enabled
-    )
-
-
-@callback
 def _async_should_expose(
     hass: HomeAssistant, config: dict[str, Any], entity_id: str
 ) -> bool:
@@ -252,8 +244,13 @@ async def async_migrate_entity_settings(
     ):
         _async_migrate_entity_settings_v1(hass, config, prefs)
 
-    # A disabled Google Assistant exposed nothing, so there is nothing to preserve
-    if prefs.google_settings_version < 4 and _async_enabled(cloud, prefs):
+    # Only a logged in and enabled Google Assistant exposed names, so only then
+    # is there anything to preserve
+    if (
+        prefs.google_settings_version < 4
+        and cloud.is_logged_in
+        and prefs.google_enabled
+    ):
         _async_migrate_entity_settings_v2(hass, config)
 
     _LOGGER.info(
@@ -287,7 +284,11 @@ class CloudGoogleConfig(AbstractConfig):
     @override
     def enabled(self) -> bool:
         """Return if Google is enabled."""
-        return _async_enabled(self._cloud, self._prefs)
+        return (
+            self._cloud.is_logged_in
+            and not self._cloud.subscription_expired
+            and self._prefs.google_enabled
+        )
 
     @property
     @override
