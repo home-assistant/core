@@ -1,7 +1,6 @@
 """Services for the image integration."""
 
 import asyncio
-import errno
 import os
 from typing import TYPE_CHECKING
 
@@ -10,6 +9,7 @@ import probatio
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.os_error import os_error_translation_key
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -24,14 +24,6 @@ if TYPE_CHECKING:
     from . import ImageEntity
 
 IMAGE_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.string}
-
-# OS errors are not translatable, so the common causes get their own message
-WRITE_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
-    errno.EACCES: "write_permission_denied",
-    errno.EPERM: "write_permission_denied",
-    errno.ENOSPC: "write_no_space",
-    errno.EROFS: "write_read_only",
-}
 
 
 async def _async_handle_snapshot_service(
@@ -66,8 +58,8 @@ async def _async_handle_snapshot_service(
     except OSError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key=WRITE_ERROR_TRANSLATION_KEYS.get(err.errno, "write_failed"),
-            translation_placeholders={"filename": snapshot_file},
+            translation_key=os_error_translation_key(err),
+            translation_placeholders={"path": snapshot_file},
         ) from err
 
 

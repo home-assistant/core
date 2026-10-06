@@ -554,23 +554,23 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     [
         (
             OSError(errno.EACCES, "Permission denied"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+            "Permission denied for /test/snapshot.jpg$",
         ),
         (
             OSError(errno.EPERM, "Operation not permitted"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+            "Permission denied for /test/snapshot.jpg$",
         ),
         (
             OSError(errno.ENOSPC, "No space left on device"),
-            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
+            "Not enough disk space to write /test/snapshot.jpg$",
         ),
         (
             OSError(errno.EROFS, "Read-only file system"),
-            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
+            "Cannot write /test/snapshot.jpg because the file system is read-only$",
         ),
         (
             OSError(errno.EIO, "Input/output error"),
-            "Cannot write image to /test/snapshot.jpg$",
+            "Cannot access /test/snapshot.jpg$",
         ),
     ],
 )
