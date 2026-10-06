@@ -164,7 +164,7 @@ _CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         probatio.Optional(CONF_IGNORE_ATTRIBUTES): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )
@@ -181,10 +181,10 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {cv.string: cv.string}
         ),
         probatio.Optional(CONF_TAGS_ATTRIBUTES, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_ENTITY_SCHEMA}
@@ -337,6 +337,14 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 with suppress(KeyError, TypeError):
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
+
+        # InfluxDB reserves "time"; leave the valid "time_str" field unchanged.
+        fields = json[INFLUX_CONF_FIELDS]
+        if INFLUX_CONF_TIME in fields:
+            key = f"{INFLUX_CONF_TIME}_"
+            while key in fields:
+                key = f"{key}_"
+            fields[key] = fields.pop(INFLUX_CONF_TIME)
 
         json[INFLUX_CONF_TAGS].update(tags)
 

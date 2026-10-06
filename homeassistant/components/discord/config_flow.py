@@ -15,7 +15,9 @@ from .const import DOMAIN, URL_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
+CONFIG_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+)
 
 
 class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):

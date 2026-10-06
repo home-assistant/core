@@ -2020,6 +2020,8 @@ async def test_track_template_result_with_group(hass: HomeAssistant) -> None:
 """
     template_complex = Template(template_complex_str, hass)
 
+    # Run in the event loop; executor jobs may append results out of order
+    @callback
     def specific_run_callback(
         event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],

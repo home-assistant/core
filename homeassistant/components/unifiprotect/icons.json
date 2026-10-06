@@ -405,9 +405,6 @@
       "detections_vehicle": {
         "default": "mdi:car"
       },
-      "hdr_mode": {
-        "default": "mdi:brightness-7"
-      },
       "high_fps": {
         "default": "mdi:video-high-definition"
       },

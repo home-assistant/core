@@ -36,7 +36,7 @@ import logging
 from typing import get_args
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
+from aiohttp.web_exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound
 from aiohttp_sse import sse_response
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -48,7 +48,6 @@ from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
 
 from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
@@ -113,7 +112,7 @@ def _entry_llm_api_ids(
 def _validate_admin(request: web.Request, entry: MCPServerConfigEntry) -> None:
     """Verify the user may use the endpoints serving the configured LLM APIs."""
     if entry.data[CONF_REQUIRE_ADMIN] and not request["hass_user"].is_admin:
-        raise Unauthorized
+        raise HTTPForbidden
 
 
 @dataclass
@@ -367,7 +366,7 @@ class ModelContextProtocolStreamableApiView(HomeAssistantView):
         """Process JSON-RPC messages for the LLM API identified by api_id."""
         hass = request.app[KEY_HASS]
         if api_id != llm.LLM_API_ASSIST and not request["hass_user"].is_admin:
-            raise Unauthorized
+            raise HTTPForbidden
         if api_id not in {api.id for api in llm.async_get_apis(hass)}:
             raise HTTPNotFound(text=f"Unknown LLM API '{api_id}'")
         return await _async_handle_streamable_message(

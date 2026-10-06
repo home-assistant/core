@@ -39,7 +39,7 @@ on:
 env:
   CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.10"
+  HA_SHORT_VERSION: "2026.11"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
   # - 10.3 and 10.6 are the versions currently phased out until 2027.3

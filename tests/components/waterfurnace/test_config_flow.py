@@ -6,7 +6,7 @@ import pytest
 from waterfurnace.waterfurnace import WFCredentialError, WFException
 
 from homeassistant.components.waterfurnace.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -164,103 +164,6 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_success(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
-) -> None:
-    """Test successful import flow from YAML."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "WaterFurnace test_user"
-    assert result["data"] == {
-        CONF_USERNAME: "test_user",
-        CONF_PASSWORD: "test_password",
-    }
-    assert result["result"].unique_id == "test_account_id"
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test import flow when device is already configured."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    ("exception", "reason"),
-    [
-        (WFCredentialError("Invalid credentials"), "invalid_auth"),
-        (WFException("Connection failed"), "cannot_connect"),
-        (Exception("Unexpected error"), "unknown"),
-    ],
-)
-async def test_import_flow_exceptions(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
-    exception: Exception,
-    reason: str,
-) -> None:
-    """Test import flow with connection error."""
-    mock_waterfurnace_client.login.side_effect = exception
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-
-async def test_import_flow_account_id_none(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
-) -> None:
-    """Test import flow when account_id is None."""
-    mock_waterfurnace_client.account_id = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
-
-
-async def test_import_flow_no_devices(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
-) -> None:
-    """Test import flow with no devices."""
-    mock_waterfurnace_client.devices = []
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
