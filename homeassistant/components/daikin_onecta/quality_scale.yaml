@@ -38,11 +38,15 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
   devices: done
-  diagnostics: todo
-  discovery: todo
-  discovery-update-info: todo
+  diagnostics: done
+  discovery: done
+  discovery-update-info:
+    status: exempt
+    comment: >-
+      Zeroconf discovery starts the cloud OAuth flow only; the integration
+      does not use or persist a local network address.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
