@@ -407,7 +407,6 @@ async def test_device_registry_sw_version_updates_on_refresh(
         assert device is not None
         assert device.sw_version == "G-BLE-1.5.3-master+0"
 
-        # The next poll reports the upgraded firmware.
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
