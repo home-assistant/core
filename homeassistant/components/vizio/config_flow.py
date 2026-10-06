@@ -74,7 +74,8 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> probatio.Sch
             ): str,
             probatio.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
             probatio.Optional(
-                CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
+                probatio.Secret(CONF_ACCESS_TOKEN),
+                default=input_dict.get(CONF_ACCESS_TOKEN, ""),
             ): str,
         },
         extra=probatio.REMOVE_EXTRA,

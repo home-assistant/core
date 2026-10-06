@@ -48,9 +48,7 @@ CV_FLOW_METER_VALID_UNITS = {
     "m3",
 }
 
-CV_WX_DATA_VALID_PERCENTAGE = probatio.All(
-    probatio.Coerce(int), probatio.Range(min=0, max=100)
-)
+CV_WX_DATA_VALID_PERCENTAGE = probatio.All(probatio.Coerce(int), probatio.Percentage())
 CV_WX_DATA_VALID_TEMP_RANGE = probatio.All(
     probatio.Coerce(float), probatio.Range(min=-40.0, max=40.0)
 )
