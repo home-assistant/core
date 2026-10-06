@@ -334,7 +334,9 @@ async def test_unclaimed_device_starts_reauth(
     assert [flow["context"]["source"] for flow in flows] == ["reauth"]
 
 
-@pytest.mark.parametrize("lost_during", ["get_directives", "get_directive_data"])
+@pytest.mark.parametrize(
+    "lost_during", ["get_directives", "get_directives_denied", "get_directive_data"]
+)
 async def test_claim_lost_while_polling_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -352,12 +354,18 @@ async def test_claim_lost_while_polling_starts_reauth(
         mock_webhook_client.is_claimed = False
         return []
 
+    async def lose_claim_on_denied_list() -> list[DirectiveResource]:
+        mock_webhook_client.is_claimed = False
+        raise PermissionError("The device is not authenticated")
+
     async def lose_claim_on_schedule(_directive_id: str) -> DirectiveData:
         mock_webhook_client.is_claimed = False
         raise PermissionError("The device is not authenticated")
 
     if lost_during == "get_directives":
         mock_webhook_client.get_directives.side_effect = lose_claim_on_list
+    elif lost_during == "get_directives_denied":
+        mock_webhook_client.get_directives.side_effect = lose_claim_on_denied_list
     else:
         mock_webhook_client.get_directive_data.side_effect = lose_claim_on_schedule
     await coordinator.async_refresh()
