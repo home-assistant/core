@@ -39,7 +39,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -74,16 +74,26 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration", "mock_infrared_emitter_entity")
+@pytest.mark.parametrize(
+    ("has_receiver", "source_entity_ids"),
+    [
+        pytest.param(False, [EMITTER_ENTITY_ID], id="emitter"),
+        pytest.param(
+            True, [EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID], id="emitter_and_receiver"
+        ),
+    ],
+)
 @pytest.mark.parametrize(
     "entity_id", [_TURBO_ENTITY_ID, _LIGHT_ENTITY_ID, _XFAN_ENTITY_ID]
 )
-async def test_availability_follows_emitter(
+@pytest.mark.usefixtures("init_integration", "mock_infrared_emitter_entity")
+async def test_availability_follows_sources(
     hass: HomeAssistant,
     entity_id: str,
+    source_entity_ids: list[str],
 ) -> None:
-    """Test switch availability follows the infrared emitter."""
-    await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)
+    """Test switch availability follows all configured infrared entities."""
+    await assert_availability_follows_source_entity(hass, entity_id, source_entity_ids)
 
 
 @pytest.mark.usefixtures("init_integration")
