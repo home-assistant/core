@@ -1,6 +1,7 @@
 """Test the Daikin Onecta coordinator."""
 
 from datetime import UTC, datetime, time, timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -13,6 +14,7 @@ from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
+from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -20,6 +22,34 @@ from tests.common import MockConfigEntry
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
+
+
+def test_device_update_refreshes_cached_name() -> None:
+    """Use the replacement cloud model's name in device-registry metadata."""
+    device = DaikinOnectaDevice(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Old name",
+            available=True,
+            mac_address=None,
+            device_model=None,
+            gateway_embedded_id=None,
+        )
+    )
+
+    device.set_device_data(
+        SimpleNamespace(
+            id="gateway",
+            display_name="New name",
+            available=True,
+            mac_address=None,
+            device_model=None,
+            gateway_embedded_id=None,
+        )
+    )
+
+    assert device.name == "New name"
+    assert device.device_info()["name"] == "New name"
 
 
 def _patch_polling_schedule(

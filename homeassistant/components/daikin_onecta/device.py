@@ -108,6 +108,7 @@ class DaikinOnectaDevice:
     def set_device_data(self, device: GatewayDevice) -> None:
         """Overwrite the typed and compatibility data for this device."""
         self.device = device
+        self.name = device.display_name
         self._is_present_in_cloud = True
         _LOGGER.debug(
             "Device '%s' received new data from the Daikin cloud, isCloudConnectionUp '%s'",
