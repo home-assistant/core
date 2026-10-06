@@ -470,3 +470,43 @@ async def test_default_scan_interval_migration(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_update.call_count == 3
+
+
+async def test_device_registry_sw_version_updates_on_refresh(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device firmware version follows a firmware upgrade."""
+    first_device = deepcopy(WAVE_DEVICE_INFO)
+    second_device = deepcopy(WAVE_DEVICE_INFO)
+    first_device.sw_version = "G-BLE-1.5.3-master+0"
+    second_device.sw_version = "G-BLE-2.2.3-master+0"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: first_device.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(side_effect=[first_device, second_device]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_BLUETOOTH, WAVE_DEVICE_INFO.address), entry.entry_id
+        )
+        assert device is not None
+        assert device.sw_version == "G-BLE-1.5.3-master+0"
+
+        await entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.sw_version == "G-BLE-2.2.3-master+0"

@@ -1,5 +1,6 @@
 """The tests for the Restore component."""
 
+import asyncio
 from collections.abc import Coroutine
 from datetime import datetime, timedelta
 import logging
@@ -9,8 +10,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -629,3 +631,254 @@ async def test_entity_removal_with_failing_extra_data(
     assert "input_boolean.bad" not in data.last_states
 
     assert "Error getting extra restore state data for input_boolean.bad" in caplog.text
+
+
+class _CounterExtraData(ExtraStoredData):
+    """Extra stored data holding a counter."""
+
+    def __init__(self, count: int) -> None:
+        """Initialize the extra data."""
+        self.count = count
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {"count": self.count}
+
+
+class _RenameRestoreEntity(RestoreEntity):
+    """Restore entity recording what it restored each time it was added."""
+
+    _attr_should_poll = False
+    _attr_unique_id = "5678"
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        self._attr_state = "initial"
+        self.count = 0
+        self.restored: list[tuple[str, str | None, dict[str, Any] | None]] = []
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the state and the counter."""
+        last_state = await self.async_get_last_state()
+        last_extra_data = await self.async_get_last_extra_data()
+        self.restored.append(
+            (
+                self.entity_id,
+                last_state.state if last_state else None,
+                last_extra_data.as_dict() if last_extra_data else None,
+            )
+        )
+        if last_state:
+            self._attr_state = last_state.state
+        if last_extra_data:
+            self.count = last_extra_data.as_dict()["count"]
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Suspend during removal."""
+        # The stored state must be moved only after removal has completed
+        await asyncio.sleep(0)
+
+    @property
+    def extra_restore_state_data(self) -> _CounterExtraData:
+        """Return the counter."""
+        return _CounterExtraData(self.count)
+
+    def set_state(self, state: str, count: int) -> None:
+        """Set the state and the counter."""
+        self._attr_state = state
+        self.count = count
+        self.async_write_ha_state()
+
+
+class _FailingRenameRestoreEntity(_RenameRestoreEntity):
+    """Restore entity whose extra_restore_state_data raises."""
+
+    @property
+    def extra_restore_state_data(self) -> _CounterExtraData:
+        """Raise."""
+        raise RuntimeError("Unexpected error")
+
+
+async def _async_add_rename_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity: _RenameRestoreEntity,
+) -> None:
+    """Register the entity as test.test and add it."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    await platform.async_add_entities([entity])
+
+
+async def test_restore_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the state is restored after the entity_id is changed."""
+    entity = _RenameRestoreEntity()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+
+    assert entity.restored == [
+        ("test.test", None, None),
+        ("test.test2", "live", {"count": 3}),
+    ]
+    assert hass.states.get("test.test") is None
+    assert hass.states.get("test.test2").state == "live"
+
+    data = async_get(hass)
+    assert list(data.entities) == ["test.test2"]
+    assert list(data.last_states) == ["test.test2"]
+    assert data.last_states["test.test2"].state.entity_id == "test.test2"
+
+    entity.set_state("later", 4)
+    await entity.async_remove()
+    await data.async_dump_states()
+
+    stored = hass_storage[STORAGE_KEY]["data"]
+    assert [item["state"]["entity_id"] for item in stored] == ["test.test2"]
+    assert stored[0]["state"]["state"] == "later"
+    assert stored[0]["extra_data"] == {"count": 4}
+
+
+async def test_entity_id_change_dumped_before_readd(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a state moved before the re-add is persisted under the new entity_id."""
+    entity = _RenameRestoreEntity()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+    data = async_get(hass)
+
+    # Emulate a dump between the move and the re-add
+    await entity.async_remove(force_remove=True)
+    data.async_restore_entity_id_changed("test.test", "test.test2")
+    await data.async_dump_states()
+
+    stored = hass_storage[STORAGE_KEY]["data"]
+    assert [item["state"]["entity_id"] for item in stored] == ["test.test2"]
+    assert stored[0]["state"]["state"] == "live"
+    assert stored[0]["extra_data"] == {"count": 3}
+
+    reloaded = RestoreStateData(hass)
+    await reloaded.async_load()
+    assert list(reloaded.last_states) == ["test.test2"]
+    assert reloaded.last_states["test.test2"].state.state == "live"
+    assert reloaded.last_states["test.test2"].extra_data.as_dict() == {"count": 3}
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "expected_restored"),
+    [
+        pytest.param(
+            _RenameRestoreEntity,
+            ("test.test2", "live", {"count": 3}),
+            id="own_state",
+        ),
+        pytest.param(
+            _FailingRenameRestoreEntity,
+            ("test.test2", None, None),
+            id="failing_extra_data",
+        ),
+    ],
+)
+async def test_entity_id_change_ignores_leftover_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_class: type[_RenameRestoreEntity],
+    expected_restored: tuple[str, str | None, dict[str, Any] | None],
+) -> None:
+    """Test a leftover state stored under the new entity_id is not restored."""
+    data = async_get(hass)
+    data.last_states["test.test2"] = StoredState(
+        State("test.test2", "foreign"), _CounterExtraData(99), dt_util.utcnow()
+    )
+    entity = entity_class()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+
+    assert entity.restored == [("test.test", None, None), expected_restored]
+    assert "test.test" not in data.last_states
+
+
+async def test_entity_id_change_and_back(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test changing the entity_id back restores the latest state."""
+    entity = _RenameRestoreEntity()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("first", 1)
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+    entity.set_state("second", 2)
+
+    entity_registry.async_update_entity("test.test2", new_entity_id="test.test")
+    await hass.async_block_till_done()
+
+    assert entity.restored == [
+        ("test.test", None, None),
+        ("test.test2", "first", {"count": 1}),
+        ("test.test", "second", {"count": 2}),
+    ]
+    data = async_get(hass)
+    assert list(data.last_states) == ["test.test"]
+
+    # A new entity taking the previous entity_id restores nothing
+    other = RestoreEntity()
+    other.hass = hass
+    other.entity_id = "test.test2"
+    assert await other.async_get_last_state() is None
+
+
+async def test_restore_entity_id_changed(hass: HomeAssistant) -> None:
+    """Test moving a stored state to a new entity_id."""
+    data = async_get(hass)
+    now = dt_util.utcnow()
+    context = Context()
+    extra_data = _CounterExtraData(3)
+    state = State(
+        "test.test",
+        "on",
+        {"attr": "value"},
+        last_changed=now - timedelta(hours=2),
+        last_reported=now - timedelta(minutes=1),
+        last_updated=now - timedelta(hours=1),
+        context=context,
+    )
+    data.last_states["test.test"] = StoredState(state, extra_data, now)
+
+    data.async_restore_entity_id_changed("test.test", "test.test2")
+
+    assert list(data.last_states) == ["test.test2"]
+    stored_state = data.last_states["test.test2"]
+    assert stored_state.extra_data is extra_data
+    assert stored_state.last_seen == now
+    assert stored_state.state.as_dict() == {
+        **state.as_dict(),
+        "entity_id": "test.test2",
+    }
+    assert stored_state.state.context is context
+
+
+async def test_restore_entity_id_changed_no_stored_state(hass: HomeAssistant) -> None:
+    """Test moving the restore data of an entity without a stored state."""
+    data = async_get(hass)
+    data.last_states["test.other"] = StoredState(
+        State("test.other", "on"), None, dt_util.utcnow()
+    )
+
+    data.async_restore_entity_id_changed("test.test", "test.test2")
+
+    assert list(data.last_states) == ["test.other"]

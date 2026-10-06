@@ -5,7 +5,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from wled import WLEDConnectionError
+from wled import WLEDConnectionClosedError, WLEDConnectionError
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
@@ -45,6 +45,41 @@ async def test_load_unload_config_entry(
 
     # Ensure everything is cleaned up nicely and are disconnected
     assert mock_wled.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_unload_while_listening(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unloading ends the WebSocket listener without errors."""
+    connection_connected = asyncio.Future()
+    connection_closed = asyncio.Future()
+
+    async def listen(callback: Callable) -> None:
+        connection_connected.set_result(None)
+        await connection_closed
+
+    async def disconnect() -> None:
+        # Disconnecting ends the listener, like a closed WebSocket does.
+        if not connection_closed.done():
+            connection_closed.set_exception(WLEDConnectionClosedError("closed"))
+
+    mock_wled.listen.side_effect = listen
+    mock_wled.disconnect.side_effect = disconnect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await connection_connected
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert "Unable to remove unknown job listener" not in caplog.text
 
 
 @patch(

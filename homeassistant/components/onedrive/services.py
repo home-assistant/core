@@ -43,7 +43,7 @@ DELETE_SERVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Required(CONF_DESTINATION_PATH): probatio.All(
-            probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+            probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
         ),
     }
 )

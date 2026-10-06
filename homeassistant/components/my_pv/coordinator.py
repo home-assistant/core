@@ -27,10 +27,10 @@ UPDATE_INTERVAL = timedelta(seconds=5)
 
 
 def _my_pv_connection[T](
-    func: Callable[..., Coroutine[Any, Any, T]],
-) -> Callable[..., Coroutine[Any, Any, T]]:
+    func: Callable[..., Coroutine[Any, Any, bool]],
+) -> Callable[..., Coroutine[Any, Any, bool]]:
     @functools.wraps(func)
-    async def wrapper(self, *args: Any, **kwargs: Any) -> T:
+    async def wrapper(self, *args: Any, **kwargs: Any) -> bool:
         try:
             if not self.device.connected and not await self.device.connect():
                 raise HomeAssistantError(
@@ -39,6 +39,10 @@ def _my_pv_connection[T](
                 )
 
             return await func(self, *args, **kwargs)
+        except MyPVTooManyRequestsError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="rate_limiting"
+            ) from exc
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -138,7 +142,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             ) from exc
 
     @_my_pv_connection
-    async def set_setup_value(self, key: str, value: Any):
+    async def set_setup_value(self, key: str, value: Any) -> bool:
         """Set a setup value."""
         result = await self.device.set_setup_value(key, value)
         self.async_update_listeners()

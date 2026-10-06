@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, override
 
-from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
+from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -86,12 +86,17 @@ class PyLoadBinarySensor(BasePyLoadEntity, ButtonEntity):
         try:
             await self.entity_description.press_fn(self.coordinator.pyload)
         except CannotConnect as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
         except InvalidAuth as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_auth_exception",
+            ) from e
+        except ParserError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
             ) from e

@@ -17,7 +17,7 @@ _LOGGER = getLogger(__name__)
 UPLOAD_IMAGE_SCHEMA = probatio.Schema(
     {
         probatio.Required("device_id"): probatio.All(
-            probatio.EnsureList(), [cv.string], probatio.Length(min=1)
+            probatio.EnsureList(), [cv.string], probatio.NonEmpty()
         ),
         probatio.Required("image_url"): cv.url,
     }
