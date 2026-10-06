@@ -341,6 +341,16 @@ async def test_smoke_detection_system_no_alarm_yet(
         pytest.param(
             {
                 "smoke_detection_system": smoke_detection_system_device(
+                    alarm=SurveillanceAlarmService.State.ALARM_OFF
+                )
+            },
+            SurveillanceAlarmService.State.PRE_ALARM,
+            "pre_alarm",
+            id="pre_alarm",
+        ),
+        pytest.param(
+            {
+                "smoke_detection_system": smoke_detection_system_device(
                     alarm=SurveillanceAlarmService.State.ALARM_ON
                 )
             },
