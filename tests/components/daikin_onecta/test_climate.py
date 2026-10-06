@@ -193,7 +193,7 @@ async def test_set_vertical_swing_mode(command_result: bool) -> None:
     if not command_result:
         with pytest.raises(HomeAssistantError) as err:
             await entity.async_set_swing_mode("swing")
-        assert err.value.translation_key == "command_failed"
+        assert err.value.translation_key == "set_swing_mode_failed"
         coordinator.async_update_listeners.assert_not_called()
     else:
         await entity.async_set_swing_mode("swing")
@@ -221,7 +221,7 @@ async def test_set_hvac_mode_keeps_power_state_when_power_command_fails() -> Non
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_hvac_mode(HVACMode.OFF)
 
-    assert err.value.translation_key == "command_failed"
+    assert err.value.translation_key == "set_hvac_mode_failed"
     assert climate_control.on_off_mode.value == "on"
     coordinator.async_update_listeners.assert_not_called()
 
@@ -316,7 +316,7 @@ async def test_set_swing_horizontal_mode(
     if current_mode != requested_mode and not command_result:
         with pytest.raises(HomeAssistantError) as err:
             await entity.async_set_swing_horizontal_mode(requested_mode)
-        assert err.value.translation_key == "command_failed"
+        assert err.value.translation_key == "set_swing_mode_failed"
         coordinator.async_update_listeners.assert_not_called()
     else:
         await entity.async_set_swing_horizontal_mode(requested_mode)
@@ -505,11 +505,14 @@ async def test_turn_handles_management_point_removed_after_command(
 
 
 @pytest.mark.parametrize(
-    ("method", "initial_value"),
-    [("async_turn_on", "off"), ("async_turn_off", "on")],
+    ("method", "initial_value", "translation_key"),
+    [
+        ("async_turn_on", "off", "turn_on_failed"),
+        ("async_turn_off", "on", "turn_off_failed"),
+    ],
 )
 async def test_turn_keeps_cached_power_state_after_failed_command(
-    method: str, initial_value: str
+    method: str, initial_value: str, translation_key: str
 ) -> None:
     """Do not publish an unsuccessful power command."""
     entity = object.__new__(DaikinClimate)
@@ -525,7 +528,7 @@ async def test_turn_keeps_cached_power_state_after_failed_command(
     with pytest.raises(HomeAssistantError) as err:
         await getattr(entity, method)()
 
-    assert err.value.translation_key == "command_failed"
+    assert err.value.translation_key == translation_key
     assert climate_control.on_off_mode.value == initial_value
     coordinator.async_update_listeners.assert_not_called()
 
@@ -553,7 +556,7 @@ async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_hvac_mode(HVACMode.HEAT)
 
-    assert err.value.translation_key == "command_failed"
+    assert err.value.translation_key == "set_hvac_mode_failed"
 
     assert climate_control.on_off_mode.value == "on"
     assert climate_control.operation_mode.value == "cooling"
@@ -705,7 +708,7 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_fan_mode("3")
 
-    assert err.value.translation_key == "command_failed"
+    assert err.value.translation_key == "set_fan_mode_failed"
 
     assert fan_speed.current_mode.value == FANMODE_FIXED
     assert fan_speed.modes[FANMODE_FIXED].value == 1
@@ -877,7 +880,7 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_preset_mode(PRESET_COMFORT)
 
-    assert err.value.translation_key == "command_failed"
+    assert err.value.translation_key == "set_preset_mode_failed"
 
     entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
     entity._async_enable_preset_mode.assert_not_awaited()
@@ -900,7 +903,7 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_preset_mode(PRESET_COMFORT)
 
-    assert err.value.translation_key == "command_failed"
+    assert err.value.translation_key == "set_preset_mode_failed"
 
     entity._async_disable_preset_mode.assert_awaited_once_with(PRESET_BOOST)
     entity._async_enable_preset_mode.assert_awaited_once_with(PRESET_COMFORT)

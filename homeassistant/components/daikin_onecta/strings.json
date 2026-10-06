@@ -80,9 +80,6 @@
     }
   },
   "exceptions": {
-    "command_failed": {
-      "message": "Failed to {command} for {device}"
-    },
     "connection_failed": {
       "message": "Unable to connect to the Daikin API"
     },
@@ -91,6 +88,27 @@
     },
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set the fan mode for {device}"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set the HVAC mode for {device}"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set the preset mode for {device}"
+    },
+    "set_swing_mode_failed": {
+      "message": "Failed to set the swing mode for {device}"
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set the temperature for {device}"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on {device}"
     }
   },
   "options": {
