@@ -351,6 +351,7 @@ async def test_migrate_sense_setting_mirror_keeps_other_devices(
 async def test_migrate_sense_setting_mirror_removed_public_only(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     sensor_all: Sensor,
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
@@ -365,10 +366,17 @@ async def test_migrate_sense_setting_mirror_removed_public_only(
         f"{sensor_all.mac}_alarm",
         config_entry=ufp_public_only.entry,
     )
+    await _load_automation(hass, mirror.entity_id)
 
     await setup_public_only()
 
     assert entity_registry.async_get(mirror.entity_id) is None
+    # Runs after platform setup, so the repair names the alarm switch.
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"sense_setting_mirror_removed_{mirror.unique_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "sense_setting_mirror_removed"
 
 
 REMOVED_ENTITIES = [
