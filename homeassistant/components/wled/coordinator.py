@@ -187,9 +187,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
     """Class to manage fetching WLED releases."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize global WLED releases updater."""
-        self.wled = WLEDReleases(session=async_get_clientsession(hass))
+    def __init__(self, hass: HomeAssistant, repo: str) -> None:
+        """Initialize the WLED releases updater for a firmware repository."""
+        self.repo = repo
+        self.wled = WLEDReleases(session=async_get_clientsession(hass), repo=repo)
         super().__init__(
             hass,
             LOGGER,

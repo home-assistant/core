@@ -31,19 +31,18 @@ PLATFORMS = (
     Platform.UPDATE,
 )
 
-WLED_KEY: HassKey[WLEDReleasesDataUpdateCoordinator] = HassKey(DOMAIN)
+WLED_KEY: HassKey[dict[str, WLEDReleasesDataUpdateCoordinator]] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the WLED integration.
 
-    We set up a single coordinator for fetching WLED releases, which
-    is used across all WLED devices (and config entries) to avoid
-    fetching the same data multiple times for each.
+    Releases are fetched by one coordinator per firmware repository, shared
+    across all WLED devices (and config entries) using it, to avoid fetching
+    the same data multiple times for each.
     """
-    hass.data[WLED_KEY] = WLEDReleasesDataUpdateCoordinator(hass)
-    await hass.data[WLED_KEY].async_request_refresh()
+    hass.data[WLED_KEY] = {}
     return True
 
 
