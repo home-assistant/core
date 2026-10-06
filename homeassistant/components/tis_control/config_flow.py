@@ -30,6 +30,9 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
 
             error = await self.validate_input(user_input)
 
+            if error == "no_devices_found":
+                return self.async_abort(reason="no_devices_found")
+
             if error:
                 errors["base"] = error
                 return self._show_setup_form(errors=errors)
@@ -47,7 +50,11 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
 
         schema = probatio.Schema(
-            {probatio.Required(CONF_PORT, default=6000): int},
+            {
+                probatio.Required(CONF_PORT, default=6000): probatio.All(
+                    int, probatio.Range(min=1, max=65535)
+                )
+            },
         )
         return self.async_show_form(
             step_id="user",
@@ -56,7 +63,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def validate_input(self, data: dict) -> str | None:
-        """Validate the user input allows us to connect."""
+        """Validate the user input allows us to connect and discover devices."""
         tis_api = TISApi(
             port=int(data[CONF_PORT]),
             domain=DOMAIN,
@@ -64,6 +71,9 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await tis_api.connect()
+            await tis_api.scan_devices()
+            if not tis_api.devices:
+                return "no_devices_found"
         except (ConnectionError, OSError) as e:
             _LOGGER.debug(
                 "Failed to connect to TIS Control bridge at %d: %s", data[CONF_PORT], e

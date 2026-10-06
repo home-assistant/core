@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             _raise_no_devices_found(entry.data[CONF_PORT])
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
+    except Exception, asyncio.CancelledError:
         if (task := entry.runtime_data.listener_task) is not None:
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
