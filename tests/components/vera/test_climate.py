@@ -128,11 +128,13 @@ async def test_climate(
         pytest.param("Heating", HVACAction.HEATING, id="heating"),
         pytest.param("Cooling", HVACAction.COOLING, id="cooling"),
         pytest.param("PendingCool", HVACAction.COOLING, id="pending-cool"),
-        pytest.param("PendingIdle", HVACAction.PREHEATING, id="pending-idle"),
+        pytest.param("PendingHeat", HVACAction.PREHEATING, id="pending-heat"),
+        pytest.param("PendingIdle", HVACAction.IDLE, id="pending-idle"),
         pytest.param("Idle", HVACAction.IDLE, id="idle"),
         pytest.param("FanOnly", HVACAction.FAN, id="fan-only"),
         pytest.param("Vent", HVACAction.FAN, id="vent"),
-        pytest.param("Off", None, id="unmapped"),
+        pytest.param("Off", HVACAction.OFF, id="off"),
+        pytest.param("Unknown", None, id="unmapped"),
     ],
 )
 async def test_hvac_action(
