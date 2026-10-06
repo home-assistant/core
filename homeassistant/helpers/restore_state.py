@@ -1,7 +1,7 @@
 """Support for restoring entity states on startup."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, MutableMapping
+from collections.abc import Iterator, Mapping, MutableMapping
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
@@ -225,13 +225,17 @@ class RestoreStateData:
         return _LastStates(self)
 
     @last_states.setter
-    def last_states(self, last_states: dict[str, StoredState]) -> None:
-        """Set the stored states of entities without a registry entry.
+    def last_states(self, last_states: Mapping[str, StoredState]) -> None:
+        """Replace all stored states.
 
         Deprecated.
         """
         _report_last_states_usage()
-        self.last_states_by_entity_id = last_states
+        self.last_states_by_entity_id = {}
+        self.last_states_by_entity_registry_id = {}
+        view = _LastStates(self)
+        for entity_id, stored_state in last_states.items():
+            view[entity_id] = stored_state
 
     def set_load_empty(self) -> None:
         """Set the store to load empty and become read-only."""
