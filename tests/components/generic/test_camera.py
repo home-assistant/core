@@ -422,7 +422,7 @@ async def test_stream_source_error(
         assert msg["success"] is False
         assert msg["error"] == {
             "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
+            "message": "Camera camera.config_test does not support streaming",
         }
 
 
@@ -484,7 +484,7 @@ async def test_no_stream_source(
         assert msg["success"] is False
         assert msg["error"] == {
             "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
+            "message": "Camera camera.config_test does not support streaming",
         }
 
 
