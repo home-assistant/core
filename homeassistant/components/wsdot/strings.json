@@ -6,7 +6,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "invalid_travel_time_id": "WSDOT TravelTimeId does not describe a valid travel time route {travel_time_id}",
       "no_travel_time": "Travel time route created without a travel time entity"
     },
     "step": {
