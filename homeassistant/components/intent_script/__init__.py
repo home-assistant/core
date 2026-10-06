@@ -20,7 +20,7 @@ from .const import (
     DEFAULT_CONF_ASYNC_ACTION,
     DOMAIN,
 )
-from .helpers import ScriptIntentHandler, async_load_intents, async_reload  # noqa: F401
+from .helpers import async_load_intents, async_reload
 
 CONFIG_SCHEMA = probatio.Schema(
     {
