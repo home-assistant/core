@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError
+from adguardhome import AdGuardHome, AdGuardHomeAuthenticationError, AdGuardHomeError
 import probatio
 from yarl import URL
 
@@ -19,7 +19,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -167,8 +171,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
 
     try:
         version = str((await adguard.status()).version)
-    except AdGuardHomeConnectionError as exception:
-        raise ConfigEntryNotReady from exception
+    except AdGuardHomeAuthenticationError as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exception
+    except AdGuardHomeError as exception:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from exception
 
     entry.runtime_data = AdGuardData(adguard, version)
 

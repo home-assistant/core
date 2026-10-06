@@ -16,7 +16,7 @@ from lunatone_rest_api_client import (
     Sensor,
     Sensors,
 )
-from lunatone_rest_api_client.models import InfoData, ScanData
+from lunatone_rest_api_client.models import InfoData, ScanData, ScanLineData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -182,6 +182,7 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             update_interval=DEFAULT_SCAN_UPDATE_INTERVAL,
         )
         self.dali_scan_api = dali_scan_api
+        self.line_scan_status: dict[int, ScanLineData] = {}
 
     @override
     async def _async_update_data(self) -> ScanData:
@@ -201,4 +202,7 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             update_interval = timedelta(seconds=1)
         self.update_interval = update_interval
 
+        self.line_scan_status = {
+            scan_data.line: scan_data for scan_data in self.dali_scan_api.data.lines
+        }
         return self.dali_scan_api.data
