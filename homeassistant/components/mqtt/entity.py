@@ -1261,8 +1261,8 @@ class MqttDiscoveryUpdateMixin(Entity):
         disabled entity), a registry hook is installed so the retained discovery
         topic is cleared if the entity is later removed from the registry.
         """
-        if self._discovery_data is None:
-            return
+        if TYPE_CHECKING:
+            assert self._discovery_data is not None
         if not self._added_to_hass and self.registry_entry is not None:
             discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
             self._registry_hooks[discovery_hash] = (

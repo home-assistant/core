@@ -412,9 +412,6 @@ def ptz_camera_fixture(camera: Camera):
     # Disable pydantic validation on this instance so we can mock methods
     object.__setattr__(ptz_cam, "get_ptz_presets", AsyncMock(return_value=[]))
     object.__setattr__(ptz_cam, "get_ptz_patrols", AsyncMock(return_value=[]))
-    object.__setattr__(ptz_cam, "ptz_goto_preset_public", AsyncMock())
-    object.__setattr__(ptz_cam, "ptz_patrol_start_public", AsyncMock())
-    object.__setattr__(ptz_cam, "ptz_patrol_stop_public", AsyncMock())
 
     return ptz_cam
 
