@@ -111,6 +111,31 @@ async def test_sensor_updates_from_client(
     assert state.state == "ready_to_charge"
 
 
+async def test_scheduled_charging_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+) -> None:
+    """Test a charging reservation is reported as scheduled."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    publish_besen_state(
+        mock_besen_client,
+        charger_state(
+            charge=ChargeStatus(
+                charging_status="Cancel",
+                charging_status_description="Charging reservation.",
+                current_state="Charging Reservation",
+            )
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(CHARGING_STATUS_ENTITY_ID)) is not None
+    assert state.state == "scheduled"
+
+
 async def test_sensor_unknown_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
