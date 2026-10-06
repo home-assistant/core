@@ -3,7 +3,6 @@
 import logging
 from typing import Any, cast, override
 
-import probatio
 from pyatmo.modules import NATherm1
 from pyatmo.modules.device_types import DeviceType
 
@@ -25,7 +24,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -44,11 +42,6 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
-    SERVICE_CLEAR_TEMPERATURE_SETTING,
-    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-    SERVICE_SET_SCHEDULE,
-    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
@@ -135,49 +128,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, NETATMO_CREATE_CLIMATE, _create_entity)
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_SCHEDULE,
-        {probatio.Required(ATTR_SCHEDULE_NAME): cv.string},
-        "_async_service_set_schedule",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-        {
-            probatio.Required(ATTR_PRESET_MODE): probatio.In(THERM_MODES),
-            probatio.Required(ATTR_END_DATETIME): cv.datetime,
-        },
-        "_async_service_set_preset_mode_with_end_datetime",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-        {
-            probatio.Required(ATTR_TARGET_TEMPERATURE): probatio.All(
-                probatio.Coerce(float), probatio.Range(min=7, max=30)
-            ),
-            probatio.Required(ATTR_END_DATETIME): cv.datetime,
-        },
-        "_async_service_set_temperature_with_end_datetime",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
-        {
-            probatio.Required(ATTR_TARGET_TEMPERATURE): probatio.All(
-                probatio.Coerce(float), probatio.Range(min=7, max=30)
-            ),
-            probatio.Required(ATTR_TIME_PERIOD): probatio.All(
-                cv.time_period,
-                cv.positive_timedelta,
-            ),
-        },
-        "_async_service_set_temperature_with_time_period",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_TEMPERATURE_SETTING,
-        None,
-        "_async_service_clear_temperature_setting",
     )
 
 
