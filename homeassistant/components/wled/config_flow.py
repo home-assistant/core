@@ -3,7 +3,13 @@
 from typing import Any, override
 
 import probatio
-from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
+from wled import (
+    WLED,
+    Device,
+    WLEDConnectionError,
+    WLEDError,
+    WLEDUnsupportedVersionError,
+)
 import yarl
 
 from homeassistant.components import onboarding
@@ -64,6 +70,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_version"
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
+            except WLEDError:
+                errors["base"] = "invalid_response"
             else:
                 mac_address = normalize_mac_address(device.info.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
@@ -124,6 +132,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unsupported_version")
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except WLEDError:
+            return self.async_abort(reason="invalid_response")
 
         device_mac_address = normalize_mac_address(
             self.discovered_device.info.mac_address

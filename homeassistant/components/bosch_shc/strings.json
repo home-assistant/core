@@ -43,6 +43,11 @@
     }
   },
   "entity": {
+    "button": {
+      "smoke_test": {
+        "name": "Start self-test"
+      }
+    },
     "event": {
       "smoke_detector_alarm": {
         "state_attributes": {
@@ -71,12 +76,30 @@
       }
     },
     "select": {
+      "motion_sensitivity": {
+        "name": "Motion sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "middle": "Medium"
+        }
+      },
       "siren_sound_level": {
         "name": "Siren volume",
         "state": {
           "high": "Loud",
           "low": "Reduced",
           "medium": "Medium"
+        }
+      },
+      "vibration_sensitivity": {
+        "name": "Vibration sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "very_high": "Very high",
+          "very_low": "Very low"
         }
       }
     },
@@ -143,6 +166,9 @@
       },
       "camera_light": {
         "name": "Camera light"
+      },
+      "camera_notification": {
+        "name": "Notifications"
       },
       "child_lock": {
         "name": "Child lock"

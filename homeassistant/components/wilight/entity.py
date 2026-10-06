@@ -1,11 +1,16 @@
 """The WiLight integration."""
 
+from functools import partial
 from typing import Any, override
 
 from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -27,6 +32,8 @@ class WiLightDevice(Entity):
         self._client = api_device.client
         self._index = index
         self._status: dict[str, Any] = {}
+        self._status_signal = f"wilight_status_{self._device_id}_{index}"
+        self._status_callback_registered = False
 
         self._attr_unique_id = f"{self._device_id}_{index}"
         self._attr_device_info = DeviceInfo(
@@ -56,5 +63,17 @@ class WiLightDevice(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
-        self._client.register_status_callback(self.handle_event_callback, self._index)
+        # pywilight can't unregister status callbacks, so register a forwarder
+        # once and (un)subscribe the entity through the dispatcher.
+        if not self._status_callback_registered:
+            self._client.register_status_callback(
+                partial(async_dispatcher_send, self.hass, self._status_signal),
+                self._index,
+            )
+            self._status_callback_registered = True
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._status_signal, self.handle_event_callback
+            )
+        )
         await self._client.status(self._index)

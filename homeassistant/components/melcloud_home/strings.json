@@ -127,6 +127,15 @@
       "energy_consumed": {
         "name": "Energy consumed (monthly)"
       },
+      "operation_status": {
+        "name": "Operation status",
+        "state": {
+          "cooling": "Cooling",
+          "heating_water": "Heating water",
+          "heating_zones": "Heating zones",
+          "idle": "[%key:common::state::idle%]"
+        }
+      },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
@@ -161,6 +170,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the MELCloud Home API"
+    },
     "cannot_connect": {
       "message": "Error communicating with MELCloud Home API"
     },

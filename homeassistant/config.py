@@ -11,7 +11,6 @@ import logging
 import operator
 import os
 from pathlib import Path
-import shutil
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
@@ -25,12 +24,12 @@ from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .core_config import _PACKAGE_DEFINITION_SCHEMA, _PACKAGES_CONFIG_SCHEMA
 from .exceptions import ConfigValidationError, HomeAssistantError
 from .helpers import config_validation as cv
+from .helpers.redact import REDACTED
 from .helpers.translation import async_get_exception_message
 from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
-from .util.package import is_docker_env
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 from .util.yaml.objects import NodeStrClass
 
@@ -306,12 +305,6 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     version_obj = AwesomeVersion(conf_version)
 
-    if version_obj < AwesomeVersion("0.50"):
-        # 0.50 introduced persistent deps dir.
-        lib_path = hass.config.path("deps")
-        if os.path.isdir(lib_path):
-            shutil.rmtree(lib_path)
-
     if version_obj < AwesomeVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = hass.config.path(YAML_CONFIG_FILE)
@@ -327,13 +320,6 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
                     config_file.write(config_raw)
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
-
-    if version_obj < AwesomeVersion("0.94") and is_docker_env():
-        # In 0.94 we no longer install packages inside the deps folder when
-        # running inside a Docker container.
-        lib_path = hass.config.path("deps")
-        if os.path.isdir(lib_path):
-            shutil.rmtree(lib_path)
 
     with open(version_path, "w", encoding="utf8") as outp:
         outp.write(__version__)
@@ -497,11 +483,14 @@ def stringify_invalid(
     output = Exception.__str__(exc)
     if error_type := exc.error_type:
         output += " for " + error_type
-    offending_item_summary = repr(_get_by_path(config, exc.path))
-    if len(offending_item_summary) > max_sub_error_length:
-        offending_item_summary = (
-            f"{offending_item_summary[: max_sub_error_length - 3]}..."
-        )
+    if exc.secret:
+        offending_item_summary = REDACTED
+    else:
+        offending_item_summary = repr(_get_by_path(config, exc.path))
+        if len(offending_item_summary) > max_sub_error_length:
+            offending_item_summary = (
+                f"{offending_item_summary[: max_sub_error_length - 3]}..."
+            )
     return (
         f"{message_prefix}: {output} '{path}', got {offending_item_summary}"
         f"{message_suffix}"

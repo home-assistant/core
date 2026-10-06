@@ -12,6 +12,7 @@ from aiomelcloudhome import (
     ATWZoneMode,
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeNotFoundError,
     MelCloudHomeTimeoutError,
     UserContext,
 )
@@ -19,6 +20,7 @@ import pytest
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
@@ -28,6 +30,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -528,6 +531,47 @@ async def test_atw_zone_temperature_range(
 
 
 @pytest.mark.parametrize(
+    ("overrides", "expected_action"),
+    [
+        pytest.param({"OperationMode": "Stop"}, HVACAction.IDLE, id="idle"),
+        pytest.param({"OperationMode": "HotWater"}, HVACAction.IDLE, id="hot_water"),
+        pytest.param({"OperationMode": "Heat"}, HVACAction.HEATING, id="heat"),
+        pytest.param(
+            {"OperationMode": "HeatZones"}, HVACAction.HEATING, id="heat_zones"
+        ),
+        pytest.param({"OperationMode": "Cool"}, HVACAction.COOLING, id="cool"),
+        pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
+        pytest.param(
+            {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"
+        ),
+    ],
+)
+async def test_atw_zone_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+    overrides: dict[str, str],
+    expected_action: HVACAction | None,
+) -> None:
+    """Test the ATW zone HVAC action follows the unit's operation mode."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    settings = {
+        setting["name"]: setting
+        for setting in context["buildings"][0]["airToWaterUnits"][0]["settings"]
+    }
+    for name, value in overrides.items():
+        settings[name]["value"] = value
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ATW_ZONE1_ENTITY_ID))
+    assert state.attributes.get(ATTR_HVAC_ACTION) == expected_action
+
+
+@pytest.mark.parametrize(
     ("entity_id", "method", "service", "service_data"),
     [
         pytest.param(
@@ -607,6 +651,7 @@ async def test_atw_zone_temperature_range(
         (MelCloudHomeAuthenticationError, "invalid_auth"),
         (MelCloudHomeConnectionError, "cannot_connect"),
         (MelCloudHomeTimeoutError, "timeout_connect"),
+        (MelCloudHomeNotFoundError, "api_error"),
     ],
 )
 async def test_action_exceptions(
