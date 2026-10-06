@@ -54,8 +54,6 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    # register service
-
 
 class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
     """Define an Omnilogic Base Switch entity to be extended."""
