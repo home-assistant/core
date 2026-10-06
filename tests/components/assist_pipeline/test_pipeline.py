@@ -1746,6 +1746,40 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             4,
             "Let me check the temperature. It is 25 degrees.",
         ),
+        # Text, then an assistant message with only another tool call
+        (
+            (
+                [
+                    "Let me check the temperature.",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id_2",
+                        )
+                    ],
+                },
+                [
+                    "It is ",
+                    "25 degrees.",
+                ],
+            ),
+            # 1 chunk before the tool calls, one separator, then 2 after
+            4,
+            "Let me check the temperature. It is 25 degrees.",
+        ),
     ],
 )
 @freeze_time("2025-10-31 12:00:00")

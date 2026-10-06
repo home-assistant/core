@@ -643,6 +643,7 @@ class _DefaultPipelineProcessor:
                         and not last_assistant_content[-1].isspace()
                     ):
                         tts_input_stream.put_nowait(" ")
+                        last_assistant_content = " "
 
                 # We are only interested in assistant deltas
                 if chat_log_role != "assistant":

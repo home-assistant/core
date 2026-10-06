@@ -783,6 +783,209 @@
     }),
   ])
 # ---
+# name: test_chat_log_tts_streaming[to_stream_deltas4-4-Let me check the temperature. It is 25 degrees.]
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'stream_response': True,
+          'token': 'mocked-token.mp3',
+          'url': '/api/tts_proxy/mocked-token.mp3',
+        }),
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'test-agent',
+        'intent_input': 'Set a timer',
+        'language': 'en',
+        'prefer_local_intents': False,
+        'satellite_id': None,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'Let me check the temperature.',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'tool_calls': list([
+            dict({
+              'external': False,
+              'id': 'test_tool_id',
+              'tool_args': dict({
+              }),
+              'tool_name': 'test_tool',
+            }),
+          ]),
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_start_streaming': True,
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'agent_id': 'test-agent',
+          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+          'result': dict({
+            'data': 'Test response',
+            'error': False,
+          }),
+          'role': 'tool_result',
+          'tool_call_id': 'test_tool_id',
+          'tool_name': 'test_tool',
+          'tool_result': 'Test response',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'tool_calls': list([
+            dict({
+              'external': False,
+              'id': 'test_tool_id_2',
+              'tool_args': dict({
+              }),
+              'tool_name': 'test_tool',
+            }),
+          ]),
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'agent_id': 'test-agent',
+          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+          'result': dict({
+            'data': 'Test response',
+            'error': False,
+          }),
+          'role': 'tool_result',
+          'tool_call_id': 'test_tool_id_2',
+          'tool_name': 'test_tool',
+          'tool_result': 'Test response',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'It is ',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': '25 degrees.',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': 'It is 25 degrees.',
+              }),
+            }),
+          }),
+        }),
+        'processed_locally': False,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'acknowledge_override': False,
+        'engine': 'tts.test',
+        'language': 'en_US',
+        'tts_input': 'It is 25 degrees.',
+        'voice': None,
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': 'media-source://tts/-stream-/mocked-token.mp3',
+          'mime_type': 'audio/mpeg',
+          'token': 'mocked-token.mp3',
+          'url': '/api/tts_proxy/mocked-token.mp3',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
 # name: test_pipeline_language_used_instead_of_conversation_language
   list([
     dict({
