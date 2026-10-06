@@ -2,11 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.tractive.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -115,3 +116,37 @@ async def test_device_tracker_device_assignment(
     entry = entity_registry.async_get("device_tracker.tracker_device_id_123")
     assert entry is not None
     assert entry.device_id == tracker_device.id
+
+
+@pytest.mark.parametrize(
+    "pos_report",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param(
+            {"latlong": None, "pos_uncertainty": None, "sensor_used": None},
+            id="no_location",
+        ),
+    ],
+)
+async def test_device_tracker_without_position(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    pos_report: dict[str, None],
+) -> None:
+    """Test a tracker without a position, like a switched off one, is set up."""
+    mock_tractive_client.tracker.return_value.pos_report.return_value = pos_report
+    with patch(
+        "homeassistant.components.tractive.PLATFORMS", [Platform.DEVICE_TRACKER]
+    ):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("device_tracker.tracker_device_id_123")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    mock_tractive_client.send_position_event(mock_config_entry)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.tracker_device_id_123")
+    assert state.state != STATE_UNKNOWN

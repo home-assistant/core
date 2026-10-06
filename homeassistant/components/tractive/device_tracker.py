@@ -49,10 +49,13 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
             f"{TRACKER_POSITION_UPDATED}-{item.tracker_details['_id']}",
         )
 
-        self._attr_latitude = item.pos_report["latlong"][0]
-        self._attr_longitude = item.pos_report["latlong"][1]
-        self._attr_location_accuracy: float = item.pos_report["pos_uncertainty"]
-        self._source_type: str = item.pos_report["sensor_used"]
+        # A tracker that has been switched off for a while has no position
+        if latlong := item.pos_report.get("latlong"):
+            self._attr_latitude, self._attr_longitude = latlong
+        self._attr_location_accuracy: float = (
+            item.pos_report.get("pos_uncertainty") or 0
+        )
+        self._source_type: str | None = item.pos_report.get("sensor_used")
         self._attr_unique_id = item.trackable["_id"]
 
     @property
