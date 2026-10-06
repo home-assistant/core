@@ -31,6 +31,13 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+def _profile(token: str, name: str) -> MagicMock:
+    """Create a mock profile."""
+    profile = MagicMock(token=token)
+    profile.name = name
+    return profile
+
+
 async def test_migrate_camera_entities_unique_ids(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -57,11 +64,25 @@ async def test_migrate_camera_entities_unique_ids(
         unique_id=MAC,
         config_entry=config_entry,
     )
+    # Token based unique id of a current profile gets migrated to the name
+    entity_with_token = entity_registry.async_get_or_create(
+        domain="camera",
+        platform="onvif",
+        unique_id=f"{MAC}#profile_token_2",
+        config_entry=config_entry,
+    )
     # This one should not be migrated (already migrated)
     entity_migrated = entity_registry.async_get_or_create(
         domain="camera",
         platform="onvif",
-        unique_id=f"{MAC}#profile_token_2",
+        unique_id=f"{MAC}#PROFILE_3",
+        config_entry=config_entry,
+    )
+    # Token of a profile that no longer exists is left alone
+    entity_stale_token = entity_registry.async_get_or_create(
+        domain="camera",
+        platform="onvif",
+        unique_id=f"{MAC}#stale_token",
         config_entry=config_entry,
     )
     # Unparsable index
@@ -84,9 +105,10 @@ async def test_migrate_camera_entities_unique_ids(
             mock_device,
             capabilities=None,
             profiles=[
-                MagicMock(token="profile_token_0"),
-                MagicMock(token="profile_token_1"),
-                MagicMock(token="profile_token_2"),
+                _profile("profile_token_0", "PROFILE_0"),
+                _profile("profile_token_1", "PROFILE_1"),
+                _profile("profile_token_2", "PROFILE_2"),
+                _profile("profile_token_3", "PROFILE_3"),
             ],
         )
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -95,21 +117,30 @@ async def test_migrate_camera_entities_unique_ids(
     entity_with_only_mac = entity_registry.async_get(entity_with_only_mac.entity_id)
     entity_with_index = entity_registry.async_get(entity_with_index.entity_id)
     entity_sensor = entity_registry.async_get(entity_sensor.entity_id)
+    entity_with_token = entity_registry.async_get(entity_with_token.entity_id)
     entity_migrated = entity_registry.async_get(entity_migrated.entity_id)
+    entity_stale_token = entity_registry.async_get(entity_stale_token.entity_id)
 
     assert entity_with_only_mac is not None
-    assert entity_with_only_mac.unique_id == f"{MAC}#profile_token_0"
+    assert entity_with_only_mac.unique_id == f"{MAC}#PROFILE_0"
 
     assert entity_with_index is not None
-    assert entity_with_index.unique_id == f"{MAC}#profile_token_1"
+    assert entity_with_index.unique_id == f"{MAC}#PROFILE_1"
 
     # Make sure the sensor entity is unchanged
     assert entity_sensor is not None
     assert entity_sensor.unique_id == MAC
 
+    assert entity_with_token is not None
+    assert entity_with_token.unique_id == f"{MAC}#PROFILE_2"
+
     # Make sure the already migrated entity is unchanged
     assert entity_migrated is not None
-    assert entity_migrated.unique_id == f"{MAC}#profile_token_2"
+    assert entity_migrated.unique_id == f"{MAC}#PROFILE_3"
+
+    # Make sure the stale token entity is unchanged
+    assert entity_stale_token is not None
+    assert entity_stale_token.unique_id == f"{MAC}#stale_token"
 
     # Make sure the unparsable index entity is unchanged
     assert entity_unparsable_index is not None
