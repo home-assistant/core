@@ -27,9 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
 )
 
@@ -55,7 +55,7 @@ async def _setup_hybrid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)

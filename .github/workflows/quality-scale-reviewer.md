@@ -1,5 +1,6 @@
 ---
 name: quality-scale-reviewer
+run-name: "quality-scale-reviewer: ${{ github.event.workflow_run.display_title || format('PR #{0}', inputs.pull_request_number) }}"
 description: >
   Reviews pull requests that touch an integration against the Integration
   Quality Scale rules the integration declares as `done` or `exempt` in its
@@ -311,6 +312,10 @@ integration's codebase, analyze only the files and lines changed in
 cannot be judged without them. The exception is a newly claimed rule, which is
 verified against the integration as a whole because a PR that claims a rule
 must satisfy it.
+
+A Python environment is not available. For rules where running tests or scripts is
+desirable, judge statically from the code and tests instead. If the static evidence is
+insufficient for a confident verdict, do not report a finding.
 
 A finding is reportable only when all of the following hold:
 

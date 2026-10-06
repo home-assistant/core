@@ -377,6 +377,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._change_handler = self._node.control_events.subscribe(
             self.async_on_update, event_filter={ATTR_CONTROL: self._control}
         )
+        self.async_on_remove(self._change_handler.unsubscribe)
         self._availability_handler = self._node.isy.nodes.status_events.subscribe(
             self.async_on_update,
             event_filter={
@@ -384,6 +385,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
                 ATTR_ACTION: NC_NODE_ENABLED,
             },
         )
+        self.async_on_remove(self._availability_handler.unsubscribe)
 
     @callback
     @override
