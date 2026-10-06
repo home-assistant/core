@@ -6,5 +6,5 @@ DOMAIN = "prowl"
 PLATFORMS = [Platform.NOTIFY]
 
 CONF_ENTRY = "entry"
-# Set on entries imported from YAML; holds the YAML names of the legacy notify services
-CONF_LEGACY_SERVICE_NAMES = "legacy_service_names"
+# Set on entries imported from YAML; holds the YAML name of the legacy notify service
+CONF_LEGACY_SERVICE_NAME = "legacy_service_name"
