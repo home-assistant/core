@@ -199,6 +199,7 @@ class NAD(MediaPlayerEntity):
 class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = SUPPORT_NAD
 
     def __init__(self, config):
