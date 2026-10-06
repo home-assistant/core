@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast, override
 
-from pyatmo.modules import NATherm1
+from pyatmo.modules import BNS, NATherm1
 from pyatmo.modules.device_types import DeviceType
 
 from homeassistant.components.climate import (
@@ -148,6 +148,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _away_temperature: float | None = None
     _hg_temperature: float | None = None
     _boilerstatus: bool | None = None
+    _coolerstatus: bool | None = None
 
     def __init__(self, room: NetatmoRoom) -> None:
         """Initialize the sensor."""
@@ -282,8 +283,11 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
-        if self.device_type != NA_VALVE and self._boilerstatus is not None:
-            return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
+        if self.device_type != NA_VALVE:
+            if self._coolerstatus and not self._boilerstatus:
+                return HVACAction.COOLING
+            if self._boilerstatus is not None:
+                return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if (
             heating_req := getattr(self.device, "heating_power_request", 0)
@@ -411,6 +415,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     module = cast(NATherm1, module)
                     if module.boiler_status is not None:
                         self._boilerstatus = module.boiler_status
+                        if hasattr(module, "cooler_status"):
+                            self._coolerstatus = cast(BNS, module).cooler_status
                         break
 
         self.async_write_ha_state()
