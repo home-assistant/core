@@ -13,6 +13,7 @@ from homeassistant.const import (
     UnitOfConductivity,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -111,6 +112,27 @@ async def test_update_states(hass: HomeAssistant) -> None:
     state = hass.states.get(f"plant.{plant_name}")
     assert state.state == STATE_PROBLEM
     assert state.attributes[plant.READING_MOISTURE] == 5
+
+
+async def test_state_tracking_stops_after_removal(hass: HomeAssistant) -> None:
+    """Test a removed plant no longer processes sensor state changes."""
+    plant_name = "some_plant"
+    entity_id = f"plant.{plant_name}"
+    assert await async_setup_component(
+        hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
+    )
+    hass.states.async_set(MOISTURE_ENTITY, 50)
+    await hass.async_block_till_done()
+    entity = hass.data[DATA_INSTANCES][plant.DOMAIN].get_entity(entity_id)
+    assert entity.extra_state_attributes[plant.READING_MOISTURE] == 50
+
+    await entity.async_remove()
+    assert hass.states.get(entity_id) is None
+
+    hass.states.async_set(MOISTURE_ENTITY, 5)
+    await hass.async_block_till_done()
+    assert entity.extra_state_attributes[plant.READING_MOISTURE] == 50
+    assert hass.states.get(entity_id) is None
 
 
 async def test_unavailable_state(hass: HomeAssistant) -> None:

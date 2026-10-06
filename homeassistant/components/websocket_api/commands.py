@@ -37,6 +37,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     entity,
+    system_state as system_state_helper,
     target as target_helpers,
     template,
     trace,
@@ -132,6 +133,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
+    async_reg(hass, handle_subscribe_system_state)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_subscribe_trigger_platforms)
     async_reg(hass, handle_test_condition)
@@ -241,6 +243,35 @@ def handle_subscribe_bootstrap_integrations(
     )
 
     connection.send_result(msg["id"])
+
+
+@callback
+@decorators.require_admin
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "subscribe_system_state",
+    }
+)
+def handle_subscribe_system_state(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe system state command."""
+
+    @callback
+    def forward_system_state(
+        system_state: system_state_helper.SystemState,
+    ) -> None:
+        """Forward the system state to the websocket."""
+        connection.send_message(
+            messages.event_message(msg["id"], system_state.as_dict())
+        )
+
+    connection.subscriptions[msg["id"]] = system_state_helper.async_subscribe(
+        hass, forward_system_state
+    )
+
+    connection.send_result(msg["id"])
+    forward_system_state(system_state_helper.async_get(hass))
 
 
 @callback

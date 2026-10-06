@@ -1,17 +1,16 @@
 """Test the UniFi Protect setup flow."""
 
-from unittest.mock import patch
-
+import pytest
 from uiprotect.data import Camera, Sensor
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.migrate import (
     SENSE_SETTING_MIRROR_BREAKS_IN,
     async_deprecate_sense_setting_mirrors,
+    async_remove_hdr_switch,
 )
-from homeassistant.const import SERVICE_RELOAD, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -21,61 +20,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry, setup_public_sensor
-
-from tests.typing import WebSocketGenerator
-
-
-async def test_deprecated_entity(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    hass_ws_client: WebSocketGenerator,
-    doorbell: Camera,
-) -> None:
-    """Test Deprecate entity repair does not exist by default (new installs)."""
-
-    await init_entry(hass, ufp, [doorbell])
-
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_hdr_switch":
-            issue = i
-    assert issue is None
-
-
-async def test_deprecated_entity_no_automations(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    hass_ws_client: WebSocketGenerator,
-    doorbell: Camera,
-) -> None:
-    """Test Deprecate entity repair exists for existing installs."""
-    entity_registry.async_get_or_create(
-        Platform.SWITCH,
-        DOMAIN,
-        f"{doorbell.mac}_hdr_mode",
-        config_entry=ufp.entry,
-    )
-
-    await init_entry(hass, ufp, [doorbell])
-
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_hdr_switch":
-            issue = i
-    assert issue is None
 
 
 async def _load_automation(hass: HomeAssistant, entity_id: str):
@@ -109,123 +53,6 @@ async def _load_automation(hass: HomeAssistant, entity_id: str):
             ]
         },
     )
-
-
-async def test_deprecate_entity_automation(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    hass_ws_client: WebSocketGenerator,
-    doorbell: Camera,
-) -> None:
-    """Test Deprecate entity repair exists for existing installs."""
-    entry = entity_registry.async_get_or_create(
-        Platform.SWITCH,
-        DOMAIN,
-        f"{doorbell.mac}_hdr_mode",
-        config_entry=ufp.entry,
-    )
-    await _load_automation(hass, entry.entity_id)
-    await init_entry(hass, ufp, [doorbell])
-
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_hdr_switch":
-            issue = i
-    assert issue is not None
-
-    with patch(
-        "homeassistant.config.load_yaml_config_file",
-        autospec=True,
-        return_value={AUTOMATION_DOMAIN: []},
-    ):
-        await hass.services.async_call(AUTOMATION_DOMAIN, SERVICE_RELOAD, blocking=True)
-
-    await hass.config_entries.async_reload(ufp.entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_hdr_switch":
-            issue = i
-    assert issue is None
-
-
-async def _load_script(hass: HomeAssistant, entity_id: str):
-    assert await async_setup_component(
-        hass,
-        SCRIPT_DOMAIN,
-        {
-            SCRIPT_DOMAIN: {
-                "test": {
-                    "sequence": {
-                        "service": "test.script",
-                        "data": {"entity_id": entity_id},
-                    }
-                }
-            },
-        },
-    )
-
-
-async def test_deprecate_entity_script(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    hass_ws_client: WebSocketGenerator,
-    doorbell: Camera,
-) -> None:
-    """Test Deprecate entity repair exists for existing installs."""
-    entry = entity_registry.async_get_or_create(
-        Platform.SWITCH,
-        DOMAIN,
-        f"{doorbell.mac}_hdr_mode",
-        config_entry=ufp.entry,
-    )
-    await _load_script(hass, entry.entity_id)
-    await init_entry(hass, ufp, [doorbell])
-
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_hdr_switch":
-            issue = i
-    assert issue is not None
-
-    with patch(
-        "homeassistant.config.load_yaml_config_file",
-        autospec=True,
-        return_value={SCRIPT_DOMAIN: {}},
-    ):
-        await hass.services.async_call(SCRIPT_DOMAIN, SERVICE_RELOAD, blocking=True)
-
-    await hass.config_entries.async_reload(ufp.entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "deprecate_hdr_switch":
-            issue = i
-    assert issue is None
 
 
 async def test_migrate_remove_aiport_device(
@@ -380,32 +207,6 @@ async def test_migrate_insecure_camera_removed_disabled_not_repaired(
     assert (
         issue_registry.async_get_issue(
             DOMAIN, f"insecure_camera_removed_{doorbell.mac}_0_insecure"
-        )
-        is None
-    )
-
-
-async def test_migrate_package_binary_sensor_removed(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-) -> None:
-    """An unused package binary sensor is removed silently."""
-    package = entity_registry.async_get_or_create(
-        Platform.BINARY_SENSOR,
-        DOMAIN,
-        f"{doorbell.mac}_smart_obj_package",
-        config_entry=ufp.entry,
-    )
-
-    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
-
-    assert entity_registry.async_get(package.entity_id) is None
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
         )
         is None
     )
@@ -616,55 +417,140 @@ async def test_migrate_sense_setting_keys_scoped_to_sensors(
         )
 
 
-async def test_migrate_package_binary_sensor_removed_in_use(
+REMOVED_ENTITIES = [
+    pytest.param(
+        Platform.BINARY_SENSOR,
+        "smart_obj_package",
+        "package_binary_sensor_removed",
+        id="package_binary_sensor",
+    ),
+    pytest.param(Platform.SWITCH, "hdr_mode", "hdr_switch_removed", id="hdr_switch"),
+]
+
+
+@pytest.mark.parametrize(("platform", "key", "issue"), REMOVED_ENTITIES)
+async def test_migrate_removed_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
+    platform: Platform,
+    key: str,
+    issue: str,
 ) -> None:
-    """Removing a used package binary sensor raises an actionable repair."""
-    package = entity_registry.async_get_or_create(
-        Platform.BINARY_SENSOR,
-        DOMAIN,
-        f"{doorbell.mac}_smart_obj_package",
-        config_entry=ufp.entry,
+    """An unused removed entity is removed silently."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
     )
-    await _load_automation(hass, package.entity_id)
 
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    assert entity_registry.async_get(package.entity_id) is None
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
+    assert entity_registry.async_get(entity.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"{issue}_{doorbell.mac}_{key}") is None
     )
-    assert issue is not None
-    assert issue.translation_placeholders["entity_id"] == package.entity_id
 
 
-async def test_migrate_package_binary_sensor_removed_disabled_not_repaired(
+@pytest.mark.parametrize(("platform", "key", "issue"), REMOVED_ENTITIES)
+async def test_migrate_removed_entity_in_use(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
+    platform: Platform,
+    key: str,
+    issue: str,
 ) -> None:
-    """A disabled package binary sensor is removed without a repair even if referenced."""
-    package = entity_registry.async_get_or_create(
-        Platform.BINARY_SENSOR,
+    """Removing a used entity raises an actionable repair."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(entity.entity_id) is None
+    repair = issue_registry.async_get_issue(DOMAIN, f"{issue}_{doorbell.mac}_{key}")
+    assert repair is not None
+    assert repair.translation_key == issue
+    assert repair.is_persistent
+    assert repair.translation_placeholders["entity_id"] == entity.entity_id
+
+
+@pytest.mark.parametrize(("platform", "key", "issue"), REMOVED_ENTITIES)
+async def test_migrate_removed_entity_disabled_not_repaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    issue: str,
+) -> None:
+    """A disabled removed entity is removed without a repair even if referenced."""
+    entity = entity_registry.async_get_or_create(
+        platform,
         DOMAIN,
-        f"{doorbell.mac}_smart_obj_package",
+        f"{doorbell.mac}_{key}",
         config_entry=ufp.entry,
         disabled_by=er.RegistryEntryDisabler.USER,
     )
-    await _load_automation(hass, package.entity_id)
+    await _load_automation(hass, entity.entity_id)
 
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    assert entity_registry.async_get(package.entity_id) is None
+    assert entity_registry.async_get(entity.entity_id) is None
     assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
-        )
-        is None
+        issue_registry.async_get_issue(DOMAIN, f"{issue}_{doorbell.mac}_{key}") is None
     )
+
+
+@pytest.mark.parametrize("platform", [Platform.BINARY_SENSOR, Platform.SELECT])
+async def test_migrate_hdr_switch_keeps_other_platforms(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+) -> None:
+    """Only the switch goes; the HDR binary sensor and select share its key."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_hdr_mode", config_entry=ufp.entry
+    )
+
+    # Run the migration alone: setup would recreate the entity.
+    async_remove_hdr_switch(hass, ufp.entry)
+
+    assert entity_registry.async_get(entity.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.unifiprotect.issues.deprecate_hdr_switch.title",
+            "component.unifiprotect.issues.deprecate_hdr_switch.description",
+        ]
+    ],
+)
+async def test_migrate_hdr_switch_clears_deprecation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """The stored deprecation repair is deleted with the switch."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecate_hdr_switch",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecate_hdr_switch",
+    )
+
+    async_remove_hdr_switch(hass, ufp.entry)
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecate_hdr_switch") is None

@@ -1428,7 +1428,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "landisgyr_heat_meter",
     "lannouncer",
     "lastfm",
-    "lametric",
     "launch_library",
     "laundrify",
     "ld2410_ble",

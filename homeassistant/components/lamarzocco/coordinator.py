@@ -249,6 +249,11 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         entry.async_on_unload(
             config_coordinator.async_add_listener(self._async_update_shot_timer)
         )
+        entry.async_on_unload(
+            device.register_bluetooth_connection_callback(
+                lambda _: self.async_update_listeners()
+            )
+        )
 
     @override
     async def _internal_async_setup(self) -> None:

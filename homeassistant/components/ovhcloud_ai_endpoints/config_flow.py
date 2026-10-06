@@ -189,6 +189,14 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             SelectOptionDict(label=api.name, value=api.id)
             for api in llm.async_get_apis(self.hass)
         ]
+        valid_api_ids = {api["value"] for api in hass_apis}
+        selected_apis = [
+            api
+            for api in existing.get(
+                CONF_LLM_HASS_API, RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API]
+            )
+            if api in valid_api_ids
+        ]
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=probatio.Schema(
@@ -204,10 +212,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                     ): TemplateSelector(),
                     probatio.Optional(
                         CONF_LLM_HASS_API,
-                        default=existing.get(
-                            CONF_LLM_HASS_API,
-                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
-                        ),
+                        default=selected_apis,
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
