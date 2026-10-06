@@ -73,7 +73,7 @@ async def test_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
-    assert mock_mpd_client.disconnect.called
+    mock_mpd_client.disconnect.assert_called_once()
 
     mock_mpd_client.password.side_effect = None
 
