@@ -72,13 +72,13 @@ ATTR_SAFE_MODE = "safe_mode"
 
 _LOGGER = logging.getLogger(__name__)
 # To be deprecated at a later stage, replaced by HomeAssistantService
-SERVICE_RELOAD_CORE_CONFIG = HomeAssistantService.RELOAD_CORE_CONFIG
-SERVICE_RELOAD_CONFIG_ENTRY = HomeAssistantService.RELOAD_CONFIG_ENTRY
-SERVICE_RELOAD_CUSTOM_TEMPLATES = HomeAssistantService.RELOAD_CUSTOM_TEMPLATES
-SERVICE_CHECK_CONFIG = HomeAssistantService.CHECK_CONFIG
-SERVICE_UPDATE_ENTITY = HomeAssistantService.UPDATE_ENTITY
-SERVICE_SET_LOCATION = HomeAssistantService.SET_LOCATION
-SERVICE_RELOAD_ALL = HomeAssistantService.RELOAD_ALL
+SERVICE_RELOAD_CORE_CONFIG = HomeAssistantService.RELOAD_CORE_CONFIG.value
+SERVICE_RELOAD_CONFIG_ENTRY = HomeAssistantService.RELOAD_CONFIG_ENTRY.value
+SERVICE_RELOAD_CUSTOM_TEMPLATES = HomeAssistantService.RELOAD_CUSTOM_TEMPLATES.value
+SERVICE_CHECK_CONFIG = HomeAssistantService.CHECK_CONFIG.value
+SERVICE_UPDATE_ENTITY = HomeAssistantService.UPDATE_ENTITY.value
+SERVICE_SET_LOCATION = HomeAssistantService.SET_LOCATION.value
+SERVICE_RELOAD_ALL = HomeAssistantService.RELOAD_ALL.value
 SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
     probatio.Schema(

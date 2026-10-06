@@ -40,5 +40,5 @@ class HomeAssistantService(StrEnum):
 
 
 # To be deprecated at a later stage, replaced by HomeAssistantService
-SERVICE_HOMEASSISTANT_STOP: Final = HomeAssistantService.STOP
-SERVICE_HOMEASSISTANT_RESTART: Final = HomeAssistantService.RESTART
+SERVICE_HOMEASSISTANT_STOP: Final = HomeAssistantService.STOP.value
+SERVICE_HOMEASSISTANT_RESTART: Final = HomeAssistantService.RESTART.value
