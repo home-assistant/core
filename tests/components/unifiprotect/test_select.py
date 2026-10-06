@@ -71,6 +71,7 @@ from .utils import (
     make_public_light,
     make_public_liveview,
     make_public_sensor,
+    make_public_viewer,
     public_device_ws_message,
     remove_entities,
     setup_public_camera,
@@ -1520,6 +1521,65 @@ async def test_public_only_select_follows_public_ws(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == after
+
+
+async def test_public_only_select_viewer(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    viewer: Viewer,
+    liveview: Liveview,
+) -> None:
+    """A public-only entry builds the viewport liveview select from public data.
+
+    Options come from the public liveviews, a chosen option goes to the public
+    setter, and frames and store changes update the select.
+    """
+    pb = ufp_public_only.api.public_bootstrap
+    other = copy(liveview)
+    other.id = "other_liveview"
+    other.name = "Other"
+    pb.liveviews = {lv.id: make_public_liveview(lv) for lv in (liveview, other)}
+    viewer._api = ufp_public_only.api
+    pb.viewers[viewer.id] = public = make_public_viewer(viewer)
+
+    await setup_public_only()
+
+    assert _select_keys(entity_registry, viewer.mac) == {"viewer"}
+    # The read-only liveview sensor is a NO_WRITE mirror, skipped without a private user.
+    assert not [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.domain == Platform.SENSOR and entry.unique_id.startswith(viewer.mac)
+    ]
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{viewer.mac}_viewer"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state.state == liveview.name
+    assert state.attributes[ATTR_OPTIONS] == [liveview.name, "Other"]
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Other"},
+        blocking=True,
+    )
+    public.set_liveview.assert_awaited_once_with(other.id)
+
+    public.liveview_id = other.id
+    ufp_public_only.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "Other"
+
+    del pb.liveviews[liveview.id]
+    ufp_public_only.public_store_change(
+        _liveview_change(removed=frozenset({liveview.id}))
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes[ATTR_OPTIONS] == ["Other"]
 
 
 async def test_public_only_select_sensor_has_none(
