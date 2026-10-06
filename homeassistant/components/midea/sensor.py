@@ -1062,7 +1062,7 @@ class MideaSensor(MideaEntity, SensorEntity):
             or description.key == "temperature"
         ):
             try:
-                return cast("StateType", int(value))
+                return cast("StateType", float(value))
             except ValueError:
                 return None
         if description.device_class == SensorDeviceClass.TIMESTAMP:
