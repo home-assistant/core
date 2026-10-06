@@ -42,10 +42,6 @@ async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None
     async_remove_package_binary_sensor(hass, entry)
     _LOGGER.debug("Completed Migrate: async_remove_package_binary_sensor")
 
-    _LOGGER.debug("Start Migrate: async_remove_sense_setting_mirrors")
-    async_remove_sense_setting_mirrors(hass, entry)
-    _LOGGER.debug("Completed Migrate: async_remove_sense_setting_mirrors")
-
 
 # Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
 # in the registry so cleanup does not depend on the bundled library still exposing
@@ -116,16 +112,13 @@ def _async_repair_if_used(
     issue_id: str,
     translation_key: str,
     placeholders: dict[str, str] | None = None,
-    breaks_in: str | None = None,
 ) -> None:
-    """Raise a repair for an entity that is going away and is still in use.
+    """Raise a persistent repair for a removed entity that is still in use.
 
-    Neither a removal nor a deprecation can rewrite the user's
-    automations/scripts, so the repair lists the affected ones (the caller
-    supplies any replacement hint via ``placeholders``). Disabled entities are
-    skipped: they are not active in any automation. Pass ``breaks_in`` while the
-    entity still exists; the repair then clears itself once the last usage is
-    gone, where a removal repair has to persist.
+    The removal cannot rewrite the user's automations/scripts, so the repair
+    lists the affected ones (the caller supplies any replacement hint via
+    ``placeholders``). Disabled entities are skipped: they are not active in any
+    automation.
     """
     if entity.disabled_by is not None:
         return
@@ -134,16 +127,13 @@ def _async_repair_if_used(
         | set(scripts_with_entity(hass, entity.entity_id))
     )
     if not items:
-        if breaks_in is not None:
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
         return
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
         is_fixable=False,
-        is_persistent=breaks_in is None,
-        breaks_in_ha_version=breaks_in,
+        is_persistent=True,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
         translation_placeholders={
@@ -212,25 +202,22 @@ def async_remove_hdr_switch(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
 
 
 # Removed read-only mirrors of the sense setting controls, keyed by the mirror's
-# (platform, translation_key) and pointing at the (platform, key) of the control
-# that replaces it. Camera and light entities reuse the mirror keys, but not
-# these translation keys, so the match cannot hit them.
+# (platform, key) and pointing at the (platform, key) of the control that
+# replaces it. Camera and light entities reuse these keys, so the match is
+# scoped to sensor MACs.
 _SENSE_SETTING_MIRRORS: dict[tuple[str, str], tuple[Platform, str]] = {
-    (Platform.BINARY_SENSOR, "motion_detection_enabled"): (Platform.SWITCH, "motion"),
-    (Platform.BINARY_SENSOR, "temperature_sensor_enabled"): (
-        Platform.SWITCH,
-        "temperature",
-    ),
-    (Platform.BINARY_SENSOR, "humidity_sensor_enabled"): (Platform.SWITCH, "humidity"),
-    (Platform.BINARY_SENSOR, "light_sensor_enabled"): (Platform.SWITCH, "light"),
-    (Platform.BINARY_SENSOR, "alarm_sound_detection"): (Platform.SWITCH, "alarm"),
+    (Platform.BINARY_SENSOR, "motion_enabled"): (Platform.SWITCH, "motion"),
+    (Platform.BINARY_SENSOR, "temperature"): (Platform.SWITCH, "temperature"),
+    (Platform.BINARY_SENSOR, "humidity"): (Platform.SWITCH, "humidity"),
+    (Platform.BINARY_SENSOR, "light"): (Platform.SWITCH, "light"),
+    (Platform.BINARY_SENSOR, "alarm"): (Platform.SWITCH, "alarm"),
     (Platform.SENSOR, "sensitivity"): (Platform.NUMBER, "sensitivity"),
 }
 
 
 @callback
 def async_remove_sense_setting_mirrors(
-    hass: HomeAssistant, entry: UFPConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry, sensor_macs: set[str]
 ) -> None:
     """Remove the read-only mirrors of the sense setting controls.
 
@@ -239,19 +226,22 @@ def async_remove_sense_setting_mirrors(
     a repair first if a still-enabled one is referenced by an automation or
     script, and drop the stored deprecation repair.
 
+    Runs after platform setup, unlike the other migrations in this file: the
+    repair names the replacement, which only exists once the platform is set up.
+
     Added in 2026.11.0
     """
+    if not sensor_macs:
+        return
     registry = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        replacement = _SENSE_SETTING_MIRRORS.get(
-            (entity.domain, entity.translation_key or "")
-        )
-        if replacement is None:
+        mac, _, key = entity.unique_id.partition("_")
+        replacement = _SENSE_SETTING_MIRRORS.get((entity.domain, key))
+        if replacement is None or mac not in sensor_macs:
             continue
         ir.async_delete_issue(
             hass, DOMAIN, f"sense_setting_mirror_deprecated_{entity.unique_id}"
         )
-        mac = entity.unique_id.partition("_")[0]
         replacement_platform, replacement_key = replacement
         if replacement_entity_id := registry.async_get_entity_id(
             replacement_platform, DOMAIN, f"{mac}_{replacement_key}"

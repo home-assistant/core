@@ -1140,6 +1140,15 @@ async def test_switch_sense_public_switches_ignore_local_permissions(
     )
     assert entity_registry.async_get(entity_id) is None
 
+    # The removed read-only mirrors of the migrated switches are not created.
+    for key in ("motion_enabled", "temperature", "humidity", "light", "alarm"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{sensor_all.mac}_{key}"
+            )
+            is None
+        ), key
+
 
 _SMART_KEYS = {key for key, _, _ in CAMERA_SWITCHES_DETECTION_READ}
 

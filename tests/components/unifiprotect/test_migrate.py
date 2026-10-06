@@ -1,7 +1,11 @@
 """Test the UniFi Protect setup flow."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 import pytest
 from uiprotect.data import Camera, Sensor
+from uiprotect.data.public_devices import SensorFeatureCapability
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
@@ -18,7 +22,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, make_public_sensor, setup_public_sensor
 
 
 async def _load_automation(hass: HomeAssistant, entity_id: str):
@@ -212,16 +216,25 @@ async def test_migrate_insecure_camera_removed_disabled_not_repaired(
 
 
 SENSE_SETTING_MIRRORS = [
-    pytest.param(Platform.BINARY_SENSOR, "motion_enabled", "motion_detection_enabled"),
-    pytest.param(Platform.BINARY_SENSOR, "temperature", "temperature_sensor_enabled"),
-    pytest.param(Platform.BINARY_SENSOR, "humidity", "humidity_sensor_enabled"),
-    pytest.param(Platform.BINARY_SENSOR, "light", "light_sensor_enabled"),
-    pytest.param(Platform.BINARY_SENSOR, "alarm", "alarm_sound_detection"),
-    pytest.param(Platform.SENSOR, "sensitivity", "sensitivity"),
+    pytest.param(Platform.BINARY_SENSOR, "motion_enabled", id="motion_enabled"),
+    pytest.param(Platform.BINARY_SENSOR, "temperature", id="temperature"),
+    pytest.param(Platform.BINARY_SENSOR, "humidity", id="humidity"),
+    pytest.param(Platform.BINARY_SENSOR, "light", id="light"),
+    pytest.param(Platform.BINARY_SENSOR, "alarm", id="alarm"),
+    pytest.param(Platform.SENSOR, "sensitivity", id="sensitivity"),
 ]
 
 
-@pytest.mark.parametrize(("platform", "key", "translation_key"), SENSE_SETTING_MIRRORS)
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.unifiprotect.issues.sense_setting_mirror_deprecated.title",
+            "component.unifiprotect.issues.sense_setting_mirror_deprecated.description",
+        ]
+    ],
+)
+@pytest.mark.parametrize(("platform", "key"), SENSE_SETTING_MIRRORS)
 async def test_migrate_sense_setting_mirror_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -230,15 +243,11 @@ async def test_migrate_sense_setting_mirror_removed(
     sensor_all: Sensor,
     platform: Platform,
     key: str,
-    translation_key: str,
 ) -> None:
     """An unused setting mirror is removed with its stored deprecation repair."""
+    setup_public_sensor(ufp)
     mirror = entity_registry.async_get_or_create(
-        platform,
-        DOMAIN,
-        f"{sensor_all.mac}_{key}",
-        config_entry=ufp.entry,
-        translation_key=translation_key,
+        platform, DOMAIN, f"{sensor_all.mac}_{key}", config_entry=ufp.entry
     )
     deprecation_issue = f"sense_setting_mirror_deprecated_{mirror.unique_id}"
     ir.async_create_issue(
@@ -247,12 +256,7 @@ async def test_migrate_sense_setting_mirror_removed(
         deprecation_issue,
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="sense_setting_mirror_removed",
-        translation_placeholders={
-            "entity_id": mirror.entity_id,
-            "replacement": "switch.replacement",
-            "items": "",
-        },
+        translation_key="sense_setting_mirror_deprecated",
     )
 
     await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
@@ -267,23 +271,35 @@ async def test_migrate_sense_setting_mirror_removed(
     )
 
 
+@pytest.mark.parametrize(
+    ("capabilities", "translation_key", "has_replacement"),
+    [
+        pytest.param(None, "sense_setting_mirror_removed", True, id="replacement"),
+        pytest.param(
+            set(),
+            "sense_setting_mirror_removed_no_replacement",
+            False,
+            id="no_replacement",
+        ),
+    ],
+)
 async def test_migrate_sense_setting_mirror_removed_in_use(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
+    capabilities: set[SensorFeatureCapability] | None,
+    translation_key: str,
+    has_replacement: bool,
 ) -> None:
-    """Removing a used setting mirror raises a repair naming its replacement."""
-    replacement = entity_registry.async_get_or_create(
-        Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm", config_entry=ufp.entry
-    )
+    """Removing a used mirror raises a repair naming the switch set up beside it."""
+    setup_public_sensor(ufp, capabilities=capabilities)
     mirror = entity_registry.async_get_or_create(
         Platform.BINARY_SENSOR,
         DOMAIN,
         f"{sensor_all.mac}_alarm",
         config_entry=ufp.entry,
-        translation_key="alarm_sound_detection",
     )
     await _load_automation(hass, mirror.entity_id)
 
@@ -295,86 +311,63 @@ async def test_migrate_sense_setting_mirror_removed_in_use(
     )
     assert issue is not None
     assert issue.is_persistent
-    assert issue.translation_key == "sense_setting_mirror_removed"
+    assert issue.translation_key == translation_key
     assert issue.translation_placeholders["entity_id"] == mirror.entity_id
-    assert issue.translation_placeholders["replacement"] == replacement.entity_id
-
-
-async def test_migrate_sense_setting_mirror_removed_in_use_no_replacement(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    ufp: MockUFPFixture,
-    sensor_all: Sensor,
-) -> None:
-    """A mirror without a replacement control gets the no-replacement repair."""
-    mirror = entity_registry.async_get_or_create(
-        Platform.BINARY_SENSOR,
-        DOMAIN,
-        f"{sensor_all.mac}_alarm",
-        config_entry=ufp.entry,
-        translation_key="alarm_sound_detection",
+    replacement = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm"
     )
-    await _load_automation(hass, mirror.entity_id)
-
-    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
-
-    assert entity_registry.async_get(mirror.entity_id) is None
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"sense_setting_mirror_removed_{mirror.unique_id}"
-    )
-    assert issue is not None
-    assert issue.translation_key == "sense_setting_mirror_removed_no_replacement"
-    assert "replacement" not in issue.translation_placeholders
+    assert (replacement is not None) is has_replacement
+    assert issue.translation_placeholders.get("replacement") == replacement
 
 
 @pytest.mark.parametrize(
-    ("platform", "key", "translation_key"),
+    ("platform", "key"),
     [
-        pytest.param(
-            Platform.BINARY_SENSOR,
-            "motion_enabled",
-            "detections_motion",
-            id="camera_motion_mirror",
-        ),
-        pytest.param(
-            Platform.BINARY_SENSOR, "light", "flood_light", id="floodlight_light"
-        ),
-        pytest.param(
-            Platform.SENSOR,
-            "sensitivity",
-            "motion_sensitivity",
-            id="floodlight_sensitivity",
-        ),
-        pytest.param(
-            Platform.SWITCH,
-            "alarm",
-            "alarm_sound_detection",
-            id="sense_alarm_switch",
-        ),
+        pytest.param(Platform.BINARY_SENSOR, "motion_enabled", id="motion_enabled"),
+        pytest.param(Platform.BINARY_SENSOR, "light", id="light"),
+        pytest.param(Platform.SENSOR, "sensitivity", id="sensitivity"),
     ],
 )
-async def test_migrate_sense_setting_mirror_keeps_other_entities(
+async def test_migrate_sense_setting_mirror_keeps_other_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
+    sensor_all: Sensor,
     platform: Platform,
     key: str,
-    translation_key: str,
 ) -> None:
-    """Entities sharing a mirror key or translation key on another platform stay."""
+    """Camera and light entities share the mirror keys and stay."""
     entity = entity_registry.async_get_or_create(
-        platform,
-        DOMAIN,
-        f"{doorbell.mac}_{key}",
-        config_entry=ufp.entry,
-        translation_key=translation_key,
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
     )
 
-    async_remove_sense_setting_mirrors(hass, ufp.entry)
+    async_remove_sense_setting_mirrors(hass, ufp.entry, {sensor_all.mac})
 
     assert entity_registry.async_get(entity.entity_id) is not None
+
+
+async def test_migrate_sense_setting_mirror_removed_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_all: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A mirror left by full access is also removed in API key only mode."""
+    ufp_public_only.api.public_bootstrap.sensors[sensor_all.id] = make_public_sensor(
+        sensor_all
+    )
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_alarm",
+        config_entry=ufp_public_only.entry,
+    )
+
+    await setup_public_only()
+
+    assert entity_registry.async_get(mirror.entity_id) is None
 
 
 REMOVED_ENTITIES = [

@@ -256,14 +256,8 @@
       "high_fps": {
         "name": "High FPS"
       },
-      "humidity_sensor": {
-        "name": "Humidity sensor"
-      },
       "is_dark": {
         "name": "Is dark"
-      },
-      "light_sensor": {
-        "name": "Light sensor"
       },
       "object_detected": {
         "name": "Object detected"
@@ -303,9 +297,6 @@
       },
       "system_sounds": {
         "name": "System sounds"
-      },
-      "temperature_sensor": {
-        "name": "Temperature sensor"
       },
       "tracking_person": {
         "name": "Tracking: person"
@@ -768,13 +759,13 @@
         "name": "[%key:component::unifiprotect::entity::binary_sensor::high_fps::name%]"
       },
       "humidity_sensor": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::humidity_sensor::name%]"
+        "name": "Humidity sensor"
       },
       "insights_enabled": {
         "name": "Insights enabled"
       },
       "light_sensor": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::light_sensor::name%]"
+        "name": "Light sensor"
       },
       "motion": {
         "name": "[%key:component::binary_sensor::entity_component::motion::name%]"

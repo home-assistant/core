@@ -87,14 +87,8 @@
       "high_fps": {
         "default": "mdi:video-high-definition"
       },
-      "humidity_sensor": {
-        "default": "mdi:water-percent"
-      },
       "is_dark": {
         "default": "mdi:brightness-6"
-      },
-      "light_sensor": {
-        "default": "mdi:brightness-5"
       },
       "object_detected": {
         "default": "mdi:eye"
@@ -134,9 +128,6 @@
       },
       "system_sounds": {
         "default": "mdi:speaker"
-      },
-      "temperature_sensor": {
-        "default": "mdi:thermometer"
       },
       "tracking_person": {
         "default": "mdi:walk"
