@@ -418,10 +418,13 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
-                    # pylint: disable-next=home-assistant-exception-not-translated
-                    raise HomeAssistantError(
-                        f"Error rendering response template: {ex}"
-                    ) from ex
+                    self._send_service_call_response(
+                        call_id,
+                        success=False,
+                        error_message=f"Error rendering response template: {ex}",
+                        response_data=b"",
+                    )
+                    return
             else:
                 response_dict = {"response": action_response}
 

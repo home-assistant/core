@@ -46,7 +46,10 @@ class PVOutputDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         try:
             return await self.pvoutput.status()
         except PVOutputAuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except PVOutputNoDataError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

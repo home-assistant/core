@@ -22,7 +22,7 @@ from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
-from .schemas import BlockedTemplateAttributes
+from .validators import BlockedTemplateAttributes
 
 _SENTINEL = object()
 

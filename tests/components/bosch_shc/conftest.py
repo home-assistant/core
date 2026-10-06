@@ -47,6 +47,7 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
     ValveTappetService,
+    VibrationSensorService,
 )
 import pytest
 
@@ -550,6 +551,9 @@ def shutter_contact2_plus_device(
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
     vibration_enabled: bool = False,
+    sensitivity: VibrationSensorService.SensitivityState = (
+        VibrationSensorService.SensitivityState.MEDIUM
+    ),
 ) -> SHCShutterContact2Plus:
     """Build a minimal device double for a vibration-capable Door/Window Contact II Plus."""
     device = create_autospec(SHCShutterContact2Plus, instance=True, spec_set=True)
@@ -565,6 +569,7 @@ def shutter_contact2_plus_device(
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
     device.enabled = vibration_enabled
+    device.sensitivity = sensitivity
     return device
 
 
@@ -635,6 +640,7 @@ def motion_detector2_device(
     tamper_protection_enabled: bool = False,
     supports_smart_sensitivity: bool = False,
     smart_sensitivity_enabled: bool = False,
+    supports_tamper_reset: bool = True,
     latestmotion: str = "",
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
@@ -654,6 +660,7 @@ def motion_detector2_device(
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
+    device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
     if motion_sensitivity is None:
         del device.motion_sensitivity

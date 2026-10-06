@@ -989,7 +989,8 @@ async def test_esphome_device_service_call_with_response_template_error(
     )
     assert call_id == 789
     assert success is False
-    assert "Error rendering response template" in error_message
+    assert error_message.startswith("Error rendering response template: ")
+    assert "invalid_field" in error_message
     assert response_data == b""
 
 

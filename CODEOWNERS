@@ -266,8 +266,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/bring/ @miaucl @tr4nt0r
 /tests/components/bring/ @miaucl @tr4nt0r
-/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
-/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @DAB-LABS
+/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @DAB-LABS
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
@@ -479,8 +479,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/eheimdigital/ @autinerd
 /homeassistant/components/ekeybionyx/ @richardpolzer
 /tests/components/ekeybionyx/ @richardpolzer
-/homeassistant/components/electrasmart/ @jafar-atili
-/tests/components/electrasmart/ @jafar-atili
+/homeassistant/components/electrasmart/ @jafar-atili @noamokman
+/tests/components/electrasmart/ @jafar-atili @noamokman
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
 /homeassistant/components/elevenlabs/ @sorgfresser
@@ -850,6 +850,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
+/homeassistant/components/hydroquebec_peak/ @Beat-YT
+/tests/components/hydroquebec_peak/ @Beat-YT
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/hypontech/ @jcisio
@@ -1696,8 +1698,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sfr_box/ @epenet
 /homeassistant/components/sftp_storage/ @maretodoric
 /tests/components/sftp_storage/ @maretodoric
-/homeassistant/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
-/tests/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
+/homeassistant/components/sharkiq/ @JeffResc @funkybunch
+/tests/components/sharkiq/ @JeffResc @funkybunch
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @bieniu @thecode @chemelli74 @bdraco

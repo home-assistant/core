@@ -359,6 +359,7 @@ FLOWS = {
         "huum",
         "hvv_departures",
         "hydrawise",
+        "hydroquebec_peak",
         "hyperion",
         "hypontech",
         "ialarm",

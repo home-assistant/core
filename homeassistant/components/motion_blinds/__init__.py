@@ -9,7 +9,8 @@ from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, AsyncMotionMul
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -22,6 +23,7 @@ from .const import (
 from .coordinator import DataUpdateCoordinatorMotionBlinds, MotionBlindsConfigEntry
 from .entity import gateway_device_info
 from .gateway import ConnectMotionGateway
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +40,15 @@ class MotionBlindsData:
 # One multicast listener serves every gateway, so it is shared between config
 # entries rather than owned by any one of them.
 MOTION_BLINDS_DATA: HassKey[MotionBlindsData] = HassKey(DOMAIN)
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Motionblinds integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
