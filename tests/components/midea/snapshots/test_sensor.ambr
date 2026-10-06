@@ -886,7 +886,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1400',
+    'state': '1400.0',
   })
 # ---
 # name: test_all_entities[db][sensor.front_load_washer_dehydration_time-entry]
@@ -1136,7 +1136,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60',
+    'state': '60.0',
   })
 # ---
 # name: test_all_entities[db][sensor.front_load_washer_wash_program-entry]
@@ -1740,7 +1740,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70',
+    'state': '70.0',
   })
 # ---
 # name: test_all_entities[db_unknown_attributes][sensor.front_load_washer_wash_program-entry]
