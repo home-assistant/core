@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-import httpx
+import httpx2
 from openai import (
     APIConnectionError,
     APITimeoutError,
@@ -121,8 +121,8 @@ def _status_error(
 ) -> AuthenticationError | PermissionDeniedError:
     """Build an OpenAI status error backed by a real httpx response."""
     return error(
-        response=httpx.Response(
-            status_code=status_code, request=httpx.Request("GET", TEST_URL)
+        response=httpx2.Response(
+            status_code=status_code, request=httpx2.Request("GET", TEST_URL)
         ),
         body=None,
         message="error",
@@ -135,8 +135,8 @@ def _status_error(
     [
         (_status_error(AuthenticationError, 401), "invalid_auth"),
         (_status_error(PermissionDeniedError, 403), "invalid_auth"),
-        (APIConnectionError(request=httpx.Request("GET", TEST_URL)), "cannot_connect"),
-        (APITimeoutError(request=httpx.Request("GET", TEST_URL)), "cannot_connect"),
+        (APIConnectionError(request=httpx2.Request("GET", TEST_URL)), "cannot_connect"),
+        (APITimeoutError(request=httpx2.Request("GET", TEST_URL)), "cannot_connect"),
     ],
 )
 async def test_user_step_proxy_errors(

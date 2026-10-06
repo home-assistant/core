@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from openai import AuthenticationError, BadRequestError, OpenAIError
 import pytest
 
@@ -37,9 +37,9 @@ async def test_setup_unload(
         (
             AuthenticationError(
                 message="invalid key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
@@ -48,9 +48,9 @@ async def test_setup_unload(
         (
             BadRequestError(
                 message="invalid parameter",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=400,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
