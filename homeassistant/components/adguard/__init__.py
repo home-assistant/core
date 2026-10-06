@@ -1,14 +1,8 @@
 """Support for AdGuard Home."""
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from adguardhome import (
-    AdGuardHome,
-    AdGuardHomeAuthenticationError,
-    AdGuardHomeConnectionError,
-    AdGuardHomeError,
-)
+from adguardhome import AdGuardHome, AdGuardHomeAuthenticationError, AdGuardHomeError
 import probatio
 from yarl import URL
 
@@ -28,7 +22,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -44,6 +37,7 @@ from .const import (
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
 )
+from .helpers import adguard_exception_handler
 
 SERVICE_URL_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}
@@ -85,66 +79,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         return [entry.runtime_data.client for entry in entries]
 
-    async def _async_run_on_instances(
-        hass: HomeAssistant, action: Callable[[AdGuardHome], Awaitable[object]]
-    ) -> None:
-        """Run an action on every AdGuard Home instance, translating errors."""
-        for adguard in _get_adguard_instances(hass):
-            try:
-                await action(adguard)
-            except AdGuardHomeConnectionError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cannot_connect"
-                ) from err
-            except AdGuardHomeAuthenticationError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="authentication_failed"
-                ) from err
-            except AdGuardHomeError as err:
-                # AdGuard Home explains what went wrong, like an unknown list.
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_failed",
-                    translation_placeholders={"error": str(err)},
-                ) from err
-
+    @adguard_exception_handler
     async def add_url(call: ServiceCall) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
-        await _async_run_on_instances(
-            call.hass,
-            lambda adguard: adguard.filtering.blocklists.add(
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.blocklists.add(
                 call.data[CONF_URL], name=call.data[CONF_NAME]
-            ),
-        )
+            )
 
+    @adguard_exception_handler
     async def remove_url(call: ServiceCall) -> None:
         """Service call to remove a filter subscription from AdGuard Home."""
-        await _async_run_on_instances(
-            call.hass,
-            lambda adguard: adguard.filtering.blocklists.remove(call.data[CONF_URL]),
-        )
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.blocklists.remove(call.data[CONF_URL])
 
+    @adguard_exception_handler
     async def enable_url(call: ServiceCall) -> None:
         """Service call to enable a filter subscription in AdGuard Home."""
-        await _async_run_on_instances(
-            call.hass,
-            lambda adguard: adguard.filtering.blocklists.enable(call.data[CONF_URL]),
-        )
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.blocklists.enable(call.data[CONF_URL])
 
+    @adguard_exception_handler
     async def disable_url(call: ServiceCall) -> None:
         """Service call to disable a filter subscription in AdGuard Home."""
-        await _async_run_on_instances(
-            call.hass,
-            lambda adguard: adguard.filtering.blocklists.disable(call.data[CONF_URL]),
-        )
+        for adguard in _get_adguard_instances(call.hass):
+            await adguard.filtering.blocklists.disable(call.data[CONF_URL])
 
+    @adguard_exception_handler
     async def refresh(call: ServiceCall) -> None:
         """Service call to refresh the filter subscriptions in AdGuard Home."""
-        # AdGuard Home always forces a refresh, so the force option does
-        # nothing, but is kept so existing automations keep working.
-        await _async_run_on_instances(
-            call.hass, lambda adguard: adguard.filtering.blocklists.refresh()
-        )
+        for adguard in _get_adguard_instances(call.hass):
+            # AdGuard Home always forces a refresh, so the force option does
+            # nothing, but is kept so existing automations keep working.
+            await adguard.filtering.blocklists.refresh()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
