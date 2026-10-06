@@ -122,3 +122,26 @@ async def test_unexpected_exception(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
     mock_tis_api.disconnect.assert_called_once()
+
+
+async def test_no_devices_found(hass: HomeAssistant, mock_tis_api: MagicMock) -> None:
+    """Test handling when no devices are discovered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Configure the mock so devices list is empty after scan
+    mock_tis_api.devices = []
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PORT: 6000},
+    )
+    await hass.async_block_till_done()
+
+    # The flow should abort with the no_devices_found reason
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "no_devices_found"
+    mock_tis_api.connect.assert_awaited_once()
+    mock_tis_api.scan_devices.assert_awaited_once()
+    mock_tis_api.disconnect.assert_called_once()

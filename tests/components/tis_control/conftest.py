@@ -38,6 +38,7 @@ def mock_tis_api() -> Generator[MagicMock]:
         instance.connect = AsyncMock(return_value=True)
         instance.scan_devices = AsyncMock()
         instance.get_entities = AsyncMock(return_value=[])
+        instance.devices = [{"name": "test_device"}]  # Default non-empty devices list
 
         # Mock the infinite event generator for the background task
         async def _mock_consume_events():
