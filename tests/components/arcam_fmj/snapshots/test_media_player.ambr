@@ -25,7 +25,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'arcam_fmj',
@@ -78,7 +78,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'arcam_fmj',
