@@ -649,7 +649,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "oncue",
     "ondilo_ico",
     "onvif",
-    "open_meteo",
     "openalpr_cloud",
     "openerz",
     "openexchangerates",
