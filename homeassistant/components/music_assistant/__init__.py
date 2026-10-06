@@ -157,13 +157,29 @@ async def async_setup_entry(  # noqa: C901
     # store the listen task and mass client in the entry data
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
-    # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        try:
-            await mass.disconnect()
-        finally:
-            raise ConfigEntryNotReady(listen_error) from listen_error
+    # check if any playerconfigs have been removed while we were disconnected,
+    # before forwarding the platforms, as the server can still go away here.
+    # never clean up dashboard devices: their registration is connection-scoped,
+    # so the cache may still be empty right after a reconnect.
+    try:
+        all_player_configs = await mass.config.get_player_configs()
+    except (MusicAssistantClientException, MusicAssistantError) as err:
+        listen_task.cancel()
+        await mass.disconnect()
+        raise ConfigEntryNotReady(
+            f"Lost connection to music assistant server {mass_url}: {err}"
+        ) from err
+    player_ids = {player.player_id for player in all_player_configs}
+    dev_reg = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    for device in dev_entries:
+        for identifier in device.identifiers:
+            if (
+                identifier[0] == DOMAIN
+                and not identifier[1].startswith(DASHBOARD_ID_PREFIX)
+                and identifier[1] not in player_ids
+            ):
+                dev_reg.async_remove_device(device.id)
 
     # initialize platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -240,21 +256,14 @@ async def async_setup_entry(  # noqa: C901
         mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
     )
 
-    # check if any playerconfigs have been removed while we were disconnected.
-    # never clean up dashboard devices: their registration is connection-scoped,
-    # so the cache may still be empty right after a reconnect.
-    all_player_configs = await mass.config.get_player_configs()
-    player_ids = {player.player_id for player in all_player_configs}
-    dev_reg = dr.async_get(hass)
-    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
-    for device in dev_entries:
-        for identifier in device.identifiers:
-            if (
-                identifier[0] == DOMAIN
-                and not identifier[1].startswith(DASHBOARD_ID_PREFIX)
-                and identifier[1] not in player_ids
-            ):
-                dev_reg.async_remove_device(device.id)
+    # The listen task skips its reload when it fails with an exception while
+    # the entry is still being set up, so that case has to be caught here
+    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        try:
+            await mass.disconnect()
+        finally:
+            raise ConfigEntryNotReady(listen_error) from listen_error
 
     return True
 
