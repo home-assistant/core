@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -128,8 +129,6 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox VM entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._vm_data = vm_data
-        self._node_name = node_data.node["node"]
         self.device_id = int(vm_data["vmid"])
         self.device_name = vm_data["name"]
 
@@ -159,14 +158,22 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    def _node_name(self) -> str:
+        """Resolve current node from coordinator's centralized map."""
+        node = self.coordinator.vmid_node_map.get(self.device_id)
+        if node is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="entity_not_found",
+                translation_placeholders={"kind": "VM", "id": str(self.device_id)},
+            )
+        return node
+
+    @property
     @override
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].vms
-        )
+        return super().available and self.device_id in self.coordinator.vmid_node_map
 
     @property
     def vm_data(self) -> dict[str, Any]:
@@ -187,8 +194,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox Container entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._container_data = container_data
-        self._node_name = node_data.node["node"]
         # Proxmox hands out a container vmid as a string, a VM one as an int
         self.device_id = int(container_data["vmid"])
         self.device_name = container_data["name"]
@@ -222,14 +227,25 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    def _node_name(self) -> str:
+        """Resolve current node from coordinator's centralized map."""
+        node = self.coordinator.ctid_node_map.get(self.device_id)
+        if node is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="entity_not_found",
+                translation_placeholders={
+                    "kind": "Container",
+                    "id": str(self.device_id),
+                },
+            )
+        return node
+
+    @property
     @override
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].containers
-        )
+        return super().available and self.device_id in self.coordinator.ctid_node_map
 
     @property
     def container_data(self) -> dict[str, Any]:
