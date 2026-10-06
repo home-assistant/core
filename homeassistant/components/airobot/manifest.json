@@ -1,7 +1,7 @@
 {
   "domain": "airobot",
   "name": "Airobot",
-  "codeowners": ["@mettolen"],
+  "codeowners": ["@mettolen", "@dmednis"],
   "config_flow": true,
   "dependencies": ["modbus"],
   "dhcp": [
