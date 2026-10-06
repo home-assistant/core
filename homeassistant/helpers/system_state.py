@@ -6,8 +6,8 @@ Home Assistant creates a fresh instance, and that is what clears it.
 The reboot flag is owned by Supervisor, which keeps it across restarts of
 Home Assistant. The hassio integration mirrors it here.
 
-An admin can put off a pending restart. That only hides it from the
-interface until another integration asks; the restart stays required.
+An admin can put off what is pending. That only hides it from the
+interface until something new asks; the restart or reboot stays required.
 """
 
 from collections.abc import Callable
@@ -32,6 +32,7 @@ class SystemState:
     home_assistant_restart_sources: frozenset[str] = frozenset()
     home_assistant_restart_dismissed_sources: frozenset[str] = frozenset()
     host_reboot_required: bool = False
+    host_reboot_dismissed: bool = False
 
     @property
     def home_assistant_restart_required(self) -> bool:
@@ -54,6 +55,7 @@ class SystemState:
             "home_assistant_restart_sources": sorted(
                 self.home_assistant_restart_sources
             ),
+            "host_reboot_dismissed": self.host_reboot_dismissed,
             "host_reboot_required": self.host_reboot_required,
         }
 
@@ -118,7 +120,15 @@ def async_set_host_reboot_required(hass: HomeAssistant, required: bool) -> None:
     if system_state.host_reboot_required is required:
         return
 
-    _async_update(hass, replace(system_state, host_reboot_required=required))
+    # Once the reboot is no longer pending, a next one is new again.
+    _async_update(
+        hass,
+        replace(
+            system_state,
+            host_reboot_required=required,
+            host_reboot_dismissed=system_state.host_reboot_dismissed and required,
+        ),
+    )
 
 
 @callback
@@ -132,6 +142,7 @@ def async_dismiss(hass: HomeAssistant) -> None:
         home_assistant_restart_dismissed_sources=(
             system_state.home_assistant_restart_sources
         ),
+        host_reboot_dismissed=system_state.host_reboot_required,
     )
     if dismissed == system_state:
         return

@@ -3746,6 +3746,7 @@ async def test_subscribe_system_state(
         "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
         "host_reboot_required": False,
     }
 
@@ -3757,6 +3758,7 @@ async def test_subscribe_system_state(
         "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["demo", "hacs"],
+        "host_reboot_dismissed": False,
         "host_reboot_required": False,
     }
 
@@ -3781,6 +3783,7 @@ async def test_dismiss_system_state(
         "home_assistant_restart_dismissed": True,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
         "host_reboot_required": False,
     }
 
