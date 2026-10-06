@@ -6,12 +6,13 @@ from typing import Any
 from unittest.mock import patch
 
 import aiounifi
+from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
-from homeassistant.components.unifi.coordinator import POLL_INTERVAL
+from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
@@ -84,7 +85,7 @@ async def test_coordinators_preserve_handler_update_sources(
         api.traffic_routes,
     ):
         coordinator = loader.get_data_update_coordinator(handler)
-        assert coordinator.update_interval == POLL_INTERVAL
+        assert coordinator.update_interval == IDLE_POLL_INTERVAL
 
 
 async def test_get_data_update_coordinator_requires_registered_handler(
@@ -109,6 +110,11 @@ async def test_polling_coordinator_refreshes_after_interval(
         api.object_oriented_network_configs
     )
 
+    assert coordinator.update_interval == IDLE_POLL_INTERVAL
+
+    with patch.object(coordinator.handler, "items", return_value=[("id", object())]):
+        await coordinator.async_refresh()
+
     assert coordinator.update_interval == POLL_INTERVAL
 
     with patch.object(
@@ -120,6 +126,49 @@ async def test_polling_coordinator_refreshes_after_interval(
         await hass.async_block_till_done()
 
     assert mock_update.call_count >= 1
+
+
+async def test_endpoint_not_found_disables_object_oriented_network_config_polling(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure an unavailable optional endpoint stops polling after one warning."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+    coordinator = loader.get_data_update_coordinator(
+        api.object_oriented_network_configs
+    )
+    traffic_rules_coordinator = loader.get_data_update_coordinator(api.traffic_rules)
+
+    with patch.object(
+        coordinator.handler,
+        "update",
+        side_effect=EndpointNotFound("endpoint not found"),
+    ) as mock_update:
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+        assert coordinator.update_interval is None
+        assert coordinator.last_update_success is False
+        assert mock_update.call_count == 1
+
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count == 2
+    assert traffic_rules_coordinator.update_interval == IDLE_POLL_INTERVAL
+    assert (
+        caplog.text.count(
+            "UniFi ObjectOrientedNetworkConfigs endpoint is unavailable; disabling polling"
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize(

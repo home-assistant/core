@@ -246,7 +246,9 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
             errors=errors,
         )
 

@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/rituals_perfume_genie",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["pyrituals"],
-  "requirements": ["pyrituals==0.0.7"]
+  "loggers": ["ritualsgenie"],
+  "requirements": ["ritualsgenie==0.1.0"]
 }

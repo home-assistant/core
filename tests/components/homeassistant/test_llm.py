@@ -412,3 +412,45 @@ async def test_get_live_context_schema(
     schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
 
     assert schema == snapshot
+
+
+async def test_get_exposed_entities_brightness_percentage(hass: HomeAssistant) -> None:
+    """Test that a light's brightness is also rendered as a percentage."""
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 128}
+    )
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    attributes = exposed[ENTITY_ID]["attributes"]
+
+    # The raw attribute is unchanged, so anything reading it keeps working.
+    assert attributes["brightness"] == "128"
+    # The percentage is the inverse of the percentage-to-brightness conversion.
+    assert attributes["brightness_pct"] == "50"
+
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 255}
+    )
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed[ENTITY_ID]["attributes"]["brightness_pct"] == "100"
+
+    # A lit light never rounds down to nothing.
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 1}
+    )
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed[ENTITY_ID]["attributes"]["brightness_pct"] == "1"
+
+    hass.states.async_set(ENTITY_ID, "off", {"friendly_name": "Kitchen Light"})
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert "brightness_pct" not in exposed[ENTITY_ID].get("attributes", {})
+
+    # Only lights get the percentage, whatever attribute another domain carries.
+    hass.states.async_set(
+        "fan.kitchen", "on", {"friendly_name": "Kitchen Fan", "brightness": 128}
+    )
+    async_expose_entity(hass, "conversation", "fan.kitchen", True)
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed["fan.kitchen"]["attributes"]["brightness"] == "128"
+    assert "brightness_pct" not in exposed["fan.kitchen"]["attributes"]

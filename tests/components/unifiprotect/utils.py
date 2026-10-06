@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -36,6 +36,7 @@ from uiprotect.data.public_devices import (
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
     PublicHdrMode,
+    PublicLcdMessage,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
@@ -43,7 +44,9 @@ from uiprotect.data.public_devices import (
     PublicSensor,
     PublicSensorAlarmSettingsRead,
     PublicSensorLeakSettings,
+    PublicSensorMetric,
     PublicSensorMotionSettingsRead,
+    PublicSensorStats,
     PublicSensorThresholdSettings,
     PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
@@ -51,6 +54,7 @@ from uiprotect.data.public_devices import (
     SensorFeatureCapability,
 )
 from uiprotect.test_util.anonymize import random_hex
+from uiprotect.utils import to_js_time
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import Platform
@@ -133,6 +137,25 @@ def assert_entity_counts(
 
     assert len(entities) == total
     assert len(hass.states.async_all(platform.value)) == enabled
+
+
+def registered_keys(
+    entity_registry: er.EntityRegistry, platform: Platform, mac: str
+) -> set[str]:
+    """Return the description keys registered for a device on a platform."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == platform and entry.unique_id.startswith(prefix)
+    }
+
+
+def make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
 
 
 def normalize_name(name: str) -> str:
@@ -354,6 +377,10 @@ def make_public_sensor(
     capabilities: set[SensorFeatureCapability] | None = None,
     leak_internal_enabled: bool = False,
     leak_external_enabled: bool = False,
+    light_value: float | None = None,
+    humidity_value: float | None = None,
+    temperature_value: float | None = None,
+    tampering_detected_at: datetime | None = None,
 ) -> Mock:
     """Build a public-API sensor mirroring a private sensor's migrated fields.
 
@@ -363,8 +390,8 @@ def make_public_sensor(
     never from real capture data. Each ``*`` override lets a test diverge from
     the private value. The mount-derived enablement properties are computed from
     the resolved mount type so a ``mount_type`` override stays consistent.
-    ``capabilities`` mimics the capability map of newer firmware; ``None`` (the
-    default) models older firmware without a map, where every entity is created.
+    ``capabilities`` is the sensor's capability map; ``None`` (the default)
+    advertises every capability.
     """
     public = Mock(spec=PublicSensor)
     public.id = sensor.id
@@ -375,12 +402,6 @@ def make_public_sensor(
     public.model = ModelType.SENSOR
     public.state = DeviceState[sensor.state.name] if state is None else state
     public.mount_type = sensor.mount_type if mount_type is None else mount_type
-    public.is_contact_sensor_enabled = public.mount_type in {
-        MountType.DOOR,
-        MountType.WINDOW,
-        MountType.GARAGE,
-    }
-    public.is_leak_sensor_enabled = public.mount_type is MountType.LEAK
     public.is_opened = sensor.is_opened if is_opened is None else is_opened
     public.is_leak_detected = (
         sensor.is_leak_detected if is_leak_detected is None else is_leak_detected
@@ -390,12 +411,8 @@ def make_public_sensor(
         if is_tampering_detected is None
         else is_tampering_detected
     )
-    public.has_feature_flags = capabilities is not None
-    public.supports = Mock(
-        side_effect=lambda capability: (
-            capabilities is not None and capability in capabilities
-        )
-    )
+    caps = set(SensorFeatureCapability) if capabilities is None else capabilities
+    public.supports = Mock(side_effect=lambda capability: capability in caps)
     public.leak_settings = PublicSensorLeakSettings(
         is_internal_enabled=leak_internal_enabled,
         is_external_enabled=leak_external_enabled,
@@ -447,6 +464,46 @@ def make_public_sensor(
             is_low=sensor.battery_status.is_low if is_low is None else is_low,
         )
     )
+    # The fixture reports the same number for all three metrics, so a test that
+    # has to tell the value paths apart passes its own.
+    public.stats = PublicSensorStats(
+        **{
+            name: PublicSensorMetric(
+                value=getattr(sensor.stats, name).value if value is None else value
+            )
+            for name, value in (
+                ("light", light_value),
+                ("humidity", humidity_value),
+                ("temperature", temperature_value),
+            )
+        }
+    )
+    # The public API reports these as a JS epoch; the fixture leaves tampering
+    # unset, so a test asserting that path passes its own instant.
+    public.open_status_changed_at = to_js_time(sensor.open_status_changed_at)
+    public.motion_detected_at = to_js_time(sensor.motion_detected_at)
+    public.tampering_detected_at = to_js_time(
+        sensor.tampering_detected_at
+        if tampering_detected_at is None
+        else tampering_detected_at
+    )
+    # Mocks do not evaluate properties, so derive them with the library's own
+    # logic: a wrong assumption about what gates a metric, or about how the
+    # epoch fields convert, fails the test.
+    for name in (
+        "is_contact_sensor_enabled",
+        "is_leak_sensor_enabled",
+        "is_leak_detection_enabled",
+        "is_motion_sensor_enabled",
+        "is_alarm_sensor_enabled",
+        "is_temperature_sensor_enabled",
+        "is_humidity_sensor_enabled",
+        "is_light_sensor_enabled",
+        "open_status_changed_at_dt",
+        "motion_detected_at_dt",
+        "tampering_detected_at_dt",
+    ):
+        setattr(public, name, getattr(PublicSensor, name).fget(public))
     return public
 
 
@@ -517,6 +574,7 @@ def make_public_light(
             lds.pir_sensitivity if pir_sensitivity is None else pir_sensitivity
         ),
     )
+    public.last_motion_dt = PublicLight.last_motion_dt.fget(public)
     return public
 
 
@@ -560,6 +618,8 @@ def make_public_camera(
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
+    lcd_message: PublicLcdMessage | None = None,
+    active_patrol_slot: int | None = None,
 ) -> Mock:
     """Build a public-API camera for a private camera's migrated fields.
 
@@ -573,7 +633,7 @@ def make_public_camera(
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
     not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
-    the test.
+    the test. ``lcd_message`` defaults to none for the same reason.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -592,6 +652,11 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.lcd_message = lcd_message
+    public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
+    # The doorbell text falls back to the default message of the private NVR.
+    public.api = camera._api
+    public.active_patrol_slot = active_patrol_slot
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected
@@ -637,9 +702,10 @@ def make_public_camera(
         if hdr_type is None
         else hdr_type
     )
+    public.hdr_mode_display = PublicCamera.hdr_mode_display.fget(public)
     flags = camera.feature_flags
     public.has_package_camera = flags.has_package_camera
-    # Spec'd so a private-only flag (e.g. ``has_highfps``) reads as absent.
+    # Spec'd so a private-only flag reads as absent.
     public.feature_flags = Mock(spec=PublicCameraFeatureFlags)
     public.feature_flags.support_full_hd_snapshot = flags.support_full_hd_snapshot
     public.feature_flags.has_hdr = flags.has_hdr
@@ -650,6 +716,10 @@ def make_public_camera(
     public.feature_flags.smart_detect_types = list(flags.smart_detect_types)
     public.feature_flags.smart_detect_audio_types = list(
         flags.smart_detect_audio_types or []
+    )
+    # Derived from the mirrored video modes with the library's own logic.
+    public.feature_flags.has_highfps = PublicCameraFeatureFlags.has_highfps.fget(
+        public.feature_flags
     )
     # The capability gate runs the library's own logic on the mirrored flags.
     public.can_detect = Mock(side_effect=partial(PublicCamera.can_detect, public))
@@ -663,17 +733,19 @@ def make_public_camera(
 def setup_public_sensor(
     ufp: MockUFPFixture,
     capabilities: set[SensorFeatureCapability] | None = None,
+    **mirror_overrides: Any,
 ) -> None:
     """Expose private sensors over the public API via a real ``PublicBootstrap``.
 
     Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
     against the private bootstrap at call time, so it is robust to ``init_entry``
-    regenerating device ids. ``capabilities`` is forwarded to the mirror to model
-    newer firmware with a capability map.
+    regenerating device ids. ``capabilities`` is forwarded to the mirror as the
+    sensor's capability map. Further keyword arguments are handed
+    to ``make_public_sensor``, so a test can diverge a mirrored value.
     """
     public_bootstrap = PublicBootstrap()
     pb = make_public_bootstrap(sensors=public_bootstrap.sensors)
-    make = partial(make_public_sensor, capabilities=capabilities)
+    make = partial(make_public_sensor, capabilities=capabilities, **mirror_overrides)
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
         if (

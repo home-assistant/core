@@ -26,7 +26,7 @@ DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Optional(
             CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE
