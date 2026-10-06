@@ -98,11 +98,12 @@ class GetForecastTool(Tool):
                     "period",
                     description=(
                         "Requested time window: today, tomorrow, this_afternoon, "
-                        "tonight, next_24_hours, this_week, or a weekday name "
+                        "tonight, next_24_hours, next_7_days, or a weekday name "
                         "(Monday through Sunday) for the next occurrence of that "
                         "weekday. Map conversational requests such as 'this "
-                        "Thursday' to the weekday name. Use this_afternoon, tonight, "
-                        "or next_24_hours for requests within a day."
+                        "Thursday' to the weekday name, and 'this week' to "
+                        "next_7_days. Use this_afternoon, tonight, or "
+                        "next_24_hours for requests within a day."
                     ),
                 ): probatio.In(
                     [
@@ -111,7 +112,7 @@ class GetForecastTool(Tool):
                         "this_afternoon",
                         "tonight",
                         "next_24_hours",
-                        "this_week",
+                        "next_7_days",
                         "monday",
                         "tuesday",
                         "wednesday",
@@ -222,6 +223,7 @@ def _forecast_datetime(value: datetime | str) -> datetime:
     Providers may supply either an ISO-formatted string or a native datetime
     object (for example IPMA's forecasts pass a datetime straight through).
     """
+    parsed: datetime | None
     if isinstance(value, datetime):
         parsed = value
     elif (parsed := dt_util.parse_datetime(value)) is None:
@@ -246,11 +248,11 @@ def _get_forecast_window(period: str) -> tuple[datetime, datetime]:
         end = today.replace(hour=18)
     elif period == "tonight":
         start = today.replace(hour=18)
-        end = today + timedelta(days=1)
+        end = (today + timedelta(days=1)).replace(hour=6)
     elif period == "next_24_hours":
         start = now
         end = dt_util.as_local(dt_util.as_utc(now) + timedelta(hours=24))
-    elif period == "this_week":
+    elif period == "next_7_days":
         start = today
         end = today + timedelta(days=7)
     else:

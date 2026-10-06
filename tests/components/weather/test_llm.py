@@ -411,14 +411,16 @@ async def test_get_forecast_tool_maps_tomorrow(hass: HomeAssistant) -> None:
 async def test_get_forecast_tool_tonight_window_boundaries(
     hass: HomeAssistant,
 ) -> None:
-    """Test the 'tonight' window includes 18:00 and excludes the next midnight."""
+    """Test 'tonight' spans 18:00 through the following morning cutoff."""
     entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
     today = dt_util.start_of_local_day()
+    tomorrow = today + timedelta(days=1)
     entity.forecast_list = [
         {"datetime": today.replace(hour=17).isoformat(), "condition": "cloudy"},
         {"datetime": today.replace(hour=18).isoformat(), "condition": "rainy"},
         {"datetime": today.replace(hour=23).isoformat(), "condition": "sunny"},
-        {"datetime": (today + timedelta(days=1)).isoformat(), "condition": "foggy"},
+        {"datetime": tomorrow.replace(hour=2).isoformat(), "condition": "foggy"},
+        {"datetime": tomorrow.replace(hour=6).isoformat(), "condition": "windy"},
     ]
     result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
     assert result is not None
@@ -430,13 +432,13 @@ async def test_get_forecast_tool_tonight_window_boundaries(
     )
 
     conditions = [entry["condition"] for entry in response.data["forecast"]]
-    assert conditions == ["rainy", "sunny"]
+    assert conditions == ["rainy", "sunny", "foggy"]
 
 
-async def test_get_forecast_tool_this_week_window_boundaries(
+async def test_get_forecast_tool_next_7_days_window_boundaries(
     hass: HomeAssistant,
 ) -> None:
-    """Test the 'this_week' window includes today and excludes day 7."""
+    """Test 'next_7_days' is a rolling window, including today and excluding day 7."""
     entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
     today = dt_util.start_of_local_day()
     entity.forecast_list = [
@@ -450,7 +452,7 @@ async def test_get_forecast_tool_this_week_window_boundaries(
 
     response = await result.tools[0].async_call(
         hass,
-        llm_helper.ToolInput("weather__get_forecast", _tool_args("this_week")),
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_7_days")),
         _llm_context(),
     )
 
@@ -526,4 +528,3 @@ async def test_get_forecast_tool_no_forecast_capable_entities(
     )
     assert response.error
     assert response.data == {"error": "Weather entity not found"}
-
