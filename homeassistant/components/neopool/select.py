@@ -21,7 +21,11 @@ from neopool_modbus.decoders import (
     decode_cell_boost,
     decode_filtration_speed_slot,
 )
-from neopool_modbus.exceptions import NeoPoolError
+from neopool_modbus.exceptions import (
+    InvalidStateReason,
+    NeoPoolError,
+    NeoPoolInvalidStateError,
+)
 from neopool_modbus.registers import (
     ConfigKind,
     FiltValveMode,
@@ -183,9 +187,15 @@ async def _write_timer_period(
     entity.coordinator.request_refresh_with_followup()
 
 
-# Map entity keys like "relay_aux1_mode" to the library RelayKind enum. The
-# entity key is the timer-block name (without the "_mode" suffix) which the
-# library already normalises inside async_set_relay_mode.
+# Map a library invalid-state rejection to a user-facing validation message.
+# _write_filt_mode is the one write that can surface it: leaving manual mode
+# while a cell boost is active makes the library refuse the pump toggle.
+_INVALID_STATE_TRANSLATION_KEY: dict[InvalidStateReason, str] = {
+    InvalidStateReason.FILTRATION_BOOST_ACTIVE: "filtration_boost_active",
+    InvalidStateReason.FILTRATION_NOT_IN_MANUAL_MODE: "filtration_not_manual_mode",
+}
+
+
 _RELAY_MODE_ENTITY_KIND: dict[str, RelayKind] = {
     "relay_aux1_mode": RelayKind.AUX1,
     "relay_aux2_mode": RelayKind.AUX2,
@@ -648,6 +658,16 @@ class NeoPoolSelect(NeoPoolEntity, SelectEntity):
             return
         try:
             await write_fn(self, self.coordinator.client, option)
+        except NeoPoolInvalidStateError as err:
+            translation_key = (
+                _INVALID_STATE_TRANSLATION_KEY.get(err.reason, "relay_in_auto_mode")
+                if err.reason is not None
+                else "relay_in_auto_mode"
+            )
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            ) from err
         except (NeoPoolError, OSError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from neopool_modbus import NeoPoolError
+from neopool_modbus.exceptions import InvalidStateReason, NeoPoolInvalidStateError
 from neopool_modbus.registers import ConfigKind, FiltValveMode, RelayKind, RelayMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -122,6 +123,50 @@ async def test_filt_mode_backwash_option_is_display_only(
     mock_neopool_client.async_set_filtration_mode.reset_mock()
     await _select_option(hass, entity_id, "backwash")
     mock_neopool_client.async_set_filtration_mode.assert_not_awaited()
+
+
+async def test_filt_mode_invalid_state_maps_to_validation_error(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A library invalid-state rejection surfaces as ServiceValidationError.
+
+    Leaving manual mode while a cell boost is active makes the library raise
+    NeoPoolInvalidStateError; that is a fixable device state, not a comms
+    failure, so it maps to the reason's validation message, not
+    modbus_communication_error.
+    """
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "mbf_par_filt_mode")
+    mock_neopool_client.async_set_filtration_mode = AsyncMock(
+        side_effect=NeoPoolInvalidStateError(
+            "boost active",
+            reason=InvalidStateReason.FILTRATION_BOOST_ACTIVE,
+        ),
+    )
+    with pytest.raises(ServiceValidationError) as err:
+        await _select_option(hass, entity_id, "auto")
+    assert err.value.translation_key == "filtration_boost_active"
+
+
+async def test_filt_mode_invalid_state_unmapped_reason_falls_back(
+    hass: HomeAssistant,
+    mock_config_entry_timers: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """An invalid-state reason outside the select map falls back to a generic key."""
+    await setup_integration(hass, mock_config_entry_timers)
+    entity_id = _select_entity_id(hass, mock_config_entry_timers, "mbf_par_filt_mode")
+    mock_neopool_client.async_set_filtration_mode = AsyncMock(
+        side_effect=NeoPoolInvalidStateError(
+            "unexpected",
+            reason=InvalidStateReason.FILTVALVE_IN_AUTO_MODE,
+        ),
+    )
+    with pytest.raises(ServiceValidationError) as err:
+        await _select_option(hass, entity_id, "auto")
+    assert err.value.translation_key == "relay_in_auto_mode"
 
 
 async def test_filtvalve_period_minutes_writes_mapped_register(
