@@ -216,6 +216,49 @@ CUSTOM = {
                 "time_range_end": "12:00",
             },
         ),
+        # Malformed stored values aren't sent back: they fall back to the
+        # defaults a missing value would get.
+        (
+            {**EVERY_DAY, "time_range_start": None},
+            {"end": time(7, 0)},
+            {
+                "mode": "EVERY_DAY",
+                "time_range_start": "09:00",
+                "time_range_end": "07:00",
+            },
+        ),
+        (
+            {**EVERY_DAY, "time_range_end": "25:00"},
+            {"start": time(22, 0)},
+            {
+                "mode": "EVERY_DAY",
+                "time_range_start": "22:00",
+                "time_range_end": "12:00",
+            },
+        ),
+        (
+            {**ONE_TIME, "date": "2026-13-01"},
+            {"end": time(7, 0)},
+            {
+                "mode": "ONE_TIME_ONLY",
+                "date": "2026-01-16",
+                "time_range_start": "21:30",
+                "time_range_end": "07:00",
+            },
+        ),
+        (
+            {**CUSTOM, "date_end": "garbage"},
+            {"start_date": date(2026, 1, 6)},
+            {
+                "mode": "CUSTOM",
+                "date_start": "2026-01-06",
+                "date_end": "2026-01-17",
+                "repeat_on_days": ["mon", "fri"],
+                "time_all_day": False,
+                "time_range_start": "20:00",
+                "time_range_end": "06:00",
+            },
+        ),
         # An all-day schedule has no times, and a stray date isn't carried.
         (
             {**WEEKLY_ALL_DAY, "date": "2026-01-01"},
@@ -514,3 +557,28 @@ async def test_rejected_write_shows_the_controllers_reason(
     assert exc_info.value.translation_placeholders == {
         "reason": "Start date must be before the end date"
     }
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rejected_switch_write_leaves_the_policy_unchanged(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """A rejected turn off leaves the cached policy and the switch on."""
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/firewall-policies/{FIREWALL_POLICY['_id']}",
+        status=400,
+        json=REJECTION,
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await _call(hass, "switch", "turn_off", SWITCH)
+
+    api = config_entry_setup.runtime_data.api
+    assert api.firewall_policies[FIREWALL_POLICY["_id"]].enabled is True
+    assert hass.states.get(SWITCH).state == "on"

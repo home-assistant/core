@@ -170,6 +170,55 @@ async def test_set_schedule_time(
 @pytest.mark.parametrize(
     "firewall_policy_payload",
     [
+        [
+            _policy(
+                {
+                    "mode": "EVERY_DAY",
+                    "time_range_start": "25:00",
+                    "time_range_end": "08:00",
+                }
+            )
+        ]
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_schedule_time_replaces_malformed_time(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """A malformed stored time isn't sent back when the other one is set."""
+    assert hass.states.get(START).state == STATE_UNKNOWN
+    expected = {
+        **FIREWALL_POLICY,
+        "schedule": {
+            "mode": "EVERY_DAY",
+            "time_range_start": "09:00",
+            "time_range_end": "07:00",
+        },
+    }
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/firewall-policies/{FIREWALL_POLICY['_id']}",
+        json=expected,
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: END, ATTR_TIME: "07:00:00"},
+        blocking=True,
+    )
+
+    assert aioclient_mock.mock_calls[call_count][2] == expected
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload",
+    [
         [_policy({"mode": "ALWAYS"})],
         [_policy({**WEEKLY, "time_all_day": True})],
         [_policy({"mode": "SUNRISE"})],

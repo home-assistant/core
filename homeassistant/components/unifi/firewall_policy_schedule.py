@@ -99,7 +99,8 @@ def build_schedule(
     """Build the schedule for a mode from the current one plus changes.
 
     Times are taken from the changes, then from the current schedule, then
-    from defaults. Dates and days are only kept when the mode doesn't change:
+    from defaults; a malformed stored time or date is replaced the same way
+    a missing one is. Dates and days are only kept when the mode doesn't change:
     choosing a mode starts it today, on every day of the week.
     """
     current_mode = schedule_mode(current)
@@ -117,9 +118,15 @@ def build_schedule(
     ) -> str:
         if changed is not None:
             return changed.isoformat()
-        if keep and isinstance(kept := current_values.get(key), str):
-            return kept
+        if keep and (kept := parse_date(current_values.get(key))) is not None:
+            return kept.isoformat()
         return default.isoformat()
+
+    def _time(changed: time | None, key: str, default: str) -> str:
+        # A malformed stored time is replaced, so it isn't sent back.
+        if changed is None:
+            changed = parse_time(current_values.get(key))
+        return default if changed is None else changed.strftime("%H:%M")
 
     all_day = False
     if new_mode in MODES_WITH_DAYS:
@@ -143,15 +150,11 @@ def build_schedule(
             end_date, "date_end", keep=same_mode, default=today + timedelta(days=1)
         )
     if not all_day:
-        schedule["time_range_start"] = (
-            start.strftime("%H:%M")
-            if start is not None
-            else current.get("time_range_start", DEFAULT_TIME_RANGE_START)
+        schedule["time_range_start"] = _time(
+            start, "time_range_start", DEFAULT_TIME_RANGE_START
         )
-        schedule["time_range_end"] = (
-            end.strftime("%H:%M")
-            if end is not None
-            else current.get("time_range_end", DEFAULT_TIME_RANGE_END)
+        schedule["time_range_end"] = _time(
+            end, "time_range_end", DEFAULT_TIME_RANGE_END
         )
     return schedule
 
