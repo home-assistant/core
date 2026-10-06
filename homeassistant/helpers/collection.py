@@ -11,8 +11,8 @@ import logging
 from operator import attrgetter
 from typing import Any, TypedDict, override
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
@@ -590,7 +590,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             f"{self.api_prefix}/list",
             list_handler,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {vol.Required("type"): f"{self.api_prefix}/list"}
+                {probatio.Required("type"): f"{self.api_prefix}/list"}
             ),
         )
 
@@ -603,7 +603,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
                     **self.create_schema,
-                    vol.Required("type"): f"{self.api_prefix}/create",
+                    probatio.Required("type"): f"{self.api_prefix}/create",
                 }
             ),
         )
@@ -613,7 +613,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             f"{self.api_prefix}/subscribe",
             subscribe_handler,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {vol.Required("type"): f"{self.api_prefix}/subscribe"}
+                {probatio.Required("type"): f"{self.api_prefix}/subscribe"}
             ),
         )
 
@@ -626,8 +626,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
                     **self.update_schema,
-                    vol.Required("type"): f"{self.api_prefix}/update",
-                    vol.Required(self.item_id_key): str,
+                    probatio.Required("type"): f"{self.api_prefix}/update",
+                    probatio.Required(self.item_id_key): str,
                 }
             ),
         )
@@ -640,8 +640,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             ),
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
-                    vol.Required("type"): f"{self.api_prefix}/delete",
-                    vol.Required(self.item_id_key): str,
+                    probatio.Required("type"): f"{self.api_prefix}/delete",
+                    probatio.Required(self.item_id_key): str,
                 }
             ),
         )
@@ -663,7 +663,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             data.pop("type")
             item = await self.storage_collection.async_create_item(data)
             connection.send_result(msg["id"], item)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             connection.send_error(
                 msg["id"],
                 websocket_api.ERR_INVALID_FORMAT,
@@ -740,7 +740,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
                 websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {item_id}",
             )
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             connection.send_error(
                 msg["id"],
                 websocket_api.ERR_INVALID_FORMAT,

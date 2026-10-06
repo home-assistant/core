@@ -3,7 +3,7 @@
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -27,8 +27,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -76,17 +77,17 @@ TILT_FEATURES = (
 
 DEFAULT_NAME = "Template Cover"
 
-COVER_COMMON_SCHEMA = vol.Schema(
+COVER_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
-        vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_POSITION): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TILT): cv.template,
-        vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_POSITION): cv.template,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_TILT): cv.template,
+        probatio.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
@@ -94,10 +95,10 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=CoverEntityStateAttribute, device_class=True
 )
 
-COVER_YAML_SCHEMA = vol.All(
-    vol.Schema(
+COVER_YAML_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
+            probatio.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
         }
     )
     .extend(COVER_COMMON_SCHEMA.schema)
@@ -107,12 +108,12 @@ COVER_YAML_SCHEMA = vol.All(
             COVER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
         ).schema
     ),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+    probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
 )
 
-COVER_CONFIG_ENTRY_SCHEMA = vol.All(
+COVER_CONFIG_ENTRY_SCHEMA = probatio.All(
     COVER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+    probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
 )
 
 

@@ -14,7 +14,7 @@ from knx_telegram_store import (
     KnxTelegramStoreException,
     TelegramQuery,
 )
-import voluptuous as vol
+import probatio
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
@@ -182,7 +182,7 @@ def provide_knx(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_base_data",
+        probatio.Required("type"): "knx/get_base_data",
     }
 )
 @provide_knx
@@ -235,7 +235,7 @@ def ws_get_base_data(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_knx_project",
+        probatio.Required("type"): "knx/get_knx_project",
     }
 )
 @websocket_api.async_response
@@ -257,9 +257,9 @@ async def ws_get_knx_project(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/project_file_process",
-        vol.Required("file_id"): str,
-        vol.Required("password"): str,
+        probatio.Required("type"): "knx/project_file_process",
+        probatio.Required("file_id"): str,
+        probatio.Required("password"): str,
     }
 )
 @websocket_api.async_response
@@ -290,7 +290,7 @@ async def ws_project_file_process(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/project_file_remove",
+        probatio.Required("type"): "knx/project_file_remove",
     }
 )
 @websocket_api.async_response
@@ -309,7 +309,7 @@ async def ws_project_file_remove(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/group_monitor_info",
+        probatio.Required("type"): "knx/group_monitor_info",
     }
 )
 @websocket_api.async_response
@@ -357,7 +357,7 @@ async def ws_group_monitor_info(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/group_telegrams",
+        probatio.Required("type"): "knx/group_telegrams",
     }
 )
 @provide_knx
@@ -378,19 +378,27 @@ def ws_group_telegrams(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/query_telegrams",
-        vol.Optional("sources"): [str],
-        vol.Optional("destinations"): [str],
-        vol.Optional("telegram_types"): [str],
-        vol.Optional("directions"): [str],
-        vol.Optional("dpt_mains"): [vol.Coerce(int)],
-        vol.Optional("start_time"): cv.datetime,
-        vol.Optional("end_time"): cv.datetime,
-        vol.Optional("delta_before_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional("delta_after_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional("limit"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100_000)),
-        vol.Optional("offset"): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional("order_descending"): bool,
+        probatio.Required("type"): "knx/query_telegrams",
+        probatio.Optional("sources"): [str],
+        probatio.Optional("destinations"): [str],
+        probatio.Optional("telegram_types"): [str],
+        probatio.Optional("directions"): [str],
+        probatio.Optional("dpt_mains"): [probatio.Coerce(int)],
+        probatio.Optional("start_time"): cv.datetime,
+        probatio.Optional("end_time"): cv.datetime,
+        probatio.Optional("delta_before_ms"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
+        probatio.Optional("delta_after_ms"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
+        probatio.Optional("limit"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=100_000)
+        ),
+        probatio.Optional("offset"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
+        probatio.Optional("order_descending"): bool,
     }
 )
 @websocket_api.async_response
@@ -452,7 +460,7 @@ async def ws_query_telegrams(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/subscribe_telegrams",
+        probatio.Required("type"): "knx/subscribe_telegrams",
     }
 )
 @callback
@@ -494,7 +502,7 @@ def ws_subscribe_telegram(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/validate_entity",
+        probatio.Required("type"): "knx/validate_entity",
         **CREATE_ENTITY_BASE_SCHEMA,
     }
 )
@@ -518,8 +526,8 @@ def ws_validate_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_schema",
-        vol.Required(CONF_PLATFORM): vol.Coerce(Platform),
+        probatio.Required("type"): "knx/get_schema",
+        probatio.Required(CONF_PLATFORM): probatio.Coerce(Platform),
     }
 )
 @websocket_api.async_response
@@ -540,7 +548,7 @@ async def ws_get_schema(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/create_entity",
+        probatio.Required("type"): "knx/create_entity",
         **CREATE_ENTITY_BASE_SCHEMA,
     }
 )
@@ -577,7 +585,7 @@ async def ws_create_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_entity",
+        probatio.Required("type"): "knx/update_entity",
         **UPDATE_ENTITY_BASE_SCHEMA,
     }
 )
@@ -614,8 +622,8 @@ async def ws_update_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/delete_entity",
-        vol.Required(CONF_ENTITY_ID): str,
+        probatio.Required("type"): "knx/delete_entity",
+        probatio.Required(CONF_ENTITY_ID): str,
     }
 )
 @websocket_api.async_response
@@ -640,7 +648,7 @@ async def ws_delete_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entities_by_group",
+        probatio.Required("type"): "knx/get_entities_by_group",
     }
 )
 @provide_knx
@@ -661,8 +669,8 @@ def ws_get_entities_by_group(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_config",
-        vol.Required(CONF_ENTITY_ID): str,
+        probatio.Required("type"): "knx/get_entity_config",
+        probatio.Required(CONF_ENTITY_ID): str,
     }
 )
 @provide_knx
@@ -687,9 +695,9 @@ def ws_get_entity_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/create_device",
-        vol.Required("name"): str,
-        vol.Optional("area_id"): str,
+        probatio.Required("type"): "knx/create_device",
+        probatio.Required("name"): str,
+        probatio.Optional("area_id"): str,
     }
 )
 @provide_knx
@@ -725,7 +733,7 @@ def ws_create_device(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_expose_groups",
+        probatio.Required("type"): "knx/get_expose_groups",
     }
 )
 @provide_knx
@@ -743,8 +751,8 @@ def ws_get_expose_groups(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_expose_config",
-        vol.Required("entity_id"): str,
+        probatio.Required("type"): "knx/get_expose_config",
+        probatio.Required("entity_id"): str,
     }
 )
 @provide_knx
@@ -764,9 +772,9 @@ def ws_get_expose_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_expose",
-        vol.Required("entity_id"): str,
-        vol.Required("data"): dict,  # validation done in handler
+        probatio.Required("type"): "knx/update_expose",
+        probatio.Required("entity_id"): str,
+        probatio.Required("data"): dict,  # validation done in handler
     }
 )
 @websocket_api.async_response
@@ -800,8 +808,8 @@ async def ws_update_expose(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/delete_expose",
-        vol.Required("entity_id"): str,
+        probatio.Required("type"): "knx/delete_expose",
+        probatio.Required("entity_id"): str,
     }
 )
 @websocket_api.async_response
@@ -826,9 +834,9 @@ async def ws_delete_expose(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/validate_expose",
-        vol.Required("entity_id"): str,
-        vol.Required("data"): dict,  # validation done in handler
+        probatio.Required("type"): "knx/validate_expose",
+        probatio.Required("entity_id"): str,
+        probatio.Required("data"): dict,  # validation done in handler
     }
 )
 @callback
@@ -856,7 +864,7 @@ def ws_validate_expose(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_time_server_config",
+        probatio.Required("type"): "knx/get_time_server_config",
     }
 )
 @provide_knx
@@ -875,8 +883,8 @@ def ws_get_time_server_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_time_server_config",
-        vol.Required("config"): dict,  # validation done in handler
+        probatio.Required("type"): "knx/update_time_server_config",
+        probatio.Required("config"): dict,  # validation done in handler
     }
 )
 @websocket_api.async_response

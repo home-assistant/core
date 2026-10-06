@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus sensor platform."""
+"""Tests for the Sofar sensor platform."""
 
 from collections.abc import Callable
 from datetime import timedelta
@@ -25,11 +25,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
@@ -49,7 +49,7 @@ async def test_all_entities(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -69,7 +69,9 @@ async def test_all_entities(
 
 def test_sensor_description_components_are_real() -> None:
     """Guards SENSOR_DESCRIPTIONS against a component/key transcription slip."""
-    inverter = SofarInverter(MockModbusConnection().for_unit(1))
+    inverter = SofarInverter(
+        MockModbusConnection().for_unit(1), serial_number="SP1ES12345678"
+    )
     for description in SENSOR_DESCRIPTIONS:
         component = getattr(inverter, description.component, None)
         assert component is not None, f"unknown component {description.component!r}"
@@ -102,12 +104,12 @@ async def test_sensor_entities_created_and_state(
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 71, 21, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 74, 21, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            137,
+            145,
             44,
             id="hybrid",
         ),
@@ -126,7 +128,7 @@ async def test_enabled_by_default_partition(
     connection = MockModbusConnection()
     seed(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=serial, data=MOCK_USER_INPUT, title=model
+        domain=DOMAIN, unique_id=serial, data=MOCK_ENTRY_DATA, title=model
     )
     entry.add_to_hass(hass)
     with patch(
@@ -170,7 +172,7 @@ async def test_settings_backed_sensor_created_and_state(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -200,7 +202,7 @@ async def test_enum_option_slugs_are_translation_keys(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -261,11 +263,12 @@ async def test_total_sensor_restore_data_parsing(
     device = runtime_data.readings.device
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
+        value_fn=lambda device: device.meter_energy.load_consumption_total,
     )
 
-    device.energy.load_consumption_total = None
+    device.meter_energy.load_consumption_total = None
     sensor = SofarTotalSensor(runtime_data, description)
     sensor.hass = hass
     sensor.async_get_last_sensor_data = AsyncMock(
@@ -290,11 +293,11 @@ async def test_total_sensor_restore_data_parsing(
     await blank_sensor.async_added_to_hass()
     assert blank_sensor.native_value is None
 
-    device.energy.load_consumption_total = 120.0
+    device.meter_energy.load_consumption_total = 120.0
     total_sensor = SofarTotalSensor(runtime_data, description)
     assert total_sensor.native_value == 120.0
 
-    device.energy.load_consumption_total = None
+    device.meter_energy.load_consumption_total = None
     unset_sensor = SofarTotalSensor(runtime_data, description)
     assert unset_sensor.native_value is None
 
@@ -307,16 +310,20 @@ async def test_total_sensor_seeds_high_water_from_restored_value(
     device = runtime_data.readings.device
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: (
+            device.meter_energy.load_consumption_total_corrected.value
+        ),
+        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
     )
     sensor = SofarTotalSensor(runtime_data, description)
     sensor.hass = hass
     sensor.async_get_last_sensor_data = AsyncMock(
         return_value=SimpleNamespace(native_value="555.5")
     )
-    with patch.object(device.energy, "seed_high_water") as mock_seed:
+    with patch.object(device.meter_energy, "seed_high_water") as mock_seed:
         await sensor.async_added_to_hass()
     mock_seed.assert_called_once_with("load_consumption_total", 555.5)
 
@@ -328,6 +335,7 @@ async def test_sensor_dead_link_unavailable(init_integration: MockConfigEntry) -
         key="grid_frequency",
         component="grid",
         translation_key="grid_frequency",
+        value_fn=lambda device: device.grid.grid_frequency,
     )
     sensor = SofarSensor(runtime_data, description)
     assert sensor.native_value == 50.0
@@ -342,9 +350,13 @@ async def test_total_sensor_dead_link_unavailable(
     runtime_data = init_integration.runtime_data
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: (
+            device.meter_energy.load_consumption_total_corrected.value
+        ),
+        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
     )
     sensor = SofarTotalSensor(runtime_data, description)
     assert sensor.available
@@ -365,6 +377,7 @@ async def test_sensor_availability_on_component_failure(
         key="grid_frequency",
         component="grid",
         translation_key="grid_frequency",
+        value_fn=lambda device: device.grid.grid_frequency,
     )
     sensor = SofarSensor(runtime_data, description)
     assert sensor.available
@@ -390,13 +403,59 @@ async def test_total_sensor_total_increasing_uses_corrected_value(
     runtime_data = init_integration.runtime_data
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: (
+            device.meter_energy.load_consumption_total_corrected.value
+        ),
+        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
     )
     device = runtime_data.readings.device
     sensor = SofarTotalSensor(runtime_data, description)
-    with patch.object(device.energy, "corrected", return_value=42.0) as mock_corrected:
+    with patch.object(
+        device.meter_energy, "corrected", return_value=42.0
+    ) as mock_corrected:
         assert sensor.native_value == 42.0
     mock_corrected.assert_called_once_with("load_consumption_total")
     assert sensor.available
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        pytest.param(description, id=description.key)
+        for description in SENSOR_DESCRIPTIONS
+        if description.state_class is not SensorStateClass.TOTAL_INCREASING
+    ],
+)
+async def test_value_fn_reads_the_field_its_key_names(
+    init_integration: MockConfigEntry, description: SofarSensorDescription
+) -> None:
+    """Test each value_fn reads the field its key and component name."""
+    device = init_integration.runtime_data.readings.device
+    component = getattr(device, description.component)
+    sentinel = object()
+    with patch.dict(component._values, {description.key: sentinel}):
+        assert description.value_fn(device) is sentinel
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        pytest.param(description, id=description.key)
+        for description in SENSOR_DESCRIPTIONS
+        if description.state_class is SensorStateClass.TOTAL_INCREASING
+    ],
+)
+async def test_total_reads_and_seeds_its_own_corrected_total(
+    init_integration: MockConfigEntry, description: SofarSensorDescription
+) -> None:
+    """Test each total reads and seeds the corrected total its key names."""
+    device = init_integration.runtime_data.readings.device
+    component = getattr(device, description.component)
+    with patch.object(component, "corrected", return_value=42.0) as mock_corrected:
+        assert description.value_fn(device) == 42.0
+    mock_corrected.assert_called_once_with(description.key)
+    assert description.total_fn is not None
+    assert description.total_fn(device).name == description.key

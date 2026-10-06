@@ -1,6 +1,7 @@
 """Define tests for the ReCollect Waste config flow."""
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiorecollect.errors import RecollectError
 import pytest
@@ -17,23 +18,14 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PLACE_ID, TEST_SERVICE_ID
 
+from tests.common import MockConfigEntry
 
-@pytest.mark.parametrize(
-    ("get_pickup_events_mock", "get_pickup_events_errors"),
-    [
-        (
-            AsyncMock(side_effect=RecollectError),
-            {"base": "invalid_place_or_service_id"},
-        ),
-    ],
-)
+
+@pytest.mark.usefixtures("mock_aiorecollect")
 async def test_create_entry(
     hass: HomeAssistant,
-    client,
-    config,
-    get_pickup_events_errors,
-    get_pickup_events_mock,
-    mock_aiorecollect,
+    client: Mock,
+    config: dict[str, Any],
 ) -> None:
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -43,12 +35,14 @@ async def test_create_entry(
     assert result["step_id"] == "user"
 
     # Test errors that can arise when checking the API key:
-    with patch.object(client, "async_get_pickup_events", get_pickup_events_mock):
+    with patch.object(
+        client, "async_get_pickup_events", AsyncMock(side_effect=RecollectError)
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=config
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == get_pickup_events_errors
+        assert result["errors"] == {"base": "invalid_place_or_service_id"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config
@@ -61,18 +55,25 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
-) -> None:
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM

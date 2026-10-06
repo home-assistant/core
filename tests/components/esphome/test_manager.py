@@ -44,8 +44,8 @@ from aioesphomeapi import (
 )
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.esphome.config_flow import PROBE_NOISE_PSK
@@ -1102,7 +1102,7 @@ async def test_esphome_device_service_call_with_validation_error(
 
     # Register a service that validates input
     async def _mock_service(call: ServiceCall) -> None:
-        raise vol.Invalid("Invalid input provided")
+        raise probatio.Invalid("Invalid input provided")
 
     hass.services.async_register(DOMAIN, "validate_test", _mock_service)
 
@@ -3249,6 +3249,7 @@ def mock_provisioning_client(mock_client: APIClient) -> Generator[Mock]:
 
     def _api_client(*args: Any, **kwargs: Any) -> Mock:
         if kwargs.get("noise_psk") == ZERO_NOISE_PSK:
+            client.outgoing_connection_target = kwargs["outgoing_connection_target"]
             return client
         return mock_client(*args, **kwargs)
 
@@ -3317,6 +3318,8 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk(
     )
     mock_client.noise_encryption_set_key.assert_not_called()
     mock_provisioning_client.disconnect.assert_called_with(force=True)
+    # The key exchange session must not become a dial-back target
+    assert mock_provisioning_client.outgoing_connection_target is False
 
     # Entry and storage were updated
     assert entry.data[CONF_NOISE_PSK] == expected_key
@@ -3988,6 +3991,7 @@ def test_zero_noise_psk_is_not_the_probe_key() -> None:
 async def test_zwave_proxy_request_home_id_change(
     hass: HomeAssistant,
     mock_client: APIClient,
+    hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test Z-Wave proxy request handler with HOME_ID_CHANGE request."""
@@ -4073,6 +4077,54 @@ async def test_zwave_proxy_request_home_id_change(
         assert call_args[0][1] == "zwave_js"
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
+
+    assert entry.runtime_data.device_info.zwave_home_id == zwave_home_id
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["device_info"]["zwave_home_id"] == zwave_home_id
+
+
+async def test_zwave_home_id_change_saved_after_reconnect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a home ID change replaces the pending connect-time save."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"zwave_proxy_feature_flags": 1},
+    )
+    storage_key = f"{DOMAIN}.{device.entry.entry_id}"
+    zwave_home_id = 3551671779
+
+    async def report_home_id() -> None:
+        callback = mock_client.subscribe_zwave_proxy_request.call_args[0][0]
+        callback(
+            ZWaveProxyRequest(
+                type=ZWaveProxyRequestType.HOME_ID_CHANGE,
+                data=zwave_home_id.to_bytes(4, byteorder="big"),
+            )
+        )
+        freezer.tick(SAVE_DELAY + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    with patch("homeassistant.helpers.discovery_flow.async_create_flow"):
+        await report_home_id()
+        stored = hass_storage[storage_key]["data"]
+        assert stored["device_info"]["zwave_home_id"] == zwave_home_id
+
+        # The device reconnects with home ID 0, so the connect-time save holds 0
+        await device.mock_disconnect(expected_disconnect=False)
+        await device.mock_connect()
+        await report_home_id()
+
+    # Equal to the store, so only replacing the pending save can write it
+    assert hass_storage[storage_key]["data"] == stored
 
 
 async def test_no_zwave_proxy_subscribe_without_feature_flags(

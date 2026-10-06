@@ -34,7 +34,7 @@ async def test_setup_failed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the adguard setup failed."""
-    mock_adguard.version.side_effect = AdGuardHomeConnectionError("Connection error")
+    mock_adguard.status.side_effect = AdGuardHomeConnectionError("Connection error")
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -92,7 +92,7 @@ async def test_device_identifiers_migration_when_unavailable(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the device is migrated even when the instance cannot be reached."""
-    mock_adguard.version.side_effect = AdGuardHomeConnectionError("Connection error")
+    mock_adguard.status.side_effect = AdGuardHomeConnectionError("Connection error")
 
     mock_config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(

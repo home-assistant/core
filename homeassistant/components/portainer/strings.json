@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The Portainer instance ID does not match the previously configured instance. This can occur if the device was reset or reconfigured outside of Home Assistant."
     },
     "error": {
@@ -58,6 +56,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "container_out_of_memory": {
+        "name": "Out of memory"
+      },
       "status": {
         "name": "Status"
       }
@@ -80,6 +81,9 @@
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "update_stack": {
+        "name": "Update stack"
       },
       "volumes_prune": {
         "name": "Prune unused volumes"
@@ -128,6 +132,12 @@
           "starting": "Starting",
           "unhealthy": "Unhealthy"
         }
+      },
+      "container_restart_count": {
+        "name": "Restart count"
+      },
+      "container_started_at": {
+        "name": "Started"
       },
       "container_state": {
         "name": "State",
@@ -234,6 +244,9 @@
     "update": {
       "container_image_update": {
         "name": "Image update available"
+      },
+      "server_update": {
+        "name": "Update"
       }
     }
   },
@@ -252,6 +265,24 @@
     }
   },
   "services": {
+    "prune_build_cache": {
+      "description": "Prunes the build cache on a Portainer endpoint.",
+      "fields": {
+        "all": {
+          "description": "If true (default), prune all unused build cache. If false, only prune dangling build cache.",
+          "name": "All"
+        },
+        "device_id": {
+          "description": "The endpoint to prune the build cache on.",
+          "name": "[%key:component::portainer::services::prune_images::fields::device_id::name%]"
+        },
+        "until": {
+          "description": "Only prune build cache that was last used longer ago than this duration. If not provided, build cache of any age is pruned.",
+          "name": "[%key:component::portainer::services::prune_images::fields::until::name%]"
+        }
+      },
+      "name": "Prune build cache"
+    },
     "prune_images": {
       "description": "Prunes unused images on a Portainer endpoint.",
       "fields": {
@@ -264,7 +295,7 @@
           "name": "Endpoint"
         },
         "until": {
-          "description": "Prune images unused for at least this time duration in the past. If not provided, all unused images will be pruned.",
+          "description": "Only prune images created longer ago than this duration. If not provided, images of any age are pruned.",
           "name": "Until"
         }
       },
