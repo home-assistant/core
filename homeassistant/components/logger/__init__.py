@@ -7,8 +7,8 @@ from typing import override
 import probatio
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -30,6 +30,9 @@ from .helpers import (
     set_log_levels,
 )
 from .services import async_setup_services
+
+# Home Assistant moved from httpx to httpx2, which logs under new logger names.
+RENAMED_LOGGERS = {"httpx": "httpx2", "httpcore": "httpcore2"}
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -63,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set default log severity and filter
     logger_config = config.get(DOMAIN, {})
+    _async_check_renamed_loggers(hass, logger_config)
 
     if LOGGER_DEFAULT in logger_config:
         set_default_log_level(hass, logger_config[LOGGER_DEFAULT])
@@ -80,6 +84,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     return True
+
+
+def _renamed_logger(name: str) -> str | None:
+    """Return the new name of a renamed logger, or None if not renamed."""
+    for old, new in RENAMED_LOGGERS.items():
+        if name == old or name.startswith(f"{old}."):
+            return f"{new}{name.removeprefix(old)}"
+    return None
+
+
+@callback
+def _async_check_renamed_loggers(
+    hass: HomeAssistant, logger_config: ConfigType
+) -> None:
+    """Create a repair issue if the config uses renamed logger names."""
+    renames = {
+        name: new_name
+        for section in (LOGGER_LOGS, LOGGER_FILTERS)
+        for name in logger_config.get(section, {})
+        if (new_name := _renamed_logger(name))
+    }
+    if not renames:
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "renamed_loggers",
+        is_fixable=False,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="renamed_loggers",
+        translation_placeholders={
+            "loggers": "\n".join(
+                f"- `{old}` → `{new}`" for old, new in sorted(renames.items())
+            )
+        },
+    )
 
 
 def _add_log_filter(logger: logging.Logger, patterns: list[re.Pattern]) -> None:

@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from copy import deepcopy
+import logging
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -14,6 +15,7 @@ from aiopowerwall import (
     PowerwallConnectionError,
     PowerwallFaultError,
 )
+from bleak.backends.device import BLEDevice
 from bleak.exc import BleakDeviceNotFoundError, BleakError
 from bleak_retry_connector import (
     BleakConnectionError,
@@ -22,6 +24,7 @@ from bleak_retry_connector import (
 )
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
@@ -52,6 +55,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    async_register_scanner,
+)
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -63,6 +70,7 @@ from homeassistant.components.teslemetry.const import (
     TOKEN_URL,
     VEHICLE_KEY_FILE,
 )
+from homeassistant.components.teslemetry.coordinator import METADATA_INTERVAL
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
@@ -83,11 +91,13 @@ from homeassistant.setup import async_setup_component
 from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
+    FakeScanner,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement,
+    inject_advertisement_with_time_and_source_connectable,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -1507,9 +1517,12 @@ async def test_subentry_abandoned_during_connect_disconnects(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
+async def test_subentry_scan_device_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """The scan step re-shows the form with an error when no device is found."""
     entry = await _setup_account_entry(hass)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.teslemetry")
 
     with (
         patch(
@@ -1517,8 +1530,11 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
             return_value=[],
         ),
         patch(
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
+        ),
+        patch(
             "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
-            return_value=MagicMock(),
+            return_value=_mock_ble_parent(_mock_vehicle()),
         ),
     ):
         result = await _start_pairing_at_scan(hass, entry)
@@ -1530,6 +1546,9 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "scan"
     assert result["errors"] == {"base": "device_not_found"}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert "No connectable advertisement matched Bluetooth name Sdcdcb1a343110fba" in (
+        caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -1591,26 +1610,155 @@ async def test_subentry_scan_key_load_recovers(
     vehicle.connect.assert_awaited_once()
 
 
+def _inject_vehicle_advertisement(hass: HomeAssistant) -> None:
+    """Inject an advertisement carrying the test vehicle's BLE name."""
+    name = TeslaBluetooth().get_name(VIN)
+    inject_advertisement(
+        hass,
+        generate_ble_device(ADDRESS, name),
+        generate_advertisement_data(local_name=name),
+    )
+
+
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subentry_scan_finds_device_after_active_scan(
+async def test_subentry_scan_waits_for_advertisement_after_active_scan(
     hass: HomeAssistant,
 ) -> None:
-    """An awake in-range car only in scan responses is found via active scan."""
+    """A vehicle found by the active scan is connected only once it is heard again."""
     entry = await _setup_account_entry(hass)
     vehicle = _mock_vehicle()
-    mock_discovered = MagicMock(return_value=[])
+    parent = _mock_ble_parent(vehicle)
+    fresh_device = generate_ble_device(ADDRESS)
+    events: list[str] = []
+    auto_scanner = FakeScanner(
+        "AA:BB:CC:00:00:02",
+        "hci1",
+        connectable=True,
+        requested_mode=BluetoothScanningMode.AUTO,
+        current_mode=BluetoothScanningMode.ACTIVE,
+    )
+    unregister_scanner = async_register_scanner(hass, auto_scanner)
+
+    def _advertise(
+        source: str, connectable: bool, device: BLEDevice | None = None
+    ) -> None:
+        inject_advertisement_with_time_and_source_connectable(
+            hass,
+            device or generate_ble_device(ADDRESS),
+            generate_advertisement_data(),
+            time.monotonic(),
+            source,
+            connectable,
+        )
+
+    def _advertise_before_window_ends() -> None:
+        events.append("proxy advertisement before the active window ends")
+        _advertise("AA:BB:CC:00:00:03", True)
+        hass.loop.call_soon(_advertise_non_connectable_after_window_ends)
+
+    def _advertise_non_connectable_after_window_ends() -> None:
+        events.append("non-connectable advertisement after the active window ends")
+        auto_scanner.set_current_mode(BluetoothScanningMode.PASSIVE)
+        _advertise("AA:BB:CC:00:00:01", False)
+        hass.loop.call_soon(_advertise_after_window_ends)
+
+    def _advertise_after_window_ends() -> None:
+        events.append("advertisement after the active window ends")
+        _advertise(auto_scanner.source, True, fresh_device)
 
     async def _active_scan(hass: HomeAssistant) -> None:
-        mock_discovered.return_value = [_discovered_info()]
+        events.append("active scan")
+        # The name is only in the scan response, so the vehicle first appears during the active scan.
+        _inject_vehicle_advertisement(hass)
+        hass.loop.call_soon(_advertise_before_window_ends)
+
+    async def _connect() -> None:
+        events.append("connect")
+
+    vehicle.connect = AsyncMock(side_effect=_connect)
 
     with (
         patch(
-            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
-            mock_discovered,
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
+            AsyncMock(side_effect=_active_scan),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=parent,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    unregister_scanner()
+    # Connecting before the active window ends races a local adapter dropping the vehicle.
+    assert events == [
+        "active scan",
+        "proxy advertisement before the active window ends",
+        "non-connectable advertisement after the active window ends",
+        "advertisement after the active window ends",
+        "connect",
+    ]
+    # The pre-scan handle may be stale, so the connection uses the advertisement heard afterwards.
+    parent.vehicles.createBluetooth.assert_called_once_with(VIN, device=fresh_device)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_scan_connects_when_not_heard_after_active_scan(
+    hass: HomeAssistant,
+) -> None:
+    """The flow still connects when the vehicle is not heard again after the active scan."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+
+    async def _active_scan(hass: HomeAssistant) -> None:
+        _inject_vehicle_advertisement(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.BLE_ADVERTISEMENT_TIMEOUT",
+            0,
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
             AsyncMock(side_effect=_active_scan),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    vehicle.connect.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_scan_known_vehicle_skips_active_scan(
+    hass: HomeAssistant,
+) -> None:
+    """A vehicle whose name is already known is connected without an active scan."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+    _inject_vehicle_advertisement(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
         ) as mock_active_scan,
         patch(
             "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
@@ -1624,7 +1772,7 @@ async def test_subentry_scan_finds_device_after_active_scan(
         )
         await hass.async_block_till_done()
 
-    mock_active_scan.assert_awaited_once()
+    mock_active_scan.assert_not_called()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert len(subentries) == 1
@@ -1755,6 +1903,90 @@ async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> N
 @pytest.mark.usefixtures("enable_bluetooth", "mock_energy_only")
 async def test_subentry_add_flow_account_has_no_vehicles(hass: HomeAssistant) -> None:
     """The add flow aborts when the account has no vehicles to add."""
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_vehicles"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_hides_unsupported_vehicles(
+    hass: HomeAssistant, mock_products: AsyncMock, mock_metadata: AsyncMock
+) -> None:
+    """Only vehicles that report no command protocol support are left out."""
+    products = deepcopy(PRODUCTS)
+    metadata = deepcopy(METADATA)
+    vehicle_product = products["response"][0]
+    vehicle_metadata = metadata["vehicles"][VIN]
+    products["response"] = products["response"][1:]
+    metadata["vehicles"] = {}
+    for vin, name, proxy in (
+        ("LRW3F7EK4NC700001", "Supported", True),
+        ("LRW3F7EK4NC700002", "Unsupported", False),
+        ("LRW3F7EK4NC700003", "Unknown", None),
+    ):
+        products["response"].append(
+            {**vehicle_product, "vin": vin, "display_name": name}
+        )
+        metadata["vehicles"][vin] = {**vehicle_metadata, "proxy": proxy}
+    mock_products.return_value = products
+    mock_metadata.return_value = metadata
+    entry = await _setup_account_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_VIN].container == {
+        "LRW3F7EK4NC700001": "Supported",
+        "LRW3F7EK4NC700003": "Unknown",
+    }
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_keeps_vehicle_without_metadata(
+    hass: HomeAssistant, mock_metadata: AsyncMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A vehicle missing from refreshed metadata is offered as unknown support."""
+    entry = await _setup_account_entry(hass)
+    metadata = deepcopy(METADATA)
+    del metadata["vehicles"][VIN]
+    mock_metadata.return_value = metadata
+
+    # The flow can open after the metadata refresh but before its reload runs.
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+            context={"source": "user"},
+        )
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_VIN].container == {VIN: "Test"}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_add_flow_only_unsupported_vehicles(
+    hass: HomeAssistant, mock_metadata: AsyncMock
+) -> None:
+    """The add flow aborts when no account vehicle supports the command protocol."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["proxy"] = False
+    mock_metadata.return_value = metadata
     entry = await _setup_account_entry(hass)
 
     result = await hass.config_entries.subentries.async_init(
