@@ -784,6 +784,7 @@ async def test_firmware_update_unavailable(
     state = hass.states.get("update.mock_title_firmware")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert not mock_config_entry.runtime_data.update_coordinator.last_update_success
 
     mock_opnsense_client.get_firmware_update_info.return_value = {}
     freezer.tick(timedelta(hours=1))
@@ -792,6 +793,7 @@ async def test_firmware_update_unavailable(
     state = hass.states.get("update.mock_title_firmware")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert not mock_config_entry.runtime_data.update_coordinator.last_update_success
 
     mock_opnsense_client.get_firmware_update_info.side_effect = OPNsenseConnectionError(
         "connection failed"

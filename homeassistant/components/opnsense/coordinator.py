@@ -117,9 +117,11 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         if firmware_info is None:
             raise UpdateFailed("No firmware information returned by OPNsense")
-        if not firmware_info and self.entry.runtime_data.firmware_privilege_missing:
-            self._create_firmware_privilege_issue()
-            return {}
+        if not firmware_info:
+            if self.entry.runtime_data.firmware_privilege_missing:
+                self._create_firmware_privilege_issue()
+                return {}
+            raise UpdateFailed("No firmware information returned by OPNsense")
         self.entry.runtime_data.firmware_privilege_missing = False
         ir.async_delete_issue(
             self.hass,
