@@ -262,7 +262,11 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     @property
     def _homekit_fan_mode_aliases_enabled(self) -> bool:
         """Return whether HomeKit fan mode aliases are enabled."""
-        return bool(self.coordinator.options.get(CONF_HOMEKIT_FAN_MODE_ALIASES, False))
+        return bool(
+            self.coordinator.config_entry.options.get(
+                CONF_HOMEKIT_FAN_MODE_ALIASES, False
+            )
+        )
 
     def _homekit_fan_mode_aliases(self, fan_speed: FanSpeed) -> dict[str, str]:
         """Return HomeKit fan mode aliases available for the fan speed data."""

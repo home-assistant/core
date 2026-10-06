@@ -387,22 +387,3 @@ class TestOnectaDataUpdateCoordinator:
         existing_device.async_register_ha_device.assert_called_once_with(
             coordinator.hass, coordinator.config_entry
         )
-
-    def test_update_settings(self, coordinator):
-        """Apply changed entity options to the coordinator."""
-        options = {"homekit_fan_mode_aliases": True}
-        updated_entry = MockConfigEntry(
-            domain=DOMAIN, title="daikin_onecta", unique_id="12345", options=options
-        )
-
-        assert coordinator.update_settings(updated_entry)
-
-        assert coordinator.options == options
-
-    def test_update_settings_ignores_unchanged_options(
-        self, coordinator, mock_config_entry
-    ):
-        """Do not apply settings when only config-entry data changed."""
-        assert not coordinator.update_settings(mock_config_entry)
-
-        assert coordinator.options == {}

@@ -64,7 +64,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 952>,
-        'translation_key': 'roomtemperature',
+        'translation_key': 'room_temperature',
         'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),

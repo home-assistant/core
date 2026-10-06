@@ -72,7 +72,7 @@ async def _async_update_listener(
     hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
 ) -> None:
     """Handle options update."""
-    coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     if coordinator.update_settings(config_entry):
         await coordinator.async_request_refresh()
         coordinator.async_update_listeners()

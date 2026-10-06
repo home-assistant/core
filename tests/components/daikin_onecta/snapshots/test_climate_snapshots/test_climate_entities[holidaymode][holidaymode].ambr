@@ -45,7 +45,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 400>,
-        'translation_key': 'roomtemperature',
+        'translation_key': 'room_temperature',
         'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_roomTemperature',
         'unit_of_measurement': None,
       }),

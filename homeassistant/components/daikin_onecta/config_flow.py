@@ -27,7 +27,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: DaikinOnectaConfigEntry) -> None:
         """Initialize Daikin Onecta options flow."""
-        self.options = dict(config_entry.options)
+        self._options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -42,7 +42,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     probatio.Required(
                         CONF_HOMEKIT_FAN_MODE_ALIASES,
-                        default=self.options.get(CONF_HOMEKIT_FAN_MODE_ALIASES, False),
+                        default=self._options.get(CONF_HOMEKIT_FAN_MODE_ALIASES, False),
                     ): BooleanSelector(),
                 }
             ),
