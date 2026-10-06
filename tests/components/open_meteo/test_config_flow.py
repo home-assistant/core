@@ -34,7 +34,6 @@ async def test_full_user_flow(hass: HomeAssistant, mock_open_meteo: MagicMock) -
     assert result2.get("title") == "test home"
     assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}
 
-    # The forecast for the zone is fetched before the entry is created
     assert len(mock_open_meteo.forecast.mock_calls) == 1
     _, _, kwargs = mock_open_meteo.forecast.mock_calls[0]
     zone = hass.states.get(ENTITY_ID_HOME)
