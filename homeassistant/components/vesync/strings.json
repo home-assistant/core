@@ -75,6 +75,9 @@
     "number": {
       "mist_level": {
         "name": "Mist level"
+      },
+      "warm_mist_level": {
+        "name": "Warm mist level"
       }
     },
     "select": {

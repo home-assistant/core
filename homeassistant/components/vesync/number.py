@@ -3,9 +3,11 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import override
+from typing import TypeGuard, override
 
+from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import HumidifierFeatures
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.number import (
@@ -42,6 +44,18 @@ def _set_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
     raise HomeAssistantError("Device does not support mist level adjustment.")
 
 
+def _supports_warm_mist(device: VeSyncBaseDevice) -> TypeGuard[VeSyncHumidifier]:
+    """Check if the device is a humidifier with warm mist support."""
+    return is_humidifier(device) and HumidifierFeatures.WARM_MIST in device.features
+
+
+def _warm_mist_humidifier(device: VeSyncBaseDevice) -> VeSyncHumidifier:
+    """Return the device as a humidifier with warm mist support."""
+    if _supports_warm_mist(device):
+        return device
+    raise HomeAssistantError("Device does not support warm mist level adjustment.")
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
@@ -64,7 +78,24 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         exists_fn=is_humidifier,
         set_value_fn=_set_mist_level,
         value_fn=lambda device: device.state.mist_virtual_level,
-    )
+    ),
+    VeSyncNumberEntityDescription(
+        key="warm_mist_level",
+        translation_key="warm_mist_level",
+        native_min_value_fn=lambda device: min(
+            _warm_mist_humidifier(device).warm_mist_levels
+        ),
+        native_max_value_fn=lambda device: max(
+            _warm_mist_humidifier(device).warm_mist_levels
+        ),
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        exists_fn=_supports_warm_mist,
+        set_value_fn=lambda device, value: _warm_mist_humidifier(device).set_warm_level(
+            int(value)
+        ),
+        value_fn=lambda device: device.state.warm_mist_level,
+    ),
 ]
 
 
