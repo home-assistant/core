@@ -15,6 +15,7 @@ from aiomobilitydatabase import (
     SourceInfo,
 )
 from aiomobilitydatabase.feeds import (
+    Route,
     SourceAuthenticationError,
     SourceConnectionError,
     StaticBuildProgress,
@@ -27,8 +28,8 @@ import pytest
 
 from homeassistant.components.mobilitydata.const import (
     CONF_FEED_ID,
-    CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
+    CONF_ROUTE_DESTINATIONS,
     CONF_ROUTE_IDS,
     CONF_SEARCH_QUERY,
     CONF_STATION_ID,
@@ -48,6 +49,8 @@ from homeassistant.data_entry_flow import (
 from .conftest import (
     DATASET,
     FEED_ID,
+    ROUTE_A,
+    ROUTE_B,
     RT_FEED,
     RT_FEED_ID,
     SEARCH_ITEM,
@@ -451,11 +454,11 @@ async def test_add_stop_via_zone(
         result["flow_id"], {CONF_ROUTE_IDS: ["R1"]}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "headsigns"
+    assert result["step_id"] == "departures"
     mock_handle.headsigns_serving.assert_awaited_with("S2", "R1")
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_HEADSIGNS: ["Downtown"]}
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: ['["R1","Downtown"]']}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry = next(
@@ -469,10 +472,10 @@ async def test_add_stop_via_zone(
         CONF_STOP_IDS: ["S2"],
         CONF_STOP_NAME: "2nd & Spring",
         CONF_ROUTE_IDS: ["R1"],
-        CONF_HEADSIGNS: ["Downtown"],
+        CONF_ROUTE_DESTINATIONS: [["R1", "Downtown"]],
     }
     # A filtered board names what it shows, so several at one station differ.
-    assert subentry.title == "2nd & Spring (Downtown)"
+    assert subentry.title == "2nd & Spring (A → Downtown)"
 
     # Creating a subentry reloads the entry so its sensors appear immediately.
     await hass.async_block_till_done()
@@ -592,7 +595,7 @@ async def test_add_stop_duplicate_aborts(
         result["flow_id"], {CONF_ROUTE_IDS: []}
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_HEADSIGNS: []}
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: []}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -617,7 +620,7 @@ async def test_add_second_board_at_same_stop(
         result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_HEADSIGNS: ["Uptown"]}
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: ['["R2","Uptown"]']}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     boards = [
@@ -630,7 +633,7 @@ async def test_add_second_board_at_same_stop(
     assert len({board.unique_id for board in boards}) == 2
     assert sorted(board.title for board in boards) == [
         "1st & Grand",
-        "1st & Grand (Uptown)",
+        "1st & Grand (B → Uptown)",
     ]
 
 
@@ -658,6 +661,7 @@ async def test_add_stop_without_routes_or_headsigns(
     """Test the filter steps are skipped when the stop offers no choices."""
     await setup_integration(hass, mock_config_entry)
     mock_handle.routes_serving.return_value = []
+    mock_handle.headsigns_serving.side_effect = None
     mock_handle.headsigns_serving.return_value = []
     result = await _start_stop_flow(hass, mock_config_entry)
     result = await hass.config_entries.subentries.async_configure(
@@ -675,7 +679,7 @@ async def test_add_stop_without_routes_or_headsigns(
     )
     assert subentry.data[CONF_STOP_IDS] == ["S2"]
     assert subentry.data[CONF_ROUTE_IDS] == []
-    assert subentry.data[CONF_HEADSIGNS] == []
+    assert subentry.data[CONF_ROUTE_DESTINATIONS] == []
 
 
 async def test_reconfigure_stop_filters(
@@ -693,25 +697,25 @@ async def test_reconfigure_stop_filters(
         result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "headsigns"
+    assert result["step_id"] == "departures"
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_HEADSIGNS: ["Uptown"]}
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: ['["R2","Uptown"]']}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     subentry = mock_config_entry.subentries[SUBENTRY_ID]
     assert subentry.data[CONF_STOP_IDS] == ["S1"]
     assert subentry.data[CONF_ROUTE_IDS] == ["R2"]
-    assert subentry.data[CONF_HEADSIGNS] == ["Uptown"]
+    assert subentry.data[CONF_ROUTE_DESTINATIONS] == [["R2", "Uptown"]]
 
 
-async def test_reconfigure_offers_the_existing_headsigns(
+async def test_reconfigure_offers_the_existing_departures(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfiguring does not silently clear the headsign filter.
+    """Test reconfiguring does not silently clear the departure selection.
 
     The form defaulted to empty, so a user who reconfigured anything at all
     lost their destination selection without being told.
@@ -723,7 +727,7 @@ async def test_reconfigure_offers_the_existing_headsigns(
         data={
             **mock_config_entry.subentries[SUBENTRY_ID].data,
             CONF_ROUTE_IDS: ["R2"],
-            CONF_HEADSIGNS: ["Uptown"],
+            CONF_ROUTE_DESTINATIONS: [["R2", "Uptown"]],
         },
     )
     await hass.async_block_till_done()
@@ -731,15 +735,17 @@ async def test_reconfigure_offers_the_existing_headsigns(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
     )
-    assert result["step_id"] == "headsigns"
-    assert result["data_schema"]({}) == {CONF_HEADSIGNS: ["Uptown"]}
+    assert result["step_id"] == "departures"
+    assert result["data_schema"]({}) == {CONF_ROUTE_DESTINATIONS: ['["R2","Uptown"]']}
 
-    # Accepting the offered default keeps the filter rather than clearing it.
+    # Accepting the offered default keeps the selection rather than clearing it.
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_HEADSIGNS: ["Uptown"]}
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: ['["R2","Uptown"]']}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert mock_config_entry.subentries[SUBENTRY_ID].data[CONF_HEADSIGNS] == ["Uptown"]
+    assert mock_config_entry.subentries[SUBENTRY_ID].data[CONF_ROUTE_DESTINATIONS] == [
+        ["R2", "Uptown"]
+    ]
 
 
 @pytest.mark.parametrize(
@@ -941,7 +947,7 @@ async def test_add_stop_without_coverage_center(
     ("step_input", "final_step"),
     [
         pytest.param(None, "routes", id="routes"),
-        pytest.param({CONF_ROUTE_IDS: ["R1"]}, "headsigns", id="headsigns"),
+        pytest.param({CONF_ROUTE_IDS: ["R1"]}, "departures", id="departures"),
     ],
 )
 async def test_add_stop_unloaded_mid_flow(
@@ -1030,7 +1036,7 @@ async def test_station_hierarchy_grouped(
         result["flow_id"], {CONF_ROUTE_IDS: []}
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_HEADSIGNS: []}
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: []}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry = next(
@@ -1089,3 +1095,417 @@ async def test_reauth_token_updates_sibling_entries(
     # The sibling was reloaded with the new token, aborting its reauth flow
     assert sibling.state is ConfigEntryState.LOADED
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def _advance_to_api_key(hass: HomeAssistant, mock_client: MagicMock) -> str:
+    """Pick a feed whose realtime needs a producer key; return the flow id."""
+    mock_client.catalog.get_gtfs_feed_gtfs_rt_feeds.return_value = [
+        _authed_rt_feed(None)
+    ]
+    flow_id = await _advance_to_search(hass)
+    await _search_and_get_options(hass, flow_id)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_FEED_ID: FEED_ID}
+    )
+    assert result["step_id"] == "api_key"
+    return flow_id
+
+
+async def test_api_key_is_optional_at_setup(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_handle: MagicMock,
+) -> None:
+    """Test a blank key creates a schedule-only entry.
+
+    The schedule comes from the Mobility Database's own hosted copy, so a
+    user without a producer key can still get departures -- only realtime
+    needs the key, and making it required locked those users out entirely.
+    """
+    flow_id = await _advance_to_api_key(hass, mock_feeds_client)
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_API_KEY not in result["data"]
+    # Nothing was entered, so there was nothing to prove.
+    mock_handle.get_arrivals.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(SourceAuthenticationError("rejected"), "invalid_auth", id="auth"),
+        pytest.param(SourceConnectionError("offline"), "cannot_connect", id="offline"),
+    ],
+)
+async def test_api_key_is_probed_at_setup(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_handle: MagicMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test a key the producer rejects is caught before the entry exists.
+
+    Unprobed, a typo only surfaced after setup, as a realtime auth failure
+    that pushed the user straight into reauth.
+    """
+    flow_id = await _advance_to_api_key(hass, mock_feeds_client)
+    mock_handle.get_arrivals.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_KEY: "typo"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+    assert result["errors"] == {"base": error}
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    mock_handle.get_arrivals.side_effect = None
+    mock_handle.get_arrivals.return_value = []
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_KEY: "good-key"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_API_KEY] == "good-key"
+
+
+async def test_reauth_blank_api_key_drops_it(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+) -> None:
+    """Test giving up the key in reauth falls back to the schedule alone."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_API_KEY: "old-key"},
+    )
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert CONF_API_KEY not in mock_config_entry.data
+    # No key was probed: the only feed opens are the reload's, keyless. (The
+    # reload does poll arrivals, so "no arrivals call" would be the wrong
+    # proof of "no probe".)
+    assert mock_feeds_client.get_transit_feed.await_args_list
+    assert all(
+        call.args[1] is None
+        for call in mock_feeds_client.get_transit_feed.await_args_list
+    )
+
+
+async def _advance_to_routes(
+    hass: HomeAssistant, entry: MockConfigEntry, station: str = "2nd & spring"
+) -> dict:
+    result = await _start_stop_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP: station}
+    )
+    assert result["step_id"] == "routes"
+    return result
+
+
+def _offered(result: dict) -> list[tuple[str, str]]:
+    """Return (value, label) for every option a select step offers."""
+    selector = next(iter(result["data_schema"].schema.values()))
+    return [(option["value"], option["label"]) for option in selector.config["options"]]
+
+
+async def test_departures_offer_pairs_of_all_routes_when_none_chosen(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test skipping the routes step lists every pair at the station.
+
+    That makes the routes step a narrowing aid, never a requirement: for a
+    small station the whole set of pairs is the easiest list to pick from.
+    """
+    await setup_integration(hass, mock_config_entry)
+    result = await _advance_to_routes(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: []}
+    )
+    assert result["step_id"] == "departures"
+    assert _offered(result) == [
+        ('["R1","Downtown"]', "A → Downtown"),
+        ('["R2","Uptown"]', "B → Uptown"),
+    ]
+
+
+async def test_departures_skipped_when_the_feed_has_no_destinations(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+) -> None:
+    """Test a feed without destinations goes straight from routes to done.
+
+    TfL and Delhi DTC publish no trip headsigns at all; offering an empty
+    pair list would be a dead end, so the chosen routes ARE the selection.
+    """
+    await setup_integration(hass, mock_config_entry)
+    mock_handle.headsigns_serving.side_effect = None
+    mock_handle.headsigns_serving.return_value = []
+    result = await _advance_to_routes(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.data[CONF_STOP_NAME] == "2nd & Spring"
+    )
+    assert subentry.data[CONF_ROUTE_IDS] == ["R2"]
+    assert subentry.data[CONF_ROUTE_DESTINATIONS] == []
+    assert subentry.title == "2nd & Spring (B)"
+
+
+async def test_route_without_destinations_is_offered_as_itself(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+) -> None:
+    """Test a destination-less route can still be combined with pairs.
+
+    Otherwise a station mixing a route with destinations and one without
+    could not hold both on one board: picking any pair would drop the
+    other route entirely.
+    """
+    await setup_integration(hass, mock_config_entry)
+    mock_handle.headsigns_serving.side_effect = lambda stop_id, route_id=None: (
+        ["Downtown"] if route_id == "R1" else []
+    )
+    result = await _advance_to_routes(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: ["R1", "R2"]}
+    )
+    assert _offered(result) == [
+        ('["R1","Downtown"]', "A → Downtown"),
+        ('["R2",null]', "B"),
+    ]
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_ROUTE_DESTINATIONS: ['["R1","Downtown"]', '["R2",null]']},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.data[CONF_STOP_NAME] == "2nd & Spring"
+    )
+    assert subentry.data[CONF_ROUTE_DESTINATIONS] == [
+        ["R1", "Downtown"],
+        ["R2", None],
+    ]
+    assert subentry.title == "2nd & Spring (A → Downtown, B)"
+
+
+async def test_picked_pairs_define_the_board_not_the_routes(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test two flows reaching the same pairs are the same board.
+
+    The routes step only narrowed the list the pairs came from, so B ->
+    Uptown picked after choosing routes A and B is the board B -> Uptown
+    picked after choosing route B alone.
+    """
+    await setup_integration(hass, mock_config_entry)
+    result = await _advance_to_routes(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: ["R2"]}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: ['["R2","Uptown"]']}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await _advance_to_routes(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: ["R1", "R2"]}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_DESTINATIONS: ['["R2","Uptown"]']}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("groups", "routes_by_stop", "expected"),
+    [
+        pytest.param(
+            [("A", "86 St", ("S1",)), ("B", "86 St", ("S2",)), ("C", "Elm", ("S3",))],
+            {"S1": ["R1"], "S2": ["R2"], "S3": ["R1"]},
+            ["86 St (A)", "86 St (B)", "Elm"],
+            id="routes-tell-them-apart",
+        ),
+        pytest.param(
+            [("A", "86 St", ("S1",)), ("B", "86 St", ("S2",))],
+            {"S1": ["R1"], "S2": ["R1"]},
+            ["86 St (A) [S1]", "86 St (A) [S2]"],
+            id="same-routes-fall-back-to-an-id",
+        ),
+    ],
+)
+async def test_stations_sharing_a_name_are_told_apart(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+    groups: list[tuple[str, str, tuple[str, ...]]],
+    routes_by_stop: dict[str, list[str]],
+    expected: list[str],
+) -> None:
+    """Test identical station names gain the routes serving them.
+
+    193 of NYC's 496 subway stations share a name with another ("86 St" on
+    several lines, two "DeKalb Av"); a picker of identical labels cannot be
+    chosen from. Unique names are left alone.
+    """
+    routes = {"R1": ROUTE_A, "R2": ROUTE_B}
+    await setup_integration(hass, mock_config_entry)
+    mock_handle.stations_in.return_value = [
+        StationGroup(id=group_id, name=name, stop_ids=stop_ids)
+        for group_id, name, stop_ids in groups
+    ]
+    mock_handle.routes_serving.side_effect = lambda stop_id: [
+        routes[route_id] for route_id in routes_by_stop[stop_id]
+    ]
+    result = await _start_stop_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
+    )
+    assert result["step_id"] == "stop"
+    assert [label for _, label in _offered(result)] == expected
+
+
+async def test_stop_step_aborts_if_unloaded(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test picking a stop after the entry unloads aborts cleanly.
+
+    The stop step reads the handle to label same-named stations, so it must
+    check the entry is still loaded like the steps after it do.
+    """
+    await setup_integration(hass, mock_config_entry)
+    result = await _start_stop_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
+    )
+    assert result["step_id"] == "stop"
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP: "2nd & spring"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_ready"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            MobilityDatabaseAuthenticationError("token"), "invalid_auth", id="token"
+        ),
+        pytest.param(
+            MobilityDatabaseConnectionError("offline"), "cannot_connect", id="offline"
+        ),
+    ],
+)
+async def test_reauth_api_key_feed_cannot_open(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test a failure opening the feed is reported before any probe runs."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_API_KEY: "old-key"},
+    )
+    result = await mock_config_entry.start_reauth_flow(hass)
+    mock_feeds_client.get_transit_feed.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_API_KEY] == "old-key"
+
+
+async def test_api_key_on_a_feed_without_stops_is_not_probed(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_handle: MagicMock,
+) -> None:
+    """Test a stopless feed skips the probe rather than inventing a query.
+
+    The probe needs a stop to ask about; with none there is nothing it
+    could prove, so the key is kept and realtime errors surface later.
+    """
+    mock_handle.stops = []
+    flow_id = await _advance_to_api_key(hass, mock_feeds_client)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_KEY: "producer-key"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_API_KEY] == "producer-key"
+    mock_handle.get_arrivals.assert_not_awaited()
+
+
+async def test_long_route_lists_are_truncated_in_station_labels(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+) -> None:
+    """Test a duplicate station served by many routes keeps a readable label."""
+    many = [
+        Route(
+            id=f"R{n}",
+            short_name=str(n),
+            long_name=None,
+            type=3,
+            agency_id=None,
+            color=None,
+            text_color=None,
+            url=None,
+            description=None,
+            sort_order=None,
+        )
+        for n in range(1, 9)
+    ]
+    await setup_integration(hass, mock_config_entry)
+    mock_handle.stations_in.return_value = [
+        StationGroup(id="a", name="Hub", stop_ids=("S1",)),
+        StationGroup(id="b", name="Hub", stop_ids=("S2",)),
+    ]
+    mock_handle.routes_serving.side_effect = lambda stop_id: (
+        many if stop_id == "S1" else [ROUTE_A]
+    )
+    result = await _start_stop_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
+    )
+    assert [label for _, label in _offered(result)] == [
+        "Hub (1 2 3 4 5 6 …)",
+        "Hub (A)",
+    ]

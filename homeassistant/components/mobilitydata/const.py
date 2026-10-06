@@ -13,7 +13,10 @@ CONF_STATION_ID = "station_id"
 CONF_STOP_IDS = "stop_ids"
 CONF_STOP_NAME = "stop_name"
 CONF_ROUTE_IDS = "route_ids"
-CONF_HEADSIGNS = "headsigns"
+# Route -> destination pairs, each a [route_id, headsign] list; a null
+# headsign means every departure of that route. Empty means "every departure
+# of the routes in CONF_ROUTE_IDS" (or of the whole station).
+CONF_ROUTE_DESTINATIONS = "route_destinations"
 
 STATIC_REFRESH_INTERVAL = timedelta(hours=24)
 # Until the first static refresh lands there is no index to query, so every

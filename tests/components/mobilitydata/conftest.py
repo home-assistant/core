@@ -27,10 +27,11 @@ from aiomobilitydatabase.feeds import (
 )
 import pytest
 
+from homeassistant.components.mobilitydata.config_flow import _board_unique_id
 from homeassistant.components.mobilitydata.const import (
     CONF_FEED_ID,
-    CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
+    CONF_ROUTE_DESTINATIONS,
     CONF_ROUTE_IDS,
     CONF_STATION_ID,
     CONF_STOP_IDS,
@@ -196,6 +197,19 @@ RT_FEED = GtfsRtFeed(
     feed_references=[FEED_ID],
     source_info=SourceInfo(authentication_type=0),
 )
+# A sibling realtime feed that only answers requests carrying the producer key.
+KEYED_RT_FEED = GtfsRtFeed(
+    id="mdb-3",
+    data_type=DataType.GTFS_RT,
+    provider="LADOT",
+    entity_types=[EntityType.TRIP_UPDATES],
+    feed_references=[FEED_ID],
+    source_info=SourceInfo(
+        authentication_type=2,
+        api_key_parameter_name="X-Api-Key",
+        authentication_info_url="https://example.com/developers",
+    ),
+)
 DATASET = LatestDataset(
     id="dataset-1",
     hosted_url="https://example.com/gtfs.zip",
@@ -231,11 +245,23 @@ def mock_handle() -> MagicMock:
         ]
     )
     handle.routes_serving = AsyncMock(return_value=[ROUTE_A, ROUTE_B])
-    handle.headsigns_serving = AsyncMock(return_value=["Downtown", "Uptown"])
+    handle.headsigns_serving = AsyncMock(side_effect=_headsigns_for)
     handle.get_arrivals = AsyncMock(side_effect=_boards_for_queries)
     handle.refresh_static = AsyncMock(return_value=False)
     handle.close = MagicMock()
     return handle
+
+
+# Each fixture route runs to its own destination, matching ARRIVALS, so the
+# departures step offers real route -> destination pairs.
+HEADSIGNS_BY_ROUTE = {"R1": ["Downtown"], "R2": ["Uptown"]}
+
+
+def _headsigns_for(stop_id: str, route_id: str | None = None) -> list[str]:
+    """Return the destinations a route serves, as the library would."""
+    if route_id is None:
+        return sorted({h for hs in HEADSIGNS_BY_ROUTE.values() for h in hs})
+    return HEADSIGNS_BY_ROUTE.get(route_id, [])
 
 
 def _boards_for_queries(
@@ -312,12 +338,14 @@ def mock_config_entry() -> MockConfigEntry:
                     CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: [],
-                    CONF_HEADSIGNS: [],
+                    CONF_ROUTE_DESTINATIONS: [],
                 },
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
                 title="1st & Grand",
-                unique_id="1st & grand#[[],[]]",
+                # Computed, not hand-written: the duplicate-board tests only
+                # mean something if this matches what the flow produces.
+                unique_id=_board_unique_id("1st & grand", [], []),
             )
         ],
     )

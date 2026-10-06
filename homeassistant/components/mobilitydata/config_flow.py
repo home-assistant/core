@@ -1,6 +1,7 @@
 """Config flow for the MobilityData integration."""
 
 import asyncio
+from collections import Counter
 from collections.abc import Mapping
 import json
 import logging
@@ -20,6 +21,7 @@ from aiomobilitydatabase.feeds import (
     Circle,
     MobilityFeedsClient,
     MobilityFeedsError,
+    Route,
     SourceAuthenticationError,
     StaticBuildProgress,
     StationGroup,
@@ -57,8 +59,8 @@ from homeassistant.helpers.selector import (
 from . import _cache_dir
 from .const import (
     CONF_FEED_ID,
-    CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
+    CONF_ROUTE_DESTINATIONS,
     CONF_ROUTE_IDS,
     CONF_SEARCH_QUERY,
     CONF_STATION_ID,
@@ -67,7 +69,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_STOP,
 )
-from .coordinator import MobilityDataConfigEntry
+from .coordinator import MobilityDataConfigEntry, requires_api_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +84,9 @@ TOKEN_SCHEMA = probatio.Schema(
 )
 API_KEY_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): TextSelector(
+        # Optional: a blank key runs the entry on the published schedule
+        # alone, rather than locking out everyone without a producer key.
+        probatio.Optional(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         )
     }
@@ -115,14 +119,8 @@ def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
     not publish authentication instructions.
     """
     for rt_feed in rt_feeds:
-        if (
-            rt_feed.source_info is not None
-            and rt_feed.source_info.authentication_type
-            in (
-                1,
-                2,
-            )
-        ):
+        if requires_api_key(rt_feed):
+            assert rt_feed.source_info is not None
             return (
                 rt_feed.source_info.authentication_info_url
                 or f"{ACCOUNT_URL}/feeds/{feed_id}"
@@ -130,9 +128,30 @@ def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
     return None
 
 
+async def _probe_realtime(handle: TransitFeedHandle) -> str | None:
+    """Return an error key if the realtime producer refuses us, else None.
+
+    The producer key authenticates REALTIME fetches, not the catalog or the
+    static download, so opening the feed proves nothing -- only an actual
+    realtime request does. One arrivals query over a single stop is the
+    smallest call that makes one.
+    """
+    if not handle.stops:
+        return None
+    try:
+        await handle.get_arrivals([ArrivalsQuery([handle.stops[0].id])])
+    except SourceAuthenticationError:
+        return "invalid_auth"
+    except MobilityDatabaseError, MobilityFeedsError:
+        return "cannot_connect"
+    return None
+
+
 # A station id comes from the feed and never contains this, so it cleanly
 # separates the station from the JSON-encoded filters in a board's id.
 _BOARD_ID_SEPARATOR = "#"
+# Enough routes to tell two same-named stations apart, short enough to read.
+_MAX_DISAMBIGUATING_ROUTES = 6
 
 
 class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -148,6 +167,7 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
         self._static_feed_id: str | None = None
         self._title: str | None = None
         self._api_key: str | None = None
+        self._api_key_error: str | None = None
         self._auth_url: str | None = None
         self._build_task: asyncio.Task[None] | None = None
         self._build_error: str | None = None
@@ -303,14 +323,25 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_api_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Prompt for the realtime producer's API key."""
-        if user_input is not None:
-            self._api_key = user_input[CONF_API_KEY]
+        """Prompt for the realtime producer's API key, or none at all."""
+        errors: dict[str, str] = {}
+        if self._api_key_error is not None:
+            # The build just proved the last key wrong and routed back here.
+            # Home Assistant re-enters this step with that SAME submitted
+            # input, so it must not be taken as a new submission -- that
+            # would rebuild, re-probe and route back here forever. Show the
+            # error and wait for a real answer.
+            errors["base"] = self._api_key_error
+            self._api_key_error = None
+        elif user_input is not None:
+            # Blank means schedule-only, so it has nothing to prove.
+            self._api_key = user_input.get(CONF_API_KEY) or None
             return await self.async_step_build()
         assert self._auth_url is not None
         return self.async_show_form(
             step_id="api_key",
             data_schema=API_KEY_SCHEMA,
+            errors=errors,
             description_placeholders={"authentication_info_url": self._auth_url},
         )
 
@@ -333,6 +364,10 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
             self._build_task = None
             return self.async_show_progress_done(next_step_id="build_failed")
         self._build_task = None
+        if self._api_key_error is not None:
+            # The schedule is indexed and cached, so going back for another
+            # key costs no second download.
+            return self.async_show_progress_done(next_step_id="api_key")
         return self.async_show_progress_done(next_step_id="finish")
 
     async def _async_build(self) -> None:
@@ -355,7 +390,13 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
         handle = await self._get_client().get_transit_feed(
             self._static_feed_id, self._api_key, on_progress=on_progress
         )
-        handle.close()
+        try:
+            # Prove the key before saving it: a typo would otherwise only
+            # surface after setup, as a realtime auth failure and a reauth.
+            if self._api_key is not None:
+                self._api_key_error = await _probe_realtime(handle)
+        finally:
+            handle.close()
 
     async def async_step_build_failed(
         self, user_input: dict[str, Any] | None = None
@@ -461,7 +502,17 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             entry = self._get_reauth_entry()
-            api_key: str = user_input[CONF_API_KEY]
+            if not (api_key := user_input.get(CONF_API_KEY)):
+                # Giving up the key is a valid answer: drop it and run on
+                # the published schedule alone.
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={
+                        key: value
+                        for key, value in entry.data.items()
+                        if key != CONF_API_KEY
+                    },
+                )
             if error := await self._async_probe_api_key(entry, api_key):
                 errors["base"] = error
             else:
@@ -479,44 +530,76 @@ class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_probe_api_key(
         self, entry: MobilityDataConfigEntry, api_key: str
     ) -> str | None:
-        """Return an error key if the producer rejects this key, else None.
+        """Return an error key if this key cannot open the feed's realtime.
 
-        The key authenticates REALTIME fetches, not the catalog or the static
-        download, so opening the feed proves nothing -- only an actual
-        realtime request does. One arrivals query over a single stop is the
-        smallest call that makes one; the static index is already cached, so
-        this costs a catalog check and one producer request.
+        The static index is already cached, so this costs a catalog check
+        and the one producer request ``_probe_realtime`` makes.
         """
         # Reauth for the producer key starts at this step, so the flow has no
         # token of its own yet; the entry's is the one that reaches the catalog.
         self._refresh_token = entry.data[CONF_REFRESH_TOKEN]
-        client = self._get_client()
-        handle: TransitFeedHandle | None = None
         try:
-            handle = await client.get_transit_feed(entry.data[CONF_FEED_ID], api_key)
-            if handle.stops:
-                await handle.get_arrivals([ArrivalsQuery([handle.stops[0].id])])
-        except MobilityDatabaseAuthenticationError, SourceAuthenticationError:
+            handle = await self._get_client().get_transit_feed(
+                entry.data[CONF_FEED_ID], api_key
+            )
+        except MobilityDatabaseAuthenticationError:
             return "invalid_auth"
         except MobilityDatabaseError, MobilityFeedsError:
             return "cannot_connect"
+        try:
+            return await _probe_realtime(handle)
         finally:
-            if handle is not None:
-                handle.close()
-        return None
+            handle.close()
 
 
-def _board_unique_id(group_key: str, route_ids: list[str], headsigns: list[str]) -> str:
-    """Identify a board by its station AND its filters.
+type Pair = tuple[str, str | None]
+
+
+def _board_unique_id(group_key: str, route_ids: list[str], pairs: list[Pair]) -> str:
+    """Identify a board by its station AND what it shows.
 
     A station can carry several boards, so the station alone cannot be the
-    identity -- only an identical selection is a duplicate. The filters are
-    JSON-encoded rather than joined, because a headsign legitimately
-    contains commas ("Downtown, via Main") and would otherwise make two
-    different selections collide.
+    identity -- only an identical selection is a duplicate. Picked pairs
+    define the board on their own (the routes step only narrowed the list
+    they came from), so the identity is the pairs when there are any and
+    the routes otherwise. JSON-encoded rather than joined, because a
+    headsign legitimately contains commas ("Downtown, via Main").
     """
-    filters = json.dumps([sorted(route_ids), sorted(headsigns)], separators=(",", ":"))
-    return f"{group_key}{_BOARD_ID_SEPARATOR}{filters}"
+    if pairs:
+        shown: list[Any] = ["pairs", sorted(pairs, key=_pair_sort_key)]
+    else:
+        shown = ["routes", sorted(route_ids)]
+    return f"{group_key}{_BOARD_ID_SEPARATOR}{json.dumps(shown, separators=(',', ':'))}"
+
+
+def _pair_sort_key(pair: Pair) -> tuple[str, bool, str]:
+    route_id, headsign = pair
+    return (route_id, headsign is not None, headsign or "")
+
+
+def _route_labels(routes: list[Route]) -> dict[str, str]:
+    """Label routes as briefly as stays unambiguous.
+
+    The short name is what riders call a route ("R", "Blue", "C1_RED"), but
+    two routes can share one -- Paris runs both an RER B and a bus B -- so
+    any short name used more than once falls back to the full name.
+    """
+    shorts = Counter(route.short_name for route in routes if route.short_name)
+    return {
+        route.id: route.short_name
+        if route.short_name and shorts[route.short_name] == 1
+        else route.display_name
+        for route in routes
+    }
+
+
+def _encode_pair(pair: Pair) -> str:
+    return json.dumps(list(pair), separators=(",", ":"))
+
+
+def _decode_pair(value: str) -> Pair:
+    route_id, headsign = json.loads(value)
+    return route_id, headsign
 
 
 class StopSubentryFlowHandler(ConfigSubentryFlow):
@@ -528,8 +611,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         self._stop_ids: list[str] = []
         self._stop_name: str | None = None
         self._route_ids: list[str] = []
-        self._headsigns: list[str] = []
-        self._route_names: dict[str, str] = {}
+        self._pairs: list[Pair] = []
+        self._route_labels: dict[str, str] = {}
         self._groups: dict[str, StationGroup] = {}
 
     def _get_handle(self) -> TransitFeedHandle | None:
@@ -588,20 +671,56 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    async def _station_labels(self, handle: TransitFeedHandle) -> dict[str, str]:
+        """Label stations, telling apart the ones that share a name.
+
+        Station names repeat within one network -- NYC has an "86 St" on
+        several lines and two "DeKalb Av" -- and a picker of identical
+        labels cannot be chosen from. Only the duplicated names gain the
+        routes serving them ("86 St (1)" against "86 St (N W)").
+        """
+        names = Counter(group.name for group in self._groups.values())
+        labels: dict[str, str] = {}
+        for group_key, group in self._groups.items():
+            labels[group_key] = group.name
+            if names[group.name] == 1:
+                continue
+            serving = {
+                route.short_name or route.long_name or route.id
+                for stop_id in group.stop_ids
+                for route in await handle.routes_serving(stop_id)
+            }
+            if serving:
+                listed = sorted(serving)
+                shown = " ".join(listed[:_MAX_DISAMBIGUATING_ROUTES])
+                if len(listed) > _MAX_DISAMBIGUATING_ROUTES:
+                    shown += " …"
+                labels[group_key] = f"{group.name} ({shown})"
+        # Same name AND same routes (two halves of one interchange, say):
+        # only an id is left to tell them apart.
+        repeats = Counter(labels.values())
+        for group_key, label in labels.items():
+            if repeats[label] > 1:
+                labels[group_key] = f"{label} [{self._groups[group_key].stop_ids[0]}]"
+        return labels
+
     async def async_step_stop(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Pick a stop from those inside the search area."""
+        if (handle := self._get_handle()) is None:
+            return self.async_abort(reason="not_ready")
         if user_input is not None:
             group_key: str = user_input[CONF_STOP]
             # Several boards at one station is the useful case ("downtown bus"
             # and "airport train" are different sensors), so the duplicate
-            # check belongs at the end, once the filters are known.
+            # check belongs at the end, once the selection is known.
             group = self._groups[group_key]
             self._group_key = group_key
             self._stop_name = group.name
             self._stop_ids = list(group.stop_ids)
             return await self.async_step_routes()
+        labels = await self._station_labels(handle)
         return self.async_show_form(
             step_id="stop",
             data_schema=probatio.Schema(
@@ -609,8 +728,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Required(CONF_STOP): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                SelectOptionDict(value=group_key, label=group.name)
-                                for group_key, group in self._groups.items()
+                                SelectOptionDict(value=group_key, label=label)
+                                for group_key, label in labels.items()
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -622,22 +741,22 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_routes(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Optionally filter to specific routes serving the stop."""
+        """Optionally narrow to specific routes serving the stop."""
         if (handle := self._get_handle()) is None:
             return self.async_abort(reason="not_ready")
         assert self._stop_ids
         if user_input is not None:
             self._route_ids = user_input.get(CONF_ROUTE_IDS, [])
-            return await self.async_step_headsigns()
+            return await self.async_step_departures()
         routes_by_id = {
             route.id: route
             for stop_id in self._stop_ids
             for route in await handle.routes_serving(stop_id)
         }
         routes = sorted(routes_by_id.values(), key=lambda route: route.display_name)
-        self._route_names = {route.id: route.display_name for route in routes}
+        self._route_labels = _route_labels(routes)
         if not routes:
-            return await self.async_step_headsigns()
+            return await self.async_step_departures()
         return self.async_show_form(
             step_id="routes",
             data_schema=probatio.Schema(
@@ -660,36 +779,64 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    async def async_step_headsigns(
+    async def async_step_departures(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Optionally filter to specific headsigns, then finish."""
+        """Optionally pick exact route -> destination pairs, then finish.
+
+        Offered for the routes chosen in the previous step, or for every
+        route when none were. A route whose trips here carry no destination
+        at all is offered as itself, so it can still be combined with
+        specific pairs from other routes.
+        """
         if (handle := self._get_handle()) is None:
             return self.async_abort(reason="not_ready")
         assert self._stop_ids
         if user_input is not None:
-            return self._async_finish(user_input.get(CONF_HEADSIGNS, []))
-        route_ids: list[str | None] = list(self._route_ids) or [None]
-        headsigns = sorted(
-            {
+            return self._async_finish(
+                [
+                    _decode_pair(value)
+                    for value in user_input.get(CONF_ROUTE_DESTINATIONS, [])
+                ]
+            )
+        route_ids = self._route_ids or list(self._route_labels)
+        named: set[Pair] = set()
+        undirected: set[str] = set()
+        for route_id in route_ids:
+            headsigns = {
                 headsign
                 for stop_id in self._stop_ids
-                for route_id in route_ids
                 for headsign in await handle.headsigns_serving(stop_id, route_id)
             }
-        )
-        if not headsigns:
+            named.update((route_id, headsign) for headsign in headsigns)
+            if not headsigns:
+                undirected.add(route_id)
+        if not named:
+            # Nothing to narrow by -- some feeds (TfL, Delhi DTC) publish no
+            # destinations at all -- so the routes alone are the selection.
             return self._async_finish([])
-        # Narrowing the routes can retire a previously chosen headsign; keep
-        # the ones still on offer rather than silently clearing the filter.
-        current = [headsign for headsign in self._headsigns if headsign in headsigns]
+        offered = sorted(
+            [*named, *((route_id, None) for route_id in undirected)],
+            key=lambda pair: (self._pair_label(pair), _pair_sort_key(pair)),
+        )
+        # Narrowing the routes can retire a previously chosen pair; keep the
+        # ones still on offer rather than silently clearing the selection.
+        current = [_encode_pair(pair) for pair in self._pairs if pair in offered]
         return self.async_show_form(
-            step_id="headsigns",
+            step_id="departures",
             data_schema=probatio.Schema(
                 {
-                    probatio.Optional(CONF_HEADSIGNS, default=current): SelectSelector(
+                    probatio.Optional(
+                        CONF_ROUTE_DESTINATIONS, default=current
+                    ): SelectSelector(
                         SelectSelectorConfig(
-                            options=headsigns,
+                            options=[
+                                SelectOptionDict(
+                                    value=_encode_pair(pair),
+                                    label=self._pair_label(pair),
+                                )
+                                for pair in offered
+                            ],
                             multiple=True,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -698,21 +845,30 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    def _board_title(self, headsigns: list[str]) -> str:
+    def _pair_label(self, pair: Pair) -> str:
+        route_id, headsign = pair
+        route = self._route_labels.get(route_id, route_id)
+        return route if headsign is None else f"{route} → {headsign}"
+
+    def _board_title(self, pairs: list[Pair]) -> str:
         """Name the board by what it shows, so several at one station differ."""
         assert self._stop_name is not None
-        summary = headsigns or [
-            self._route_names.get(route_id, route_id) for route_id in self._route_ids
-        ]
-        if not summary:
+        if pairs:
+            shown = [self._pair_label(pair) for pair in pairs]
+        else:
+            shown = [
+                self._route_labels.get(route_id, route_id)
+                for route_id in self._route_ids
+            ]
+        if not shown:
             return self._stop_name
-        return f"{self._stop_name} ({', '.join(summary)})"
+        return f"{self._stop_name} ({', '.join(shown)})"
 
     @callback
-    def _async_finish(self, headsigns: list[str]) -> SubentryFlowResult:
+    def _async_finish(self, pairs: list[Pair]) -> SubentryFlowResult:
         assert self._stop_name is not None
         assert self._group_key is not None
-        unique_id = _board_unique_id(self._group_key, self._route_ids, headsigns)
+        unique_id = _board_unique_id(self._group_key, self._route_ids, pairs)
         reconfigure = self.source == SOURCE_RECONFIGURE
         current = self._get_reconfigure_subentry() if reconfigure else None
         # Home Assistant raises on a duplicate subentry unique_id, so catch
@@ -720,26 +876,27 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         for subentry in self._get_entry().subentries.values():
             if subentry.unique_id == unique_id and subentry is not current:
                 return self.async_abort(reason="already_configured")
+        stored_pairs = [list(pair) for pair in pairs]
         if current is not None:
             # The entry's update listener reloads; must not reload here too.
             return self.async_update_and_abort(
                 self._get_entry(),
                 current,
-                title=self._board_title(headsigns),
+                title=self._board_title(pairs),
                 unique_id=unique_id,
                 data_updates={
                     CONF_ROUTE_IDS: self._route_ids,
-                    CONF_HEADSIGNS: headsigns,
+                    CONF_ROUTE_DESTINATIONS: stored_pairs,
                 },
             )
         return self.async_create_entry(
-            title=self._board_title(headsigns),
+            title=self._board_title(pairs),
             data={
                 CONF_STATION_ID: self._group_key,
                 CONF_STOP_IDS: self._stop_ids,
                 CONF_STOP_NAME: self._stop_name,
                 CONF_ROUTE_IDS: self._route_ids,
-                CONF_HEADSIGNS: headsigns,
+                CONF_ROUTE_DESTINATIONS: stored_pairs,
             },
             unique_id=unique_id,
         )
@@ -747,11 +904,14 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Reconfigure the route and headsign filters for an existing stop."""
+        """Reconfigure the routes and departures for an existing board."""
         subentry: ConfigSubentry = self._get_reconfigure_subentry()
         self._stop_ids = list(subentry.data[CONF_STOP_IDS])
         self._stop_name = subentry.data[CONF_STOP_NAME]
         self._route_ids = list(subentry.data[CONF_ROUTE_IDS])
-        self._headsigns = list(subentry.data[CONF_HEADSIGNS])
+        self._pairs = [
+            (route_id, headsign)
+            for route_id, headsign in subentry.data[CONF_ROUTE_DESTINATIONS]
+        ]
         self._group_key = subentry.data[CONF_STATION_ID]
         return await self.async_step_routes()

@@ -1,11 +1,13 @@
 """Coordinators for the MobilityData integration."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import logging
 from typing import override
 
 from aiomobilitydatabase import (
     EntityType,
+    GtfsRtFeed,
     MobilityDatabaseAuthenticationError,
     MobilityDatabaseError,
 )
@@ -29,7 +31,7 @@ from .const import (
     ARRIVALS_INTERVAL_REALTIME,
     ARRIVALS_INTERVAL_SCHEDULE,
     CONF_FEED_ID,
-    CONF_HEADSIGNS,
+    CONF_ROUTE_DESTINATIONS,
     CONF_ROUTE_IDS,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
@@ -53,6 +55,79 @@ class MobilityDataRuntimeData:
     client: MobilityFeedsClient
     static_coordinator: StaticCoordinator
     arrivals_coordinator: ArrivalsCoordinator
+
+
+def requires_api_key(rt_feed: GtfsRtFeed) -> bool:
+    """Return whether a realtime feed only answers requests carrying a key.
+
+    Catalog authentication types 1 (query parameter) and 2 (header) both
+    need the producer's key; 0 is open. Only realtime ever needs one: the
+    static schedule comes from the Mobility Database's own hosted copy.
+    """
+    return (
+        rt_feed.source_info is not None
+        and rt_feed.source_info.authentication_type in (1, 2)
+    )
+
+
+def board_queries(subentry: ConfigSubentry) -> list[ArrivalsQuery]:
+    """Return the queries whose merged results make up one board.
+
+    A board picked as route -> destination pairs needs one query per pair:
+    the library filters routes and headsigns as two independent lists, so a
+    single query for Blue -> Largo plus Silver -> Ashburn would ALSO match
+    Silver -> Largo, a train nobody picked. Each pair is exact on its own,
+    and the batched call still costs one realtime fetch.
+    """
+    stop_ids = subentry.data[CONF_STOP_IDS]
+    if pairs := subentry.data[CONF_ROUTE_DESTINATIONS]:
+        return [
+            ArrivalsQuery(
+                stop_ids=stop_ids,
+                route_ids=[route_id],
+                # A null headsign stands for the route's every departure.
+                headsigns=[headsign] if headsign is not None else None,
+                limit=DEPARTURE_SENSOR_COUNT,
+            )
+            for route_id, headsign in pairs
+        ]
+    return [
+        ArrivalsQuery(
+            stop_ids=stop_ids,
+            route_ids=subentry.data[CONF_ROUTE_IDS] or None,
+            limit=DEPARTURE_SENSOR_COUNT,
+        )
+    ]
+
+
+def _departs_at(arrival: StopArrival) -> datetime:
+    """Order rows the way the library orders a single board."""
+    return (
+        arrival.predicted_departure
+        or arrival.scheduled_departure
+        or arrival.predicted_arrival
+        or datetime.max.replace(tzinfo=UTC)
+    )
+
+
+def merge_boards(boards: list[list[StopArrival]]) -> list[StopArrival]:
+    """Merge one board's per-pair results into its next departures.
+
+    Each per-pair result is already filtered and limited, so the first few
+    of their union are exactly the first few of the whole board. A route's
+    every-departure pair and one of its specific pairs can both return the
+    same trip, hence the de-duplication.
+    """
+    seen: set[tuple[str | None, str, datetime | None]] = set()
+    rows: list[StopArrival] = []
+    for arrival in sorted(
+        (arrival for board in boards for arrival in board), key=_departs_at
+    ):
+        key = (arrival.trip_id, arrival.stop_id, arrival.scheduled_departure)
+        if key not in seen:
+            seen.add(key)
+            rows.append(arrival)
+    return rows[:DEPARTURE_SENSOR_COUNT]
 
 
 def stop_subentries(entry: MobilityDataConfigEntry) -> dict[str, ConfigSubentry]:
@@ -102,9 +177,19 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
         feed_id: str = self.config_entry.data[CONF_FEED_ID]
         try:
             if self.data is None:
-                handle = await self.client.get_transit_feed(
-                    feed_id, self.config_entry.data.get(CONF_API_KEY)
-                )
+                api_key = self.config_entry.data.get(CONF_API_KEY)
+                handle = await self.client.get_transit_feed(feed_id, api_key)
+                if api_key is None:
+                    # No key was given, so run schedule-only for any producer
+                    # that demands one. Left in, the first keyless realtime
+                    # request would raise for EVERY board on the entry and
+                    # push the user into reauth for a key they chose not to
+                    # provide. Keyless realtime siblings are kept.
+                    handle.rt_feeds = [
+                        rt_feed
+                        for rt_feed in handle.rt_feeds
+                        if not requires_api_key(rt_feed)
+                    ]
             else:
                 handle = self.data
                 await handle.refresh_static()
@@ -149,11 +234,12 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
 class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
     """Fetch upcoming departures for all stop subentries in one batched call.
 
-    Data maps subentry id to that board's arrivals. Each subentry becomes one
-    ``ArrivalsQuery``, so the library applies that board's route and headsign
-    filters BEFORE its limit and the whole batch costs a single realtime
-    fetch. Polls every minute when the feed family has a trip-updates capable
-    realtime source, else every five.
+    Data maps subentry id to that board's arrivals. Each board becomes one
+    query per picked route -> destination pair (or one for its routes), all
+    sent in a single batched call: the library applies each query's filters
+    BEFORE its limit, and the whole batch costs one realtime fetch. Polls
+    every minute when the feed family has a usable trip-updates source, else
+    every five.
     """
 
     config_entry: MobilityDataConfigEntry
@@ -192,19 +278,13 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
         subentries = stop_subentries(self.config_entry)
         if not subentries:
             return {}
-        queries = [
-            ArrivalsQuery(
-                stop_ids=subentry.data[CONF_STOP_IDS],
-                # The flow always writes both, so a missing key is a bug
-                # worth surfacing; an empty list means "no narrowing".
-                route_ids=subentry.data[CONF_ROUTE_IDS] or None,
-                headsigns=subentry.data[CONF_HEADSIGNS] or None,
-                limit=DEPARTURE_SENSOR_COUNT,
-            )
-            for subentry in subentries.values()
-        ]
+        per_board = {
+            subentry_id: board_queries(subentry)
+            for subentry_id, subentry in subentries.items()
+        }
+        queries = [query for board in per_board.values() for query in board]
         try:
-            boards = await handle.get_arrivals(queries)
+            results = iter(await handle.get_arrivals(queries))
         except (MobilityDatabaseAuthenticationError, SourceAuthenticationError) as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -217,4 +297,7 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
                 translation_key="arrivals_refresh_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return dict(zip(subentries, boards, strict=True))
+        return {
+            subentry_id: merge_boards([next(results) for _ in board])
+            for subentry_id, board in per_board.items()
+        }

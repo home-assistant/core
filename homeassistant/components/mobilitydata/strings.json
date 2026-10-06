@@ -21,9 +21,9 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "API key issued by the transit data producer"
+          "api_key": "API key issued by the transit data producer. Optional."
         },
-        "description": "This feed's realtime data requires an API key issued by the transit provider. See [the provider's instructions]({authentication_info_url}) for how to get one."
+        "description": "This feed's realtime data requires an API key issued by the transit provider. See [the provider's instructions]({authentication_info_url}) for how to get one. Leave it empty to use the published schedule only, without realtime predictions."
       },
       "reauth_api_key": {
         "data": {
@@ -32,7 +32,7 @@
         "data_description": {
           "api_key": "[%key:component::mobilitydata::config::step::api_key::data_description::api_key%]"
         },
-        "description": "The transit provider rejected the configured API key. Enter a new one. See [the provider's instructions]({authentication_info_url}) for how to get one."
+        "description": "The transit provider rejected the configured API key. Enter a new one, or leave it empty to continue with the published schedule only. See [the provider's instructions]({authentication_info_url}) for how to get one."
       },
       "reauth_token": {
         "data": {
@@ -82,15 +82,15 @@
         "user": "Add transit stop"
       },
       "step": {
-        "headsigns": {
+        "departures": {
           "data": {
-            "headsigns": "Destinations"
+            "route_destinations": "Departures"
           },
           "data_description": {
-            "headsigns": "Only departures with these headsigns are shown"
+            "route_destinations": "Only departures on these routes to these destinations are shown"
           },
-          "description": "Optionally limit departures to specific destinations (headsigns). Leave empty to include all.",
-          "title": "Filter by destination"
+          "description": "Optionally pick specific routes and destinations. Leave empty to show every departure of the routes chosen in the previous step.",
+          "title": "Choose departures"
         },
         "routes": {
           "data": {
@@ -99,7 +99,7 @@
           "data_description": {
             "route_ids": "Only departures on these routes are shown"
           },
-          "description": "Optionally limit departures to specific routes. Leave empty to include all routes.",
+          "description": "Optionally limit departures to specific routes. Leave empty to include all routes. The next step can narrow these to specific destinations.",
           "title": "Filter by route"
         },
         "stop": {

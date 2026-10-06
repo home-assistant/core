@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components.mobilitydata.const import (
     ARRIVALS_INTERVAL_SCHEDULE,
-    CONF_HEADSIGNS,
+    CONF_ROUTE_DESTINATIONS,
     CONF_ROUTE_IDS,
     CONF_STOP_IDS,
     CONF_STOP_NAME,
@@ -25,8 +25,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigSubentryDataWithId
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
+from . import conftest
 from .conftest import (
     FEED_ID,
+    KEYED_RT_FEED,
+    RT_FEED,
     RT_FEED_ID,
     STOP_1,
     STOP_2,
@@ -45,7 +48,7 @@ SECOND_STOP_SUBENTRY = ConfigSubentryDataWithId(
         CONF_STOP_IDS: ["S2"],
         CONF_STOP_NAME: "2nd & Spring",
         CONF_ROUTE_IDS: [],
-        CONF_HEADSIGNS: [],
+        CONF_ROUTE_DESTINATIONS: [],
     },
     subentry_id="stop_subentry_2",
     subentry_type=SUBENTRY_TYPE_STOP,
@@ -71,7 +74,7 @@ async def test_arrivals_batched_across_stops(
                     CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: [],
-                    CONF_HEADSIGNS: [],
+                    CONF_ROUTE_DESTINATIONS: [],
                 },
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
@@ -150,7 +153,7 @@ async def test_route_and_headsign_filters(
                     CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: ["R2"],
-                    CONF_HEADSIGNS: ["Uptown"],
+                    CONF_ROUTE_DESTINATIONS: [["R2", "Uptown"]],
                 },
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
@@ -261,3 +264,133 @@ async def test_static_retries_quickly_until_the_first_success(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEXT_S1).state == "2026-08-01T08:05:30+00:00"
+
+
+def _pair_board_entry(pairs: list[list[str | None]]) -> MockConfigEntry:
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="LADOT",
+        unique_id=FEED_ID,
+        data={"refresh_token": "refresh-token", "feed_id": FEED_ID},
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_STOP_IDS: ["S1"],
+                    CONF_STOP_NAME: "1st & Grand",
+                    CONF_ROUTE_IDS: [],
+                    CONF_ROUTE_DESTINATIONS: pairs,
+                },
+                subentry_id=SUBENTRY_ID,
+                subentry_type=SUBENTRY_TYPE_STOP,
+                title="1st & Grand",
+                unique_id="1st & grand",
+            )
+        ],
+    )
+
+
+# A station where both routes reach Downtown, and the soonest train is the
+# one nobody picks: R2 -> Downtown at 08:01.
+CROSSED = [
+    make_arrival("S1", 1, route_id="R2", route_name="B Crosstown", headsign="Downtown"),
+    make_arrival("S1", 5, route_id="R1", headsign="Downtown"),
+    make_arrival("S1", 9, route_id="R2", route_name="B Crosstown", headsign="Uptown"),
+    make_arrival("S1", 14, route_id="R1", headsign="Uptown"),
+]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_picked_pairs_do_not_leak_across_routes(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_handle: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test A -> Downtown plus B -> Uptown never shows B -> Downtown.
+
+    As two independent lists that selection becomes routes {A, B} x
+    destinations {Downtown, Uptown}, which also matches B -> Downtown -- the
+    soonest train here, and one nobody picked. One query per pair keeps it
+    exact, and the batch still costs a single call.
+    """
+    monkeypatch.setattr(conftest, "ARRIVALS", CROSSED)
+    await setup_integration(
+        hass, _pair_board_entry([["R1", "Downtown"], ["R2", "Uptown"]])
+    )
+    shown = [
+        (state.attributes["route_id"], state.attributes["headsign"])
+        for entity_id in (
+            NEXT_S1,
+            "sensor.1st_grand_second_departure",
+        )
+        if (state := hass.states.get(entity_id))
+    ]
+    assert shown == [("R1", "Downtown"), ("R2", "Uptown")]
+    [queries] = mock_handle.get_arrivals.await_args.args
+    assert [(q.route_ids, q.headsigns) for q in queries] == [
+        (["R1"], ["Downtown"]),
+        (["R2"], ["Uptown"]),
+    ]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_route_pair_without_destination_is_every_departure(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_handle: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a [route, null] pair is that route's every departure.
+
+    It is how a route the feed gives no destinations for joins a board, and
+    overlapping it with a specific pair of the same route must not show the
+    shared trip twice.
+    """
+    monkeypatch.setattr(conftest, "ARRIVALS", CROSSED)
+    await setup_integration(hass, _pair_board_entry([["R1", None], ["R1", "Uptown"]]))
+    trips = [
+        hass.states.get(entity_id).attributes["trip_id"]
+        for entity_id in (
+            NEXT_S1,
+            "sensor.1st_grand_second_departure",
+            "sensor.1st_grand_third_departure",
+        )
+        if hass.states.get(entity_id).state != "unknown"
+    ]
+    # Every R1 trip once each, in order -- T14 came back from BOTH queries.
+    assert trips == ["T5", "T14"]
+
+
+@pytest.mark.parametrize(
+    ("api_key", "kept"),
+    [
+        pytest.param(None, [RT_FEED], id="no-key-drops-the-keyed-feed"),
+        pytest.param("producer-key", [RT_FEED, KEYED_RT_FEED], id="key-keeps-both"),
+    ],
+)
+async def test_without_a_key_keyed_realtime_is_dropped(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+    api_key: str | None,
+    kept: list,
+) -> None:
+    """Test an entry without a key runs schedule-only for keyed producers.
+
+    Left in, the first keyless request to a keyed producer would raise for
+    every board on the entry and push the user into reauth for a key they
+    chose not to give. A sibling realtime feed needing no key is kept.
+    """
+    mock_handle.rt_feeds = [RT_FEED, KEYED_RT_FEED]
+    if api_key is not None:
+        mock_config_entry.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            mock_config_entry, data={**mock_config_entry.data, "api_key": api_key}
+        )
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    else:
+        await setup_integration(hass, mock_config_entry)
+    assert mock_handle.rt_feeds == kept
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
