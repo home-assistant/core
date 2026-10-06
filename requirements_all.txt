@@ -175,7 +175,7 @@ aio-georss-gdacs==0.10
 aio-ownet==0.1.0
 
 # homeassistant.components.wattwaechter
-aio-wattwaechter==1.0.0
+aio-wattwaechter==1.2.0
 
 # homeassistant.components.acaia
 aioacaia==0.2.2
