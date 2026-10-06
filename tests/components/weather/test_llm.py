@@ -646,6 +646,40 @@ async def test_get_forecast_tool_final_entry_fallback_uses_local_calendar_time(
     assert response.data["units"].keys() == FORECAST_UNIT_KEYS
 
 
+@pytest.mark.freeze_time("2024-11-03T06:00:00+00:00")
+async def test_get_forecast_tool_hourly_fallback_uses_utc_across_fall_back_dst(
+    hass: HomeAssistant,
+) -> None:
+    """Test the hourly fallback end doesn't overshoot across the fall DST transition.
+
+    Adding a wall-clock hour to a local ZoneInfo datetime across the November
+    fall-back transition can span two real elapsed hours (the repeated
+    01:00-01:59 local hour), so the fallback must compute the final hourly
+    entry's end in absolute (UTC) time instead, or the entry would be
+    returned for an hour after its actual coverage ends.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    # The only entry, so its end is computed via the duration fallback. Its
+    # real coverage ends exactly at the frozen "now" (06:00 UTC == 01:00 EST,
+    # the instant clocks fall back), so "next_24_hours" (starting at "now")
+    # must not include it.
+    entity.forecast_list = [
+        {"datetime": "2024-11-03T01:00:00-04:00", "condition": "foggy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    assert response.data["forecast"] == []
+
+
 @pytest.mark.freeze_time("2024-11-23T10:00:00+00:00")
 async def test_get_forecast_tool_next_24_hours_window_boundaries(
     hass: HomeAssistant,

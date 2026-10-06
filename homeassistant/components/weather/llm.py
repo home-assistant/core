@@ -219,12 +219,22 @@ class GetForecastTool(Tool):
         matching_forecast: list[Forecast] = []
         for index, entry in enumerate(forecast):
             entry_start = _forecast_datetime(entry["datetime"])
-            # Apply the duration in local wall-clock time rather than to the
-            # entry's (possibly fixed-offset) tzinfo directly: a provider's
-            # fixed UTC offset doesn't account for a DST change between the
-            # entry and its computed end, which would otherwise over- or
-            # under-shoot the real calendar boundary.
-            cadence_end = dt_util.as_local(entry_start) + duration
+            if forecast_type == "daily":
+                # Apply the duration in local wall-clock time: a daily entry
+                # represents a calendar day, so its end must be the next
+                # local midnight, which (via zoneinfo) correctly accounts for
+                # a DST change between the entry and its computed end rather
+                # than over- or under-shooting the real calendar boundary.
+                cadence_end = dt_util.as_local(entry_start) + duration
+            else:
+                # Hourly/twice-daily entries represent a fixed elapsed
+                # duration, not a calendar boundary, so the end must be
+                # computed in absolute (UTC) time instead: adding wall-clock
+                # time across the autumn DST transition can span two real
+                # elapsed hours (the repeated 01:00-01:59 hour), which would
+                # return the final entry for an hour after its actual
+                # coverage ends.
+                cadence_end = dt_util.as_utc(entry_start) + duration
             if index + 1 < len(forecast):
                 # Prefer the next entry's own start as the end of this
                 # interval, since it reflects the provider's actual cadence
