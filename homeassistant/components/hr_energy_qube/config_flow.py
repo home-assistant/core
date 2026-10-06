@@ -80,13 +80,12 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Entries created without mDNS have no unique id yet; adopt the one
-        # whose host is this controller (by IP or mDNS hostname)
-        hostname = discovery_info.hostname.lower().rstrip(".")
+        # whose host is this controller (any advertised IP or the mDNS hostname)
+        controller_hosts = {str(ip) for ip in discovery_info.ip_addresses}
+        controller_hosts.add(discovery_info.hostname.lower().rstrip("."))
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id is None and entry.data[CONF_HOST].lower() in (
-                host,
-                hostname,
-            ):
+            configured_host = entry.data[CONF_HOST].lower().rstrip(".")
+            if entry.unique_id is None and configured_host in controller_hosts:
                 self.hass.config_entries.async_update_entry(
                     entry, unique_id=device.uuid
                 )

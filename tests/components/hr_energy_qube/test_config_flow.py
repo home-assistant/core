@@ -248,6 +248,8 @@ async def test_zeroconf_updates_host(hass: HomeAssistant) -> None:
         pytest.param("192.168.5.208", id="ip"),
         pytest.param("qube.local", id="hostname"),
         pytest.param("Qube.local", id="hostname_case"),
+        pytest.param("qube.local.", id="hostname_trailing_dot"),
+        pytest.param("fd00::208", id="secondary_address"),
     ],
 )
 async def test_zeroconf_sets_unique_id_on_existing_entry(
@@ -256,9 +258,13 @@ async def test_zeroconf_sets_unique_id_on_existing_entry(
     """Test an entry created without mDNS adopts the discovered uuid."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: host, CONF_PORT: 502})
     entry.add_to_hass(hass)
+    discovery = replace(
+        ZEROCONF_DISCOVERY,
+        ip_addresses=[ip_address("192.168.5.208"), ip_address("fd00::208")],
+    )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
     )
 
     assert result["type"] is FlowResultType.ABORT
