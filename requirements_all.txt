@@ -2118,7 +2118,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.10
 
 # homeassistant.components.bluesound
-pyblu==2.0.8
+pyblu==2.2.0
 
 # homeassistant.components.neato
 pybotvac==0.0.29
