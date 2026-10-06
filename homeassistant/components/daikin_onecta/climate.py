@@ -352,11 +352,9 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
 
     def _get_supported_features(self) -> ClimateEntityFeature:
         """Return the features supported by this climate entity."""
-        supported_features = ClimateEntityFeature(0)
-        if hasattr(ClimateEntityFeature, "TURN_OFF"):
-            supported_features = (
-                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-            )
+        supported_features = (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         setpointdict = self._get_setpoint()
         if setpointdict is not None and setpointdict.settable:
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -787,8 +785,10 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 for mode in axis.current_mode.values or []
                 if swing_mode == mode.lower()
             ),
-            "stop",
+            None,
         )
+        if new_mode is None:
+            return False
         operation_mode = cc.operation_mode.value
         result = await self._async_patch(
             "fanControl",

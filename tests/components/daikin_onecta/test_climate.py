@@ -830,6 +830,38 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     )
 
 
+async def test_set_swing_mode_rejects_unsupported_value() -> None:
+    """Do not turn an unsupported swing value into a stop command."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device")
+    device.patch = AsyncMock()
+    management_point = SimpleNamespace(
+        operation_mode=SimpleNamespace(value="heating"),
+        fan_control=SimpleNamespace(
+            value=SimpleNamespace(
+                operation_modes={
+                    "heating": SimpleNamespace(
+                        fan_direction=SimpleNamespace(
+                            vertical=SimpleNamespace(
+                                current_mode=SimpleNamespace(
+                                    value="swing", values=["stop", "swing"]
+                                )
+                            )
+                        )
+                    )
+                }
+            )
+        ),
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    entity._climate_control = MagicMock(return_value=management_point)
+
+    assert not await entity._async_set_swing("vertical", "unsupported")
+
+    device.patch.assert_not_awaited()
+
+
 async def test_set_preset_mode_stops_after_failed_disable() -> None:
     """Do not enable a replacement preset when disabling the old one fails."""
     entity = object.__new__(DaikinClimate)
