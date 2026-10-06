@@ -982,12 +982,12 @@ async def test_google_config_get_agent_users(
 
 
 @pytest.mark.parametrize(
-    ("enabled", "logged_in", "subscription_expired", "preserved"),
+    ("enabled", "logged_in", "subscription_expired", "expected_entity_ids"),
     [
-        pytest.param(True, True, False, True, id="enabled"),
-        pytest.param(False, True, False, False, id="disabled"),
-        pytest.param(True, False, False, False, id="logged_out"),
-        pytest.param(True, True, True, True, id="subscription_expired"),
+        pytest.param(True, True, False, ["light.exposed"], id="enabled"),
+        pytest.param(False, True, False, [], id="disabled"),
+        pytest.param(True, False, False, [], id="logged_out"),
+        pytest.param(True, True, True, ["light.exposed"], id="subscription_expired"),
     ],
 )
 async def test_google_config_migrate_entity_names(
@@ -997,7 +997,7 @@ async def test_google_config_migrate_entity_names(
     enabled: bool,
     logged_in: bool,
     subscription_expired: bool,
-    preserved: bool,
+    expected_entity_ids: list[str],
 ) -> None:
     """Test the v4 migration preserves the names of exposed entities as aliases.
 
@@ -1037,6 +1037,7 @@ async def test_google_config_migrate_entity_names(
             Mock(is_logged_in=logged_in, subscription_expired=subscription_expired),
         )
 
-    expected_calls = [call(hass, entity_exposed.entity_id)] if preserved else []
-    assert mock_preserve.mock_calls == expected_calls
+    assert mock_preserve.mock_calls == [
+        call(hass, entity_id) for entity_id in expected_entity_ids
+    ]
     assert cloud_prefs.google_settings_version == GOOGLE_SETTINGS_VERSION

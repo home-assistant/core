@@ -704,21 +704,32 @@ async def test_async_get_users(
 
 
 @pytest.mark.parametrize(
-    ("stored_data", "expected_calls"),
+    ("storage", "expected_calls"),
     [
         pytest.param(
-            {"agent_user_ids": {"agent_1": {"local_webhook_id": "test_webhook"}}},
+            {
+                "google_assistant": {
+                    "version": 1,
+                    "minor_version": 2,
+                    "key": "google_assistant",
+                    "data": {
+                        "agent_user_ids": {
+                            "agent_1": {"local_webhook_id": "test_webhook"}
+                        }
+                    },
+                }
+            },
             [call(ANY, "light.exposed")],
             id="existing_store_migrates",
         ),
-        pytest.param(None, [], id="new_store_has_nothing_to_migrate"),
+        pytest.param({}, [], id="new_store_has_nothing_to_migrate"),
     ],
 )
 async def test_google_config_migrate_entity_names(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     entity_registry: er.EntityRegistry,
-    stored_data: dict[str, Any] | None,
+    storage: dict[str, Any],
     expected_calls: list[Any],
 ) -> None:
     """Test the entity settings migration preserves exposed entity names once."""
@@ -731,13 +742,7 @@ async def test_google_config_migrate_entity_names(
     entity_registry.async_get_or_create(
         "switch", "test", "not_exposed", suggested_object_id="not_exposed"
     )
-    if stored_data is not None:
-        hass_storage["google_assistant"] = {
-            "version": 1,
-            "minor_version": 2,
-            "key": "google_assistant",
-            "data": stored_data,
-        }
+    hass_storage.update(storage)
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
