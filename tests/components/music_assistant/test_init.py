@@ -2,9 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from music_assistant_client.exceptions import InvalidState
 from music_assistant_models.dashboard import DashboardDevice
 from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
+import pytest
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
@@ -352,3 +354,30 @@ async def test_authentication_required_addon_no_reauth(
 
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     assert issue_registry.async_get_issue("homeassistant", issue_id) is None
+
+
+async def test_server_lost_during_setup_retries(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test losing the server during setup leaves no platforms set up."""
+    get_player_configs = music_assistant_client.config.get_player_configs
+    music_assistant_client.config.get_player_configs = AsyncMock(
+        side_effect=InvalidState("Not connected")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    music_assistant_client.disconnect.assert_awaited_once()
+
+    music_assistant_client.config.get_player_configs = get_player_configs
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "has already been setup" not in caplog.text
