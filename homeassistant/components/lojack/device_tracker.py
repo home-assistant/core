@@ -69,10 +69,3 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         if self.coordinator.data.accuracy is not None:
             return int(self.coordinator.data.accuracy)
         return 0
-
-    @property
-    @override
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device (if applicable)."""
-        # LoJack devices report vehicle battery voltage, not percentage
-        return None
