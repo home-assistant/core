@@ -59,19 +59,19 @@ from homeassistant.helpers.automation import (
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
-    _DATA_HISTORY_PRIMING_MANAGER,
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
     CONDITIONS,
+    DATA_HISTORY_PRIMING_MANAGER,
     MAX_HISTORY_PRIMING_LOOKBACK,
     Condition,
     ConditionChecker,
     ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
+    HistoryPrimingManager,
     _async_get_condition_platform,
-    _HistoryPrimingManager,
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
@@ -1034,28 +1034,28 @@ async def test_time_window(hass: HomeAssistant) -> None:
     test2 = await condition.async_from_config(hass, config2)
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not test1.async_check()
         assert test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert test1.async_check()
         assert not test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert test1.async_check()
         assert not test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not test1.async_check()
@@ -1104,7 +1104,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(
@@ -1115,7 +1115,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(
@@ -1126,7 +1126,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(
@@ -1137,7 +1137,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(
@@ -1149,7 +1149,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(
@@ -1163,7 +1163,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(
@@ -1202,28 +1202,28 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(hass, after="time.am", before="time.pm")
         assert condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="time.am", before="time.pm")
         assert not condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(hass, after="time.am", before="time.pm")
         assert not condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(hass, after="time.am", before="time.pm")
@@ -1231,7 +1231,7 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(hass, after="time.pm", before="time.am")
@@ -1241,7 +1241,7 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(hass, after="time.pm", before="time.am")
@@ -1287,14 +1287,14 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(hass, after="sensor.am", before="sensor.pm")
         assert condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
@@ -1302,14 +1302,14 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(hass, after="sensor.am", before="sensor.pm")
@@ -1317,7 +1317,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(hass, after="sensor.pm", before="sensor.am")
@@ -1331,7 +1331,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
@@ -3006,8 +3006,8 @@ async def test_async_get_all_descriptions(
 
     with (
         patch(
-            "homeassistant.helpers.condition._load_conditions_files",
-            side_effect=condition._load_conditions_files,
+            "homeassistant.helpers.condition.descriptions._load_conditions_files",
+            side_effect=condition.descriptions._load_conditions_files,
         ) as proxy_load_conditions_files,
         patch(
             "annotatedyaml.loader.load_yaml",
@@ -3189,7 +3189,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     with (
         patch(
-            "homeassistant.helpers.condition.load_yaml_dict",
+            "homeassistant.helpers.condition.descriptions.load_yaml_dict",
             side_effect=_load_yaml_dict,
         ),
         patch.object(Integration, "has_conditions", return_value=True),
@@ -5895,14 +5895,14 @@ async def test_async_setup_creates_history_priming_manager(
 ) -> None:
     """The priming manager is created during condition setup, not on demand."""
     # condition.async_setup runs as part of the test hass fixture.
-    assert isinstance(hass.data[_DATA_HISTORY_PRIMING_MANAGER], _HistoryPrimingManager)
+    assert isinstance(hass.data[DATA_HISTORY_PRIMING_MANAGER], HistoryPrimingManager)
 
 
 async def test_history_priming_manager_serializes_queries(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Queries run one at a time even when many conditions prime together."""
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     running = 0
@@ -5959,7 +5959,7 @@ async def test_history_priming_manager_does_not_ride_in_flight_flush(
     test fails: the late arrivals would ride the first flush (it would stay at
     one flush total) instead of sharing a second, fresh one.
     """
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     flush_futures: list[asyncio.Future[None]] = []
@@ -6004,7 +6004,7 @@ async def test_history_priming_manager_retries_after_cancelled_flush(
     test fails: the rider would proceed on the cancelled flush and never make a
     second one.
     """
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     flush_futures: list[asyncio.Future[None]] = []
@@ -6048,7 +6048,7 @@ async def test_history_priming_manager_cancelled_lobby_waiter(
     A condition whose timeout fires while it waits for an in-flight flush is
     cancelled. That must leave the manager able to flush for the next priming.
     """
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     flush_futures: list[asyncio.Future[None]] = []
