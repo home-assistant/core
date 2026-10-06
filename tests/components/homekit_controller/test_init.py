@@ -318,3 +318,25 @@ async def test_snapshots(
         devices.append({"device": device, "entities": entities})
 
     assert snapshot == devices
+
+
+@pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
+async def test_ble_device_polls_after_reload(hass: HomeAssistant, controller) -> None:
+    """Test a BLE device starts polling again after its entry is reloaded."""
+    accessory = Accessory.create_with_info(
+        1, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+    await async_setup_component(hass, DOMAIN, {})
+    config_entry, _ = await setup_test_accessories_with_controller(
+        hass, [accessory], controller
+    )
+
+    with patch(
+        "homeassistant.components.homekit_controller.connection.HKDevice._async_start_polling"
+    ) as mock_start_polling:
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    mock_start_polling.assert_called_once()
