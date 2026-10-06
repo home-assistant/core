@@ -326,8 +326,8 @@ async def test_set_dynamic_eq_connectivity_error_marks_audyssey_unavailable(
     This command is Audyssey-scoped, sent directly to the receiver
     rather than through that coordinator - so on a connectivity
     failure, only marking the general coordinator unavailable (what
-    the decorator already does) would leave Audyssey-backed entities
-    still showing available with stale data.
+    the decorator already does) would let the Audyssey coordinator keep
+    skipping its reads while its data is stale.
     """
     entry = await setup_denonavr(hass)
     client.async_dynamic_eq_on.side_effect = AvrNetworkError(
@@ -766,12 +766,12 @@ async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_po
 
 @pytest.mark.usefixtures("client")
 async def test_update_audyssey_restores_availability(hass: HomeAssistant) -> None:
-    """A successful call recovers Audyssey entities from a prior failure.
+    """A successful call clears a prior Audyssey coordinator failure.
 
     The fetch is this zone's own rather than the coordinator's, so the
-    coordinator has to be told it succeeded - otherwise a prior failure
-    would keep every Audyssey-backed entity unavailable even after this
-    has updated the receiver's properties.
+    coordinator has to be told it succeeded - otherwise it would stay
+    failed until its next read even after this has updated the receiver's
+    properties.
     """
     entry = await setup_denonavr(hass)
     mark_unavailable(entry.runtime_data.audyssey_coordinator)

@@ -126,9 +126,9 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
     """Log command errors and refresh the coordinator after success.
 
-    The entity has should_poll=False, so nothing else refreshes it after a
-    successful command. A connectivity failure marks the coordinator
-    unavailable at once rather than leaving stale data looking current.
+    The refresh confirms the command now rather than at the next poll. A
+    connectivity failure marks the coordinator unavailable at once rather
+    than leaving stale data looking current.
     """
 
     @wraps(func)
@@ -529,10 +529,10 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             # Audyssey-scoped, so that coordinator's data is suspect too.
             mark_unavailable(self._audyssey_coordinator)
             raise
-        # Keeps last_update_success and the Audyssey entities in step with
-        # a fetch made outside the coordinator. Not async_set_updated_data():
-        # that cancels the refresh set_dynamic_eq queued, which reads the
-        # other zones while Telnet is down.
+        # Clears a prior failure, which would otherwise force the
+        # coordinator's next read, and refreshes dynamic_eq. Not
+        # async_set_updated_data(): that cancels the refresh set_dynamic_eq
+        # queued, which reads the other zones while Telnet is down.
         self._audyssey_coordinator.last_update_success = True
         self._audyssey_coordinator.async_update_listeners()
 
