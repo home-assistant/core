@@ -104,11 +104,20 @@ CURRENT_STATES: Final = {
     "Charging Reservation": "charging_reservation",
 }
 
+# The charger keeps reporting schedule values after cancellation or completion.
+SCHEDULE_STATES: Final = ("Charging Reservation", "Charging")
+
 
 def _enum_state(value: str | None, states: Mapping[str, str]) -> str | None:
     """Return the stable Home Assistant value for a charger state."""
 
     return states.get(value) if value is not None else None
+
+
+def _schedule_value[T](data: BesenData, value: T) -> T | None:
+    """Return a schedule value while the schedule is pending or running."""
+
+    return value if data.charge.current_state in SCHEDULE_STATES else None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -226,7 +235,7 @@ SENSOR_DESCRIPTIONS: tuple[BesenSensorEntityDescription, ...] = (
         translation_key="scheduled_start",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.charge.scheduled_start,
+        value_fn=lambda data: _schedule_value(data, data.charge.scheduled_start),
     ),
     BesenSensorEntityDescription(
         key="charging_time_limit",
@@ -235,7 +244,7 @@ SENSOR_DESCRIPTIONS: tuple[BesenSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
-        value_fn=lambda data: data.charge.charging_time_limit,
+        value_fn=lambda data: _schedule_value(data, data.charge.charging_time_limit),
     ),
     BesenSensorEntityDescription(
         key="internal_temperature",

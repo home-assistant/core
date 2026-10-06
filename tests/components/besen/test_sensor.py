@@ -1,5 +1,6 @@
 """Tests for the Besen sensor platform."""
 
+from datetime import UTC, datetime
 from unittest.mock import Mock
 
 from besen.const import (
@@ -39,6 +40,8 @@ from tests.common import MockConfigEntry, snapshot_platform
 POWER_ENTITY_ID = "sensor.garage_charging_power"
 CHARGING_STATUS_ENTITY_ID = "sensor.garage_charging_status"
 CHARGING_MESSAGE_ENTITY_ID = "sensor.garage_charging_message"
+SCHEDULED_START_ENTITY_ID = "sensor.garage_scheduled_start"
+CHARGING_TIME_LIMIT_ENTITY_ID = "sensor.garage_charging_time_limit"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -129,6 +132,65 @@ async def test_sensor_unknown_value(
     assert state.state == STATE_UNKNOWN
     assert (state := hass.states.get(CHARGING_MESSAGE_ENTITY_ID)) is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("current_state", "expected_start", "expected_limit"),
+    [
+        pytest.param(
+            "Charging Reservation",
+            "2026-10-01T22:00:00+00:00",
+            "30",
+            id="scheduled",
+        ),
+        pytest.param("Charging", "2026-10-01T22:00:00+00:00", "30", id="charging"),
+        *(
+            pytest.param(value, STATE_UNKNOWN, STATE_UNKNOWN, id=value)
+            for value in (
+                "Fault",
+                "Charging Fault 1",
+                "Charging Fault 2",
+                "Waiting for swipe",
+                "Waiting for button",
+                "Not Connected",
+                "Ready to charge",
+                "Completed",
+                "Completed Full Charge",
+            )
+        ),
+        pytest.param(None, STATE_UNKNOWN, STATE_UNKNOWN, id="missing"),
+        pytest.param("Unexpected", STATE_UNKNOWN, STATE_UNKNOWN, id="unsupported"),
+    ],
+)
+async def test_schedule_sensors_update_with_charging_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    current_state: str | None,
+    expected_start: str,
+    expected_limit: str,
+) -> None:
+    """Test inactive sessions clear schedule values still reported by the charger."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    publish_besen_state(
+        mock_besen_client,
+        charger_state(
+            charge=ChargeStatus(
+                current_state=current_state,
+                scheduled_start=datetime(2026, 10, 1, 22, 0, tzinfo=UTC),
+                charging_time_limit=30,
+            )
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(SCHEDULED_START_ENTITY_ID)) is not None
+    assert state.state == expected_start
+    assert (state := hass.states.get(CHARGING_TIME_LIMIT_ENTITY_ID)) is not None
+    assert state.state == expected_limit
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
