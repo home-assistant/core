@@ -1,6 +1,7 @@
 """Test the Daikin Onecta coordinator."""
 
 from datetime import UTC, datetime, time, timedelta
+from math import ceil
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
@@ -121,7 +122,7 @@ class TestOnectaDataUpdateCoordinator:
         """High scan interval should apply during high-frequency window."""
         mock_now.return_value = datetime(2023, 1, 1, 10, 0, 0)
 
-        expected = timedelta(minutes=10)
+        expected = timedelta(seconds=594)
         result = coordinator._determine_update_interval()
         assert result == expected
 
@@ -131,24 +132,66 @@ class TestOnectaDataUpdateCoordinator:
         mock_now.return_value = datetime(2023, 1, 1, 23, 0, 0)
 
         with patch.object(coordinator, "_in_between", side_effect=[False, False]):
-            expected = timedelta(minutes=30)
+            expected = timedelta(seconds=1782)
             result = coordinator._determine_update_interval()
             assert result == expected
+
+    def test_polling_intervals_use_default_daily_limit(self, coordinator):
+        """Use no more than 55% of the conservative default daily limit."""
+        coordinator.api.rate_limits = {"day": None}
+
+        high_interval, low_interval = coordinator._polling_intervals()
+
+        assert high_interval == timedelta(seconds=594)
+        assert low_interval == timedelta(seconds=1782)
+        assert ceil(15 * 3600 / 594) + ceil(9 * 3600 / 1782) == 110
+
+    def test_polling_intervals_use_reported_daily_limit(self, coordinator):
+        """Adapt the polling budget when Daikin reports a different limit."""
+        coordinator.api.rate_limits = {"day": 400}
+
+        assert coordinator._polling_intervals() == (
+            timedelta(seconds=296),
+            timedelta(seconds=888),
+        )
+
+    def test_polling_intervals_cap_a_1000_daily_limit(self, coordinator):
+        """Keep a 1000-call daily limit at the three-minute polling floor."""
+        coordinator.api.rate_limits = {"day": 1000}
+
+        assert coordinator._polling_intervals() == (
+            timedelta(minutes=3),
+            timedelta(minutes=9),
+        )
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
+    async def test_cloud_response_updates_polling_interval_from_daily_limit(
+        self, mock_now, coordinator
+    ):
+        """Apply Daikin's reported daily limit after a cloud refresh."""
+        mock_now.return_value = datetime(2023, 1, 1, 10, 0)
+        coordinator.api.last_patch_call = None
+        coordinator.api.rate_limits = {"day": 400}
+        coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+
+        await coordinator._async_update_data_from_cloud()
+
+        assert coordinator.update_interval == timedelta(seconds=296)
 
     @pytest.mark.parametrize(
         ("now", "expected"),
         [
             (
                 datetime(2023, 1, 1, 6, 59),
-                timedelta(minutes=10),
+                timedelta(seconds=594),
             ),
             (
                 datetime(2023, 1, 1, 21, 59),
-                timedelta(minutes=10),
+                timedelta(seconds=594),
             ),
             (
                 datetime(2023, 1, 1, 6, 59, 59, 500000),
-                timedelta(minutes=10),
+                timedelta(seconds=594),
             ),
         ],
     )
@@ -188,7 +231,7 @@ class TestOnectaDataUpdateCoordinator:
                 amsterdam,
             ),
         ):
-            assert coordinator._determine_update_interval() == timedelta(minutes=1)
+            assert coordinator._determine_update_interval() == timedelta(minutes=3)
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_preserves_dst_fold_at_window_boundary(
@@ -225,15 +268,15 @@ class TestOnectaDataUpdateCoordinator:
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
     def test_transition_period_randomization(self, mock_random, mock_now, coordinator):
-        """During transition, interval is randomized between floor and low interval."""
+        """During transition, randomize within the calculated poll intervals."""
         mock_now.return_value = datetime(2023, 1, 1, 22, 5, 0)
-        mock_random.randint.return_value = 120  # 2 minutes
+        mock_random.randint.return_value = 594
 
         with patch.object(coordinator, "_in_between", side_effect=[False, True]):
-            expected = timedelta(minutes=10)
+            expected = timedelta(seconds=594)
             result = coordinator._determine_update_interval()
             assert result == expected
-            mock_random.randint.assert_called_once_with(60, 1800)
+            mock_random.randint.assert_called_once_with(594, 1782)
 
     async def test_rate_limit_uses_update_failed_retry_after(
         self, caplog, coordinator, mock_config_entry

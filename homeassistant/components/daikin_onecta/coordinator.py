@@ -2,6 +2,7 @@
 
 from datetime import datetime, time, timedelta, tzinfo
 import logging
+from math import ceil
 import random
 from typing import override
 
@@ -23,6 +24,9 @@ _LOW_SCAN_INTERVAL = timedelta(minutes=30)
 _HIGH_SCAN_START = time(7)
 _LOW_SCAN_START = time(22)
 _POST_WRITE_COOLDOWN = timedelta(seconds=30)
+_DEFAULT_DAILY_CALL_LIMIT = 200
+_POLLING_BUDGET_FRACTION = 0.55
+_MINIMUM_POLL_INTERVAL = timedelta(minutes=3)
 
 type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
 
@@ -141,8 +145,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     def _determine_update_interval(self) -> timedelta:
         """Determine the next polling interval."""
         now = dt_util.now()
-        scan_interval = int(_LOW_SCAN_INTERVAL.total_seconds())
-        high_scan_interval = int(_HIGH_SCAN_INTERVAL.total_seconds())
+        high_interval, low_interval = self._polling_intervals()
+        scan_interval = int(low_interval.total_seconds())
+        high_scan_interval = int(high_interval.total_seconds())
         hs = _HIGH_SCAN_START
         ls = _LOW_SCAN_START
         in_high_frequency_window = self._in_between(now.time(), hs, ls)
@@ -162,7 +167,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 )
             ).time()
             if self._in_between(now.time(), ls, end_time):
-                scan_interval = random.randint(60, int(scan_interval))
+                scan_interval = random.randint(high_scan_interval, scan_interval)
 
         if hs != ls:
             boundary = ls if in_high_frequency_window else hs
@@ -196,7 +201,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         - now_utc
                     ).total_seconds()
                 )
-                scan_interval = min(scan_interval, max(1, boundary_delay))
+                scan_interval = min(
+                    scan_interval, max(high_scan_interval, boundary_delay)
+                )
             else:
                 # Keep a valid polling interval when the next boundary is less
                 # than one high-frequency interval away. In particular, converting
@@ -206,6 +213,49 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 )
 
         return timedelta(seconds=scan_interval)
+
+    def _polling_intervals(self) -> tuple[timedelta, timedelta]:
+        """Return polling intervals within the available daily API-call budget."""
+        rate_limit = self.api.rate_limits.get("day")
+        daily_limit = (
+            rate_limit
+            if isinstance(rate_limit, int) and rate_limit > 0
+            else _DEFAULT_DAILY_CALL_LIMIT
+        )
+        daily_budget = max(2, int(daily_limit * _POLLING_BUDGET_FRACTION))
+
+        high_window_seconds = (
+            datetime.combine(datetime.min, _LOW_SCAN_START)
+            - datetime.combine(datetime.min, _HIGH_SCAN_START)
+        ).total_seconds() % timedelta(days=1).total_seconds()
+        low_window_seconds = timedelta(days=1).total_seconds() - high_window_seconds
+        interval_ratio = _LOW_SCAN_INTERVAL / _HIGH_SCAN_INTERVAL
+        minimum_interval = int(_MINIMUM_POLL_INTERVAL.total_seconds())
+        high_interval = max(
+            minimum_interval,
+            ceil(
+                (high_window_seconds + low_window_seconds / interval_ratio)
+                / daily_budget
+            ),
+        )
+        low_interval = max(minimum_interval, ceil(high_interval * interval_ratio))
+
+        while (
+            ceil(high_window_seconds / high_interval)
+            + ceil(low_window_seconds / low_interval)
+            > daily_budget
+        ):
+            high_interval += 1
+            low_interval = max(minimum_interval, ceil(high_interval * interval_ratio))
+
+        _LOGGER.debug(
+            "Daikin polling uses %s of %s daily calls: %s daytime, %s overnight",
+            daily_budget,
+            daily_limit,
+            timedelta(seconds=high_interval),
+            timedelta(seconds=low_interval),
+        )
+        return timedelta(seconds=high_interval), timedelta(seconds=low_interval)
 
     @staticmethod
     def _in_between(now: time, start: time, end: time) -> bool:
