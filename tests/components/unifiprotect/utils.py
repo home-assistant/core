@@ -48,6 +48,7 @@ from uiprotect.data.public_devices import (
     PublicSensorMotionSettingsRead,
     PublicSensorStats,
     PublicSensorThresholdSettings,
+    PublicSignalState,
     PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
@@ -381,6 +382,7 @@ def make_public_sensor(
     humidity_value: float | None = None,
     temperature_value: float | None = None,
     tampering_detected_at: datetime | None = None,
+    signal_quality: int | None = None,
 ) -> Mock:
     """Build a public-API sensor mirroring a private sensor's migrated fields.
 
@@ -462,7 +464,9 @@ def make_public_sensor(
                 sensor.battery_status.percentage if percentage is None else percentage
             ),
             is_low=sensor.battery_status.is_low if is_low is None else is_low,
-        )
+        ),
+        # The private sensor has no signal quality to mirror.
+        signal_state=PublicSignalState(signal_quality=signal_quality),
     )
     # The fixture reports the same number for all three metrics, so a test that
     # has to tell the value paths apart passes its own.
