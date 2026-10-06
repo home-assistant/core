@@ -1,6 +1,5 @@
 """The sensor tests for the griddy platform."""
 
-from datetime import UTC
 from unittest.mock import patch
 
 from pydexcom.errors import SessionError
@@ -23,10 +22,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     test_username_glucose_reading_time = hass.states.get(
         "sensor.test_username_glucose_reading_time"
     )
-    assert (
-        test_username_glucose_reading_time.state
-        == GLUCOSE_READING.datetime.astimezone(UTC).isoformat(timespec="seconds")
-    )
+    assert test_username_glucose_reading_time.state == "2025-04-19T16:58:33+00:00"
 
 
 async def test_sensors_unknown(hass: HomeAssistant) -> None:
