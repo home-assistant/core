@@ -4,6 +4,7 @@ import logging
 
 import probatio
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -141,7 +142,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_START_WATERING,
-        entity_domain=Platform.SWITCH,
+        entity_domain=SWITCH_DOMAIN,
         func="turn_on",
         schema={probatio.Optional(ATTR_DURATION): cv.positive_int},
     )
@@ -149,7 +150,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_SET_ZONE_MOISTURE,
-        entity_domain=Platform.SWITCH,
+        entity_domain=SWITCH_DOMAIN,
         func="set_moisture_percent",
         schema={probatio.Required(ATTR_PERCENT): cv.positive_int},
     )
