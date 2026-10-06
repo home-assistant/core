@@ -114,12 +114,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     if dev_data.id in devices:
                         device = devices[dev_data.id]
                         device.set_device_data(dev_data)
-                        device.async_register_ha_device(self.hass, self.config_entry)
                     else:
                         device = DaikinOnectaDevice(dev_data)
-                        # Register the gateway device before entity platforms are set
-                        # up so they can link back to this gateway device.
-                        device.async_register_ha_device(self.hass, self.config_entry)
                         devices[dev_data.id] = device
 
                 self.update_interval = self._determine_update_interval()

@@ -50,7 +50,6 @@ def test_device_update_refreshes_cached_name() -> None:
     )
 
     assert device.name == "New name"
-    assert device.device_info()["name"] == "New name"
 
 
 def _patch_polling_schedule(
@@ -371,8 +370,8 @@ class TestOnectaDataUpdateCoordinator:
 
         missing_device.mark_unavailable.assert_called_once_with()
 
-    async def test_updated_cloud_device_refreshes_device_registry(self, coordinator):
-        """Refresh gateway metadata after cloud data replaces its model."""
+    async def test_updated_cloud_device_replaces_cached_model(self, coordinator):
+        """Replace the cached gateway model with cloud data."""
         existing_device = MagicMock()
         cloud_device = MagicMock(id="gateway")
         coordinator.data = {"gateway": existing_device}
@@ -384,6 +383,3 @@ class TestOnectaDataUpdateCoordinator:
         await coordinator._async_update_data_from_cloud()
 
         existing_device.set_device_data.assert_called_once_with(cloud_device)
-        existing_device.async_register_ha_device.assert_called_once_with(
-            coordinator.hass, coordinator.config_entry
-        )

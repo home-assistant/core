@@ -943,6 +943,8 @@ async def test_climate_service_updates_entity_state(
     device.name = "Daikin"
     device.device = SimpleNamespace(
         device_model="Daikin",
+        gateway_embedded_id=None,
+        mac_address=None,
         management_points_by_type=lambda _: (climate_control,),
     )
     device.management_point.return_value = climate_control
@@ -1001,6 +1003,14 @@ async def test_climate_service_updates_entity_state(
         "/operationModes/heating/setpoints/roomTemperature",
         21,
     )
+
+    device.name = "Renamed Daikin"
+    coordinator.async_update_listeners()
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gateway"), config_entry.entry_id
+    )
+    assert gateway is not None
+    assert gateway.name == "Renamed Daikin"
 
 
 async def test_climate_platform_services_and_management_points(
@@ -1070,6 +1080,8 @@ async def test_climate_platform_services_and_management_points(
     device.name = "Daikin"
     device.device = SimpleNamespace(
         device_model="Daikin",
+        gateway_embedded_id=None,
+        mac_address=None,
         management_points_by_type=lambda _: tuple(climate_controls.values()),
     )
     device.management_point.side_effect = climate_controls.get

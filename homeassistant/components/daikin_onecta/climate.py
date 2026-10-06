@@ -32,14 +32,13 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
+from .entity import DaikinOnectaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +136,7 @@ def _create_climate_entities(
     return entities
 
 
-class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntity):
+class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     """Representation of a Daikin HVAC."""
 
     _attr_has_entity_name = True
@@ -153,15 +152,10 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         embedded_id: str,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(coordinator)
-        self._device = device
+        super().__init__(coordinator, device)
         self._embedded_id = embedded_id
         self._setpoint = setpoint
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._setpoint}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.id)},
-            name=self._device.name,
-        )
         self.entity_description = CLIMATE_ENTITY_DESCRIPTIONS.get(
             setpoint,
             ClimateEntityDescription(
@@ -170,7 +164,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                 translation_placeholders={"setpoint": setpoint},
             ),
         )
-        self._device.fill_gateway_device_info(self._attr_device_info)
         self._update_state()
 
     def _update_state(self) -> None:
@@ -215,6 +208,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
+        self._async_update_device_registry()
         self._update_state()
         self.async_write_ha_state()
 
