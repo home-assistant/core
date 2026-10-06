@@ -116,7 +116,6 @@ async def test_select_schedule_thermostats(
             blocking=True,
         )
 
-    # Test setting a schedule
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
