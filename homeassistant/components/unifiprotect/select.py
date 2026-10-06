@@ -53,7 +53,11 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .utils import async_get_light_motion_current_public, async_ufp_instance_command
+from .utils import (
+    async_get_doorbell_settings_public,
+    async_get_light_motion_current_public,
+    async_ufp_instance_command,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -138,8 +142,9 @@ def _get_viewer_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
 
 def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
-    default_message = api.bootstrap.nvr.doorbell_settings.default_message_text
-    messages = api.bootstrap.nvr.doorbell_settings.all_messages
+    settings = async_get_doorbell_settings_public(api)
+    default_message = settings.default_message_text
+    messages = settings.all_messages
     built_messages: list[dict[str, str]] = []
 
     for item in messages:
