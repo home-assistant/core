@@ -18,11 +18,7 @@ from .const import DOMAIN
 def adguard_exception_handler[**_P](
     func: Callable[_P, Coroutine[Any, Any, None]],
 ) -> Callable[_P, Coroutine[Any, Any, None]]:
-    """Decorate AdGuard Home calls to handle exceptions.
-
-    A decorator that wraps the passed in function, and turns AdGuard Home
-    errors into translated Home Assistant errors.
-    """
+    """Decorate AdGuard Home calls to raise translated Home Assistant errors."""
 
     @wraps(func)
     async def handler(*args: _P.args, **kwargs: _P.kwargs) -> None:
