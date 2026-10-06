@@ -117,33 +117,43 @@ async def async_setup_entry(
 def _create_climate_entities(
     device: DaikinOnectaDevice, coordinator: OnectaDataUpdateCoordinator
 ) -> list[DaikinClimate]:
-    """Create climate entities for all independently controllable zones."""
+    """Create climate entities for each Daikin temperature target.
+
+    A ``climateControl`` management point represents one independently
+    controllable Daikin zone. Its ``temperatureControl`` data can advertise
+    more than one target type for that zone, such as room temperature, leaving
+    water temperature, or leaving-water offset. These target types are control
+    strategies, not additional zones, and all share the same management point.
+    """
     entities: list[DaikinClimate] = []
     for management_point in device.device.management_points_by_type("climateControl"):
-        modes: list[str] = []
+        setpoint_types: list[str] = []
         if management_point.temperature_control is not None:
             for (
                 operation_mode
             ) in management_point.temperature_control.value.operation_modes.values():
-                modes.extend(operation_mode.setpoints)
-        # The setpoints may recur across operation modes, but each management
-        # point represents an independently controllable climate zone.
-        modes = list(dict.fromkeys(modes))
+                setpoint_types.extend(operation_mode.setpoints)
+        # A target may recur across heating, cooling, and automatic operation.
+        # It remains one entity because it controls the same management point.
+        setpoint_types = list(dict.fromkeys(setpoint_types))
         entities.extend(
-            DaikinClimate(device, mode, coordinator, management_point.embedded_id)
-            for mode in modes
+            DaikinClimate(
+                device, setpoint_type, coordinator, management_point.embedded_id
+            )
+            for setpoint_type in setpoint_types
         )
     return entities
 
 
 class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
-    """Representation of a Daikin HVAC."""
+    """Representation of one Daikin temperature target in a climate zone."""
 
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    # Setpoint is the setpoint string under
-    # temperatureControl/value/operationsModes/mode/setpoints, for example roomTemperature/leavingWaterOffset
+    # ``setpoint`` is a Daikin target type under
+    # temperatureControl/value/operationModes/<mode>/setpoints, for example
+    # roomTemperature or leavingWaterOffset. It is not a zone identifier.
     def __init__(
         self,
         device: DaikinOnectaDevice,

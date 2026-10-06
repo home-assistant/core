@@ -27,7 +27,10 @@ from homeassistant.components.climate import (
     ClimateEntity,
     HVACMode,
 )
-from homeassistant.components.daikin_onecta.climate import DaikinClimate
+from homeassistant.components.daikin_onecta.climate import (
+    DaikinClimate,
+    _create_climate_entities,
+)
 from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
@@ -62,6 +65,45 @@ def mock_climate_patch(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
     monkeypatch.setattr(DaikinClimate, "_async_patch", _async_patch)
+
+
+def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
+    """Create one entity per temperature target, not per operation mode."""
+    management_point = SimpleNamespace(
+        embedded_id="main_zone",
+        temperature_control=SimpleNamespace(
+            value=SimpleNamespace(
+                operation_modes={
+                    "heating": SimpleNamespace(
+                        setpoints={
+                            "roomTemperature": MagicMock(),
+                            "leavingWaterOffset": MagicMock(),
+                        }
+                    ),
+                    "cooling": SimpleNamespace(
+                        setpoints={
+                            "roomTemperature": MagicMock(),
+                            "leavingWaterTemperature": MagicMock(),
+                        }
+                    ),
+                }
+            )
+        ),
+    )
+    device = MagicMock()
+    device.device.management_points_by_type.return_value = [management_point]
+    coordinator = MagicMock()
+
+    with patch(
+        "homeassistant.components.daikin_onecta.climate.DaikinClimate"
+    ) as climate:
+        _create_climate_entities(device, coordinator)
+
+    assert climate.call_args_list == [
+        ((device, "roomTemperature", coordinator, "main_zone"), {}),
+        ((device, "leavingWaterOffset", coordinator, "main_zone"), {}),
+        ((device, "leavingWaterTemperature", coordinator, "main_zone"), {}),
+    ]
 
 
 @pytest.mark.parametrize(
