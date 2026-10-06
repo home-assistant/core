@@ -62,7 +62,7 @@ async def test_outdoor_siren_sound_level_select_option(
         {ATTR_ENTITY_ID: SOUND_LEVEL_ENTITY_ID, "option": "high"},
         blocking=True,
     )
-    device.siren.async_set_configuration.assert_awaited_once_with(
+    device.siren.set_configuration.assert_called_once_with(
         sound_level=OutdoorSirenService.SoundLevel.HIGH
     )
 
@@ -132,8 +132,9 @@ async def test_motion_sensitivity_select_option(
         {ATTR_ENTITY_ID: MOTION_SENSITIVITY_ENTITY_ID, "option": "high"},
         blocking=True,
     )
-    device.async_set_motion_sensitivity.assert_awaited_once_with(
-        PirSensorConfigurationService.MotionSensitivity.HIGH
+    assert (
+        device.motion_sensitivity
+        == PirSensorConfigurationService.MotionSensitivity.HIGH
     )
 
 
