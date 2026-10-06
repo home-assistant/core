@@ -817,8 +817,8 @@ def test_date() -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        pytest.param("12-24", (12, 24), id="padded"),
-        pytest.param("1-6", (1, 6), id="unpadded"),
+        pytest.param("12-24", (12, 24), id="december"),
+        pytest.param("01-06", (1, 6), id="january"),
         pytest.param("02-29", (2, 29), id="leap_day"),
     ],
 )
@@ -839,6 +839,8 @@ def test_month_day(value: str, expected: tuple[int, int]) -> None:
         pytest.param("02-30", id="day_out_of_range"),
         pytest.param("00-10", id="zero_month"),
         pytest.param("12", id="month_only"),
+        pytest.param("1-6", id="unpadded"),
+        pytest.param("--12-24", id="iso_without_year"),
         pytest.param(None, id="none"),
         pytest.param(1224, id="int"),
     ],

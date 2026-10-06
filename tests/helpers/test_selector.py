@@ -2272,6 +2272,16 @@ def test_color_tempselector_schema(
             ("2022-03-24",),
             (None, "abc", "00:00", "2022-03-24 00:00", "2022-03-32"),
         ),
+        (
+            {"no_year": False},
+            ("2022-03-24",),
+            (None, "03-24"),
+        ),
+        (
+            {"no_year": True},
+            ("12-24", "02-29"),
+            (None, "abc", "2022-03-24", "13-01", "02-30", "1-6"),
+        ),
     ],
 )
 def test_date_selector_schema(schema, valid_selections, invalid_selections) -> None:

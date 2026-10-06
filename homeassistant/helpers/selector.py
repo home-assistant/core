@@ -888,17 +888,19 @@ class CountrySelector(Selector[CountrySelectorConfig]):
         return country
 
 
-class DateSelectorConfig(BaseSelectorConfig):
+class DateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a date selector config."""
+
+    no_year: bool
 
 
 @SELECTORS.register("date")
 class DateSelector(Selector[DateSelectorConfig]):
-    """Selector of a date."""
+    """Selector of a date, or of a month and day when no_year is set."""
 
     selector_type = "date"
 
-    CONFIG_SCHEMA = make_selector_config_schema()
+    CONFIG_SCHEMA = make_selector_config_schema({probatio.Optional("no_year"): bool})
 
     def __init__(self, config: DateSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -906,7 +908,10 @@ class DateSelector(Selector[DateSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        cv.date(data)
+        if self.config.get("no_year"):
+            cv.month_day(data)
+        else:
+            cv.date(data)
         return data
 
 

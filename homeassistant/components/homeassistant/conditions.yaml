@@ -1,0 +1,12 @@
+date:
+  fields:
+    start:
+      example: "12-24"
+      selector:
+        date:
+          no_year: true
+    end:
+      example: "01-06"
+      selector:
+        date:
+          no_year: true

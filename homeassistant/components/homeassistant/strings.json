@@ -1,4 +1,20 @@
 {
+  "conditions": {
+    "date": {
+      "description": "Tests if today's date is within a range of the year, ignoring the year. The range may wrap around New Year, like December 24 to January 6.",
+      "fields": {
+        "end": {
+          "description": "Last day of the range. Leave empty to end on December 31.",
+          "name": "End date"
+        },
+        "start": {
+          "description": "First day of the range. Leave empty to start on January 1.",
+          "name": "Start date"
+        }
+      },
+      "name": "Date"
+    }
+  },
   "config": {
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",

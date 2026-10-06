@@ -37,14 +37,12 @@ from homeassistant.const import (
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_ENABLED,
-    CONF_END,
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_ID,
     CONF_MATCH,
     CONF_OPTIONS,
     CONF_SELECTOR,
-    CONF_START,
     CONF_STATE,
     CONF_TARGET,
     CONF_VALUE_TEMPLATE,
@@ -142,7 +140,6 @@ MAX_HISTORY_PRIMING_LOOKBACK = timedelta(hours=6)
 
 _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "and": None,
-    "date": None,
     "device": "device_automation",
     "not": None,
     "numeric_state": None,
@@ -1835,50 +1832,6 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
         return async_template(hass, value_template, variables)
 
     return template_if
-
-
-def _format_month_day(month_day: tuple[int, int]) -> str:
-    """Format a (month, day) tuple as MM-DD."""
-    return f"{month_day[0]:02d}-{month_day[1]:02d}"
-
-
-def date(
-    start: tuple[int, int] | None = None,
-    end: tuple[int, int] | None = None,
-) -> bool:
-    """Test if the local date is within a yearly recurring range.
-
-    Both ends are inclusive. A range whose start is after its end wraps
-    around the turn of the year, e.g. 12-24 until 01-06.
-    """
-    today = dt_util.now().date()
-    now_month_day = (today.month, today.day)
-
-    if start is None:
-        start = (1, 1)
-    if end is None:
-        end = (12, 31)
-
-    condition_trace_update_result(
-        start=_format_month_day(start),
-        now_date=today.isoformat(),
-        end=_format_month_day(end),
-    )
-    if start <= end:
-        return start <= now_month_day <= end
-    return now_month_day >= start or now_month_day <= end
-
-
-def date_from_config(config: ConfigType) -> ConditionCheckerType:
-    """Wrap action method with date based condition."""
-    start = config.get(CONF_START)
-    end = config.get(CONF_END)
-
-    def date_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Validate date based if-condition."""
-        return date(start, end)
-
-    return date_if
 
 
 def time(

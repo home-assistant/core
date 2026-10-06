@@ -48,7 +48,6 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ELSE,
     CONF_ENABLED,
-    CONF_END,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_ERROR,
@@ -73,7 +72,6 @@ from homeassistant.const import (
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
-    CONF_START,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
@@ -522,7 +520,7 @@ def date(value: Any) -> date_sys:
     return date_val
 
 
-_MONTH_DAY_RE = re.compile(r"^(\d{1,2})-(\d{1,2})$")
+_MONTH_DAY_RE = re.compile(r"^(\d{2})-(\d{2})$")
 
 
 def month_day(value: Any) -> tuple[int, int]:
@@ -1600,18 +1598,6 @@ TEMPLATE_CONDITION_SCHEMA = probatio.Schema(
     }
 )
 
-DATE_CONDITION_SCHEMA = probatio.All(
-    probatio.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            probatio.Required(CONF_CONDITION): "date",
-            probatio.Optional(CONF_START): month_day,
-            probatio.Optional(CONF_END): month_day,
-        }
-    ),
-    probatio.AtLeastOne(CONF_START, CONF_END),
-)
-
 TIME_CONDITION_SCHEMA = probatio.All(
     probatio.Schema(
         {
@@ -1780,7 +1766,6 @@ CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
 
 BUILT_IN_CONDITIONS: ValueSchemas = {
     "and": AND_CONDITION_SCHEMA,
-    "date": DATE_CONDITION_SCHEMA,
     "device": DEVICE_CONDITION_SCHEMA,
     "not": NOT_CONDITION_SCHEMA,
     "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,

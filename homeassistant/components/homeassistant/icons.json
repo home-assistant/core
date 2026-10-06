@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "date": {
+      "condition": "mdi:calendar-range"
+    }
+  },
   "services": {
     "check_config": {
       "service": "mdi:receipt-text-check"
