@@ -43,6 +43,11 @@
     }
   },
   "entity": {
+    "button": {
+      "smoke_test": {
+        "name": "Start self-test"
+      }
+    },
     "event": {
       "smoke_detector_alarm": {
         "state_attributes": {
