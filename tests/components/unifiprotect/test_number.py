@@ -22,11 +22,7 @@ from uiprotect.data import (
     WSAction,
 )
 from uiprotect.data.devices import Hotplug
-from uiprotect.data.public_devices import (
-    PublicChime,
-    PublicRingSettings,
-    SensorFeatureCapability,
-)
+from uiprotect.data.public_devices import PublicRingSettings, SensorFeatureCapability
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.number import (
@@ -44,7 +40,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
@@ -606,6 +602,9 @@ async def test_number_sense_sensitivity_unavailable_on_public_disconnect(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
+RING_VOLUME_ENTITY = "number.test_chime_ring_volume_test_camera"
+
+
 def _setup_chime_with_doorbell(
     chime: Chime, doorbell: Camera, volume: int = 50
 ) -> None:
@@ -634,7 +633,7 @@ async def test_chime_ring_volume_setup(
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
-    entity_id = "number.test_chime_ring_volume_test_camera"
+    entity_id = RING_VOLUME_ENTITY
     entity = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.unique_id == f"{chime.mac}_ring_volume_{doorbell.id}"
@@ -657,7 +656,7 @@ async def test_chime_ring_volume_set_value(
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
-    entity_id = "number.test_chime_ring_volume_test_camera"
+    entity_id = RING_VOLUME_ENTITY
     public = ufp.api.public_bootstrap.get(ModelType.CHIME, chime.id)
 
     await hass.services.async_call(
@@ -670,34 +669,50 @@ async def test_chime_ring_volume_set_value(
     public.set_volume_for_camera.assert_awaited_once_with(doorbell.id, 80)
 
 
+@pytest.mark.parametrize(
+    ("failing_camera_id", "camera_name"),
+    [
+        pytest.param("test-doorbell", "Test Camera", id="this_camera"),
+        pytest.param("test-doorbell-2", "Test Doorbell 2", id="other_camera"),
+        pytest.param("unknown-camera", "unknown-camera", id="unknown_camera"),
+    ],
+)
 async def test_chime_ring_volume_set_value_without_ringtone(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
+    failing_camera_id: str,
+    camera_name: str,
 ) -> None:
-    """A ring setting without a ringtone asks the user to pick one in the app."""
+    """A paired camera without a ringtone is named so the user can pick one."""
+    doorbell.id = "test-doorbell"
     _setup_chime_with_doorbell(chime, doorbell)
     setup_public_chime(ufp)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
+    doorbell2 = doorbell.model_copy()
+    doorbell2.id = "test-doorbell-2"
+    doorbell2.name = "Test Doorbell 2"
+    ufp.api.public_bootstrap.cameras = {
+        camera.id: make_public_camera(camera) for camera in (doorbell, doorbell2)
+    }
     public = ufp.api.public_bootstrap.get(ModelType.CHIME, chime.id)
-    public.set_volume_for_camera.side_effect = ChimeRingtoneNotSetError(doorbell.id)
+    public.set_volume_for_camera.side_effect = ChimeRingtoneNotSetError(
+        failing_camera_id
+    )
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             "number",
             "set_value",
-            {
-                ATTR_ENTITY_ID: "number.test_chime_ring_volume_test_camera",
-                "value": 80.0,
-            },
+            {ATTR_ENTITY_ID: RING_VOLUME_ENTITY, "value": 80.0},
             blocking=True,
         )
 
     assert exc_info.value.translation_key == "chime_ringtone_not_set"
-    assert exc_info.value.translation_placeholders == {"camera_name": "Test Camera"}
+    assert exc_info.value.translation_placeholders == {"camera_name": camera_name}
 
 
 async def test_chime_volume_set_value(
@@ -767,7 +782,7 @@ async def test_chime_ring_volume_multiple_cameras(
 
     await init_entry(hass, ufp, [chime, doorbell, doorbell2], regenerate_ids=False)
 
-    state1 = hass.states.get("number.test_chime_ring_volume_test_camera")
+    state1 = hass.states.get(RING_VOLUME_ENTITY)
     assert state1 is not None
     assert state1.state == "60"
 
@@ -776,61 +791,50 @@ async def test_chime_ring_volume_multiple_cameras(
     assert state2.state == "80"
 
 
-async def test_chime_ring_volume_unavailable_when_unpaired(
+@pytest.mark.parametrize(
+    ("public_kwargs", "expected"),
+    [
+        pytest.param(
+            {
+                "ring_settings": [
+                    PublicRingSettings(
+                        camera_id="test-doorbell",
+                        repeat_times=1,
+                        ringtone_id="test-ringtone-id",
+                        volume=30,
+                    )
+                ]
+            },
+            "30",
+            id="reads_public",
+        ),
+        pytest.param({"ring_settings": []}, STATE_UNAVAILABLE, id="unpaired"),
+        pytest.param(
+            {"state": DeviceState.DISCONNECTED}, STATE_UNAVAILABLE, id="disconnected"
+        ),
+    ],
+)
+async def test_chime_ring_volume_follows_public(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
-) -> None:
-    """Test chime ring volume becomes unavailable when camera is unpaired."""
-    _setup_chime_with_doorbell(chime, doorbell)
-    setup_public_chime(ufp)
-
-    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
-
-    entity_id = "number.test_chime_ring_volume_test_camera"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "50"
-
-    # Simulate removing the camera pairing on the public chime
-    public = make_public_chime(chime, ring_settings=[])
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unavailable"
-
-
-async def test_chime_ring_volume_reads_public(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    chime: Chime,
-    doorbell: Camera,
+    public_kwargs: dict[str, Any],
+    expected: str,
 ) -> None:
     """The ring volume follows the public chime, not the private one."""
+    doorbell.id = "test-doorbell"
     _setup_chime_with_doorbell(chime, doorbell, volume=50)
     setup_public_chime(ufp)
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+    assert hass.states.get(RING_VOLUME_ENTITY).state == "50"
 
-    entity_id = "number.test_chime_ring_volume_test_camera"
-    public = make_public_chime(
-        chime,
-        ring_settings=[
-            PublicRingSettings(
-                camera_id=doorbell.id,
-                repeat_times=1,
-                ringtone_id="test-ringtone-id",
-                volume=30,
-            )
-        ],
-    )
+    public = make_public_chime(chime, **public_kwargs)
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "30"
+    assert hass.states.get(RING_VOLUME_ENTITY).state == expected
 
 
 async def test_chime_ring_volume_unavailable_without_public(
@@ -844,31 +848,9 @@ async def test_chime_ring_volume_unavailable_without_public(
 
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
-    state = hass.states.get("number.test_chime_ring_volume_test_camera")
+    state = hass.states.get(RING_VOLUME_ENTITY)
     assert state
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_chime_ring_volume_unavailable_on_public_disconnect(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    chime: Chime,
-    doorbell: Camera,
-) -> None:
-    """The ring volume availability follows the public chime's state."""
-    _setup_chime_with_doorbell(chime, doorbell)
-    setup_public_chime(ufp)
-
-    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
-
-    entity_id = "number.test_chime_ring_volume_test_camera"
-    assert hass.states.get(entity_id).state == "50"
-
-    public = make_public_chime(chime, state=DeviceState.DISCONNECTED)
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -1008,13 +990,7 @@ async def test_public_only_number_chime_has_no_numbers(
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A public chime yields no numbers, they are built from the private chime."""
-    public = Mock(spec=PublicChime)
-    public.id = chime.id
-    public.mac = chime.mac
-    public.name = chime.name
-    public.model = chime.model
-    public.state = DeviceState.CONNECTED
-    ufp_public_only.api.public_bootstrap.chimes[chime.id] = public
+    ufp_public_only.api.public_bootstrap.chimes[chime.id] = make_public_chime(chime)
 
     await setup_public_only()
 

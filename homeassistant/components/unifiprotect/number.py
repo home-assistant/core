@@ -18,7 +18,7 @@ from uiprotect.data.public_devices import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -380,8 +380,7 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
         super().__init__(data, chime)
         self._attr_unique_id = f"{chime.mac}_ring_volume_{camera.id}"
         self._attr_translation_key = "chime_ring_volume"
-        self._camera_name = camera.display_name
-        self._attr_translation_placeholders = {"camera_name": self._camera_name}
+        self._attr_translation_placeholders = {"camera_name": camera.display_name}
         # BaseProtectEntity sets _attr_name = None when no description is passed,
         # which prevents translation_key from being used. Delete to enable translations.
         del self._attr_name
@@ -417,8 +416,12 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
         try:
             await public.set_volume_for_camera(self._camera_id, int(value))
         except ChimeRingtoneNotSetError as err:
-            raise ServiceValidationError(
+            # The library checks every paired camera, so name the one it reports.
+            camera = self.data.api.public_bootstrap.cameras.get(err.camera_id)
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="chime_ringtone_not_set",
-                translation_placeholders={"camera_name": self._camera_name},
+                translation_placeholders={
+                    "camera_name": camera.display_name if camera else err.camera_id
+                },
             ) from err
