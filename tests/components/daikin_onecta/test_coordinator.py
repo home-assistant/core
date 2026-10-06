@@ -298,6 +298,23 @@ class TestOnectaDataUpdateCoordinator:
 
         missing_device.mark_unavailable.assert_called_once_with()
 
+    async def test_updated_cloud_device_refreshes_device_registry(self, coordinator):
+        """Refresh gateway metadata after cloud data replaces its model."""
+        existing_device = MagicMock()
+        cloud_device = MagicMock(id="gateway")
+        coordinator.data = {"gateway": existing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            return_value=[cloud_device]
+        )
+
+        await coordinator._async_update_data_from_cloud()
+
+        existing_device.set_device_data.assert_called_once_with(cloud_device)
+        existing_device.async_register_ha_device.assert_called_once_with(
+            coordinator.hass, coordinator.config_entry
+        )
+
     def test_update_settings(self, coordinator):
         """Apply changed entity options to the coordinator."""
         options = {"homekit_fan_mode_aliases": True}
