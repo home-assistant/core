@@ -4,9 +4,17 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from boschshcpy import OutdoorSirenService, SHCMotionDetector2, SHCOutdoorSiren
+from boschshcpy import (
+    OutdoorSirenService,
+    SHCMotionDetector2,
+    SHCOutdoorSiren,
+    SHCShutterContact2Plus,
+)
 from boschshcpy.device import SHCDevice
-from boschshcpy.services_impl import PirSensorConfigurationService
+from boschshcpy.services_impl import (
+    PirSensorConfigurationService,
+    VibrationSensorService,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -71,6 +79,21 @@ MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
 )
 
 
+def _vibration_select_option(device: SHCShutterContact2Plus, option: str) -> None:
+    """Write the Door/Window Contact II Plus's vibration sensitivity."""
+    device.sensitivity = VibrationSensorService.SensitivityState[option.upper()]
+
+
+VIBRATION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCShutterContact2Plus](
+    key="vibration_sensitivity",
+    translation_key="vibration_sensitivity",
+    entity_category=EntityCategory.CONFIG,
+    options=["very_high", "high", "medium", "low", "very_low"],
+    current_option_fn=lambda device, options: device.sensitivity.name.lower(),
+    select_option_fn=_vibration_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -111,6 +134,18 @@ async def async_setup_entry(
             description=MOTION_SENSITIVITY_DESCRIPTION,
         )
         for detector in motion_detectors
+    )
+
+    async_add_entities(
+        SHCSelect(
+            hass=hass,
+            device=contact,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=VIBRATION_SENSITIVITY_DESCRIPTION,
+        )
+        for contact in session.device_helper.shutter_contacts2
+        if isinstance(contact, SHCShutterContact2Plus)
     )
 
 
