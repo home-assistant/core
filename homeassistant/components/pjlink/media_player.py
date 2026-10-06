@@ -101,7 +101,7 @@ async def async_setup_entry(
     async_add_entities([PjLinkDevice(entry)], update_before_add=True)
 
 
-def _format_input_source(input_source: tuple[Sources.Mode, int]) -> str:
+def _format_input_source(input_source: tuple[Sources.Mode, str]) -> str:
     """Format input source for display in UI."""
     return f"{input_source[0].name} {input_source[1]}"
 
