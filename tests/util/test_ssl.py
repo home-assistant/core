@@ -1,11 +1,17 @@
 """Test Home Assistant ssl utility functions."""
 
+from datetime import timedelta
 from pathlib import Path
 import ssl
 
 import certifi
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import NameOID
 import pytest
 
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
     SSL_ALPN_HTTP11_HTTP2,
@@ -222,3 +228,30 @@ def test_create_client_context_uses_requests_ca_bundle(
     context = create_client_context()
 
     assert context.cert_store_stats()["x509_ca"] == 1
+
+
+def test_create_client_context_keeps_non_ca_certs_in_requests_ca_bundle(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test explicitly trusted non-CA certificates in REQUESTS_CA_BUNDLE are kept."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
+    now = dt_util.utcnow()
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now)
+        .not_valid_after(now + timedelta(days=1))
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .sign(key, hashes.SHA256())
+    )
+    ca_bundle = tmp_path / "server.pem"
+    ca_bundle.write_bytes(certificate.public_bytes(serialization.Encoding.PEM))
+    monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(ca_bundle))
+
+    context = create_client_context()
+
+    assert context.cert_store_stats() == {"x509": 1, "crl": 0, "x509_ca": 0}

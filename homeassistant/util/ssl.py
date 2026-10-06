@@ -6,9 +6,7 @@ from functools import cache
 from os import environ
 import ssl
 
-import certifi
-
-from .ca_certs import load_ca_data
+from .ca_certs import certifi_ca_data
 
 # Type alias for ALPN protocols tuple (None means no ALPN protocols set)
 type SSLALPNProtocols = tuple[str, ...] | None
@@ -112,11 +110,16 @@ def _create_client_context(
     # Reuse environment variable definition from requests, since it's already a
     # requirement. If the environment variable has no value, fall back to using
     # certs from certifi package.
-    cafile = environ.get("REQUESTS_CA_BUNDLE", certifi.where())
-
-    sslcontext = ssl.create_default_context(
-        purpose=ssl.Purpose.SERVER_AUTH, cadata=load_ca_data(cafile)
-    )
+    if (cafile := environ.get("REQUESTS_CA_BUNDLE")) is not None:
+        # Load custom bundles from the file, as they may contain trusted
+        # non-CA certificates that get_ca_certs() would not export.
+        sslcontext = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
+        )
+    else:
+        sslcontext = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cadata=certifi_ca_data()
+        )
     if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
     # Set ALPN protocols to prevent downstream libraries (e.g., httpx/httpcore)
