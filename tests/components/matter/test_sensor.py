@@ -8,7 +8,12 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -1107,3 +1112,58 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry, f"Expected {entity_id} to be registered"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat_with_suggestions"])
+async def test_thermostat_suggestion_time_sensors(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the current thermostat suggestion effective/expiration sensors."""
+    state = hass.states.get(
+        "sensor.mock_thermostat_with_suggestions_suggestion_effective"
+    )
+    assert state
+    assert state.state == "2055-01-01T00:00:00+00:00"
+
+    state = hass.states.get(
+        "sensor.mock_thermostat_with_suggestions_suggestion_expires"
+    )
+    assert state
+    assert state.state == "2055-01-01T01:00:00+00:00"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat_with_suggestions"])
+@pytest.mark.parametrize(
+    ("reason_bitmap", "expected_state"),
+    [
+        pytest.param(0, STATE_UNKNOWN, id="no_reason"),
+        pytest.param(1, "DemandResponseEvent", id="single_reason"),
+        pytest.param(3, "DemandResponseEvent, OngoingHold", id="multiple_reasons"),
+    ],
+)
+async def test_thermostat_suggestion_not_following_reason_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    reason_bitmap: int,
+    expected_state: str,
+) -> None:
+    """Test the not-following-reason sensor renders every set flag."""
+    set_node_attribute(
+        matter_node,
+        1,
+        513,
+        clusters.Thermostat.Attributes.ThermostatSuggestionNotFollowingReason.attribute_id,
+        reason_bitmap,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "sensor.mock_thermostat_with_suggestions_suggestion_not_followed_reason"
+    )
+    assert state
+    assert state.state == expected_state
