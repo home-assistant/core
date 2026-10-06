@@ -30,6 +30,10 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         """Initialize DataUpdateCoordinator to gather data for specific Hub."""
         self.shades = shades
         self.hub = hub
+
+        # Add tracking of known shades
+        self._previous_shade_ids: set[int] = set()
+        
         # The hub tends to crash if there are multiple radio operations at the same time
         # but it seems to handle all other requests that do not use RF without issue
         # so we have a lock to prevent multiple radio operations at the same time
@@ -62,4 +66,38 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         # only update if shade_entries is valid
         self.data.store_group_data(shade_entries)
 
+        # Clean up stale devices
+        current_shade_ids = set(self.data._shade_group_data_by_id.keys())
+        if self._previous_shade_ids:  # Skip on first run
+            removed_shade_ids = self._previous_shade_ids - current_shade_ids
+            if removed_shade_ids:
+                self._remove_stale_devices(removed_shade_ids)
+        self._previous_shade_ids = current_shade_ids
+
         return self.data
+
+    @callback
+    def _remove_stale_devices(self, removed_shade_ids):
+        """Remove devices for shades that no longer exist."""
+        device_registry = dr.async_get(self.hass)
+        devices = device_registry.devices.get_devices_for_config_entry_id(
+            self.entry.entry_id
+        )
+
+        for device in devices:
+            # Skip the hub device itself
+            if device.via_device_id is None:
+                continue
+
+            # Check if this device is for a removed shade
+            for identifier in device.identifiers:
+                if identifier[0] == DOMAIN and identifier[1] in removed_shade_ids:
+                    _LOGGER.info(
+                        "Removing device for shade %s that no longer exists on hub",
+                        identifier[1]
+                    )
+                    device_registry.async_update_device(
+                        device.id,
+                        remove_config_entry_id=self.entry.entry_id
+                    )
+                    break
