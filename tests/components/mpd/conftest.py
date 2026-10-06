@@ -40,4 +40,5 @@ def mock_mpd_client() -> Generator[MagicMock]:
     ) as mpd_client:
         client = mpd_client.return_value
         client.password = AsyncMock()
+        client.status = AsyncMock(return_value={})
         yield client
