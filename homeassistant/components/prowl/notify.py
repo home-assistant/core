@@ -17,9 +17,8 @@ from homeassistant.components.notify import (
     NotifyEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,7 +26,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENTRY, DOMAIN
-from .issue import async_create_import_error_issue, async_create_yaml_deprecated_issue
+from .issue import async_create_yaml_deprecated_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,18 +42,10 @@ async def async_get_service(
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
     if discovery_info is None:
-        result = await hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
         )
-        if result["type"] is FlowResultType.CREATE_ENTRY or (
-            result["type"] is FlowResultType.ABORT
-            and result["reason"] == "already_configured"
-        ):
-            async_create_yaml_deprecated_issue(hass)
-        else:
-            async_create_import_error_issue(
-                hass, config.get(CONF_NAME), result["reason"]
-            )
+        async_create_yaml_deprecated_issue(hass)
         # YAML keeps providing the legacy service while it is present
         return ProwlNotificationService(
             hass, config[CONF_API_KEY], get_async_client(hass)

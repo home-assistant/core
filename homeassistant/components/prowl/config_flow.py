@@ -8,7 +8,6 @@ import prowlpy
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import callback
 
 from .const import CONF_LEGACY_SERVICE_NAMES, DOMAIN
 from .helpers import async_verify_key
@@ -57,26 +56,6 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
         api_key = import_data[CONF_API_KEY]
         name = import_data.get(CONF_NAME)
 
-        if result := self._async_add_legacy_service_name(api_key, name):
-            return result
-
-        if errors := await self._validate_api_key(api_key):
-            return self.async_abort(reason=errors["base"])
-
-        # Another import for this API key may have created the entry meanwhile
-        if result := self._async_add_legacy_service_name(api_key, name):
-            return result
-
-        return self.async_create_entry(
-            title=name or "Prowl",
-            data={CONF_API_KEY: api_key, CONF_LEGACY_SERVICE_NAMES: [name]},
-        )
-
-    @callback
-    def _async_add_legacy_service_name(
-        self, api_key: str, name: str | None
-    ) -> ConfigFlowResult | None:
-        """Add a YAML legacy service name to the entry with the same API key."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_API_KEY] != api_key:
                 continue
@@ -88,7 +67,12 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_updates={CONF_LEGACY_SERVICE_NAMES: [*names, name]},
                 reason="already_configured",
             )
-        return None
+
+        # Not validated: API key or connection problems surface on entry setup
+        return self.async_create_entry(
+            title=name or "Prowl",
+            data={CONF_API_KEY: api_key, CONF_LEGACY_SERVICE_NAMES: [name]},
+        )
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the provided API key."""
