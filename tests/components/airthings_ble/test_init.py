@@ -61,11 +61,7 @@ async def test_migration_existing_entries(
     service_info: BluetoothServiceInfoBleak,
     device_info: AirthingsDevice,
 ) -> None:
-    """Test migration of an existing config entry without a device model.
-
-    The device is read once to learn its model, which is stored in the entry.
-    Polling then uses the scan interval for that model.
-    """
+    """Test migration of an existing config entry without a device model."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=service_info.address,
@@ -173,11 +169,7 @@ async def test_setup_retries_on_failed_read(
     side_effect: Exception | list[Exception | AirthingsDevice] | None,
     message: str,
 ) -> None:
-    """Test setup is retried when reading the device fails or is incomplete.
-
-    In every case Home Assistant should retry the setup later, create no
-    entities and log why. A failed migration read stores no device model.
-    """
+    """Test setup is retried when reading the device fails or is incomplete."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=WAVE_SERVICE_INFO.address,
@@ -223,11 +215,7 @@ async def test_sensors_unavailable_while_update_fails(
     side_effect: Exception | None,
     message: str,
 ) -> None:
-    """Test sensors become unavailable when an update fails and recover after.
-
-    The entry stays loaded through a failed poll; only the entities go
-    unavailable until the next successful poll.
-    """
+    """Test sensors become unavailable when an update fails and recover after."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=WAVE_SERVICE_INFO.address,
