@@ -206,7 +206,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#generate-an-api-key",
+                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#prerequisites",
             },
         )
 
