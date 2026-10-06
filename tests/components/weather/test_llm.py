@@ -173,6 +173,29 @@ async def test_get_forecast_tool_prefers_granular_cadence_for_partial_day(
     assert response.data["forecast"][0]["condition"] == "sunny"
 
 
+async def test_get_forecast_tool_unavailable_entity(hass: HomeAssistant) -> None:
+    """Test the tool reports an error instead of raising for an unavailable entity."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    # An unavailable entity can still be matched by name (matching doesn't
+    # filter by availability), but entity services silently exclude
+    # unavailable entities from their response. Without a guard, indexing the
+    # response by entity_id raises KeyError instead of a graceful ToolResult.
+    entity._attr_available = False
+    entity.async_write_ha_state()
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity is unavailable"}
+
+
 async def test_get_forecast_tool_not_offered_without_forecast_support(
     hass: HomeAssistant,
 ) -> None:

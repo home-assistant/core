@@ -163,9 +163,16 @@ class GetForecastTool(Tool):
             blocking=True,
             return_response=True,
         )
-        forecast = cast(dict[str, dict[str, list[Forecast]]], response)[
+        # Entity services omit unavailable entities from the response entirely,
+        # so the entity_id may be missing even though it matched above.
+        entity_response = cast(dict[str, dict[str, list[Forecast]]], response).get(
             weather_state.entity_id
-        ]["forecast"]
+        )
+        if entity_response is None:
+            return ToolResult(
+                data={"error": "Weather entity is unavailable"}, error=True
+            )
+        forecast = entity_response["forecast"]
         matching_forecast = [
             entry
             for entry in forecast
