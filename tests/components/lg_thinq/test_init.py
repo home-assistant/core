@@ -8,6 +8,7 @@ from thinqconnect import ThinQAPIException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
 
@@ -135,3 +136,21 @@ async def test_retry_after_mqtt_failure(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "has already been setup" not in caplog.text
+
+
+async def test_mqtt_disconnected_when_setup_fails_after_connecting(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_thinq_mqtt_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test MQTT is disconnected when setup fails after it connected."""
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=ConfigEntryNotReady,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_thinq_mqtt_client.async_disconnect.assert_awaited_once()

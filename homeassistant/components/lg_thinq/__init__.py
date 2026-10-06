@@ -161,6 +161,9 @@ async def async_setup_mqtt(
         _LOGGER.error("Failed to set up mqtt connection")
         return
 
+    # Also runs when setup fails after this point, unlike async_unload_entry
+    entry.async_on_unload(mqtt_client.async_disconnect)
+
     # Ready to subscribe.
     await mqtt_client.async_start_subscribes()
 
@@ -181,7 +184,4 @@ async def async_setup_mqtt(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Unload the entry."""
-    if entry.runtime_data.mqtt_client:
-        await entry.runtime_data.mqtt_client.async_disconnect()
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
