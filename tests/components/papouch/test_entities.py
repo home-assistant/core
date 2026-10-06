@@ -33,7 +33,7 @@ async def test_sensor_entity(
     assert state.state == "22.5"
     assert state.attributes["unit_of_measurement"] == "°C"
 
-    mock_device.parse_fresh_data = AsyncMock(
+    mock_device.get_fresh_data = AsyncMock(
         return_value={
             "temperature": {"1": 24.0},
             "input": {"1": 1},

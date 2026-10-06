@@ -79,8 +79,8 @@ async def test_coordinator_auth_error(
     hass: HomeAssistant, mock_config_entry, mock_papouch_client
 ) -> None:
     """Test coordinator handles auth errors during update."""
-    mock_client, _, _ = mock_papouch_client
-    mock_client.fetch_data.side_effect = DeviceAuthError()
+    _, _, mock_device = mock_papouch_client
+    mock_device.get_fresh_data.side_effect = DeviceAuthError()
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -93,8 +93,8 @@ async def test_coordinator_connection_error(
     hass: HomeAssistant, mock_config_entry, mock_papouch_client
 ) -> None:
     """Test coordinator handles connection errors during update."""
-    mock_client, _, _ = mock_papouch_client
-    mock_client.fetch_data.side_effect = DeviceConnectionError()
+    _, _, mock_device = mock_papouch_client
+    mock_device.get_fresh_data.side_effect = DeviceConnectionError()
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

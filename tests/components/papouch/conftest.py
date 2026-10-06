@@ -24,10 +24,10 @@ def mock_config_entry():
 def mock_papouch_device():
     """Mock a Papouch device instance with all supported entities."""
     device = MagicMock()
-    device.mac_address = "00:11:22:33:44:55"
-    device.name = "Test Papouch"
-    device.manufacturer = "Papouch s.r.o."
-    device.location = "Test Lab"
+    device.conf.identifier = "00:11:22:33:44:55"
+    device.conf.name = "Test Papouch"
+    device.conf.manufacturer = "Papouch s.r.o."
+    device.conf.location = "Test Lab"
 
     device.get_supported_sensors.return_value = [
         {
@@ -77,7 +77,7 @@ def mock_papouch_device():
         },
     ]
 
-    device.parse_fresh_data = AsyncMock(
+    device.get_fresh_data = AsyncMock(
         return_value={
             "temperature": {"1": 22.5},
             "battery": {"3": 99},
@@ -104,7 +104,7 @@ def mock_papouch_client(mock_papouch_device):
     with (
         patch("homeassistant.components.papouch.PapouchHTTPClient") as mock_client_cls,
         patch(
-            "homeassistant.components.papouch.create_device",
+            "homeassistant.components.papouch.create_network_device",
             return_value=mock_papouch_device,
         ) as mock_create,
     ):
