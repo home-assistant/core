@@ -90,7 +90,6 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def __init__(
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
@@ -212,6 +211,7 @@ async def async_setup_platform(
 class YamahaDeviceZone(MediaPlayerEntity):
     """Representation of a Yamaha device zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _reverse_mapping: dict[str, str]
 
     def __init__(
