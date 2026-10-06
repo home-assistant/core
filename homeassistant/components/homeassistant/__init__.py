@@ -21,10 +21,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     RESTART_EXIT_CODE,
     SERVICE_RELOAD,
-    SERVICE_SAVE_PERSISTENT_STATES,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.core import (
     Event,
@@ -65,8 +61,9 @@ from .const import (
     DATA_EXPOSED_ENTITIES,
     DATA_STOP_HANDLER,
     DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_HOMEASSISTANT_RESTART,  # noqa: F401
+    SERVICE_HOMEASSISTANT_STOP,  # noqa: F401
+    HomeAssistantService,
 )
 from .exposed_entities import ExposedEntities, async_should_expose  # noqa: F401
 
@@ -74,13 +71,14 @@ ATTR_ENTRY_ID = "entry_id"
 ATTR_SAFE_MODE = "safe_mode"
 
 _LOGGER = logging.getLogger(__name__)
-SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
-SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
-SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
-SERVICE_CHECK_CONFIG = "check_config"
-SERVICE_UPDATE_ENTITY = "update_entity"
-SERVICE_SET_LOCATION = "set_location"
-SERVICE_RELOAD_ALL = "reload_all"
+# To be deprecated at a later stage, replaced by HomeAssistantService
+SERVICE_RELOAD_CORE_CONFIG = HomeAssistantService.RELOAD_CORE_CONFIG
+SERVICE_RELOAD_CONFIG_ENTRY = HomeAssistantService.RELOAD_CONFIG_ENTRY
+SERVICE_RELOAD_CUSTOM_TEMPLATES = HomeAssistantService.RELOAD_CUSTOM_TEMPLATES
+SERVICE_CHECK_CONFIG = HomeAssistantService.CHECK_CONFIG
+SERVICE_UPDATE_ENTITY = HomeAssistantService.UPDATE_ENTITY
+SERVICE_SET_LOCATION = HomeAssistantService.SET_LOCATION
+SERVICE_RELOAD_ALL = HomeAssistantService.RELOAD_ALL
 SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
     probatio.Schema(
@@ -95,7 +93,7 @@ SCHEMA_RESTART = probatio.Schema(
     {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
 )
 
-SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+SHUTDOWN_SERVICES = (HomeAssistantService.STOP, HomeAssistantService.RESTART)
 
 DEPRECATION_URL = (
     "https://www.home-assistant.io/blog/2025/05/22/"
@@ -179,7 +177,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             await asyncio.gather(*tasks)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SAVE_PERSISTENT_STATES, async_save_persistent_states
+        DOMAIN,
+        HomeAssistantService.SAVE_PERSISTENT_STATES,
+        async_save_persistent_states,
     )
 
     service_schema = probatio.Schema(
@@ -187,13 +187,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
+        DOMAIN,
+        HomeAssistantService.TURN_OFF,
+        async_handle_turn_service,
+        schema=service_schema,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_turn_service, schema=service_schema
+        DOMAIN,
+        HomeAssistantService.TURN_ON,
+        async_handle_turn_service,
+        schema=service_schema,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
+        DOMAIN,
+        HomeAssistantService.TOGGLE,
+        async_handle_turn_service,
+        schema=service_schema,
     )
 
     async def async_handle_core_service(call: ServiceCall) -> None:
@@ -212,7 +221,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 "while a database upgrade is in progress."
             )
 
-        if call.service == SERVICE_HOMEASSISTANT_STOP:
+        if call.service == HomeAssistantService.STOP:
             stop_handler = hass.data[DATA_STOP_HANDLER]
             await stop_handler(hass, False)
             return
@@ -236,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 f"because the configuration is not valid: {errors}"
             )
 
-        if call.service == SERVICE_HOMEASSISTANT_RESTART:
+        if call.service == HomeAssistantService.RESTART:
             if call.data[ATTR_SAFE_MODE]:
                 await conf_util.async_enable_safe_mode(hass)
             stop_handler = hass.data[DATA_STOP_HANDLER]
@@ -271,21 +280,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             await asyncio.gather(*tasks)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
+        hass, DOMAIN, HomeAssistantService.STOP, async_handle_core_service
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_HOMEASSISTANT_RESTART,
+        HomeAssistantService.RESTART,
         async_handle_core_service,
         SCHEMA_RESTART,
     )
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
+        hass, DOMAIN, HomeAssistantService.CHECK_CONFIG, async_handle_core_service
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UPDATE_ENTITY,
+        HomeAssistantService.UPDATE_ENTITY,
         async_handle_update_service,
         schema=SCHEMA_UPDATE_ENTITY,
     )
@@ -305,7 +314,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
+        hass,
+        DOMAIN,
+        HomeAssistantService.RELOAD_CORE_CONFIG,
+        async_handle_reload_config,
     )
 
     async def async_set_location(call: ServiceCall) -> None:
@@ -323,7 +335,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_LOCATION,
+        HomeAssistantService.SET_LOCATION,
         async_set_location,
         probatio.Schema(
             {
@@ -339,7 +351,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         await async_load_custom_templates(hass)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES, async_handle_reload_templates
+        hass,
+        DOMAIN,
+        HomeAssistantService.RELOAD_CUSTOM_TEMPLATES,
+        async_handle_reload_templates,
     )
 
     async def async_handle_reload_config_entry(call: ServiceCall) -> None:
@@ -366,7 +381,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD_CONFIG_ENTRY,
+        HomeAssistantService.RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
         schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
@@ -408,16 +423,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 domain, service, context=call.context, blocking=True
             )
             for domain, service in (
-                (DOMAIN, SERVICE_RELOAD_CORE_CONFIG),
+                (DOMAIN, HomeAssistantService.RELOAD_CORE_CONFIG),
                 ("frontend", "reload_themes"),
-                (DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES),
+                (DOMAIN, HomeAssistantService.RELOAD_CUSTOM_TEMPLATES),
             )
         ]
 
         await asyncio.gather(*tasks)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
+        hass, DOMAIN, HomeAssistantService.RELOAD_ALL, async_handle_reload_all
     )
 
     exposed_entities = ExposedEntities(hass)
