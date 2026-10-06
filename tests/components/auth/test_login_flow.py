@@ -245,8 +245,14 @@ async def test_invalid_redirect_uri(
     assert data["message"] == "Invalid redirect URI"
 
 
+@pytest.mark.parametrize(
+    "authorization_data",
+    [{}, {"response_type": "code"}],
+)
 async def test_login_exist_user(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    authorization_data: dict[str, str],
 ) -> None:
     """Test logging in with exist user."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
@@ -261,6 +267,7 @@ async def test_login_exist_user(
             "client_id": CLIENT_ID,
             "handler": ["insecure_example", None],
             "redirect_uri": CLIENT_REDIRECT_URI,
+            **authorization_data,
         },
     )
     assert resp.status == HTTPStatus.OK
@@ -538,6 +545,12 @@ async def test_well_known_protected_resource_no_url(
             },
             "Message format incorrect",
         ),
+        (
+            {
+                "response_type": "token",
+            },
+            "Response type not supported",
+        ),
     ],
     ids=[
         "method_without_challenge",
@@ -545,6 +558,7 @@ async def test_well_known_protected_resource_no_url(
         "unsupported_plain_method",
         "challenge_too_short",
         "challenge_padded",
+        "unsupported_response_type",
     ],
 )
 async def test_login_flow_pkce_validation(

@@ -63,10 +63,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> boo
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator = entry.runtime_data
 
-        # Ensure disconnected and cleanup stop sub
+        # Ensure disconnected and cleanup stop sub. Cleared once called, as the
+        # WebSocket listener also cleans it up when the disconnect ends it.
         await coordinator.wled.disconnect()
         if coordinator.unsub:
             coordinator.unsub()
+            coordinator.unsub = None
 
     return unload_ok
 
