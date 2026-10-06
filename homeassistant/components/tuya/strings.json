@@ -275,6 +275,9 @@
       "siren_duration": {
         "name": "Siren duration"
       },
+      "speed": {
+        "name": "[%key:component::sensor::entity_component::speed::name%]"
+      },
       "target_dis_closest": {
         "name": "Closest target distance"
       },
@@ -543,6 +546,9 @@
           "interim": "Interim",
           "smart": "Smart"
         }
+      },
+      "pump_mode": {
+        "name": "Mode"
       },
       "quick_heat_temperature": {
         "name": "Quick heat temperature",

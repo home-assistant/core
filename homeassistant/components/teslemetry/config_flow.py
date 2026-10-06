@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any, cast, override
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
+from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
+from habluetooth.const import STRONG_OWNER_STALE_RSSI
 import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -42,6 +44,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.bluetooth import (
     async_discovered_service_info,
+    async_last_service_info,
     async_request_active_scan,
     async_scanner_count,
 )
@@ -69,6 +72,7 @@ from .const import (
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_KEY_FILE,
 )
 from .helpers import (
     PowerwallKeyRejectedError,
@@ -252,6 +256,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if vehicle.vin not in already_added
         }
         if not choices:
+            if entry.runtime_data.vehicles:
+                return self.async_abort(reason="all_vehicles_added")
             return self.async_abort(reason="no_vehicles")
 
         if user_input is not None:
@@ -273,13 +279,15 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._vin is not None
         errors: dict[str, str] = {}
+        placeholders = {"vin": self._vin}
 
         if user_input is not None:
             try:
                 parent = await async_get_ble_parent(self.hass)
             except _BLE_KEY_ERRORS as err:
                 LOGGER.debug("Bluetooth key load failed: %s", err)
-                errors["base"] = "cannot_connect"
+                errors["base"] = "key_load_failed"
+                placeholders["key_file"] = self.hass.config.path(VEHICLE_KEY_FILE)
             else:
                 # The advertised BLE name is a hash of the VIN; match on its prefix.
                 expected = parent.get_name(self._vin)[:17]
@@ -304,14 +312,34 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                     except (BleakError, TeslaFleetError, TimeoutError) as err:
                         LOGGER.error("Failed to connect over Bluetooth: %s", err)
                         await self._async_disconnect()
-                        errors["base"] = "cannot_connect"
+                        cause = err.__cause__
+                        last_info = async_last_service_info(
+                            self.hass, device.address, connectable=True
+                        )
+                        if not isinstance(
+                            cause, BleakNotFoundError | BleakOutOfConnectionSlotsError
+                        ):
+                            errors["base"] = "cannot_connect"
+                        # bleak-retry-connector also raises BleakNotFoundError from a final connect timeout.
+                        elif last_info is None or (
+                            isinstance(cause, BleakNotFoundError)
+                            and not isinstance(cause.__cause__, TimeoutError)
+                        ):
+                            errors["base"] = "device_not_found"
+                        elif isinstance(cause, BleakOutOfConnectionSlotsError):
+                            errors["base"] = "no_connection_slot"
+                        # habluetooth treats this signal as a close device, so the timeout is not about range.
+                        elif last_info.rssi >= STRONG_OWNER_STALE_RSSI:
+                            errors["base"] = "vehicle_busy"
+                        else:
+                            errors["base"] = "weak_signal"
                     else:
                         return await self.async_step_pair()
 
         return self.async_show_form(
             step_id="scan",
             errors=errors,
-            description_placeholders={"vin": self._vin},
+            description_placeholders=placeholders,
         )
 
     async def async_step_pair(
