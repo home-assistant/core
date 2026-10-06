@@ -214,8 +214,7 @@ class SmokeDetectionSystemEvent(SHCEntity, EventEntity):
     _attr_translation_key = "smoke_detection_system_alarm"
     _attr_event_types = ["alarm_off", "alarm_on", "alarm_muted"]
     _device: SHCSmokeDetectionSystem
-    # Dedup guard: SurveillanceAlarm replays the current state on unrelated
-    # long-poll updates; seeded in async_added_to_hass.
+    # The SHC re-sends the unchanged alarm state on other device updates.
     _last_fired_state: str
 
     @override
