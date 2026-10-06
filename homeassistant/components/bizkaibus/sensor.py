@@ -171,30 +171,30 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
 
     @property
     @override
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""
         index = self._find_index_by_bus_id()
 
-        if index < 0 or index >= len(self.coordinator.data):
+        if index is None or index < 0 or index >= len(self.coordinator.data):
             self._attr_extra_state_attributes = {}
-            raise ValueError("Index out of range for coordinator data")
+            return None
 
         self._attr_extra_state_attributes = {
             "next_arrival": self.coordinator.data[index].next_arrival or None
         }
         return self.entity_description.value_fn(self.coordinator.data[index])
 
-    def _find_index_by_bus_id(self) -> int:
+    def _find_index_by_bus_id(self) -> int | None:
         """Return the index of the element with the given bus_id."""
         if not self.coordinator.config_entry:
-            raise ValueError("Config entry data is empty")
+            return None
 
         if not self.coordinator.data:
-            raise ValueError("Coordinator data is empty")
+            return None
         for idx, item in enumerate(self.coordinator.data):
             if getattr(item, "bus_id", None) == self.line_id:
                 return idx
-        raise ValueError("Bus ID not found")
+        return None
 
     @property
     @override
