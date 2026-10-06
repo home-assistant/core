@@ -22,6 +22,7 @@ import pytest
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import (
+    ATTR_CHANGE,
     ATTR_CLOUD_SATURATION_MAX,
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_CYCLES,
@@ -433,6 +434,34 @@ async def test_effect_colorloop_clamps_saturation_above_zero(
     effect = mock_effect_conductor.start.await_args.args[0]
     assert effect.saturation_min == 0.01
     assert effect.saturation_max == 0.01
+
+
+@pytest.mark.parametrize(
+    ("change", "expected"),
+    [
+        pytest.param(0, 1.0, id="zero"),
+        pytest.param(180, 179.0, id="half-circle"),
+        pytest.param(360, 179.0, id="full-circle"),
+    ],
+)
+async def test_effect_colorloop_change_is_clamped_to_what_the_library_accepts(
+    hass: HomeAssistant,
+    mock_effect_conductor: MagicMock,
+    change: int,
+    expected: float,
+) -> None:
+    """Test a change of 0 or of 180 degrees and more is clamped, not refused."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CHANGE: change},
+        blocking=True,
+    )
+
+    effect = mock_effect_conductor.start.await_args.args[0]
+    assert effect.change == expected
 
 
 async def test_effect_colorloop_accepts_absolute_brightness(
