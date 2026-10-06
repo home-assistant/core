@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from music_assistant_client.exceptions import ConnectionClosed, InvalidState
+from music_assistant_client.exceptions import ConnectionFailed, InvalidState
 from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.dashboard import DashboardDevice
 from music_assistant_models.enums import DashboardType, EventType
@@ -396,7 +396,7 @@ async def test_server_lost_late_in_setup_retries(
     async def listen(init_ready: asyncio.Event) -> None:
         init_ready.set()
         await connection_lost.wait()
-        raise ConnectionClosed("Connection closed")
+        raise ConnectionFailed
 
     get_player_configs = music_assistant_client.config.get_player_configs
 
