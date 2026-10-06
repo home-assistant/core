@@ -1178,14 +1178,19 @@ async def handle_subscribe_condition(
     def unsubscribe() -> None:
         """Unsubscribe from condition updates."""
         condition.async_unload()
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
-    unsub = async_track_time_interval(
-        hass,
-        evaluate_condition,
-        timedelta(seconds=1),
-        name="websocket_api_condition_subscription",
-    )
+    unsubs = [await condition.async_track_changes(partial(evaluate_condition, None))]
+    if condition.needs_polling:
+        unsubs.append(
+            async_track_time_interval(
+                hass,
+                evaluate_condition,
+                timedelta(seconds=1),
+                name="websocket_api_condition_subscription",
+            )
+        )
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])
     evaluate_condition(None)
