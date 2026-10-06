@@ -230,10 +230,7 @@ class SpeechToTextEntity(RestoreEntity):
     async def internal_async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
-        """Process an audio stream to STT service.
-
-        Only streaming content is allowed!
-        """
+        """Process an audio stream to STT service."""
         self.__last_processed = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
         return await self.async_process_audio_stream(metadata=metadata, stream=stream)
@@ -242,10 +239,7 @@ class SpeechToTextEntity(RestoreEntity):
     async def internal_async_process_audio_stream_partial(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
-        """Process an audio stream to STT service, yielding partial transcripts.
-
-        Only streaming content is allowed!
-        """
+        """Process an audio stream to STT service, yielding partial transcripts."""
         self.__last_processed = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
         # aclosing so a consumer that stops early still closes the entity's generator.
@@ -259,10 +253,7 @@ class SpeechToTextEntity(RestoreEntity):
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
-        """Process an audio stream to STT service.
-
-        Only streaming content is allowed!
-        """
+        """Process an audio stream to STT service."""
 
     async def async_process_audio_stream_partial(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
