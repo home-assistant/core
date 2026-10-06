@@ -9,11 +9,15 @@ from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
-from aiohomekit.testing import FakePairing
+from aiohomekit.testing import FakeController, FakePairing
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homekit_controller.const import DOMAIN, ENTITY_MAP
+from homeassistant.components.homekit_controller.const import (
+    DEBOUNCE_COOLDOWN,
+    DOMAIN,
+    ENTITY_MAP,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -321,22 +325,33 @@ async def test_snapshots(
 
 
 @pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
-async def test_ble_device_polls_after_reload(hass: HomeAssistant, controller) -> None:
-    """Test a BLE device starts polling again after its entry is reloaded."""
+async def test_ble_device_polls_after_reload(
+    hass: HomeAssistant, controller: FakeController
+) -> None:
+    """Test a BLE device is polled again after its entry is reloaded."""
     accessory = Accessory.create_with_info(
         1, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     create_alive_service(accessory)
     await async_setup_component(hass, DOMAIN, {})
-    config_entry, _ = await setup_test_accessories_with_controller(
+    config_entry, pairing = await setup_test_accessories_with_controller(
         hass, [accessory], controller
     )
 
-    with patch(
-        "homeassistant.components.homekit_controller.connection.HKDevice._async_start_polling"
-    ) as mock_start_polling:
-        assert await hass.config_entries.async_reload(config_entry.entry_id)
-        await hass.async_block_till_done()
-
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    mock_start_polling.assert_called_once()
+
+    with patch.object(
+        pairing, "get_characteristics", wraps=pairing.get_characteristics
+    ) as mock_get_characteristics:
+        # The poll requests a debounced update, which runs after its cooldown
+        async_fire_time_changed(hass, utcnow() + pairing.poll_interval)
+        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            utcnow() + pairing.poll_interval + timedelta(seconds=DEBOUNCE_COOLDOWN),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_characteristics.assert_called()
