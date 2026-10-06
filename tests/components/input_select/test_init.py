@@ -28,7 +28,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -105,7 +105,10 @@ async def test_select_option(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option non existing option is not valid for input_select.test_1",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -309,7 +312,10 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option first option is not valid for input_select.test_1",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -353,7 +359,10 @@ async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
         "last option",
     ]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Options for input_select.test_1 contain duplicates: option1, option1",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_OPTIONS,
