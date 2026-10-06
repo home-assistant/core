@@ -102,9 +102,10 @@ def build_schedule(
 
     Times are taken from the changes, then from the current schedule if it
     uses them, then from defaults; a malformed stored time or date is replaced
-    the same way a missing one is. Dates and days are only kept when the mode
-    doesn't change: choosing a mode starts it today, on every day of the week,
-    with a time window.
+    the same way a missing one is. Dates are only kept when the mode doesn't
+    change, and days and all day only when both modes have days: otherwise
+    choosing a mode starts it today, on every day of the week, with a time
+    window.
     """
     current_mode = schedule_mode(current)
     new_mode = mode or current_mode
@@ -135,8 +136,9 @@ def build_schedule(
 
     all_day_on = False
     if new_mode in MODES_WITH_DAYS:
-        if same_mode:
-            # A value change leaves the days alone, even if none are chosen.
+        if current_mode in MODES_WITH_DAYS:
+            # A value change, or a change between the modes with days, leaves
+            # the days alone, even if none are chosen.
             selected = schedule_days(current) if days is None else days
             schedule["repeat_on_days"] = [day for day in WEEKDAYS if day in selected]
             all_day_on = (

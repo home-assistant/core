@@ -223,7 +223,7 @@ CUSTOM = {
                 "time_range_end": "18:00",
             },
         ),
-        # Changing between the modes with days starts over: every day, timed.
+        # Changing between the modes with days keeps the days and all day.
         (
             WEEKLY_ALL_DAY,
             {"mode": FirewallPolicyScheduleMode.CUSTOM},
@@ -231,7 +231,28 @@ CUSTOM = {
                 "mode": "CUSTOM",
                 "date_start": "2026-01-16",
                 "date_end": "2026-01-17",
-                "repeat_on_days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                "repeat_on_days": ["fri"],
+                "time_all_day": True,
+            },
+        ),
+        (
+            CUSTOM,
+            {"mode": FirewallPolicyScheduleMode.EVERY_WEEK},
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["mon", "fri"],
+                "time_all_day": False,
+                "time_range_start": "20:00",
+                "time_range_end": "06:00",
+            },
+        ),
+        # All day off doesn't send back a malformed time left in the schedule.
+        (
+            {**WEEKLY_ALL_DAY, "time_range_start": "bad"},
+            {"all_day": False},
+            {
+                "mode": "EVERY_WEEK",
+                "repeat_on_days": ["fri"],
                 "time_all_day": False,
                 "time_range_start": "09:00",
                 "time_range_end": "12:00",
