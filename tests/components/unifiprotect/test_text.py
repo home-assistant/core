@@ -1,13 +1,16 @@
 """Test the UniFi Protect text platform."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from uiprotect.data import Camera, DoorbellMessageType, LCDMessage
 from uiprotect.data.public_devices import PublicLcdMessage
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.text import CAMERA
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -19,6 +22,7 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     make_public_camera,
+    make_streamless_public_camera,
     public_device_ws_message,
     remove_entities,
     setup_public_camera,
@@ -149,3 +153,26 @@ async def test_text_camera_reads_public(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == value
+
+
+async def test_text_public_only_no_doorbell_text(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    doorbell: Camera,
+) -> None:
+    """API-key-only mode builds no doorbell text, which needs the private NVR."""
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = (
+        make_streamless_public_camera(doorbell)
+    )
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.TEXT, DOMAIN, f"{doorbell.mac}_doorbell"
+        )
+        is None
+    )
