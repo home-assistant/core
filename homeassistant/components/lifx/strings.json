@@ -52,6 +52,20 @@
         "name": "Clean cycle"
       }
     },
+    "light": {
+      "back": {
+        "name": "Back"
+      },
+      "downlight": {
+        "name": "Downlight"
+      },
+      "front": {
+        "name": "Front"
+      },
+      "uplight": {
+        "name": "Uplight"
+      }
+    },
     "select": {
       "infrared_brightness": {
         "name": "Infrared brightness"
@@ -72,6 +86,12 @@
     },
     "cannot_read_state": {
       "message": "The current state of the LIFX device could not be read, so the requested change was not written to it"
+    },
+    "colorsweep_speed_needs_duration": {
+      "message": "The Color Sweep effect needs a duration when its speed is 0, because it then sweeps once across the duration."
+    },
+    "component_software_effect": {
+      "message": "{entity_id} controls one part of a LIFX light and cannot run {effect} on its own. Target the main light entity to run it on the whole light."
     },
     "device_error": {
       "message": "Error communicating with the LIFX device: {error}"
@@ -94,11 +114,17 @@
     "no_matrix_target": {
       "message": "The targets of action lifx.{service} include no LIFX matrix light"
     },
+    "no_mirror_target": {
+      "message": "The targets of action lifx.{service} include no LIFX Mirror"
+    },
     "no_multizone_target": {
       "message": "The targets of action lifx.{service} include no LIFX multizone light"
     },
     "not_loaded": {
       "message": "LIFX is not loaded, so this action cannot be performed."
+    },
+    "sky_speed_needs_duration": {
+      "message": "The Sky effect needs a duration when its speed is 0, because it then plays once across the duration."
     },
     "update_failed": {
       "message": "Error fetching the state of the LIFX device: {error}"
@@ -159,6 +185,28 @@
         }
       },
       "name": "Color loop effect"
+    },
+    "effect_colorsweep": {
+      "description": "Starts a firmware-based effect on LIFX Mirror lights that sweeps through a palette of colors, by default the color temperature range.",
+      "fields": {
+        "duration": {
+          "description": "How long the effect runs. 0 runs it until it is stopped.",
+          "name": "Duration"
+        },
+        "palette": {
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and Kelvin (1500-9000) values to sweep through. Defaults to sweeping from 1500 to 6500 Kelvin.",
+          "name": "Palette"
+        },
+        "power_on": {
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]",
+          "name": "Power on"
+        },
+        "speed": {
+          "description": "How long one sweep takes. 0 sweeps once across the duration, which then has to be set.",
+          "name": "Speed"
+        }
+      },
+      "name": "Color sweep effect"
     },
     "effect_flame": {
       "description": "Starts the firmware-based Flame effect on LIFX Tiles or Candle.",
@@ -267,6 +315,10 @@
           "description": "The minimum cloud saturation for the Clouds sky type.",
           "name": "Cloud saturation minimum"
         },
+        "duration": {
+          "description": "How long the effect runs. 0 runs it until it is stopped.",
+          "name": "Duration"
+        },
         "palette": {
           "description": "List of 1 to 6 colors as hue (0-360), saturation (0-100), brightness (0-100) and Kelvin (1500-9000) values to use for this effect.",
           "name": "Palette"
@@ -280,7 +332,7 @@
           "name": "Sky type"
         },
         "speed": {
-          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Clouds sky type, it is the speed of the clouds across the device.",
+          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Clouds sky type, it is the speed of the clouds across the device. 0 plays the effect once across the duration, which then has to be set.",
           "name": "Speed"
         }
       },

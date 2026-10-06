@@ -53,6 +53,7 @@ from .const import (
     DATA_LIFX_MANAGER,
     DOMAIN,
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
@@ -222,11 +223,29 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+LIFX_EFFECT_COLORSWEEP_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=25)),
+        ATTR_DURATION: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=3600)
+        ),
+        ATTR_PALETTE: probatio.All(
+            probatio.EnsureList(),
+            [HSBK_SCHEMA],
+            probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
+        ),
+    }
+)
+
 LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=86400)
+            probatio.Coerce(int), probatio.Clamp(min=0, max=86400)
+        ),
+        ATTR_DURATION: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=86400)
         ),
         ATTR_SKY_TYPE: probatio.In(EFFECT_SKY_SKY_TYPES),
         ATTR_CLOUD_SATURATION_MIN: probatio.All(
@@ -261,6 +280,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
 )
 
 SERVICES_SCHEMA = {
+    SERVICE_EFFECT_COLORSWEEP: LIFX_EFFECT_COLORSWEEP_SCHEMA,
     SERVICE_EFFECT_COLORLOOP: LIFX_EFFECT_COLORLOOP_SCHEMA,
     SERVICE_EFFECT_FLAME: LIFX_EFFECT_FLAME_SCHEMA,
     SERVICE_EFFECT_MORPH: LIFX_EFFECT_MORPH_SCHEMA,

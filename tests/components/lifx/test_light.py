@@ -11,6 +11,7 @@ from lifx import (
     EffectColorloop,
     EffectPulse,
     FirmwareEffect,
+    FirmwareInfo,
     LifxError,
     MultiZoneEffect,
     ThemeLibrary,
@@ -38,6 +39,7 @@ from homeassistant.components.lifx.const import (
     ATTR_SPEED,
     ATTR_THEME,
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
@@ -104,6 +106,7 @@ from .helpers import (
     create_mock_infrared_light,
     create_mock_light,
     create_mock_matrix_light,
+    create_mock_mirror_light,
     create_mock_multizone_light,
     create_reference_matrix_light,
 )
@@ -200,8 +203,17 @@ async def test_white_light_modes(
     ]
 
 
+def _create_firmware_3_matrix_light() -> MockDevice:
+    """Return a matrix light on firmware too old to run the Sky effect."""
+    device = create_mock_matrix_light()
+    device.state.host_firmware = FirmwareInfo(
+        build=0, version_major=3, version_minor=50
+    )
+    return device
+
+
 @pytest.mark.parametrize(
-    ("factory", "effect_list"),
+    ("factory", "effect_list", "component_keys"),
     [
         (
             create_mock_multizone_light,
@@ -211,6 +223,7 @@ async def test_white_light_modes(
                 SERVICE_EFFECT_MOVE,
                 SERVICE_EFFECT_STOP,
             ],
+            (),
         ),
         (
             create_mock_matrix_light,
@@ -219,8 +232,21 @@ async def test_white_light_modes(
                 SERVICE_EFFECT_FLAME,
                 SERVICE_EFFECT_PULSE,
                 SERVICE_EFFECT_MORPH,
+                SERVICE_EFFECT_SKY,
                 SERVICE_EFFECT_STOP,
             ],
+            (),
+        ),
+        (
+            _create_firmware_3_matrix_light,
+            [
+                SERVICE_EFFECT_COLORLOOP,
+                SERVICE_EFFECT_FLAME,
+                SERVICE_EFFECT_PULSE,
+                SERVICE_EFFECT_MORPH,
+                SERVICE_EFFECT_STOP,
+            ],
+            (),
         ),
         (
             create_mock_ceiling_light,
@@ -232,6 +258,20 @@ async def test_white_light_modes(
                 SERVICE_EFFECT_SKY,
                 SERVICE_EFFECT_STOP,
             ],
+            ("uplight", "downlight"),
+        ),
+        (
+            create_mock_mirror_light,
+            [
+                SERVICE_EFFECT_COLORLOOP,
+                SERVICE_EFFECT_FLAME,
+                SERVICE_EFFECT_PULSE,
+                SERVICE_EFFECT_MORPH,
+                SERVICE_EFFECT_SKY,
+                SERVICE_EFFECT_COLORSWEEP,
+                SERVICE_EFFECT_STOP,
+            ],
+            ("front", "back"),
         ),
     ],
 )
@@ -240,8 +280,9 @@ async def test_zoned_effect_names_and_firmware_state(
     entity_registry: er.EntityRegistry,
     factory: Callable[[], MockDevice],
     effect_list: list[str],
+    component_keys: tuple[str, ...],
 ) -> None:
-    """Test existing zoned effect names without exposing ceiling subentities."""
+    """Test existing zoned effect names, alongside any disabled component entities."""
     device = factory()
     device.state.power = 65535
     device.state.effect = FirmwareEffect.MOVE
@@ -251,11 +292,14 @@ async def test_zoned_effect_names_and_firmware_state(
     assert state
     assert state.attributes[ATTR_EFFECT_LIST] == effect_list
     assert state.attributes[ATTR_EFFECT] == "effect_move"
+    expected_entries = [entity_registry.async_get(ENTITY_ID)] + [
+        entity_registry.async_get(f"{ENTITY_ID}_{key}") for key in component_keys
+    ]
     assert [
         entry
         for entry in entity_registry.entities.values()
         if entry.platform == DOMAIN and entry.domain == LIGHT_DOMAIN
-    ] == [entity_registry.async_get(ENTITY_ID)]
+    ] == expected_entries
 
 
 @pytest.mark.parametrize(
@@ -513,6 +557,35 @@ async def test_stopping_an_effect_to_set_state_can_fail(
         )
 
 
+async def test_running_color_sweep_is_reported_by_its_action_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a running Color Sweep shows the effect name the Mirror offers."""
+    device = create_mock_mirror_light()
+    device.state.power = 65535
+    device.state.effect = FirmwareEffect.COLOR_SWEEP
+    await async_setup_lifx_entry(hass, device)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_EFFECT] == "effect_colorsweep"
+    assert "effect_colorsweep" in state.attributes[ATTR_EFFECT_LIST]
+
+
+async def test_undocumented_firmware_effect_is_not_reported(
+    hass: HomeAssistant,
+) -> None:
+    """Test an effect type the protocol does not document shows no effect."""
+    device = create_mock_mirror_light()
+    device.state.power = 65535
+    device.state.effect = FirmwareEffect(99)
+    await async_setup_lifx_entry(hass, device)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_EFFECT] is None
+
+
 @pytest.mark.parametrize(
     ("service", "service_data", "effect_type", "expected_kwargs"),
     [
@@ -615,11 +688,55 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
     device.set_effect.assert_awaited_once_with(
         FirmwareEffect.SKY,
         speed=50,
+        duration=0,
         palette=[HSBK(200, 1.0, 0.01, 3500), HSBK(40, 0.5, 1.0, 3500)],
         sky_type=TileEffectSkyType.CLOUDS,
         cloud_saturation_min=50,
         cloud_saturation_max=180,
     )
+
+
+async def test_sky_effect_plays_once_across_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 plays a sunrise once across the duration, in nanoseconds."""
+    device = create_mock_ceiling_light()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_SKY,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_SKY_TYPE: "Sunrise",
+            ATTR_SPEED: 0,
+            ATTR_DURATION: 1800,
+        },
+        blocking=True,
+    )
+
+    assert device.set_effect.await_args.kwargs["speed"] == 0
+    assert device.set_effect.await_args.kwargs["duration"] == 1_800_000_000_000
+    assert device.set_effect.await_args.kwargs["sky_type"] is TileEffectSkyType.SUNRISE
+
+
+async def test_sky_effect_speed_zero_needs_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 without a duration is refused instead of quietly changed."""
+    device = create_mock_ceiling_light()
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_SKY,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SPEED: 0},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "sky_speed_needs_duration"
+    device.set_effect.assert_not_awaited()
 
 
 async def test_sky_effect_without_a_palette_omits_it(
@@ -640,6 +757,99 @@ async def test_sky_effect_without_a_palette_omits_it(
     # The library rejects an empty palette, so it is not given one at all
     assert device.set_effect.await_args.kwargs["palette"] is None
     device.set_power.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_kwargs"),
+    [
+        pytest.param(
+            {
+                ATTR_SPEED: 5,
+                ATTR_DURATION: 0,
+                ATTR_PALETTE: [(0, 100, 100, 3500), (240, 50, 80, 3500)],
+            },
+            {
+                "speed": 5,
+                "duration": 0,
+                "palette": [HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.8, 3500)],
+            },
+            id="palette",
+        ),
+        # By default one sweep runs across the color temperature range
+        pytest.param(
+            {},
+            {
+                "speed": 0,
+                "duration": 30_000_000_000,
+                "palette": [HSBK(0, 0.0, 1.0, 1500), HSBK(0, 0.0, 1.0, 6500)],
+            },
+            id="defaults",
+        ),
+    ],
+)
+async def test_color_sweep_effect_uses_public_firmware_api(
+    hass: HomeAssistant,
+    service_data: dict[str, Any],
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test Color Sweep delegates to the firmware effect on a Mirror."""
+    device = create_mock_mirror_light()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORSWEEP,
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    device.set_power.assert_awaited_once_with(True, duration=0.0)
+    device.set_effect.assert_awaited_once_with(
+        FirmwareEffect.COLOR_SWEEP, **expected_kwargs
+    )
+
+
+async def test_color_sweep_speed_zero_needs_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 without a duration is refused instead of quietly changed."""
+    device = create_mock_mirror_light()
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_COLORSWEEP,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DURATION: 0},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "colorsweep_speed_needs_duration"
+    device.set_effect.assert_not_awaited()
+
+
+async def test_color_sweep_effect_skips_other_matrix_lights(
+    hass: HomeAssistant,
+) -> None:
+    """Test Color Sweep only reaches the Mirror when another matrix light is named."""
+    mirror = create_mock_mirror_light()
+    matrix = create_mock_matrix_light()
+    matrix.ip = OTHER_IP_ADDRESS
+    matrix.serial = matrix.state.serial = OTHER_SERIAL
+    matrix.state.mac_address = OTHER_MAC_ADDRESS
+    matrix.state.label = OTHER_LABEL
+    await async_setup_lifx_entries(hass, [mirror, matrix])
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORSWEEP,
+        {ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
+        blocking=True,
+    )
+
+    mirror.set_effect.assert_awaited_once()
+    matrix.set_power.assert_not_awaited()
+    matrix.set_effect.assert_not_awaited()
 
 
 async def test_move_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
@@ -1566,6 +1776,11 @@ async def test_effect_without_a_lifx_target_is_rejected(hass: HomeAssistant) -> 
         ),
         pytest.param(SERVICE_EFFECT_SKY, "no LIFX matrix light", id="sky-needs-matrix"),
         pytest.param(
+            SERVICE_EFFECT_COLORSWEEP,
+            "no LIFX Mirror",
+            id="color-sweep-needs-mirror",
+        ),
+        pytest.param(
             SERVICE_EFFECT_MOVE, "no LIFX multizone light", id="move-needs-multizone"
         ),
     ],
@@ -1784,6 +1999,18 @@ def test_theme_field_default_matches_the_action(
             create_mock_matrix_light,
             [(0, 100, 100, 3500)] * 7,
             id="sky-above-maximum",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_COLORSWEEP,
+            create_mock_mirror_light,
+            [(0, 100, 100, 3500)],
+            id="color-sweep-below-minimum",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_COLORSWEEP,
+            create_mock_mirror_light,
+            [(0, 100, 100, 3500)] * 17,
+            id="color-sweep-above-maximum",
         ),
         pytest.param(
             SERVICE_PAINT_THEME,
