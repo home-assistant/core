@@ -22,12 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
-from .const import (
-    API_RETRY_TIMES,
-    CONF_CONTROLLER_UNIQUE_ID,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import API_RETRY_TIMES, CONF_CONTROLLER_UNIQUE_ID, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
             ) from err
 
     # Load options from config entry
-    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, UPDATE_INTERVAL)
 
     entry.runtime_data = Control4RuntimeData(
         account=account,

@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
+from .const import UPDATE_INTERVAL
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -90,9 +91,6 @@ async def async_setup_entry(
     if not all_rooms:
         return
 
-    scan_interval = runtime_data.scan_interval
-    _LOGGER.debug("Scan interval = %s", scan_interval)
-
     async def async_update_data() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director."""
         try:
@@ -107,7 +105,7 @@ async def async_setup_entry(
         _LOGGER,
         name="room",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
         config_entry=entry,
     )
 
