@@ -56,7 +56,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
         if arrivalTime is None:
             return None
         start_datetime = dt_util.parse_datetime(arrivalTime.get_utc())
-        return start_datetime.astimezone() if start_datetime else None
+        return dt_util.as_utc(start_datetime) if start_datetime else None
 
     @override
     async def _async_update_data(self) -> list[ArrivalData]:
