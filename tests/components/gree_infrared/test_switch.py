@@ -468,6 +468,87 @@ async def test_overlapping_sends_keep_both_changes(
     )
 
 
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
+@pytest.mark.usefixtures("init_integration")
+async def test_remote_frame_during_send_keeps_what_each_entity_shows(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a remote frame landing mid-send leaves the shared state as displayed.
+
+    Neither frame is known to have reached the unit last, so each field keeps the
+    value of whichever wrote it last: the switch its own flag, the remote the rest.
+    The next frame then carries what every entity shows.
+    """
+    sending = asyncio.Event()
+    finish_sending = asyncio.Event()
+    send_command = mock_infrared_emitter_entity.async_send_command
+
+    async def blocking_send(command: InfraredCommand) -> None:
+        """Hold the frame in flight until the remote frame has been received."""
+        sending.set()
+        await finish_sending.wait()
+        await send_command(command)
+
+    with patch.object(
+        mock_infrared_emitter_entity, "async_send_command", blocking_send
+    ):
+        turbo_call = hass.async_create_task(
+            hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: _TURBO_ENTITY_ID},
+                blocking=True,
+            )
+        )
+        await sending.wait()
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(
+                timings=GreeAcCommand(
+                    mode=GreeAcMode.COOL,
+                    temperature=27,
+                    fan=GreeAcFanSpeed.HIGH,
+                    display=False,
+                ).get_raw_timings()
+            )
+        )
+        finish_sending.set()
+        await turbo_call
+
+    climate_state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert climate_state is not None
+    assert climate_state.state == HVACMode.COOL
+    assert climate_state.attributes[ATTR_TEMPERATURE] == 27
+    assert (state := hass.states.get(_TURBO_ENTITY_ID)) is not None
+    assert state.state == STATE_ON
+    assert (state := hass.states.get(_LIGHT_ENTITY_ID)) is not None
+    assert state.state == STATE_OFF
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _XFAN_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL,
+            temperature=27,
+            fan=GreeAcFanSpeed.HIGH,
+            turbo=True,
+            display=False,
+            blow=True,
+        ).get_raw_timings()
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_failed_send_leaves_the_flag_unset(
     hass: HomeAssistant,
