@@ -64,11 +64,11 @@ TPMS_NO_WARNINGS = {
 }
 
 
-def _products_with_driver_assist(driver_assist: str) -> dict:
-    """Return a products response with the vehicle's driver-assist capability set."""
-    products = deepcopy(PRODUCTS)
-    products["response"][0]["vehicle_config"]["driver_assist"] = driver_assist
-    return products
+def _metadata_with_driver_assist(driver_assist: str | None) -> dict:
+    """Return a metadata response with the vehicle's driver-assist hardware set."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["config"]["driver_assist"] = driver_assist
+    return metadata
 
 
 def _live_status(**overrides: object) -> dict:
@@ -191,7 +191,7 @@ async def test_sensors_streaming(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
-    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with streaming are correct."""
@@ -199,7 +199,7 @@ async def test_sensors_streaming(
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
     # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
-    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+    mock_metadata.return_value = _metadata_with_driver_assist("TeslaAP4")
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -313,14 +313,14 @@ async def test_sensors_streaming(
 async def test_new_streaming_sensors_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test the new firmware-2025.44 streaming sensors are disabled-by-default diagnostics."""
 
     # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
-    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+    mock_metadata.return_value = _metadata_with_driver_assist("TeslaAP4")
 
     await setup_platform(hass, [Platform.SENSOR])
 
@@ -343,12 +343,14 @@ async def test_new_streaming_sensors_disabled_by_default(
     [
         ("2025.44.25.5", "TeslaAP4", True),
         ("2025.44.25.5", "TeslaAP3", False),
+        ("2025.44.25.5", None, False),
         ("2025.44.25.4", "TeslaAP4", False),
         ("2025.44.25.4", "TeslaAP3", False),
     ],
     ids=[
         "hw4_at_threshold",
         "hw3_at_threshold",
+        "unknown_at_threshold",
         "hw4_below_threshold",
         "hw3_below_threshold",
     ],
@@ -361,16 +363,19 @@ async def test_hw4_mileage_sensors_gating(
     mock_add_listener: AsyncMock,
     entity_id: str,
     firmware: str,
-    driver_assist: str,
+    driver_assist: str | None,
     expected: bool,
 ) -> None:
     """Test HW4 mileage sensors need both AP4 hardware and qualifying firmware."""
 
-    metadata = deepcopy(METADATA)
+    metadata = _metadata_with_driver_assist(driver_assist)
     metadata["vehicles"][VEHICLE_VIN]["firmware"] = firmware
     mock_metadata.return_value = metadata
 
-    mock_products.return_value = _products_with_driver_assist(driver_assist)
+    # A streaming vehicle is never polled, so vehicle_config is only in metadata.
+    products = deepcopy(PRODUCTS)
+    del products["response"][0]["vehicle_config"]
+    mock_products.return_value = products
 
     await setup_platform(hass, [Platform.SENSOR])
 
