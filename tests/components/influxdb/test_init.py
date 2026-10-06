@@ -1,10 +1,11 @@
 """The tests for the InfluxDB component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
 import logging
+import math
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
@@ -619,6 +620,77 @@ async def test_event_listener(
         assert write_api.call_count == 1
         assert write_api.call_args == get_mock_call(body)
         write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
+    [
+        (
+            {
+                "influxdb": {
+                    "override_measurement": "state\nlog",
+                    "tags_attributes": ["room"],
+                    "tags": {"site": "first\nfloor"},
+                }
+            },
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            {
+                "influxdb": {
+                    "override_measurement": "state\nlog",
+                    "tags_attributes": ["room"],
+                    "tags": {"site": "first\nfloor"},
+                }
+            },
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_multiline_strings(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    get_mock_call: Callable[..., Any],
+) -> None:
+    """Test line breaks in strings are replaced, line protocol has no escape for them."""
+    await _setup(hass, mock_client, config_ext, get_write_api)
+
+    hass.states.async_set(
+        "fake.entity_id",
+        "Avenida de Logroño, 50\n28002 Madrid\r\nEspaña",
+        {"address": "line one\nline two", "room": "living\nroom"},
+    )
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    body = [
+        {
+            "measurement": "state log",
+            "tags": {
+                "domain": "fake",
+                "entity_id": "entity_id",
+                "room": "living room",
+                "site": "first floor",
+            },
+            "time": ANY,
+            "fields": {
+                "state": "Avenida de Logroño, 50 28002 Madrid España",
+                "address_str": "line one line two",
+            },
+        }
+    ]
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
 
 
 @pytest.mark.parametrize(
@@ -1852,20 +1924,56 @@ async def test_event_listener_backlog_full(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+@pytest.mark.parametrize(
+    ("attributes", "fields"),
+    [
+        pytest.param(
+            {"value": "value_str"}, {"value__str": "value_str"}, id="state-value"
+        ),
+        pytest.param({"time": 42}, {"time_": 42.0}, id="numeric-time"),
+        pytest.param({"time": "42.5"}, {"time_": 42.5}, id="numeric-string-time"),
+        pytest.param(
+            {"time": "2026-09-28T08:10:53.050Z"},
+            {
+                "time_str": "2026-09-28T08:10:53.050Z",
+                "time_": 20260928081053.05,
+            },
+            id="timestamp-time",
+        ),
+        pytest.param({"time": "unknown"}, {"time_str": "unknown"}, id="string-time"),
+        pytest.param({"time": math.inf}, {}, id="nonfinite-time"),
+        pytest.param(
+            {"time_": 84, "time": 42},
+            {"time_": 84.0, "time__": 42.0},
+            id="reserved-name-conflict",
+        ),
+        pytest.param(
+            {"time": 42, "time_": 84},
+            {"time_": 84.0, "time__": 42.0},
+            id="renamed-field-conflict",
+        ),
+    ],
+)
 async def test_event_listener_attribute_name_conflict(
-    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    get_mock_call: Callable[..., Any],
+    attributes: dict[str, Any],
+    fields: dict[str, Any],
 ) -> None:
-    """Test the event listener when an attribute conflicts with another field."""
+    """Test attributes that conflict with an existing or reserved field name."""
     await _setup(hass, mock_client, config_ext, get_write_api)
     body = [
         {
             "measurement": "fake.something",
             "tags": {"domain": "fake", "entity_id": "something"},
             "time": ANY,
-            "fields": {"value": 1, "value__str": "value_str"},
+            "fields": {"value": 1, **fields},
         }
     ]
-    hass.states.async_set("fake.something", 1, {"value": "value_str"})
+    hass.states.async_set("fake.something", 1, attributes)
     await hass.async_block_till_done()
     await async_wait_for_queue_to_process(hass)
 

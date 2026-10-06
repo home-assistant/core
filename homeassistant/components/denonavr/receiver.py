@@ -6,7 +6,7 @@ import logging
 
 from denonavr import DenonAVR
 from denonavr.exceptions import AvrProcessingError
-import httpx
+import httpx2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class ConnectDenonAVR:
         zone2: bool,
         zone3: bool,
         use_telnet: bool,
-        async_client_getter: Callable[[], httpx.AsyncClient],
+        async_client_getter: Callable[[], httpx2.AsyncClient],
     ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter
@@ -86,7 +86,7 @@ class ConnectDenonAVR:
             timeout=self._timeout,
             add_zones=self._zones,
         )
-        # Use httpx.AsyncClient getter provided by Home Assistant
+        # Use httpx2.AsyncClient getter provided by Home Assistant
         receiver.set_async_client_getter(self._async_client_getter)
         await receiver.async_setup()
         # Do an initial update if telnet is used.

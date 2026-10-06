@@ -3,8 +3,6 @@
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, override
 
-from universal_silabs_flasher.flasher import Zbt1Flasher
-
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
@@ -16,6 +14,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
 )
 from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
@@ -77,7 +76,7 @@ class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 115200
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     @override
     def _get_translation_placeholders(self) -> dict[str, str]:
@@ -268,9 +267,9 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
 
     @property
     @override
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
-        return Zbt1Flasher  # type: ignore[no-any-return]
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
+        return FlasherType.ZBT1
 
     @override
     async def async_step_flashing_complete(

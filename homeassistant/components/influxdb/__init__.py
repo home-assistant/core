@@ -164,7 +164,7 @@ _CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         probatio.Optional(CONF_IGNORE_ATTRIBUTES): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )
@@ -181,10 +181,10 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {cv.string: cv.string}
         ),
         probatio.Optional(CONF_TAGS_ATTRIBUTES, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_ENTITY_SCHEMA}
@@ -209,10 +209,19 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
+def _single_line(value: str) -> str:
+    """Return the value with its line breaks replaced by spaces.
+
+    Line protocol has no escape for a line break, in a string field it ends
+    the point, and the escape the clients use for tags is not one either.
+    """
+    return " ".join(value.splitlines())
+
+
 def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
-    tags = conf.get(CONF_TAGS)
+    tags = {key: _single_line(value) for key, value in conf[CONF_TAGS].items()}
     tags_attributes: list[str] = conf[CONF_TAGS_ATTRIBUTES]
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     measurement_attr: str = conf[CONF_MEASUREMENT_ATTR]
@@ -276,6 +285,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 else:
                     include_uom = measurement_attr != "unit_of_measurement"
 
+        if isinstance(measurement, str):
+            measurement = _single_line(measurement)
+
         json: dict[str, Any] = {
             INFLUX_CONF_MEASUREMENT: measurement,
             INFLUX_CONF_TAGS: {
@@ -286,7 +298,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
             INFLUX_CONF_FIELDS: {},
         }
         if _include_state:
-            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = state.state
+            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = _single_line(state.state)
         if _include_value:
             json[INFLUX_CONF_FIELDS][INFLUX_CONF_VALUE] = _state_as_value
 
@@ -294,7 +306,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
         ignore_attributes.update(global_ignore_attributes)
         for key, value in state.attributes.items():
             if key in tags_attributes:
-                json[INFLUX_CONF_TAGS][key] = value
+                json[INFLUX_CONF_TAGS][key] = (
+                    _single_line(value) if isinstance(value, str) else value
+                )
             elif (
                 (key != CONF_UNIT_OF_MEASUREMENT or include_uom)
                 and (key != "device_class" or include_dc)
@@ -311,7 +325,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     json[INFLUX_CONF_FIELDS][key] = float(value)
                 except ValueError, TypeError:
                     new_key = f"{key}_str"
-                    new_value = str(value)
+                    new_value = _single_line(str(value))
                     json[INFLUX_CONF_FIELDS][new_key] = new_value
 
                     if RE_DIGIT_TAIL.match(new_value):
@@ -323,6 +337,14 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 with suppress(KeyError, TypeError):
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
+
+        # InfluxDB reserves "time"; leave the valid "time_str" field unchanged.
+        fields = json[INFLUX_CONF_FIELDS]
+        if INFLUX_CONF_TIME in fields:
+            key = f"{INFLUX_CONF_TIME}_"
+            while key in fields:
+                key = f"{key}_"
+            fields[key] = fields.pop(INFLUX_CONF_TIME)
 
         json[INFLUX_CONF_TAGS].update(tags)
 

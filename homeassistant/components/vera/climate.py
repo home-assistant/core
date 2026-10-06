@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
@@ -128,6 +129,25 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
             self.vera_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
         self.schedule_update_ha_state()
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        mode = self.vera_device.get_hvac_state()
+        if mode == "Heating":
+            result = HVACAction.HEATING
+        elif mode == "Cooling":
+            result = HVACAction.COOLING
+        elif mode in {"Idle", "PendingCool", "PendingHeat", "PendingIdle"}:
+            result = HVACAction.IDLE
+        elif mode in {"FanOnly", "Vent"}:
+            result = HVACAction.FAN
+        elif mode == "Off":
+            result = HVACAction.OFF
+        else:
+            result = None
+
+        return result
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:

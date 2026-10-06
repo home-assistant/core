@@ -207,6 +207,9 @@
       "block_tumblr": {
         "default": "mdi:image-outline"
       },
+      "block_tunneling_endpoints": {
+        "default": "mdi:vpn"
+      },
       "block_twitch": {
         "default": "mdi:twitch"
       },

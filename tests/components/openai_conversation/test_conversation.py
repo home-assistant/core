@@ -5,7 +5,7 @@ from typing import Literal
 from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 from openai import AuthenticationError, RateLimitError
 from openai.types.responses import (
     ResponseError,
@@ -90,7 +90,7 @@ async def test_entity(
     [
         (
             RateLimitError(
-                response=httpx.Response(status_code=429, request=""),
+                response=httpx2.Response(status_code=429, request=""),
                 body=None,
                 message=None,
             ),
@@ -98,7 +98,7 @@ async def test_entity(
         ),
         (
             AuthenticationError(
-                response=httpx.Response(status_code=401, request=""),
+                response=httpx2.Response(status_code=401, request=""),
                 body=None,
                 message=None,
             ),
@@ -824,9 +824,9 @@ async def test_flex_tier_retry(
 
     mock_create_stream.return_value = [
         RateLimitError(
-            response=httpx.Response(
+            response=httpx2.Response(
                 status_code=429,
-                request=httpx.Request("POST", "https://api.openai.com/v1/responses"),
+                request=httpx2.Request("POST", "https://api.openai.com/v1/responses"),
             ),
             body=None,
             message="Resource Unavailable",
@@ -878,6 +878,13 @@ async def test_flex_tier_retry(
             CONF_REASONING_EFFORT: "high",
             CONF_REASONING_SUMMARY: "off",
             CONF_VERBOSITY: "high",
+        },
+        {CONF_CHAT_MODEL: "gpt-6-luna"},
+        {
+            CONF_CHAT_MODEL: "gpt-6-luna",
+            CONF_REASONING_EFFORT: "none",
+            CONF_TEMPERATURE: 0.5,
+            CONF_TOP_P: 0.9,
         },
     ],
 )

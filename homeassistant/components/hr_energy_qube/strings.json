@@ -232,6 +232,15 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the Qube heat pump at {host}."
+    },
+    "communication_error": {
+      "message": "Error communicating with the Qube heat pump: {error}"
+    },
+    "no_data": {
+      "message": "No data received from the Qube heat pump."
+    },
     "set_temperature_failed": {
       "message": "Failed to set the target temperature."
     },

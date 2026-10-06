@@ -13,6 +13,7 @@ from uiprotect.data import (
     Bootstrap,
     Camera,
     ChannelQuality,
+    Chime,
     DeviceState,
     Event,
     EventType,
@@ -35,11 +36,14 @@ from uiprotect.data.public_devices import (
     PublicCamera,
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
+    PublicChime,
     PublicHdrMode,
+    PublicLcdMessage,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
     PublicOsdSettings,
+    PublicRingSettings,
     PublicSensor,
     PublicSensorAlarmSettingsRead,
     PublicSensorLeakSettings,
@@ -47,6 +51,7 @@ from uiprotect.data.public_devices import (
     PublicSensorMotionSettingsRead,
     PublicSensorStats,
     PublicSensorThresholdSettings,
+    PublicSignalState,
     PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
@@ -136,6 +141,25 @@ def assert_entity_counts(
 
     assert len(entities) == total
     assert len(hass.states.async_all(platform.value)) == enabled
+
+
+def registered_keys(
+    entity_registry: er.EntityRegistry, platform: Platform, mac: str
+) -> set[str]:
+    """Return the description keys registered for a device on a platform."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == platform and entry.unique_id.startswith(prefix)
+    }
+
+
+def make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
 
 
 def normalize_name(name: str) -> str:
@@ -361,6 +385,8 @@ def make_public_sensor(
     humidity_value: float | None = None,
     temperature_value: float | None = None,
     tampering_detected_at: datetime | None = None,
+    signal_strength: int | None = None,
+    signal_quality: int | None = None,
 ) -> Mock:
     """Build a public-API sensor mirroring a private sensor's migrated fields.
 
@@ -370,8 +396,8 @@ def make_public_sensor(
     never from real capture data. Each ``*`` override lets a test diverge from
     the private value. The mount-derived enablement properties are computed from
     the resolved mount type so a ``mount_type`` override stays consistent.
-    ``capabilities`` mimics the capability map of newer firmware; ``None`` (the
-    default) models older firmware without a map, where every entity is created.
+    ``capabilities`` is the sensor's capability map; ``None`` (the default)
+    advertises every capability.
     """
     public = Mock(spec=PublicSensor)
     public.id = sensor.id
@@ -391,12 +417,8 @@ def make_public_sensor(
         if is_tampering_detected is None
         else is_tampering_detected
     )
-    public.has_feature_flags = capabilities is not None
-    public.supports = Mock(
-        side_effect=lambda capability: (
-            capabilities is not None and capability in capabilities
-        )
-    )
+    caps = set(SensorFeatureCapability) if capabilities is None else capabilities
+    public.supports = Mock(side_effect=lambda capability: capability in caps)
     public.leak_settings = PublicSensorLeakSettings(
         is_internal_enabled=leak_internal_enabled,
         is_external_enabled=leak_external_enabled,
@@ -446,7 +468,16 @@ def make_public_sensor(
                 sensor.battery_status.percentage if percentage is None else percentage
             ),
             is_low=sensor.battery_status.is_low if is_low is None else is_low,
-        )
+        ),
+        # The private sensor has no signal quality to mirror.
+        signal_state=PublicSignalState(
+            signal_strength=(
+                sensor.bluetooth_connection_state.signal_strength
+                if signal_strength is None
+                else signal_strength
+            ),
+            signal_quality=signal_quality,
+        ),
     )
     # The fixture reports the same number for all three metrics, so a test that
     # has to tell the value paths apart passes its own.
@@ -477,6 +508,7 @@ def make_public_sensor(
     for name in (
         "is_contact_sensor_enabled",
         "is_leak_sensor_enabled",
+        "is_leak_detection_enabled",
         "is_motion_sensor_enabled",
         "is_alarm_sensor_enabled",
         "is_temperature_sensor_enabled",
@@ -601,6 +633,8 @@ def make_public_camera(
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
+    lcd_message: PublicLcdMessage | None = None,
+    active_patrol_slot: int | None = None,
 ) -> Mock:
     """Build a public-API camera for a private camera's migrated fields.
 
@@ -614,7 +648,7 @@ def make_public_camera(
     ``status_light`` and the ``osd_*`` flags deliberately default to off instead
     of mirroring, so a test overriding one sets a value the private object would
     not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
-    the test.
+    the test. ``lcd_message`` defaults to none for the same reason.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -633,6 +667,11 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.lcd_message = lcd_message
+    public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
+    # The doorbell text falls back to the default message of the private NVR.
+    public.api = camera._api
+    public.active_patrol_slot = active_patrol_slot
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected
@@ -715,8 +754,8 @@ def setup_public_sensor(
 
     Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
     against the private bootstrap at call time, so it is robust to ``init_entry``
-    regenerating device ids. ``capabilities`` is forwarded to the mirror to model
-    newer firmware with a capability map. Further keyword arguments are handed
+    regenerating device ids. ``capabilities`` is forwarded to the mirror as the
+    sensor's capability map. Further keyword arguments are handed
     to ``make_public_sensor``, so a test can diverge a mirrored value.
     """
     public_bootstrap = PublicBootstrap()
@@ -782,6 +821,64 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def make_public_chime(
+    chime: Chime,
+    *,
+    state: DeviceState | None = None,
+    ring_settings: list[PublicRingSettings] | None = None,
+) -> Mock:
+    """Build a public-API chime mirroring the private fixture's ring settings."""
+    public = Mock(spec=PublicChime)
+    public.id = chime.id
+    public.mac = chime.mac
+    public.name = chime.name
+    public.display_name = chime.display_name
+    public.type = chime.type
+    public.model = ModelType.CHIME
+    public.state = DeviceState[chime.state.name] if state is None else state
+    public.ring_settings = (
+        [
+            PublicRingSettings(
+                camera_id=setting.camera_id,
+                repeat_times=setting.repeat_times,
+                ringtone_id=setting.ringtone_id,
+                volume=setting.volume,
+            )
+            for setting in chime.ring_settings
+        ]
+        if ring_settings is None
+        else ring_settings
+    )
+    return public
+
+
+def setup_public_chime(ufp: MockUFPFixture) -> None:
+    """Expose private chimes over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_light`` for ``ModelType.CHIME`` so the ring volume
+    numbers read from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = make_public_bootstrap(chimes=public_bootstrap.chimes)
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        # One mock per id so command assertions hit the entity's cached object.
+        if (
+            model is ModelType.CHIME
+            and obj_id not in public_bootstrap.chimes
+            and (private := ufp.api.bootstrap.chimes.get(obj_id)) is not None
+        ):
+            public_bootstrap.chimes[obj_id] = make_public_chime(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    _mirror_on_update_public(
+        ufp, "chimes", public_bootstrap.chimes, make_public_chime, keep_existing=True
+    )
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 

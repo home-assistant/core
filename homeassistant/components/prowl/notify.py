@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Any, override
 
-import httpx
+import httpx2
 import probatio
 import prowlpy
 
@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_API_KEY): cv.string}
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
 )
 
 
@@ -60,7 +60,7 @@ class ProwlNotificationService(BaseNotificationService):
     """
 
     def __init__(
-        self, hass: HomeAssistant, api_key: str, httpx_client: httpx.AsyncClient
+        self, hass: HomeAssistant, api_key: str, httpx_client: httpx2.AsyncClient
     ) -> None:
         """Initialize the service."""
         self._hass = hass
@@ -109,7 +109,7 @@ class ProwlNotificationEntity(NotifyEntity):
         hass: HomeAssistant,
         name: str,
         api_key: str,
-        httpx_client: httpx.AsyncClient,
+        httpx_client: httpx2.AsyncClient,
     ) -> None:
         """Initialize the service."""
         self._hass = hass
