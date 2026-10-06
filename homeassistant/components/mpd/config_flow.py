@@ -44,6 +44,8 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     await client.connect(user_input[CONF_HOST], user_input[CONF_PORT])
                     if CONF_PASSWORD in user_input:
                         await client.password(user_input[CONF_PASSWORD])
+                    # MPD greets before authenticating, so only a read proves access.
+                    await client.status()
                     with suppress(mpd.ConnectionError):
                         client.disconnect()
             except (
@@ -53,6 +55,8 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                 OSError,
             ):
                 errors["base"] = "cannot_connect"
+            except mpd.CommandError:
+                errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
