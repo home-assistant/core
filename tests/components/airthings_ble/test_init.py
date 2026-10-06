@@ -227,11 +227,9 @@ async def test_sensors_unavailable_while_update_fails(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # First poll succeeds.
     entity_id = "sensor.airthings_wave_123456_battery"
     assert hass.states.get(entity_id).state == "85"
 
-    # Next poll fails with a Bluetooth error.
     with patch_airthings_ble(side_effect=BleakError("boom")):
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -242,7 +240,6 @@ async def test_sensors_unavailable_while_update_fails(
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    # The poll after that succeeds again and the sensor recovers.
     with patch_airthings_ble(WAVE_DEVICE_INFO):
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
