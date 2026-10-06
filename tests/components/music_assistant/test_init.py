@@ -1,8 +1,10 @@
 """Test the Music Assistant integration init."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from music_assistant_client.exceptions import InvalidState
+from music_assistant_client.exceptions import ConnectionClosed, InvalidState
+from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.dashboard import DashboardDevice
 from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
@@ -381,3 +383,38 @@ async def test_server_lost_during_setup_retries(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "has already been setup" not in caplog.text
+
+
+async def test_server_lost_late_in_setup_retries(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test losing the server after the last server call during setup retries."""
+    connection_lost = asyncio.Event()
+
+    async def listen(init_ready: asyncio.Event) -> None:
+        init_ready.set()
+        await connection_lost.wait()
+        raise ConnectionClosed("Connection closed")
+
+    get_player_configs = music_assistant_client.config.get_player_configs
+
+    async def get_player_configs_then_lose_server() -> list[PlayerConfig]:
+        player_configs = await get_player_configs()
+        connection_lost.set()
+        # Let the listen task fail before setup continues
+        await asyncio.sleep(0)
+        return player_configs
+
+    music_assistant_client.start_listening.side_effect = listen
+    music_assistant_client.config.get_player_configs = (
+        get_player_configs_then_lose_server
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    music_assistant_client.disconnect.assert_awaited_once()

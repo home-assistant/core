@@ -157,14 +157,6 @@ async def async_setup_entry(  # noqa: C901
     # store the listen task and mass client in the entry data
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
-    # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        try:
-            await mass.disconnect()
-        finally:
-            raise ConfigEntryNotReady(listen_error) from listen_error
-
     # check if any playerconfigs have been removed while we were disconnected,
     # before forwarding the platforms, as the server can still go away here.
     # never clean up dashboard devices: their registration is connection-scoped,
@@ -263,6 +255,15 @@ async def async_setup_entry(  # noqa: C901
     entry.async_on_unload(
         mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
     )
+
+    # The listen task does not reload the entry while it is still being set up,
+    # so a server lost at any point during setup has to be caught here
+    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        try:
+            await mass.disconnect()
+        finally:
+            raise ConfigEntryNotReady(listen_error) from listen_error
 
     return True
 
