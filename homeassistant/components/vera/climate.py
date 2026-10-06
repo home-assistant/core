@@ -136,11 +136,9 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
         mode = self.vera_device.get_hvac_state()
         if mode == "Heating":
             result = HVACAction.HEATING
-        elif mode in {"Cooling", "PendingCool"}:
+        elif mode == "Cooling":
             result = HVACAction.COOLING
-        elif mode == "PendingHeat":
-            result = HVACAction.PREHEATING
-        elif mode in {"Idle", "PendingIdle"}:
+        elif mode in {"Idle", "PendingCool", "PendingHeat", "PendingIdle"}:
             result = HVACAction.IDLE
         elif mode in {"FanOnly", "Vent"}:
             result = HVACAction.FAN

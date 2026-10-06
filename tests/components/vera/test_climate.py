@@ -127,8 +127,8 @@ async def test_climate(
     [
         pytest.param("Heating", HVACAction.HEATING, id="heating"),
         pytest.param("Cooling", HVACAction.COOLING, id="cooling"),
-        pytest.param("PendingCool", HVACAction.COOLING, id="pending-cool"),
-        pytest.param("PendingHeat", HVACAction.PREHEATING, id="pending-heat"),
+        pytest.param("PendingCool", HVACAction.IDLE, id="pending-cool"),
+        pytest.param("PendingHeat", HVACAction.IDLE, id="pending-heat"),
         pytest.param("PendingIdle", HVACAction.IDLE, id="pending-idle"),
         pytest.param("Idle", HVACAction.IDLE, id="idle"),
         pytest.param("FanOnly", HVACAction.FAN, id="fan-only"),
