@@ -44,7 +44,9 @@ FORECAST_FEATURES = (
 # How long a single forecast entry of each cadence covers, used to determine
 # whether it overlaps the requested window rather than requiring its start
 # timestamp to fall inside that window (a daily entry starts at midnight, so
-# it would otherwise be discarded for a same-day partial-day request).
+# it would otherwise be discarded for a same-day partial-day request). Only
+# used as a fallback for the final entry in a forecast, since every other
+# entry's end is derived from the following entry's start.
 FORECAST_TYPE_DURATION = {
     "daily": timedelta(days=1),
     "hourly": timedelta(hours=1),
@@ -205,9 +207,17 @@ class GetForecastTool(Tool):
         forecast = entity_response["forecast"]
         duration = FORECAST_TYPE_DURATION[forecast_type]
         matching_forecast: list[Forecast] = []
-        for entry in forecast:
+        for index, entry in enumerate(forecast):
             entry_start = _forecast_datetime(entry["datetime"])
-            entry_end = entry_start + duration
+            # Prefer the next entry's own start as the end of this interval:
+            # adding a fixed duration can land on the wrong local wall-clock
+            # time across a DST change (e.g. a daily entry starting just
+            # before the clocks change). Only the last entry, which has no
+            # follow-up to derive an end from, falls back to the duration.
+            if index + 1 < len(forecast):
+                entry_end = _forecast_datetime(forecast[index + 1]["datetime"])
+            else:
+                entry_end = entry_start + duration
             if entry_start < end and entry_end > start:
                 # Normalize to an ISO string: some providers (e.g. IPMA) put a
                 # native datetime object in this field, which isn't JSON-safe.

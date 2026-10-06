@@ -460,6 +460,40 @@ async def test_get_forecast_tool_next_7_days_window_boundaries(
     assert conditions == ["rainy", "sunny"]
 
 
+@pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
+async def test_get_forecast_tool_derives_interval_end_from_next_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test a daily entry's end is derived from the next entry, not a fixed duration.
+
+    2024-03-10 is the day clocks spring forward in America/New_York, so it is
+    only 23 hours long. Adding a fixed 24-hour duration to its midnight
+    timestamp (which providers supply with a fixed UTC offset) overshoots the
+    real calendar boundary by an hour, which would wrongly pull the previous
+    day's forecast into "tomorrow". Deriving the end from the following
+    entry's own (correctly offset) start avoids this.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = [
+        {"datetime": "2024-03-09T00:00:00-05:00", "condition": "cloudy"},
+        {"datetime": "2024-03-10T00:00:00-05:00", "condition": "foggy"},
+        {"datetime": "2024-03-11T00:00:00-04:00", "condition": "sunny"},
+        {"datetime": "2024-03-12T00:00:00-04:00", "condition": "cloudy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["sunny"]
+
+
 @pytest.mark.freeze_time("2024-11-23T10:00:00+00:00")
 async def test_get_forecast_tool_next_24_hours_window_boundaries(
     hass: HomeAssistant,
