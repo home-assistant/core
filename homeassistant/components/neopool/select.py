@@ -188,11 +188,11 @@ async def _write_timer_period(
 
 
 # Map a library invalid-state rejection to a user-facing validation message.
-# _write_filt_mode is the one write that can surface it: leaving manual mode
-# while a cell boost is active makes the library refuse the pump toggle.
+# _write_filt_mode is the only write that can surface one: leaving manual mode
+# while a cell boost is active makes the library refuse the pump toggle with
+# FILTRATION_BOOST_ACTIVE. Any other (or absent) reason falls back below.
 _INVALID_STATE_TRANSLATION_KEY: dict[InvalidStateReason, str] = {
     InvalidStateReason.FILTRATION_BOOST_ACTIVE: "filtration_boost_active",
-    InvalidStateReason.FILTRATION_NOT_IN_MANUAL_MODE: "filtration_not_manual_mode",
 }
 
 

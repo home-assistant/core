@@ -155,14 +155,11 @@ async def test_filt_mode_invalid_state_unmapped_reason_falls_back(
     mock_config_entry_timers: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """An invalid-state reason outside the select map falls back to a generic key."""
+    """An invalid-state rejection without a reason falls back to a generic key."""
     await setup_integration(hass, mock_config_entry_timers)
     entity_id = _select_entity_id(hass, mock_config_entry_timers, "mbf_par_filt_mode")
     mock_neopool_client.async_set_filtration_mode = AsyncMock(
-        side_effect=NeoPoolInvalidStateError(
-            "unexpected",
-            reason=InvalidStateReason.FILTVALVE_IN_AUTO_MODE,
-        ),
+        side_effect=NeoPoolInvalidStateError("unexpected"),
     )
     with pytest.raises(ServiceValidationError) as err:
         await _select_option(hass, entity_id, "auto")
