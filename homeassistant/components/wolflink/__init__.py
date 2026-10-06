@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from httpx import RequestError
+from httpx2 import RequestError
 from wolf_comm.models import Device
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 

@@ -53,13 +53,13 @@ def generate_audio_frame(pcm_mulaw=False):
 @functools.lru_cache(maxsize=1024)
 def frame_image_data(frame_i, total_frames):
     """Generate image content for a frame of a video."""
-    img = np.empty((480, 320, 3))
-    img[:, :, 0] = 0.5 + 0.5 * np.sin(2 * np.pi * (0 / 3 + frame_i / total_frames))
-    img[:, :, 1] = 0.5 + 0.5 * np.sin(2 * np.pi * (1 / 3 + frame_i / total_frames))
-    img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
-
-    img = np.round(255 * img).astype(np.uint8)
-    return np.clip(img, 0, 255)
+    color = [
+        np.round(
+            255 * (0.5 + 0.5 * np.sin(2 * np.pi * (c / 3 + frame_i / total_frames)))
+        )
+        for c in range(3)
+    ]
+    return np.full((480, 320, 3), color, dtype=np.uint8)
 
 
 def generate_video(encoder, container_format, duration):

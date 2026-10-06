@@ -65,9 +65,9 @@ FLAG_SAVE_DELAY = 15
 COMMAND_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_COMMAND): probatio.All(
-            cv.ensure_list,
-            [probatio.All(cv.string, probatio.Length(min=1))],
-            probatio.Length(min=1),
+            probatio.EnsureList(),
+            [probatio.All(cv.string, probatio.NonEmpty())],
+            probatio.NonEmpty(),
         ),
     },
     extra=probatio.ALLOW_EXTRA,
@@ -75,7 +75,7 @@ COMMAND_SCHEMA = probatio.Schema(
 
 SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
         probatio.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): probatio.Coerce(
             float
         ),
@@ -84,7 +84,7 @@ SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
 
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
         probatio.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): probatio.In(
             COMMAND_TYPES
         ),
@@ -93,7 +93,7 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
-    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1))}
+    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty())}
 )
 
 

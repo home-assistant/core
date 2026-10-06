@@ -1,5 +1,8 @@
 """Tests for hassfest translations."""
 
+from dataclasses import replace
+from pathlib import Path
+
 import probatio
 import pytest
 
@@ -248,6 +251,7 @@ SAMPLE_STRINGS = {
         },
         "deprecated_yaml": {
             "title": "Deprecated YAML configuration",
+            "short_title": "Deprecated YAML",
             "description": "YAML configuration is deprecated, please use the UI",
         },
     },
@@ -421,6 +425,43 @@ def test_gen_strings_schema(
     validated = schema(SAMPLE_STRINGS)
 
     assert validated == SAMPLE_STRINGS
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_step_title_brand_name_shared_schema(config: Config) -> None:
+    """Test the brand name step title check uses the validated integration."""
+    blocked = get_integration("test_integration", config)
+    allowed = get_integration("cert_expiry", config)
+    assert "cert_expiry" in translations.ALLOW_NAME_TRANSLATION
+
+    hits = translations._gen_strings_schema.cache_info().hits
+    blocked_schema = translations.gen_strings_schema(config, blocked)
+    allowed_schema = translations.gen_strings_schema(config, allowed)
+    # Both integrations share one cached schema
+    assert translations._gen_strings_schema.cache_info().hits > hits
+
+    with pytest.raises(probatio.Invalid, match="Do not set title of step user"):
+        blocked_schema({"config": {"step": {"user": {"title": blocked.name}}}})
+
+    strings = {"config": {"step": {"user": {"title": allowed.name}}}}
+    assert allowed_schema(strings) == strings
+
+
+def test_removed_title_warning_shared_schema(config: Config) -> None:
+    """Test the removed config.title warning lands on the validated integration."""
+    config = replace(config, specific_integrations=[Path("first"), Path("second")])
+    first = get_integration("first", config)
+    second = get_integration("second", config)
+    second_schema = translations.gen_strings_schema(config, second)
+    first_schema = translations.gen_strings_schema(config, first)
+
+    second_schema({"config": {"title": "Old title", "step": {}}})
+    first_schema({"config": {"step": {}}})
+
+    assert [warning.error for warning in second.warnings] == [
+        translations.REMOVED_TITLE_MSG
+    ]
+    assert first.warnings == []
 
 
 @pytest.mark.parametrize(

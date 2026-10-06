@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
 from elevenlabs.types import GetVoicesResponse
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
 
 from homeassistant.components.elevenlabs.const import (

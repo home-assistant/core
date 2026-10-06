@@ -11,6 +11,7 @@ import probatio
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -105,7 +106,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
@@ -134,7 +135,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        return await self._async_step_api_key(user_input, "user")
 
+    async def _async_step_api_key(
+        self, user_input: dict[str, Any] | None, step_id: str
+    ) -> ConfigFlowResult:
+        """Handle an API key form."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -149,9 +155,18 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
+                    )
+                    if entry.update_listeners:
+                        return self.async_update_and_abort(
+                            entry, data_updates=user_input
+                        )
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                        entry, data_updates=user_input
                     )
                 return self.async_create_entry(
                     title="ChatGPT",
@@ -185,13 +200,13 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
             description_placeholders={
-                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#generate-an-api-key",
+                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#prerequisites",
             },
         )
 
@@ -205,12 +220,13 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        return await self._async_step_api_key(user_input, "reauth_confirm")
 
-        return await self.async_step_user(user_input)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the API key."""
+        return await self._async_step_api_key(user_input, "reconfigure")
 
     @classmethod
     @callback
@@ -502,9 +518,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if options.get(CONF_SERVICE_TIER) not in service_tiers:
             options.pop(CONF_SERVICE_TIER, None)
 
-        if self._subentry_type == "conversation" and not model.startswith(
-            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
-        ):
+        if not model.startswith(tuple(UNSUPPORTED_WEB_SEARCH_MODELS)):
             step_schema.update(
                 {
                     probatio.Optional(
@@ -613,6 +627,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
+            "gpt-6-luna": ["none", "low", "medium", "high", "xhigh", "max"],
             "gpt-6": ["low", "medium", "high", "xhigh", "max"],
             "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],

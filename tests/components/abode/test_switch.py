@@ -101,3 +101,30 @@ async def test_trigger_automation(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         mock.assert_called_once()
+
+
+async def test_entity_id_tracking_after_removal(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a removed switch is no longer tracked in the Abode entity ids."""
+    config_entry = await setup_platform(hass, SWITCH_DOMAIN)
+    assert DEVICE_ID in config_entry.runtime_data.entity_ids
+
+    entity_registry.async_remove(DEVICE_ID)
+    await hass.async_block_till_done()
+
+    assert DEVICE_ID not in config_entry.runtime_data.entity_ids
+
+
+async def test_entity_id_tracking_after_entity_id_change(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a renamed switch is tracked by its new entity id only."""
+    config_entry = await setup_platform(hass, SWITCH_DOMAIN)
+
+    # Changing the entity_id removes and re-adds the same entity object.
+    entity_registry.async_update_entity(DEVICE_ID, new_entity_id="switch.renamed")
+    await hass.async_block_till_done()
+
+    assert DEVICE_ID not in config_entry.runtime_data.entity_ids
+    assert "switch.renamed" in config_entry.runtime_data.entity_ids
