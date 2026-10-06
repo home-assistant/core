@@ -46,7 +46,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER, LOGGER
+from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -61,21 +61,6 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kUnknown: None,
     clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: None,
 }
-
-
-def _air_quality_to_ha(value: int) -> str | None:
-    """Convert a Matter air quality value, reporting values we don't know."""
-    if value not in AIR_QUALITY_MAP:
-        # Raising here would reload the whole Matter integration
-        LOGGER.warning(
-            "Received unknown air quality value %s, please report it at "
-            "https://github.com/home-assistant/core/issues",
-            value,
-        )
-        return None
-
-    return AIR_QUALITY_MAP[value]
-
 
 CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kNormal: "normal",
@@ -756,7 +741,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="air_quality",
             device_class=SensorDeviceClass.ENUM,
             options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
-            device_to_ha=_air_quality_to_ha,
+            device_to_ha=AIR_QUALITY_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.AirQuality.Attributes.AirQuality,),

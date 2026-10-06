@@ -326,11 +326,10 @@ def test_air_quality_map_complete() -> None:
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
 async def test_air_quality_out_of_range(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test an out of spec AirQuality value is logged and reports unknown."""
+    """Test an out of spec AirQuality value reports unknown."""
     set_node_attribute(matter_node, 1, 91, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -344,7 +343,6 @@ async def test_air_quality_out_of_range(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_air_quality")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert "Received unknown air quality value 255" in caplog.text
 
 
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
