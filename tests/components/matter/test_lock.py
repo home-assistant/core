@@ -754,9 +754,10 @@ async def test_get_lock_users_iterates_with_next_index(
         return_response=True,
     )
 
-    # Indexes 2 to 4 are skipped, the rest of the table is walked
+    # Indexes 2 to 4 are skipped, and the null after index 5 ends the walk
+    # because this lock has shown it reports the field
     assert matter_client.send_device_command.call_args_list == _get_user_calls(
-        matter_node.node_id, [1, *range(5, 11)]
+        matter_node.node_id, [1, 5]
     )
 
     entity_result = result["lock.mock_door_lock"]
@@ -871,6 +872,47 @@ async def test_get_lock_users_scans_when_next_user_index_is_null(
             }
         ],
     }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_follows_next_index_from_an_empty_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users jumps over an empty slot that reports a next index."""
+    _mock_get_user(
+        matter_client,
+        {
+            1: {**_EMPTY_USER_RESPONSE, "nextUserIndex": 3},
+            3: {
+                "userIndex": 3,
+                "userName": "Alice",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": None,
+            },
+        },
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_users",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    # The empty slot points past itself, so the table is not scanned
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, [1, 3]
+    )
+    users = result["lock.mock_door_lock"]["users"]
+    assert [user["user_index"] for user in users] == [3]
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
