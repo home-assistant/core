@@ -4,6 +4,10 @@ httpx2 and httpcore2 build their default SSL contexts with truststore. On Linux,
 truststore reloads the system CA store on every TLS handshake, which blocks the
 event loop. This replaces truststore's SSLContext with one verified against
 certifi, matching httpx and the rest of Home Assistant.
+
+The certifi CA data is shared with homeassistant.util.ssl. Unlike that module,
+REQUESTS_CA_BUNDLE is not honored here, matching httpx: it only applies to the
+SSL contexts Home Assistant creates for its own HTTP client helpers.
 """
 
 from os import environ
@@ -11,20 +15,13 @@ import ssl
 import sys
 from typing import Self
 
-import certifi
 import truststore
 
-
-def _load_certifi_ca_data() -> bytes:
-    """Return the certifi CA certificates in DER form."""
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    context.load_verify_locations(cafile=certifi.where())
-    return b"".join(context.get_ca_certs(binary_form=True))
-
+from .ca_certs import certifi_ca_data
 
 # Load once at import, so creating a context in the event loop does not read
 # the CA bundle from disk.
-_CERTIFI_CA_DATA = _load_certifi_ca_data()
+certifi_ca_data()
 
 
 class CertifiSSLContext(ssl.SSLContext):
@@ -38,7 +35,7 @@ class CertifiSSLContext(ssl.SSLContext):
         """Load the certifi CA certificates."""
         super().__init__()
         self.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN | ssl.VERIFY_X509_STRICT
-        self.load_verify_locations(cadata=_CERTIFI_CA_DATA)
+        self.load_verify_locations(cadata=certifi_ca_data())
         # Match ssl.create_default_context(), which httpx used
         if (keylogfile := environ.get("SSLKEYLOGFILE")) and not (
             sys.flags.ignore_environment

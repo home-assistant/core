@@ -8,6 +8,8 @@ import ssl
 
 import certifi
 
+from .ca_certs import load_ca_data
+
 # Type alias for ALPN protocols tuple (None means no ALPN protocols set)
 type SSLALPNProtocols = tuple[str, ...] | None
 
@@ -113,7 +115,7 @@ def _create_client_context(
     cafile = environ.get("REQUESTS_CA_BUNDLE", certifi.where())
 
     sslcontext = ssl.create_default_context(
-        purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
+        purpose=ssl.Purpose.SERVER_AUTH, cadata=load_ca_data(cafile)
     )
     if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])

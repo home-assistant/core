@@ -1,5 +1,11 @@
 """Test Home Assistant ssl utility functions."""
 
+from pathlib import Path
+import ssl
+
+import certifi
+import pytest
+
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
     SSL_ALPN_HTTP11_HTTP2,
@@ -188,3 +194,31 @@ def test_client_context_default_no_alpn() -> None:
 
     assert default_ctx is not http1_ctx
     assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
+
+
+def test_create_client_context_uses_certifi(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test client contexts trust the certifi CA certificates by default."""
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+    expected = ssl.create_default_context(cafile=certifi.where())
+
+    context = create_client_context()
+
+    assert context.cert_store_stats() == expected.cert_store_stats()
+
+
+def test_create_client_context_uses_requests_ca_bundle(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test client contexts trust REQUESTS_CA_BUNDLE when set."""
+    certifi_bundle = Path(certifi.where()).read_text(encoding="utf-8")
+    end_marker = "-----END CERTIFICATE-----"
+    ca_bundle = tmp_path / "ca.pem"
+    ca_bundle.write_text(
+        certifi_bundle[: certifi_bundle.index(end_marker)] + end_marker,
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("REQUESTS_CA_BUNDLE", str(ca_bundle))
+
+    context = create_client_context()
+
+    assert context.cert_store_stats()["x509_ca"] == 1
