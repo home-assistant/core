@@ -108,7 +108,9 @@ class MobilityDataDepartureSensor(CoordinatorEntity[ArrivalsCoordinator], Sensor
             return None
         return {
             "route_id": arrival.route_id,
-            "route_name": arrival.route_name,
+            # 0.5.0 nests the whole Route; a route_id the dataset does not
+            # define leaves it None.
+            "route_name": arrival.route.display_name if arrival.route else None,
             "headsign": arrival.headsign,
             "scheduled_departure": arrival.scheduled_departure,
             "predicted_departure": arrival.predicted_departure,

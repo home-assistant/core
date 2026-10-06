@@ -352,7 +352,7 @@ aiomealie==2.1.2
 aiomelcloudhome==0.2.4
 
 # homeassistant.components.mobilitydata
-aiomobilitydatabase[feeds]==0.4.0
+aiomobilitydatabase[feeds]==0.5.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.3.1
