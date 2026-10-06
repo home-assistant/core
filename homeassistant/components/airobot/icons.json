@@ -10,6 +10,35 @@
         "default": "mdi:delta"
       }
     },
+    "sensor": {
+      "extract_airflow": {
+        "default": "mdi:weather-windy"
+      },
+      "extract_fan_level": {
+        "default": "mdi:fan"
+      },
+      "extract_fan_rpm": {
+        "default": "mdi:fan"
+      },
+      "heat_recovery_efficiency": {
+        "default": "mdi:heat-wave"
+      },
+      "supply_airflow": {
+        "default": "mdi:weather-windy"
+      },
+      "supply_fan_level": {
+        "default": "mdi:fan"
+      },
+      "supply_fan_rpm": {
+        "default": "mdi:fan"
+      },
+      "voc": {
+        "default": "mdi:air-purifier"
+      },
+      "working_time": {
+        "default": "mdi:clock-outline"
+      }
+    },
     "switch": {
       "actuator_exercise_disabled": {
         "default": "mdi:valve"

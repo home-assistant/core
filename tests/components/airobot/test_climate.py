@@ -268,3 +268,9 @@ async def test_climate_current_temperature(
     state = hass.states.get("climate.test_thermostat")
     assert state
     assert state.attributes.get("current_temperature") == expected_temp
+
+
+@pytest.mark.usefixtures("init_vu_integration")
+async def test_climate_not_created_for_ventilation(hass: HomeAssistant) -> None:
+    """Test no climate entities are created for a ventilation entry."""
+    assert not hass.states.async_entity_ids(CLIMATE_DOMAIN)

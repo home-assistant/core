@@ -1,10 +1,14 @@
-"""Coordinator for the Airobot integration."""
+"""Coordinators for the Airobot integration."""
 
 import asyncio
 from datetime import timedelta
 import logging
 from typing import override
 
+from modbus_connection import ModbusUnit
+from pyairobotmodbus import AirobotModbusClient
+from pyairobotmodbus.exceptions import AirobotError as VUError, AirobotReadError
+from pyairobotmodbus.models import AirobotData as AirobotVUData, AirobotIdentity
 from pyairobotrest import AirobotClient
 from pyairobotrest.exceptions import AirobotAuthError, AirobotConnectionError
 
@@ -20,10 +24,12 @@ from .models import AirobotData
 
 _LOGGER = logging.getLogger(__name__)
 
-# Update interval - thermostat measures air every 30 seconds
+# Update interval - the devices measure air every 30 seconds
 UPDATE_INTERVAL = timedelta(seconds=30)
 
-type AirobotConfigEntry = ConfigEntry[AirobotDataUpdateCoordinator]
+type AirobotConfigEntry = ConfigEntry[
+    AirobotDataUpdateCoordinator | AirobotVUCoordinator
+]
 
 
 class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
@@ -69,3 +75,48 @@ class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
             ) from err
 
         return AirobotData(status=status, settings=settings)
+
+
+class AirobotVUCoordinator(DataUpdateCoordinator[AirobotVUData]):
+    """Class to manage fetching Airobot VU data via Modbus."""
+
+    config_entry: AirobotConfigEntry
+    identity: AirobotIdentity | None = None
+
+    def __init__(
+        self, hass: HomeAssistant, entry: AirobotConfigEntry, unit: ModbusUnit
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+            config_entry=entry,
+        )
+        self.client = AirobotModbusClient(unit)
+
+    @override
+    async def _async_setup(self) -> None:
+        """Read the unit's identity, which never changes."""
+        try:
+            self.identity = await self.client.async_get_identity()
+        except AirobotReadError:
+            # Firmware without the undocumented identity registers
+            self.identity = None
+        except VUError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+            ) from err
+
+    @override
+    async def _async_update_data(self) -> AirobotVUData:
+        """Fetch data from the Modbus device."""
+        try:
+            return await self.client.async_get_data()
+        except VUError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+            ) from err
