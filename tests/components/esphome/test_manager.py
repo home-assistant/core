@@ -1776,6 +1776,29 @@ async def test_state_subscription(
     assert mock_client.send_home_assistant_state.mock_calls == []
 
 
+async def test_state_subscription_entity_added_later(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the state is sent once a subscribed entity is created."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+    )
+    await hass.async_block_till_done()
+    device.mock_home_assistant_state_subscription("cover.garage_door", None)
+    device.mock_home_assistant_state_subscription("cover.garage_door", "position")
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == []
+
+    hass.states.async_set("cover.garage_door", "closed", {"position": 0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("cover.garage_door", None, "closed"),
+        call("cover.garage_door", "position", "0"),
+    ]
+
+
 async def test_state_request(
     mock_client: APIClient,
     hass: HomeAssistant,
