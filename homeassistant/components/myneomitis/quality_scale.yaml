@@ -33,8 +33,8 @@ rules:
 
   # Silver tier rules
   action-exceptions:
-    status: exempt
-    comment: Integration does not provide service actions.
+    status: todo
+    comment: Library errors are not handled in select action, and only partially in climate actions
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

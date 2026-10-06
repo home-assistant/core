@@ -1,11 +1,179 @@
 {
   "timestamp": 1704067200,
   "datetime": "2024-01-01T00:00:00",
-  "1.8.0": { "value": 12345.678, "unit": "kWh", "name": "Total Import" },
-  "2.8.0": { "value": 1234.567, "unit": "kWh", "name": "Total Export" },
-  "16.7.0": { "value": 1500.5, "unit": "W", "name": "Active Power" },
-  "32.7.0": { "value": 230.1, "unit": "V", "name": "Voltage L1" },
-  "31.7.0": { "value": 6.52, "unit": "A", "name": "Current L1" },
-  "14.7.0": { "value": 50.01, "unit": "Hz", "name": "Frequency" },
-  "13.7.0": { "value": 0.985, "unit": "", "name": "Power Factor" }
+  "1.8.0": {
+    "value": 12345.678,
+    "unit": "kWh",
+    "name": "Total Import"
+  },
+  "2.8.0": {
+    "value": 1234.567,
+    "unit": "kWh",
+    "name": "Total Export"
+  },
+  "16.7.0": {
+    "value": 1500.5,
+    "unit": "W",
+    "name": "Active Power"
+  },
+  "32.7.0": {
+    "value": 230.1,
+    "unit": "V",
+    "name": "Voltage L1"
+  },
+  "31.7.0": {
+    "value": 6.52,
+    "unit": "A",
+    "name": "Current L1"
+  },
+  "14.7.0": {
+    "value": 50.01,
+    "unit": "Hz",
+    "name": "Frequency"
+  },
+  "13.7.0": {
+    "value": 0.985,
+    "unit": "",
+    "name": "Power Factor"
+  },
+  "1.7.0": {
+    "value": 1480.2,
+    "unit": "W",
+    "name": "Import Power"
+  },
+  "2.7.0": {
+    "value": 12.5,
+    "unit": "W",
+    "name": "Export Power"
+  },
+  "15.7.0": {
+    "value": 1467.7,
+    "unit": "W",
+    "name": "Absolute Power"
+  },
+  "1.8.3": {
+    "value": 823.11,
+    "unit": "kWh",
+    "name": "Import Tariff 3"
+  },
+  "5.8.0": {
+    "value": 101.532,
+    "unit": "kvarh",
+    "name": "Reactive QI"
+  },
+  "6.8.0": {
+    "value": 23.114,
+    "unit": "kvarh",
+    "name": "Reactive QII"
+  },
+  "7.8.0": {
+    "value": 5.871,
+    "unit": "kvarh",
+    "name": "Reactive QIII"
+  },
+  "8.8.0": {
+    "value": 44.209,
+    "unit": "kvarh",
+    "name": "Reactive QIV"
+  },
+  "5.8.1": {
+    "value": 55.217,
+    "unit": "kvarh",
+    "name": "Reactive QI Tariff 1"
+  },
+  "3.7.0": {
+    "value": 231.7,
+    "unit": "var",
+    "name": "Reactive Power"
+  },
+  "4.7.0": {
+    "value": 12.4,
+    "unit": "var",
+    "name": "Reactive Power Export"
+  },
+  "9.7.0": {
+    "value": 1502.3,
+    "unit": "VA",
+    "name": "Apparent Power"
+  },
+  "10.7.0": {
+    "value": 14.1,
+    "unit": "VA",
+    "name": "Apparent Power Export"
+  },
+  "21.7.0": {
+    "value": 500.1,
+    "unit": "W",
+    "name": "Import Power L1"
+  },
+  "23.7.0": {
+    "value": 120.4,
+    "unit": "var",
+    "name": "Reactive Power L1"
+  },
+  "12.7.0": {
+    "value": 230.4,
+    "unit": "V",
+    "name": "Voltage Average"
+  },
+  "91.7.0": {
+    "value": 0.42,
+    "unit": "A",
+    "name": "Neutral Current"
+  },
+  "140.7.0": {
+    "value": 49.99,
+    "unit": "Hz",
+    "name": "Internal Frequency"
+  },
+  "94.91.1": {
+    "value": 3,
+    "unit": "",
+    "name": ""
+  },
+  "94.91.0": {
+    "value": "0x0182",
+    "unit": "",
+    "name": "Status Word"
+  },
+  "96.5.0": {
+    "value": 386,
+    "unit": "",
+    "name": "Operating Status"
+  },
+  "15.8.0": {
+    "value": 13580.245,
+    "unit": "kWh",
+    "name": "Absolute Energy"
+  },
+  "3.8.0": {
+    "value": 245.891,
+    "unit": "kvarh",
+    "name": "Reactive Import"
+  },
+  "4.8.0": {
+    "value": 87.316,
+    "unit": "kvarh",
+    "name": "Reactive Export"
+  },
+  "1.6.0": {
+    "value": 4.21,
+    "unit": "kW",
+    "name": "Maximum Demand"
+  },
+  "0.0.0": {
+    "value": "1EMH0012345678",
+    "unit": "",
+    "name": "Device Address"
+  },
+  "96.1.0": {
+    "value": "0a014845480000123456",
+    "unit": "",
+    "name": "Serial Number"
+  },
+  "0.2.0": {
+    "value": 10203,
+    "unit": "",
+    "name": "Firmware Revision"
+  }
 }

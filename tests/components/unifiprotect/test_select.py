@@ -1,6 +1,8 @@
 """Test the UniFi Protect select platform."""
 
+from collections.abc import Callable, Coroutine
 from copy import copy
+from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -12,23 +14,27 @@ from uiprotect.data import (
     DeviceState,
     DoorbellMessageType,
     IRLEDMode,
-    LCDMessage,
     Light,
     LightModeEnableType,
     LightModeType,
     Liveview,
     NvrArmMode,
     NvrArmModeStatus,
+    ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicHdrMode,
     RecordingMode,
+    Sensor,
     Viewer,
+    WSAction,
 )
 from uiprotect.data.nvr import DoorbellMessage
-from uiprotect.exceptions import GlobalAlarmManagerError
+from uiprotect.data.public_devices import PublicLcdMessage, SensorFeatureCapability
+from uiprotect.exceptions import ClientError, GlobalAlarmManagerError
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.select import ATTR_OPTIONS
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
@@ -36,6 +42,7 @@ from homeassistant.components.unifiprotect.select import (
     PTZ_PATROL_STOP,
     VIEWER_SELECTS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
@@ -46,9 +53,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
+from .conftest import UNIFI_MAC
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -58,6 +66,7 @@ from .utils import (
     make_public_bootstrap,
     make_public_camera,
     make_public_light,
+    make_public_sensor,
     public_device_ws_message,
     remove_entities,
     setup_public_camera,
@@ -387,6 +396,7 @@ async def test_select_update_doorbell_message(
 ) -> None:
     """Test select entity update (change doorbell message)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -398,22 +408,37 @@ async def test_select_update_doorbell_message(
     assert state
     assert state.state == "Default Message (Welcome)"
 
-    new_camera = doorbell.model_copy()
-    new_camera.lcd_message = LCDMessage(
-        type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+    public = make_public_camera(
+        doorbell,
+        lcd_message=PublicLcdMessage(
+            type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+        ),
     )
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.ws_msg(mock_msg)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "Test"
+
+    public = make_public_camera(
+        doorbell,
+        lcd_message=PublicLcdMessage(type=DoorbellMessageType.DO_NOT_DISTURB),
+    )
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "DO NOT DISTURB"
+
+    public = make_public_camera(doorbell, lcd_message=None)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Default Message (Welcome)"
 
 
 async def test_select_set_option_light_motion(
@@ -629,11 +654,18 @@ async def test_select_set_option_camera_ir(
         mock_method.assert_called_once_with(expected)
 
 
+@pytest.mark.parametrize("message", ["Test", "Back at 5:30"])
 async def test_select_set_option_camera_doorbell_custom(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, message: str
 ) -> None:
     """Test Doorbell Text select (user defined message)."""
 
+    setup_public_camera(ufp)
+    doorbell_settings = ufp.api.bootstrap.nvr.doorbell_settings
+    doorbell_settings.all_messages = [
+        *doorbell_settings.all_messages,
+        DoorbellMessage(type=DoorbellMessageType.CUSTOM_MESSAGE, text="Back at 5:30"),
+    ]
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -641,20 +673,22 @@ async def test_select_set_option_camera_doorbell_custom(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_message_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Test"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: message},
             blocking=True,
         )
 
         # reset_at=None keeps the message up; omitting it lets the NVR
         # clear it after its own timeout
         mock_method.assert_called_once_with(
-            DoorbellMessageType.CUSTOM_MESSAGE, text="Test", reset_at=None
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
         )
 
 
@@ -663,6 +697,7 @@ async def test_select_set_option_camera_doorbell_unifi(
 ) -> None:
     """Test Doorbell Text select (unifi message)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -670,9 +705,11 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_message_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -693,6 +730,7 @@ async def test_select_set_option_camera_doorbell_default(
 ) -> None:
     """Test Doorbell Text select (default message)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -700,9 +738,11 @@ async def test_select_set_option_camera_doorbell_default(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_message_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "select",
             "select_option",
@@ -864,16 +904,14 @@ async def test_select_ptz_patrol_start(
 
     entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert entity_id is not None
-    with patch_ufp_method(
-        ptz_camera, "ptz_patrol_start_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
-            blocking=True,
-        )
-        mock_method.assert_called_once_with(slot=0)
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
+        blocking=True,
+    )
+    public.ptz_patrol_start.assert_awaited_once_with(0)
 
 
 async def test_select_ptz_patrol_stop(
@@ -886,26 +924,50 @@ async def test_select_ptz_patrol_stop(
 
     entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert entity_id is not None
-    with patch_ufp_method(
-        ptz_camera, "ptz_patrol_stop_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "stop"},
+        blocking=True,
+    )
+    public.ptz_patrol_stop.assert_awaited_once_with()
+
+
+async def test_select_ptz_patrol_client_error(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test a failed patrol command raises HomeAssistantError."""
+    await _setup_ptz_camera(
+        hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id)[:1]
+    )
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    public.ptz_patrol_start.side_effect = ClientError("boom")
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "select",
             "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "stop"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
             blocking=True,
         )
-        mock_method.assert_called_once()
 
 
 async def test_select_ptz_patrol_active_state(
     hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
 ) -> None:
-    """Test PTZ patrol shows active patrol from device state."""
-    patrols = _make_patrols(ptz_camera.id)
-    ptz_camera.active_patrol_slot = 0
+    """Test PTZ patrol shows the active patrol from the public camera."""
+    prime = ufp.api.update_public.side_effect
 
-    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=patrols)
+    async def _prime_with_active_patrol() -> Any:
+        pb = await prime()
+        pb.cameras[ptz_camera.id].active_patrol_slot = 0
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_with_active_patrol)
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
 
     entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
     assert entity_id is not None
@@ -930,37 +992,58 @@ async def test_select_ptz_patrol_websocket_update(
     assert state is not None
     assert state.state == PTZ_PATROL_STOP
 
-    # Simulate websocket update: patrol starts
-    new_camera = ptz_camera.model_copy()
-    new_camera.active_patrol_slot = 1
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.ws_msg(mock_msg)
+    # Simulate public websocket update: patrol starts
+    public = make_public_camera(ptz_camera, active_patrol_slot=1)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "Patrol 2"
 
-    # Simulate websocket update: patrol stops
-    new_camera2 = ptz_camera.model_copy()
-    new_camera2.active_patrol_slot = None
-
-    mock_msg2 = Mock()
-    mock_msg2.changed_data = {}
-    mock_msg2.new_obj = new_camera2
-
-    ufp.api.bootstrap.cameras = {new_camera2.id: new_camera2}
-    ufp.ws_msg(mock_msg2)
+    # Simulate public websocket update: patrol stops
+    public = make_public_camera(ptz_camera)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == PTZ_PATROL_STOP
+
+
+async def test_select_ptz_patrol_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test the PTZ patrol select is unavailable without a public camera."""
+
+    async def _prime_without_camera() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_without_camera)
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_select_ptz_patrol_unavailable_on_public_disconnect(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ patrol availability follows the public camera's state."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == PTZ_PATROL_STOP
+
+    public = make_public_camera(ptz_camera, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_select_ptz_camera_adopt(
@@ -1220,3 +1303,370 @@ async def test_select_nvr_arm_profile_ws_update(
     state = hass.states.get(ARM_PROFILE_ENTITY_ID)
     assert state is not None
     assert state.state == "Away (p2)"
+
+
+def _select_keys(entity_registry: er.EntityRegistry, mac: str) -> set[str]:
+    """Return the description keys of the selects registered for a device."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == Platform.SELECT and entry.unique_id.startswith(prefix)
+    }
+
+
+def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
+
+
+@pytest.mark.parametrize(
+    (
+        "fixture_name",
+        "make",
+        "key",
+        "value",
+        "option",
+        "setter",
+        "setter_call",
+    ),
+    [
+        pytest.param(
+            "doorbell",
+            partial(_make_streamless_public_camera, hdr_type=PublicHdrMode.AUTO),
+            "hdr_mode",
+            "auto",
+            "always",
+            "set_hdr_mode",
+            ((PublicHdrMode.ON,), {}),
+            id="camera",
+        ),
+        pytest.param(
+            "light",
+            partial(
+                make_public_light,
+                light_mode=LightModeType.WHEN_DARK,
+                light_mode_enable_at=LightModeEnableType.DARK,
+            ),
+            "light_motion",
+            "when_dark",
+            "motion",
+            "set_light_mode",
+            ((LightModeType.MOTION,), {"enable_at": LightModeEnableType.ALWAYS}),
+            id="light",
+        ),
+    ],
+)
+async def test_public_only_select_end_to_end(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    fixture_name: str,
+    make: Callable[[ProtectAdoptableDeviceModel], Mock],
+    key: str,
+    value: str,
+    option: str,
+    setter: str,
+    setter_call: tuple[tuple[Any, ...], dict[str, Any]],
+) -> None:
+    """A public-only entry builds the migrated selects from the public object.
+
+    Private-only selects are absent, the device is registered from public
+    identity and a chosen option goes to the public setter.
+    """
+    device = request.getfixturevalue(fixture_name)
+    public = make(device)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = public
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    assert _select_keys(entity_registry, device.mac) == {key}
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{device.mac}_{key}"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == value
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.model == public.type
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert nvr_device
+    assert device_entry.via_device_id == nvr_device.id
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+    args, kwargs = setter_call
+    getattr(public, setter).assert_awaited_once_with(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "make", "updated", "key", "before", "after"),
+    [
+        pytest.param(
+            "doorbell",
+            partial(_make_streamless_public_camera, hdr_type=PublicHdrMode.AUTO),
+            partial(_make_streamless_public_camera, hdr_type=PublicHdrMode.OFF),
+            "hdr_mode",
+            "auto",
+            "off",
+            id="camera",
+        ),
+        pytest.param(
+            "light",
+            partial(
+                make_public_light,
+                light_mode=LightModeType.MOTION,
+                light_mode_enable_at=LightModeEnableType.ALWAYS,
+            ),
+            partial(
+                make_public_light,
+                light_mode=LightModeType.MOTION,
+                light_mode_enable_at=LightModeEnableType.DARK,
+            ),
+            "light_motion",
+            "motion",
+            "motion_dark",
+            id="light",
+        ),
+    ],
+)
+async def test_public_only_select_follows_public_ws(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    fixture_name: str,
+    make: Callable[[ProtectAdoptableDeviceModel], Mock],
+    updated: Callable[[ProtectAdoptableDeviceModel], Mock],
+    key: str,
+    before: str,
+    after: str,
+) -> None:
+    """A public devices websocket frame updates the select."""
+    device = request.getfixturevalue(fixture_name)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = make(device)
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{device.mac}_{key}"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == before
+
+    store[device.id] = public = updated(device)
+    ufp_public_only.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == after
+
+
+async def test_public_only_select_sensor_has_none(
+    entity_registry: er.EntityRegistry,
+    sensor_all: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The sense selects are private-only, so a public sensor yields none."""
+    ufp_public_only.api.public_bootstrap.sensors[sensor_all.id] = make_public_sensor(
+        sensor_all, capabilities={SensorFeatureCapability.OPEN}
+    )
+
+    await setup_public_only()
+
+    assert _select_keys(entity_registry, sensor_all.mac) == set()
+
+
+async def test_public_only_select_added_after_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    light: Light,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """In public-only mode a light added later gets its select from its add frame.
+
+    The public devices websocket ``add`` frame is the only discovery signal
+    without a local user; a re-delivered frame must not add a second time.
+    """
+    await setup_public_only()
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+
+    public = make_public_light(light)
+    ufp_public_only.api.public_bootstrap.lights[light.id] = public
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert _select_keys(entity_registry, light.mac) == {"light_motion"}
+    count = len(hass.states.async_entity_ids(Platform.SELECT.value))
+
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(Platform.SELECT.value)) == count
+    assert "already exists" not in caplog.text
+
+
+async def test_public_only_select_sense_registry_cleanup(
+    entity_registry: er.EntityRegistry,
+    sensor_all: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The capability cleanup runs without a private bootstrap."""
+    stale = entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        f"{sensor_all.mac}_mount_type",
+        config_entry=ufp_public_only.entry,
+    )
+    ufp_public_only.api.public_bootstrap.sensors[sensor_all.id] = make_public_sensor(
+        sensor_all, capabilities={SensorFeatureCapability.TEMPERATURE}
+    )
+
+    await setup_public_only()
+
+    assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_public_only_select_nvr_arm_profile(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The arm profile select is built from the public NVR without a private one."""
+    pb = ufp_public_only.api.public_bootstrap
+    pb.arm_profiles = {
+        "p1": _make_arm_profile("p1", "Home"),
+        "p2": _make_arm_profile("p2", "Away"),
+    }
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p2")
+    ufp_public_only.api.set_current_arm_profile_public = AsyncMock()
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Away (p2)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Home (p1)"},
+        blocking=True,
+    )
+    ufp_public_only.api.set_current_arm_profile_public.assert_awaited_once_with("p1")
+
+
+async def test_public_only_select_nvr_arm_profile_ws_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """An NVR devices websocket frame updates the arm profile select."""
+    pb = ufp_public_only.api.public_bootstrap
+    pb.arm_profiles = {"p1": _make_arm_profile("p1", "Home")}
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p1")
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+    pb.arm_profiles = {
+        "p1": _make_arm_profile("p1", "Home"),
+        "p2": _make_arm_profile("p2", "Away"),
+    }
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p2")
+    msg = Mock()
+    msg.new_obj = pb.nvr
+    msg.old_obj = None
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "Away (p2)"
+    assert set(state.attributes[ATTR_OPTIONS]) == {"Home (p1)", "Away (p2)"}
+
+
+async def test_public_only_select_nvr_arm_profile_follows_public_ws(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The arm profile select goes unavailable with the public devices websocket."""
+    pb = ufp_public_only.api.public_bootstrap
+    pb.arm_profiles = {"p1": _make_arm_profile("p1", "Home")}
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p1")
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+
+async def test_select_nvr_arm_profile_decoupled_from_private_websocket(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Arm profile availability follows the public WS only: private loss is a no-op."""
+    profiles = {"p1": _make_arm_profile("p1", "Home")}
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(
+        arm_mode=_make_nvr_arm_mode(profile_id="p1"), profiles=profiles
+    )
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == "Home (p1)"
+
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == "Home (p1)"
+
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == STATE_UNAVAILABLE

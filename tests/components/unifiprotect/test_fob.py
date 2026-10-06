@@ -45,6 +45,7 @@ FOB_NAME = "Front Door Fob"
 
 BATTERY_SENSOR = "sensor.front_door_fob_battery"
 SIGNAL_SENSOR = "sensor.front_door_fob_signal_strength"
+SIGNAL_QUALITY_SENSOR = "sensor.front_door_fob_signal_quality"
 STATUS_SENSOR = "sensor.front_door_fob_status"
 BATTERY_LOW_BINARY = "binary_sensor.front_door_fob_battery"
 BUTTON_EVENT = "event.front_door_fob_button"
@@ -57,6 +58,7 @@ def _make_fob(
     percentage: int | None = 80,
     is_low: bool = False,
     signal_strength: int | None = -55,
+    signal_quality: int | None = 90,
     state: DeviceState = DeviceState.CONNECTED,
     name: str | None = FOB_NAME,
 ) -> Mock:
@@ -75,7 +77,7 @@ def _make_fob(
             percentage=percentage, is_low=is_low
         ),
         signal_state=PublicSignalState(
-            signal_strength=signal_strength, signal_quality=None
+            signal_strength=signal_strength, signal_quality=signal_quality
         ),
     )
     return fob
@@ -345,7 +347,7 @@ async def test_fob_present_at_startup_not_added_twice(
                 if entry.unique_id.startswith(FOB_MAC)
             ]
         )
-        == 5
+        == 6
     )
 
 
@@ -424,19 +426,28 @@ async def test_fob_battery_none_is_unknown(
     assert state.state == "unknown"
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "expected"),
+    [
+        pytest.param(SIGNAL_SENSOR, "-55", id="strength"),
+        pytest.param(SIGNAL_QUALITY_SENSOR, "90", id="quality"),
+    ],
+)
 async def test_fob_signal_sensor_when_enabled(
     hass: HomeAssistant,
     ufp_with_fob: tuple[MockUFPFixture, Mock],
+    entity_id: str,
+    expected: str,
 ) -> None:
-    """Enabling the signal-strength sensor exposes the fob's signal value."""
+    """Enabling a signal sensor exposes the fob's signal value."""
     ufp, _fob = ufp_with_fob
     await init_entry(hass, ufp, [])
 
-    await enable_entity(hass, ufp.entry.entry_id, SIGNAL_SENSOR)
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
-    state = hass.states.get(SIGNAL_SENSOR)
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "-55"
+    assert state.state == expected
 
 
 async def test_fob_event_entity_created_with_empty_feature_flags(
@@ -531,6 +542,9 @@ async def test_fob_without_wireless_data_is_unknown(
     await enable_entity(hass, ufp.entry.entry_id, SIGNAL_SENSOR)
     assert hass.states.get(SIGNAL_SENSOR).state == "unknown"
 
+    await enable_entity(hass, ufp.entry.entry_id, SIGNAL_QUALITY_SENSOR)
+    assert hass.states.get(SIGNAL_QUALITY_SENSOR).state == "unknown"
+
 
 async def test_fob_unavailable_when_public_bootstrap_lost(
     hass: HomeAssistant,
@@ -570,8 +584,9 @@ async def test_fob_entity_counts(
         for entry in entity_registry.entities.values()
         if entry.unique_id.startswith(FOB_MAC)
     ]
-    # battery sensor, signal sensor, status sensor, battery-low binary, button event
-    assert len(fob_entities) == 5
+    # battery, signal strength, signal quality and status sensors, battery-low
+    # binary, button event
+    assert len(fob_entities) == 6
     assert sum(not entry.disabled for entry in fob_entities) == 4
 
 
@@ -619,7 +634,7 @@ async def test_fob_added_at_runtime(
                 if entry.unique_id.startswith(FOB_MAC)
             ]
         )
-        == 5
+        == 6
     )
 
 

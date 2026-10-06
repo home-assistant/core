@@ -19,15 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
-    CO2_V1,
-    CO2_V2,
     CORENTIUM_HOME_2_DEVICE_INFO,
     CORENTIUM_HOME_2_SERVICE_INFO,
-    HUMIDITY_V2,
-    TEMPERATURE_V1,
-    VOC_V1,
-    VOC_V2,
-    VOC_V3,
     WAVE_DEVICE_INFO,
     WAVE_ENHANCE_DEVICE_INFO,
     WAVE_ENHANCE_SERVICE_INFO,
@@ -37,7 +30,6 @@ from . import (
     create_device,
     create_entry,
     patch_airthings_ble,
-    patch_airthings_device_update,
     patch_async_ble_device_from_address,
     patch_async_discovered_service_info,
 )
@@ -46,205 +38,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def test_migration_from_v1_to_v3_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Verify migration from v1 (pre 2023.9.0).
-
-    Migrates to the latest unique id format.
-    """
-    entry = create_entry(hass, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-
-    assert entry is not None
-    assert device is not None
-
-    new_unique_id = f"{WAVE_DEVICE_INFO.address}_temperature"
-
-    sensor = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=TEMPERATURE_V1.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-    inject_bluetooth_service_info(
-        hass,
-        WAVE_SERVICE_INFO,
-    )
-
-    await hass.async_block_till_done()
-
-    with patch_airthings_device_update():
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) > 0
-
-    assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
-
-
-async def test_migration_from_v2_to_v3_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Verify migration from v2 (introduced in 2023.9.0).
-
-    Migrates to the latest unique id format.
-    """
-    entry = create_entry(hass, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-
-    assert entry is not None
-    assert device is not None
-
-    sensor = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=HUMIDITY_V2.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-    inject_bluetooth_service_info(
-        hass,
-        WAVE_SERVICE_INFO,
-    )
-
-    await hass.async_block_till_done()
-
-    with patch_airthings_device_update():
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) > 0
-
-    # Migration should happen, v2 unique id should be updated to the new format
-    new_unique_id = f"{WAVE_DEVICE_INFO.address}_humidity"
-    assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
-
-
-async def test_migration_from_v1_and_v2_to_v3_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test migration with both v1 and v2 unique ids.
-
-    v1 is pre 2023.9.0, v2 introduced in 2023.9.0.
-    """
-    entry = create_entry(hass, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-
-    assert entry is not None
-    assert device is not None
-
-    v2 = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=CO2_V2.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    v1 = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=CO2_V1.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-    inject_bluetooth_service_info(
-        hass,
-        WAVE_SERVICE_INFO,
-    )
-
-    await hass.async_block_till_done()
-
-    with patch_airthings_device_update():
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) > 0
-
-    # Migration should happen, v1 unique id should be updated to the new format
-    new_unique_id = f"{WAVE_DEVICE_INFO.address}_co2"
-    assert entity_registry.async_get(v1.entity_id).unique_id == new_unique_id
-    assert entity_registry.async_get(v2.entity_id).unique_id == CO2_V2.unique_id
-
-
-async def test_migration_with_all_unique_ids(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test if migration works when we have all unique ids."""
-    entry = create_entry(hass, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
-
-    assert entry is not None
-    assert device is not None
-
-    v1 = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=VOC_V1.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    v2 = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=VOC_V2.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    v3 = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform=Platform.SENSOR,
-        unique_id=VOC_V3.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-    inject_bluetooth_service_info(
-        hass,
-        WAVE_SERVICE_INFO,
-    )
-
-    await hass.async_block_till_done()
-
-    with patch_airthings_device_update():
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) > 0
-
-    # No migration should happen, unique id should be the same as before
-    assert entity_registry.async_get(v1.entity_id).unique_id == VOC_V1.unique_id
-    assert entity_registry.async_get(v2.entity_id).unique_id == VOC_V2.unique_id
-    assert entity_registry.async_get(v3.entity_id).unique_id == VOC_V3.unique_id
 
 
 @pytest.mark.parametrize(
@@ -470,3 +263,43 @@ async def test_default_scan_interval_migration(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_update.call_count == 3
+
+
+async def test_device_registry_sw_version_updates_on_refresh(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device firmware version follows a firmware upgrade."""
+    first_device = deepcopy(WAVE_DEVICE_INFO)
+    second_device = deepcopy(WAVE_DEVICE_INFO)
+    first_device.sw_version = "G-BLE-1.5.3-master+0"
+    second_device.sw_version = "G-BLE-2.2.3-master+0"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: first_device.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(side_effect=[first_device, second_device]),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_BLUETOOTH, WAVE_DEVICE_INFO.address), entry.entry_id
+        )
+        assert device is not None
+        assert device.sw_version == "G-BLE-1.5.3-master+0"
+
+        await entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.sw_version == "G-BLE-2.2.3-master+0"

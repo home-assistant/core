@@ -225,8 +225,8 @@ async def test_add_item_service_raises(
     ("item_data", "expected_exception", "expected_error"),
     [
         ({}, probatio.Invalid, "required key not provided"),
-        ({ATTR_ITEM: ""}, probatio.Invalid, "length of value must be at least 1"),
-        ({ATTR_ITEM: "    "}, probatio.Invalid, "length of value must be at least 1"),
+        ({ATTR_ITEM: ""}, probatio.Invalid, "value must not be empty"),
+        ({ATTR_ITEM: "    "}, probatio.Invalid, "value must not be empty"),
         (
             {ATTR_ITEM: "Submit forms", ATTR_DESCRIPTION: "Submit tax forms"},
             ServiceValidationError,
@@ -534,10 +534,10 @@ async def test_update_todo_item_service_by_summary_not_found(
     [
         ({}, r"required key not provided at 'item'"),
         ({"status": "needs_action"}, r"required key not provided at 'item'"),
-        ({"item": "Item #1"}, "must contain at least one of"),
+        ({"item": "Item #1"}, "at least one of"),
         (
             {"item": "", "status": "needs_action"},
-            "length of value must be at least 1",
+            "value must not be empty",
         ),
     ],
 )

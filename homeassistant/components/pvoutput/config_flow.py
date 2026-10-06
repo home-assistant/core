@@ -59,23 +59,20 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_API_KEY: user_input[CONF_API_KEY],
                     },
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
-                    ): str,
-                    probatio.Required(
-                        CONF_SYSTEM_ID, default=user_input.get(CONF_SYSTEM_ID, "")
-                    ): int,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(CONF_SYSTEM_ID): int,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )
@@ -113,7 +110,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             },
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -153,6 +150,8 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
