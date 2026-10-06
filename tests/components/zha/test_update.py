@@ -706,6 +706,7 @@ async def test_update_release_notes(
 
 async def test_update_version_sync_device_registry(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
     device_registry: dr.DeviceRegistry,
@@ -727,3 +728,4 @@ async def test_update_version_sync_device_registry(
         hass.config_entries.async_entries("zha")[0].entry_id,
     )
     assert reg_device.sw_version == "0xabcd1234"
+    assert "Received unknown event" not in caplog.text
