@@ -542,13 +542,14 @@ async def test_duplicate_entry(
     [
         pytest.param(BleakError, id="bleak_error"),
         # The library returns None for the values it failed to read
-        pytest.param([(None, None, None)], id="no_device_info"),
+        pytest.param([(None, "Automower", "305")], id="no_manufacturer"),
+        pytest.param([("Husqvarna", None, "305")], id="no_device_type"),
     ],
 )
 async def test_exception_probe(
     hass: HomeAssistant,
     mock_automower_client: Mock,
-    probe_side_effect: type[Exception] | list[tuple[None, None, None]],
+    probe_side_effect: type[Exception] | list[tuple[str | None, str | None, str]],
 ) -> None:
     """Test a failing probe shows an error."""
 
