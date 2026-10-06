@@ -1,7 +1,6 @@
 """Commands part of Websocket API."""
 
 from collections.abc import Callable
-from contextvars import copy_context
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
@@ -1207,19 +1206,13 @@ async def handle_subscribe_condition(
         connection.send_event(msg["id"], event_data)
 
     @callback
-    def condition_changed() -> None:
-        """Evaluate the condition when its result may have changed."""
-        # Run in a copied context so the trace of the run that changed the state is kept
-        copy_context().run(evaluate_condition, None)
-
-    @callback
     def unsubscribe() -> None:
         """Unsubscribe from condition updates."""
         condition.async_unload()
         for unsub in unsubs:
             unsub()
 
-    unsubs = [await condition.async_track_changes(condition_changed)]
+    unsubs = [await condition.async_track_changes(partial(evaluate_condition, None))]
     if condition.needs_polling:
         unsubs.append(
             async_track_time_interval(

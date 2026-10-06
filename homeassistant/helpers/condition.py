@@ -4,6 +4,7 @@ import abc
 import asyncio
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Iterable, Mapping
+from contextvars import copy_context
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -362,7 +363,13 @@ class ConditionChecker(abc.ABC):
         """
         if not self._set_up:
             raise HomeAssistantError("Condition checker is not set up")
-        return await self._async_track_changes(action)
+
+        @callback
+        def isolated_action() -> None:
+            # Run in a copied context so the trace of the run that changed the state is kept
+            copy_context().run(action)
+
+        return await self._async_track_changes(isolated_action)
 
     async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
         """Call action when the result of the condition may have changed.
@@ -706,6 +713,11 @@ class EntityConditionBase(Condition):
     @property
     @override
     def needs_polling(self) -> bool:
+        """Return if the result can change without async_track_changes reporting it.
+
+        Subclasses whose result depends on anything else than the states of the
+        targeted entities must override this.
+        """
         return self._duration is not None
 
     @override
@@ -725,15 +737,35 @@ class EntityConditionBase(Condition):
             or selection.label_ids
         ):
             return async_track_state_change_event(
-                self._hass, selection.entity_ids, state_changed
+                self._hass,
+                {
+                    entity_id
+                    for entity_id in selection.entity_ids
+                    if split_entity_id(entity_id)[0] in self._domain_specs
+                },
+                state_changed,
             )
-        return await async_track_target_selector_state_change_event(
+
+        tracking = False
+
+        @callback
+        def entities_updated(
+            _added: set[str], _removed: set[str], _states: Mapping[str, State | None]
+        ) -> None:
+            # The tracker also reports the initial entities while it is set up
+            if tracking:
+                action()
+
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_changed,
             self.entity_filter,
+            entities_updated,
             primary_entities_only=self._primary_entities_only,
         )
+        tracking = True
+        return unsub
 
     @override
     async def _async_setup(self) -> None:

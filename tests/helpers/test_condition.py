@@ -6720,6 +6720,36 @@ async def test_needs_polling(
             "input_number.threshold",
             id="threshold_entity",
         ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"entity": "input_number.threshold"},
+                        "value_max": {"number": 50},
+                    }
+                },
+            },
+            "input_number.threshold",
+            id="threshold_entity_min",
+        ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 0},
+                        "value_max": {"entity": "input_number.threshold"},
+                    }
+                },
+            },
+            "input_number.threshold",
+            id="threshold_entity_max",
+        ),
     ],
 )
 async def test_track_changes(
@@ -6745,7 +6775,9 @@ async def test_track_changes(
 @pytest.mark.parametrize(
     ("target", "registry_listeners"),
     [
-        pytest.param({"entity_id": "light.kitchen"}, 0, id="entity"),
+        pytest.param(
+            {"entity_id": ["light.kitchen", "sensor.kitchen"]}, 0, id="entity"
+        ),
         pytest.param({"area_id": "kitchen"}, 1, id="area"),
     ],
 )
@@ -6753,7 +6785,7 @@ async def test_track_changes_target(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
-    target: dict[str, str],
+    target: dict[str, Any],
     registry_listeners: int,
 ) -> None:
     """Test only targeted entities the condition can evaluate are tracked."""
@@ -6787,3 +6819,50 @@ async def test_track_changes_target(
 
     unsub()
     assert hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED] == init_count
+
+
+async def test_track_changes_target_registry_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a change of the entities in the target is reported."""
+    area = area_registry.async_create("Kitchen")
+    kitchen = entity_registry.async_get_or_create(
+        "light", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    hallway = entity_registry.async_get_or_create(
+        "light", "test", "hallway", suggested_object_id="hallway"
+    )
+    entity_registry.async_update_entity(kitchen.entity_id, area_id=area.id)
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {"condition": "light.is_on", "target": {"area_id": area.id}}
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+    action.assert_not_called()
+
+    entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
+    await hass.async_block_till_done()
+    action.assert_called_once()
+
+    unsub()
+
+
+async def test_track_changes_isolates_context(hass: HomeAssistant) -> None:
+    """Test the action does not run in the context of the state change caller."""
+    config = await async_validate_condition_config(
+        hass, cv.CONDITION_SCHEMA(_STATE_CONDITION)
+    )
+    test = await condition.async_from_config(hass, config)
+    unsub = await test.async_track_changes(trace.trace_clear)
+
+    caller_trace = trace.trace_get()
+    hass.states.async_set("light.kitchen", "on")
+    assert trace.trace_get(clear=False) is caller_trace
+
+    unsub()

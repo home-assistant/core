@@ -3153,7 +3153,7 @@ async def test_subscribe_condition_untracked_entity(
     websocket_client: MockHAClientWebSocket,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test changes to entities not referenced by the condition are polled."""
+    """Test changes to entities used only in a template are polled."""
     hass.states.async_set("hello.world", "paulus")
     hass.states.async_set("hello.other", "on")
 
