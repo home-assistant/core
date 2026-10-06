@@ -1,9 +1,11 @@
 """Support for the Daikin HVAC."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import Any, Literal, cast, override
 
+from daikin_onecta import ClimateControlClient
 from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
@@ -205,13 +207,13 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             translation_placeholders={"device": self._device.name},
         )
 
-    async def _async_patch(
-        self, characteristic: str, path: str | None, value: Any
+    async def _async_execute_climate_command(
+        self, command: Callable[[ClimateControlClient], Awaitable[None]]
     ) -> bool:
-        """Patch a climate characteristic through the serialized command gateway."""
+        """Execute a bound climate command through the serialized gateway."""
         return await self.coordinator.api.async_execute_command(
-            lambda client: client.patch_characteristic(
-                self._device.id, self._embedded_id, characteristic, value, path=path
+            lambda client: command(
+                client.climate_control(self._device.id, self._embedded_id)
             )
         )
 
@@ -453,10 +455,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 operationmode = self._operation_mode()
                 if operationmode is not None:
                     omv = operationmode.value
-                    res = await self._async_patch(
-                        "temperatureControl",
-                        f"/operationModes/{omv}/setpoints/{self._setpoint}",
-                        value,
+                    res = await self._async_execute_climate_command(
+                        lambda climate: climate.set_temperature(
+                            omv, self._setpoint, value
+                        )
                     )
                     # When updating the value to the daikin cloud worked update our local cached version
                     if res:
@@ -537,7 +539,9 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
         # Only set the on/off to Daikin when we need to change it
         if on_off_mode is not None:
-            if not await self._async_patch("onOffMode", None, on_off_mode):
+            if not await self._async_execute_climate_command(
+                lambda climate: climate.set_power(on_off_mode == "on")
+            ):
                 self._raise_command_failed("set_hvac_mode_failed")
             cc = self._climate_control()
             if cc is not None and cc.on_off_mode is not None:
@@ -558,7 +562,9 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             and cc.operation_mode is not None
             and operation_mode != cc.operation_mode.value
         ):
-            if not await self._async_patch("operationMode", None, operation_mode):
+            if not await self._async_execute_climate_command(
+                lambda climate: climate.set_operation_mode(operation_mode)
+            ):
                 self._raise_command_failed("set_hvac_mode_failed")
             cc = self._climate_control()
             if cc is not None and cc.operation_mode is not None:
@@ -635,10 +641,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         fan_mode = self._resolve_homekit_fan_mode_alias(fan_speed, requested_fan_mode)
         if fan_mode.isnumeric():
             if fan_speed.current_mode.value != FANMODE_FIXED:
-                if not await self._async_patch(
-                    "fanControl",
-                    f"/operationModes/{operation_mode}/fanSpeed/currentMode",
-                    FANMODE_FIXED,
+                if not await self._async_execute_climate_command(
+                    lambda climate: climate.set_fan_mode(operation_mode, FANMODE_FIXED)
                 ):
                     self._raise_command_failed("set_fan_mode_failed")
                 fan_operation = self._fan_operation(operation_mode)
@@ -653,10 +657,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
             new_fixed_mode = int(fan_mode)
             if fixed is not None and fixed.value != new_fixed_mode:
-                if not await self._async_patch(
-                    "fanControl",
-                    f"/operationModes/{operation_mode}/fanSpeed/modes/fixed",
-                    new_fixed_mode,
+                if not await self._async_execute_climate_command(
+                    lambda climate: climate.set_fixed_fan_speed(
+                        operation_mode, new_fixed_mode
+                    )
                 ):
                     self._raise_command_failed("set_fan_mode_failed")
                 fan_operation = self._fan_operation(operation_mode)
@@ -668,10 +672,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                     return
                 fixed.value = new_fixed_mode
         elif fan_speed.current_mode.value != fan_mode:
-            if not await self._async_patch(
-                "fanControl",
-                f"/operationModes/{operation_mode}/fanSpeed/currentMode",
-                fan_mode,
+            if not await self._async_execute_climate_command(
+                lambda climate: climate.set_fan_mode(operation_mode, fan_mode)
             ):
                 self._raise_command_failed("set_fan_mode_failed")
             fan_operation = self._fan_operation(operation_mode)
@@ -754,10 +756,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         if new_mode is None:
             return False
         operation_mode = cc.operation_mode.value
-        result = await self._async_patch(
-            "fanControl",
-            f"/operationModes/{operation_mode}/fanDirection/{direction}/currentMode",
-            new_mode,
+        result = await self._async_execute_climate_command(
+            lambda climate: climate.set_fan_direction(
+                operation_mode, direction, new_mode
+            )
         )
         if result:
             fan_operation = self._fan_operation(operation_mode)
@@ -825,13 +827,13 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Disable the current Daikin preset mode."""
         daikin_mode = HA_PRESET_TO_DAIKIN[preset_mode]
         if preset_mode == PRESET_AWAY:
-            result = await self.coordinator.api.async_execute_command(
-                lambda client: client.set_holiday_mode(
-                    self._device.id, self._embedded_id, False
-                )
+            result = await self._async_execute_climate_command(
+                lambda climate: climate.set_holiday_mode(False)
             )
         else:
-            result = await self._async_patch(daikin_mode, None, "off")
+            result = await self._async_execute_climate_command(
+                lambda climate: climate.set_preset_mode(daikin_mode, False)
+            )
         if result:
             preset = self._preset_characteristic(daikin_mode)
             if preset_mode == PRESET_AWAY and preset is not None:
@@ -849,17 +851,17 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 return False
         if preset_mode == PRESET_AWAY:
             today = dt_util.now().date()
-            result = await self.coordinator.api.async_execute_command(
-                lambda client: client.set_holiday_mode(
-                    self._device.id,
-                    self._embedded_id,
+            result = await self._async_execute_climate_command(
+                lambda climate: climate.set_holiday_mode(
                     True,
                     start_date=today,
                     end_date=today + timedelta(days=60),
                 )
             )
         else:
-            result = await self._async_patch(daikin_mode, None, "on")
+            result = await self._async_execute_climate_command(
+                lambda climate: climate.set_preset_mode(daikin_mode, True)
+            )
         if result:
             preset = self._preset_characteristic(daikin_mode)
             if preset_mode == PRESET_AWAY and preset is not None:
@@ -908,7 +910,9 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             and cc.on_off_mode is not None
             and cc.on_off_mode.value == "off"
         ):
-            result &= await self._async_patch("onOffMode", None, "on")
+            result &= await self._async_execute_climate_command(
+                lambda climate: climate.set_power(True)
+            )
             if result is False:
                 self._raise_command_failed("turn_on_failed")
             else:
@@ -935,7 +939,9 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             and cc.on_off_mode is not None
             and cc.on_off_mode.value == "on"
         ):
-            result &= await self._async_patch("onOffMode", None, "off")
+            result &= await self._async_execute_climate_command(
+                lambda climate: climate.set_power(False)
+            )
             if result is False:
                 self._raise_command_failed("turn_off_failed")
             else:

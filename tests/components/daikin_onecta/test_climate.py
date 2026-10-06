@@ -4,6 +4,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from daikin_onecta import ClimateControlClient
 import pytest
 
 from homeassistant.components.climate import (
@@ -50,21 +51,50 @@ from .conftest import DOMAIN
 
 from tests.common import MockConfigEntry
 
-_ACTUAL_ASYNC_PATCH = DaikinClimate._async_patch
+_ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND = DaikinClimate._async_execute_climate_command
 
 
 @pytest.fixture(autouse=True)
-def mock_climate_patch(monkeypatch: pytest.MonkeyPatch) -> None:
+def mock_climate_command(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep climate state tests focused on state changes, not cloud transport."""
 
-    async def _async_patch(
-        entity: DaikinClimate, characteristic: str, path: str | None, value: object
+    async def _async_execute_climate_command(
+        entity: DaikinClimate, command: object
     ) -> bool:
-        return await entity._device.patch(
-            entity._device.id, entity._embedded_id, characteristic, path or "", value
-        )
+        result = True
+        client = MagicMock()
 
-    monkeypatch.setattr(DaikinClimate, "_async_patch", _async_patch)
+        async def patch_characteristic(
+            gateway_id: str,
+            management_point_id: str,
+            characteristic: str,
+            value: object,
+            *,
+            path: str | None = None,
+        ) -> None:
+            nonlocal result
+            patch = getattr(entity._device, "patch", None)
+            if isinstance(patch, AsyncMock):
+                result = bool(
+                    await patch(
+                        gateway_id,
+                        management_point_id,
+                        characteristic,
+                        path or "",
+                        value,
+                    )
+                )
+
+        client.patch_characteristic = patch_characteristic
+        climate = ClimateControlClient(client, entity._device.id, entity._embedded_id)
+        await command(climate)  # type: ignore[operator]
+        return result
+
+    monkeypatch.setattr(
+        DaikinClimate,
+        "_async_execute_climate_command",
+        _async_execute_climate_command,
+    )
 
 
 def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
@@ -133,11 +163,13 @@ def test_climate_availability(
     assert entity.available is expected
 
 
-async def test_async_patch_calls_typed_library_client() -> None:
-    """Pass the stable gateway and management-point IDs to the library client."""
+async def test_async_climate_command_uses_bound_library_client() -> None:
+    """Pass stable IDs to the bound climate-control library client."""
     entity = object.__new__(DaikinClimate)
     client = MagicMock()
-    client.patch_characteristic = AsyncMock()
+    climate = MagicMock()
+    climate.set_fan_mode = AsyncMock()
+    client.climate_control.return_value = climate
 
     async def execute_command(command: object) -> bool:
         await command(client)  # type: ignore[operator]
@@ -151,20 +183,13 @@ async def test_async_patch_calls_typed_library_client() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     entity.coordinator = MagicMock(api=api)
 
-    assert await _ACTUAL_ASYNC_PATCH(
+    assert await _ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND(
         entity,
-        "fanControl",
-        "/operationModes/heating/fanSpeed/currentMode",
-        "quiet",
+        lambda bound_client: bound_client.set_fan_mode("heating", "quiet"),
     )
 
-    client.patch_characteristic.assert_awaited_once_with(
-        "gateway",
-        "zone",
-        "fanControl",
-        "quiet",
-        path="/operationModes/heating/fanSpeed/currentMode",
-    )
+    client.climate_control.assert_called_once_with("gateway", "zone")
+    climate.set_fan_mode.assert_awaited_once_with("heating", "quiet")
 
 
 def test_homekit_fan_mode_aliases_follow_advertised_capabilities() -> None:
@@ -373,13 +398,17 @@ async def test_set_swing_horizontal_mode(
             coordinator.async_update_listeners.assert_called_once_with()
 
 
-async def test_enable_and_disable_away_preset_updates_cache() -> None:
+async def test_enable_and_disable_away_preset_updates_cache(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Use the typed holiday command and update the cached holiday state."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
     holiday_mode = SimpleNamespace(value=SimpleNamespace(enabled=False))
     client = MagicMock()
-    client.set_holiday_mode = AsyncMock()
+    climate = MagicMock()
+    climate.set_holiday_mode = AsyncMock()
+    client.climate_control.return_value = climate
 
     async def execute_command(command: object) -> bool:
         await command(client)  # type: ignore[operator]
@@ -392,6 +421,11 @@ async def test_enable_and_disable_away_preset_updates_cache() -> None:
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.HEAT)
     entity.coordinator = MagicMock(api=api)
     entity._preset_characteristic = MagicMock(return_value=holiday_mode)
+    monkeypatch.setattr(
+        DaikinClimate,
+        "_async_execute_climate_command",
+        _ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND,
+    )
 
     with patch(
         "homeassistant.components.daikin_onecta.climate.dt_util.now",
@@ -399,9 +433,8 @@ async def test_enable_and_disable_away_preset_updates_cache() -> None:
     ):
         assert await entity._async_enable_preset_mode(PRESET_AWAY)
 
-    client.set_holiday_mode.assert_awaited_once_with(
-        "device",
-        "zone",
+    client.climate_control.assert_called_once_with("device", "zone")
+    climate.set_holiday_mode.assert_awaited_once_with(
         True,
         start_date=datetime(2026, 10, 6).date(),
         end_date=datetime(2026, 12, 5).date(),
@@ -410,7 +443,7 @@ async def test_enable_and_disable_away_preset_updates_cache() -> None:
 
     assert await entity._async_disable_preset_mode(PRESET_AWAY)
 
-    client.set_holiday_mode.assert_awaited_with("device", "zone", False)
+    climate.set_holiday_mode.assert_awaited_with(False)
     assert not holiday_mode.value.enabled
 
 
