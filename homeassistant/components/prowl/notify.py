@@ -26,7 +26,6 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENTRY, DOMAIN
-from .issue import async_create_yaml_deprecated_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +44,6 @@ async def async_get_service(
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
         )
-        async_create_yaml_deprecated_issue(hass)
         # YAML keeps providing the legacy service while it is present
         return ProwlNotificationService(
             hass, config[CONF_API_KEY], get_async_client(hass)
