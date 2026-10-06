@@ -177,7 +177,7 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
 
         if index < 0 or index >= len(self.coordinator.data):
             self._attr_extra_state_attributes = {}
-            return None
+            raise ValueError("Index out of range for coordinator data")
 
         self._attr_extra_state_attributes = {
             "next_arrival": self.coordinator.data[index].next_arrival or None
@@ -185,16 +185,16 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
         return self.entity_description.value_fn(self.coordinator.data[index])
 
     def _find_index_by_bus_id(self) -> int:
-        """Return the index of the element with the given bus_id, or None if not found."""
+        """Return the index of the element with the given bus_id."""
         if not self.coordinator.config_entry:
             raise ValueError("Config entry data is empty")
 
         if not self.coordinator.data:
-            return -1
+            raise ValueError("Coordinator data is empty")
         for idx, item in enumerate(self.coordinator.data):
             if getattr(item, "bus_id", None) == self.line_id:
                 return idx
-        return -1
+        raise ValueError("Bus ID not found")
 
     @property
     @override
