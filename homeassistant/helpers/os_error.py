@@ -11,7 +11,6 @@ _WRITE_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
     errno.EPERM: "os_write_permission_denied",
     errno.ENOSPC: "os_write_no_space",
     errno.EROFS: "os_write_read_only",
-    # On a write, ENOENT means the parent folder is missing
     errno.ENOENT: "os_write_dir_not_found",
 }
 
