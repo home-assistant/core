@@ -129,18 +129,22 @@ def test_build_event_entity_names_empty() -> None:
 
 
 def test_build_profile_unique_keys() -> None:
-    """Test profile names are used as keys, with the token as fallback for duplicates."""
+    """Test keys use the profile name and position, independent of the token."""
     video = Video("H264", None)  # type: ignore[arg-type]
     profiles = [
         Profile(0, "token_0", "PROFILE_1", video),
-        Profile(1, "token_1", "PROFILE_2", video),
+        Profile(1, "token_1", "SAME", video),
         Profile(2, "token_2", "SAME", video),
-        Profile(3, "token_3", "SAME", video),
+        Profile(3, "token_3", "token_1", video),
     ]
 
     assert build_profile_unique_keys(profiles) == {
-        "token_0": "PROFILE_1",
-        "token_1": "PROFILE_2",
-        "token_2": "token_2",
-        "token_3": "token_3",
+        "token_0": "PROFILE_1#0",
+        "token_1": "SAME#0",
+        "token_2": "SAME#1",
+        "token_3": "token_1#0",
+    }
+    assert build_profile_unique_keys(profiles[:2]) == {
+        "token_0": "PROFILE_1#0",
+        "token_1": "SAME#0",
     }

@@ -46,14 +46,16 @@ def build_profile_unique_keys(profiles: list[Profile]) -> dict[str, str]:
     """Build the unique id keys for profiles, mapped by profile token.
 
     Cameras may hand out new profile tokens after a reconnect or reboot, while
-    the profile name stays the same, so the name is used when it is unique.
-    The token is the fallback for profiles that share a name.
+    the profile name stays the same. The key is the profile name plus the
+    position among the profiles sharing that name, so it neither depends on
+    the token nor on which other profiles are currently present.
     """
-    name_counts = Counter(profile.name for profile in profiles)
-    return {
-        profile.token: profile.name if name_counts[profile.name] == 1 else profile.token
-        for profile in profiles
-    }
+    name_counts: Counter[str] = Counter()
+    keys: dict[str, str] = {}
+    for profile in profiles:
+        keys[profile.token] = f"{profile.name}#{name_counts[profile.name]}"
+        name_counts[profile.name] += 1
+    return keys
 
 
 def extract_subcodes_as_strings(subcodes: Any) -> list[str]:

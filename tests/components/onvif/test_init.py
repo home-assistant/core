@@ -75,7 +75,7 @@ async def test_migrate_camera_entities_unique_ids(
     entity_migrated = entity_registry.async_get_or_create(
         domain="camera",
         platform="onvif",
-        unique_id=f"{MAC}#PROFILE_3",
+        unique_id=f"{MAC}#PROFILE_3#0",
         config_entry=config_entry,
     )
     # Token of a profile that no longer exists is left alone
@@ -122,21 +122,21 @@ async def test_migrate_camera_entities_unique_ids(
     entity_stale_token = entity_registry.async_get(entity_stale_token.entity_id)
 
     assert entity_with_only_mac is not None
-    assert entity_with_only_mac.unique_id == f"{MAC}#PROFILE_0"
+    assert entity_with_only_mac.unique_id == f"{MAC}#PROFILE_0#0"
 
     assert entity_with_index is not None
-    assert entity_with_index.unique_id == f"{MAC}#PROFILE_1"
+    assert entity_with_index.unique_id == f"{MAC}#PROFILE_1#0"
 
     # Make sure the sensor entity is unchanged
     assert entity_sensor is not None
     assert entity_sensor.unique_id == MAC
 
     assert entity_with_token is not None
-    assert entity_with_token.unique_id == f"{MAC}#PROFILE_2"
+    assert entity_with_token.unique_id == f"{MAC}#PROFILE_2#0"
 
     # Make sure the already migrated entity is unchanged
     assert entity_migrated is not None
-    assert entity_migrated.unique_id == f"{MAC}#PROFILE_3"
+    assert entity_migrated.unique_id == f"{MAC}#PROFILE_3#0"
 
     # Make sure the stale token entity is unchanged
     assert entity_stale_token is not None
