@@ -75,19 +75,26 @@ class ClimateControl(SHCEntity, ClimateEntity):
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
         self._attr_device_info["name"] = room_name
-
-    @property
-    @override
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return supported features."""
+        # Capabilities are fixed by the installation, so evaluate them once.
+        hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
+        if device.supports_cooling:
+            hvac_modes.append(HVACMode.COOL)
+        hvac_modes.append(HVACMode.OFF)
+        self._attr_hvac_modes = hvac_modes
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        if self.preset_modes:
+        presets = []
+        if device.supports_boost_mode:
+            presets.append(PRESET_BOOST)
+        if device.supports_eco:
+            presets.append(PRESET_ECO)
+        if presets:
+            self._attr_preset_modes = [PRESET_NONE, *presets]
             features |= ClimateEntityFeature.PRESET_MODE
-        return features
+        self._attr_supported_features = features
 
     @property
     @override
@@ -118,16 +125,6 @@ class ClimateControl(SHCEntity, ClimateEntity):
 
     @property
     @override
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the available HVAC modes."""
-        modes = [HVACMode.AUTO, HVACMode.HEAT]
-        if self._device.supports_cooling:
-            modes.append(HVACMode.COOL)
-        modes.append(HVACMode.OFF)
-        return modes
-
-    @property
-    @override
     def hvac_action(self) -> HVACAction:
         """Return the current HVAC action."""
         hvac_mode = self.hvac_mode
@@ -146,17 +143,6 @@ class ClimateControl(SHCEntity, ClimateEntity):
         if self._device.supports_eco and self._device.low:
             return PRESET_ECO
         return PRESET_NONE
-
-    @property
-    @override
-    def preset_modes(self) -> list[str] | None:
-        """Return the available override presets."""
-        presets = []
-        if self._device.supports_boost_mode:
-            presets.append(PRESET_BOOST)
-        if self._device.supports_eco:
-            presets.append(PRESET_ECO)
-        return [PRESET_NONE, *presets] if presets else None
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
