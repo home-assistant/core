@@ -1,5 +1,6 @@
 """Support to select an option from a list."""
 
+from collections import Counter
 from dataclasses import dataclass
 import logging
 from typing import Any, Self, cast, override
@@ -26,7 +27,7 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -269,18 +270,31 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         if option not in self.options:
-            raise HomeAssistantError(
-                f"Invalid option: {option} (possible options:"
-                f" {', '.join(self.options)})"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_option",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "option": option,
+                    "options": ", ".join(self.options),
+                },
             )
         self._attr_current_option = option
         self.async_write_ha_state()
 
     async def async_set_options(self, options: list[str]) -> None:
         """Set options."""
-        unique_options = list(dict.fromkeys(options))
-        if len(unique_options) != len(options):
-            raise HomeAssistantError(f"Duplicated options: {options}")
+        if duplicates := [
+            option for option, count in Counter(options).items() if count > 1
+        ]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="duplicate_options",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "duplicates": ", ".join(duplicates),
+                },
+            )
 
         self._attr_options = options
 
