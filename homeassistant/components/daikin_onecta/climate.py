@@ -5,13 +5,12 @@ from datetime import timedelta
 import logging
 from typing import Any, Literal, cast, override
 
-from daikin_onecta import ClimateControlClient
+from daikin_onecta import ClimateControl, ClimateControlClient
 from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
     FanOperationMode,
     FanSpeed,
-    ManagementPoint,
     Setpoint,
 )
 
@@ -95,11 +94,6 @@ HA_PRESET_TO_DAIKIN = {
     PRESET_ECO: "econoMode",
 }
 
-_SENSORY_DATA_MODEL_ATTRIBUTES = {
-    "roomTemperature": "room_temperature",
-    "leavingWaterTemperature": "leaving_water_temperature",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -129,20 +123,14 @@ def _create_climate_entities(
     """
     entities: list[DaikinClimate] = []
     for management_point in device.device.management_points_by_type("climateControl"):
-        setpoint_types: list[str] = []
-        if management_point.temperature_control is not None:
-            for (
-                operation_mode
-            ) in management_point.temperature_control.value.operation_modes.values():
-                setpoint_types.extend(operation_mode.setpoints)
-        # A target may recur across heating, cooling, and automatic operation.
-        # It remains one entity because it controls the same management point.
-        setpoint_types = list(dict.fromkeys(setpoint_types))
+        climate_control = management_point.climate_control
+        if climate_control is None:
+            continue
         entities.extend(
             DaikinClimate(
                 device, setpoint_type, coordinator, management_point.embedded_id
             )
-            for setpoint_type in setpoint_types
+            for setpoint_type in climate_control.setpoint_types
         )
     return entities
 
@@ -234,9 +222,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             and self._climate_control() is not None
         )
 
-    def _climate_control(self) -> ManagementPoint | None:
-        """Return the typed climate-control management point."""
-        return self._device.management_point(self._embedded_id)
+    def _climate_control(self) -> ClimateControl | None:
+        """Return typed native climate-control state from the library."""
+        management_point = self._device.management_point(self._embedded_id)
+        return (
+            management_point.climate_control if management_point is not None else None
+        )
 
     def _operation_mode(self) -> Characteristic[str] | None:
         """Return the operation-mode characteristic."""
@@ -248,22 +239,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     ) -> FanOperationMode | None:
         """Return fan controls for an operation mode."""
         cc = self._climate_control()
-        if cc is None or cc.fan_control is None:
-            return None
-        if operation_mode is None:
-            if cc.operation_mode is None:
-                return None
-            operation_mode = cc.operation_mode.value
-        return (cc.fan_control.value.operation_modes or {}).get(operation_mode)
+        return cc.fan_operation(operation_mode) if cc is not None else None
 
     def _preset_characteristic(self, daikin_mode: str) -> Characteristic[Any] | None:
         """Return a preset characteristic by Daikin API name."""
         cc = self._climate_control()
-        if cc is None:
-            return None
-        if daikin_mode == "holidayMode":
-            return cc.holiday_mode
-        return cc.characteristic(daikin_mode)
+        return cc.preset(daikin_mode) if cc is not None else None
 
     @property
     def _homekit_fan_mode_aliases_enabled(self) -> bool:
@@ -332,33 +313,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     def _get_setpoint(self, operation_mode: str | None = None) -> Setpoint | None:
         """Return a setpoint for an operation mode."""
         cc = self._climate_control()
-        if cc is None or cc.temperature_control is None:
-            return None
-        if operation_mode is None:
-            if cc.operation_mode is None:
-                return None
-            operation_mode = cc.operation_mode.value
-        mode_setpoints = cc.temperature_control.value.operation_modes.get(
-            operation_mode
-        )
-        if mode_setpoints is None:
-            return None
-        return mode_setpoints.setpoints.get(self._setpoint)
-
-    def _sensory_data_for_setpoint(
-        self, setpoint: str
-    ) -> Characteristic[int | float] | None:
-        """Return a sensory characteristic by Daikin API name."""
-        cc = self._climate_control()
-        if cc is None or cc.sensory_data is None:
-            return None
-        attribute = _SENSORY_DATA_MODEL_ATTRIBUTES.get(setpoint)
-        if attribute is None:
-            return None
-        return cast(
-            "Characteristic[int | float] | None",
-            getattr(cc.sensory_data.value, attribute),
-        )
+        return cc.setpoint(self._setpoint, operation_mode) if cc is not None else None
 
     def _get_supported_features(self) -> ClimateEntityFeature:
         """Return the features supported by this climate entity."""
@@ -386,19 +341,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature for this setpoint."""
-        current_temp: float | None = None
-        sensory_data = self._sensory_data_for_setpoint(self._setpoint)
-        # Check if there is a sensoryData which is for the same setpoint, if so, return that
-        if sensory_data is not None:
-            current_temp = sensory_data.value
-        else:
-            # There is no sensoryData with the same name as the setpoint we are using, see
-            # if we are using leavingWaterOffset, at that moment see if we have a
-            # leavingWaterTemperature temperature
-            lwsensor = self._sensory_data_for_setpoint("leavingWaterTemperature")
-            if self._setpoint == "leavingWaterOffset" and lwsensor is not None:
-                current_temp = lwsensor.value
-        return current_temp
+        cc = self._climate_control()
+        return cc.current_temperature(self._setpoint) if cc is not None else None
 
     def _get_max_temp(self) -> float:
         """Return the maximum configurable temperature."""

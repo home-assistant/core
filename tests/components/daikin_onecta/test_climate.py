@@ -101,23 +101,12 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
     """Create one entity per temperature target, not per operation mode."""
     management_point = SimpleNamespace(
         embedded_id="main_zone",
-        temperature_control=SimpleNamespace(
-            value=SimpleNamespace(
-                operation_modes={
-                    "heating": SimpleNamespace(
-                        setpoints={
-                            "roomTemperature": MagicMock(),
-                            "leavingWaterOffset": MagicMock(),
-                        }
-                    ),
-                    "cooling": SimpleNamespace(
-                        setpoints={
-                            "roomTemperature": MagicMock(),
-                            "leavingWaterTemperature": MagicMock(),
-                        }
-                    ),
-                }
-            )
+        climate_control=SimpleNamespace(
+            setpoint_types=[
+                "roomTemperature",
+                "leavingWaterOffset",
+                "leavingWaterTemperature",
+            ]
         ),
     )
     device = MagicMock()
@@ -300,8 +289,8 @@ def test_get_current_temperature_uses_leaving_water_for_offset() -> None:
     device.name = "Device"
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_setpoint", "leavingWaterOffset")
-    entity._sensory_data_for_setpoint = MagicMock(
-        side_effect=[None, SimpleNamespace(value=32.5)]
+    entity._climate_control = MagicMock(
+        return_value=SimpleNamespace(current_temperature=MagicMock(return_value=32.5))
     )
 
     assert entity._get_current_temperature() == 32.5
@@ -807,17 +796,16 @@ async def test_set_fan_mode_updates_captured_operation_mode() -> None:
     )
     previous_management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="heating"),
-        fan_control=SimpleNamespace(
-            value=SimpleNamespace(operation_modes={"heating": previous_fan})
-        ),
     )
+    previous_management_point.fan_operation = MagicMock(return_value=previous_fan)
     current_management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="cooling"),
-        fan_control=SimpleNamespace(
-            value=SimpleNamespace(
-                operation_modes={"heating": captured_fan, "cooling": active_fan}
-            )
-        ),
+    )
+    current_management_point.fan_operation = MagicMock(
+        side_effect=lambda mode=None: {
+            "heating": captured_fan,
+            "cooling": active_fan,
+        }.get(mode)
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -873,17 +861,16 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     )
     previous_management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="heating"),
-        fan_control=SimpleNamespace(
-            value=SimpleNamespace(operation_modes={"heating": previous_fan})
-        ),
     )
+    previous_management_point.fan_operation = MagicMock(return_value=previous_fan)
     current_management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="cooling"),
-        fan_control=SimpleNamespace(
-            value=SimpleNamespace(
-                operation_modes={"heating": captured_fan, "cooling": active_fan}
-            )
-        ),
+    )
+    current_management_point.fan_operation = MagicMock(
+        side_effect=lambda mode=None: {
+            "heating": captured_fan,
+            "cooling": active_fan,
+        }.get(mode)
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -915,21 +902,17 @@ async def test_set_swing_mode_rejects_unsupported_value() -> None:
     device.patch = AsyncMock()
     management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="heating"),
-        fan_control=SimpleNamespace(
-            value=SimpleNamespace(
-                operation_modes={
-                    "heating": SimpleNamespace(
-                        fan_direction=SimpleNamespace(
-                            vertical=SimpleNamespace(
-                                current_mode=SimpleNamespace(
-                                    value="swing", values=["stop", "swing"]
-                                )
-                            )
-                        )
+    )
+    management_point.fan_operation = MagicMock(
+        return_value=SimpleNamespace(
+            fan_direction=SimpleNamespace(
+                vertical=SimpleNamespace(
+                    current_mode=SimpleNamespace(
+                        value="swing", values=["stop", "swing"]
                     )
-                }
+                )
             )
-        ),
+        )
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -1013,6 +996,12 @@ async def test_climate_service_updates_entity_state(
     climate_control.holiday_mode = None
     climate_control.sensory_data = None
     climate_control.characteristic.return_value = None
+    climate_control.climate_control = climate_control
+    climate_control.setpoint_types = ["roomTemperature"]
+    climate_control.setpoint.return_value = setpoint
+    climate_control.fan_operation.return_value = None
+    climate_control.preset.return_value = None
+    climate_control.current_temperature.return_value = None
 
     device = MagicMock(id="gateway", available=True)
     device.name = "Daikin"
@@ -1120,32 +1109,21 @@ async def test_climate_platform_services_and_management_points(
             "comfortMode": SimpleNamespace(value="off"),
             "econoMode": SimpleNamespace(value="off"),
         }
-        return SimpleNamespace(
+        control = SimpleNamespace(
             embedded_id=embedded_id,
-            temperature_control=SimpleNamespace(
-                value=SimpleNamespace(
-                    operation_modes={
-                        mode: SimpleNamespace(setpoints={"roomTemperature": setpoint})
-                        for mode in ("heating", "cooling")
-                    }
-                )
-            ),
             operation_mode=SimpleNamespace(
                 value="heating", values=["heating", "cooling"], settable=True
             ),
             on_off_mode=SimpleNamespace(value="on"),
-            fan_control=SimpleNamespace(
-                value=SimpleNamespace(
-                    operation_modes={
-                        "heating": fan_operation,
-                        "cooling": fan_operation,
-                    }
-                )
-            ),
             holiday_mode=SimpleNamespace(value=SimpleNamespace(enabled=False)),
-            sensory_data=None,
-            characteristic=presets.get,
         )
+        control.climate_control = control
+        control.setpoint_types = ["roomTemperature"]
+        control.setpoint = lambda _target, _mode=None: setpoint
+        control.fan_operation = lambda _mode=None: fan_operation
+        control.preset = presets.get
+        control.current_temperature = lambda _target: None
+        return control
 
     climate_controls = {
         "living_room": climate_control("living_room", 20),
@@ -1232,13 +1210,9 @@ async def test_setup_creates_entities_per_management_point(
     onecta_device = MagicMock(id="device", device=gateway)
     coordinator.data = {"device": onecta_device}
     first_zone = MagicMock(embedded_id="first_zone")
-    first_zone.temperature_control.value.operation_modes = {
-        "heating": MagicMock(setpoints={"roomTemperature": MagicMock()}),
-    }
+    first_zone.climate_control.setpoint_types = ["roomTemperature"]
     second_zone = MagicMock(embedded_id="second_zone")
-    second_zone.temperature_control.value.operation_modes = {
-        "cooling": MagicMock(setpoints={"roomTemperature": MagicMock()}),
-    }
+    second_zone.climate_control.setpoint_types = ["roomTemperature"]
     gateway.management_points_by_type.return_value = (first_zone, second_zone)
     coordinator.async_config_entry_first_refresh = AsyncMock()
 
