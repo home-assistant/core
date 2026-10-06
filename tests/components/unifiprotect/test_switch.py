@@ -516,9 +516,8 @@ CAMERA_SWITCHES_DETECTIONS_EXTRA = [
 async def test_switch_camera_hdr(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
-    """Tests HDR mode switch reads and writes the public camera."""
+    """Tests HDR mode switch uses the public API helper."""
 
-    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
@@ -529,22 +528,9 @@ async def test_switch_camera_hdr(
     )
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
-    public = make_public_camera(doorbell, hdr_type=PublicHdrMode.OFF)
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-    public = make_public_camera(doorbell, hdr_type=PublicHdrMode.AUTO)
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
-
-    public = make_public_camera(doorbell, hdr_type=PublicHdrMode.ON)
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
-
-    with patch.object(public, "set_hdr_mode", new_callable=AsyncMock) as mock_method:
+    with patch_ufp_method(
+        doorbell, "set_hdr_mode_public", new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -1302,7 +1288,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
             make_streamless_public_camera,
             "smart_person",
             "set_person_detection",
-            {"high_fps", "hdr_mode"},
+            {"high_fps"},
             {"ssh", "motion", "privacy_mode", "color_night_vision"},
             id="camera",
         ),
