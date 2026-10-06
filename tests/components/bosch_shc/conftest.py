@@ -47,6 +47,7 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
     ValveTappetService,
+    VibrationSensorService,
 )
 import pytest
 
@@ -550,6 +551,9 @@ def shutter_contact2_plus_device(
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
     vibration_enabled: bool = False,
+    sensitivity: VibrationSensorService.SensitivityState = (
+        VibrationSensorService.SensitivityState.MEDIUM
+    ),
 ) -> SHCShutterContact2Plus:
     """Build a minimal device double for a vibration-capable Door/Window Contact II Plus."""
     device = create_autospec(SHCShutterContact2Plus, instance=True, spec_set=True)
@@ -565,6 +569,7 @@ def shutter_contact2_plus_device(
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
     device.enabled = vibration_enabled
+    device.sensitivity = sensitivity
     return device
 
 

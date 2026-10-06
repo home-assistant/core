@@ -49,6 +49,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with the PVOutput service failed. Please reauthenticate with a valid API key."
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the PVOutput service."
     },

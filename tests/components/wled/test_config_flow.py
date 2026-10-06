@@ -4,7 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from wled import WLEDConnectionError, WLEDUnsupportedVersionError
+from wled import WLEDConnectionError, WLEDError, WLEDUnsupportedVersionError
 
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -219,6 +219,7 @@ async def test_zeroconf_during_onboarding(
     [
         (WLEDConnectionError, {"base": "cannot_connect"}),
         (WLEDUnsupportedVersionError, {"base": "unsupported_version"}),
+        (WLEDError, {"base": "invalid_response"}),
     ],
 )
 async def test_form_submission_errors(
@@ -265,6 +266,30 @@ async def test_zeroconf_connection_error(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
+
+
+async def test_zeroconf_invalid_response(
+    hass: HomeAssistant, mock_wled: MagicMock
+) -> None:
+    """Test we abort zeroconf flow when the device doesn't respond like WLED."""
+    mock_wled.update.side_effect = WLEDError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "aabbccddeeff"},
+            type="mock_type",
+        ),
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "invalid_response"
 
 
 async def test_zeroconf_unsupported_version_error(
