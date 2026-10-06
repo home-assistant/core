@@ -129,6 +129,29 @@ async def test_write_api_error(
     )
 
 
+async def test_write_connection_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Return false for connection failures without recording a successful write."""
+    api = DaikinApi(hass, config_entry, MagicMock())
+    command = AsyncMock(
+        side_effect=OnectaConnectionError(
+            "network unavailable",
+            method="PATCH",
+            path="/v1/management-points/point",
+        )
+    )
+
+    assert not await api.async_execute_command(command)
+    assert api.last_patch_call is None
+    assert (
+        "Daikin request PATCH /v1/management-points/point failed to connect: "
+        "network unavailable" in caplog.text
+    )
+
+
 async def test_write_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

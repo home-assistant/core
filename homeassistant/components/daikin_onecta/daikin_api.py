@@ -7,7 +7,11 @@ import logging
 from typing import cast
 
 from daikin_onecta.client import OnectaClient
-from daikin_onecta.exceptions import OnectaApiError, OnectaRateLimitError
+from daikin_onecta.exceptions import (
+    OnectaApiError,
+    OnectaConnectionError,
+    OnectaRateLimitError,
+)
 from daikin_onecta.models import GatewayDevice
 
 from homeassistant import config_entries, core
@@ -100,6 +104,14 @@ class DaikinApi:
                     err.method,
                     err.path,
                     err.retry_after,
+                )
+                return False
+            except OnectaConnectionError as err:
+                _LOGGER.warning(
+                    "Daikin request %s %s failed to connect: %s",
+                    err.method,
+                    err.path,
+                    err,
                 )
                 return False
             except OnectaApiError as err:
