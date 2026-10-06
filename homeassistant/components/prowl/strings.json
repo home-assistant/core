@@ -1,10 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "API key is already configured",
-      "api_timeout": "[%key:common::config_flow::error::timeout_connect%]",
-      "bad_api_response": "[%key:common::config_flow::error::unknown%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+      "already_configured": "API key is already configured"
     },
     "error": {
       "api_timeout": "[%key:common::config_flow::error::timeout_connect%]",
@@ -18,20 +15,6 @@
         },
         "description": "Enter the Prowl API key."
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_api_timeout": {
-      "description": "Configuring Prowl using YAML is being removed, but importing your configuration failed because the Prowl API could not be reached in time.\n\nThe existing Prowl notify action from YAML keeps working for now. Correct the YAML configuration and restart Home Assistant to try the import again, or remove the Prowl configuration from the `notify` section of your `configuration.yaml` file and [set up the integration]({url}) manually.",
-      "title": "Failed to import Prowl YAML configuration"
-    },
-    "deprecated_yaml_import_issue_bad_api_response": {
-      "description": "Configuring Prowl using YAML is being removed, but importing your configuration failed because the Prowl API returned an unexpected response.\n\nThe existing Prowl notify action from YAML keeps working for now. Correct the YAML configuration and restart Home Assistant to try the import again, or remove the Prowl configuration from the `notify` section of your `configuration.yaml` file and [set up the integration]({url}) manually.",
-      "title": "[%key:component::prowl::issues::deprecated_yaml_import_issue_api_timeout::title%]"
-    },
-    "deprecated_yaml_import_issue_invalid_api_key": {
-      "description": "Configuring Prowl using YAML is being removed, but importing your configuration failed because the API key is invalid.\n\nThe existing Prowl notify action from YAML keeps working for now. Correct the YAML configuration and restart Home Assistant to try the import again, or remove the Prowl configuration from the `notify` section of your `configuration.yaml` file and [set up the integration]({url}) manually.",
-      "title": "[%key:component::prowl::issues::deprecated_yaml_import_issue_api_timeout::title%]"
     }
   }
 }

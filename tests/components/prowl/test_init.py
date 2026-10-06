@@ -146,45 +146,35 @@ async def test_yaml_import_existing_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("prowlpy_side_effect", "expected_translation_key"),
+    ("prowlpy_side_effect", "expected_state"),
     [
         pytest.param(
             prowlpy.APIError("Invalid API key: foo"),
-            "deprecated_yaml_import_issue_invalid_api_key",
+            ConfigEntryState.SETUP_ERROR,
             id="invalid_api_key",
         ),
-        pytest.param(
-            TimeoutError, "deprecated_yaml_import_issue_api_timeout", id="timeout"
-        ),
-        pytest.param(
-            prowlpy.APIError("Internal server error"),
-            "deprecated_yaml_import_issue_bad_api_response",
-            id="bad_api_response",
-        ),
+        pytest.param(TimeoutError, ConfigEntryState.SETUP_RETRY, id="timeout"),
     ],
 )
-async def test_yaml_import_failure(
+async def test_yaml_import_entry_setup_failure(
     hass: HomeAssistant,
     mock_prowlpy: AsyncMock,
     issue_registry: ir.IssueRegistry,
     prowlpy_side_effect: Exception | type[Exception],
-    expected_translation_key: str,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test the legacy action keeps working when the YAML import fails."""
+    """Test the import is not blocked by API problems and YAML keeps working."""
     mock_prowlpy.verify_key.side_effect = prowlpy_side_effect
 
     await _setup_yaml(hass, {CONF_API_KEY: TEST_API_KEY, CONF_NAME: DOMAIN})
 
-    assert not hass.config_entries.async_entries(DOMAIN)
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{DOMAIN}"
-    )
-    assert issue
-    assert issue.translation_key == expected_translation_key
-    assert TEST_API_KEY not in str(issue.translation_placeholders)
-    assert not issue_registry.async_get_issue(
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is expected_state
+    assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+    assert len(issue_registry.issues) == 1
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     await hass.services.async_call(
