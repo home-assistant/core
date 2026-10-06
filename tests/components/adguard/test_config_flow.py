@@ -21,6 +21,18 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+FIXTURE_STATUS = {
+    "version": "v0.99.0",
+    "language": "en",
+    "dns_addresses": ["127.0.0.1"],
+    "dns_port": 53,
+    "http_port": 3000,
+    "protection_disabled_duration": 0,
+    "protection_enabled": True,
+    "dhcp_available": True,
+    "running": True,
+}
+
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
     CONF_PORT: 3000,
@@ -80,7 +92,7 @@ async def test_full_flow_implementation(
             f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
             f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
         ),
-        json={"version": "v0.99.0"},
+        json=FIXTURE_STATUS,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -190,7 +202,7 @@ async def test_hassio_confirm(
     """Test we can finish a config flow."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
-        json={"version": "v0.99.0"},
+        json=FIXTURE_STATUS,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 

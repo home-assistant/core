@@ -191,16 +191,48 @@ async def test_stt_process_audio_stream_api_error(
     assert result.text is None
 
 
+@pytest.mark.parametrize(
+    ("response", "expected_log"),
+    [
+        pytest.param(
+            types.GenerateContentResponse(candidates=[]),
+            "STT response contained no text (finish_reason=None)",
+            id="empty_response",
+        ),
+        pytest.param(
+            types.GenerateContentResponse(
+                candidates=[{"finish_reason": "STOP", "content": {"role": "model"}}]
+            ),
+            "STT response contained no text (finish_reason=FinishReason.STOP)",
+            id="blank_text_response",
+        ),
+        pytest.param(
+            types.GenerateContentResponse(
+                candidates=[],
+                prompt_feedback={
+                    "block_reason": "SAFETY",
+                    # Not populated by the Gemini API in practice (only
+                    # Vertex AI); included to prove it is not what gets
+                    # logged.
+                    "block_reason_message": "Blocked for safety reasons",
+                },
+            ),
+            "STT response contained no text (block_reason=BlockedReason.SAFETY)",
+            id="blocked_prompt",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
-async def test_stt_process_audio_stream_empty_response(
+async def test_stt_process_audio_stream_no_text_response(
     hass: HomeAssistant,
     mock_genai_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    response: types.GenerateContentResponse,
+    expected_log: str,
 ) -> None:
-    """Test STT processing with an empty response from the API."""
+    """Test STT logs when the API response contains no text."""
     entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
-    mock_genai_client.aio.models.generate_content.return_value = (
-        types.GenerateContentResponse(candidates=[])
-    )
+    mock_genai_client.aio.models.generate_content.return_value = response
 
     metadata = stt.SpeechMetadata(
         language="en-US",
@@ -216,6 +248,7 @@ async def test_stt_process_audio_stream_empty_response(
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None
+    assert expected_log in caplog.text
 
 
 @pytest.mark.usefixtures("mock_genai_client")

@@ -18,7 +18,12 @@ import pytest
 from homeassistant import core as ha
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.const import (
+    ATTR_EVALUATE_PAYLOAD,
+    ATTR_MESSAGE_EXPIRY_INTERVAL,
+    DOMAIN,
+    SERVICE_DUMP,
+)
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
@@ -365,7 +370,7 @@ async def test_mqtt_publish_action_call_with_raw_data(
         {
             mqtt.ATTR_TOPIC: "test/topic",
             mqtt.ATTR_PAYLOAD: attr_payload,
-            mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+            ATTR_EVALUATE_PAYLOAD: evaluate_payload,
         },
         blocking=True,
     )
@@ -392,7 +397,7 @@ async def test_mqtt_publish_action_call_with_raw_data(
             {
                 mqtt.ATTR_TOPIC: "test/topic",
                 mqtt.ATTR_PAYLOAD: attr_payload,
-                mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+                ATTR_EVALUATE_PAYLOAD: evaluate_payload,
             },
             blocking=True,
         )
@@ -496,7 +501,7 @@ async def test_publish_action_with_message_expiry_interval(
             mqtt.ATTR_PAYLOAD: "bla",
             mqtt.ATTR_QOS: 2,
             mqtt.ATTR_RETAIN: False,
-            mqtt.ATTR_MESSAGE_EXPIRY_INTERVAL: interval_data,
+            ATTR_MESSAGE_EXPIRY_INTERVAL: interval_data,
         },
         blocking=True,
     )
@@ -1112,7 +1117,7 @@ async def test_dump_service(
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
 
-    with patch("homeassistant.components.mqtt.open", mopen):
+    with patch("homeassistant.components.mqtt.services.open", mopen):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
@@ -1127,7 +1132,7 @@ ADMIN_SERVICE_CALLS = [
         {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD: "payload"},
         id="publish",
     ),
-    pytest.param(mqtt.SERVICE_DUMP, {"topic": "bla/#", "duration": 3}, id="dump"),
+    pytest.param(SERVICE_DUMP, {"topic": "bla/#", "duration": 3}, id="dump"),
 ]
 
 

@@ -15,11 +15,12 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
+    DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
 )
-from homeassistant.const import ATTR_MODE, Platform
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -304,7 +305,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_SET_STATE,
-        entity_domain=Platform.LIGHT,
+        entity_domain=LIGHT_DOMAIN,
         schema=LIFX_SET_STATE_SCHEMA,
         func="set_state",
     )
@@ -312,7 +313,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_SET_HEV_CYCLE_STATE,
-        entity_domain=Platform.LIGHT,
+        entity_domain=LIGHT_DOMAIN,
         schema=LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
         func="set_hev_cycle_state",
     )
