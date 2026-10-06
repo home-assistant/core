@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import TEST_EMAIL, TEST_PASSWORD
+from .const import TEST_EMAIL, TEST_PASSWORD, TEST_TOKEN
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,9 @@ def mock_rituals_client() -> Generator[AsyncMock]:
             new=mock_client_cls,
         ),
     ):
-        yield mock_client_cls.return_value
+        client = mock_client_cls.return_value
+        client.token = TEST_TOKEN
+        yield client
 
 
 @pytest.fixture

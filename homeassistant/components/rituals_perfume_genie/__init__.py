@@ -5,7 +5,7 @@ import asyncio
 from ritualsgenie import RitualsGenie, RitualsGenieHub
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> b
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
         session=async_get_clientsession(hass),
+        token=entry.data.get(CONF_TOKEN),
     )
 
     hubs = RitualsHubsCoordinator(hass, entry, client)
