@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -12,7 +13,7 @@ import pytest
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, frame
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,7 +73,7 @@ async def test_caching_data(hass: HomeAssistant) -> None:
         await async_load(hass)
 
     data = async_get(hass)
-    assert data.last_states == {}
+    assert data.last_states_by_entity_id == {}
 
     # Mock that only b1 is present this run
     with patch(
@@ -280,7 +281,7 @@ async def test_dump_data(hass: HomeAssistant) -> None:
 
     data = async_get(hass)
     now = dt_util.utcnow()
-    data.last_states = {
+    data.last_states_by_entity_id = {
         "input_boolean.b0": StoredState(State("input_boolean.b0", "off"), None, now),
         "input_boolean.b1": StoredState(State("input_boolean.b1", "off"), None, now),
         "input_boolean.b2": StoredState(State("input_boolean.b2", "off"), None, now),
@@ -324,7 +325,10 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     assert state2["state"]["entity_id"] == "input_boolean.b5"
     assert state2["state"]["state"] == "off"
     # States that are not written anymore are dropped from memory as well
-    assert list(data.last_states) == ["input_boolean.b3", "input_boolean.b5"]
+    assert list(data.last_states_by_entity_id) == [
+        "input_boolean.b3",
+        "input_boolean.b5",
+    ]
 
     # Test that removed entities are not persisted
     await entity.async_remove()
@@ -417,12 +421,12 @@ async def test_state_saved_on_remove(hass: HomeAssistant) -> None:
     data = async_get(hass)
 
     # No last states should currently be saved
-    assert not data.last_states
+    assert not data.last_states_by_entity_id
 
     await entity.async_remove()
 
     # We should store the input boolean state when it is removed
-    state = data.last_states["input_boolean.b0"].state
+    state = data.last_states_by_entity_id["input_boolean.b0"].state
     assert state.state == "on"
     assert isinstance(state.attributes["complicated"]["value"], list)
     assert set(state.attributes["complicated"]["value"]) == {1, 2, now.isoformat()}
@@ -472,7 +476,7 @@ async def test_restore_entity_end_to_end(
     entity_id = "test_domain.unnamed_device"
     data = async_get(hass)
     now = dt_util.utcnow()
-    data.last_states = {
+    data.last_states_by_entity_id = {
         entity_id: StoredState(State(entity_id, "stored"), None, now),
     }
 
@@ -628,7 +632,7 @@ async def test_entity_removal_with_failing_extra_data(
     # Entity should be unregistered
     assert "input_boolean.bad" not in data.entities
     # No last state should be saved since extra data failed
-    assert "input_boolean.bad" not in data.last_states
+    assert "input_boolean.bad" not in data.last_states_by_entity_id
 
     assert "Error getting extra restore state data for input_boolean.bad" in caplog.text
 
@@ -774,7 +778,7 @@ async def test_restore_after_entity_id_change(
 
     data = async_get(hass)
     assert list(data.entities) == ["test.test2"]
-    assert not data.last_states
+    assert not data.last_states_by_entity_id
     assert list(data.last_states_by_entity_registry_id) == [entity_registry_id]
     stored_state = data.last_states_by_entity_registry_id[entity_registry_id]
     assert stored_state.state.entity_id == "test.test2"
@@ -839,7 +843,7 @@ async def test_entity_id_change_and_disable(
 ) -> None:
     """Test changing the entity_id and disabling a loaded entity at once."""
     data = async_get(hass)
-    data.last_states["test.test2"] = StoredState(
+    data.last_states_by_entity_id["test.test2"] = StoredState(
         State("test.test2", "foreign"), _CounterExtraData(99), dt_util.utcnow()
     )
     entity = entity_class()
@@ -853,7 +857,7 @@ async def test_entity_id_change_and_disable(
     )
     await hass.async_block_till_done()
     assert hass.states.get("test.test") is None
-    assert "test.test" not in data.last_states
+    assert "test.test" not in data.last_states_by_entity_id
 
     entity_registry.async_update_entity("test.test2", disabled_by=None)
     new_entity = _RenameRestoreEntity()
@@ -884,7 +888,7 @@ async def test_entity_id_change_ignores_leftover_state(
 ) -> None:
     """Test a leftover state stored under the new entity_id is not restored."""
     data = async_get(hass)
-    data.last_states["test.test2"] = StoredState(
+    data.last_states_by_entity_id["test.test2"] = StoredState(
         State("test.test2", "foreign"), _CounterExtraData(99), dt_util.utcnow()
     )
     entity = entity_class()
@@ -895,7 +899,7 @@ async def test_entity_id_change_ignores_leftover_state(
     await hass.async_block_till_done()
 
     assert entity.restored == [("test.test", None, None), expected_restored]
-    assert "test.test" not in data.last_states
+    assert "test.test" not in data.last_states_by_entity_id
 
 
 async def test_entity_id_change_and_back(
@@ -920,7 +924,7 @@ async def test_entity_id_change_and_back(
         ("test.test", "second", {"count": 2}),
     ]
     data = async_get(hass)
-    assert not data.last_states
+    assert not data.last_states_by_entity_id
     assert list(data.last_states_by_entity_registry_id) == [entity_registry_id]
 
     # A new entity taking the previous entity_id restores nothing
@@ -943,10 +947,10 @@ async def test_restore_after_registry_entry_recreated(
     await hass.async_block_till_done()
     assert hass.states.get("test.test") is None
     data = async_get(hass)
-    assert not data.last_states
+    assert not data.last_states_by_entity_id
     assert list(data.last_states_by_entity_registry_id) == [entity_registry_id]
     # A state stored by entity_id meanwhile does not replace the entry's own
-    data.last_states["test.test"] = StoredState(
+    data.last_states_by_entity_id["test.test"] = StoredState(
         State("test.test", "foreign"), _CounterExtraData(99), dt_util.utcnow()
     )
 
@@ -1042,7 +1046,7 @@ async def test_entity_id_change_not_loaded(
         dt_util.utcnow(),
         registry_entry.id,
     )
-    data.last_states["test.test2"] = StoredState(
+    data.last_states_by_entity_id["test.test2"] = StoredState(
         State("test.test2", "foreign"), _CounterExtraData(99), dt_util.utcnow()
     )
 
@@ -1098,7 +1102,7 @@ async def test_restore_after_unique_id_added(
     entity_registry_id = entity_registry.async_get("test.test").id
 
     assert entity.restored == [("test.test", "live", {"count": 3})]
-    assert not data.last_states
+    assert not data.last_states_by_entity_id
     assert list(data.last_states_by_entity_registry_id) == [entity_registry_id]
 
 
@@ -1196,12 +1200,57 @@ async def test_load_stored_state_without_entity_registry_id(
     data = async_get(hass)
     await data.async_load()
 
-    assert list(data.last_states) == expected_last_states
+    assert list(data.last_states_by_entity_id) == expected_last_states
     assert len(data.last_states_by_entity_registry_id) == 1 - len(expected_last_states)
 
     entity = entity_class()
     await add_entity(hass, entity_registry, entity)
     assert entity.restored == [("test.test", "stored", {"count": 3})]
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_load_waits_for_entity_registry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test stored states are indexed only once the entity registry is loaded."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "key": STORAGE_KEY,
+        "data": [_stored_state_item()],
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    data = async_get(hass)
+    load_task = hass.async_create_task(data.async_load())
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert not load_task.done()
+
+    await er.async_load(hass)
+    await load_task
+
+    assert list(data.last_states_by_entity_id) == ["test.test"]
+
+
+async def test_dump_drops_stored_state_of_entity_with_failing_extra_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a failing extra_restore_state_data drops the previously stored state."""
+    entity = _FailingRenameRestoreEntity()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    entity_registry_id = entity_registry.async_get("test.test").id
+    data = async_get(hass)
+    data.last_states_by_entity_registry_id[entity_registry_id] = StoredState(
+        State("test.test", "stale"), None, dt_util.utcnow(), entity_registry_id
+    )
+    entity.set_state("live", 3)
+
+    await data.async_dump_states()
+
+    assert hass_storage[STORAGE_KEY]["data"] == []
+    assert not data.last_states_by_entity_registry_id
 
 
 async def test_load_stored_state_without_registry_entry(
@@ -1219,7 +1268,7 @@ async def test_load_stored_state_without_registry_entry(
     data = async_get(hass)
     await data.async_load()
 
-    assert list(data.last_states) == ["test.test"]
+    assert list(data.last_states_by_entity_id) == ["test.test"]
     assert not data.last_states_by_entity_registry_id
 
     entity = _RenameRestoreEntity()
@@ -1255,13 +1304,13 @@ async def test_async_get_stored_state(
         State("test.registered", "by_registry_id"), None, now, registered_id
     )
     # Stored by entity_id after the registry entry was created
-    data.last_states["test.registered"] = StoredState(
+    data.last_states_by_entity_id["test.registered"] = StoredState(
         State("test.registered", "leftover"), None, now
     )
-    data.last_states["test.registered_leftover"] = StoredState(
+    data.last_states_by_entity_id["test.registered_leftover"] = StoredState(
         State("test.registered_leftover", "leftover"), None, now
     )
-    data.last_states["test.unregistered"] = StoredState(
+    data.last_states_by_entity_id["test.unregistered"] = StoredState(
         State("test.unregistered", "unregistered"), None, now
     )
     # Stored by a registry entry which has since been removed
@@ -1308,3 +1357,106 @@ async def test_async_get_stored_state_entity_id_changed(
         "entity_id": "test.test2",
     }
     assert stored_state.state.context is context
+
+
+_LAST_STATES_DEPRECATION = "accesses RestoreStateData.last_states, which is deprecated"
+
+
+def _get_last_states(data: RestoreStateData) -> None:
+    """Get last_states."""
+    assert data.last_states is not None
+
+
+def _set_last_states(data: RestoreStateData) -> None:
+    """Set last_states."""
+    data.last_states = {}
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core_integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom_integration",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "access",
+    [
+        pytest.param(_get_last_states, id="get"),
+        pytest.param(_set_last_states, id="set"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_last_states_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    expectation: AbstractContextManager,
+    expected_log: int,
+    access: Callable[[RestoreStateData], None],
+) -> None:
+    """Test accessing last_states is deprecated.
+
+    It logs for custom integrations and raises for core and core integrations.
+    """
+    data = async_get(hass)
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        access(data)
+
+    assert caplog.text.count(_LAST_STATES_DEPRECATION) == expected_log
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_last_states(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the deprecated last_states still finds all stored states."""
+    entity = _RenameRestoreEntity()
+    await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+    await entity.async_remove(force_remove=True)
+    data = async_get(hass)
+    data.last_states_by_entity_id["test.unregistered"] = StoredState(
+        State("test.unregistered", "on"), None, dt_util.utcnow()
+    )
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        last_states = data.last_states
+        # An entity with a registry entry is found by entity_id
+        assert last_states["test.test"].state.state == "live"
+        assert last_states.get("test.test").state.state == "live"
+        assert "test.test" in last_states
+        assert last_states["test.unregistered"].state.state == "on"
+        assert last_states.get("test.unknown") is None
+        assert "test.unknown" not in last_states
+        with pytest.raises(KeyError):
+            last_states["test.unknown"]
+        # Only entities without a registry entry are iterated
+        assert list(last_states) == ["test.unregistered"]
+        assert len(last_states) == 1
+
+        del last_states["test.unregistered"]
+        assert not data.last_states_by_entity_id
+        stored_state = StoredState(State("test.other", "off"), None, dt_util.utcnow())
+        last_states["test.other"] = stored_state
+        assert data.last_states_by_entity_id == {"test.other": stored_state}
+
+    assert caplog.text.count(_LAST_STATES_DEPRECATION) == 1
+    assert "custom integration 'test_integration'" in caplog.text

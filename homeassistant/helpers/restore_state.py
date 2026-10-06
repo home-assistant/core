@@ -1,6 +1,7 @@
 """Support for restoring entity states on startup."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, MutableMapping
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
@@ -12,7 +13,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
-from . import entity_registry as er, start
+from . import entity_registry as er, frame, start
 from .entity import Entity
 from .event import async_track_time_interval
 from .json import JSONEncoder
@@ -119,6 +120,58 @@ def async_get(hass: HomeAssistant) -> RestoreStateData:
     return RestoreStateData(hass)
 
 
+def _report_last_states_usage() -> None:
+    """Report usage of the deprecated RestoreStateData.last_states."""
+    frame.report_usage(
+        "accesses RestoreStateData.last_states, which is deprecated. Use "
+        "RestoreStateData.async_get_stored_state instead",
+        core_integration_behavior=frame.ReportBehavior.ERROR,
+        breaks_in_ha_version="2027.11.0",
+    )
+
+
+class _LastStates(MutableMapping[str, StoredState]):
+    """Deprecated view of the stored states indexed by entity_id.
+
+    Lookups fall back to the stored state of an entity with a registry entry.
+    """
+
+    def __init__(self, data: RestoreStateData) -> None:
+        """Initialize."""
+        self._data = data
+
+    @override
+    def __getitem__(self, entity_id: str) -> StoredState:
+        """Return the stored state of an entity."""
+        if (
+            stored_state := self._data.last_states_by_entity_id.get(entity_id)
+        ) is not None:
+            return stored_state
+        if (stored_state := self._data.async_get_stored_state(entity_id)) is None:
+            raise KeyError(entity_id)
+        return stored_state
+
+    @override
+    def __setitem__(self, entity_id: str, stored_state: StoredState) -> None:
+        """Set the stored state of an entity without a registry entry."""
+        self._data.last_states_by_entity_id[entity_id] = stored_state
+
+    @override
+    def __delitem__(self, entity_id: str) -> None:
+        """Delete the stored state of an entity without a registry entry."""
+        del self._data.last_states_by_entity_id[entity_id]
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over the entity_ids of entities without a registry entry."""
+        return iter(self._data.last_states_by_entity_id)
+
+    @override
+    def __len__(self) -> int:
+        """Return the number of stored states of entities without a registry entry."""
+        return len(self._data.last_states_by_entity_id)
+
+
 class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
@@ -135,11 +188,29 @@ class RestoreStateData:
         )
         # Stored states of entities without an entity registry entry, indexed
         # by entity_id
-        self.last_states: dict[str, StoredState] = {}
+        self.last_states_by_entity_id: dict[str, StoredState] = {}
         # Stored states of entities with an entity registry entry, indexed by
         # entity registry id
         self.last_states_by_entity_registry_id: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
+
+    @property
+    def last_states(self) -> MutableMapping[str, StoredState]:
+        """Return the stored states indexed by entity_id.
+
+        Deprecated, use async_get_stored_state instead.
+        """
+        _report_last_states_usage()
+        return _LastStates(self)
+
+    @last_states.setter
+    def last_states(self, last_states: dict[str, StoredState]) -> None:
+        """Set the stored states of entities without a registry entry.
+
+        Deprecated.
+        """
+        _report_last_states_usage()
+        self.last_states_by_entity_id = last_states
 
     def set_load_empty(self) -> None:
         """Set the store to load empty and become read-only."""
@@ -168,14 +239,14 @@ class RestoreStateData:
     ) -> None:
         """Index the state stored by entity_id by the new registry entry."""
         entity_id = event.data["entity_id"]
-        if (stored_state := self.last_states.get(entity_id)) is None:
+        if (stored_state := self.last_states_by_entity_id.get(entity_id)) is None:
             return
         registry_entry = er.async_get(self.hass).async_get(entity_id)
         assert registry_entry is not None
         # A recreated registry entry keeps its id and its own stored state
         if registry_entry.id in self.last_states_by_entity_registry_id:
             return
-        del self.last_states[entity_id]
+        del self.last_states_by_entity_id[entity_id]
         stored_state.entity_registry_id = registry_entry.id
         self.last_states_by_entity_registry_id[registry_entry.id] = stored_state
 
@@ -192,21 +263,23 @@ class RestoreStateData:
         if stored_states is None:
             _LOGGER.debug("Not creating cache - no saved states found")
             stored_states = []
+        await er.async_get(self.hass).async_wait_loaded()
         self._async_load_stored_states(stored_states)
 
     @callback
     def _async_load_stored_states(self, stored_states: list[dict[str, Any]]) -> None:
         """Replace the stored states with the serialized stored states."""
         entity_registry = er.async_get(self.hass)
-        self.last_states = {}
+        self.last_states_by_entity_id = {}
         self.last_states_by_entity_registry_id = {}
         for item in stored_states:
             if not valid_entity_id(entity_id := item["state"]["entity_id"]):
                 continue
             stored_state = StoredState.from_dict(item)
             # Stored before states were indexed by entity registry id
-            if "entity_registry_id" not in item and (
-                registry_entry := entity_registry.async_get(entity_id)
+            if (
+                "entity_registry_id" not in item
+                and (registry_entry := entity_registry.async_get(entity_id)) is not None
             ):
                 stored_state.entity_registry_id = registry_entry.id
             if (entity_registry_id := stored_state.entity_registry_id) is not None:
@@ -214,10 +287,10 @@ class RestoreStateData:
                     stored_state
                 )
             else:
-                self.last_states[entity_id] = stored_state
+                self.last_states_by_entity_id[entity_id] = stored_state
         _LOGGER.debug(
             "Created cache with %s and %s",
-            list(self.last_states),
+            list(self.last_states_by_entity_id),
             list(self.last_states_by_entity_registry_id),
         )
 
@@ -225,7 +298,7 @@ class RestoreStateData:
     def async_get_stored_state(self, entity_id: str) -> StoredState | None:
         """Get the stored state of an entity, if any."""
         if (registry_entry := er.async_get(self.hass).async_get(entity_id)) is None:
-            return self.last_states.get(entity_id)
+            return self.last_states_by_entity_id.get(entity_id)
         stored_state = self.last_states_by_entity_registry_id.get(registry_entry.id)
         if (
             stored_state is not None
@@ -265,10 +338,17 @@ class RestoreStateData:
 
         # Start with the currently registered states
         stored_states: list[StoredState] = []
-        stored_entity_registry_ids: set[str] = set()
+        current_entity_registry_ids: set[str] = set()
         for entity_id, entity in self.entities.items():
             if entity_id not in current_states_by_entity_id:
                 continue
+            entity_registry_id = (
+                registry_entry.id
+                if (registry_entry := entity.registry_entry) is not None
+                else None
+            )
+            if entity_registry_id is not None:
+                current_entity_registry_ids.add(entity_registry_id)
             try:
                 extra_data = entity.extra_restore_state_data
             except Exception:
@@ -276,11 +356,6 @@ class RestoreStateData:
                     "Error getting extra restore state data for %s", entity_id
                 )
                 continue
-            entity_registry_id = (
-                registry_entry.id
-                if (registry_entry := entity.registry_entry) is not None
-                else None
-            )
             stored_states.append(
                 StoredState(
                     current_states_by_entity_id[entity_id],
@@ -289,8 +364,6 @@ class RestoreStateData:
                     entity_registry_id,
                 )
             )
-            if entity_registry_id is not None:
-                stored_entity_registry_ids.add(entity_registry_id)
         expiration_time = now - STATE_EXPIRATION
 
         last_states_by_entity_registry_id: dict[str, StoredState] = {}
@@ -298,8 +371,8 @@ class RestoreStateData:
             entity_registry_id,
             stored_state,
         ) in self.last_states_by_entity_registry_id.items():
-            # Don't save old states of entities already part of stored_states
-            if entity_registry_id in stored_entity_registry_ids:
+            # Don't save old states that have entities in the current run
+            if entity_registry_id in current_entity_registry_ids:
                 continue
 
             # Don't save old states that have expired
@@ -313,7 +386,7 @@ class RestoreStateData:
 
         last_states: dict[str, StoredState] = {}
 
-        for entity_id, stored_state in self.last_states.items():
+        for entity_id, stored_state in self.last_states_by_entity_id.items():
             # Don't save old states that have entities in the current run
             # They are either registered and already part of stored_states,
             # or no longer care about restoring.
@@ -327,7 +400,7 @@ class RestoreStateData:
             stored_states.append(stored_state)
             last_states[entity_id] = stored_state
 
-        self.last_states = last_states
+        self.last_states_by_entity_id = last_states
 
         return stored_states
 
@@ -403,7 +476,7 @@ class RestoreStateData:
                 state, extra_data, dt_util.utcnow(), entity_registry_id
             )
             if entity_registry_id is None:
-                self.last_states[entity_id] = stored_state
+                self.last_states_by_entity_id[entity_id] = stored_state
             else:
                 self.last_states_by_entity_registry_id[entity_registry_id] = (
                     stored_state
@@ -430,8 +503,11 @@ class RestoreEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
         await super().async_internal_added_to_hass()
-        if (registry_entry := self.registry_entry) is not None:
-            self.__added_entity_registry_id = registry_entry.id
+        self.__added_entity_registry_id = (
+            registry_entry.id
+            if (registry_entry := self.registry_entry) is not None
+            else None
+        )
         async_get(self.hass).async_restore_entity_added(self)
 
     @override

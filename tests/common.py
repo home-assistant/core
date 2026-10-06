@@ -1358,12 +1358,12 @@ def _mock_restore_cache(
     data._async_load_stored_states(stored_states)
     _LOGGER.debug(
         "Restore cache: %s and %s",
-        data.last_states,
+        data.last_states_by_entity_id,
         data.last_states_by_entity_registry_id,
     )
-    assert len(data.last_states) + len(data.last_states_by_entity_registry_id) == len(
-        states
-    ), f"Duplicate entity_id? {states}"
+    assert len(data.last_states_by_entity_id) + len(
+        data.last_states_by_entity_registry_id
+    ) == len(states), f"Duplicate entity_id? {states}"
 
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
