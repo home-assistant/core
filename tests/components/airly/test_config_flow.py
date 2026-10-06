@@ -10,7 +10,7 @@ from airly.measurements import Measurement
 import pytest
 
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -24,8 +24,8 @@ CONFIG = {
 }
 
 UPDATE_API_KEY_FLOWS = [
-    (SOURCE_REAUTH, "reauth_confirm", "reauth_successful"),
-    (SOURCE_RECONFIGURE, "reconfigure", "reconfigure_successful"),
+    ("start_reauth_flow", "reauth_confirm", "reauth_successful"),
+    ("start_reconfigure_flow", "reconfigure", "reconfigure_successful"),
 ]
 
 
@@ -312,21 +312,21 @@ async def test_unknown_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(("source", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS)
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
 async def test_update_api_key_successful(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_airly_client: MagicMock,
-    source: str,
+    start_flow: str,
     step_id: str,
     abort_reason: str,
 ) -> None:
     """Test updating the API key with the reauth and reconfigure flows."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source, "entry_id": mock_config_entry.entry_id}
-    )
+    result = await getattr(mock_config_entry, start_flow)(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
@@ -343,11 +343,13 @@ async def test_update_api_key_successful(
     )
 
 
-@pytest.mark.parametrize(("source", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS)
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
 async def test_update_api_key_with_nearest_method(
     hass: HomeAssistant,
     mock_airly_client: MagicMock,
-    source: str,
+    start_flow: str,
     step_id: str,
     abort_reason: str,
 ) -> None:
@@ -360,9 +362,7 @@ async def test_update_api_key_with_nearest_method(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source, "entry_id": entry.entry_id}
-    )
+    result = await getattr(entry, start_flow)(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
@@ -384,7 +384,9 @@ async def test_update_api_key_with_nearest_method(
     mock_airly_client.create_measurements_session_point.assert_not_called()
 
 
-@pytest.mark.parametrize(("source", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS)
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -412,7 +414,7 @@ async def test_update_api_key_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_airly_client: MagicMock,
-    source: str,
+    start_flow: str,
     step_id: str,
     abort_reason: str,
     exception: Exception,
@@ -421,9 +423,7 @@ async def test_update_api_key_errors(
     """Test the reauth and reconfigure flows with errors."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source, "entry_id": mock_config_entry.entry_id}
-    )
+    result = await getattr(mock_config_entry, start_flow)(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step_id
