@@ -55,6 +55,7 @@ async def async_setup_entry(
     relays: list[str] = door_bird_data.door_station_info["RELAYS"]
     entities = [
         DoorBirdButton(
+            config_entry.entry_id,
             door_bird_data,
             replace(RELAY_ENTITY_DESCRIPTION, name=f"Relay {relay}"),
             relay,
@@ -62,7 +63,7 @@ async def async_setup_entry(
         for relay in relays
     ]
     entities.extend(
-        DoorBirdButton(door_bird_data, button_description)
+        DoorBirdButton(config_entry.entry_id, door_bird_data, button_description)
         for button_description in BUTTON_DESCRIPTIONS
     )
     async_add_entities(entities)
@@ -75,12 +76,14 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
 
     def __init__(
         self,
+        config_entry_id: str,
         door_bird_data: DoorBirdData,
         entity_description: DoorbirdButtonEntityDescription,
         relay: str | None = None,
     ) -> None:
         """Initialize a button for a DoorBird device."""
         super().__init__(door_bird_data)
+        self._config_entry_id = config_entry_id
         self._relay = relay or ""
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._mac_addr}_{relay or entity_description.key}"
@@ -90,6 +93,4 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
         """Call the press action."""
         await self.entity_description.press_action(self._door_station, self._relay)
         if self.entity_description.reloads_entry:
-            self.hass.config_entries.async_schedule_reload(
-                self.platform.config_entry.entry_id
-            )
+            self.hass.config_entries.async_schedule_reload(self._config_entry_id)
