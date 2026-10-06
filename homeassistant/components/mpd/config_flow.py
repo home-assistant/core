@@ -50,6 +50,7 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                 TimeoutError,
                 gaierror,
                 mpd.ConnectionError,
+                mpd.ProtocolError,
                 OSError,
             ):
                 errors["base"] = "cannot_connect"
