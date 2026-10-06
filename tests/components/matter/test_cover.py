@@ -51,6 +51,7 @@ async def test_covers(
     [
         ("mock_window_covering_lift", "cover.mock_lift_window_covering"),
         ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+        ("mock_window_covering_pa_lift_null_tilt", "cover.shelly_2pm_gen4"),
         ("mock_window_covering_tilt", "cover.mock_tilt_window_covering"),
         ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
         ("mock_window_covering_full", "cover.mock_full_window_covering"),
@@ -121,6 +122,7 @@ async def test_cover(
     [
         ("mock_window_covering_lift", "cover.mock_lift_window_covering"),
         ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+        ("mock_window_covering_pa_lift_null_tilt", "cover.shelly_2pm_gen4"),
         ("mock_window_covering_full", "cover.mock_full_window_covering"),
     ],
 )
@@ -246,6 +248,30 @@ async def test_cover_position_aware_lift(
     assert state
     assert state.attributes["current_position"] == 0
     assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift_null_tilt", "cover.shelly_2pm_gen4"),
+    ],
+)
+async def test_cover_position_aware_lift_null_tilt(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test null tilt attribute while tilt is disabled (Shelly 2PM Gen4).
+
+    See home-assistant/core#149876.
+    """
+    state = hass.states.get(entity_id)
+    assert state
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        == 0
+    )
+    assert "current_tilt_position" not in state.attributes
 
 
 @pytest.mark.parametrize(

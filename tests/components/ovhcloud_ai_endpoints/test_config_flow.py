@@ -201,6 +201,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "Mistral-Nemo-Instruct-2407",
         CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: [],
     }
 
 
@@ -473,6 +474,61 @@ async def test_reconfigure_conversation_agent(
     assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"
 
 
+@pytest.mark.parametrize(
+    ("stored_apis", "expected_apis"),
+    [
+        pytest.param(["assist"], ["assist"], id="valid-api"),
+        pytest.param(["mcp-deleted-entry"], [], id="removed-api"),
+        pytest.param(
+            ["assist", "mcp-deleted-entry"], ["assist"], id="valid-and-removed-api"
+        ),
+    ],
+)
+async def test_reconfigure_conversation_agent_filters_removed_llm_api(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    stored_apis: list[str],
+    expected_apis: list[str],
+) -> None:
+    """Test reconfiguration drops unavailable LLM APIs from the form default."""
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_LLM_HASS_API: stored_apis},
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert [option["value"] for option in schema[key].config["options"]] == ["assist"]
+    assert key.default() == expected_apis
+
+    # An unchanged form submission must pass the selector's validation.
+    user_input = result["data_schema"](
+        {CONF_PROMPT: subentry.data[CONF_PROMPT], CONF_LLM_HASS_API: key.default()}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    updated_subentry = mock_config_entry.subentries[subentry.subentry_id]
+    assert updated_subentry.data[CONF_LLM_HASS_API] == expected_apis
+    assert updated_subentry.data[CONF_PROMPT] == subentry.data[CONF_PROMPT]
+    assert updated_subentry.data[CONF_MODEL] == subentry.data[CONF_MODEL]
+
+
 async def test_reconfigure_conversation_agent_clears_llm_api(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
@@ -499,5 +555,11 @@ async def test_reconfigure_conversation_agent_clears_llm_api(
 
     subentry = mock_config_entry.subentries[subentry_id]
     assert subentry.data[CONF_PROMPT] == "updated prompt"
-    assert CONF_LLM_HASS_API not in subentry.data
+    assert subentry.data[CONF_LLM_HASS_API] == []
     assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.default() == []

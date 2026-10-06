@@ -40,6 +40,7 @@ class RenderInfo:
         "_result",
         "all_states",
         "all_states_lifecycle",
+        "collecting",
         "domains",
         "domains_lifecycle",
         "entities",
@@ -55,6 +56,10 @@ class RenderInfo:
     def __init__(self, template: Template) -> None:
         """Initialise."""
         self.template = template
+        # Work scheduled during a render inherits a copy of its context, so the
+        # render info in that copy outlives the render. Cleared when the render
+        # ends, so the copy neither collects nor looks like a render in flight.
+        self.collecting = True
         # Will be set sensibly once frozen.
         self.filter_lifecycle: Callable[[str], bool] = _true
         self.filter: Callable[[str], bool] = _true

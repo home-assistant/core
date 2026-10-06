@@ -3,7 +3,8 @@
 from typing import Any, override
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
-import voluptuous as vol
+import probatio
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -33,14 +34,14 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=3000): vol.Coerce(int),
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL, default=True): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=True): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=3000): probatio.Coerce(int),
+                    probatio.Optional(CONF_USERNAME): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+                    probatio.Required(CONF_SSL, default=True): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
             errors=errors or {},
@@ -76,17 +77,19 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         username: str | None = user_input.get(CONF_USERNAME)
         password: str | None = user_input.get(CONF_PASSWORD)
         adguard = AdGuardHome(
-            user_input[CONF_HOST],
-            port=user_input[CONF_PORT],
+            URL.build(
+                scheme="https" if user_input[CONF_SSL] else "http",
+                host=user_input[CONF_HOST],
+                port=user_input[CONF_PORT],
+            ),
             username=username,
             password=password,
-            tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
             session=session,
         )
 
         try:
-            await adguard.version()
+            await adguard.status()
         except AdGuardHomeConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -129,14 +132,16 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         assert self._hassio_discovery
         adguard = AdGuardHome(
-            self._hassio_discovery[CONF_HOST],
-            port=self._hassio_discovery[CONF_PORT],
-            tls=False,
+            URL.build(
+                scheme="http",
+                host=self._hassio_discovery[CONF_HOST],
+                port=self._hassio_discovery[CONF_PORT],
+            ),
             session=session,
         )
 
         try:
-            await adguard.version()
+            await adguard.status()
         except AdGuardHomeConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_hassio_form(errors)

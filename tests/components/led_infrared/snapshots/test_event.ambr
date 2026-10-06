@@ -1,4 +1,80 @@
 # serializer version: 1
+# name: test_setup[generic_10_key][event.led_infrared_via_test_ir_emitter_received_command-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'on',
+        'off',
+        'brightness_up',
+        'brightness_down',
+        'timer_2h',
+        'timer_4h',
+        'timer_6h',
+        'timer_8h',
+        'candle',
+        'light',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.led_infrared_via_test_ir_emitter_received_command',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Received command',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Received command',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'received_command',
+    'unique_id': '1234567890',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_10_key][event.led_infrared_via_test_ir_emitter_received_command-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'on',
+        'off',
+        'brightness_up',
+        'brightness_down',
+        'timer_2h',
+        'timer_4h',
+        'timer_6h',
+        'timer_8h',
+        'candle',
+        'light',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Received command',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.led_infrared_via_test_ir_emitter_received_command',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup[generic_13_key][event.led_infrared_via_test_ir_emitter_received_command-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

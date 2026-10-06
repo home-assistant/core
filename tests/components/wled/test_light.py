@@ -71,6 +71,23 @@ async def test_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_segment_with_sparse_ids(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test segment lights still set up after a segment in the middle is deleted."""
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    data["state"]["seg"][1]["id"] = 2
+    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("light.wled_rgb_light_segment_2"))
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
+
+
 async def test_segment_change_state(
     hass: HomeAssistant,
     mock_wled: MagicMock,
@@ -277,7 +294,9 @@ async def test_single_segment_behavior(
     )
     assert mock_wled.segment.call_count == 1
     assert mock_wled.master.call_count == 2
-    mock_wled.segment.assert_called_with(on=True, segment_id=0, brightness=255)
+    mock_wled.segment.assert_called_with(
+        on=True, segment_id=0, brightness=255, transition=50
+    )
     mock_wled.master.assert_called_with(on=True, transition=50, brightness=42)
 
 

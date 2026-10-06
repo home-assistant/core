@@ -29,7 +29,11 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -48,7 +52,7 @@ async def wavertree_data(
 ) -> dict[str, _Matcher]:
     """Mock data for the Wavertree location."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
@@ -181,7 +185,9 @@ async def test_one_weather_site_running(
 
     assert weather.state == "rainy"
     assert weather.attributes.get("temperature") == 9.3
+    assert weather.attributes.get("apparent_temperature") == 5.8
     assert weather.attributes.get("wind_speed") == 28.33
+    assert weather.attributes.get("wind_gust_speed") == 55.55
     assert weather.attributes.get("wind_bearing") == 176.0
     assert weather.attributes.get("humidity") == 95
 
@@ -196,7 +202,7 @@ async def test_two_weather_sites_running(
     """Test we handle two different weather sites both running."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
     kingslynn_daily = json.dumps(mock_json["kingslynn_daily"])
 

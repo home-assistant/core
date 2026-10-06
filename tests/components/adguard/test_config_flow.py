@@ -21,6 +21,18 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+FIXTURE_STATUS = {
+    "version": "v0.99.0",
+    "language": "en",
+    "dns_addresses": ["127.0.0.1"],
+    "dns_port": 53,
+    "http_port": 3000,
+    "protection_disabled_duration": 0,
+    "protection_enabled": True,
+    "dhcp_available": True,
+    "running": True,
+}
+
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
     CONF_PORT: 3000,
@@ -55,10 +67,16 @@ async def test_connection_error(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FIXTURE_USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
@@ -74,7 +92,7 @@ async def test_full_flow_implementation(
             f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
             f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
         ),
-        json={"version": "v0.99.0"},
+        json=FIXTURE_STATUS,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -109,15 +127,21 @@ async def test_full_flow_implementation(
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
+        domain=DOMAIN, data={CONF_HOST: "mock-adguard", CONF_PORT: 3000}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={"host": "mock-adguard", "port": "3000"},
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**FIXTURE_USER_INPUT, CONF_HOST: "mock-adguard"},
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -178,7 +202,7 @@ async def test_hassio_confirm(
     """Test we can finish a config flow."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
-        json={"version": "v0.99.0"},
+        json=FIXTURE_STATUS,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 

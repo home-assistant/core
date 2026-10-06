@@ -1,10 +1,11 @@
 """Tests for the TechnoVE config flow."""
 
+from dataclasses import replace
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from technove import TechnoVEConnectionError
+from technove import TechnoVEConnectionError, TechnoVEError
 
 from homeassistant.components.technove.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -62,9 +63,18 @@ async def test_user_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -> None:
-    """Test we show user form on TechnoVE connection error."""
-    mock_technove.update.side_effect = TechnoVEConnectionError
+@pytest.mark.parametrize(
+    "error",
+    [
+        TechnoVEConnectionError,
+        TechnoVEError,
+    ],
+)
+async def test_connection_error(
+    hass: HomeAssistant, mock_technove: MagicMock, error: type[Exception]
+) -> None:
+    """Test we show user form on TechnoVE error."""
+    mock_technove.update.side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -82,12 +92,19 @@ async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -
     assert result.get("errors") == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        TechnoVEConnectionError,
+        TechnoVEError,
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry", "mock_technove")
 async def test_full_user_flow_with_error(
-    hass: HomeAssistant, mock_technove: MagicMock
+    hass: HomeAssistant, mock_technove: MagicMock, error: type[Exception]
 ) -> None:
     """Test the full manual user flow with some errors in the middle."""
-    mock_technove.update.side_effect = TechnoVEConnectionError
+    mock_technove.update.side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -186,11 +203,18 @@ async def test_zeroconf_during_onboarding(
     assert len(mock_onboarding.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        TechnoVEConnectionError,
+        TechnoVEError,
+    ],
+)
 async def test_zeroconf_connection_error(
-    hass: HomeAssistant, mock_technove: MagicMock
+    hass: HomeAssistant, mock_technove: MagicMock, error: type[Exception]
 ) -> None:
     """Test we abort zeroconf flow on TechnoVE connection error."""
-    mock_technove.update.side_effect = TechnoVEConnectionError
+    mock_technove.update.side_effect = error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -317,7 +341,7 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
 
     # Change mac address to simulate a different device
     device = mock_technove.update.return_value
-    device.info.mac_address = "AA:AA:AA:AA:AA:CC"
+    device.info = replace(device.info, mac_address="AA:AA:AA:AA:AA:CC")
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -332,16 +356,24 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
     assert result.get("reason") == "unique_id_mismatch"
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        TechnoVEConnectionError,
+        TechnoVEError,
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_reconfigure_flow_connection_error_and_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_technove: MagicMock,
+    error: type[Exception],
 ) -> None:
     """Test reconfigure flow with connection error, then successful recovery."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_technove.update.side_effect = TechnoVEConnectionError
+    mock_technove.update.side_effect = error
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 

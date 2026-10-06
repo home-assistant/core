@@ -1,51 +1,45 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
 
+from dataclasses import dataclass
 import logging
 from typing import Self, cast, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
-from homeassistant.const import (
-    ATTR_EDITABLE,
-    CONF_ICON,
-    CONF_ID,
-    CONF_NAME,
-    SERVICE_RELOAD,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.components.button import SERVICE_PRESS, ButtonEntity  # noqa: F401
+from homeassistant.const import ATTR_EDITABLE, CONF_ICON, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-DOMAIN = "input_button"
+from .const import DATA_INPUT_BUTTON, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
+            probatio.Any(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
                 },
                 None,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -53,7 +47,7 @@ STORAGE_VERSION = 1
 class InputButtonStorageCollection(collection.DictStorageCollection):
     """Input button collection stored in storage."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = probatio.Schema(STORAGE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict[str, str]:
@@ -71,6 +65,14 @@ class InputButtonStorageCollection(collection.DictStorageCollection):
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
         return {CONF_ID: item[CONF_ID]} | update_data
+
+
+@dataclass(slots=True)
+class InputButtonData:
+    """Runtime data for the input_button integration."""
+
+    component: EntityComponent[InputButton]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -103,26 +105,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all input buttons and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [
-                {CONF_ID: id_, **(conf or {})}
-                for id_, conf in conf.get(DOMAIN, {}).items()
-            ]
-        )
+    hass.data[DATA_INPUT_BUTTON] = InputButtonData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(SERVICE_PRESS, None, "_async_press_action")
-
+    async_setup_services(hass)
     return True
 
 

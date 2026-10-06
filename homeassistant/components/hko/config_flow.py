@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from hko import HKO, LOCATIONS, HKOError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LOCATION
@@ -22,9 +22,9 @@ def get_loc_name(item):
     return item[KEY_LOCATION]
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION, default=DEFAULT_LOCATION): SelectSelector(
+        probatio.Required(CONF_LOCATION, default=DEFAULT_LOCATION): SelectSelector(
             SelectSelectorConfig(options=list(map(get_loc_name, LOCATIONS)), sort=True)
         )
     }

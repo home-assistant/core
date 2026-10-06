@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_MOTION, MODEL_WALL_DISPLAY
+from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1112,3 +1112,36 @@ async def test_rpc_circuit_breaker_turn_on_errors(
             {ATTR_ENTITY_ID: "switch.test_name"},
             blocking=True,
         )
+
+
+async def test_rpc_camera_privacy_switch(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the camera privacy switch."""
+    entity_id = "switch.test_name_privacy"
+
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-camera:0-camera_privacy"
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_camera_rpc_device, "camera:0", "privacy", True
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_camera_rpc_device.mock_update()
+    mock_camera_rpc_device.set_camera_privacy.assert_called_with(0, True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON

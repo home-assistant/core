@@ -1,0 +1,31 @@
+{
+  "fixture": [
+    {
+      "addr": 1,
+      "type": 13,
+      "name": "Fan",
+      "detail": { "model": "2603-56" },
+      "state": {
+        "status": true,
+        "fanSpeed": 3,
+        "fanDirection": false,
+        "wind": false,
+        "windSpeed": 3
+      }
+    },
+    {
+      "addr": 2,
+      "type": 0,
+      "name": "ModernFormsFan Uplight",
+      "detail": { "minColorTemp": 2700, "maxColorTemp": 5000 },
+      "state": { "status": true, "level": 8000, "mixColorTemp": 3000 }
+    },
+    {
+      "addr": 3,
+      "type": 0,
+      "name": "ModernFormsFan Downlight",
+      "detail": { "minColorTemp": 2700, "maxColorTemp": 5000 },
+      "state": { "status": false, "level": 5000, "mixColorTemp": 4000 }
+    }
+  ]
+}

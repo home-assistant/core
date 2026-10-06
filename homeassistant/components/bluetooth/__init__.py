@@ -69,6 +69,7 @@ from .api import (
     async_last_service_info,
     async_process_advertisements,
     async_rediscover_address,
+    async_register_advertisement_callback,
     async_register_callback,
     async_register_scanner,
     async_remove_scanner,
@@ -131,6 +132,7 @@ __all__ = [
     "async_last_service_info",
     "async_process_advertisements",
     "async_rediscover_address",
+    "async_register_advertisement_callback",
     "async_register_callback",
     "async_register_scanner",
     "async_remove_scanner",
@@ -407,7 +409,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if mode is BluetoothScanningMode.AUTO and not details.get(ADAPTER_PASSIVE_SCAN):
         mode = BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
-    scanner.async_setup()
+    entry.async_on_unload(scanner.async_setup())
     if entry.title == address:
         hass.config_entries.async_update_entry(
             entry, title=adapter_title(adapter, details)

@@ -106,7 +106,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: EnphaseConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: EnphaseConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove an enphase_envoy config entry from a device."""
     dev_ids = {dev_id[1] for dev_id in device_entry.identifiers if dev_id[0] == DOMAIN}

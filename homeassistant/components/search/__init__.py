@@ -6,10 +6,13 @@ from enum import StrEnum
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import automation, group, person, script, websocket_api
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.homeassistant import scene
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
     area_registry as ar,
@@ -57,9 +60,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "search/related",
-        vol.Required("item_type"): vol.Coerce(ItemType),
-        vol.Required("item_id"): str,
+        probatio.Required("type"): "search/related",
+        probatio.Required("item_type"): probatio.Coerce(ItemType),
+        probatio.Required("item_id"): str,
+        probatio.Optional("include_disabled_entities", default=False): bool,
     }
 )
 @callback
@@ -69,7 +73,11 @@ def websocket_search_related(
     msg: dict[str, Any],
 ) -> None:
     """Handle search."""
-    searcher = Searcher(hass, get_entity_sources(hass))
+    searcher = Searcher(
+        hass,
+        get_entity_sources(hass),
+        include_disabled_entities=msg["include_disabled_entities"],
+    )
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
     )
@@ -84,6 +92,8 @@ class Searcher:
         self,
         hass: HomeAssistant,
         entity_sources: dict[str, EntityInfo],
+        *,
+        include_disabled_entities: bool = False,
     ) -> None:
         """Search results."""
         self.hass = hass
@@ -91,6 +101,7 @@ class Searcher:
         self._device_registry = dr.async_get(hass)
         self._entity_registry = er.async_get(hass)
         self._entity_sources = entity_sources
+        self._include_disabled_entities = include_disabled_entities
         self.results: defaultdict[ItemType, set[str]] = defaultdict(set)
 
     @callback
@@ -144,15 +155,16 @@ class Searcher:
             self._add(ItemType.DEVICE, device.id)
 
             # Config entries for devices in this area
-            if device_entry := self._device_registry.async_get(device.id):
-                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+            self._add(ItemType.CONFIG_ENTRY, device.config_entry_id)
 
             # Automations and scripts referencing this device
             self._async_add_automations_and_scripts_for_device(device)
 
             # Entities of this device
             for entity_entry in er.async_entries_for_device(
-                self._entity_registry, device.id
+                self._entity_registry,
+                device.id,
+                include_disabled_entities=self._include_disabled_entities,
             ):
                 # Skip the entity if it's in a different area
                 if entity_entry.area_id is not None:
@@ -249,21 +261,21 @@ class Searcher:
 
             # For an automation, we want to unwrap the groups, to ensure we
             # relate this automation to all those members as well.
-            if domain == "group":
+            if domain == GROUP_DOMAIN:
                 for group_entity_id in group.get_entity_ids(self.hass, entity_id):
                     self._add(ItemType.ENTITY, group_entity_id)
                     self._async_resolve_up_entity(group_entity_id)
 
             # For an automation, we want to unwrap the scenes, to ensure we
             # relate this automation to all referenced entities as well.
-            if domain == "scene":
+            if domain == SCENE_DOMAIN:
                 for scene_entity_id in scene.entities_in_scene(self.hass, entity_id):
                     self._add(ItemType.ENTITY, scene_entity_id)
                     self._async_resolve_up_entity(scene_entity_id)
 
             # Fully search the script if it is part of an automation.
             # This makes the automation return all results of the embedded script.
-            if domain == "script":
+            if domain == SCRIPT_DOMAIN:
                 self._async_search_script(entity_id, entry_point=False)
 
     @callback
@@ -324,7 +336,9 @@ class Searcher:
 
         # Entities of this device
         for entity_entry in er.async_entries_for_device(
-            self._entity_registry, device_id
+            self._entity_registry,
+            device_id,
+            include_disabled_entities=self._include_disabled_entities,
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
@@ -583,21 +597,21 @@ class Searcher:
 
             # For an script, we want to unwrap the groups, to ensure we
             # relate this script to all those members as well.
-            if domain == "group":
+            if domain == GROUP_DOMAIN:
                 for group_entity_id in group.get_entity_ids(self.hass, entity_id):
                     self._add(ItemType.ENTITY, group_entity_id)
                     self._async_resolve_up_entity(group_entity_id)
 
             # For an script, we want to unwrap the scenes, to ensure we
             # relate this script to all referenced entities as well.
-            if domain == "scene":
+            if domain == SCENE_DOMAIN:
                 for scene_entity_id in scene.entities_in_scene(self.hass, entity_id):
                     self._add(ItemType.ENTITY, scene_entity_id)
                     self._async_resolve_up_entity(scene_entity_id)
 
             # Fully search the script if it is nested.
             # This makes the script return all results of the embedded script.
-            if domain == "script":
+            if domain == SCRIPT_DOMAIN:
                 self._async_search_script(entity_id, entry_point=False)
 
     @callback
@@ -620,8 +634,12 @@ class Searcher:
                 self._add(ItemType.AREA, area_id)
                 self._async_resolve_up_area(area_id)
 
-            self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
-            for config_entry_id in device_entry.config_entries:
+            if device_entry.is_composite_device:
+                config_entry_ids = device_entry.config_entries
+            else:
+                config_entry_ids = {device_entry.config_entry_id}
+            self._add(ItemType.CONFIG_ENTRY, config_entry_ids)
+            for config_entry_id in config_entry_ids:
                 if entry := self.hass.config_entries.async_get_entry(config_entry_id):
                     self._add(ItemType.INTEGRATION, entry.domain)
 

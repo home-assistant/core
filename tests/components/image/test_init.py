@@ -1,6 +1,6 @@
 """The tests for the image component."""
 
-from datetime import datetime
+import errno
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, mock_open, patch
@@ -15,8 +15,9 @@ from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MockImageEntity,
@@ -427,7 +428,7 @@ async def test_image_stream(
             assert not resp.closed
             assert resp.status == HTTPStatus.OK
 
-            mock_image.image_last_updated = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+            mock_image.image_last_updated = dt_util.utcnow()
             mock_image.async_write_ha_state()
             # Two blocks to ensure the frame is written
             await hass.async_block_till_done()
@@ -472,8 +473,8 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with (
-        patch("homeassistant.components.image.open", mopen, create=True),
-        patch("homeassistant.components.image.os.makedirs"),
+        patch("homeassistant.components.image.services.open", mopen, create=True),
+        patch("homeassistant.components.image.services.os.makedirs"),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
         await hass.services.async_call(
@@ -503,9 +504,9 @@ async def test_snapshot_service_no_image(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with (
-        patch("homeassistant.components.image.open", mopen, create=True),
+        patch("homeassistant.components.image.services.open", mopen, create=True),
         patch(
-            "homeassistant.components.image.os.makedirs",
+            "homeassistant.components.image.services.os.makedirs",
         ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
@@ -533,7 +534,10 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Cannot write to /test/snapshot.jpg because access to this path is not allowed",
+    ):
         await hass.services.async_call(
             image.DOMAIN,
             image.SERVICE_SNAPSHOT,
@@ -545,7 +549,34 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
         )
 
 
-async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        (
+            OSError(errno.EACCES, "Permission denied"),
+            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        ),
+        (
+            OSError(errno.EPERM, "Operation not permitted"),
+            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        ),
+        (
+            OSError(errno.ENOSPC, "No space left on device"),
+            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
+        ),
+        (
+            OSError(errno.EROFS, "Read-only file system"),
+            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
+        ),
+        (
+            OSError(errno.EIO, "Input/output error"),
+            "Cannot write image to /test/snapshot.jpg$",
+        ),
+    ],
+)
+async def test_snapshot_service_os_error(
+    hass: HomeAssistant, side_effect: OSError, message: str
+) -> None:
     """Test snapshot service with os error."""
     mock_integration(hass, MockModule(domain="test"))
     mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
@@ -556,8 +587,8 @@ async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("os.makedirs", side_effect=OSError),
-        pytest.raises(HomeAssistantError),
+        patch("os.makedirs", side_effect=side_effect),
+        pytest.raises(HomeAssistantError, match=message),
     ):
         await hass.services.async_call(
             image.DOMAIN,

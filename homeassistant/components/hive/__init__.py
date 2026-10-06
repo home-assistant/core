@@ -10,13 +10,12 @@ from apyhiveapi import Auth, Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .entity import HiveEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,10 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     hive_config = dict(entry.data)
     hive = Hive(web_session)
 
-    hive_config["options"] = {}
-    hive_config["options"].update(
-        {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
-    )
     entry.runtime_data = hive
 
     try:
@@ -50,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
         connections.add((dr.CONNECTION_NETWORK_MAC, mac))
 
     device_registry = dr.async_get(hass)
-    hub_device = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub_data["device_id"])},
         connections=connections,
@@ -59,20 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
         sw_version=hub_data["deviceData"]["version"],
         manufacturer=hub_data["deviceData"]["manufacturer"],
     )
-    if hub_device.via_device_id is not None:
-        # Older versions linked the hub's own diagnostic sensor to the hub itself;
-        # clear the stale self-reference since async_get_or_create leaves
-        # via_device_id untouched when it's not passed.
-        device_registry.async_update_device(hub_device.id, via_device_id=None)
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        [
-            ha_type
-            for ha_type, hive_type in PLATFORM_LOOKUP.items()
-            if devices.get(hive_type)
-        ],
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -92,7 +75,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True
