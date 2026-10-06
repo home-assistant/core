@@ -135,12 +135,6 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 @callback
-def _async_enabled(cloud: Cloud[CloudClient], prefs: CloudPreferences) -> bool:
-    """Return if Alexa is enabled."""
-    return cloud.is_logged_in and not cloud.subscription_expired and prefs.alexa_enabled
-
-
-@callback
 def _async_should_expose(
     hass: HomeAssistant, config: dict[str, Any], entity_id: str
 ) -> bool:
@@ -243,8 +237,9 @@ async def async_migrate_entity_settings(
     ):
         _async_migrate_entity_settings_v1(hass, config, prefs)
 
-    # A disabled Alexa exposed nothing by name, so there is nothing to preserve
-    if prefs.alexa_settings_version < 4 and _async_enabled(cloud, prefs):
+    # Only a logged in and enabled Alexa exposed names, so only then
+    # is there anything to preserve
+    if prefs.alexa_settings_version < 4 and cloud.is_logged_in and prefs.alexa_enabled:
         _async_migrate_entity_settings_v2(hass, config)
 
     _LOGGER.info(
@@ -281,7 +276,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     @property
     def enabled(self) -> bool:
         """Return if Alexa is enabled."""
-        return _async_enabled(self._cloud, self._prefs)
+        return (
+            self._cloud.is_logged_in
+            and not self._cloud.subscription_expired
+            and self._prefs.alexa_enabled
+        )
 
     @property
     @override

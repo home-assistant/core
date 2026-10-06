@@ -982,17 +982,27 @@ async def test_google_config_get_agent_users(
 
 
 @pytest.mark.parametrize(
-    "enabled", [pytest.param(True, id="enabled"), pytest.param(False, id="disabled")]
+    ("enabled", "logged_in", "subscription_expired", "preserved"),
+    [
+        pytest.param(True, True, False, True, id="enabled"),
+        pytest.param(False, True, False, False, id="disabled"),
+        pytest.param(True, False, False, False, id="logged_out"),
+        pytest.param(True, True, True, True, id="subscription_expired"),
+    ],
 )
 async def test_google_config_migrate_entity_names(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
     entity_registry: er.EntityRegistry,
     enabled: bool,
+    logged_in: bool,
+    subscription_expired: bool,
+    preserved: bool,
 ) -> None:
     """Test the v4 migration preserves the names of exposed entities as aliases.
 
-    Nothing is preserved for a disabled Google Assistant, it exposed nothing.
+    Nothing is preserved for a disabled or logged out Google Assistant, it
+    exposed nothing. An expired subscription still did, so its names are preserved.
     """
     hass.set_state(CoreState.not_running)
 
@@ -1024,9 +1034,9 @@ async def test_google_config_migrate_entity_names(
                 {"entity_config": {entity_yaml_name.entity_id: {"name": "Configured"}}}
             ),
             cloud_prefs,
-            Mock(is_logged_in=True, subscription_expired=False),
+            Mock(is_logged_in=logged_in, subscription_expired=subscription_expired),
         )
 
-    expected_calls = [call(hass, entity_exposed.entity_id)] if enabled else []
+    expected_calls = [call(hass, entity_exposed.entity_id)] if preserved else []
     assert mock_preserve.mock_calls == expected_calls
     assert cloud_prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
