@@ -187,11 +187,8 @@ async def _write_timer_period(
     entity.coordinator.request_refresh_with_followup()
 
 
-# Map a library invalid-state rejection to a user-facing validation message.
-# _write_filt_mode is the only write that can surface one: leaving manual mode
-# while a cell boost is active makes the library refuse the pump toggle with
-# FILTRATION_BOOST_ACTIVE. Any other (or absent) reason falls back to the
-# generic "invalid_state" message.
+# Only _write_filt_mode can raise invalid-state: leaving manual mode during an
+# active cell boost makes the library refuse the pump toggle.
 _INVALID_STATE_TRANSLATION_KEY: dict[InvalidStateReason, str] = {
     InvalidStateReason.FILTRATION_BOOST_ACTIVE: "filtration_boost_active",
 }
