@@ -614,6 +614,40 @@ async def test_get_forecast_tool_matches_daily_entries_by_calendar_date(
     assert conditions == ["sunny"]
 
 
+@pytest.mark.freeze_time("2024-01-15T12:00:00+00:00")
+async def test_get_forecast_tool_matches_daily_entries_by_entry_own_timezone(
+    hass: HomeAssistant,
+) -> None:
+    """Test a daily entry's calendar date is derived from its own offset.
+
+    A forecast for a remote location (e.g. via Google Weather) reports its
+    own local date, which can differ from the date that instant falls on in
+    Home Assistant's configured timezone. Re-interpreting the entry's
+    calendar date using Home Assistant's timezone instead of the entry's own
+    offset would assign it to the wrong day.
+    """
+    await hass.config.async_set_time_zone("UTC")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity.forecast_list = [
+        # Local midnight in a remote (JST) location. In Home Assistant's
+        # (UTC) timezone this instant falls on 2024-01-15, but the entry's
+        # own date is 2024-01-16.
+        {"datetime": "2024-01-16T00:00:00+09:00", "condition": "sunny"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["sunny"]
+
+
 @pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
 async def test_get_forecast_tool_derives_interval_end_from_next_entry(
     hass: HomeAssistant,

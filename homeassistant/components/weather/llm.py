@@ -223,20 +223,24 @@ class GetForecastTool(Tool):
                 # Daily entries aren't guaranteed to start at local midnight
                 # (e.g. Google Weather's daytime entries start at 07:00), so
                 # match by calendar date rather than by the literal
-                # timestamp: otherwise a non-midnight entry's interval would
-                # bleed into the following day's window. Apply the duration
-                # in local wall-clock time so the end is the next local
-                # midnight, correctly accounting for a DST change in between.
-                match_start = dt_util.start_of_local_day(dt_util.as_local(entry_start))
-                cadence_end = match_start + duration
+                # timestamp, or a non-midnight entry would bleed into the
+                # following day's window. Floor using the entry's own tzinfo
+                # rather than Home Assistant's configured timezone: a
+                # forecast for a remote location reports its own local date,
+                # which can differ from the date that instant falls on in
+                # Home Assistant's timezone.
+                match_start = entry_start.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+                # Apply the duration in local wall-clock time so the end is
+                # the next local midnight, correctly accounting for a DST
+                # change in between.
+                cadence_end = dt_util.as_local(match_start) + duration
             else:
-                # Hourly/twice-daily entries represent a fixed elapsed
-                # duration, not a calendar boundary, so the end must be
-                # computed in absolute (UTC) time instead: adding wall-clock
-                # time across the autumn DST transition can span two real
-                # elapsed hours (the repeated 01:00-01:59 hour), which would
-                # return the final entry for an hour after its actual
-                # coverage ends.
+                # Elapsed-time (not calendar-boundary) cadences must use
+                # absolute time: adding wall-clock time across the autumn
+                # DST transition can span two real elapsed hours (the
+                # repeated 01:00-01:59 hour), overshooting the real end.
                 match_start = entry_start
                 cadence_end = dt_util.as_utc(entry_start) + duration
             if index + 1 < len(forecast):
