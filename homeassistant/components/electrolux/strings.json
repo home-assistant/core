@@ -207,6 +207,9 @@
           "running": "[%key:component::electrolux::common::running%]"
         }
       },
+      "battery_percentage": {
+        "name": "Battery"
+      },
       "bottomoven_appliance_state": {
         "name": "Lower cavity appliance state",
         "state": {
