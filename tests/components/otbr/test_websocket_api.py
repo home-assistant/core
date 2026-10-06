@@ -1452,6 +1452,54 @@ async def test_delete_ephemeral_key_by_key(
 
 
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_ephemeral_key_lifetime_counts_from_request(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a key is considered expired once the router has dropped it."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key")
+
+    async def activate(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        # The router starts the lifetime before its response arrives
+        freezer.tick(timedelta(seconds=10))
+        return AiohttpClientMockResponse(
+            "POST",
+            URL(f"{BASE_URL}/node/ba-epskc/key"),
+            json={"tap": "700855744", "port": 49154},
+        )
+
+    aioclient_mock.post(f"{BASE_URL}/node/ba-epskc/key", side_effect=activate)
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        assert (await websocket_client.receive_json())["success"]
+        # Past the lifetime counted from the request, not from the response
+        freezer.tick(timedelta(minutes=5) - timedelta(seconds=5))
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/delete_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+                "ephemeral_key": "700855744",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    # Another controller may own the router's active key by now
+    assert not any(call[0] == "DELETE" for call in aioclient_mock.mock_calls)
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
 async def test_delete_ephemeral_key_retry_after_failure(
     aioclient_mock: AiohttpClientMocker,
     websocket_client: MockHAClientWebSocket,

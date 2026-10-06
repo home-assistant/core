@@ -223,6 +223,9 @@ class OTBRData:
 
         # The feature has to be enabled before a key can be activated
         await self.api.set_ephemeral_key_enabled(True)
+        # The router starts the lifetime when it activates the key, so count it
+        # from the request to never consider the key active after it expired
+        expires = dt_util.utcnow() + timedelta(milliseconds=lifetime)
         try:
             activation = await self.api.activate_ephemeral_key(lifetime)
         except python_otbr_api.EphemeralKeyConflictError as err:
@@ -232,11 +235,10 @@ class OTBRData:
             if status.state in EPHEMERAL_KEY_IN_USE_STATES:
                 raise EphemeralKeyInUse from err
             await self.api.deactivate_ephemeral_key()
+            expires = dt_util.utcnow() + timedelta(milliseconds=lifetime)
             activation = await self.api.activate_ephemeral_key(lifetime)
         self.active_ephemeral_key = activation.tap
-        self.active_ephemeral_key_expires = dt_util.utcnow() + timedelta(
-            milliseconds=lifetime
-        )
+        self.active_ephemeral_key_expires = expires
         return activation.tap, activation.port
 
     @_handle_otbr_error
