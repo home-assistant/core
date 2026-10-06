@@ -477,8 +477,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/eheimdigital/ @autinerd
 /homeassistant/components/ekeybionyx/ @richardpolzer
 /tests/components/ekeybionyx/ @richardpolzer
-/homeassistant/components/electrasmart/ @jafar-atili
-/tests/components/electrasmart/ @jafar-atili
+/homeassistant/components/electrasmart/ @jafar-atili @noamokman
+/tests/components/electrasmart/ @jafar-atili @noamokman
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
 /homeassistant/components/elevenlabs/ @sorgfresser
@@ -1696,8 +1696,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sfr_box/ @epenet
 /homeassistant/components/sftp_storage/ @maretodoric
 /tests/components/sftp_storage/ @maretodoric
-/homeassistant/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
-/tests/components/sharkiq/ @JeffResc @funkybunch @TheOneOgre
+/homeassistant/components/sharkiq/ @JeffResc @funkybunch
+/tests/components/sharkiq/ @JeffResc @funkybunch
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @bieniu @thecode @chemelli74 @bdraco
