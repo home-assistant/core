@@ -2410,12 +2410,12 @@ class _PhaseTrackingEntity(entity.Entity):
         self.phases.append("write")
         super()._async_write_ha_state()
 
-    async def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
         """Record the state when the change is finished."""
-        await super().async_entity_id_change_finished(old_entity_id)
+        super().async_entity_id_change_finished(old_entity_id)
         self.phases.append("finished")
         self.state_in_finished = self.hass.states.get(self.entity_id)
-        await asyncio.sleep(0)
 
 
 async def test_change_entity_id_phases(
@@ -2432,8 +2432,10 @@ async def test_change_entity_id_phases(
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
-    await hass.async_block_till_done()
 
+    # The change completes synchronously while the registry event is dispatched
+    assert ent.phases == ["changed", "write", "finished"]
+    await hass.async_block_till_done()
     assert ent.phases == ["changed", "write", "finished"]
     assert ent.state_in_finished is not None
     assert ent.state_in_finished.attributes["key"] == "test.test2"
@@ -2449,7 +2451,7 @@ async def test_change_entity_id_phases(
 
 
 class _SuspendingEntity(entity.Entity):
-    """Entity whose async_entity_id_change_finished suspends until resumed."""
+    """Entity whose async_entity_id_change_finished starts a suspending task."""
 
     _attr_unique_id = "5678"
 
@@ -2459,10 +2461,15 @@ class _SuspendingEntity(entity.Entity):
         self.calls: list[tuple[str, str]] = []
         self.entity_ids_after_resume: list[str] = []
 
-    async def async_entity_id_change_finished(self, old_entity_id: str) -> None:
-        """Record the change, then wait until resumed."""
-        await super().async_entity_id_change_finished(old_entity_id)
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Record the change, then start a task which waits until resumed."""
+        super().async_entity_id_change_finished(old_entity_id)
         self.calls.append((old_entity_id, self.entity_id))
+        self.hass.async_create_task(self._async_wait_for_resume())
+
+    async def _async_wait_for_resume(self) -> None:
+        """Wait until resumed."""
         await self.resume.wait()
         self.entity_ids_after_resume.append(self.entity_id)
 
@@ -2470,7 +2477,7 @@ class _SuspendingEntity(entity.Entity):
 async def test_change_entity_id_again_while_finishing(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test an entity_id change while async_entity_id_change_finished awaits."""
+    """Test an entity_id change while a task of the finished hook awaits."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="a"
     )
@@ -2479,8 +2486,8 @@ async def test_change_entity_id_again_while_finishing(
     await platform.async_add_entities([ent])
 
     entity_registry.async_update_entity("test.a", new_entity_id="test.b")
-    # Registry events are not serialized, the second change runs while the first
-    # async_entity_id_change_finished is suspended
+    # Registry events are not serialized with the task started by the first
+    # async_entity_id_change_finished, the second change runs while it awaits
     entity_registry.async_update_entity("test.b", new_entity_id="test.c")
     ent.resume.set()
     await hass.async_block_till_done()
@@ -2502,7 +2509,7 @@ async def test_change_entity_id_again_while_finishing(
 async def test_remove_while_finishing_entity_id_change(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test removing the entity while async_entity_id_change_finished awaits."""
+    """Test removing the entity while a task of the finished hook awaits."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="a"
     )
@@ -2521,27 +2528,54 @@ async def test_remove_while_finishing_entity_id_change(
     _assert_entity_bookkeeping(hass, platform, ent, [])
 
 
+class _RaisingChangedEntity(_PhaseTrackingEntity):
+    """Entity whose async_entity_id_changed raises."""
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Raise."""
+        super().async_entity_id_changed(old_entity_id)
+        raise ValueError("Boom")
+
+
+class _RaisingFinishedEntity(_PhaseTrackingEntity):
+    """Entity whose async_entity_id_change_finished raises."""
+
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Raise."""
+        super().async_entity_id_change_finished(old_entity_id)
+        raise ValueError("Boom")
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "message"),
+    [
+        pytest.param(
+            _RaisingChangedEntity,
+            "Error handling entity_id change of test.test2 from test.test",
+            id="changed",
+        ),
+        pytest.param(
+            _RaisingFinishedEntity,
+            "Error finishing entity_id change of test.test2 from test.test",
+            id="finished",
+        ),
+    ],
+)
 async def test_change_entity_id_hook_raises(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    entity_class: type[_PhaseTrackingEntity],
+    message: str,
 ) -> None:
-    """Test a raising async_entity_id_changed still leaves the new state written."""
-
-    class RaisingEntity(_PhaseTrackingEntity):
-        """Entity whose async_entity_id_changed raises."""
-
-        @callback
-        def async_entity_id_changed(self, old_entity_id: str) -> None:
-            """Raise."""
-            super().async_entity_id_changed(old_entity_id)
-            raise ValueError("Boom")
-
+    """Test a raising hook is logged and still leaves the new state written."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
     )
     platform = MockEntityPlatform(hass, domain="test")
-    ent = RaisingEntity()
+    ent = entity_class()
     await platform.async_add_entities([ent])
     ent.phases.clear()
 
@@ -2551,7 +2585,7 @@ async def test_change_entity_id_hook_raises(
     assert ent.phases == ["changed", "write", "finished"]
     assert hass.states.get("test.test") is None
     assert hass.states.get("test.test2").attributes["key"] == "test.test2"
-    assert "Error handling entity_id change of test.test2 from test.test" in caplog.text
+    assert message in caplog.text
     assert "ValueError: Boom" in caplog.text
 
 
@@ -2653,7 +2687,8 @@ class _AddedEntity(entity.Entity):
 class _FinishedOnlyAddedEntity(_AddedEntity):
     """Entity opting in with only async_entity_id_change_finished."""
 
-    async def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
         """Run when the state has been written under the new entity_id."""
 
 

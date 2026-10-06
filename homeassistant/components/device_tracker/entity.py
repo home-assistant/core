@@ -467,8 +467,11 @@ class BaseScannerEntity(BaseTrackerEntity):
     def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
         """Refresh the entity_id shown by an open associated-zone repair issue."""
         super().async_internal_entity_id_changed(old_entity_id)
-        if self.registry_entry and ir.async_get(self.hass).async_get_issue(
-            DOMAIN, self._associated_zone_issue_id
+        if (
+            ir.async_get(self.hass).async_get_issue(
+                DOMAIN, self._associated_zone_issue_id
+            )
+            is not None
         ):
             self._async_create_associated_zone_issue()
 

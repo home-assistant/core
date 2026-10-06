@@ -1701,17 +1701,18 @@ class Entity(
         in place.
         """
 
-    async def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
         """Run when the state has been written under the new entity_id.
 
-        Only for work which must await or which reads the entity's own state under
-        the new entity_id, e.g. templates rendering `this`. Anything else belongs in
-        async_entity_id_changed. Call super() so base classes can do the same.
+        Only for work which reads the entity's own state under the new entity_id,
+        e.g. templates rendering `this`, or which may write state. Anything else
+        belongs in async_entity_id_changed. Call super() so base classes can do
+        the same.
 
-        Registry events are not serialized: while this awaits, the entity may be
-        renamed again, disabled or removed. After an await, re-check that the entity
-        is still added and that self.entity_id is unchanged before registering
-        anything, and undo work which is no longer wanted.
+        Work which must await can be done in a task; registry events are not
+        serialized with it, so after an await re-check that the entity is still
+        added and that self.entity_id is unchanged.
 
         To be extended by integrations.
         """
@@ -1794,7 +1795,14 @@ class Entity(
                 old_entity_id,
             )
         self.async_write_ha_state()
-        await self.async_entity_id_change_finished(old_entity_id)
+        try:
+            self.async_entity_id_change_finished(old_entity_id)
+        except Exception:
+            _LOGGER.exception(
+                "Error finishing entity_id change of %s from %s",
+                self.entity_id,
+                old_entity_id,
+            )
 
     async def _async_readd_on_entity_id_change(
         self, old_entity_id: str, registry_entry: er.RegistryEntry
@@ -1802,6 +1810,7 @@ class Entity(
         """Remove the entity and add it again with its new entity_id.
 
         Used for entities which have not opted in to async_entity_id_changed.
+        Can be removed in Home Assistant Core 2027.11.
         """
         await self.async_remove(force_remove=True)
 
@@ -1818,7 +1827,7 @@ class Entity(
     @callback
     def _async_unsubscribe_registry_updates(self) -> None:
         """Unsubscribe from entity registry updates."""
-        if not self._unsub_registry_updates:
+        if self._unsub_registry_updates is None:
             return
         self._unsub_registry_updates()
         self._unsub_registry_updates = None
