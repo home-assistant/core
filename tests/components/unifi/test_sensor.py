@@ -2639,6 +2639,7 @@ async def test_device_uplink(
 
 
 @pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_firewall_policy_schedule_status(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -2665,24 +2666,48 @@ async def test_firewall_policy_schedule_status(
 
 
 @pytest.mark.parametrize(
-    "time_zone", [None, "Mars/Olympus_Mons", "../../etc/passwd", 3600]
+    "system_information_payload",
+    [
+        pytest.param(
+            [{"anonymous_controller_id": "1", "version": "7.4.162"}], id="missing"
+        ),
+        pytest.param(
+            [
+                {
+                    "anonymous_controller_id": "1",
+                    "version": "7.4.162",
+                    "timezone": "Mars/Olympus_Mons",
+                }
+            ],
+            id="unknown",
+        ),
+        pytest.param(
+            [
+                {
+                    "anonymous_controller_id": "1",
+                    "version": "7.4.162",
+                    "timezone": "../../etc/passwd",
+                }
+            ],
+            id="path",
+        ),
+        pytest.param(
+            [{"anonymous_controller_id": "1", "version": "7.4.162", "timezone": 3600}],
+            id="not_a_string",
+        ),
+    ],
 )
 @pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_firewall_policy_schedule_status_time_zone_fallback(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     config_entry_factory: ConfigEntryFactoryType,
-    system_information_payload: list[dict[str, Any]],
-    time_zone: str | int | None,
 ) -> None:
     """Without a usable controller time zone, Home Assistant's is used.
 
     20:00 UTC is 21:00 in Stockholm but noon in US/Pacific.
     """
-    if time_zone is None:
-        del system_information_payload[0]["timezone"]
-    else:
-        system_information_payload[0]["timezone"] = time_zone
     freezer.move_to("2026-01-15 20:00:00+00:00")
     await config_entry_factory()
     assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
@@ -2691,16 +2716,28 @@ async def test_firewall_policy_schedule_status_time_zone_fallback(
 @pytest.mark.parametrize(
     ("firewall_policy_payload", "expected"),
     [
-        ([{**FIREWALL_POLICY, "enabled": False}], "disabled"),
-        ([{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}], "active"),
-        ([{**FIREWALL_POLICY, "schedule": {"mode": "SUNRISE"}}], STATE_UNKNOWN),
-        (
+        pytest.param(
+            [{**FIREWALL_POLICY, "enabled": False}], "disabled", id="disabled"
+        ),
+        pytest.param(
+            [{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}],
+            "active",
+            id="always",
+        ),
+        pytest.param(
+            [{**FIREWALL_POLICY, "schedule": {"mode": "SUNRISE"}}],
+            STATE_UNKNOWN,
+            id="unknown_mode",
+        ),
+        pytest.param(
             [{k: v for k, v in FIREWALL_POLICY.items() if k != "schedule"}],
             STATE_UNKNOWN,
+            id="no_schedule",
         ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_firewall_policy_schedule_status_by_policy(
     hass: HomeAssistant, expected: str
 ) -> None:
@@ -2711,8 +2748,8 @@ async def test_firewall_policy_schedule_status_by_policy(
 @pytest.mark.parametrize(
     "firewall_policy_payload",
     [
-        [{**FIREWALL_POLICY, "predefined": True}],
-        [{**FIREWALL_POLICY, "name": ""}],
+        pytest.param([{**FIREWALL_POLICY, "predefined": True}], id="predefined"),
+        pytest.param([{**FIREWALL_POLICY, "name": ""}], id="unnamed"),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -2726,12 +2763,13 @@ async def test_firewall_policy_schedule_status_unsupported(
 @pytest.mark.parametrize(
     "firewall_policy_payload", [[{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}]]
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_firewall_policy_schedule_status_follows_polling(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     config_entry_factory: ConfigEntryFactoryType,
-    mock_requests,
+    mock_requests: Callable[[str, str], None],
     firewall_policy_payload: list[dict[str, Any]],
 ) -> None:
     """A policy disabled on the controller shows as disabled after a poll."""
@@ -2749,7 +2787,19 @@ async def test_firewall_policy_schedule_status_follows_polling(
 
 
 @pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_firewall_policy_schedule_status_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """The status sensor is created disabled."""
+    entry = entity_registry.async_get(SCHEDULE_STATUS_ENTITY)
+    assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY) is None
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
 @pytest.mark.freeze_time("2021-01-01 01:01:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_firewall_policy_schedule_status_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

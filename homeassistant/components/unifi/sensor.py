@@ -907,6 +907,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="Firewall policy schedule status",
         translation_key="firewall_policy_schedule_status",
         device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=False,
         options=["disabled", "inactive", "active"],
         api_handler_fn=lambda api: api.firewall_policies,
         device_info_fn=async_unifi_network_device_info_fn,
