@@ -124,10 +124,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
         for event_name in self._registered_event_names:
-            # Defensive: the resolver gives an event to one image, so this
-            # should always be ours.
-            if event_to_entity_id.get(event_name) == self.entity_id:
-                del event_to_entity_id[event_name]
+            event_to_entity_id.pop(event_name, None)
         await super().async_will_remove_from_hass()
 
     @callback

@@ -62,9 +62,8 @@ async def async_setup_entry(
                 translation_key=f"deprecated_camera_{camera_id}",
             )
         else:
-            # The image replacing this camera is event driven and does not poll,
-            # so without an event to invalidate it the camera has to stay. The
-            # issue would name a replacement that cannot refresh, so it goes too.
+            # The image only refreshes on an event, so without one the polling
+            # camera stays and the issue would name a replacement that is stale.
             ir.async_delete_issue(hass, DOMAIN, issue_id)
             keep = True
 

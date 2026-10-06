@@ -73,9 +73,7 @@ class ConfiguredDoorBird:
         # Event names, ie "doorbird_1234_doorbell" or "doorbird_1234_motion"
         self.door_station_events: list[str] = []
         self.event_descriptions: list[DoorbirdEvent] = []
-        # The event names that refresh each image, by image event type, and the
-        # configured events the device will actually call. Both are resolved
-        # here, since only this class knows which favorites registered.
+        # Resolved here, since only this class knows which favorites registered.
         self.image_event_names: dict[str, list[str]] = {}
         self._callable_events: set[str] = set()
 
@@ -129,14 +127,11 @@ class ConfiguredDoorBird:
             event_config = await self._async_get_event_config(http_fav)
         self.event_descriptions = event_config.events
         if event_config.schedule:
-            # With the schedule API the device reports which input calls each
-            # favorite, so one it does not describe it will never call: the
-            # schedule write was rejected, or a renamed event has not been
-            # assigned to an input in the DoorBird app yet.
+            # The device never calls a favorite its schedule does not describe,
+            # e.g. a rejected schedule write or a renamed event with no input.
             self._callable_events.intersection_update(
                 event.event for event in event_config.events
             )
-        # Only the names the device will actually call can refresh an image.
         self._async_resolve_image_events()
 
     async def _configure_unconfigured_favorites(
@@ -173,13 +168,14 @@ class ConfiguredDoorBird:
         hass_url = self._get_hass_url()
         http_fav = await self._async_get_http_favorites()
         self._callable_events = set(self.door_station_events)
-        # Note that a list is built here to ensure all events are registered
-        # and the any() below does not short circuit.
-        added = [
-            await self._async_register_event(hass_url, event, http_fav)
-            for event in self.door_station_events
-        ]
-        if any(added):
+        if any(
+            # Note that a list comp is used here to ensure all
+            # events are registered and the any does not short circuit
+            [
+                await self._async_register_event(hass_url, event, http_fav)
+                for event in self.door_station_events
+            ]
+        ):
             # If any events were registered, get the updated favorites
             http_fav = await self._async_get_http_favorites()
 
@@ -203,8 +199,7 @@ class ConfiguredDoorBird:
             output.param: entry.input
             for entry in schedule
             for output in entry.output
-            # A disabled output is one the device will not call, so the event
-            # is not reported and nothing subscribes to it.
+            # The device does not call a disabled output.
             if output.event == HTTP_EVENT_TYPE and output.enabled
         }
         default_event_types = {

@@ -114,6 +114,5 @@ async def _async_register_events(
 
 async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Handle options update."""
-    # The entities derive both their existence and their subscriptions from the
-    # configured events, so they are rebuilt rather than patched in place.
+    # The entities are built from the configured events, so rebuild them.
     await hass.config_entries.async_reload(entry.entry_id)
