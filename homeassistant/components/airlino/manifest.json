@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/airlino",
   "integration_type": "device",
   "iot_class": "local_polling",
+  "quality_scale": "bronze",
   "zeroconf": ["_dockset._tcp.local."]
 }
