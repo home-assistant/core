@@ -95,6 +95,7 @@
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
         "bluetooth_not_available": "Adding a vehicle over Bluetooth needs a Bluetooth adapter on the Home Assistant host or a remote Bluetooth proxy that supports active connections, such as an ESPHome Bluetooth proxy. Shelly devices only listen for Bluetooth devices and cannot connect to a vehicle.",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
+        "no_supported_vehicles": "None of the vehicles left to add support Bluetooth commands. Vehicles without the vehicle command protocol, such as Model S and Model X built before 2021, cannot be added as a local vehicle.",
         "no_vehicles": "Home Assistant cannot access any vehicles in your Teslemetry account. Check that the vehicle is in your account and that Teslemetry has access to it."
       },
       "entry_type": "Bluetooth vehicle",
