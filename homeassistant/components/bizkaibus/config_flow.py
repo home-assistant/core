@@ -304,12 +304,18 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         if line_ids == []:
             return self.async_abort(reason="cannot_connect")
 
-        route_id = info.get(CONF_LINE_IDS, info.get(OLD_CONF_ROUTE_ID))
+        route_ids = info.get(CONF_LINE_IDS, [info.get(OLD_CONF_ROUTE_ID)])
 
-        if route_id in line_ids:
+        route_ids = [route_id for route_id in route_ids if route_id in line_ids]
+
+        if route_ids:
             imported_options: dict[str, Any] = {
-                CONF_LINE_IDS: [route_id],
-                CONF_LINES: {route_id: lines[route_id]},
+                CONF_LINE_IDS: route_ids,
+                CONF_LINES: {
+                    route_id: lines[route_id]
+                    for route_id in route_ids
+                    if route_id in lines
+                },
             }
         else:
             return self.async_abort(reason="invalid_line_id")
@@ -328,14 +334,14 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if existing_entry:
             existing_line_ids = existing_entry.options.get(CONF_LINE_IDS, [])
-            if route_id in existing_line_ids:
+            if any(route_id in existing_line_ids for route_id in route_ids):
                 return self.async_abort(reason="already_configured")
 
             return self.async_update_reload_and_abort(
                 existing_entry,
                 title=title,
                 options={
-                    CONF_LINE_IDS: [*existing_line_ids, route_id],
+                    CONF_LINE_IDS: [*existing_line_ids, *route_ids],
                     CONF_LINES: {
                         **existing_entry.options.get(CONF_LINES, {}),
                         **imported_options[CONF_LINES],
