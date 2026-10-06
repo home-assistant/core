@@ -1,6 +1,7 @@
 """Support for the definition of zones."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from operator import attrgetter
 import sys
@@ -50,6 +51,7 @@ from .const import (  # noqa: F401
     ATTR_PASSIVE,
     ATTR_RADIUS,
     CONF_PASSIVE,
+    DATA_ZONE,
     DOMAIN,
     HOME_ZONE,
     ZoneEntityStateAttribute,
@@ -111,8 +113,16 @@ ENTITY_ID_SORTER = attrgetter("entity_id")
 
 ZONE_ENTITY_IDS = "zone_entity_ids"
 
-DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
 DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
+
+
+@dataclass(slots=True)
+class ZoneData:
+    """Runtime data for the zone integration."""
+
+    component: entity_component.EntityComponent[Zone]
+    storage_collection: ZoneStorageCollection
+    yaml_collection: collection.IDLessCollection
 
 
 def async_in_zones(
@@ -358,6 +368,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
+    hass.data[DATA_ZONE] = ZoneData(component, storage_collection, yaml_collection)
+
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all zones and load new ones from config."""
         conf = await component.async_prepare_reload(skip_reset=True)
@@ -384,8 +396,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
-    hass.data[DATA_ZONE_STORAGE_COLLECTION] = storage_collection
-
     return True
 
 
@@ -410,7 +420,7 @@ async def async_setup_entry(
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
-    await hass.data[DATA_ZONE_STORAGE_COLLECTION].async_create_item(data)
+    await hass.data[DATA_ZONE].storage_collection.async_create_item(data)
 
     hass.async_create_task(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
