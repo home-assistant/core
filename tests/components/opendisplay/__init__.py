@@ -28,6 +28,7 @@ V1_ADVERTISEMENT_DATA = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x82\x72\x
 
 TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TEST_TITLE = "OpenDisplay 1234"
+TEST_NAME = "OD1A2B3C"
 ENCRYPTION_KEY = "aabbccddee112233aabbccddee112233"  # 32 hex chars = 16 bytes
 
 # Firmware version response: major=1, minor=2, patch=3, sha="abc123"
@@ -115,7 +116,7 @@ DEVICE_CONFIG = GlobalConfig(
 
 
 def make_service_info(
-    name: str | None = "OpenDisplay 1234",
+    name: str | None = TEST_NAME,
     address: str = "AA:BB:CC:DD:EE:FF",
     manufacturer_data: dict[int, bytes] | None = None,
 ) -> BluetoothServiceInfoBleak:
@@ -169,7 +170,7 @@ BUTTON_DEVICE_CONFIG = GlobalConfig(
 
 def make_v1_service_info(
     dynamic_data: bytes = b"\x00" * 11,
-    name: str | None = "OpenDisplay 1234",
+    name: str | None = TEST_NAME,
     address: str = TEST_ADDRESS,
 ) -> BluetoothServiceInfoBleak:
     """Create a v1 advertisement service info with a custom 11-byte dynamic block."""
@@ -215,8 +216,3 @@ def make_button_device_config(binary_inputs: list[BinaryInputs]) -> GlobalConfig
 
 
 VALID_SERVICE_INFO = make_service_info()
-
-NOT_OPENDISPLAY_SERVICE_INFO = make_service_info(
-    name="Other Device",
-    manufacturer_data={0x1234: b"\x00\x01"},
-)

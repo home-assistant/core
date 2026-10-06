@@ -186,6 +186,9 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "cannot_connect": {
+      "message": "Could not connect to Telegram."
+    },
     "entry_not_loaded": {
       "message": "{telegram_bot} is not loaded"
     },
@@ -194,6 +197,9 @@
     },
     "failed_to_load_url": {
       "message": "Failed to load URL: {error}"
+    },
+    "invalid_api_key": {
+      "message": "The Telegram bot API token is invalid."
     },
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."

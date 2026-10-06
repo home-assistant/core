@@ -4,8 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from typing import Any, override
 
-import probatio
-from pysnooz.api import UnknownSnoozState
+from pysnooz import UnknownSnoozState
 from pysnooz.commands import (
     SnoozCommandData,
     SnoozCommandResultStatus,
@@ -22,19 +21,11 @@ from homeassistant.components.fan import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_VOLUME,
-    DEFAULT_TRANSITION_DURATION,
-    DOMAIN,
-    SERVICE_TRANSITION_OFF,
-    SERVICE_TRANSITION_ON,
-)
+from .const import DOMAIN
 from .models import SnoozConfigEntry, SnoozConfigurationData
 
 
@@ -44,29 +35,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Snooz device from a config entry."""
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_TRANSITION_ON,
-        {
-            probatio.Optional(ATTR_VOLUME): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
-            ),
-            probatio.Optional(
-                ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION
-            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=300)),
-        },
-        "async_transition_on",
-    )
-    platform.async_register_entity_service(
-        SERVICE_TRANSITION_OFF,
-        {
-            probatio.Optional(
-                ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION
-            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=300)),
-        },
-        "async_transition_off",
-    )
 
     async_add_entities([SnoozFan(entry.runtime_data)])
 
@@ -139,7 +107,7 @@ class SnoozFan(FanEntity, RestoreEntity):
     @override
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return not self._device.is_connected or self._device.state is UnknownSnoozState
+        return not self._device.is_connected or self._device.state == UnknownSnoozState
 
     @override
     async def async_turn_on(

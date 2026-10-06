@@ -20,7 +20,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -104,9 +104,29 @@ async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
     stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
     with (
         patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            ServiceValidationError,
+            match="Cannot write to /example/path because access to this path is not allowed",
+        ),
     ):
         await stream.async_record("/example/path")
+
+
+async def test_record_already_recording(hass: HomeAssistant, h264_video) -> None:
+    """Test recording a stream that is already recording."""
+
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+    recorder = stream.add_provider(RECORDER_PROVIDER)
+    recorder.video_path = "/example/first.mp4"
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        pytest.raises(
+            ServiceValidationError,
+            match="The stream is already recording to /example/first.mp4",
+        ),
+    ):
+        await stream.async_record("/example/second.mp4")
 
 
 def add_parts_to_segment(segment, source):

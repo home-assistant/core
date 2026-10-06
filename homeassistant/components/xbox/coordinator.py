@@ -7,7 +7,7 @@ from http import HTTPStatus
 import logging
 from typing import ClassVar, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from pythonxbox.api.provider.catalog.models import AlternateIdType, Product
@@ -228,8 +228,8 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                 ):
                     continue
                 try:
-                    title = await self.client.titlehub.get_title_info(
-                        presence_detail.title_id
+                    title = await self.client.titlehub.get_title_info_by_xuid(
+                        person.xuid, presence_detail.title_id
                     )
                 except HTTPStatusError as e:
                     if e.response.status_code == HTTPStatus.NOT_FOUND:

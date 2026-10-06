@@ -21,7 +21,8 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from . import CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from .const import DOMAIN
 
 # mypy: disallow-any-generics
 
@@ -34,14 +35,14 @@ POSITION_CONDITION_SCHEMA = probatio.All(
             probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             probatio.Required(CONF_TYPE): probatio.In(POSITION_CONDITION_TYPES),
             probatio.Optional(CONF_ABOVE): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(CONF_BELOW): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
@@ -102,10 +103,10 @@ async def async_get_condition_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(CONF_ABOVE, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
                 probatio.Optional(CONF_BELOW, default=100): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
             }
         )

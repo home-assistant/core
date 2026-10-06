@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
 
 from homeassistant.components.egauge.const import DOMAIN

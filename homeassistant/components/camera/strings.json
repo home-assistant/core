@@ -34,17 +34,27 @@
       }
     }
   },
-  "issues": {
-    "deprecated_filename_template": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The pre-defined template variable `entity_id` was used when performing action `{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue.",
-            "title": "[%key:component::camera::issues::deprecated_filename_template::title%]"
-          }
-        }
-      },
-      "title": "Detected use of deprecated template variable"
+  "exceptions": {
+    "path_not_allowed": {
+      "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
+    },
+    "record_not_supported": {
+      "message": "Camera {entity_id} does not support recording."
+    },
+    "snapshot_timeout": {
+      "message": "Unable to get snapshot: timed out after {timeout} seconds."
+    },
+    "write_failed": {
+      "message": "Cannot write image to {filename}."
+    },
+    "write_no_space": {
+      "message": "Cannot write image to {filename}: no space left on the device."
+    },
+    "write_permission_denied": {
+      "message": "Cannot write image to {filename}: permission denied."
+    },
+    "write_read_only": {
+      "message": "Cannot write image to {filename}: the file system is read-only."
     }
   },
   "selector": {},

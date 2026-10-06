@@ -12,8 +12,8 @@ from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
-    "relays": 1,
-    "inputs": 1,
+    "relays": [1],
+    "inputs": [1],
     "temps": False,
 }
 

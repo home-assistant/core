@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from gatus_api import EndpointStatus, Result
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -21,6 +22,7 @@ from tests.common import (
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_setup_and_states(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
@@ -153,6 +155,7 @@ async def test_sensor_missing_status_code(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that a result missing status code evaluates to STATE_UNKNOWN for status code sensor."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
@@ -165,6 +168,11 @@ async def test_sensor_missing_status_code(
     ]
 
     await setup_integration(hass, mock_config_entry)
+    entity_registry.async_update_entity(
+        "sensor.backend_service_status_code", disabled_by=None
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.backend_service_status_code")
     assert state is not None
@@ -225,3 +233,115 @@ async def test_sensor_missing_dns_rcode(
 
     state = hass.states.get("sensor.backend_service_dns_response_code")
     assert state is None
+
+
+async def test_sensor_dynamic_add_endpoint(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that new endpoint sensors are dynamically created on coordinator update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.new_service_response_time") is None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        *mock_gatus_client.get_endpoints_statuses.return_value,
+        EndpointStatus(
+            key="new_service",
+            name="New Service",
+            group=None,
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=15000000,
+                    certificate_expiration=7776000000000000,
+                    dns_rcode="NOERROR",
+                )
+            ],
+        ),
+    ]
+
+    freezer.tick(300)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.new_service_response_time")
+    assert state is not None
+    assert state.state == "15.0"
+
+
+async def test_sensor_readded_endpoint(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a removed endpoint can be successfully re-added and has its sensor entity recreated."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.core_backend_service_response_time") is not None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = []
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_registry.async_remove("sensor.core_backend_service_response_time")
+    assert hass.states.get("sensor.core_backend_service_response_time") is None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group="Core",
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=15000000,
+                    certificate_expiration=1000000000,
+                    dns_rcode="NOERROR",
+                )
+            ],
+        )
+    ]
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.core_backend_service_response_time") is not None
+    for sensor_key in (
+        "status_code",
+        "last_event",
+        "certificate_expiration",
+        "dns_response_code",
+    ):
+        entity_id = f"sensor.core_backend_service_{sensor_key}"
+        assert hass.states.get(entity_id) is None
+        assert entity_registry.async_get(entity_id) is not None
+
+
+async def test_diagnostic_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that diagnostic sensors are disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    for sensor_key in (
+        "status_code",
+        "last_event",
+        "certificate_expiration",
+        "dns_response_code",
+    ):
+        entity_id = f"sensor.core_backend_service_{sensor_key}"
+        assert hass.states.get(entity_id) is None
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
