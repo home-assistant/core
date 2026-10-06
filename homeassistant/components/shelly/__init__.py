@@ -385,13 +385,14 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
 
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
         if get_rpc_key_ids(device.status, BLU_TRV_IDENTIFIER):
-            blu_trv_update = ShellyBluTrvUpdateCoordinator(hass, entry, device)
-            runtime_data.rpc_blu_trv_update = blu_trv_update
+            runtime_data.rpc_blu_trv_update = ShellyBluTrvUpdateCoordinator(
+                hass, entry, device
+            )
             # Checking the firmware repository reaches out to the internet, so it must
             # not hold up setup; the update entities pick the result up when it lands.
             entry.async_create_background_task(
                 hass,
-                blu_trv_update.async_refresh(),
+                runtime_data.rpc_blu_trv_update.async_refresh(),
                 "blu trv firmware check",
             )
         await hass.config_entries.async_forward_entry_setups(
