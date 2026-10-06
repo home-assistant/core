@@ -74,5 +74,4 @@ async def _async_update_listener(
     """Handle options update."""
     coordinator = config_entry.runtime_data
     if coordinator.update_settings(config_entry):
-        await coordinator.async_request_refresh()
         coordinator.async_update_listeners()

@@ -123,8 +123,8 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_update_listener_requests_coordinator_refresh() -> None:
-    """Options changes must request a refresh using the new interval."""
+async def test_update_listener_notifies_entities_without_cloud_refresh() -> None:
+    """Presentation-only option changes must not consume cloud quota."""
     coordinator = MagicMock()
     coordinator.update_settings.return_value = True
     coordinator.async_request_refresh = AsyncMock()
@@ -133,7 +133,7 @@ async def test_update_listener_requests_coordinator_refresh() -> None:
     await _async_update_listener(MagicMock(), config_entry)
 
     coordinator.update_settings.assert_called_once_with(config_entry)
-    coordinator.async_request_refresh.assert_awaited_once_with()
+    coordinator.async_request_refresh.assert_not_awaited()
     coordinator.async_update_listeners.assert_called_once_with()
 
 

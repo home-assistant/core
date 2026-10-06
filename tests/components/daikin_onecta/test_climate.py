@@ -259,6 +259,24 @@ async def test_set_vertical_swing_mode(command_result: bool) -> None:
     entity._async_set_swing.assert_awaited_once_with("vertical", "swing")
 
 
+async def test_set_vertical_swing_mode_ignores_current_value() -> None:
+    """Do not issue a cloud command when vertical swing already matches."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(name="Device")
+    coordinator = MagicMock()
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_attr_swing_mode", "swing")
+    entity.coordinator = coordinator
+    entity._async_set_swing = AsyncMock()
+    entity._async_execute_climate_command = AsyncMock()
+
+    await entity.async_set_swing_mode("swing")
+
+    entity._async_set_swing.assert_not_awaited()
+    entity._async_execute_climate_command.assert_not_awaited()
+    coordinator.async_update_listeners.assert_not_called()
+
+
 async def test_set_hvac_mode_keeps_power_state_when_power_command_fails() -> None:
     """Do not update the power cache when Daikin rejects an HVAC power command."""
     entity = object.__new__(DaikinClimate)
