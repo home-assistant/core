@@ -73,8 +73,8 @@ def default_server_port() -> int:
 
 
 STORAGE_KEY: Final = DOMAIN
-STORAGE_VERSION: Final = 2
-STORAGE_MINOR_VERSION: Final = 3
+STORAGE_VERSION: Final = 3
+STORAGE_MINOR_VERSION: Final = 1
 
 KEY_STABLE: Final = "stable"
 KEY_PENDING: Final = "pending"
@@ -185,7 +185,7 @@ _META_KEYS: Final = (
 def _migrate_ssl_profile(config: dict[str, Any]) -> None:
     """Replace an unversioned SSL profile name with a versioned profile in place.
 
-    The unversioned names (YAML and storage before 2.3) stood for the v4
+    The unversioned names (YAML and storage before version 3) stood for the v4
     profiles. A config with a certificate keeps that profile so the upgrade
     changes nothing for connecting clients; without a certificate the profile
     is not in use, so the config moves to the current profile right away.
@@ -702,7 +702,7 @@ class _HTTPStore(Store[_HTTPStoreData]):
                 KEY_PENDING: None,
                 KEY_YAML_MIGRATION_DONE: False,
             }
-        if old_minor_version < 2:
+        if (old_major_version, old_minor_version) < (2, 2):
             # 2.2 added the created_at/error metadata to the config slots
             old_data[KEY_STABLE] = {
                 **old_data[KEY_STABLE],
@@ -717,8 +717,9 @@ class _HTTPStore(Store[_HTTPStoreData]):
                     HTTP_CONFIG_ERROR: None,
                     HTTP_CONFIG_ERROR_MESSAGE: None,
                 }
-        if old_minor_version < 3:
-            # 2.3 versioned the SSL profiles
+        if old_major_version < 3:
+            # Version 3 versioned the SSL profiles; older versions do not know
+            # the versioned names, hence the major bump.
             _migrate_ssl_profile(old_data[KEY_STABLE])
             if old_data[KEY_PENDING] is not None:
                 _migrate_ssl_profile(old_data[KEY_PENDING])

@@ -37,7 +37,7 @@ CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
 
 # Profile names of the deprecated YAML config and of storage before version
-# 2.3. They predate the versioned profiles and name the v4 ones.
+# 3. They predate the versioned profiles and name the v4 ones.
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
 UNVERSIONED_SSL_PROFILES: Final = {

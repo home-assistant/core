@@ -1601,8 +1601,8 @@ async def test_setup_migrates_v1_storage_to_v2(
     # from the v1 store stays the source of truth and no pending trial is
     # staged.
     assert hass.config.api.port == 9876
-    assert hass_storage[DOMAIN]["version"] == 2
-    assert hass_storage[DOMAIN]["minor_version"] == 3
+    assert hass_storage[DOMAIN]["version"] == 3
+    assert hass_storage[DOMAIN]["minor_version"] == 1
     data = hass_storage[DOMAIN]["data"]
     # The v1→v2 migration normalises the payload through the storage schema,
     # so the v2 stable slot is well-formed (all keys present) on disk.
@@ -1700,7 +1700,7 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
         "error_message": None,
     }
     # The migrated payload is written back to disk right away.
-    assert hass_storage[DOMAIN]["minor_version"] == 3
+    assert hass_storage[DOMAIN]["minor_version"] == 1
     assert hass_storage[DOMAIN]["data"] == {
         "stable": _stored_config(
             {"server_port": 9876}, created_at=dt_util.utcnow().isoformat()
@@ -1712,12 +1712,12 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
     }
 
 
-async def test_setup_migrates_v2_2_storage_to_v2_3(
+async def test_setup_migrates_v2_2_storage_to_v3(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     tmp_path: Path,
 ) -> None:
-    """v2.3 versions the SSL profiles.
+    """Version 3 of the store versions the SSL profiles.
 
     A slot with a certificate keeps the v4 profile its unversioned name stood
     for, so the upgrade changes nothing for connecting clients. A slot without
@@ -1738,7 +1738,7 @@ async def test_setup_migrates_v2_2_storage_to_v2_3(
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass_storage[DOMAIN]["minor_version"] == 3
+    assert hass_storage[DOMAIN]["minor_version"] == 1
     assert hass_storage[DOMAIN]["data"] == {
         "stable": _stored_config(
             {**ssl_conf, "ssl_profile": "modern_v4"}, created_at=STABLE_CREATED_AT
