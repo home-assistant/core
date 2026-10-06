@@ -2,7 +2,7 @@
 
 from typing import Any, cast, override
 
-from wled import WLEDError, WLEDUpgradeError
+from wled import Releases, WLEDError, WLEDUpgradeError
 
 from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
@@ -157,20 +157,26 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
 
     def _newest_version(self) -> str | None:
         """Return the newest version released for this device's channel."""
+        # Another device from the same repository may still be fetching them;
+        # until then, the shared coordinator has no data.
+        releases: Releases | None = self.releases_coordinator.data
+        if releases is None:
+            return None
+
         # If we already run a pre-release, we consider being on the beta channel.
         # Offer beta version upgrade, unless stable is newer
         if (
-            (beta := self.releases_coordinator.data.beta) is not None
+            (beta := releases.beta) is not None
             and (current := self.coordinator.data.info.version) is not None
             and (current.alpha or current.beta or current.release_candidate)
             and (
-                (stable := self.releases_coordinator.data.stable) is None
+                (stable := releases.stable) is None
                 or (stable is not None and stable < beta and current > stable)
             )
         ):
             return str(beta)
 
-        if (stable := self.releases_coordinator.data.stable) is not None:
+        if (stable := releases.stable) is not None:
             return str(stable)
 
         return None

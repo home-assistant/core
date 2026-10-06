@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Releases, WLEDError, WLEDUpgradeError
+from wled import Device as WLEDDevice, Releases, WLEDError, WLEDUpgradeError
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOME_ASSISTANT_DOMAIN,
@@ -19,7 +19,9 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.components.wled.const import RELEASES_SCAN_INTERVAL
+from homeassistant.components.wled import WLED_KEY
+from homeassistant.components.wled.const import DOMAIN, RELEASES_SCAN_INTERVAL
+from homeassistant.components.wled.coordinator import WLEDReleasesDataUpdateCoordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
@@ -34,7 +36,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -323,3 +330,40 @@ async def test_update_install_refused(
         )
 
     assert exc_info.value.translation_key == "firmware_upgrade_failed"
+
+
+async def test_update_follows_firmware_repository_change(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the update entity follows a device flashed with another firmware."""
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert "github.com/wled/WLED/" in state.attributes[ATTR_RELEASE_URL]
+
+    # A new device object, as the device answers after being flashed.
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    data["info"]["repo"] = "MoonModules/WLED-MM"
+    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert "github.com/MoonModules/WLED-MM/" in state.attributes[ATTR_RELEASE_URL]
+
+
+async def test_update_while_releases_are_still_coming(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device set up while the shared releases aren't fetched yet."""
+    # Another device from the same repository is still fetching the releases.
+    hass.data[WLED_KEY]["wled/WLED"] = WLEDReleasesDataUpdateCoordinator(
+        hass, "wled/WLED"
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert state.state == STATE_UNKNOWN

@@ -173,6 +173,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 },
             )
 
+        # Firmware from another repository changes which updates can be offered,
+        # like after flashing a fork; set the integration up again for it.
+        if self.data is not None and device.info.repo != self.data.info.repo:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
         # If the device supports a WebSocket, try activating it.
         if (
             device.info.websocket is not None
