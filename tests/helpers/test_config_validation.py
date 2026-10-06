@@ -814,6 +814,43 @@ def test_date() -> None:
     schema("2016-11-23")
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param("12-24", (12, 24), id="padded"),
+        pytest.param("1-6", (1, 6), id="unpadded"),
+        pytest.param("02-29", (2, 29), id="leap_day"),
+    ],
+)
+def test_month_day(value: str, expected: tuple[int, int]) -> None:
+    """Test month and day validation."""
+    schema = probatio.Schema(cv.month_day)
+
+    assert schema(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("Not a date", id="text"),
+        pytest.param("2016-11-23", id="full_date_string"),
+        pytest.param(date(2016, 11, 23), id="full_date_object"),
+        pytest.param("13-01", id="month_out_of_range"),
+        pytest.param("02-30", id="day_out_of_range"),
+        pytest.param("00-10", id="zero_month"),
+        pytest.param("12", id="month_only"),
+        pytest.param(None, id="none"),
+        pytest.param(1224, id="int"),
+    ],
+)
+def test_month_day_invalid(value: Any) -> None:
+    """Test month and day validation rejects invalid values."""
+    schema = probatio.Schema(cv.month_day)
+
+    with pytest.raises(probatio.Invalid):
+        schema(value)
+
+
 def test_time() -> None:
     """Test date validation."""
     schema = probatio.Schema(cv.time)

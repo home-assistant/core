@@ -48,6 +48,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ELSE,
     CONF_ENABLED,
+    CONF_END,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_ERROR,
@@ -72,6 +73,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
+    CONF_START,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
@@ -518,6 +520,24 @@ def date(value: Any) -> date_sys:
         raise probatio.Invalid("Could not parse date")
 
     return date_val
+
+
+_MONTH_DAY_RE = re.compile(r"^(\d{1,2})-(\d{1,2})$")
+
+
+def month_day(value: Any) -> tuple[int, int]:
+    """Validate a month and day without a year, given as MM-DD."""
+    if not isinstance(value, str) or (match := _MONTH_DAY_RE.match(value)) is None:
+        raise probatio.Invalid(f"Expected a month and day as MM-DD, got {value}")
+
+    month, day = int(match[1]), int(match[2])
+    try:
+        # Validate against a leap year so February 29 is accepted
+        date_sys(2000, month, day)
+    except ValueError as err:
+        raise probatio.Invalid(f"Invalid month and day: {value}") from err
+
+    return month, day
 
 
 def time_period_str(value: str) -> timedelta:
@@ -1580,6 +1600,18 @@ TEMPLATE_CONDITION_SCHEMA = probatio.Schema(
     }
 )
 
+DATE_CONDITION_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            probatio.Required(CONF_CONDITION): "date",
+            probatio.Optional(CONF_START): month_day,
+            probatio.Optional(CONF_END): month_day,
+        }
+    ),
+    probatio.AtLeastOne(CONF_START, CONF_END),
+)
+
 TIME_CONDITION_SCHEMA = probatio.All(
     probatio.Schema(
         {
@@ -1748,6 +1780,7 @@ CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
 
 BUILT_IN_CONDITIONS: ValueSchemas = {
     "and": AND_CONDITION_SCHEMA,
+    "date": DATE_CONDITION_SCHEMA,
     "device": DEVICE_CONDITION_SCHEMA,
     "not": NOT_CONDITION_SCHEMA,
     "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
