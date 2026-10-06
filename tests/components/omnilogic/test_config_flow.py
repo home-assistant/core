@@ -5,7 +5,7 @@ from unittest.mock import patch
 from omnilogic import LoginException, OmniLogicException
 
 from homeassistant import config_entries
-from homeassistant.components.omnilogic.const import DOMAIN
+from homeassistant.components.omnilogic.const import DEFAULT_PH_OFFSET, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -130,19 +130,16 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.omnilogic.async_setup_entry", return_value=True
     ):
-        result = await hass.config_entries.options.async_init(
-            entry.entry_id,
-            data=None,
-        )
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"polling_interval": 9},
+        user_input={"ph_offset": DEFAULT_PH_OFFSET},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
-    assert result["data"]["polling_interval"] == 9
+    assert result["data"]["ph_offset"] == DEFAULT_PH_OFFSET

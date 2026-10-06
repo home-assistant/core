@@ -9,6 +9,7 @@ DOMAIN = "geniushub"
 ATTR_ZONE_MODE = "mode"
 ATTR_DURATION = "duration"
 
+SVC_SET_SWITCH_OVERRIDE = "set_switch_override"
 SVC_SET_ZONE_MODE = "set_zone_mode"
 SVC_SET_ZONE_OVERRIDE = "set_zone_override"
 

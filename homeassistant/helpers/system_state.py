@@ -8,7 +8,7 @@ Home Assistant. The hassio integration mirrors it here.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
@@ -22,11 +22,11 @@ SIGNAL_SYSTEM_STATE_UPDATED: SignalType[SystemState] = SignalType(
 )
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class SystemState:
-    """Pending restart and reboot state of the running instance."""
+    """Snapshot of the pending restart and reboot state of the running instance."""
 
-    home_assistant_restart_sources: set[str] = field(default_factory=set)
+    home_assistant_restart_sources: frozenset[str] = frozenset()
     host_reboot_required: bool = False
 
     @property
@@ -48,10 +48,7 @@ class SystemState:
 @callback
 def async_get(hass: HomeAssistant) -> SystemState:
     """Return the system state of the running instance."""
-    if (system_state := hass.data.get(DATA_SYSTEM_STATE)) is None:
-        system_state = hass.data[DATA_SYSTEM_STATE] = SystemState()
-
-    return system_state
+    return hass.data.get(DATA_SYSTEM_STATE) or SystemState()
 
 
 @callback
@@ -69,7 +66,12 @@ def async_set_home_assistant_restart_required(hass: HomeAssistant, domain: str) 
     if domain in system_state.home_assistant_restart_sources:
         return
 
-    system_state.home_assistant_restart_sources.add(domain)
+    system_state = hass.data[DATA_SYSTEM_STATE] = replace(
+        system_state,
+        home_assistant_restart_sources=(
+            system_state.home_assistant_restart_sources | {domain}
+        ),
+    )
     async_dispatcher_send_internal(hass, SIGNAL_SYSTEM_STATE_UPDATED, system_state)
 
 
@@ -77,11 +79,7 @@ def async_set_home_assistant_restart_required(hass: HomeAssistant, domain: str) 
 def async_subscribe(
     hass: HomeAssistant, listener: Callable[[SystemState], None]
 ) -> CALLBACK_TYPE:
-    """Subscribe to changes of the system state.
-
-    The listener must be a callback: it gets the live state, which a listener
-    running in the executor would only read after it changed again.
-    """
+    """Subscribe to changes of the system state."""
     return async_dispatcher_connect(hass, SIGNAL_SYSTEM_STATE_UPDATED, listener)
 
 
@@ -98,5 +96,7 @@ def async_set_host_reboot_required(hass: HomeAssistant, required: bool) -> None:
     if system_state.host_reboot_required is required:
         return
 
-    system_state.host_reboot_required = required
+    system_state = hass.data[DATA_SYSTEM_STATE] = replace(
+        system_state, host_reboot_required=required
+    )
     async_dispatcher_send_internal(hass, SIGNAL_SYSTEM_STATE_UPDATED, system_state)

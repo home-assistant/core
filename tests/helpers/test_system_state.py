@@ -1,5 +1,9 @@
 """Test the system state helper."""
 
+from dataclasses import FrozenInstanceError
+
+import pytest
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import system_state
 
@@ -60,6 +64,21 @@ async def test_unsubscribe(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert updates == []
+
+
+async def test_system_state_is_read_only(hass: HomeAssistant) -> None:
+    """Test callers cannot bypass the latch by changing the state."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+    state = system_state.async_get(hass)
+
+    with pytest.raises(FrozenInstanceError):
+        state.home_assistant_restart_sources = frozenset()  # type: ignore[misc]
+    with pytest.raises(AttributeError):
+        state.home_assistant_restart_sources.clear()  # type: ignore[attr-defined]
+    with pytest.raises(FrozenInstanceError):
+        state.host_reboot_required = True  # type: ignore[misc]
+
+    assert system_state.async_get(hass).home_assistant_restart_sources == {"hacs"}
 
 
 async def test_set_host_reboot_required(hass: HomeAssistant) -> None:

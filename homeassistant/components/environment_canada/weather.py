@@ -33,16 +33,11 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SERVICE_ENVIRONMENT_CANADA_FORECASTS
+from .const import DOMAIN
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
@@ -80,14 +75,6 @@ async def async_setup_entry(
         entity_registry.async_remove(hourly_entity_id)
 
     async_add_entities([ECWeatherEntity(config_entry.runtime_data.weather_coordinator)])
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ENVIRONMENT_CANADA_FORECASTS,
-        None,
-        "_async_environment_canada_forecasts",
-        supports_response=SupportsResponse.ONLY,
-    )
 
 
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
