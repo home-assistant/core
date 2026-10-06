@@ -5,7 +5,8 @@ import logging
 
 import probatio
 
-from homeassistant.const import Platform
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
@@ -115,7 +116,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         TadoService.SET_CLIMATE_TIMER,
-        entity_domain=Platform.CLIMATE,
+        entity_domain=CLIMATE_DOMAIN,
         func="set_timer",
         schema=CLIMATE_TIMER_SCHEMA,
     )
@@ -123,7 +124,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         TadoService.SET_CLIMATE_TEMPERATURE_OFFSET,
-        entity_domain=Platform.CLIMATE,
+        entity_domain=CLIMATE_DOMAIN,
         func="set_temp_offset",
         schema=CLIMATE_TEMP_OFFSET_SCHEMA,
     )
@@ -131,7 +132,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         TadoService.SET_WATER_HEATER_TIMER,
-        entity_domain=Platform.WATER_HEATER,
+        entity_domain=WATER_HEATER_DOMAIN,
         func="set_timer",
         schema=WATER_HEATER_TIMER_SCHEMA,
     )
