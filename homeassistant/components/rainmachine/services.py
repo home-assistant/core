@@ -8,13 +8,22 @@ import probatio
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.dt import as_timestamp, utcnow
 
-from .const import CONF_DURATION, DATA_PROGRAMS, DATA_ZONES, DOMAIN
+from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_DURATION,
+    DATA_PROGRAMS,
+    DATA_ZONES,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 if TYPE_CHECKING:
     from . import RainMachineConfigEntry
@@ -69,7 +78,11 @@ SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_PUSH_FLOW_METER_DATA = "push_flow_meter_data"
 SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
 SERVICE_NAME_RESTRICT_WATERING = "restrict_watering"
+SERVICE_NAME_START_PROGRAM = "start_program"
+SERVICE_NAME_START_ZONE = "start_zone"
 SERVICE_NAME_STOP_ALL = "stop_all"
+SERVICE_NAME_STOP_PROGRAM = "stop_program"
+SERVICE_NAME_STOP_ZONE = "stop_zone"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
 SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
 
@@ -118,6 +131,12 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
         probatio.Required(CONF_DURATION): cv.time_period,
     }
 )
+
+SERVICE_START_ZONE_SCHEMA: VolDictType = {
+    probatio.Optional(
+        CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
+    ): cv.positive_int
+}
 
 
 async def async_update_programs_and_zones(
@@ -291,4 +310,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
             description_placeholders={
                 "api_url": API_URL_REFERENCE,
             },
+        )
+
+    for service_name, entity_schema, func in (
+        (SERVICE_NAME_START_PROGRAM, None, "async_start_program"),
+        (SERVICE_NAME_START_ZONE, SERVICE_START_ZONE_SCHEMA, "async_start_zone"),
+        (SERVICE_NAME_STOP_PROGRAM, None, "async_stop_program"),
+        (SERVICE_NAME_STOP_ZONE, None, "async_stop_zone"),
+    ):
+        service.async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=SWITCH_DOMAIN,
+            func=func,
+            schema=entity_schema,
         )
