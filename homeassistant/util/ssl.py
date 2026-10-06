@@ -246,13 +246,11 @@ def server_context(profile: SSLProfile) -> ssl.SSLContext:
         case SSLProfile.INTERMEDIATE_V6:
             context.minimum_version = ssl.TLSVersion.TLSv1_2
             context.options &= ~ssl.OP_CIPHER_SERVER_PREFERENCE
-        case SSLProfile.MODERN_V4:
+        case SSLProfile.MODERN_V4 | SSLProfile.INTERMEDIATE_V4:
+            # The v4 profiles differ only in their cipher lists. Intermediate
+            # previously inherited this floor from Python's default context.
             context.minimum_version = ssl.TLSVersion.TLSv1_2
             context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
-        case SSLProfile.INTERMEDIATE_V4:
-            context.options |= (
-                ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
-            )
 
     if (ciphers := SSL_CIPHER_LISTS.get(profile)) is not None:
         context.set_ciphers(ciphers)

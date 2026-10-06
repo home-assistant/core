@@ -20,7 +20,7 @@
         },
         "step": {
           "confirm_intermediate_v6": {
-            "description": "Home Assistant restarts with the **Intermediate v6** profile and asks you to confirm the new configuration. Clients that need TLS 1.0, TLS 1.1, or legacy ciphers can no longer connect. Unless you confirm within 5 minutes, it restores the **Intermediate v4** profile automatically.",
+            "description": "Home Assistant restarts with the **Intermediate v6** profile and asks you to confirm the new configuration. Clients that need the legacy ciphers can no longer connect. Unless you confirm within 5 minutes, it restores the **Intermediate v4** profile automatically.",
             "submit": "Upgrade and restart",
             "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v4::title%]"
           },
@@ -30,7 +30,7 @@
             "title": "[%key:component::http::issues::ssl_profile_outdated_intermediate_v4::title%]"
           },
           "init": {
-            "description": "The HTTP server uses the SSL profile **Intermediate v4**, which follows outdated Mozilla TLS guidelines: it still accepts TLS 1.0 and 1.1 and many legacy ciphers. We recommend upgrading to **Intermediate v6**, which accepts TLS 1.2 and newer with current ciphers. Browsers and operating systems gained support for these around 2013 to 2016.\n\nOldest clients that can connect:\n\n| Profile | Chrome | Firefox | Safari | iOS | Android | Edge |\n| --- | --- | --- | --- | --- | --- | --- |\n| Intermediate v6 | 49 | 31 | 9 | 9 | 4.4 | 15 |\n\nWindows 7 and 8.1 clients using Internet Explorer or other system TLS can only connect with an ECDSA certificate, and devices that stopped receiving updates before then can no longer connect. If such a device still needs to connect, keep **Intermediate v4** for now.\n\nThe upgrade is applied as a trial and reverts automatically unless you confirm the new configuration within 5 minutes. You can close this dialog to decide later, or change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
+            "description": "The HTTP server uses the SSL profile **Intermediate v4**, which follows outdated Mozilla TLS guidelines: it still accepts many legacy ciphers, such as RSA key exchange, DHE, and CBC suites. We recommend upgrading to **Intermediate v6**, which accepts TLS 1.2 and newer with current ciphers. Browsers and operating systems gained support for these around 2013 to 2016.\n\nOldest clients that can connect:\n\n| Profile | Chrome | Firefox | Safari | iOS | Android | Edge |\n| --- | --- | --- | --- | --- | --- | --- |\n| Intermediate v6 | 49 | 31 | 9 | 9 | 4.4 | 15 |\n\nWindows 7 and 8.1 clients using Internet Explorer or other system TLS can only connect with an ECDSA certificate, and devices that stopped receiving updates before then can no longer connect. If such a device still needs to connect, keep **Intermediate v4** for now.\n\nThe upgrade is applied as a trial and reverts automatically unless you confirm the new configuration within 5 minutes. You can close this dialog to decide later, or change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
             "menu_options": {
               "confirm_intermediate_v6": "Upgrade to Intermediate v6 (recommended)",
               "ignore": "Keep Intermediate v4 and ignore this repair"

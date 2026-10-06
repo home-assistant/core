@@ -255,7 +255,7 @@ def test_server_context_v4_profiles() -> None:
     )
 
     intermediate = server_context(SSLProfile.INTERMEDIATE_V4)
-    assert intermediate.options & ssl.OP_NO_SSLv3
+    assert intermediate.minimum_version == ssl.TLSVersion.TLSv1_2
     assert intermediate.options & ssl.OP_NO_COMPRESSION
     assert intermediate.options & ssl.OP_CIPHER_SERVER_PREFERENCE
     assert _tls13_ciphers(intermediate) >= _TLS13_CIPHERS
