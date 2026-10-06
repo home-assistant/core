@@ -957,6 +957,14 @@
     "sense_setting_mirror_deprecated_no_replacement": {
       "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Read-only sensor setting entity deprecated"
+    },
+    "setting_mirror_deprecated": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only setting entity deprecated"
+    },
+    "setting_mirror_deprecated_light_mode": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
     }
   },
   "options": {

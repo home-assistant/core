@@ -493,17 +493,41 @@ async def test_light_turn_on_with_brightness_public_only(
     public.set_light.assert_awaited_once_with(True, 3)
 
 
-async def test_light_setup_no_perm(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+async def test_light_setup_read_only_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
 ) -> None:
-    """A light the auth user cannot write to gets no entity in hybrid mode."""
+    """A read-only local user keeps the light and its public controls.
 
+    They write through the API key, so the local user's write bit must not gate
+    them; the SSH switch and the paired camera still use private setters.
+    """
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
     ]
-
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.LIGHT, 0, 0)
+
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    for platform, key in (
+        (Platform.SWITCH, "status_light"),
+        (Platform.NUMBER, "sensitivity"),
+        (Platform.NUMBER, "duration"),
+        (Platform.SELECT, "light_motion"),
+    ):
+        assert entity_registry.async_get_entity_id(
+            platform, DOMAIN, f"{light.mac}_{key}"
+        ), key
+    for platform, key in (
+        (Platform.SWITCH, "ssh"),
+        (Platform.SELECT, "paired_camera"),
+    ):
+        assert (
+            entity_registry.async_get_entity_id(platform, DOMAIN, f"{light.mac}_{key}")
+            is None
+        ), key
 
 
 async def test_light_setup_defers_to_adopt_without_private(
@@ -512,9 +536,13 @@ async def test_light_setup_defers_to_adopt_without_private(
     """Hybrid: a public light without its private object waits for the adopt.
 
     Creating it public-only would collide on unique_id with the entity the
-    adopt dispatch creates once the private object arrives.
+    adopt dispatch creates once the private object arrives. A read-only local
+    user still gets it, since the light writes through the API key.
     """
 
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
+    ]
     light._api = ufp.api
     ufp.api.public_bootstrap.lights = {light.id: make_public_light(light)}
 

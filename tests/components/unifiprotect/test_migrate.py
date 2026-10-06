@@ -1,12 +1,14 @@
 """Test the UniFi Protect setup flow."""
 
 import pytest
-from uiprotect.data import Camera, Sensor
+from uiprotect.data import Camera, Light, Sensor
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.migrate import (
+    LIGHT_SETTING_MIRROR_BREAKS_IN,
     SENSE_SETTING_MIRROR_BREAKS_IN,
+    async_deprecate_light_setting_mirrors,
     async_deprecate_sense_setting_mirrors,
     async_migrate_sensor_signal_strength,
     async_remove_hdr_switch,
@@ -20,17 +22,18 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .utils import MockUFPFixture, init_entry, setup_public_sensor
+from .utils import MockUFPFixture, init_entry, setup_public_light, setup_public_sensor
 
 
-async def _load_automation(hass: HomeAssistant, entity_id: str):
+async def _load_automation(hass: HomeAssistant, *entity_ids: str):
+    """Load one automation per entity id; the component sets up only once."""
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "alias": "test1",
+                    "alias": f"test{index}",
                     "trigger": [
                         {"platform": "state", "entity_id": entity_id},
                         {
@@ -50,7 +53,8 @@ async def _load_automation(hass: HomeAssistant, entity_id: str):
                             "data": {"entity_id": entity_id},
                         },
                     ],
-                },
+                }
+                for index, entity_id in enumerate(entity_ids, 1)
             ]
         },
     )
@@ -602,3 +606,173 @@ async def test_migrate_sensor_signal_strength_drops_duplicate(
 
     assert entity_registry.async_get(old.entity_id) is None
     assert entity_registry.async_get(new.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    (
+        "platform",
+        "key",
+        "replacement_platform",
+        "replacement_suffix",
+        "translation_key",
+    ),
+    [
+        (
+            Platform.BINARY_SENSOR,
+            "light",
+            Platform.LIGHT,
+            "",
+            "setting_mirror_deprecated",
+        ),
+        (
+            Platform.BINARY_SENSOR,
+            "status_light",
+            Platform.SWITCH,
+            "_status_light",
+            "setting_mirror_deprecated",
+        ),
+        (
+            Platform.SENSOR,
+            "sensitivity",
+            Platform.NUMBER,
+            "_sensitivity",
+            "setting_mirror_deprecated",
+        ),
+        (
+            Platform.SENSOR,
+            "light_motion",
+            Platform.SELECT,
+            "_light_motion",
+            "setting_mirror_deprecated_light_mode",
+        ),
+    ],
+)
+async def test_migrate_light_setting_mirror_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+    platform: Platform,
+    key: str,
+    replacement_platform: Platform,
+    replacement_suffix: str,
+    translation_key: str,
+) -> None:
+    """A used light mirror gets a repair naming the control that replaces it."""
+    setup_public_light(ufp)
+    mirror = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{light.mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, mirror.entity_id)
+
+    await init_entry(hass, ufp, [light], regenerate_ids=False)
+
+    assert entity_registry.async_get(mirror.entity_id) is not None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{light.mac}_{key}"
+    )
+    assert issue is not None
+    assert issue.translation_key == translation_key
+    assert issue.breaks_in_ha_version == LIGHT_SETTING_MIRROR_BREAKS_IN
+    assert issue.translation_placeholders["entity_id"] == mirror.entity_id
+    replacement_id = entity_registry.async_get_entity_id(
+        replacement_platform, DOMAIN, f"{light.mac}{replacement_suffix}"
+    )
+    assert replacement_id is not None
+    assert issue.translation_placeholders["replacement"] == replacement_id
+
+
+async def test_migrate_light_setting_mirror_repair_clears_when_unused(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """The deprecation repair goes away once the last usage is gone."""
+    setup_public_light(ufp)
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{light.mac}_light", config_entry=ufp.entry
+    )
+    issue_id = f"setting_mirror_deprecated_{light.mac}_light"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        breaks_in_ha_version=LIGHT_SETTING_MIRROR_BREAKS_IN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="setting_mirror_deprecated",
+        translation_placeholders={
+            "entity_id": mirror.entity_id,
+            "replacement": "light.test_light",
+            "items": "* `automation.gone`\n",
+        },
+    )
+
+    await init_entry(hass, ufp, [light], regenerate_ids=False)
+
+    assert entity_registry.async_get(mirror.entity_id) is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_migrate_light_setting_mirror_without_replacement(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Before the replacement exists there is nothing to point a repair at."""
+    ufp.api.bootstrap.lights = {light.id: light}
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{light.mac}_light", config_entry=ufp.entry
+    )
+    await _load_automation(hass, mirror.entity_id)
+
+    async_deprecate_light_setting_mirrors(hass, ufp.entry, ufp.api.bootstrap)
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"setting_mirror_deprecated_{light.mac}_light"
+        )
+        is None
+    )
+
+
+async def test_migrate_light_setting_keys_scoped_to_lights(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    light: Light,
+) -> None:
+    """Cameras share the ``status_light`` key, so only the light's mirror counts."""
+    setup_public_light(ufp)
+    camera_mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_status_light",
+        config_entry=ufp.entry,
+    )
+    light_mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{light.mac}_status_light",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, camera_mirror.entity_id, light_mirror.entity_id)
+
+    await init_entry(hass, ufp, [doorbell, light], regenerate_ids=False)
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{light.mac}_status_light"
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"setting_mirror_deprecated_{doorbell.mac}_status_light"
+        )
+        is None
+    )

@@ -176,7 +176,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_public_value="light_device_settings.pir_sensitivity",
         ufp_set_method="set_sensitivity",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription[Light](
         key="duration",
@@ -188,7 +187,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=15,
         ufp_public_value="light_device_settings.pir_duration_seconds",
         ufp_set_method_fn=_set_pir_duration,
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
