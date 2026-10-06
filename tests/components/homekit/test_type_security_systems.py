@@ -358,6 +358,7 @@ async def test_handle_non_alarm_states(
 )
 async def test_set_if_valid_guards_frozen_valid_values(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     hk_driver: HomeDriver,
     build_features: AlarmControlPanelEntityFeature,
     value_is_valid: bool,
@@ -371,8 +372,11 @@ async def test_set_if_valid_guards_frozen_valid_values(
     """
     entity_id = "alarm_control_panel.test"
 
-    attrs = {"supported_features": build_features}
-    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED, attributes=attrs)
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": build_features},
+    )
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
     acc.run()
@@ -384,10 +388,16 @@ async def test_set_if_valid_guards_frozen_valid_values(
 
     # Call the update path directly: the state-change dispatcher swallows
     # callback exceptions, so a regressed set_value would raise unnoticed there.
+    # The live state advertises ARM_HOME, as after a reload-skipping feature change.
     acc.async_update_state(
-        State(entity_id, AlarmControlPanelState.ARMED_HOME, attributes=attrs)
+        State(
+            entity_id,
+            AlarmControlPanelState.ARMED_HOME,
+            attributes={"supported_features": AlarmControlPanelEntityFeature.ARM_HOME},
+        )
     )
     await hass.async_block_till_done()
 
     assert acc.char_current_state.value == expected_current
     assert acc.char_target_state.value == expected_target
+    assert ("Skipping unsupported" in caplog.text) is not value_is_valid
