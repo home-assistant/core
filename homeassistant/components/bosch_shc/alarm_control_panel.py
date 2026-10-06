@@ -60,7 +60,7 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
         self._device = device
         self._attr_unique_id = f"{device.root_device_id}_{device.id}"
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             translation_key="intrusion_system",
             manufacturer=device.manufacturer,
             model=device.device_model,
