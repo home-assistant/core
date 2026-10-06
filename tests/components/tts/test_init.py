@@ -2137,6 +2137,26 @@ async def test_stream_set_message_after_memory_cache_age(
     assert result_data
 
 
+async def test_stream_override_result_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    tmp_path: Path,
+) -> None:
+    """Test a stream overridden long after it was created can still be fetched."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The Assist pipeline overrides the result for its local acknowledgment
+    stream.async_override_result(tmp_path / "acknowledge.mp3")
+
+    assert tts.async_get_stream(hass, stream.token) is stream
+
+
 async def test_result_stream_message_set_idempotent(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:

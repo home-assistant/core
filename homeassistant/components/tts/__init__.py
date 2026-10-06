@@ -577,6 +577,7 @@ class ResultStream:
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
+        self._async_mark_used()
         self._override_media_path = Path(media_path)
 
     @property
