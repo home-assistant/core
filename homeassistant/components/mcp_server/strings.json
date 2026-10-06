@@ -24,7 +24,7 @@
           "require_admin": "Require an administrator account"
         },
         "data_description": {
-          "all_llm_apis": "Expose every LLM API, including LLM APIs added later. When enabled, the selected LLM APIs are ignored.",
+          "all_llm_apis": "Expose every LLM API, including LLM APIs added later.",
           "llm_hass_api": "The methods for controlling Home Assistant to expose with the Model Context Protocol.",
           "require_admin": "Only allow administrator accounts to use the Model Context Protocol endpoint."
         },
