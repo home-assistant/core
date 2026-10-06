@@ -51,7 +51,10 @@ from homeassistant.helpers import (
     trace,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
@@ -3196,136 +3199,45 @@ async def test_subscribe_condition_untracked_entity(
     assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
 
 
-@pytest.mark.usefixtures("freezer")
 @pytest.mark.parametrize(
-    ("condition", "threshold_before", "threshold_after"),
+    ("condition", "needs_polling"),
     [
         pytest.param(
-            {
-                "condition": "numeric_state",
-                "entity_id": "counter.value",
-                "above": "input_number.threshold",
-            },
-            "5",
-            "15",
-            id="numeric_state_above",
-        ),
-        pytest.param(
-            {
-                "condition": "numeric_state",
-                "entity_id": "counter.value",
-                "below": "input_number.threshold",
-            },
-            "15",
-            "5",
-            id="numeric_state_below",
-        ),
-        pytest.param(
-            {
-                "condition": "state",
-                "entity_id": "counter.value",
-                "state": "input_number.threshold",
-            },
-            "10",
-            "15",
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+            False,
             id="state",
         ),
         pytest.param(
             {
-                "condition": "counter.is_value",
-                "target": {"entity_id": "counter.value"},
-                "options": {
-                    "threshold": {
-                        "type": "above",
-                        "value": {"entity": "input_number.threshold"},
-                    }
-                },
+                "condition": "template",
+                "value_template": "{{ is_state('hello.world', 'paulus') }}",
             },
-            "5",
-            "15",
-            id="numerical_threshold",
+            True,
+            id="template",
         ),
     ],
 )
-async def test_subscribe_condition_comparison_entity(
+async def test_subscribe_condition_polling(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     condition: dict[str, Any],
-    threshold_before: str,
-    threshold_after: str,
+    needs_polling: bool,
 ) -> None:
-    """Test a change of an entity the condition compares against is pushed."""
-    hass.states.async_set("counter.value", "10")
-    hass.states.async_set("input_number.threshold", threshold_before)
+    """Test a condition is only polled when it can change without a state change."""
+    hass.states.async_set("hello.world", "paulus")
 
-    await websocket_client.send_json_auto_id(
-        {"type": "subscribe_condition", "condition": condition}
-    )
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_track_time_interval",
+        wraps=async_track_time_interval,
+    ) as mock_track_time_interval:
+        await websocket_client.send_json_auto_id(
+            {"type": "subscribe_condition", "condition": condition}
+        )
+        msg = await websocket_client.receive_json()
 
-    msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-
-    subscription_id = msg["id"]
-
-    msg = await websocket_client.receive_json()
-    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
-
-    hass.states.async_set("input_number.threshold", threshold_after)
-
-    msg = await websocket_client.receive_json()
-    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
-
-
-@pytest.mark.usefixtures("freezer")
-@pytest.mark.parametrize(
-    ("target", "registry_listeners"),
-    [
-        pytest.param({"entity_id": "light.kitchen"}, 0, id="entity"),
-        pytest.param({"area_id": "kitchen"}, 1, id="area"),
-    ],
-)
-async def test_subscribe_condition_target(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    area_registry: ar.AreaRegistry,
-    entity_registry: er.EntityRegistry,
-    target: dict[str, str],
-    registry_listeners: int,
-) -> None:
-    """Test a state change of a targeted entity is pushed."""
-    area = area_registry.async_create("Kitchen")
-    light = entity_registry.async_get_or_create(
-        "light", "test", "kitchen", suggested_object_id="kitchen"
-    )
-    entity_registry.async_update_entity(light.entity_id, area_id=area.id)
-    hass.states.async_set(light.entity_id, "on")
-    init_count = hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED]
-
-    await websocket_client.send_json_auto_id(
-        {
-            "type": "subscribe_condition",
-            "condition": {"condition": "light.is_on", "target": target},
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-
-    subscription_id = msg["id"]
-    assert (
-        hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED]
-        == init_count + registry_listeners
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
-
-    hass.states.async_set(light.entity_id, "off")
-
-    msg = await websocket_client.receive_json()
-    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+    assert mock_track_time_interval.called is needs_polling
 
 
 async def test_unsubscribe_condition(

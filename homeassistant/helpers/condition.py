@@ -56,6 +56,9 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -91,6 +94,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .event import async_track_state_change_event
 from .integration_platform import async_process_integration_platforms
 from .recorder import get_instance
 from .selector import (
@@ -279,6 +283,11 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 )
 
 
+@callback
+def _async_noop() -> None:
+    """Do nothing."""
+
+
 class ConditionChecker(abc.ABC):
     """Base class for condition checkers."""
 
@@ -339,6 +348,29 @@ class ConditionChecker(abc.ABC):
         Intended to be overridden in derived classes that need to do unloading.
         """
 
+    @property
+    def needs_polling(self) -> bool:
+        """Return if the result can change without async_track_changes reporting it."""
+        return True
+
+    @final
+    async def async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call action when the result of the condition may have changed.
+
+        Returns a callback to stop tracking. When needs_polling is True, the
+        result can also change without action being called (time, templates).
+        """
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
+        return await self._async_track_changes(action)
+
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call action when the result of the condition may have changed.
+
+        Intended to be overridden in derived classes that can track changes.
+        """
+        return _async_noop
+
     @final
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
@@ -368,6 +400,27 @@ class LegacyConditionChecker(ConditionChecker):
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return (
+            not isinstance(self._checker, _StateDependentChecker)
+            or self._checker.needs_polling
+        )
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        if not isinstance(self._checker, _StateDependentChecker):
+            return _async_noop
+
+        @callback
+        def state_changed(_: Event[EventStateChangedData]) -> None:
+            action()
+
+        return async_track_state_change_event(
+            self._hass, self._checker.entity_ids, state_changed
+        )
+
 
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
@@ -375,6 +428,11 @@ class DisabledConditionChecker(ConditionChecker):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return False
 
 
 class CompoundConditionChecker(ConditionChecker):
@@ -384,6 +442,25 @@ class CompoundConditionChecker(ConditionChecker):
         """Initialize condition checker."""
         super().__init__(hass)
         self._conditions = conditions
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return any(condition.needs_polling for condition in self._conditions)
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        unsubs = [
+            await condition.async_track_changes(action)
+            for condition in self._conditions
+        ]
+
+        @callback
+        def unsubscribe() -> None:
+            for unsub in unsubs:
+                unsub()
+
+        return unsubscribe
 
     @override
     def _async_unload(self) -> None:
@@ -625,6 +702,38 @@ class EntityConditionBase(Condition):
             # entity is now stale; stop priming it and let live tracking own it.
             self._priming.discard(entity_id)
             self._valid_since.pop(entity_id, None)
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return self._duration is not None
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        @callback
+        def state_changed(
+            _: Event[EventStateChangedData] | TargetStateChangedData,
+        ) -> None:
+            action()
+
+        selection = self._target_selection
+        # Explicit entity ids don't depend on the registries, skip the target tracker
+        if not (
+            selection.area_ids
+            or selection.device_ids
+            or selection.floor_ids
+            or selection.label_ids
+        ):
+            return async_track_state_change_event(
+                self._hass, selection.entity_ids, state_changed
+            )
+        return await async_track_target_selector_state_change_event(
+            self._hass,
+            self._target,
+            state_changed,
+            self.entity_filter,
+            primary_entities_only=self._primary_entities_only,
+        )
 
     @override
     async def _async_setup(self) -> None:
@@ -971,6 +1080,34 @@ class EntityNumericalConditionBase(EntityConditionBase):
             threshold_options.get("value_max")
         )
         self._threshold_type = threshold_options["type"]
+        self._threshold_entity_ids = {
+            threshold.entity
+            for threshold in (
+                self.threshold,
+                self.lower_threshold,
+                self.upper_threshold,
+            )
+            if threshold is not None and threshold.entity is not None
+        }
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        unsub_target = await super()._async_track_changes(action)
+
+        @callback
+        def threshold_changed(_: Event[EventStateChangedData]) -> None:
+            action()
+
+        unsub_thresholds = async_track_state_change_event(
+            self._hass, self._threshold_entity_ids, threshold_changed
+        )
+
+        @callback
+        def unsubscribe() -> None:
+            unsub_target()
+            unsub_thresholds()
+
+        return unsubscribe
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""
@@ -1195,6 +1332,19 @@ type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 type ConditionCheckerTypeOptional = Callable[
     [HomeAssistant, TemplateVarsType], bool | None
 ]
+
+
+@dataclass(slots=True)
+class _StateDependentChecker:
+    """Legacy condition checker whose result depends on entity states."""
+
+    checker: ConditionCheckerType
+    entity_ids: set[str]
+    needs_polling: bool
+
+    def __call__(self, hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Check the condition."""
+        return self.checker(hass, variables)
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -1678,7 +1828,11 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
 
         return True
 
-    return if_numeric_state
+    return _StateDependentChecker(
+        if_numeric_state,
+        {*entity_ids, *(value for value in (below, above) if isinstance(value, str))},
+        needs_polling=value_template is not None,
+    )
 
 
 def state(
@@ -1792,7 +1946,18 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
 
         return result
 
-    return if_state
+    return _StateDependentChecker(
+        if_state,
+        {
+            *entity_ids,
+            *(
+                req_state
+                for req_state in req_states
+                if isinstance(req_state, str) and cv.INPUT_ENTITY_ID.match(req_state)
+            ),
+        },
+        needs_polling=for_period is not None,
+    )
 
 
 def template(
