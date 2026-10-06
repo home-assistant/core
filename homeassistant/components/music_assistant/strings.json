@@ -460,7 +460,7 @@
           "name": "Enable radio mode"
         },
         "start_item": {
-          "description": "Item to start playback from, instead of the first one. Use `latest` to play a podcast from its newest episode, or give the URI, ID or part of the name of the track or episode to start from.",
+          "description": "Item to start playback from, instead of the first one. Use `latest` to play a podcast from its newest episode, or give the URI, ID or part of the name (at least 3 characters) of the track or episode to start from.",
           "name": "Start item"
         },
         "username": {
