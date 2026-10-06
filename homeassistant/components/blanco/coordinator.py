@@ -85,51 +85,41 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch system and errors from the BLANCO API."""
         prev: dict[str, Any] = self.data or {}
-        fresh_count = 0
 
+        system_data: dict[str, Any] = prev.get("system", {"params": {}, "info": {}})
         try:
             status, result = await self._api.get_device_system(self.dev_id)
-            if status == HttpStatus.OK:
-                system_data: dict[str, Any] = dict(result)
-                fresh_count += 1
-            else:
-                _LOGGER.warning(
-                    "System endpoint returned HTTP %s, using previous data", status
-                )
-                system_data = prev.get("system", {"params": {}, "info": {}})
         except BlancoConnectionError as err:
-            _LOGGER.warning("GET /system failed: %s, using previous data", err)
-            system_data = prev.get("system", {"params": {}, "info": {}})
+            _LOGGER.debug("Fetching device system data failed: %s", err)
         except BlancoApiError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="token_expired",
             ) from err
+        else:
+            if status == HttpStatus.OK:
+                system_data = dict(result)
+            else:
+                _LOGGER.debug("Device system endpoint returned HTTP %s", status)
 
         try:
             status, result = await self._api.get_device_errors(self.dev_id)
-            if status == HttpStatus.OK:
-                errors_data: dict[str, Any] = dict(result)
-                fresh_count += 1
-            else:
-                _LOGGER.warning(
-                    "Errors endpoint returned HTTP %s, using previous data", status
-                )
-                errors_data = prev.get("errors", {"errors": [], "info": {}})
         except BlancoConnectionError as err:
-            _LOGGER.warning("GET /errors failed: %s, using previous data", err)
-            errors_data = prev.get("errors", {"errors": [], "info": {}})
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
         except BlancoApiError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="token_expired",
             ) from err
-
-        if fresh_count == 0:
+        if status != HttpStatus.OK:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             )
+        errors_data: dict[str, Any] = dict(result)
 
         return {
             "system": system_data,

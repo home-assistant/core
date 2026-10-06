@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntryAuthFailed
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 from .conftest import make_coordinator, make_get_response
@@ -34,54 +35,63 @@ def _entry_states(
 
 
 @pytest.mark.parametrize(
-    ("failing_endpoint", "failure"),
+    "failure",
     [
-        pytest.param(
-            "get_device_system",
-            (HttpStatus.INTERNAL_SERVER_ERROR, {}),
-            id="system_http_error",
-        ),
-        pytest.param(
-            "get_device_system",
-            BlancoConnectionError("timeout"),
-            id="system_connection_error",
-        ),
-        pytest.param(
-            "get_device_errors",
-            (HttpStatus.INTERNAL_SERVER_ERROR, {}),
-            id="errors_http_error",
-        ),
-        pytest.param(
-            "get_device_errors",
-            BlancoConnectionError("timeout"),
-            id="errors_connection_error",
-        ),
+        pytest.param((HttpStatus.INTERNAL_SERVER_ERROR, {}), id="http_error"),
+        pytest.param(BlancoConnectionError("timeout"), id="connection_error"),
     ],
 )
-async def test_failing_endpoint_keeps_previous_data(
+async def test_failing_system_endpoint_keeps_sensor_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_blanco_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    failing_endpoint: str,
     failure: tuple[int, dict] | Exception,
 ) -> None:
-    """Test one failing endpoint keeps its previous data while the other refreshes."""
+    """Test a failing system endpoint does not affect the error sensors."""
     await setup_integration(hass, mock_config_entry)
     states_before = _entry_states(hass, entity_registry, mock_config_entry.entry_id)
 
-    getattr(mock_blanco_client, failing_endpoint).side_effect = [failure]
+    mock_blanco_client.get_device_system.side_effect = [failure]
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    getattr(mock_blanco_client, failing_endpoint).assert_awaited()
+    mock_blanco_client.get_device_system.assert_awaited()
     assert STATE_UNAVAILABLE not in states_before.values()
     assert (
         _entry_states(hass, entity_registry, mock_config_entry.entry_id)
         == states_before
     )
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param((HttpStatus.INTERNAL_SERVER_ERROR, {}), id="http_error"),
+        pytest.param(BlancoConnectionError("timeout"), id="connection_error"),
+    ],
+)
+async def test_failing_errors_endpoint_marks_entities_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_blanco_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    failure: tuple[int, dict] | Exception,
+) -> None:
+    """Test entities become unavailable when the errors endpoint fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_blanco_client.get_device_errors.side_effect = [failure]
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    states = _entry_states(hass, entity_registry, mock_config_entry.entry_id)
+    assert states
+    assert set(states.values()) == {STATE_UNAVAILABLE}
 
 
 async def test_all_endpoints_failing_marks_entities_unavailable(
@@ -281,10 +291,26 @@ class TestAsyncUpdateData:
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
         assert data["errors"]["errors"] == []
 
-    async def test_one_endpoint_500_uses_previous_data_for_that_key(
+    async def test_system_500_uses_previous_system_data(
         self, mock_hass: MagicMock
     ) -> None:
-        """A 500 on /errors falls back to previous coordinator data for that key."""
+        """A 500 on /system falls back to the previous system data."""
+        session = self._make_session(
+            make_get_response(500, {}),  # /system fails
+            make_get_response(200, ERRORS_RESPONSE),
+        )
+        coord = make_coordinator(mock_hass, session=session)
+        coord.data = {
+            "system": {"params": {"dev_name": "Previous"}, "info": {}},
+            "errors": {"errors": [{"err_code": 1}], "info": {}},
+        }
+        data = await coord._async_update_data()
+
+        assert data["system"]["params"]["dev_name"] == "Previous"
+        assert data["errors"]["errors"] == []
+
+    async def test_errors_500_raises_update_failed(self, mock_hass: MagicMock) -> None:
+        """A 500 on /errors raises UpdateFailed instead of reusing previous data."""
         session = self._make_session(
             make_get_response(200, SYSTEM_RESPONSE),
             make_get_response(500, {}),  # /errors fails
@@ -294,10 +320,9 @@ class TestAsyncUpdateData:
             "system": {"params": {}, "info": {}},
             "errors": {"errors": [{"err_code": 1}], "info": {}},
         }
-        data = await coord._async_update_data()
 
-        assert data["errors"]["errors"] == [{"err_code": 1}]
-        assert data["system"]["params"]["dev_name"] == "My BLANCO"
+        with pytest.raises(UpdateFailed):
+            await coord._async_update_data()
 
     async def test_401_with_successful_renewal_retries_and_succeeds(
         self, mock_hass: MagicMock

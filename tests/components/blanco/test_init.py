@@ -34,34 +34,51 @@ async def test_load_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("system", "errors"),
+    "errors",
     [
-        pytest.param(
-            (HttpStatus.INTERNAL_SERVER_ERROR, {}),
-            (HttpStatus.INTERNAL_SERVER_ERROR, {}),
-            id="http_error",
-        ),
-        pytest.param(
-            BlancoConnectionError("timeout"),
-            BlancoConnectionError("timeout"),
-            id="connection_error",
-        ),
+        pytest.param((HttpStatus.INTERNAL_SERVER_ERROR, {}), id="http_error"),
+        pytest.param(BlancoConnectionError("timeout"), id="connection_error"),
     ],
 )
-async def test_setup_retry_when_no_endpoint_answers(
+async def test_setup_retry_when_errors_endpoint_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_blanco_client: MagicMock,
-    system: tuple[int, dict] | Exception,
     errors: tuple[int, dict] | Exception,
 ) -> None:
-    """Test setup is retried when neither endpoint returns fresh data."""
-    mock_blanco_client.get_device_system.side_effect = [system]
+    """Test setup is retried when the errors endpoint returns no fresh data."""
     mock_blanco_client.get_device_errors.side_effect = [errors]
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "system",
+    [
+        pytest.param((HttpStatus.INTERNAL_SERVER_ERROR, {}), id="http_error"),
+        pytest.param(BlancoConnectionError("timeout"), id="connection_error"),
+    ],
+)
+async def test_setup_succeeds_when_system_endpoint_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_blanco_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    system: tuple[int, dict] | Exception,
+) -> None:
+    """Test setup succeeds with a default device name when only system data fails."""
+    mock_blanco_client.get_device_system.side_effect = [system]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEV_ID), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "BLANCO"
 
 
 @pytest.mark.parametrize("failing_endpoint", ["get_device_system", "get_device_errors"])
