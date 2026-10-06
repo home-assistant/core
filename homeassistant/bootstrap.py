@@ -109,7 +109,7 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
-from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.package import is_docker_env
 from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
@@ -225,6 +225,7 @@ DEFAULT_INTEGRATIONS = {
     "hardware",
     "labs",
     "logger",
+    "marketplace",
     "network",
     "system_health",
     #
@@ -364,9 +365,6 @@ async def async_setup_hass(
                 err,
             )
         else:
-            if not is_virtual_env():
-                await async_mount_local_lib_path(runtime_config.config_dir)
-
             if hass.config.safe_mode:
                 _LOGGER.info("Starting in safe mode")
 
@@ -477,26 +475,30 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
+    load_tasks: list[asyncio.Future[Any]] = [
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
+        create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+        create_eager_task(update_coordinator.async_load(hass, load_empty=recovery)),
+        create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
+    ]
     try:
-        await asyncio.gather(
-            create_eager_task(get_internal_store_manager(hass).async_initialize()),
-            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
-            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-            create_eager_task(template.async_load_custom_templates(hass)),
-            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
-            create_eager_task(update_coordinator.async_load(hass, load_empty=recovery)),
-            create_eager_task(hass.config_entries.async_initialize()),
-            create_eager_task(async_get_system_info(hass)),
-            create_eager_task(condition.async_setup(hass)),
-            create_eager_task(trigger.async_setup(hass)),
-        )
+        await asyncio.gather(*load_tasks)
     except UnsupportedStorageVersionError as err:
+        for task in load_tasks:
+            task.cancel()
+
         # If we're already in recovery mode, we don't want to handle the exception
         # and activate recovery mode again, as that would lead to an infinite loop.
         if recovery:
@@ -737,17 +739,6 @@ class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
         the result of this check is always False.
         """
         return False
-
-
-async def async_mount_local_lib_path(config_dir: str) -> str:
-    """Add local library to Python Path.
-
-    This function is a coroutine.
-    """
-    deps_dir = os.path.join(config_dir, "deps")
-    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
-        sys.path.insert(0, lib_dir)
-    return deps_dir
 
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:

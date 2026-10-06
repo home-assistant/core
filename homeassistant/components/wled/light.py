@@ -159,14 +159,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         )
 
         if (
-            coordinator.data.info.leds.segment_light_capabilities is not None
-            and (
-                color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(
-                    coordinator.data.info.leds.segment_light_capabilities[segment]
-                )
-            )
-            is not None
-        ):
+            capabilities := coordinator.data.state.segments[segment].light_capabilities
+        ) is not None and (
+            color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(capabilities)
+        ) is not None:
             self._attr_color_mode = color_modes[0]
             self._attr_supported_color_modes = set(color_modes)
 

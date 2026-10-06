@@ -1593,6 +1593,28 @@ async def test_filter_on_load(
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
 
 
+async def test_async_load_twice_raises(hass: HomeAssistant) -> None:
+    """Test loading the entity registry twice raises."""
+    registry = er.async_get(hass)
+    with pytest.raises(RuntimeError, match="Entity registry is already loaded"):
+        await registry.async_load()
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_wait_loaded(hass: HomeAssistant) -> None:
+    """Test waiting until the entity registry is loaded."""
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = er.async_get(hass)
+    wait_task = hass.async_create_task(registry.async_wait_loaded())
+    await asyncio.sleep(0)
+    assert not wait_task.done()
+
+    await er.async_load(hass)
+
+    await wait_task
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_load_bad_data(
     hass: HomeAssistant,

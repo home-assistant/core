@@ -98,23 +98,5 @@
         "name": "Water flow rate"
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, we could not connect to {integration_title}. Please check your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
-    },
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, invalid authentication details were found. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
-    },
-    "deprecated_yaml_import_issue_no_devices": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, no devices were found on your account. Please verify your account has devices and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration an unknown exception has been encountered. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "WaterFurnace YAML configuration import failed"
-    }
   }
 }

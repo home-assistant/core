@@ -48,8 +48,9 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -450,7 +451,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             CONF_EFFECT,
             "_attr_effect",
             tcv.item_in_list(
-                self, "_attr_effect", "_attr_effect_list", CONF_EFFECT_LIST
+                self,
+                "_attr_effect",
+                "_attr_effect_list",
+                CONF_EFFECT_LIST,
+                stringify_result=True,
             ),
         )
 

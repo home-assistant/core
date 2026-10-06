@@ -14,6 +14,7 @@ from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.yaml import dumper
 
 from . import config_validation as cv
@@ -66,12 +67,11 @@ class Selector[_T: Mapping[str, Any]]:
     # context for filtering for example. The selector defines
     # which context keys it supports and what selector types
     # are allowed for each key.
-    allowed_context_keys: dict[str, set[str]]
+    allowed_context_keys: Mapping[str, frozenset[str]] = ReadOnlyDict({})
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
-        self.allowed_context_keys = {}
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -441,6 +441,13 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     selector_type = "attribute"
 
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available attributes based on the selected entity
+            "filter_entity": frozenset({"entity"})
+        }
+    )
+
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             probatio.Required("entity_id"): cv.entity_id,
@@ -453,10 +460,6 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
-        self.allowed_context_keys = {
-            # Filters the available attributes based on the selected entity
-            "filter_entity": {"entity"}
-        }
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
@@ -1040,6 +1043,14 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
         return [probatio.Schema(str)(val) for val in data]
 
 
+class DurationSelectorMode(StrEnum):
+    """Possible modes for a duration selector."""
+
+    POSITIVE = "positive"
+    SIGNED = "signed"
+    OFFSET = "offset"
+
+
 class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
@@ -1047,6 +1058,15 @@ class DurationSelectorConfig(BaseSelectorConfig, total=False):
     enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
+    mode: DurationSelectorMode
+
+
+def _validate_duration_selector_mode(config: dict[str, Any]) -> dict[str, Any]:
+    if "allow_negative" not in config or "mode" not in config:
+        return config
+    if (config["mode"] == DurationSelectorMode.POSITIVE) == config["allow_negative"]:
+        raise probatio.Invalid(f"allow_negative conflicts with mode {config['mode']}")
+    return config
 
 
 @SELECTORS.register("duration")
@@ -1055,27 +1075,42 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            # Enable day field in frontend. A selection with `days` set is allowed
-            # even if `enable_day` is not set
-            probatio.Optional("enable_day"): cv.boolean,
-            # Enable seconds field in frontend.
-            probatio.Optional("enable_second", default=True): cv.boolean,
-            # Enable millisecond field in frontend.
-            probatio.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations.
-            probatio.Optional("allow_negative"): cv.boolean,
-        }
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                # Enable day field in frontend. A selection with `days` set is allowed
+                # even if `enable_day` is not set
+                probatio.Optional("enable_day"): cv.boolean,
+                # Enable seconds field in frontend.
+                probatio.Optional("enable_second", default=True): cv.boolean,
+                # Enable millisecond field in frontend.
+                probatio.Optional("enable_millisecond"): cv.boolean,
+                # Legacy alias of mode signed, provided for backwards compatibility
+                # and feature frozen. New configs should use `mode` instead.
+                probatio.Optional("allow_negative"): cv.boolean,
+                probatio.Optional("mode"): probatio.All(
+                    probatio.Coerce(DurationSelectorMode), lambda val: val.value
+                ),
+            }
+        ),
+        _validate_duration_selector_mode,
     )
 
     def __init__(self, config: DurationSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
+    @property
+    def allows_negative(self) -> bool:
+        """Return whether the selector allows a negative duration."""
+        mode = self.config.get("mode", DurationSelectorMode.POSITIVE)
+        return mode != DurationSelectorMode.POSITIVE or bool(
+            self.config.get("allow_negative", False)
+        )
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", False):
+        if self.allows_negative:
             cv.time_period_dict(data)
         else:
             cv.positive_time_period_dict(data)
@@ -1374,6 +1409,13 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available media based on the selected entity
+            "filter_entity": frozenset({EntitySelector.selector_type})
+        }
+    )
+
     CONFIG_SCHEMA = probatio.All(
         make_selector_config_schema(
             {
@@ -1400,10 +1442,6 @@ class MediaSelector(Selector[MediaSelectorConfig]):
     def __init__(self, config: MediaSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
-        self.allowed_context_keys = {
-            # Filters the available media based on the selected entity
-            "filter_entity": {EntitySelector.selector_type}
-        }
 
     def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
@@ -2071,6 +2109,17 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available states based on the selected entity
+            "filter_entity": frozenset({EntitySelector.selector_type}),
+            # Filters the available states based on the selected target
+            "filter_target": frozenset({"target"}),
+            # Only show the attribute values of a specific attribute
+            "filter_attribute": frozenset({AttributeSelector.selector_type}),
+        }
+    )
+
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             probatio.Optional("entity_id"): cv.entity_id,
@@ -2083,14 +2132,6 @@ class StateSelector(Selector[StateSelectorConfig]):
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
-        self.allowed_context_keys = {
-            # Filters the available states based on the selected entity
-            "filter_entity": {EntitySelector.selector_type},
-            # Filters the available states based on the selected target
-            "filter_target": {"target"},
-            # Only show the attribute values of a specific attribute
-            "filter_attribute": {AttributeSelector.selector_type},
-        }
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
