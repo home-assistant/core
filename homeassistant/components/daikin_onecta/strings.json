@@ -45,7 +45,7 @@
       "leaving_water_temperature": {
         "name": "Leaving Water Temperature"
       },
-      "roomtemperature": {
+      "room_temperature": {
         "name": "Room Temperature",
         "state_attributes": {
           "fan_mode": {

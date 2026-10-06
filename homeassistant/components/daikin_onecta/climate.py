@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Literal, cast, override
+from typing import Any, Literal, cast, override
 
 from daikin_onecta.models import (
     Characteristic,
@@ -32,6 +32,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -39,10 +40,6 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.device_registry import DeviceInfo
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +70,7 @@ CLIMATE_ENTITY_DESCRIPTIONS = {
     ),
     "roomTemperature": ClimateEntityDescription(
         key="room_temperature",
-        translation_key="roomtemperature",
+        translation_key="room_temperature",
     ),
 }
 
@@ -109,13 +106,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
-    coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     entities = [
         entity
         for device in (coordinator.data or {}).values()
         for entity in _create_climate_entities(device, coordinator)
     ]
-    async_add_entities(entities, update_before_add=False)
+    async_add_entities(entities)
 
 
 def _create_climate_entities(
@@ -123,7 +120,6 @@ def _create_climate_entities(
 ) -> list[DaikinClimate]:
     """Create climate entities for all independently controllable zones."""
     entities: list[DaikinClimate] = []
-    device_model = device.device.device_model
     for management_point in device.device.management_points_by_type("climateControl"):
         modes: list[str] = []
         if management_point.temperature_control is not None:
@@ -134,12 +130,6 @@ def _create_climate_entities(
         # The setpoints may recur across operation modes, but each management
         # point represents an independently controllable climate zone.
         modes = list(dict.fromkeys(modes))
-        _LOGGER.info(
-            "Climate: Device '%s', management point '%s' has modes %s",
-            device_model,
-            management_point.embedded_id,
-            modes,
-        )
         entities.extend(
             DaikinClimate(device, mode, coordinator, management_point.embedded_id)
             for mode in modes
@@ -151,6 +141,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     """Representation of a Daikin HVAC."""
 
     _attr_has_entity_name = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     # Setpoint is the setpoint string under
     # temperatureControl/value/operationsModes/mode/setpoints, for example roomTemperature/leavingWaterOffset
@@ -163,20 +154,14 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
     ) -> None:
         """Initialize the climate device."""
         super().__init__(coordinator)
-        _LOGGER.info(
-            "Device '%s' initializing Daikin Climate for controlling %s",
-            device.name,
-            setpoint,
-        )
         self._device = device
         self._embedded_id = embedded_id
         self._setpoint = setpoint
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._setpoint}"
-        self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, self._device.id)},
-            "name": self._device.name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.id)},
+            name=self._device.name,
+        )
         self.entity_description = CLIMATE_ENTITY_DESCRIPTIONS.get(
             setpoint,
             ClimateEntityDescription(
@@ -513,11 +498,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
                             self._attr_target_temperature = value
                             self.coordinator.async_update_listeners()
                     else:
-                        _LOGGER.warning(
-                            "Device '%s' problem setting temperature to '%s'",
-                            self._device.name,
-                            value,
-                        )
                         self._raise_command_failed("set the temperature")
 
     def _get_hvac_mode(self) -> HVACMode | None:
@@ -596,11 +576,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         # Only set the on/off to Daikin when we need to change it
         if on_off_mode is not None:
             if not await self._async_patch("onOffMode", None, on_off_mode):
-                _LOGGER.warning(
-                    "Device '%s' problem setting onOffMode to '%s'",
-                    self._device.name,
-                    on_off_mode,
-                )
                 self._raise_command_failed("set the HVAC mode")
             cc = self._climate_control()
             if cc is not None and cc.on_off_mode is not None:
@@ -622,11 +597,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             and operation_mode != cc.operation_mode.value
         ):
             if not await self._async_patch("operationMode", None, operation_mode):
-                _LOGGER.warning(
-                    "Device '%s' problem setting operationMode to '%s'",
-                    self._device.name,
-                    operation_mode,
-                )
                 self._raise_command_failed("set the HVAC mode")
             cc = self._climate_control()
             if cc is not None and cc.operation_mode is not None:
@@ -898,11 +868,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             )
         else:
             result = await self._async_patch(daikin_mode, None, "off")
-        if not result:
-            _LOGGER.warning(
-                "Device '%s' problem setting %s to off", self._device.name, daikin_mode
-            )
-        else:
+        if result:
             preset = self._preset_characteristic(daikin_mode)
             if preset_mode == PRESET_AWAY and preset is not None:
                 preset.value.enabled = False
@@ -930,11 +896,7 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
             )
         else:
             result = await self._async_patch(daikin_mode, None, "on")
-        if not result:
-            _LOGGER.warning(
-                "Device '%s' problem setting %s to on", self._device.name, daikin_mode
-            )
-        else:
+        if result:
             preset = self._preset_characteristic(daikin_mode)
             if preset_mode == PRESET_AWAY and preset is not None:
                 preset.value.enabled = True
@@ -984,9 +946,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         ):
             result &= await self._async_patch("onOffMode", None, "on")
             if result is False:
-                _LOGGER.error(
-                    "Device '%s' problem setting onOffMode to on", self._device.name
-                )
                 self._raise_command_failed("turn on")
             else:
                 cc = self._climate_control()
@@ -1014,9 +973,6 @@ class DaikinClimate(CoordinatorEntity[OnectaDataUpdateCoordinator], ClimateEntit
         ):
             result &= await self._async_patch("onOffMode", None, "off")
             if result is False:
-                _LOGGER.error(
-                    "Device '%s' problem setting onOffMode to off", self._device.name
-                )
                 self._raise_command_failed("turn off")
             else:
                 cc = self._climate_control()
