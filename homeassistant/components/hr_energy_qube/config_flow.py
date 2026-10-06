@@ -3,12 +3,13 @@
 from typing import Any, override
 
 import probatio
-from python_qube_heatpump import QubeClient
+from python_qube_heatpump import QubeClient, async_get_device_info
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT
 
 
 class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -44,6 +45,14 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.close()
 
             if not errors:
+                # The controller's mDNS record carries a stable uuid; without
+                # mDNS (e.g. across VLANs) the entry is created without one
+                aiozc = await zeroconf.async_get_async_instance(self.hass)
+                if device := await async_get_device_info(
+                    host, aiozc, timeout=MDNS_LOOKUP_TIMEOUT
+                ):
+                    await self.async_set_unique_id(device.uuid)
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title="Qube heat pump",
                     data={

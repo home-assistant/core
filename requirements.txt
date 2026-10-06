@@ -29,7 +29,7 @@ hass-nabucasa==2.7.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.9.30
-httpx==0.28.1
+httpx2==2.13.1
 ifaddr==0.2.0
 infrared-protocols==10.2.0
 Jinja2==3.1.6
@@ -54,6 +54,7 @@ securetar==2026.4.1
 SQLAlchemy==2.0.54
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
+truststore==0.10.4
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0

@@ -8,6 +8,7 @@ registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Hashable, KeysView, Mapping, Sequence
 import dataclasses
@@ -1306,6 +1307,7 @@ class EntityRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -2272,6 +2274,9 @@ class EntityRegistry(BaseRegistry):
     @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
+        if self._loaded_event.is_set():
+            raise RuntimeError("Entity registry is already loaded")
+
         # Device registry must be loaded before entity registry because
         # migration and entity processing reference device names, and because entities
         # are moved to the correct device when a pre-migration composite device was
@@ -2487,6 +2492,12 @@ class EntityRegistry(BaseRegistry):
         if migrated_composite_device:
             self.async_schedule_save()
 
+        self._loaded_event.set()
+
+    async def async_wait_loaded(self) -> None:
+        """Wait until the entity registry is fully loaded."""
+        await self._loaded_event.wait()
+
     @override
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
@@ -2616,7 +2627,6 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
-    assert DATA_REGISTRY not in hass.data
     await async_get(hass).async_load(load_empty=load_empty)
 
 

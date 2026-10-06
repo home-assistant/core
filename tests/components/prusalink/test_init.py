@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from httpx import ConnectError
+from httpx2 import ConnectError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 

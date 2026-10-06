@@ -45,7 +45,7 @@ from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
 )
 from freezegun import freeze_time
-from httpx import URL, Request, Response
+from httpx2 import URL, Request, Response
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
