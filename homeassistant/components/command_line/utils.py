@@ -1,22 +1,28 @@
 """The command_line component utils."""
 
 import asyncio
+from collections.abc import Coroutine
 from contextlib import suppress
 import hashlib
 import re
 import shlex
-from typing import Literal, overload
+from typing import Any, Literal, overload
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import discovery, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PLATFORM_MAPPING
 
 _EXEC_FAILED_CODE = 127
 # Characters that make a rendered command behave differently under /bin/sh than
@@ -306,3 +312,65 @@ def create_platform_yaml_not_supported_issue(
         learn_more_url="https://www.home-assistant.io/integrations/command_line/",
         logger=LOGGER,
     )
+
+
+def shell_template_issue_ids(
+    command_line_config: list[dict[str, dict[str, Any]]],
+) -> set[str]:
+    """Return the shell template deprecation issue ids for the given config.
+
+    Only sensor, binary_sensor and notify run templated commands and can raise
+    the issue. The name mirrors each platform's setup: sensor and binary_sensor
+    always have a name (schema default), while notify falls back to the
+    integration domain when no name is configured.
+    """
+    issue_ids: set[str] = set()
+    for platform_config in command_line_config:
+        for platform, platform_conf in platform_config.items():
+            if platform == NOTIFY_DOMAIN:
+                name = platform_conf.get(CONF_NAME) or DOMAIN
+            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+                name = platform_conf[CONF_NAME]
+            else:
+                continue
+            issue_ids.add(build_shell_template_issue_id(platform, name))
+    return issue_ids
+
+
+async def async_load_platforms(
+    hass: HomeAssistant,
+    command_line_config: list[dict[str, dict[str, Any]]],
+    config: ConfigType,
+) -> None:
+    """Load platforms from yaml."""
+    if not command_line_config:
+        return
+
+    LOGGER.debug("Full config loaded: %s", command_line_config)
+
+    load_coroutines: list[Coroutine[Any, Any, None]] = []
+    platforms: list[Platform] = []
+    reload_configs: list[tuple[Platform, dict[str, Any]]] = []
+    for platform_config in command_line_config:
+        for platform, _config in platform_config.items():
+            if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:
+                platforms.append(mapped_platform)
+            LOGGER.debug(
+                "Loading config %s for platform %s",
+                platform_config,
+                PLATFORM_MAPPING[platform],
+            )
+            reload_configs.append((PLATFORM_MAPPING[platform], _config))
+            load_coroutines.append(
+                discovery.async_load_platform(
+                    hass,
+                    PLATFORM_MAPPING[platform],
+                    DOMAIN,
+                    _config,
+                    config,
+                )
+            )
+
+    if load_coroutines:
+        LOGGER.debug("Loading platforms: %s", platforms)
+        await asyncio.gather(*load_coroutines)
