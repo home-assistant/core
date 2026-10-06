@@ -166,7 +166,8 @@ async def test_sensor_setup_sensor(
 ) -> None:
     """Test sensor entity setup for sensor devices."""
 
-    setup_public_sensor(ufp)
+    # The private fixture reports -50; the sensor must read the public value.
+    setup_public_sensor(ufp, signal_strength=-71)
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
@@ -193,12 +194,12 @@ async def test_sensor_setup_sensor(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # BLE signal
+    # Signal strength
     unique_id, entity_id = await ids_from_device_description(
         hass,
         Platform.SENSOR,
         sensor_all,
-        get_sensor_by_key(ALL_DEVICES_SENSORS, "ble_signal"),
+        get_sensor_by_key(SENSE_SENSORS, "ble_signal"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -206,11 +207,16 @@ async def test_sensor_setup_sensor(
     assert entity.disabled is True
     assert entity.unique_id == unique_id
 
+    assert (
+        entity_id
+        == f"sensor.{sensor_all.name.lower().replace(' ', '_')}_signal_strength"
+    )
+
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "-50"
+    assert state.state == "-71"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -821,7 +827,12 @@ async def test_public_only_sensor_sense_end_to_end(
 
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
     keys = registered_keys(entity_registry, Platform.SENSOR, sensor_all.mac)
-    assert {"battery_level", "temperature_level", "motion_last_trip_time"} <= keys
+    assert {
+        "battery_level",
+        "temperature_level",
+        "motion_last_trip_time",
+        "ble_signal",
+    } <= keys
     assert not keys & {"alarm_sound", "sensitivity", "mount_type", "paired_camera"}
     assert "humidity_level" not in keys
 
