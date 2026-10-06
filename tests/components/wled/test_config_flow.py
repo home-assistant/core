@@ -334,7 +334,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
     mock_wled: MagicMock,
     device_mac: str,
 ) -> None:
-    """Test we abort zeroconf flow if WLED device already configured."""
+    """Test we abort zeroconf flow, without asking the device, if already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -352,6 +352,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+    assert mock_wled.update.call_count == 0
 
 
 async def test_zeroconf_with_mac_updates_host(
@@ -378,6 +379,36 @@ async def test_zeroconf_with_mac_updates_host(
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.124"
+    assert mock_wled.update.call_count == 1
+
+
+async def test_zeroconf_with_mac_keeps_host_for_another_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test zeroconf keeps the host when another device answers on the new one."""
+    mock_config_entry.add_to_hass(hass)
+    mock_wled.update.return_value.info.mac_address = "112233445566"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.124"),
+            ip_addresses=[ip_address("192.168.1.124")],
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "aabbccddeeff"},
+            type="mock_type",
+        ),
+    )
+
+    # Offered as the new device it is, without touching the configured one.
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "zeroconf_confirm"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.123"
 
 
 async def test_zeroconf_with_mac_keeps_host_when_unreachable(
