@@ -180,6 +180,8 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {"host": "192.168.5.208"}
+    progress = hass.config_entries.flow.async_progress()
+    assert progress[0]["context"]["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

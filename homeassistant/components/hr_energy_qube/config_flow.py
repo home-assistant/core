@@ -107,6 +107,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self._async_create_qube_entry(self._host)
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"host": self._host},
