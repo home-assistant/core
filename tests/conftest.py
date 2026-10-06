@@ -60,6 +60,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
@@ -472,7 +473,7 @@ def verify_cleanup(
     for thread in threads:
         assert (
             isinstance(thread, threading._DummyThread)
-            or thread.name.startswith("waitpid-")
+            or thread.name.startswith("asyncio-waitpid-")
             or "_run_safe_shutdown_loop" in thread.name
         )
 
@@ -902,11 +903,17 @@ async def hass_read_only_access_token(
 async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return the Home Assistant Supervisor user."""
+    """Return the Home Assistant Supervisor user.
+
+    The user is published the same way the hassio integration does, so
+    commands restricted to the Supervisor accept it.
+    """
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
-    return MockUser(
+    user = MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
     ).add_to_hass(hass)
+    hass.data[DATA_SUPERVISOR_USER] = user
+    return user
 
 
 @pytest.fixture

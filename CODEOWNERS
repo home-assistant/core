@@ -266,8 +266,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/bring/ @miaucl @tr4nt0r
 /tests/components/bring/ @miaucl @tr4nt0r
-/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
-/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @DAB-LABS
+/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @DAB-LABS
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
@@ -513,6 +513,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/energyid/ @JrtPec @Molier
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
+/homeassistant/components/engie_be/ @DaanVervacke
+/tests/components/engie_be/ @DaanVervacke
 /homeassistant/components/enigma2/ @autinerd
 /tests/components/enigma2/ @autinerd
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
@@ -848,6 +850,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
+/homeassistant/components/hydroquebec_peak/ @Beat-YT
+/tests/components/hydroquebec_peak/ @Beat-YT
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/hypontech/ @jcisio
@@ -1124,6 +1128,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/map_tiles/ @home-assistant/core
 /homeassistant/components/marantz_infrared/ @balloob
 /tests/components/marantz_infrared/ @balloob
+/homeassistant/components/marketplace/ @home-assistant/core
+/tests/components/marketplace/ @home-assistant/core
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah

@@ -55,7 +55,7 @@ dependencies = [
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
   "lru-dict==1.4.1",
-  "PyJWT==2.13.0",
+  "PyJWT==2.15.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==50.0.1",
   "Pillow==12.3.0",
@@ -78,7 +78,7 @@ dependencies = [
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.12.20",
-  "probatio==0.12.4",
+  "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
   "zeroconf==0.151.5",
@@ -646,6 +646,10 @@ exclude_lines = [
 
 [tool.ruff]
 required-version = ">=0.16.9"
+extend-exclude = [
+  # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
+  "tests/components/marketplace/fixtures/proxy",
+]
 
 [tool.ruff.lint]
 select = [

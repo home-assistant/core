@@ -141,7 +141,7 @@ HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
         # the stored config never contains it.
         probatio.Remove(CONF_BASE_URL): object,
         probatio.Optional(CONF_SERVER_HOST): probatio.All(
-            probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+            probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
         ),
         probatio.Optional(
             CONF_SERVER_PORT, default=default_server_port
