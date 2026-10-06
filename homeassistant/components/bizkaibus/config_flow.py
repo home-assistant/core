@@ -144,13 +144,30 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._stop_id,
                         session=async_get_clientsession(self.hass),
                     )
-                except BizkaibusConnectionError, BizkaibusParseError:
+
+                except BizkaibusStopNotFoundError:
+                    errors[CONF_STOP_ID] = "stop_not_found"
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=USER_DATA_SCHEMA,
+                        errors=errors,
+                    )
+                except BizkaibusConnectionError:
                     errors["base"] = "cannot_connect"
                     return self.async_show_form(
                         step_id="user",
                         data_schema=USER_DATA_SCHEMA,
                         errors=errors,
                     )
+
+                except BizkaibusParseError:
+                    errors["base"] = "api_parse_error"
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=USER_DATA_SCHEMA,
+                        errors=errors,
+                    )
+
                 self._line_ids, self._lines = await _async_get_lines(api)
                 if self._line_ids == []:
                     errors["base"] = "cannot_connect"
