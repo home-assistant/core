@@ -511,14 +511,18 @@ class ESPHomeManager:
         new_state = event_data["new_state"]
         old_state = event_data["old_state"]
 
-        if new_state is None or old_state is None:
+        if new_state is None:
             return
 
-        # Only communicate changes to the state or attribute tracked
-        if (not attribute and old_state.state == new_state.state) or (
-            attribute
-            and old_state.attributes.get(attribute)
-            == new_state.attributes.get(attribute)
+        # Only communicate changes to the state or attribute tracked, an entity
+        # created after the subscription has no old state and is always sent
+        if old_state is not None and (
+            (not attribute and old_state.state == new_state.state)
+            or (
+                attribute
+                and old_state.attributes.get(attribute)
+                == new_state.attributes.get(attribute)
+            )
         ):
             return
 
