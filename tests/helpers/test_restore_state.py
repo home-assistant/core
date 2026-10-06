@@ -1454,9 +1454,93 @@ async def test_last_states(
 
         del last_states["test.unregistered"]
         assert not data.last_states_by_entity_id
+        with pytest.raises(KeyError):
+            del last_states["test.unknown"]
         stored_state = StoredState(State("test.other", "off"), None, dt_util.utcnow())
         last_states["test.other"] = stored_state
         assert data.last_states_by_entity_id == {"test.other": stored_state}
 
     assert caplog.text.count(_LAST_STATES_DEPRECATION) == 1
     assert "custom integration 'test_integration'" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_last_states_delete_registry_entry_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test deleting the stored state of an entity with a registry entry."""
+    entity = _RenameRestoreEntity()
+    platform = await _async_add_rename_entity(hass, entity_registry, entity)
+    entity.set_state("live", 3)
+    await entity.async_remove(force_remove=True)
+    data = async_get(hass)
+
+    # Custom integrations delete the stored state before removing the entity
+    last_states = data.last_states
+    assert "test.test" in last_states
+    del last_states["test.test"]
+
+    assert "test.test" not in last_states
+    assert not data.last_states_by_entity_registry_id
+    new_entity = _RenameRestoreEntity()
+    await platform.async_add_entities([new_entity])
+    assert new_entity.restored == [("test.test", None, None)]
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_last_states_move_registry_entry_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test moving the stored state of an entity before changing its entity_id."""
+    entity = _RenameRestoreEntity()
+    platform = await _async_add_rename_entity(hass, entity_registry, entity)
+    entity_registry_id = entity_registry.async_get("test.test").id
+    entity.set_state("live", 3)
+    await entity.async_remove(force_remove=True)
+    data = async_get(hass)
+
+    # Custom integrations move the stored state, then change the entity_id
+    last_states = data.last_states
+    stored_state = last_states.pop("test.test", None)
+    last_states["test.test2"] = stored_state
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+
+    assert not data.last_states_by_entity_id
+    assert data.last_states_by_entity_registry_id == {entity_registry_id: stored_state}
+    new_entity = _RenameRestoreEntity()
+    await platform.async_add_entities([new_entity])
+    assert new_entity.restored == [("test.test2", "live", {"count": 3})]
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_last_states_set_registry_entry_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test setting the stored state of an entity with a registry entry."""
+    entity = _RenameRestoreEntity()
+    platform = await _async_add_rename_entity(hass, entity_registry, entity)
+    entity_registry_id = entity_registry.async_get("test.test").id
+    entity.set_state("live", 3)
+    await entity.async_remove(force_remove=True)
+    data = async_get(hass)
+
+    stored_state = StoredState(
+        State("test.test", "written"), _CounterExtraData(5), dt_util.utcnow()
+    )
+    data.last_states["test.test"] = stored_state
+
+    assert stored_state.entity_registry_id == entity_registry_id
+    assert not data.last_states_by_entity_id
+    assert data.last_states_by_entity_registry_id == {entity_registry_id: stored_state}
+    new_entity = _RenameRestoreEntity()
+    await platform.async_add_entities([new_entity])
+    assert new_entity.restored == [("test.test", "written", {"count": 5})]

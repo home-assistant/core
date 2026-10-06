@@ -133,7 +133,8 @@ def _report_last_states_usage() -> None:
 class _LastStates(MutableMapping[str, StoredState]):
     """Deprecated view of the stored states indexed by entity_id.
 
-    Lookups fall back to the stored state of an entity with a registry entry.
+    Lookups, writes and deletes also reach the stored state of an entity with a
+    registry entry, iteration only covers entities without a registry entry.
     """
 
     def __init__(self, data: RestoreStateData) -> None:
@@ -153,13 +154,33 @@ class _LastStates(MutableMapping[str, StoredState]):
 
     @override
     def __setitem__(self, entity_id: str, stored_state: StoredState) -> None:
-        """Set the stored state of an entity without a registry entry."""
-        self._data.last_states_by_entity_id[entity_id] = stored_state
+        """Set the stored state of an entity."""
+        # A stored state taken from an entity with a registry entry keeps its
+        # registry entry, also when set under a new entity_id
+        if stored_state.entity_registry_id is None and (
+            registry_entry := er.async_get(self._data.hass).async_get(entity_id)
+        ):
+            stored_state.entity_registry_id = registry_entry.id
+        if (entity_registry_id := stored_state.entity_registry_id) is None:
+            self._data.last_states_by_entity_id[entity_id] = stored_state
+        else:
+            self._data.last_states_by_entity_registry_id[entity_registry_id] = (
+                stored_state
+            )
 
     @override
     def __delitem__(self, entity_id: str) -> None:
-        """Delete the stored state of an entity without a registry entry."""
-        del self._data.last_states_by_entity_id[entity_id]
+        """Delete the stored state of an entity."""
+        if entity_id in self._data.last_states_by_entity_id:
+            del self._data.last_states_by_entity_id[entity_id]
+            return
+        if (
+            registry_entry := er.async_get(self._data.hass).async_get(entity_id)
+        ) is None or (
+            registry_entry.id not in self._data.last_states_by_entity_registry_id
+        ):
+            raise KeyError(entity_id)
+        del self._data.last_states_by_entity_registry_id[registry_entry.id]
 
     @override
     def __iter__(self) -> Iterator[str]:
