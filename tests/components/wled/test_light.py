@@ -506,6 +506,15 @@ async def _async_load_segment(
         (1, [255, 0, 0], [ColorMode.RGB], ColorMode.RGB),
         (3, [255, 0, 0, 128], [ColorMode.RGBW], ColorMode.RGBW),
         (6, [0, 0, 0, 255], [ColorMode.COLOR_TEMP], ColorMode.COLOR_TEMP),
+        # Manual white (bit 8, not set by current firmware) never gives an
+        # unsupported color mode, and recognizes the white it sends.
+        (11, [0, 0, 0, 255], [ColorMode.RGBW, ColorMode.WHITE], ColorMode.RGBW),
+        (
+            13,
+            [255, 255, 255],
+            [ColorMode.COLOR_TEMP, ColorMode.RGBW],
+            ColorMode.COLOR_TEMP,
+        ),
     ],
 )
 async def test_color_mode_follows_color(

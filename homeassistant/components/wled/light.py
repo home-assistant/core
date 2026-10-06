@@ -185,21 +185,22 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if len(self._color_modes) == 1:
             return self._color_modes[0]
 
+        # A color temperature shows as exactly the white this light sends for
+        # it. A dimmed white channel is a color, so restoring it doesn't turn
+        # it into full white.
         color = self.coordinator.data.state.segments[self._segment].color
-        primary = color.primary if color else None
-        if ColorMode.RGBW in self._color_modes:
-            # Only the full white channel: a dimmed one is an RGBW color, so
-            # restoring it doesn't turn it into full white.
-            if primary == (0, 0, 0, 255):
+        if ColorMode.COLOR_TEMP in self._color_modes and color is not None:
+            primary = color.primary
+            if (
+                primary == (0, 0, 0, 255)
+                if self._has_white_channel
+                else primary[:3] == (255, 255, 255)
+            ):
                 return ColorMode.COLOR_TEMP
-            return ColorMode.RGBW
 
-        if ColorMode.RGB in self._color_modes:
-            if primary is not None and primary[:3] == (255, 255, 255):
-                return ColorMode.COLOR_TEMP
-            return ColorMode.RGB
-
-        return self._color_modes[0]
+        return next(
+            mode for mode in self._color_modes if mode is not ColorMode.COLOR_TEMP
+        )
 
     @property
     @override
