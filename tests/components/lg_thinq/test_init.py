@@ -111,3 +111,27 @@ async def test_config_not_ready_bridge_list(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_retry_after_mqtt_failure(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup succeeds on retry after the MQTT connection failed."""
+    with patch(
+        "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
+        side_effect=[
+            ThinQAPIException(code="1309", message="Not allowed api call", headers={}),
+            True,
+        ],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "has already been setup" not in caplog.text

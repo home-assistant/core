@@ -71,11 +71,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
     # Setup coordinators and register devices.
     await async_setup_coordinators(hass, entry, thinq_api)
 
+    # Set up MQTT connection before the platforms, as it can still raise
+    # ConfigEntryNotReady and forwarded platforms would not be unloaded.
+    await async_setup_mqtt(hass, entry, thinq_api, client_id)
+
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Set up MQTT connection.
-    await async_setup_mqtt(hass, entry, thinq_api, client_id)
 
     # Clean up devices they are no longer in use.
     async_cleanup_device_registry(hass, entry)
