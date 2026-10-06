@@ -103,7 +103,10 @@ class GroupSelectOption(KNXSelectorBase):
     def __init__(self, schema: probatio.Schemable, translation_key: str) -> None:
         """Initialize the group select option schema."""
         self.translation_key = translation_key
-        self.schema = probatio.Schema(schema)
+        # a `DataclassSchema` stays unwrapped so it serializes as its fields
+        self.schema = (
+            schema if isinstance(schema, probatio.Schema) else probatio.Schema(schema)
+        )
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -325,6 +328,47 @@ def state_and_passive(
 ) -> list[DeviceAddressableType | None] | None:
     """Return the state address followed by the passive addresses."""
     return [config.state, *config.passive] if config is not None else None
+
+
+def write_address(config: GroupAddressConfig | None) -> DeviceAddressableType | None:
+    """Return the write address of an optional group address."""
+    return config.write if config is not None else None
+
+
+class TypedGroupSelect(GroupSelect):
+    """`GroupSelect` whose options are dataclass schemas.
+
+    Yields an instance of the matching option's dataclass. Temporary: fold into
+    `GroupSelect` once all platforms use typed configs.
+    """
+
+    @override
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return self.schema(data)
+
+
+def group_select(
+    *options: tuple[str, type], collapsible: bool = True
+) -> probatio.Coerce:
+    """Annotate a dataclass field with a group select of `(translation_key, type)`.
+
+    `Coerce` makes probatio run the selector before the field type check, like `ga`.
+    """
+    return probatio.Coerce(
+        TypedGroupSelect(
+            *(
+                GroupSelectOption(
+                    probatio.DataclassSchema(config_type),
+                    translation_key=translation_key,
+                )
+                for translation_key, config_type in options
+            ),
+            collapsible=collapsible,
+        )
+    )
 
 
 class GroupAddressSelector(GASelector):

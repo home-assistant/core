@@ -1,6 +1,7 @@
 """Test KNX selectors."""
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Annotated, Any
 
 import probatio
 import pytest
@@ -17,8 +18,10 @@ from homeassistant.components.knx.storage.knx_selector import (
     KNXSectionFlat,
     SyncStateSelector,
     ga,
+    group_select,
     knx_selector_in,
     state_and_passive,
+    write_address,
     write_and_passive,
 )
 from homeassistant.components.knx.storage.serialize import knx_serializer
@@ -405,3 +408,60 @@ def test_serialization(schema: Any, serialized: dict[str, Any]) -> None:
     assert (
         probatio.to_field_list(schema, custom_serializer=knx_serializer) == serialized
     )
+
+
+def test_typed_group_select() -> None:
+    """Test a typed group select yields the matching option's dataclass."""
+
+    @dataclass(kw_only=True, slots=True)
+    class FirstOption:
+        key_a: int
+
+    @dataclass(kw_only=True, slots=True)
+    class SecondOption:
+        key_b: str
+
+    @dataclass(kw_only=True, slots=True)
+    class Config:
+        choice: Annotated[
+            FirstOption | SecondOption | None,
+            group_select(("option_a", FirstOption), ("option_b", SecondOption)),
+        ] = None
+
+    schema = probatio.DataclassSchema(Config)
+    assert schema({"choice": {"key_a": 1}}).choice == FirstOption(key_a=1)
+    assert schema({"choice": {"key_b": "x"}}).choice == SecondOption(key_b="x")
+    assert schema({}).choice is None
+    with pytest.raises(probatio.Invalid) as exc_info:
+        schema({"choice": {"key_b": 1}})
+    # error of the option whose keys match, not the extra keys of the other
+    assert exc_info.value.path == ["choice", "key_b"]
+
+    assert probatio.to_field_list(schema, custom_serializer=knx_serializer) == [
+        {
+            "type": "knx_group_select",
+            "collapsible": True,
+            "schema": [
+                {
+                    "type": "knx_group_select_option",
+                    "translation_key": "option_a",
+                    "schema": [{"name": "key_a", "required": True, "type": "integer"}],
+                },
+                {
+                    "type": "knx_group_select_option",
+                    "translation_key": "option_b",
+                    "schema": [{"name": "key_b", "required": True, "type": "string"}],
+                },
+            ],
+            "name": "choice",
+            "required": False,
+            "optional": True,
+            "default": None,
+        }
+    ]
+
+
+def test_write_address() -> None:
+    """Test the write address of an optional group address."""
+    assert write_address(GroupAddressConfig(write="1/2/3")) == "1/2/3"
+    assert write_address(None) is None
