@@ -3,6 +3,8 @@
 from functools import partial
 from typing import Any, cast, override
 
+from wled import LightCapability
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -158,13 +160,46 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
+        self._color_modes: list[ColorMode] = []
+        self._has_white_channel = False
         if (
             capabilities := coordinator.data.state.segments[segment].light_capabilities
         ) is not None and (
             color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(capabilities)
         ) is not None:
-            self._attr_color_mode = color_modes[0]
+            self._color_modes = color_modes
             self._attr_supported_color_modes = set(color_modes)
+            self._has_white_channel = LightCapability.WHITE_CHANNEL in capabilities
+
+    @property
+    @override
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode the segment is in right now.
+
+        WLED doesn't tell, so it follows from the color: a color temperature
+        shows as full white, on the white channel when there is one.
+        """
+        if not self._color_modes:
+            return None
+
+        if len(self._color_modes) == 1:
+            return self._color_modes[0]
+
+        color = self.coordinator.data.state.segments[self._segment].color
+        primary = color.primary if color else None
+        if ColorMode.RGBW in self._color_modes:
+            # Only the full white channel: a dimmed one is an RGBW color, so
+            # restoring it doesn't turn it into full white.
+            if primary == (0, 0, 0, 255):
+                return ColorMode.COLOR_TEMP
+            return ColorMode.RGBW
+
+        if ColorMode.RGB in self._color_modes:
+            if primary is not None and primary[:3] == (255, 255, 255):
+                return ColorMode.COLOR_TEMP
+            return ColorMode.RGB
+
+        return self._color_modes[0]
 
     @property
     @override
@@ -275,6 +310,12 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
             )
+            # A color temperature only shows on white light: the white channel
+            # where there is one, otherwise full white.
+            if self._color_modes:
+                data[ATTR_COLOR_PRIMARY] = (
+                    (0, 0, 0, 255) if self._has_white_channel else (255, 255, 255)
+                )
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.

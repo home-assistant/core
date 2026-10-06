@@ -1,6 +1,7 @@
 """Tests for the WLED light platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -405,6 +406,7 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
         cct=130,
+        color_primary=(0, 0, 0, 255),
         on=True,
         segment_id=0,
     )
@@ -457,3 +459,159 @@ async def test_main_light_group_updates_when_segments_change(
     # Back to 1 segment: group should contain only segment 0 again
     assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.wled_rgb_light"]
+
+
+async def _async_load_segment(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    light_capabilities: int,
+    color: list[int],
+) -> None:
+    """Load the CCT device with one segment of the given capabilities and color."""
+    data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
+    data["info"]["leds"]["seglc"] = [light_capabilities]
+    data["state"]["seg"][0]["col"] = [color, [0, 0, 0, 0], [0, 0, 0, 0]]
+    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+@pytest.mark.parametrize(
+    ("light_capabilities", "color", "supported_color_modes", "color_mode"),
+    [
+        # RGB + white channel + color temperature
+        (
+            7,
+            [0, 0, 0, 255],
+            [ColorMode.COLOR_TEMP, ColorMode.RGBW],
+            ColorMode.COLOR_TEMP,
+        ),
+        (7, [255, 0, 0, 0], [ColorMode.COLOR_TEMP, ColorMode.RGBW], ColorMode.RGBW),
+        (7, [255, 0, 0, 128], [ColorMode.COLOR_TEMP, ColorMode.RGBW], ColorMode.RGBW),
+        # A dimmed white channel is an RGBW color, not a color temperature.
+        (7, [0, 0, 0, 64], [ColorMode.COLOR_TEMP, ColorMode.RGBW], ColorMode.RGBW),
+        (7, [0, 0, 0, 0], [ColorMode.COLOR_TEMP, ColorMode.RGBW], ColorMode.RGBW),
+        # RGB + color temperature
+        (
+            5,
+            [255, 255, 255],
+            [ColorMode.COLOR_TEMP, ColorMode.RGB],
+            ColorMode.COLOR_TEMP,
+        ),
+        (5, [255, 0, 0], [ColorMode.COLOR_TEMP, ColorMode.RGB], ColorMode.RGB),
+        (5, [128, 128, 128], [ColorMode.COLOR_TEMP, ColorMode.RGB], ColorMode.RGB),
+        # Single color modes
+        (1, [255, 0, 0], [ColorMode.RGB], ColorMode.RGB),
+        (3, [255, 0, 0, 128], [ColorMode.RGBW], ColorMode.RGBW),
+        (6, [0, 0, 0, 255], [ColorMode.COLOR_TEMP], ColorMode.COLOR_TEMP),
+    ],
+)
+async def test_color_mode_follows_color(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    light_capabilities: int,
+    color: list[int],
+    supported_color_modes: list[ColorMode],
+    color_mode: ColorMode,
+) -> None:
+    """Test the color mode follows the segment's capabilities and color."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, light_capabilities, color
+    )
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == supported_color_modes
+    assert state.attributes[ATTR_COLOR_MODE] == color_mode
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_color_mode_changes_with_the_device(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the color mode follows a color change on the device."""
+    await _async_load_segment(hass, mock_wled, mock_config_entry, 7, [0, 0, 0, 255])
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+
+    data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
+    data["state"]["seg"][0]["col"] = [[255, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
+    assert state.attributes[ATTR_RGBW_COLOR] == (255, 0, 0, 0)
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+@pytest.mark.parametrize(
+    ("light_capabilities", "color", "color_primary"),
+    [
+        (7, [255, 0, 0, 0], (0, 0, 0, 255)),
+        (6, [0, 0, 0, 255], (0, 0, 0, 255)),
+        (5, [255, 0, 0], (255, 255, 255)),
+    ],
+)
+async def test_color_temp_sets_white(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    light_capabilities: int,
+    color: list[int],
+    color_primary: tuple[int, ...],
+) -> None:
+    """Test a color temperature turns on the white it shows on."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, light_capabilities, color
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wled_cct_light", ATTR_COLOR_TEMP_KELVIN: 4321},
+        blocking=True,
+    )
+
+    mock_wled.segment.assert_called_with(
+        cct=130, color_primary=color_primary, on=True, segment_id=0
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+@pytest.mark.parametrize(
+    ("light_capabilities", "color", "service_data", "color_primary"),
+    [
+        (7, [0, 0, 0, 255], {ATTR_RGBW_COLOR: (255, 0, 0, 0)}, (255, 0, 0, 0)),
+        (5, [255, 255, 255], {ATTR_RGB_COLOR: (255, 0, 0)}, (255, 0, 0)),
+    ],
+)
+async def test_color_leaves_color_temp_alone(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    light_capabilities: int,
+    color: list[int],
+    service_data: dict[str, Any],
+    color_primary: tuple[int, ...],
+) -> None:
+    """Test setting a color doesn't change the color temperature."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, light_capabilities, color
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wled_cct_light", **service_data},
+        blocking=True,
+    )
+
+    mock_wled.segment.assert_called_with(
+        color_primary=color_primary, on=True, segment_id=0
+    )
