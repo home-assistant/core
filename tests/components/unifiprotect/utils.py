@@ -385,6 +385,7 @@ def make_public_sensor(
     humidity_value: float | None = None,
     temperature_value: float | None = None,
     tampering_detected_at: datetime | None = None,
+    signal_strength: int | None = None,
     signal_quality: int | None = None,
 ) -> Mock:
     """Build a public-API sensor mirroring a private sensor's migrated fields.
@@ -469,7 +470,14 @@ def make_public_sensor(
             is_low=sensor.battery_status.is_low if is_low is None else is_low,
         ),
         # The private sensor has no signal quality to mirror.
-        signal_state=PublicSignalState(signal_quality=signal_quality),
+        signal_state=PublicSignalState(
+            signal_strength=(
+                sensor.bluetooth_connection_state.signal_strength
+                if signal_strength is None
+                else signal_strength
+            ),
+            signal_quality=signal_quality,
+        ),
     )
     # The fixture reports the same number for all three metrics, so a test that
     # has to tell the value paths apart passes its own.

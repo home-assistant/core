@@ -591,9 +591,6 @@
       "alarm_sound_detected": {
         "name": "Alarm sound detected"
       },
-      "bluetooth_signal_strength": {
-        "name": "Bluetooth signal strength"
-      },
       "chime_type": {
         "name": "[%key:component::unifiprotect::entity::select::chime_type::name%]"
       },

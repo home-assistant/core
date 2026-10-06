@@ -140,17 +140,6 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value_fn=_get_uptime,
     ),
     ProtectSensorEntityDescription(
-        key="ble_signal",
-        translation_key="bluetooth_signal_strength",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="bluetooth_connection_state.signal_strength",
-        ufp_required_field="bluetooth_connection_state.signal_strength",
-    ),
-    ProtectSensorEntityDescription(
         key="phy_rate",
         translation_key="link_speed",
         device_class=SensorDeviceClass.DATA_RATE,
@@ -402,6 +391,17 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
+    ),
+    # Sensors connect over Bluetooth or SuperLink, which the public API does
+    # not tell apart, so the name stays generic.
+    ProtectSensorEntityDescription(
+        key="signal_strength",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_public_value="wireless_connection_state.signal_state.signal_strength",
     ),
 )
 
