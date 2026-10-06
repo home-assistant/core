@@ -202,9 +202,26 @@ class AbstractTemplateEntity(Entity):
             domain,
         )
 
-    def add_assumed_attribute(self, attr: str, option: str, action_option: str):
+    def add_assumed_attribute(
+        self,
+        attr: str,
+        option: str,
+        action_option: str,
+        *,
+        optimistic_option: str | None = None,
+    ):
         """Add an optimistic option."""
-        if option not in self._config and action_option in self._config:
+        if action_option not in self._config:
+            return
+
+        if optimistic_option is None:
+            if option not in self._config:
+                self._assumed_attributes[option] = attr
+            return
+
+        if (optimistic_override := self._config.get(optimistic_option)) or (
+            not optimistic_override and option not in self._config
+        ):
             self._assumed_attributes[option] = attr
 
     def update_assumed_attribute(self, option: str, value: Any) -> bool:
