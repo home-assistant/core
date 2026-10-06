@@ -4,35 +4,19 @@ import logging
 from typing import NamedTuple
 
 from nessclient import ArmingMode, ArmingState, Client
-import probatio
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INFER_ARMING_STATE,
-    CONF_ZONE_ID,
-    CONF_ZONE_NAME,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_ZONE_TYPE,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ARMING_STATE_CHANGED,
@@ -52,88 +36,14 @@ class ZoneChangedData(NamedTuple):
     state: bool
 
 
-ZONE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_ZONE_NAME): cv.string,
-        probatio.Required(CONF_ZONE_ID): cv.positive_int,
-        probatio.Optional(
-            CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE
-        ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    }
-)
-
-# YAML configuration is deprecated but supported for import
-CONFIG_SCHEMA = probatio.Schema(
-    {
-        DOMAIN: probatio.Schema(
-            {
-                probatio.Required(CONF_HOST): cv.string,
-                probatio.Required(CONF_PORT): probatio.Port(),
-                probatio.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.positive_time_period,
-                probatio.Optional(CONF_ZONES, default=[]): probatio.All(
-                    probatio.EnsureList(), [ZONE_SCHEMA]
-                ),
-                probatio.Optional(CONF_INFER_ARMING_STATE, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=probatio.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm platform."""
     async_setup_services(hass)
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass, config))
 
     return True
-
-
-async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config[DOMAIN],
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.9.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Ness Alarm",
-            },
-        )
-        return
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2026.9.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Ness Alarm",
-        },
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:

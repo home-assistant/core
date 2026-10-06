@@ -9,15 +9,11 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm.const import (
     CONF_INFER_ARMING_STATE,
     CONF_SHOW_HOME_MODE,
-    CONF_ZONE_ID,
-    CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
     DOMAIN,
     SUBENTRY_TYPE_ZONE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -148,142 +144,6 @@ async def test_user_flow_connection_error_recovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_import_yaml_config(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
-    """Test importing YAML configuration."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: "192.168.1.72",
-            CONF_PORT: 4999,
-            CONF_INFER_ARMING_STATE: False,
-            CONF_ZONES: [
-                {CONF_ZONE_NAME: "Garage", CONF_ZONE_ID: 1},
-                {
-                    CONF_ZONE_NAME: "Front Door",
-                    CONF_ZONE_ID: 5,
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
-                },
-            ],
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Ness Alarm 192.168.1.72:4999"
-    assert result["data"] == {
-        CONF_HOST: "192.168.1.72",
-        CONF_PORT: 4999,
-        CONF_INFER_ARMING_STATE: False,
-    }
-
-    # Check that subentries were created for zones with names preserved
-    assert len(result["subentries"]) == 2
-    assert result["subentries"][0]["title"] == "Zone 1"
-    assert result["subentries"][0]["unique_id"] == "zone_1"
-    assert result["subentries"][0]["data"][CONF_TYPE] == BinarySensorDeviceClass.MOTION
-    assert result["subentries"][0]["data"][CONF_ZONE_NAME] == "Garage"
-    assert result["subentries"][1]["title"] == "Zone 5"
-    assert result["subentries"][1]["unique_id"] == "zone_5"
-    assert result["subentries"][1]["data"][CONF_TYPE] == BinarySensorDeviceClass.DOOR
-    assert result["subentries"][1]["data"][CONF_ZONE_NAME] == "Front Door"
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    mock_client.close.assert_awaited_once()
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_reason"),
-    [
-        (OSError("Connection refused"), "cannot_connect"),
-        (TimeoutError, "cannot_connect"),
-        (RuntimeError("Unexpected"), "unknown"),
-    ],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_yaml_config_errors(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    side_effect: Exception,
-    expected_reason: str,
-) -> None:
-    """Test importing YAML configuration."""
-    mock_client.update.side_effect = side_effect
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: "192.168.1.72",
-            CONF_PORT: 4999,
-            CONF_INFER_ARMING_STATE: False,
-            CONF_ZONES: [
-                {CONF_ZONE_NAME: "Garage", CONF_ZONE_ID: 1},
-                {
-                    CONF_ZONE_NAME: "Front Door",
-                    CONF_ZONE_ID: 5,
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
-                },
-            ],
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == expected_reason
-
-
-async def test_import_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test we abort import if already configured."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 4999,
-            CONF_ZONES: [],
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_reason"),
-    [
-        (OSError("Connection refused"), "cannot_connect"),
-        (TimeoutError, "cannot_connect"),
-        (RuntimeError("Unexpected"), "unknown"),
-    ],
-)
-async def test_import_connection_errors(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    side_effect: Exception,
-    expected_reason: str,
-) -> None:
-    """Test import aborts on connection errors."""
-    mock_client.update.side_effect = side_effect
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: "192.168.1.72",
-            CONF_PORT: 4999,
-            CONF_ZONES: [],
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == expected_reason
-    mock_client.close.assert_awaited_once()
 
 
 async def test_zone_subentry_flow(hass: HomeAssistant) -> None:
