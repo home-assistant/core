@@ -1749,7 +1749,7 @@ def state(
     except probatio.Invalid as ex:
         raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
 
-    duration = dt_util.utcnow() - cast(timedelta, for_period)
+    duration = dt_util.utcnow() - for_period
     duration_ok = duration > entity.last_changed
     condition_trace_set_result(duration_ok, state=value, duration=duration)
     return duration_ok

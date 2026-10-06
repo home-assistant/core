@@ -86,6 +86,7 @@ class _StubTool(llm.Tool):
     """Minimal tool with a configurable parameter schema."""
 
     name = "test_tool"
+    integration = "test"
 
     def __init__(self, parameters: probatio.Schema) -> None:
         """Initialize the stub tool."""
@@ -336,19 +337,31 @@ async def test_options_flow_closes_sessions(
     assert "Could not find session ID" in response_data
 
 
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        pytest.param("GET", SSE_API, id="sse"),
+        pytest.param(
+            "POST", MESSAGES_API.format(session_id="session-id"), id="messages"
+        ),
+        pytest.param("POST", STREAMABLE_API, id="streamable"),
+        pytest.param(
+            "POST", f"{STREAMABLE_API}/{TEST_LLM_API_ID}", id="streamable-api"
+        ),
+    ],
+)
 async def test_http_requires_authentication(
     hass: HomeAssistant,
     setup_integration: None,
     hass_client_no_auth: ClientSessionGenerator,
+    method: str,
+    path: str,
 ) -> None:
-    """Test the SSE endpoint requires authentication."""
+    """Test every MCP endpoint requires authentication."""
 
     client = await hass_client_no_auth()
 
-    response = await client.get(SSE_API)
-    assert response.status == HTTPStatus.UNAUTHORIZED
-
-    response = await client.post(MESSAGES_API.format(session_id="session-id"))
+    response = await client.request(method, path)
     assert response.status == HTTPStatus.UNAUTHORIZED
 
 
@@ -631,6 +644,12 @@ async def test_mcp_tools_list(
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
+    assert tool.annotations == mcp.types.ToolAnnotations(
+        readOnlyHint=False,
+        destructiveHint=True,
+        idempotentHint=False,
+        openWorldHint=False,
+    )
 
 
 @pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
@@ -678,6 +697,119 @@ async def test_mcp_tools_list_required_parameters(
     tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
     assert tool.inputSchema.get("type") == "object"
     assert tool.inputSchema.get("required") == expected_required
+
+
+@pytest.mark.parametrize(("all_llm_apis", "llm_hass_api"), [(True, [])])
+async def test_mcp_tools_list_all_llm_apis(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test all LLM APIs are exposed, including LLM APIs registered after setup."""
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_StubTool(probatio.Schema({}))],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool_names = {tool.name for tool in result.tools}
+    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "test-api__test_tool" in tool_names
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+@pytest.mark.parametrize(
+    ("parameters", "expected_schema"),
+    [
+        pytest.param(
+            probatio.Schema(
+                {probatio.Optional("value"): probatio.Range(min=0, min_included=False)}
+            ),
+            {"type": "number", "exclusiveMinimum": 0},
+            id="exclusive-minimum",
+        ),
+        pytest.param(
+            probatio.Schema({probatio.Optional("value"): probatio.Maybe(str)}),
+            {"anyOf": [{"type": "null"}, {"type": "string"}]},
+            id="nullable",
+        ),
+    ],
+)
+async def test_mcp_tools_list_json_schema(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+    parameters: probatio.Schema,
+    expected_schema: JsonObjectType,
+) -> None:
+    """Test tool parameters use JSON Schema 2020-12 compatible representations."""
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_StubTool(parameters)],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool = next(tool for tool in result.tools if tool.name == "test_tool")
+    assert tool.inputSchema["properties"]["value"] == expected_schema
+
+
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+async def test_mcp_tools_list_metadata(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the tools list advertises the tool title and annotations."""
+
+    class _AnnotatedTool(_StubTool):
+        """Tool that declares it only reads."""
+
+        title = "Test tool"
+        annotations = llm.ToolAnnotations(
+            read_only=True, destructive=False, idempotent=True, open_world=False
+        )
+
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[_AnnotatedTool(probatio.Schema({}))],
+        ),
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+
+    tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
+    assert tool.title == "Test tool"
+    assert tool.annotations == mcp.types.ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    )
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
@@ -1005,7 +1137,7 @@ async def test_streamable_api_id_requires_admin(
         json=INITIALIZE_MESSAGE,
         headers={"accept": CONTENT_TYPE_JSON},
     )
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.FORBIDDEN
 
 
 async def test_streamable_api_id_assist_allows_non_admin(
@@ -1044,7 +1176,7 @@ async def test_streamable_api_id_unknown(
     ("require_admin", "expected_status"),
     [
         pytest.param(False, HTTPStatus.OK, id="not_required"),
-        pytest.param(True, HTTPStatus.UNAUTHORIZED, id="required"),
+        pytest.param(True, HTTPStatus.FORBIDDEN, id="required"),
     ],
 )
 async def test_require_admin_option(
@@ -1076,10 +1208,10 @@ async def test_require_admin_blocks_sse_endpoints(
     client = await hass_client(hass_read_only_access_token)
 
     response = await client.get(SSE_API)
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.FORBIDDEN
 
     response = await client.post(MESSAGES_API.format(session_id="session-id"))
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.parametrize("require_admin", [True])
@@ -1097,3 +1229,47 @@ async def test_require_admin_allows_admin(
         headers={"accept": CONTENT_TYPE_JSON},
     )
     assert response.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param("server/discover", id="server_discover"),
+        pytest.param("no/such-method", id="unknown_method"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_unsupported_method_returns_method_not_found(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+) -> None:
+    """Test that unsupported methods return JSON-RPC METHOD_NOT_FOUND without log warnings."""
+    client = await hass_client()
+
+    response = await client.post(
+        STREAMABLE_API,
+        json={
+            "jsonrpc": "2.0",
+            "id": "request-123",
+            "method": method,
+            "params": {
+                "_meta": {
+                    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                }
+            },
+        },
+        headers={"accept": CONTENT_TYPE_JSON},
+    )
+    assert response.status == HTTPStatus.OK
+    data = await response.json()
+    assert data == {
+        "jsonrpc": "2.0",
+        "id": "request-123",
+        "error": {
+            "code": -32601,
+            "message": "Method not found",
+            "data": method,
+        },
+    }
+    assert "Failed to validate request" not in caplog.text

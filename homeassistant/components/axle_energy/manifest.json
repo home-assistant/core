@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/axle_energy",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
-  "requirements": ["aioaxlevpp==0.1.1"]
+  "quality_scale": "silver",
+  "requirements": ["aioaxlevpp==0.2.0"]
 }

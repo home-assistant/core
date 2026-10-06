@@ -1,5 +1,6 @@
 """Support to enter a value into a text box."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
@@ -16,19 +17,25 @@ from homeassistant.const import (  # noqa: F401
     MAX_LENGTH_STATE_STATE,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputTextEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_VALUE,
+    CONF_VALUE,
+    DATA_INPUT_TEXT,
+    DOMAIN,
+    SERVICE_SET_VALUE,
+    InputTextEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_text"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -36,22 +43,19 @@ CONF_MIN_VALUE = 0
 CONF_MAX = "max"
 CONF_MAX_VALUE = 100
 CONF_PATTERN = "pattern"
-CONF_VALUE = "value"
 
 MODE_TEXT = "text"
 MODE_PASSWORD = "password"
 
-ATTR_VALUE = CONF_VALUE
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_PATTERN = CONF_PATTERN
 
-SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_MIN, default=CONF_MIN_VALUE): probatio.All(
         probatio.Coerce(int), probatio.Range(0, MAX_LENGTH_STATE_STATE)
     ),
@@ -111,7 +115,14 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
+
+
+@dataclass(slots=True)
+class InputTextData:
+    """Runtime data for the input_text integration."""
+
+    component: EntityComponent[InputText]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -144,25 +155,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **(cfg or {})} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_TEXT] = InputTextData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE, {probatio.Required(ATTR_VALUE): cv.string}, "async_set_value"
-    )
-
+    async_setup_services(hass)
     return True
 
 

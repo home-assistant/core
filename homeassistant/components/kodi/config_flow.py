@@ -243,7 +243,8 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME, description={"suggested_value": self._username}
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD, description={"suggested_value": self._password}
+                    probatio.Secret(CONF_PASSWORD),
+                    description={"suggested_value": self._password},
                 ): str,
             }
         )

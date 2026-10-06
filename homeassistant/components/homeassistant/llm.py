@@ -7,6 +7,7 @@ from typing import Any, override
 
 import probatio
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -26,11 +27,13 @@ from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
     ToolResult,
 )
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
+from .const import DOMAIN
 from .exposed_entities import async_should_expose
 
 # Domains bucketed out of the exposed-entity overview.
@@ -45,7 +48,7 @@ NO_ENTITIES_PROMPT = (
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
-    "the home using the `homeassistant__GetLiveContext` tool."
+    "the home by retrieving live context."
     " This is a primary function."
     " Do not state you lack the\n"
     "functionality if the question requires live data.\n"
@@ -59,7 +62,7 @@ DYNAMIC_CONTEXT_PROMPT = (
     ' "What mode is the thermostat in?",'
     ' "What is the temperature outside?"):\n'
     "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `homeassistant__GetLiveContext`."
+    "    2.  You MUST use the provided tool to retrieve live context."
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
@@ -172,6 +175,14 @@ def async_get_exposed_entities(
                 if attr_name in interesting_attributes
             }
         ):
+            # Tools take brightness as a 0-100 percentage; the attribute is 0-255.
+            if state.domain == LIGHT_DOMAIN and isinstance(
+                brightness := state.attributes.get("brightness"), int
+            ):
+                pct = round(brightness / 255 * 100)
+                attributes["brightness_pct"] = str(
+                    max(pct, 1) if brightness > 0 else pct
+                )
             info["attributes"] = attributes
 
         entities[state.entity_id] = info
@@ -208,6 +219,7 @@ class GetLiveContextTool(Tool):
     """
 
     name = "homeassistant__GetLiveContext"
+    title = "Get live context"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"
@@ -225,6 +237,8 @@ class GetLiveContextTool(Tool):
         "Prefer filtering by domain when searching"
         " for multiple devices of the same type."
     )
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
     parameters = probatio.Schema(
         {
             probatio.Optional(
