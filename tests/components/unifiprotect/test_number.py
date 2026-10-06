@@ -514,8 +514,8 @@ async def test_number_sense_sensitivity_ignores_local_permissions(
 ) -> None:
     """A read-only local user keeps the motion sensitivity number.
 
-    It writes through the API key, so the local user's write bit must not gate it.
-    Its read-only mirror stays until the deprecation runs out.
+    It writes through the API key, so the local user's write bit must not gate it,
+    and no read-only mirror is created next to it.
     """
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
@@ -531,7 +531,7 @@ async def test_number_sense_sensitivity_ignores_local_permissions(
         entity_registry.async_get_entity_id(
             Platform.SENSOR, DOMAIN, f"{sensor_all.mac}_sensitivity"
         )
-        is not None
+        is None
     )
 
 
