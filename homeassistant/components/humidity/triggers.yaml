@@ -22,7 +22,7 @@
 .humidity_threshold_number: &humidity_threshold_number
   min: 0
   max: 100
-  mode: box
+  mode: slider
   unit_of_measurement: "%"
 
 .trigger_target: &trigger_target

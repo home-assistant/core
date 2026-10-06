@@ -26,7 +26,7 @@
 .volume_threshold_number: &volume_threshold_number
   min: 0
   max: 100
-  mode: box
+  mode: slider
   unit_of_measurement: "%"
 
 muted: *trigger_common

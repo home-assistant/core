@@ -22,7 +22,7 @@
 .battery_threshold_number: &battery_threshold_number
   min: 0
   max: 100
-  mode: box
+  mode: slider
   unit_of_measurement: "%"
 
 .trigger_target_battery: &trigger_target_battery

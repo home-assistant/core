@@ -32,7 +32,7 @@
 .elevation_threshold_number: &condition_elevation_threshold_number
   min: -90
   max: 90
-  mode: box
+  mode: slider
   unit_of_measurement: "°"
 
 is_up: {}
