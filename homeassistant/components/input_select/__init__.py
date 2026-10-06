@@ -1,5 +1,6 @@
 """Support to select an option from a list."""
 
+from collections import Counter
 from dataclasses import dataclass
 import logging
 from typing import Any, Self, cast, override
@@ -283,14 +284,15 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
 
     async def async_set_options(self, options: list[str]) -> None:
         """Set options."""
-        unique_options = list(dict.fromkeys(options))
-        if len(unique_options) != len(options):
+        if duplicates := [
+            option for option, count in Counter(options).items() if count > 1
+        ]:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="duplicate_options",
                 translation_placeholders={
                     "entity_id": self.entity_id,
-                    "options": ", ".join(options),
+                    "duplicates": ", ".join(duplicates),
                 },
             )
 
