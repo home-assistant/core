@@ -121,6 +121,7 @@ async def test_device_tracker_device_assignment(
 @pytest.mark.parametrize(
     "pos_report",
     [
+        pytest.param(None, id="none"),
         pytest.param({}, id="empty"),
         pytest.param(
             {"latlong": None, "pos_uncertainty": None, "sensor_used": None},
@@ -132,7 +133,7 @@ async def test_device_tracker_without_position(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    pos_report: dict[str, None],
+    pos_report: dict[str, None] | None,
 ) -> None:
     """Test a tracker without a position, like a switched off one, is set up."""
     mock_tractive_client.tracker.return_value.pos_report.return_value = pos_report

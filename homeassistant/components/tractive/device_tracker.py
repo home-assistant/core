@@ -50,12 +50,11 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         )
 
         # A tracker that has been switched off for a while has no position
-        if latlong := item.pos_report.get("latlong"):
+        pos_report = item.pos_report or {}
+        if latlong := pos_report.get("latlong"):
             self._attr_latitude, self._attr_longitude = latlong
-        self._attr_location_accuracy: float = (
-            item.pos_report.get("pos_uncertainty") or 0
-        )
-        self._source_type: str | None = item.pos_report.get("sensor_used")
+        self._attr_location_accuracy: float = pos_report.get("pos_uncertainty") or 0
+        self._source_type: str | None = pos_report.get("sensor_used")
         self._attr_unique_id = item.trackable["_id"]
 
     @property
