@@ -1050,8 +1050,16 @@ class EntityRegistryStore(storage.Store[dict[str, Any]]):
                     ):
                         continue
 
-                    stripped = _async_strip_prefix_from_entity_name(name, device_name)
-                    if stripped is not None:
+                    # The device is not a name part of an entity with its own area
+                    if (
+                        entity["area_id"] is None
+                        and (
+                            stripped := _async_strip_prefix_from_entity_name(
+                                name, device_name
+                            )
+                        )
+                        is not None
+                    ):
                         entity["name"] = stripped
                         continue
 

@@ -7101,6 +7101,15 @@ async def test_migration_1_23(
                 "unique_id": "no_name",
             },
             {
+                "entity_id": "test.own_area",
+                "id": "entity_own_area",
+                "unique_id": "own_area",
+                "area_id": "kitchen",
+                "name": "My Device Temperature",
+                "aliases_v2": [None],
+                "options": {"conversation": {"should_expose": True}},
+            },
+            {
                 "entity_id": "test.empty_name",
                 "id": "entity_empty_name",
                 "unique_id": "empty_name",
@@ -7161,6 +7170,14 @@ async def test_migration_1_23(
     assert entry.compat_name is None
     assert er.async_get_full_entity_name(hass, entry) == "My Device Temperature"
 
+    # The device is not a name part of an entity with its own area, so the
+    # name is not stripped and the full name is unchanged
+    entry = registry.async_get("test.own_area")
+    assert entry.name == "My Device Temperature"
+    assert entry.compat_name == "My Device Temperature"
+    assert entry.aliases == ["My Device Temperature"]
+    assert er.async_get_full_entity_name(hass, entry) == "My Device Temperature"
+
     # An empty name is treated like no name, so there is nothing to preserve
     entry = registry.async_get("test.empty_name")
     assert entry.name == ""
@@ -7185,6 +7202,7 @@ async def test_migration_1_23(
         ("test.stripped", "My Device Temperature"),
         ("test.custom", "Custom"),
         ("test.no_name", "My Device Temperature"),
+        ("test.own_area", "My Device Temperature"),
         ("test.empty_name", "My Device"),
         ("test.no_device", "My Device Custom"),
     ):
@@ -7257,6 +7275,17 @@ async def test_migration_1_23(
                     "unique_id": "no_name",
                     "name": None,
                     "compat_name": None,
+                },
+                {
+                    **NAME_MIGRATION_ENTITY_BASE,
+                    "entity_id": "test.own_area",
+                    "id": "entity_own_area",
+                    "unique_id": "own_area",
+                    "area_id": "kitchen",
+                    "name": "My Device Temperature",
+                    "compat_name": "My Device Temperature",
+                    "aliases_v2": ["My Device Temperature"],
+                    "options": {"conversation": {"should_expose": True}},
                 },
                 {
                     **NAME_MIGRATION_ENTITY_BASE,
