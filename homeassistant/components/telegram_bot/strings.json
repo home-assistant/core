@@ -193,10 +193,19 @@
       "message": "{telegram_bot} is not loaded"
     },
     "failed_to_load_file": {
-      "message": "Failed to load file: {error}"
+      "message": "Failed to load file {file_path}."
     },
     "failed_to_load_url": {
       "message": "Failed to load URL: {error}"
+    },
+    "failed_to_load_url_status": {
+      "message": "Failed to load URL: the server responded with status code {status_code}."
+    },
+    "file_not_found": {
+      "message": "File {file_path} does not exist."
+    },
+    "file_permission_denied": {
+      "message": "Cannot read file {file_path}: permission denied."
     },
     "invalid_api_key": {
       "message": "The Telegram bot API token is invalid."
@@ -227,6 +236,9 @@
     },
     "multiple_errors": {
       "message": "Action failed with multiple errors.\n{errors}"
+    },
+    "no_file_path": {
+      "message": "Telegram did not return a path for the requested file."
     }
   },
   "issues": {

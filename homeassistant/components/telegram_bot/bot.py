@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable, Sequence
+import errno
 import io
 import logging
 import os
@@ -1118,10 +1119,7 @@ class TelegramNotificationService:
         if not file.file_path:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="action_failed",
-                translation_placeholders={
-                    "error": "No file path returned from Telegram"
-                },
+                translation_key="no_file_path",
             )
         if not file_name:
             file_name = os.path.basename(file.file_path)
@@ -1249,8 +1247,8 @@ async def load_data(
                     await asyncio.sleep(_RETRY_DELAY)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(response.status_code)},
+                translation_key="failed_to_load_url_status",
+                translation_placeholders={"status_code": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
@@ -1297,6 +1295,14 @@ def _validate_credentials_input(
         )
 
 
+# OS errors are not translatable, so the common causes get their own message
+READ_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
+    errno.ENOENT: "file_not_found",
+    errno.EACCES: "file_permission_denied",
+    errno.EPERM: "file_permission_denied",
+}
+
+
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     try:
@@ -1307,6 +1313,8 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     except OSError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="failed_to_load_file",
-            translation_placeholders={"error": str(err)},
+            translation_key=READ_ERROR_TRANSLATION_KEYS.get(
+                err.errno, "failed_to_load_file"
+            ),
+            translation_placeholders={"file_path": file_path},
         ) from err

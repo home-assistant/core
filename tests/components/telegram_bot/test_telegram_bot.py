@@ -1,6 +1,7 @@
 """Tests for the telegram_bot component."""
 
 import base64
+import errno
 from http import HTTPStatus
 import io
 import os
@@ -26,7 +27,10 @@ from telegram.error import (
     TimedOut,
 )
 
-from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
+from homeassistant.components.telegram_bot.bot import (
+    ALLOWED_UPDATES,
+    _read_file_as_bytesio,
+)
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
@@ -1636,8 +1640,8 @@ async def test_send_video(
 
     assert mock_get.call_count > 0
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_url"
-    assert err.value.translation_placeholders == {"error": "404"}
+    assert err.value.translation_key == "failed_to_load_url_status"
+    assert err.value.translation_placeholders == {"status_code": "404"}
 
     # test: invalid url
 
@@ -1696,9 +1700,9 @@ async def test_send_video(
     await hass.async_block_till_done()
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_file"
+    assert err.value.translation_key == "file_not_found"
     assert err.value.translation_placeholders == {
-        "error": "[Errno 2] No such file or directory: '/tmp/not-exists'"
+        "file_path": "/tmp/not-exists"  # noqa: S108
     }
 
     # test: success with file
@@ -2518,12 +2522,7 @@ async def test_download_file_when_empty_file_path(
             hass, schema_request, telegram_file, "file_content"
         )
     await hass.async_block_till_done()
-    assert err.value.translation_placeholders is not None
-    assert "error" in err.value.translation_placeholders
-    assert (
-        err.value.translation_placeholders["error"]
-        == "No file path returned from Telegram"
-    )
+    assert err.value.translation_key == "no_file_path"
 
 
 @pytest.mark.parametrize(
@@ -2821,3 +2820,24 @@ async def test_download_file_rejects_symlink_out_of_allowlist(
     assert err.value.translation_key == "allowlist_external_dirs_error"
     get_file_mock.assert_not_called()
     assert not target.exists()
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (OSError(errno.ENOENT, "No such file"), "file_not_found"),
+        (OSError(errno.EACCES, "Permission denied"), "file_permission_denied"),
+        (OSError(errno.EPERM, "Operation not permitted"), "file_permission_denied"),
+        (OSError(errno.EIO, "Input/output error"), "failed_to_load_file"),
+    ],
+)
+def test_read_file_errors(error: OSError, translation_key: str) -> None:
+    """Test reading a file maps OS errors to translated messages."""
+    with (
+        patch("builtins.open", side_effect=error),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        _read_file_as_bytesio("/some/file.jpg")
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == {"file_path": "/some/file.jpg"}
