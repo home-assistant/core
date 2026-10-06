@@ -56,9 +56,15 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
         api_key = import_data[CONF_API_KEY]
         name = import_data.get(CONF_NAME)
 
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_API_KEY] != api_key:
-                continue
+        entry = next(
+            (
+                entry
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.data[CONF_API_KEY] == api_key
+            ),
+            None,
+        )
+        if entry is not None:
             names: list[str | None] = entry.data.get(CONF_LEGACY_SERVICE_NAMES, [])
             if name in names:
                 return self.async_abort(reason="already_configured")
