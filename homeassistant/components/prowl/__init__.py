@@ -8,15 +8,15 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config import config_per_platform
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_ENTRY, DOMAIN, PLATFORMS
 from .helpers import async_verify_key
-from .issue import async_create_yaml_deprecated_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,14 +32,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for platform, p_config in config_per_platform(config, NOTIFY_DOMAIN)
         if platform == DOMAIN and CONF_API_KEY in p_config
     }
+    if hass.data[DATA_YAML_API_KEYS]:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={"domain": DOMAIN, "integration_title": "Prowl"},
+        )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Prowl service."""
     yaml_api_keys = hass.data[DATA_YAML_API_KEYS]
-    if yaml_api_keys:
-        async_create_yaml_deprecated_issue(hass)
 
     try:
         if not await async_verify_key(hass, entry.data[CONF_API_KEY]):

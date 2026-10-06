@@ -219,14 +219,14 @@ async def test_config_entry_without_legacy_service(
     ],
 )
 @pytest.mark.usefixtures("mock_prowlpy")
-async def test_config_entry_setup_yaml_deprecation_issue(
+async def test_yaml_deprecation_issue(
     hass: HomeAssistant,
     mock_prowlpy_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     config: dict[str, Any],
     issue_expected: bool,
 ) -> None:
-    """Test a config entry raises the YAML deprecation issue while YAML is present."""
+    """Test the YAML deprecation issue is raised while YAML is present."""
     mock_prowlpy_config_entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, DOMAIN, config)
