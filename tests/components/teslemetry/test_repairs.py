@@ -553,6 +553,7 @@ async def test_ble_key_fix_flow_hands_off_to_reconfigure(
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {"vehicle": "Test"}
 
     result = await _submit_ble_key_fix_flow(client, result["flow_id"], MagicMock())
 
@@ -874,10 +875,34 @@ async def test_ble_key_fix_flow_keeps_repair_open(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": error}
+    assert result["description_placeholders"] == {"vehicle": "Test"}
     assert bluetooth_vehicle.handshakeVehicleSecurity.await_count == handshakes
     bluetooth_vehicle.disconnect.assert_not_awaited()
     assert not hass.config_entries.subentries.async_progress()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_ble_key_fix_flow_keeps_vehicle_name_after_issue_clears(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """The form still names the vehicle when a Bluetooth success clears the issue mid-flow."""
+    _, bluetooth_vehicles = await _raise_ble_key_issue(hass)
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
+
+    bluetooth_vehicles[VEHICLE_VIN].flash_lights.side_effect = None
+    bluetooth_vehicles[VEHICLE_VIN].flash_lights.return_value = COMMAND_OK
+    await _press_flash_lights(hass, MagicMock())
+    assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
+
+    result = await _submit_ble_key_fix_flow(client, result["flow_id"], None)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["description_placeholders"] == {"vehicle": "Test"}
 
 
 async def _unload_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

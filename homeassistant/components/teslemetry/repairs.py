@@ -34,6 +34,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 
 from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
 from .const import (
@@ -104,11 +105,17 @@ class BluetoothKeyRepairFlow(RepairsFlow):
         """Create flow."""
         self._entry_id = entry_id
         self._subentry_id = subentry_id
+        self._placeholders: dict[str, str] | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
+        # A Bluetooth command that succeeds while this flow is open deletes the issue.
+        if issue := ir.async_get(self.hass).async_get_issue(
+            self.handler, self.issue_id
+        ):
+            self._placeholders = issue.translation_placeholders
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -116,7 +123,7 @@ class BluetoothKeyRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Check the key with a Bluetooth security handshake and re-approve it if still rejected."""
         if user_input is None:
-            return self.async_show_form(step_id="confirm")
+            return self._async_show_confirm_form()
         if not async_scanner_count(self.hass, connectable=True):
             return self.async_abort(reason="bluetooth_not_available")
         entry: TeslemetryConfigEntry | None = self.hass.config_entries.async_get_entry(
@@ -142,9 +149,7 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             return self.async_abort(reason="bluetooth_not_loaded")
         # The router's health check also refreshes the device handle the handshake connects with.
         if not await router.is_healthy():
-            return self.async_show_form(
-                step_id="confirm", errors={"base": "cannot_connect"}
-            )
+            return self._async_show_confirm_form("cannot_connect")
         try:
             async with asyncio.timeout(BLE_HANDSHAKE_TIMEOUT):
                 # Call the Bluetooth backend directly so no other backend can answer for it.
@@ -160,15 +165,11 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             TeslaFleetMessageFaultTimeout,
         ) as err:
             LOGGER.debug("Bluetooth handshake could not reach the vehicle: %s", err)
-            return self.async_show_form(
-                step_id="confirm", errors={"base": "cannot_connect"}
-            )
+            return self._async_show_confirm_form("cannot_connect")
         except TeslaFleetError as err:
             if not is_key_rejected(err):
                 LOGGER.error("Bluetooth handshake failed: %s", err)
-                return self.async_show_form(
-                    step_id="confirm", errors={"base": "unknown"}
-                )
+                return self._async_show_confirm_form("unknown")
         else:
             return self.async_create_entry(data={})
         # Only a rejected key reaches here. The reconfigure flow opens its own link
@@ -189,6 +190,15 @@ class BluetoothKeyRepairFlow(RepairsFlow):
         return self.async_abort(
             reason="reconfigure",
             next_flow=(FlowType.CONFIG_SUBENTRIES_FLOW, result["flow_id"]),
+        )
+
+    @callback
+    def _async_show_confirm_form(self, error: str | None = None) -> RepairsFlowResult:
+        """Show the confirm form with the issue's vehicle name."""
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders=self._placeholders,
+            errors={"base": error} if error else None,
         )
 
 
