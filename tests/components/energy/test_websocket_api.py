@@ -1071,6 +1071,89 @@ async def test_fossil_energy_consumption_partial_month(
     assert response["result"] == {period1.isoformat(): pytest.approx(5.0)}
 
 
+@pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
+@pytest.mark.parametrize(
+    ("period", "first_stat", "last_stat", "first_bucket"),
+    [
+        # A fixed 1-day offset from the first hour of the 25h day 2021-10-31
+        # would still be on that day
+        ("day", "2021-10-30 12:00:00", "2021-10-31 00:00:00", "2021-10-30 00:00:00"),
+        # A fixed 31-day offset from the first hour of October would still be
+        # in October because the clocks go back on 2021-10-31
+        ("month", "2021-09-15 00:00:00", "2021-10-01 00:00:00", "2021-09-01 00:00:00"),
+    ],
+)
+async def test_fossil_energy_consumption_trailing_period_dst(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    period: str,
+    first_stat: str,
+    last_stat: str,
+    first_bucket: str,
+) -> None:
+    """Test the trailing period is kept when a DST change follows the last hour."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    now = dt_util.utcnow()
+    later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime(first_stat))
+    period2 = dt_util.as_utc(dt_util.parse_datetime(last_stat))
+    first_period_start = dt_util.as_utc(dt_util.parse_datetime(first_bucket))
+
+    external_energy_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 5,
+        },
+    )
+    external_energy_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(
+        hass, external_energy_metadata, external_energy_statistics
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "energy/fossil_energy_consumption",
+            "start_time": now.isoformat(),
+            "end_time": later.isoformat(),
+            "energy_statistic_ids": ["test:total_energy_import"],
+            "co2_statistic_id": "test:co2_ratio_missing",
+            "period": period,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        first_period_start.isoformat(): pytest.approx(2.0),
+        period2.isoformat(): pytest.approx(3.0),
+    }
+
+
 async def test_fossil_energy_consumption_checks(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
