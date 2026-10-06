@@ -154,7 +154,7 @@ async def test_polling_platform_init_failed_does_not_log_token(
     api_key = mock_polling_config_entry.data[CONF_API_KEY]
     # The Telegram API URL embeds the bot token, and library errors quote it.
     error = NetworkError(
-        "httpx.HTTPStatusError: Client error '401 Unauthorized' for url "
+        "httpx2.HTTPStatusError: Client error '401 Unauthorized' for url "
         f"'https://api.telegram.org/bot{api_key}/getMe'"
     )
 
@@ -1476,6 +1476,7 @@ async def test_async_setup_entry_failed(
 
     await hass.async_block_till_done()
     assert mock_broadcast_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_broadcast_config_entry.error_reason_translation_key == "invalid_api_key"
 
 
 async def test_answer_callback_query(
@@ -1612,7 +1613,7 @@ async def test_send_video(
 
     with (
         patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
         ) as mock_get,
         patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
     ):
@@ -1727,7 +1728,7 @@ async def test_send_video(
     # test: success with url
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2686,7 +2687,7 @@ async def test_send_media_group(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 

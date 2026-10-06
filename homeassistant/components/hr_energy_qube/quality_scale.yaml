@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
@@ -66,10 +66,15 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      The integration has no conditions the user can fix from Home Assistant.
+      Connection problems make the entities unavailable and are logged once;
+      the heat pump has no authentication and its settings are managed on its panel.
   stale-devices:
     status: exempt
     comment: Single device per config entry.

@@ -6,7 +6,7 @@ import json
 import ssl
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -414,8 +414,8 @@ async def test_image_from_url_content_type(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        httpx.RequestError("server offline", request=MagicMock()),
-        httpx.TimeoutException,
+        httpx2.RequestError("server offline", request=MagicMock()),
+        httpx2.TimeoutException,
         ssl.SSLError,
     ],
 )

@@ -37,7 +37,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -798,7 +798,11 @@ class SpeechManager:
             or engine_instance.supported_languages is None
             or language not in engine_instance.supported_languages
         ):
-            raise HomeAssistantError(f"Language '{language}' not supported")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="language_not_supported",
+                translation_placeholders={"language": str(language)},
+            )
 
         options = options or {}
         supported_options = engine_instance.supported_options or []
@@ -818,7 +822,11 @@ class SpeechManager:
                 invalid_opts.append(option_name)
 
         if invalid_opts:
-            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_options",
+                translation_placeholders={"options": ", ".join(invalid_opts)},
+            )
 
         return language, merged_options
 
