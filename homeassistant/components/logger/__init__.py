@@ -7,45 +7,37 @@ from typing import override
 import probatio
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
-from .const import (
-    ATTR_LEVEL,
+from .const import (  # noqa: F401
     DOMAIN,
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
     LOGGER_LOGS,
     LOGSEVERITY,
-    SERVICE_SET_DEFAULT_LEVEL,
     SERVICE_SET_LEVEL,
 )
 from .helpers import (
     DATA_LOGGER,
+    VALID_LOG_LEVEL,
     LoggerDomainConfig,
     LoggerSettings,
     _clear_logger_overwrites,  # noqa: F401
     set_default_log_level,
     set_log_levels,
 )
-
-_VALID_LOG_LEVEL = probatio.All(
-    probatio.Upper, probatio.In(LOGSEVERITY), LOGSEVERITY.__getitem__
-)
-
-SERVICE_SET_DEFAULT_LEVEL_SCHEMA = probatio.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
-SERVICE_SET_LEVEL_SCHEMA = probatio.Schema({cv.string: _VALID_LOG_LEVEL})
+from .services import async_setup_services
 
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             {
-                probatio.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+                probatio.Optional(LOGGER_DEFAULT): VALID_LOG_LEVEL,
                 probatio.Optional(LOGGER_LOGS): probatio.Schema(
-                    {cv.string: _VALID_LOG_LEVEL}
+                    {cv.string: VALID_LOG_LEVEL}
                 ),
                 probatio.Optional(LOGGER_FILTERS): probatio.Schema(
                     {cv.string: [cv.is_regex]}
@@ -85,29 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
 
-    @callback
-    def async_service_handler(service: ServiceCall) -> None:
-        """Handle logger services."""
-        if service.service == SERVICE_SET_DEFAULT_LEVEL:
-            set_default_log_level(hass, service.data[ATTR_LEVEL])
-        else:
-            set_log_levels(hass, service.data)
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_DEFAULT_LEVEL,
-        async_service_handler,
-        schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA,
-    )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_LEVEL,
-        async_service_handler,
-        schema=SERVICE_SET_LEVEL_SCHEMA,
-    )
+    async_setup_services(hass)
 
     return True
 
