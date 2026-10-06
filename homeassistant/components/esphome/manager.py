@@ -768,8 +768,6 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        entry_data.first_connect_done.set()
-
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
         ):
@@ -778,6 +776,9 @@ class ESPHomeManager:
                 self.entry, [Platform.ASSIST_SATELLITE]
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+
+        # Setup can wait for this, so only after the platforms are forwarded
+        entry_data.first_connect_done.set()
 
         if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(
