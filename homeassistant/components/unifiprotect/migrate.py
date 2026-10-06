@@ -42,6 +42,10 @@ async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None
     async_remove_package_binary_sensor(hass, entry)
     _LOGGER.debug("Completed Migrate: async_remove_package_binary_sensor")
 
+    _LOGGER.debug("Start Migrate: async_migrate_sensor_signal_strength")
+    async_migrate_sensor_signal_strength(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_migrate_sensor_signal_strength")
+
 
 # Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
 # in the registry so cleanup does not depend on the bundled library still exposing
@@ -199,6 +203,32 @@ def async_remove_hdr_switch(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
             "hdr_switch_removed",
         )
         registry.async_remove(entity.entity_id)
+
+
+@callback
+def async_migrate_sensor_signal_strength(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> None:
+    """Rename the ``{mac}_ble_signal`` unique_id to ``{mac}_signal_strength``.
+
+    Renamed because sensors connect over Bluetooth or SuperLink. The entity keeps
+    its history and customizations. If the new entity already exists (after a
+    downgrade and upgrade), the old one is dropped.
+
+    Added in 2026.11.0
+    """
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if entity.domain != Platform.SENSOR or not entity.unique_id.endswith(
+            "_ble_signal"
+        ):
+            continue
+        mac = entity.unique_id.removesuffix("_ble_signal")
+        new_unique_id = f"{mac}_signal_strength"
+        if registry.async_get_entity_id(Platform.SENSOR, DOMAIN, new_unique_id):
+            registry.async_remove(entity.entity_id)
+            continue
+        registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
 # Removed read-only mirrors of the sense setting controls, keyed by the mirror's
