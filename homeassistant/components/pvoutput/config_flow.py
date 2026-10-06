@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
-from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
+from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError, System
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -14,15 +14,17 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_SYSTEM_ID, DOMAIN, LOGGER
 
 
-async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -> None:
-    """Try using the give system id & api key against the PVOutput API."""
+async def validate_input(
+    hass: HomeAssistant, *, api_key: str, system_id: int
+) -> System:
+    """Try using the given system ID and API key against the PVOutput API."""
     session = async_get_clientsession(hass)
     pvoutput = PVOutput(
         session=session,
         api_key=api_key,
         system_id=system_id,
     )
-    await pvoutput.system()
+    return await pvoutput.system()
 
 
 class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -39,7 +41,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(
+                system = await validate_input(
                     self.hass,
                     api_key=user_input[CONF_API_KEY],
                     system_id=user_input[CONF_SYSTEM_ID],
@@ -53,7 +55,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(str(user_input[CONF_SYSTEM_ID]))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=str(user_input[CONF_SYSTEM_ID]),
+                    title=system.system_name,
                     data={
                         CONF_SYSTEM_ID: user_input[CONF_SYSTEM_ID],
                         CONF_API_KEY: user_input[CONF_API_KEY],
