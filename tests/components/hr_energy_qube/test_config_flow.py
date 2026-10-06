@@ -18,8 +18,10 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("device_info", "unique_id"),
-    [(DEVICE_INFO, DEVICE_INFO.uuid), (None, None)],
-    ids=["mdns", "no_mdns"],
+    [
+        pytest.param(DEVICE_INFO, DEVICE_INFO.uuid, id="mdns"),
+        pytest.param(None, None, id="no_mdns"),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
@@ -126,12 +128,13 @@ async def test_already_configured_by_unique_id(
     mock_qube_client: MagicMock,
     mock_device_info: AsyncMock,
 ) -> None:
-    """Test we abort when the same controller is added under another host."""
-    MockConfigEntry(
+    """Test re-adding the same controller under a new host updates the entry."""
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "qube.local", CONF_PORT: 502},
         unique_id=DEVICE_INFO.uuid,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
     mock_device_info.return_value = DEVICE_INFO
 
     result = await hass.config_entries.flow.async_init(
@@ -144,3 +147,4 @@ async def test_already_configured_by_unique_id(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 502}

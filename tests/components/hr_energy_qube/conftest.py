@@ -20,16 +20,10 @@ def auto_mock_zeroconf(mock_async_zeroconf: MagicMock) -> None:
 @pytest.fixture(autouse=True)
 def mock_device_info() -> Generator[AsyncMock]:
     """Mock the mDNS lookup; it finds nothing unless a test sets a result."""
-    mock = AsyncMock(return_value=None)
-    with (
-        patch(
-            "homeassistant.components.hr_energy_qube.async_get_device_info", new=mock
-        ),
-        patch(
-            "homeassistant.components.hr_energy_qube.config_flow.async_get_device_info",
-            new=mock,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.hr_energy_qube.config_flow.async_get_device_info",
+        return_value=None,
+    ) as mock:
         yield mock
 
 

@@ -52,7 +52,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                     host, aiozc, timeout=MDNS_LOOKUP_TIMEOUT
                 ):
                     await self.async_set_unique_id(device.uuid)
-                    self._abort_if_unique_id_configured()
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title="Qube heat pump",
                     data={
