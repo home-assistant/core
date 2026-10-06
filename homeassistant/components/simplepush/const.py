@@ -12,6 +12,4 @@ ATTR_ENCRYPTED: Final = "encrypted"
 ATTR_EVENT: Final = "event"
 
 CONF_DEVICE_KEY: Final = "device_key"
-CONF_ENTRY: Final = "entry"
 CONF_SALT: Final = "salt"
-CONF_TOPIC: Final = "topic"
