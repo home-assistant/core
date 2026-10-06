@@ -154,3 +154,20 @@ async def test_mqtt_disconnected_when_setup_fails_after_connecting(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_thinq_mqtt_client.async_disconnect.assert_awaited_once()
+
+
+async def test_mqtt_disconnected_on_unload_when_not_prepared(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_thinq_mqtt_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the MQTT client is disconnected on unload when it failed to prepare."""
+    mock_thinq_mqtt_client.async_prepare_mqtt.return_value = False
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_thinq_mqtt_client.async_disconnect.assert_awaited_once()

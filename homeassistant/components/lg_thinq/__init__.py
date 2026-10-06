@@ -157,12 +157,12 @@ async def async_setup_mqtt(
             translation_key="connection_error",
         ) from exc
 
+    # Also runs when setup fails after this point, unlike async_unload_entry
+    entry.async_on_unload(mqtt_client.async_disconnect)
+
     if not result:
         _LOGGER.error("Failed to set up mqtt connection")
         return
-
-    # Also runs when setup fails after this point, unlike async_unload_entry
-    entry.async_on_unload(mqtt_client.async_disconnect)
 
     # Ready to subscribe.
     await mqtt_client.async_start_subscribes()
