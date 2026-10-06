@@ -11,17 +11,26 @@ from typing import Any
 
 import probatio
 
+from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     template,
 )
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -37,7 +46,7 @@ from .const import (
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, MqttData, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 50.0
 
@@ -326,6 +335,21 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
+def entity_category_without_config(value: Any) -> EntityCategory:
+    """Validate the entity category of a platform not supporting `CONFIG`.
+
+    Entities of these platforms raise when they are added as config entities.
+    """
+    entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
+    if entity_category is EntityCategory.CONFIG:
+        _options = ", ".join(sorted(set(EntityCategory) - {EntityCategory.CONFIG}))
+        raise probatio.Invalid(
+            f"Entity category '{entity_category}' is not supported by this platform."
+            f" Valid options are: {_options}"
+        )
+    return entity_category
+
+
 def valid_qos_schema(qos: Any) -> int:
     """Validate that QOS value is valid."""
     validated_qos: int = _VALID_QOS_SCHEMA(qos)
@@ -458,3 +482,43 @@ async def async_cleanup_device_registry(
         and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_remove_device(device_id)
+
+
+@callback
+def async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
+    """Unregister open config issues."""
+    issue_registry = ir.async_get(hass)
+    open_issues = [
+        issue_id
+        for (domain, issue_id), issue_entry in issue_registry.issues.items()
+        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
+    ]
+    for issue in open_issues:
+        ir.async_delete_issue(hass, DOMAIN, issue)
+
+
+async def async_check_config_schema(
+    hass: HomeAssistant, config_yaml: ConfigType
+) -> None:
+    """Validate manually configured MQTT items."""
+    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
+    for mqtt_config_item in mqtt_config:
+        for domain, config_items in mqtt_config_item.items():
+            schema = mqtt_data.reload_schema[domain]
+            for config in config_items:
+                try:
+                    schema(config)
+                except probatio.Invalid as exc:
+                    integration = await async_get_integration(hass, DOMAIN)
+                    message = conf_util.format_schema_error(
+                        hass, exc, domain, config, integration.documentation
+                    )
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_platform_config_message",
+                        translation_placeholders={
+                            "domain": domain,
+                            "message": message,
+                        },
+                    ) from exc

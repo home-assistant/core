@@ -23,6 +23,8 @@ from tests.common import MockConfigEntry
     [
         ("device", "SA110405124500W00BS9"),
         ("device_sa5", "SA52100000123TBNC"),
+        ("device_sa5_bluetooth_unavailable", "SA52100000000TBNC"),
+        ("device_wifi_connecting", "SA000000000000W00BS9"),
     ],
 )
 async def test_device_info(

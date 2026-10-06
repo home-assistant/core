@@ -115,14 +115,14 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         """Subscribe to events."""
         await super().async_added_to_hass()
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
+        for event in self._door_station.door_station_events:
             event_to_entity_id[event] = self.entity_id
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
+        for event in self._door_station.door_station_events:
             # If the clear api was called, the events may not be in the dict
             event_to_entity_id.pop(event, None)
         await super().async_will_remove_from_hass()

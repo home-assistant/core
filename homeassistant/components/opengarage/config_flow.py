@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_DEVICE_KEY): str,
+        probatio.Required(probatio.Secret(CONF_DEVICE_KEY)): str,
         probatio.Required(CONF_HOST, default="http://"): str,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,

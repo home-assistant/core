@@ -107,7 +107,7 @@ RESOURCE_SETUP = probatio.Schema(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",

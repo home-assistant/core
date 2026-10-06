@@ -1,8 +1,11 @@
 """Test configuration and mocks for Smart Meter Texas."""
 
+from collections.abc import Generator
 from http import HTTPStatus
+from itertools import cycle
 import json
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from smart_meter_texas.const import (
@@ -24,9 +27,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 TEST_ENTITY_ID = "sensor.electric_meter_123456789"
+
+
+@pytest.fixture(autouse=True)
+def mock_od_read_retry_time() -> Generator[None]:
+    """Don't wait between on-demand meter read polls."""
+    with patch("smart_meter_texas.OD_READ_RETRY_TIME", 0):
+        yield
 
 
 def load_smt_fixture(name):
@@ -65,7 +75,11 @@ async def refresh_data(
 
 
 def mock_connection(
-    aioclient_mock, auth_fail=False, auth_timeout=False, bad_reading=False
+    aioclient_mock,
+    auth_fail=False,
+    auth_timeout=False,
+    bad_reading=False,
+    stale_reading=False,
 ):
     """Mock all calls to the API."""
     aioclient_mock.get(BASE_URL)
@@ -90,15 +104,31 @@ def mock_connection(
         json=load_smt_fixture("meter"),
     )
     aioclient_mock.post(f"{BASE_ENDPOINT}{OD_READ_ENDPOINT}", json={"data": None})
-    if not bad_reading:
-        aioclient_mock.post(
-            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
-            json=load_smt_fixture("latestodrread"),
-        )
-    else:
+    latest_reading = load_smt_fixture("latestodrread")
+    if bad_reading:
         aioclient_mock.post(
             f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
             json={},
+        )
+    elif stale_reading:
+        aioclient_mock.post(
+            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
+            json=latest_reading,
+        )
+    else:
+        # read_meter() fetches the previous reading before requesting a new one
+        # and ignores any reading with the same date.
+        previous_reading = {
+            "data": {**latest_reading["data"], "odrdate": "08/15/2020 13:52:40"}
+        }
+        responses = cycle((previous_reading, latest_reading))
+
+        async def latest_od_read(method, url, data):
+            return AiohttpClientMockResponse(method, url, json=next(responses))
+
+        aioclient_mock.post(
+            f"{BASE_ENDPOINT}{LATEST_OD_READ_ENDPOINT}",
+            side_effect=latest_od_read,
         )
 
 

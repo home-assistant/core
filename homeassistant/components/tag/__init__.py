@@ -37,14 +37,14 @@ TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 
 CREATE_FIELDS: VolDictType = {
     probatio.Optional(TAG_ID): cv.string,
-    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional("description"): cv.string,
     probatio.Optional(LAST_SCANNED): cv.datetime,
     probatio.Optional(DEVICE_ID): cv.string,
 }
 
 UPDATE_FIELDS: VolDictType = {
-    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional("description"): cv.string,
     probatio.Optional(LAST_SCANNED): cv.datetime,
     probatio.Optional(DEVICE_ID): cv.string,

@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+import logging
 from typing import Any, override
 
 from homeassistant.const import (
@@ -22,8 +23,9 @@ from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
-from .schemas import BlockedTemplateAttributes
+from .validators import BlockedTemplateAttributes
 
+_LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 
 
@@ -202,15 +204,35 @@ class AbstractTemplateEntity(Entity):
             domain,
         )
 
-    def add_assumed_attribute(self, attr: str, option: str, action_option: str):
+    def add_assumed_attribute(
+        self,
+        attr: str,
+        option: str,
+        action_option: str,
+        *,
+        optimistic_option: str | None = None,
+    ):
         """Add an optimistic option."""
-        if option not in self._config and action_option in self._config:
+        if action_option not in self._config:
+            return
+
+        if optimistic_option is None:
+            if option not in self._config:
+                self._assumed_attributes[option] = attr
+            return
+
+        if (optimistic_override := self._config.get(optimistic_option)) or (
+            not optimistic_override and option not in self._config
+        ):
             self._assumed_attributes[option] = attr
 
     def update_assumed_attribute(self, option: str, value: Any) -> bool:
         """If the attribute is assumed, update attribute with the new value."""
         attr = self._assumed_attributes.get(option)
         if assumed_attribute := attr is not None:
+            _LOGGER.debug(
+                "Optimistically setting %s %s to %s", self.entity_id, option, value
+            )
             setattr(self, attr, value)
 
         return assumed_attribute
