@@ -168,8 +168,6 @@ async def test_get_forecast_tool_prefers_granular_cadence_for_partial_day(
         llm_helper.ToolInput("weather__get_forecast", _tool_args("this_afternoon")),
         _llm_context(),
     )
-    # Must be the hourly data (13:00, "sunny"), not the daily data (midnight,
-    # "cloudy"), proving the partial-day period preferred the granular cadence.
     assert response.data["forecast"][0]["condition"] == "sunny"
 
 
@@ -238,6 +236,28 @@ async def test_get_forecast_tool_unsupported_forecast(hass: HomeAssistant) -> No
     }
 
 
+async def test_get_forecast_tool_normalizes_native_datetime(
+    hass: HomeAssistant,
+) -> None:
+    """Test a native datetime entry (e.g. from IPMA) is returned as an ISO string."""
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    today = dt_util.start_of_local_day()
+    # Some providers put a native datetime object in this field instead of an
+    # ISO string; it must still be parsed and returned as JSON-safe data.
+    entity.forecast_list = [{"datetime": today, "condition": "sunny"}]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert not response.error
+    assert response.data["forecast"][0]["datetime"] == today.isoformat()
+    assert isinstance(response.data["forecast"][0]["datetime"], str)
+
+
 async def test_get_forecast_tool_ambiguous_target(hass: HomeAssistant) -> None:
     """Test the tool reports duplicate weather names instead of choosing one."""
     await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
@@ -257,6 +277,31 @@ async def test_get_forecast_tool_ambiguous_target(hass: HomeAssistant) -> None:
     )
     assert response.error
     assert response.data == {"error": "Weather entity name is ambiguous"}
+
+
+async def test_get_forecast_tool_ignores_non_forecast_name_collision(
+    hass: HomeAssistant,
+) -> None:
+    """Test a same-named, non-forecast-capable entity doesn't block a match."""
+    await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    # Shares the "Testing" name/alias but supports no forecasts, so it is never
+    # advertised to the model and must not make the genuine match ambiguous.
+    hass.states.async_set(
+        "weather.testing_two",
+        "sunny",
+        {"friendly_name": "Testing", "supported_features": 0},
+    )
+    async_expose_entity(hass, "conversation", "weather.testing_two", True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args()),
+        _llm_context(),
+    )
+    assert not response.error
+    assert response.data["forecast"]
 
 
 async def test_get_forecast_tool_no_forecast_data(hass: HomeAssistant) -> None:

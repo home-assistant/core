@@ -37,6 +37,21 @@ FORECAST_FEATURE_BY_TYPE = {
     "hourly": WeatherEntityFeature.FORECAST_HOURLY,
     "twice_daily": WeatherEntityFeature.FORECAST_TWICE_DAILY,
 }
+FORECAST_FEATURES = (
+    WeatherEntityFeature.FORECAST_DAILY
+    | WeatherEntityFeature.FORECAST_HOURLY
+    | WeatherEntityFeature.FORECAST_TWICE_DAILY
+)
+
+# How long a single forecast entry of each cadence covers, used to determine
+# whether it overlaps the requested window rather than requiring its start
+# timestamp to fall inside that window (a daily entry starts at midnight, so
+# it would otherwise be discarded for a same-day partial-day request).
+FORECAST_TYPE_DURATION = {
+    "daily": timedelta(days=1),
+    "hourly": timedelta(hours=1),
+    "twice_daily": timedelta(hours=12),
+}
 
 # Periods that describe part of a day are best served by the most granular
 # forecast available; whole-day and multi-day periods are best served by the
@@ -122,6 +137,16 @@ class GetForecastTool(Tool):
 
         start, end = _get_forecast_window(data["period"])
 
+        # Restrict matching to forecast-capable entities. Tool discovery only
+        # advertises aliases from these entities, so a current-conditions-only
+        # entity sharing the same name/alias would otherwise create an
+        # unresolvable ambiguous match for a name that is actually unique among
+        # forecast-capable entities.
+        forecast_capable_states = [
+            state
+            for state in hass.states.async_all(DOMAIN)
+            if state.attributes.get("supported_features", 0) & FORECAST_FEATURES
+        ]
         result = intent.async_match_targets(
             hass,
             intent.MatchTargetsConstraints(
@@ -129,6 +154,7 @@ class GetForecastTool(Tool):
                 domains=[DOMAIN],
                 assistant=llm_context.assistant,
             ),
+            states=forecast_capable_states,
         )
         if not result.is_match:
             message = (
@@ -173,19 +199,29 @@ class GetForecastTool(Tool):
                 data={"error": "Weather entity is unavailable"}, error=True
             )
         forecast = entity_response["forecast"]
-        matching_forecast = [
-            entry
-            for entry in forecast
-            if start <= _forecast_datetime(entry["datetime"]) < end
-        ]
+        duration = FORECAST_TYPE_DURATION[forecast_type]
+        matching_forecast: list[Forecast] = []
+        for entry in forecast:
+            entry_start = _forecast_datetime(entry["datetime"])
+            entry_end = entry_start + duration
+            if entry_start < end and entry_end > start:
+                # Normalize to an ISO string: some providers (e.g. IPMA) put a
+                # native datetime object in this field, which isn't JSON-safe.
+                matching_forecast.append({**entry, "datetime": entry_start.isoformat()})
         return ToolResult(
             data=cast(dict[str, JsonValueType], {"forecast": matching_forecast})
         )
 
 
-def _forecast_datetime(value: str) -> datetime:
-    """Parse a forecast datetime, treating timezone-naive values as local."""
-    if (parsed := dt_util.parse_datetime(value)) is None:
+def _forecast_datetime(value: datetime | str) -> datetime:
+    """Parse a forecast datetime, treating timezone-naive values as local.
+
+    Providers may supply either an ISO-formatted string or a native datetime
+    object (for example IPMA's forecasts pass a datetime straight through).
+    """
+    if isinstance(value, datetime):
+        parsed = value
+    elif (parsed := dt_util.parse_datetime(value)) is None:
         raise HomeAssistantError(f"Invalid forecast datetime: {value}")
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=dt_util.get_default_time_zone())
@@ -243,11 +279,7 @@ def async_get_tools(
     for state in sorted(hass.states.async_all(DOMAIN), key=attrgetter("name")):
         if not async_should_expose(hass, llm_context.assistant, state.entity_id):
             continue
-        if not state.attributes.get("supported_features", 0) & (
-            WeatherEntityFeature.FORECAST_DAILY
-            | WeatherEntityFeature.FORECAST_HOURLY
-            | WeatherEntityFeature.FORECAST_TWICE_DAILY
-        ):
+        if not state.attributes.get("supported_features", 0) & FORECAST_FEATURES:
             continue
         entity_entry = entity_registry.async_get(state.entity_id)
         names.update(intent.async_get_entity_aliases(hass, entity_entry, state=state))
