@@ -370,12 +370,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                     if fan_operation.fan_direction.horizontal is not None:
                         supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
-            _LOGGER.debug(
-                "Device '%s' supports features %s",
-                self._device.name,
-                supported_features,
-            )
-
         return supported_features
 
     def _get_current_temperature(self) -> float | None:
@@ -392,45 +386,25 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             lwsensor = self._sensory_data_for_setpoint("leavingWaterTemperature")
             if self._setpoint == "leavingWaterOffset" and lwsensor is not None:
                 current_temp = lwsensor.value
-        _LOGGER.debug(
-            "Device '%s' %s current temperature '%s'",
-            self._device.name,
-            self._setpoint,
-            current_temp,
-        )
         return current_temp
 
     def _get_max_temp(self) -> float:
         """Return the maximum configurable temperature."""
         setpointdict = self._get_setpoint()
-        max_temp = (
+        return (
             setpointdict.max_value
             if setpointdict is not None and setpointdict.max_value is not None
             else super().max_temp
         )
-        _LOGGER.debug(
-            "Device '%s' %s max temperature '%s'",
-            self._device.name,
-            self._setpoint,
-            max_temp,
-        )
-        return max_temp
 
     def _get_min_temp(self) -> float:
         """Return the minimum configurable temperature."""
         setpointdict = self._get_setpoint()
-        min_temp = (
+        return (
             setpointdict.min_value
             if setpointdict is not None and setpointdict.min_value is not None
             else super().min_temp
         )
-        _LOGGER.debug(
-            "Device '%s' %s min temperature '%s'",
-            self._device.name,
-            self._setpoint,
-            min_temp,
-        )
-        return min_temp
 
     def _get_target_temperature(self) -> float | None:
         """Return the configured target temperature."""
@@ -438,12 +412,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         setpointdict = self._get_setpoint()
         if setpointdict is not None:
             value = setpointdict.value
-        _LOGGER.debug(
-            "Device '%s' %s target temperature '%s'",
-            self._device.name,
-            self._setpoint,
-            value,
-        )
         return value
 
     def _get_target_temperature_step(self) -> float | None:
@@ -456,12 +424,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 if setpointdict.step_value is not None
                 else super().target_temperature_step
             )
-        _LOGGER.debug(
-            "Device '%s' %s target temperature step '%s'",
-            self._device.name,
-            self._setpoint,
-            step_value,
-        )
         return step_value
 
     @override
@@ -505,12 +467,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             onoff = cc.on_off_mode
             if onoff is not None and onoff.value != "off" and operationmode is not None:
                 mode = operationmode.value
-            _LOGGER.debug(
-                "Device '%s' %s hvac mode '%s'",
-                self._device.name,
-                self._setpoint,
-                mode,
-            )
         return DAIKIN_HVAC_TO_HA.get(mode)
 
     def _get_hvac_modes(self) -> list[HVACMode]:
