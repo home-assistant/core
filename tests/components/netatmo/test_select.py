@@ -242,6 +242,54 @@ async def test_select_schedule_with_name_shared_across_modes(
         )
 
 
+async def test_select_schedule_webhook_within_control_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a webhook selecting another schedule of the current mode is applied."""
+
+    def add_cooling_schedule(payload: dict[str, Any]) -> None:
+        """Add a second cooling schedule to the home."""
+        for home in payload.get("body", {}).get("homes", []):
+            if home["id"] != "91763b24c43d3e344f424e8b":
+                continue
+            cooling = next(s for s in home["schedules"] if s["type"] == "cooling")
+            home["schedules"].append(
+                {
+                    **cooling,
+                    "id": "c2c54a2f45795764f59d50d8",
+                    "name": "Summer",
+                    "selected": False,
+                }
+            )
+
+    with (
+        selected_platforms(["climate", "select"]),
+        modified_backend(hass, add_cooling_schedule),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    select_entity = "select.myhome_schedule"
+    assert hass.states.get(select_entity).state == "Default"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == [
+        "Default",
+        "Summer",
+    ]
+
+    response = {
+        "event_type": "schedule",
+        "schedule_id": "c2c54a2f45795764f59d50d8",
+        "previous_schedule_id": "591b54a2764ff4d50d8b5795",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(select_entity).state == "Summer"
+
+
 async def test_select_schedule_unknown_schedule_id(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
