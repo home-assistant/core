@@ -62,25 +62,25 @@ from homeassistant.helpers.typing import ConfigType
 # does not do blocking I/O in the event loop.
 from . import scene as scene_pre_import  # noqa: F401
 from .const import (
+    ATTR_ENTRY_ID,
+    ATTR_SAFE_MODE,
     DATA_EXPOSED_ENTITIES,
     DATA_STOP_HANDLER,
     DOMAIN,
+    SERVICE_CHECK_CONFIG,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD_ALL,
+    SERVICE_RELOAD_CONFIG_ENTRY,
+    SERVICE_RELOAD_CORE_CONFIG,
+    SERVICE_RELOAD_CUSTOM_TEMPLATES,
+    SERVICE_SET_LOCATION,
+    SERVICE_UPDATE_ENTITY,
+    SHUTDOWN_SERVICES,
 )
 from .exposed_entities import ExposedEntities, async_should_expose  # noqa: F401
 
-ATTR_ENTRY_ID = "entry_id"
-ATTR_SAFE_MODE = "safe_mode"
-
 _LOGGER = logging.getLogger(__name__)
-SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
-SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
-SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
-SERVICE_CHECK_CONFIG = "check_config"
-SERVICE_UPDATE_ENTITY = "update_entity"
-SERVICE_SET_LOCATION = "set_location"
-SERVICE_RELOAD_ALL = "reload_all"
 SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
     probatio.Schema(
@@ -94,8 +94,6 @@ SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
 SCHEMA_RESTART = probatio.Schema(
     {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
 )
-
-SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
 DEPRECATION_URL = (
     "https://www.home-assistant.io/blog/2025/05/22/"
