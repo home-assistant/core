@@ -190,7 +190,8 @@ async def _write_timer_period(
 # Map a library invalid-state rejection to a user-facing validation message.
 # _write_filt_mode is the only write that can surface one: leaving manual mode
 # while a cell boost is active makes the library refuse the pump toggle with
-# FILTRATION_BOOST_ACTIVE. Any other (or absent) reason falls back below.
+# FILTRATION_BOOST_ACTIVE. Any other (or absent) reason falls back to the
+# generic "invalid_state" message.
 _INVALID_STATE_TRANSLATION_KEY: dict[InvalidStateReason, str] = {
     InvalidStateReason.FILTRATION_BOOST_ACTIVE: "filtration_boost_active",
 }
@@ -660,9 +661,9 @@ class NeoPoolSelect(NeoPoolEntity, SelectEntity):
             await write_fn(self, self.coordinator.client, option)
         except NeoPoolInvalidStateError as err:
             translation_key = (
-                _INVALID_STATE_TRANSLATION_KEY.get(err.reason, "relay_in_auto_mode")
+                _INVALID_STATE_TRANSLATION_KEY.get(err.reason, "invalid_state")
                 if err.reason is not None
-                else "relay_in_auto_mode"
+                else "invalid_state"
             )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

@@ -163,7 +163,7 @@ async def test_filt_mode_invalid_state_unmapped_reason_falls_back(
     )
     with pytest.raises(ServiceValidationError) as err:
         await _select_option(hass, entity_id, "auto")
-    assert err.value.translation_key == "relay_in_auto_mode"
+    assert err.value.translation_key == "invalid_state"
 
 
 async def test_filtvalve_period_minutes_writes_mapped_register(

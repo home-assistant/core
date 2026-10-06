@@ -514,6 +514,9 @@
     "filtvalve_interval_not_set": {
       "message": "No backwash duration is configured. Set the backwash duration first, then start the backwash."
     },
+    "invalid_state": {
+      "message": "The controller rejected this change because it is not in a valid state for it."
+    },
     "modbus_communication_error": {
       "message": "An error occurred while communicating with the NeoPool controller: {error}"
     },
