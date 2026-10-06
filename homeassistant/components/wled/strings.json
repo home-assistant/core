@@ -140,6 +140,9 @@
     "connection_error": {
       "message": "Error communicating with WLED API: {error}"
     },
+    "firmware_upgrade_failed": {
+      "message": "Updating the WLED firmware failed: {error}"
+    },
     "invalid_response_github_error": {
       "message": "Invalid response from GitHub API: {error}"
     },
