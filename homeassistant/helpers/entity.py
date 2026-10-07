@@ -1776,7 +1776,6 @@ class Entity(
         if _entity_class_requires_readd(type(self)):
             # Backwards compatibility for custom integrations not yet migrated to
             # async_entity_id_changed, can be removed in Home Assistant Core 2027.11.
-
             await self._async_readd_on_entity_id_change(old_entity_id, registry_entry)
             return
 
