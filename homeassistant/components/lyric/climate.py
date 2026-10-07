@@ -165,10 +165,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
         # Use the native temperature unit from the device settings
         if device.units == "Fahrenheit":
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_precision = PRECISION_WHOLE
         else:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
             self._attr_precision = PRECISION_HALVES
 
         # Setup supported hvac modes
@@ -224,7 +224,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.indoor_temperature
 
@@ -245,7 +245,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         device = self.device
         if (
@@ -259,7 +259,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         device = self.device
         if (
@@ -271,7 +271,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         device = self.device
         if (
