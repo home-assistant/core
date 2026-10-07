@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.3.1
+aioamazondevices==16.3.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -792,7 +792,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.9.1
+compit-inext-api==0.9.2
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -2800,7 +2800,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.16.0
+python-qube-heatpump==1.17.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8

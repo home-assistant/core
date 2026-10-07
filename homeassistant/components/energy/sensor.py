@@ -1,7 +1,7 @@
 """Helper sensor for calculating utility costs."""
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 import copy
 from dataclasses import dataclass
 import logging
@@ -132,6 +132,10 @@ GRID_EXPORT_ADAPTER: Final = SourceAdapter(
 
 class EntityNotFoundError(HomeAssistantError):
     """When a referenced entity was not found."""
+
+
+class PriceUnitMismatchError(HomeAssistantError):
+    """When the price unit cannot be converted to the meter unit."""
 
 
 class SensorManager:
@@ -382,6 +386,7 @@ class EnergyCostSensor(SensorEntity):
 
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
+    _wrong_price_unit_reported = False
 
     def __init__(
         self,
@@ -497,6 +502,23 @@ class EnergyCostSensor(SensorEntity):
                 )
             return
 
+        try:
+            converted_energy_price = self._convert_energy_price(
+                energy_price, energy_price_unit, energy_unit
+            )
+        except PriceUnitMismatchError:
+            if not self._wrong_price_unit_reported:
+                self._wrong_price_unit_reported = True
+                _LOGGER.warning(
+                    "Not updating cost of %s: unit %s does not match price unit"
+                    " per %s of %s",
+                    energy_state.entity_id,
+                    energy_unit,
+                    energy_price_unit,
+                    self._config["entity_energy_price"],
+                )
+            return
+
         if (
             state_class != SensorStateClass.TOTAL_INCREASING
             and energy_state.attributes.get(SensorEntityStateAttribute.LAST_RESET)
@@ -521,10 +543,6 @@ class EnergyCostSensor(SensorEntity):
         # Update with newly incurred cost
         old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
-
-        converted_energy_price = self._convert_energy_price(
-            energy_price, energy_price_unit, energy_unit
-        )
 
         self._attr_native_value = (
             cur_value + (energy - old_energy_value) * converted_energy_price
@@ -566,17 +584,26 @@ class EnergyCostSensor(SensorEntity):
     def _convert_energy_price(
         self, energy_price: float, energy_price_unit: str | None, energy_unit: str
     ) -> float:
-        """Convert the energy price to the correct unit."""
+        """Convert the energy price to the correct unit.
+
+        Raises:
+            PriceUnitMismatchError: When the price unit cannot be converted to
+                the meter unit.
+
+        """
         if energy_price_unit is None:
             return energy_price
 
-        converter: Callable[[float, str, str], float]
+        converter: type[unit_conversion.BaseUnitConverter]
         if energy_unit in VALID_ENERGY_UNITS:
-            converter = unit_conversion.EnergyConverter.convert
+            converter = unit_conversion.EnergyConverter
         else:
-            converter = unit_conversion.VolumeConverter.convert
+            converter = unit_conversion.VolumeConverter
 
-        return converter(energy_price, energy_unit, energy_price_unit)
+        if energy_price_unit not in converter.VALID_UNITS:
+            raise PriceUnitMismatchError
+
+        return converter.convert(energy_price, energy_unit, energy_price_unit)
 
     @override
     async def async_added_to_hass(self) -> None:

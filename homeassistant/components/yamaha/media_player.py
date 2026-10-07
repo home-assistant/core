@@ -10,6 +10,7 @@ from rxv import RXV
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -178,6 +179,7 @@ async def async_setup_platform(
 class YamahaDeviceZone(MediaPlayerEntity):
     """Representation of a Yamaha device zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _reverse_mapping: dict[str, str]
 
     def __init__(
