@@ -115,7 +115,7 @@ async def create_mock_platform(
 class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -129,7 +129,7 @@ class MockClimateEntity(ClimateEntity):
 class MockClimateEntityNoSetTemperature(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
 
