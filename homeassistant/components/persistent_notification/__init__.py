@@ -8,7 +8,7 @@ from typing import Any
 import probatio
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -33,10 +33,7 @@ from .helpers import (  # noqa: F401
     create,
     dismiss,
 )
-
-SCHEMA_SERVICE_NOTIFICATION = probatio.Schema(
-    {probatio.Required(ATTR_NOTIFICATION_ID): cv.string}
-)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,44 +43,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
 
-    @callback
-    def create_service(call: ServiceCall) -> None:
-        """Handle a create notification service call."""
-        async_create(
-            hass,
-            call.data[ATTR_MESSAGE],
-            call.data.get(ATTR_TITLE),
-            call.data.get(ATTR_NOTIFICATION_ID),
-        )
-
-    @callback
-    def dismiss_service(call: ServiceCall) -> None:
-        """Handle the dismiss notification service call."""
-        async_dismiss(hass, call.data[ATTR_NOTIFICATION_ID])
-
-    @callback
-    def dismiss_all_service(call: ServiceCall) -> None:
-        """Handle the dismiss all notification service call."""
-        async_dismiss_all(hass)
-
-    hass.services.async_register(
-        DOMAIN,
-        "create",
-        create_service,
-        probatio.Schema(
-            {
-                probatio.Required(ATTR_MESSAGE): cv.string,
-                probatio.Optional(ATTR_TITLE): cv.string,
-                probatio.Optional(ATTR_NOTIFICATION_ID): cv.string,
-            }
-        ),
-    )
-
-    hass.services.async_register(
-        DOMAIN, "dismiss", dismiss_service, SCHEMA_SERVICE_NOTIFICATION
-    )
-
-    hass.services.async_register(DOMAIN, "dismiss_all", dismiss_all_service, None)
+    async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_get_notifications)
     websocket_api.async_register_command(hass, websocket_subscribe_notifications)
