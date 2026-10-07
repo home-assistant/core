@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, override
 
@@ -78,6 +79,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         save_data=AmazonSaveDataConfig(
             path=Path(hass.config.path(DOMAIN)),
         ),
+        login_data=deepcopy(data.get(CONF_LOGIN_DATA)),
     )
 
     return await api.login.login_mode_interactive(data[CONF_CODE])
