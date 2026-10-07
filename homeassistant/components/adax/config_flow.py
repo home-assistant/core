@@ -192,9 +192,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="local_manual",
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_inputs),
             errors=errors,
         )
 
