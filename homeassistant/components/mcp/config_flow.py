@@ -10,7 +10,11 @@ import httpx2
 import probatio
 from yarl import URL
 
-from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.components.application_credentials import (
+    AuthorizationServer,
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -19,14 +23,28 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
     async_get_implementations,
+    async_get_redirect_uri,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
-from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
+from .const import (
+    CONF_AUTHORIZATION_URL,
+    CONF_SCOPE,
+    CONF_SLUG,
+    CONF_TOKEN_URL,
+    DCR_CLIENT_NAME,
+    DOMAIN,
+)
 from .coordinator import TokenManager, mcp_client
+from .registration import (
+    ClientRegistrationError,
+    async_register_dynamic_client,
+    dynamic_client_auth_domain,
+    resolve_registration_endpoint,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +83,8 @@ class OAuthConfig:
 
     authorization_server: AuthorizationServer
     scopes: list[str] | None = None
+    registration_endpoint: str | None = None
+    token_endpoint_auth_methods: list[str] | None = None
 
 
 async def async_discover_authorization_server(
@@ -99,12 +119,23 @@ async def async_discover_authorization_server(
     # We have no way to know the minimum set of scopes needed, so request
     # all of them and let the user limit during the authorization step.
     scopes = data.get("scopes_supported")
+    registration_endpoint = data.get("registration_endpoint")
+    if not isinstance(registration_endpoint, str) or not registration_endpoint:
+        registration_endpoint = None
+    else:
+        registration_endpoint = resolve_registration_endpoint(
+            auth_server_url, registration_endpoint
+        )
     return OAuthConfig(
         authorization_server=AuthorizationServer(
             authorize_url=authorize_url,
             token_url=token_url,
         ),
         scopes=scopes,
+        registration_endpoint=registration_endpoint,
+        token_endpoint_auth_methods=_string_list(
+            data.get("token_endpoint_auth_methods_supported")
+        ),
     )
 
 
@@ -302,6 +333,10 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     ),
                 }
             )
+            # Servers that advertise RFC 7591 registration issue a client
+            # themselves, so the user does not create application credentials.
+            if oauth_config.registration_endpoint:
+                return await self._async_register_dynamic_client()
             return await self.async_step_credentials_choice()
 
     def authorization_server(self) -> AuthorizationServer:
@@ -324,6 +359,71 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             data[CONF_SCOPE] = " ".join(scopes)
         data.update(super().extra_authorize_data)
         return data
+
+    async def _async_register_dynamic_client(self) -> ConfigFlowResult:
+        """Register an OAuth client and continue the authorize flow."""
+        if self.oauth_config is None or not self.oauth_config.registration_endpoint:
+            return self.async_abort(reason="oauth_registration_failed")
+        try:
+            redirect_uri = async_get_redirect_uri(self.hass)
+        except RuntimeError as err:
+            _LOGGER.debug("OAuth redirect URI is not available: %s", err)
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
+                },
+            )
+        try:
+            registered = await async_register_dynamic_client(
+                self.oauth_config.registration_endpoint,
+                redirect_uri,
+                token_endpoint_auth_methods=(
+                    self.oauth_config.token_endpoint_auth_methods
+                ),
+                scopes=self.data[CONF_SCOPE],
+            )
+        except ClientRegistrationError:
+            _LOGGER.debug("Dynamic client registration failed", exc_info=True)
+            return self.async_abort(reason="oauth_registration_failed")
+        except httpx2.TimeoutException:
+            _LOGGER.debug("Timeout during dynamic client registration")
+            return self.async_abort(reason="timeout_connect")
+        except httpx2.HTTPError:
+            _LOGGER.debug("Cannot connect during dynamic client registration")
+            return self.async_abort(reason="cannot_connect")
+
+        auth_domain = dynamic_client_auth_domain(
+            registered.client_id, registered.token_endpoint_auth_method
+        )
+        try:
+            await async_import_client_credential(
+                self.hass,
+                DOMAIN,
+                ClientCredential(
+                    registered.client_id,
+                    registered.client_secret,
+                    DCR_CLIENT_NAME,
+                ),
+                auth_domain,
+            )
+        except ValueError:
+            _LOGGER.debug(
+                "Could not store dynamically registered client", exc_info=True
+            )
+            return self.async_abort(reason="oauth_registration_failed")
+
+        with authorization_server_context(self.authorization_server()):
+            implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        implementation = implementations.get(auth_domain)
+        if implementation is None:
+            _LOGGER.debug(
+                "Dynamically registered client %s is not available",
+                registered.client_id,
+            )
+            return self.async_abort(reason="oauth_registration_failed")
+        self.flow_impl = implementation
+        return await self.async_step_auth()
 
     async def async_step_credentials_choice(
         self, user_input: dict[str, Any] | None = None
@@ -550,6 +650,13 @@ def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:
         "/.well-known/oauth-authorization-server",
         "/.well-known/openid-configuration",
     ]
+
+
+def _string_list(value: Any) -> list[str] | None:
+    """Return value when it is a list of strings."""
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return value
+    return None
 
 
 def _select_scopes(
