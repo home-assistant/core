@@ -196,6 +196,10 @@ async def async_import_client_credential(
     await hass.data[DATA_COMPONENT].async_import_item(item)
 
 
+class AuthImplementationNotApplicable(Exception):
+    """A stored credential does not apply to the active authorization server."""
+
+
 class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Application Credentials local oauth2 implementation."""
 
@@ -235,10 +239,21 @@ async def _async_provide_implementation(
 
     credentials = hass.data[DATA_COMPONENT].async_client_credentials(domain)
     if hasattr(platform, "async_get_auth_implementation"):
-        return [
-            await platform.async_get_auth_implementation(hass, auth_domain, credential)
-            for auth_domain, credential in credentials.items()
-        ]
+        # Skip a credential the platform says does not apply to this context,
+        # such as a client issued by a different authorization server.
+        implementations: list[
+            config_entry_oauth2_flow.AbstractOAuth2Implementation
+        ] = []
+        for auth_domain, credential in credentials.items():
+            try:
+                implementations.append(
+                    await platform.async_get_auth_implementation(
+                        hass, auth_domain, credential
+                    )
+                )
+            except AuthImplementationNotApplicable:
+                continue
+        return implementations
     authorization_server = await platform.async_get_authorization_server(hass)
     return [
         AuthImplementation(hass, auth_domain, credential, authorization_server)

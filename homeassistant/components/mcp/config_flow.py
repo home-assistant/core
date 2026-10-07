@@ -146,7 +146,7 @@ async def async_discover_authorization_server(
         scopes=scopes,
         registration_endpoint=registration_endpoint,
         token_endpoint_auth_methods=_string_list(
-            data.get("token_endpoint_auth_methods_supported")
+            data, "token_endpoint_auth_methods_supported"
         ),
     )
 
@@ -208,6 +208,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            # Match an existing URL before OAuth. The unauthenticated success
+            # path is not the only way a duplicate can be created.
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:
@@ -226,7 +229,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -411,6 +413,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                             "https://www.home-assistant.io/more-info/no-url-available"
                         )
                     },
+                    translation_domain="homeassistant",
                 )
             try:
                 registered = await async_register_dynamic_client(
@@ -752,11 +755,19 @@ def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:
     ]
 
 
-def _string_list(value: Any) -> list[str] | None:
-    """Return value when it is a list of strings."""
+def _string_list(data: Mapping[str, Any], key: str) -> list[str] | None:
+    """Return a string list, or None when the key is omitted.
+
+    RFC 8414 treats a missing token_endpoint_auth_methods_supported as
+    client_secret_basic. An explicit null, a non-list, or a mixed list is
+    not that default, so it becomes an empty list and registration fails.
+    """
+    if key not in data:
+        return None
+    value = data[key]
     if isinstance(value, list) and all(isinstance(item, str) for item in value):
         return value
-    return None
+    return []
 
 
 def _select_scopes(

@@ -220,15 +220,13 @@ def _parse_registration_response(
         payload["redirect_uris"] = [redirect_uri]
 
     client_id = payload.get("client_id")
-    client_secret = payload.get("client_secret") or ""
     if not isinstance(client_id, str) or not client_id:
         raise ClientRegistrationError("Registration response did not include client_id")
-    if not isinstance(client_secret, str):
-        raise ClientRegistrationError("Registration response client_secret was invalid")
 
     method = _issued_auth_method(
         payload.get("token_endpoint_auth_method"), requested_method
     )
+    client_secret = _client_secret_from_response(payload.get("client_secret"), method)
     try:
         info = OAuthClientInformationFull.model_validate(payload)
     except ValidationError as err:
@@ -238,7 +236,27 @@ def _parse_registration_response(
 
     if not info.client_id:
         raise ClientRegistrationError("Registration response did not include client_id")
-    return RegisteredClient(info.client_id, info.client_secret or "", method)
+    return RegisteredClient(info.client_id, client_secret, method)
+
+
+def _client_secret_from_response(value: Any, method: TokenEndpointAuthMethod) -> str:
+    """Return the issued client secret.
+
+    Confidential methods need a non-empty string secret. A missing secret,
+    or a falsey non-string, is not turned into an empty string. Public
+    clients may omit the secret.
+    """
+    if method == TOKEN_ENDPOINT_AUTH_NONE:
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        raise ClientRegistrationError("Registration response client_secret was invalid")
+    if not isinstance(value, str) or not value:
+        raise ClientRegistrationError(
+            "Registration response did not include client_secret"
+        )
+    return value
 
 
 def _issued_auth_method(

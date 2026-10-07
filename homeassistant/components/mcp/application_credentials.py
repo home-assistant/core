@@ -13,6 +13,7 @@ from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
+    AuthImplementationNotApplicable,
     AuthorizationServer,
     ClientCredential,
 )
@@ -71,6 +72,13 @@ async def async_get_auth_implementation(
     # issued by more than one authorization server.
     if (identity := decode_registered_client_id(credential.client_id)) is None:
         return AuthImplementation(hass, auth_domain, credential, authorization_server)
+    # A client issued by another authorization server must not be offered
+    # under this server's authorize and token URLs.
+    if (
+        identity.authorize_url != authorization_server.authorize_url
+        or identity.token_url != authorization_server.token_url
+    ):
+        raise AuthImplementationNotApplicable
     return McpRegisteredOAuth2Implementation(
         hass,
         auth_domain,
