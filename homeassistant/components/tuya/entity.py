@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, override
 
+import requests
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.exceptions import TuyaSDKException
@@ -103,9 +104,11 @@ class TuyaEntity(Entity):
             )
         except TuyaSDKException as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="send_command_failed",
-                translation_placeholders={"error": str(err)},
+                translation_domain=DOMAIN, translation_key="command_rejected"
+            ) from err
+        except requests.RequestException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="send_command_failed"
             ) from err
 
     def _read_wrapper[T](self, wrapper: DeviceWrapper[T] | None) -> T | None:

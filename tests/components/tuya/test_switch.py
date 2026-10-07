@@ -1,10 +1,12 @@
 """Test Tuya switch platform."""
 
+import re
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.exceptions import ApiRequestException
@@ -140,22 +142,39 @@ async def test_action(
 
 @pytest.mark.usefixtures("no_quirk")
 @pytest.mark.parametrize("mock_device_code", ["cz_PGEkBctAbtzKOZng"])
-async def test_action_api_error(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_message"),
+    [
+        pytest.param(
+            ApiRequestException(error_code="-9999999", error_message="sign invalid"),
+            "The Tuya cloud rejected the command",
+            id="rejected",
+        ),
+        pytest.param(
+            requests.exceptions.ConnectionError,
+            "Failed to send the command to the Tuya cloud",
+            id="connection_error",
+        ),
+        pytest.param(
+            requests.exceptions.Timeout,
+            "Failed to send the command to the Tuya cloud",
+            id="timeout",
+        ),
+    ],
+)
+async def test_action_error(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    side_effect: Exception,
+    expected_message: str,
 ) -> None:
-    """Test an error from the Tuya API is raised as a Home Assistant error."""
+    """Test errors while sending a command are raised as Home Assistant errors."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    mock_manager.send_commands.side_effect = ApiRequestException(
-        error_code="-9999999", error_message="sign invalid"
-    )
+    mock_manager.send_commands.side_effect = side_effect
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"Failed to send the command to the device: network error:\(-9999999\) sign invalid",
-    ):
+    with pytest.raises(HomeAssistantError, match=re.escape(expected_message)):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
