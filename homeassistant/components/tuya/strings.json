@@ -1318,6 +1318,9 @@
     },
     "invalid_meal_plan_data": {
       "message": "Unable to parse meal plan data."
+    },
+    "send_command_failed": {
+      "message": "Failed to send the command to the device: {error}"
     }
   },
   "selector": {
