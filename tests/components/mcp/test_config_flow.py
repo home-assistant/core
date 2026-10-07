@@ -482,6 +482,8 @@ async def test_authentication_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
+    assert result["result"]
+    assert result["result"].unique_id is None
     data = result["data"]
     token = data.pop(CONF_TOKEN)
     assert data == {
@@ -1575,7 +1577,7 @@ async def test_dynamic_client_registration(
     assert result["data"][CONF_AUTHORIZATION_URL] == OAUTH_AUTHORIZE_URL
     assert result["data"][CONF_TOKEN_URL] == OAUTH_TOKEN_URL
     assert result["result"]
-    assert result["result"].unique_id == result["data"]["auth_implementation"]
+    assert result["result"].unique_id is None
 
     token_method, _token_url, token_body, headers = aioclient_mock.mock_calls[-1]
     assert token_method.lower() == "post"
@@ -2262,3 +2264,78 @@ async def test_registered_client_identity_is_scoped_to_authorization_server(
     assert implementation_a.client_secret == "secret-a"
     assert implementation_b.client_id == client_id_b
     assert implementation_b.client_secret == "secret-b"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_two_mcp_urls_create_separate_oauth_entries(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Two MCP paths that share an OAuth client stay separate entries.
+
+    Dynamic registration reuses one client for an authorization server, so the
+    credential id is not unique per MCP URL.
+    """
+    registration = respx.post(f"{AUTHORIZATION_SERVER}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": REGISTERED_CLIENT_SECRET,
+                "token_endpoint_auth_method": "client_secret_post",
+            },
+        )
+    )
+
+    def _metadata(_request: httpx2.Request) -> httpx2.Response:
+        return _authorization_server_metadata(
+            registration_endpoint=f"{AUTHORIZATION_SERVER}/register",
+            auth_methods=["client_secret_post"],
+        )
+
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(side_effect=_metadata)
+    respx.get(
+        f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp/babybuddy"
+    ).mock(side_effect=_metadata)
+
+    async def _create_entry(mcp_url: str) -> None:
+        started = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+            "Authentication required", request=None, response=httpx2.Response(401)
+        )
+        result = await hass.config_entries.flow.async_configure(
+            started["flow_id"],
+            {CONF_URL: mcp_url},
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        state = URL(result["url"]).query["state"]
+        aioclient_mock.post(OAUTH_TOKEN_URL, json=OAUTH_TOKEN_PAYLOAD)
+        client = await hass_client_no_auth()
+        resp = await client.get(f"{CALLBACK_PATH}?code={OAUTH_CODE}&state={state}")
+        assert resp.status == 200
+        mock_mcp_client.side_effect = None
+        response = Mock()
+        response.serverInfo.name = TEST_API_NAME
+        mock_mcp_client.return_value.initialize.return_value = response
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"]
+        assert result["result"].unique_id is None
+        assert result["data"][CONF_URL] == mcp_url
+
+    await _create_entry(MCP_SERVER_URL)
+    await _create_entry(PATH_MCP_URL)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+    assert {entry.data[CONF_URL] for entry in entries} == {MCP_SERVER_URL, PATH_MCP_URL}
+    assert {entry.unique_id for entry in entries} == {None}
+    assert (
+        entries[0].data["auth_implementation"] == entries[1].data["auth_implementation"]
+    )
+    assert registration.call_count == 1

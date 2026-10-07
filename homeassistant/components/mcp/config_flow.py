@@ -537,11 +537,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        if self.unique_id is None:
-            # Unique id based on the application credentials OAuth Client ID. A
-            # discovered server keeps the Supervisor uuid instead, so that the
-            # entry is removed together with the app.
-            await self.async_set_unique_id(config_entry_data["auth_implementation"])
+        # OAuth entries have no unique id. The application credential identifies
+        # the client, not the MCP server, so two URLs that share a client must
+        # not replace each other. A Supervisor discovery keeps its uuid.
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
