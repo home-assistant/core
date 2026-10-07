@@ -47,6 +47,7 @@ async def test_config_entry_not_ready(
 
     assert mock_forecast.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "communication_error"
 
 
 async def test_config_entry_zone_removed(hass: HomeAssistant) -> None:
