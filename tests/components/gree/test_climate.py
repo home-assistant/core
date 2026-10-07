@@ -992,7 +992,7 @@ async def test_coordinator_update_handler(
     assert entity is not None
 
     # Initial state
-    assert entity.temperature_unit == UnitOfTemperature.CELSIUS
+    assert entity.native_temperature_unit == UnitOfTemperature.CELSIUS
     assert entity.min_temp == TEMP_MIN
     assert entity.max_temp == TEMP_MAX
 
@@ -1001,7 +1001,7 @@ async def test_coordinator_update_handler(
     entity.coordinator.async_set_updated_data(UnitOfTemperature.FAHRENHEIT)
     await hass.async_block_till_done()
 
-    assert entity.temperature_unit == UnitOfTemperature.FAHRENHEIT
+    assert entity.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
     assert entity.min_temp == TEMP_MIN_F
     assert entity.max_temp == TEMP_MAX_F
 
@@ -1010,7 +1010,7 @@ async def test_coordinator_update_handler(
     entity.coordinator.async_set_updated_data(UnitOfTemperature.CELSIUS)
     await hass.async_block_till_done()
 
-    assert entity.temperature_unit == UnitOfTemperature.CELSIUS
+    assert entity.native_temperature_unit == UnitOfTemperature.CELSIUS
     assert entity.min_temp == TEMP_MIN
     assert entity.max_temp == TEMP_MAX
 
