@@ -38,7 +38,7 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "boiler"
 
     def __init__(
@@ -56,7 +56,7 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._heater.is_tapping:
             return self._heater.tap_temp
