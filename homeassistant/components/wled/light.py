@@ -3,12 +3,15 @@
 from functools import partial
 from typing import Any, cast, override
 
+from wled import Device as WLEDDevice, LightCapability, combine_white, split_white
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
@@ -130,6 +133,33 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         super()._handle_coordinator_update()
 
 
+def _has_warm_and_cold_white(device: WLEDDevice, segment: int) -> bool:
+    """Return whether a segment's white is split over warm and cold white.
+
+    That takes LEDs with separate warm and cold white on every output the
+    segment is on, and WLED using the color temperature for them, rather
+    than calculating it from the RGB color.
+    """
+    capabilities = device.state.segments[segment].light_capabilities
+    if (
+        capabilities is None
+        or (
+            LightCapability.RGB_COLOR
+            | LightCapability.WHITE_CHANNEL
+            | LightCapability.COLOR_TEMPERATURE
+        )
+        not in capabilities
+        or device.led_config is None
+        or device.led_config.cct_from_rgb
+    ):
+        return False
+
+    outputs = device.segment_led_outputs(segment)
+    return bool(outputs) and all(
+        output.has_rgb and output.has_white and output.has_cct for output in outputs
+    )
+
+
 class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
@@ -158,13 +188,50 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
+        self._color_modes: list[ColorMode] = []
+        self._has_white_channel = False
         if (
             capabilities := coordinator.data.state.segments[segment].light_capabilities
         ) is not None and (
             color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(capabilities)
         ) is not None:
-            self._attr_color_mode = color_modes[0]
+            # With separate warm and cold white, the white channel holds both.
+            if _has_warm_and_cold_white(coordinator.data, segment):
+                color_modes = [ColorMode.COLOR_TEMP, ColorMode.RGBWW]
+            self._color_modes = color_modes
             self._attr_supported_color_modes = set(color_modes)
+            self._has_white_channel = LightCapability.WHITE_CHANNEL in capabilities
+
+    @property
+    @override
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode the segment is in right now.
+
+        WLED doesn't tell, so it follows from the color: a color temperature
+        shows as full white, on the white channel when there is one.
+        """
+        if not self._color_modes:
+            return None
+
+        if len(self._color_modes) == 1:
+            return self._color_modes[0]
+
+        # A color temperature shows as exactly the white this light sends for
+        # it. A dimmed white channel is a color, so restoring it doesn't turn
+        # it into full white.
+        color = self.coordinator.data.state.segments[self._segment].color
+        if ColorMode.COLOR_TEMP in self._color_modes and color is not None:
+            primary = color.primary
+            if (
+                primary == (0, 0, 0, 255)
+                if self._has_white_channel
+                else primary[:3] == (255, 255, 255)
+            ):
+                return ColorMode.COLOR_TEMP
+
+        return next(
+            mode for mode in self._color_modes if mode is not ColorMode.COLOR_TEMP
+        )
 
     @property
     @override
@@ -189,6 +256,27 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if not (color := self.coordinator.data.state.segments[self._segment].color):
             return None
         return cast(tuple[int, int, int, int], color.primary)
+
+    @property
+    @override
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return the color value, with the white split over cold and warm."""
+        segment = self.coordinator.data.state.segments[self._segment]
+        if not (color := segment.color):
+            return None
+
+        red, green, blue, *white = color.primary
+        warm, cold = split_white(
+            white[0] if white else 0, segment.cct, cct_blend=self._cct_blend
+        )
+        return (red, green, blue, cold, warm)
+
+    @property
+    def _cct_blend(self) -> int:
+        """Return how the device blends warm and cold white, in percent."""
+        if (led_config := self.coordinator.data.led_config) is None:
+            return 0
+        return led_config.cct_blend
 
     @property
     @override
@@ -271,10 +359,21 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if ATTR_RGBW_COLOR in kwargs:
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
+        if ATTR_RGBWW_COLOR in kwargs:
+            red, green, blue, cold, warm = kwargs[ATTR_RGBWW_COLOR]
+            white, data[ATTR_CCT] = combine_white(warm, cold, cct_blend=self._cct_blend)
+            data[ATTR_COLOR_PRIMARY] = (red, green, blue, white)
+
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
             )
+            # A color temperature only shows on white light: the white channel
+            # where there is one, otherwise full white.
+            if self._color_modes:
+                data[ATTR_COLOR_PRIMARY] = (
+                    (0, 0, 0, 255) if self._has_white_channel else (255, 255, 255)
+                )
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.

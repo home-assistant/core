@@ -568,7 +568,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="drive_state_active_route_traffic_minutes_delay",
         polling=True,
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_RouteTrafficMinutesDelay(callback)
+            vehicle.listen_ActiveRouteTrafficMinutesDelay(callback)
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -579,7 +579,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="drive_state_active_route_energy_at_arrival",
         polling=True,
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_ExpectedEnergyPercentAtTripArrival(callback)
+            vehicle.listen_ActiveRouteExpectedEnergyPercentAtTripArrival(callback)
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
