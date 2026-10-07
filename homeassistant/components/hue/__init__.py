@@ -1,13 +1,9 @@
 """Support for the Philips Hue system."""
 
-import aiohttp
-from aiohue import HueBridgeV2
-from aiohue.errors import AiohueException
 from aiohue.util import normalize_bridge_id
 
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,39 +26,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.minor_version < 2:
-        # v2 bridges stored the zigbee mac as a network mac, migrate the connection
-        if entry.data.get(CONF_API_VERSION, 1) == 2:
-            try:
-                await _migrate_v2_zigbee_connections(hass, entry)
-            except AiohueException, aiohttp.ClientError, TimeoutError:
-                # bridge unavailable, retry the migration on the next start
-                return True
+        _migrate_zigbee_connections(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
 
 
-async def _migrate_v2_zigbee_connections(
-    hass: HomeAssistant, entry: HueConfigEntry
-) -> None:
+@callback
+def _migrate_zigbee_connections(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Migrate zigbee macs that were incorrectly stored as network macs."""
     dev_reg = dr.async_get(hass)
-    async with HueBridgeV2(entry.data[CONF_HOST], entry.data[CONF_API_KEY]) as api:
-        for hue_dev in api.devices:
-            zigbee = api.devices.get_zigbee_connectivity(hue_dev.id)
-            if not zigbee or not zigbee.mac_address:
-                continue
-            device = dev_reg.async_get_device_by_identifier(
-                identifier=(DOMAIN, hue_dev.id), config_entry_id=entry.entry_id
-            )
-            if device is None:
-                continue
-            old_connection = (dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)
-            if old_connection not in device.connections:
-                continue
-            new_connection = (dr.CONNECTION_ZIGBEE, zigbee.mac_address)
-            new_connections = device.connections - {old_connection} | {new_connection}
-            dev_reg.async_update_device(device.id, new_connections=new_connections)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        # Zigbee macs have 8 octets, network macs have 6.
+        zigbee_connections = {
+            (conn_type, value)
+            for conn_type, value in device.connections
+            if conn_type == dr.CONNECTION_NETWORK_MAC and value.count(":") == 7
+        }
+        if not zigbee_connections:
+            continue
+        new_connections = (device.connections - zigbee_connections) | {
+            (dr.CONNECTION_ZIGBEE, value) for _, value in zigbee_connections
+        }
+        dev_reg.async_update_device(device.id, new_connections=new_connections)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
