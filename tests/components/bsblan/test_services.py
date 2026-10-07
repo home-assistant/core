@@ -28,8 +28,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # Test constants
 TEST_DEVICE_MAC = "00:80:41:19:69:90"
@@ -968,7 +966,6 @@ async def test_overlapping_heating_schedule_writes_preserve_latest_refresh(
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     device_registry: dr.DeviceRegistry,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test an in-flight heating refresh does not consume a newer write."""
     circuit_device = device_registry.async_get_device_by_identifier(
@@ -979,9 +976,7 @@ async def test_overlapping_heating_schedule_writes_preserve_latest_refresh(
     first_fetch_started = asyncio.Event()
     release_first_fetch = asyncio.Event()
     stale_schedule = MagicMock()
-    stale_schedule.model_dump.return_value = {"schedule": "stale"}
     refreshed_schedule = MagicMock()
-    refreshed_schedule.model_dump.return_value = {"schedule": "refreshed"}
     fetch_count = 0
 
     async def _schedule(*, circuit: int) -> MagicMock:
@@ -1017,12 +1012,10 @@ async def test_overlapping_heating_schedule_writes_preserve_latest_refresh(
     await asyncio.gather(first_write, second_write)
 
     assert mock_bsblan.heating_schedule.await_count == 2
-    diagnostics_data = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
+    assert (
+        mock_config_entry.runtime_data.slow_coordinator.data.heating_schedule[1]
+        is refreshed_schedule
     )
-    assert diagnostics_data["slow_coordinator_data"]["heating_schedule"]["1"] == {
-        "schedule": "refreshed"
-    }
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -1031,7 +1024,6 @@ async def test_set_heating_schedule_retries_malformed_refresh(
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     device_registry: dr.DeviceRegistry,
-    hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a malformed post-write heating refresh is retried."""
@@ -1040,9 +1032,8 @@ async def test_set_heating_schedule_retries_malformed_refresh(
     )
     assert circuit_device is not None
 
-    old_schedule = mock_bsblan.heating_schedule.return_value.model_dump()
+    old_schedule = mock_bsblan.heating_schedule.return_value
     refreshed_schedule = MagicMock()
-    refreshed_schedule.model_dump.return_value = {"schedule": "refreshed"}
     mock_bsblan.heating_schedule.side_effect = [
         BSBLANMalformedResponseError("Invalid response"),
         refreshed_schedule,
@@ -1058,23 +1049,19 @@ async def test_set_heating_schedule_retries_malformed_refresh(
         blocking=True,
     )
 
-    diagnostics_data = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
-    assert diagnostics_data["slow_coordinator_data"]["heating_schedule"]["1"] == (
-        old_schedule
+    assert (
+        mock_config_entry.runtime_data.slow_coordinator.data.heating_schedule[1]
+        is old_schedule
     )
 
     freezer.tick(delta=timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    diagnostics_data = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
+    assert (
+        mock_config_entry.runtime_data.slow_coordinator.data.heating_schedule[1]
+        is refreshed_schedule
     )
-    assert diagnostics_data["slow_coordinator_data"]["heating_schedule"]["1"] == {
-        "schedule": "refreshed"
-    }
 
 
 @pytest.mark.usefixtures("setup_integration")
