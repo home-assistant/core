@@ -312,5 +312,5 @@ def test_enum_sensor_options_cover_known_library_states() -> None:
         f"Unknown {index}" for index in range(7)
     }
     assert set(CURRENT_STATES) == set(CURRENT_STATE) - {
-        f"Unknown {index}" for index in range(1, 11)
+        f"Unknown {index}" for index in range(11)
     }

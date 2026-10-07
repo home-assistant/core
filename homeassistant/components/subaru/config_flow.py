@@ -82,7 +82,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_USERNAME) if user_input else "",
                     ): str,
                     probatio.Required(
-                        CONF_PASSWORD,
+                        probatio.Secret(CONF_PASSWORD),
                         default=user_input.get(CONF_PASSWORD) if user_input else "",
                     ): str,
                     probatio.Required(

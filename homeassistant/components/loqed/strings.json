@@ -1,11 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "lock_not_found": "The discovered lock was not found in your LOQED account.",
       "no_locks": "No locks found in your LOQED account."
     },
     "flow_title": "LOQED Touch Smartlock setup",
@@ -14,11 +16,26 @@
         "data": {
           "lock_id": "Select your lock"
         },
+        "data_description": {
+          "lock_id": "Unique id of the lock to use."
+        },
         "description": "Multiple locks found. Please select the lock you want to configure."
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "LOQED personal access token."
+        },
+        "description": "The LOQED credentials for {name} were rejected. Log in at LOQED's [personal access tokens portal]({config_url}), create a new access token and enter it here."
       },
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "LOQED personal access token."
         },
         "description": "Log in at LOQED's [personal access tokens portal]({config_url}) and: \n* Create an API key by clicking 'Create' \n* Copy the created access token."
       }
