@@ -8,6 +8,7 @@ import telnetlib  # pylint: disable=deprecated-module
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -92,6 +93,8 @@ def setup_platform(
 
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon device."""
+
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def __init__(self, name, host):
         """Initialize the Denon device."""

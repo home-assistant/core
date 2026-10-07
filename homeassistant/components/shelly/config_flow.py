@@ -46,7 +46,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -67,8 +67,12 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -101,7 +105,7 @@ from .utils import (
 
 CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): TextSelector(),
         probatio.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): probatio.Coerce(int),
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -644,17 +648,27 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if get_info_gen(self.info) in RPC_GENERATIONS:
             schema = {
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                ): str,
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         else:
             schema = {
                 probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                ): str,
+                ): TextSelector(TextSelectorConfig(autocomplete="username")),
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                ): str,
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
 
         return self.async_show_form(
@@ -718,12 +732,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
-        if (
-            current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data.get(CONF_HOST) == host:
+        current_entry = await self.async_set_unique_id(mac)
+        current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+        # A user-configured hostname must not be replaced by the resolved IP
+        keep_hostname = current_host is not None and not is_ip_address(current_host)
+        if current_entry and (current_host == host or keep_hostname):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
-        if host == INTERNAL_WIFI_AP_IP:
+        if keep_hostname:
+            self._abort_if_unique_id_configured()
+        elif host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
             # we can't connect to it, so we should not update the
             # entry with the new host as it will be unreachable
@@ -855,7 +873,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 custom_value=True,
                             )
                         ),
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="current-password",
+                            )
+                        ),
                     }
                 ),
                 suggested_values,
@@ -1284,11 +1307,23 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
             schema = {
-                probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME): TextSelector(
+                    TextSelectorConfig(autocomplete="username")
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         else:
-            schema = {probatio.Required(CONF_PASSWORD): str}
+            schema = {
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                )
+            }
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -1339,7 +1374,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_HOST, default=self.host): str,
+                    probatio.Required(CONF_HOST, default=self.host): TextSelector(),
                     probatio.Required(CONF_PORT, default=self.port): probatio.Coerce(
                         int
                     ),
@@ -1387,7 +1422,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle the option flow for shelly."""
 
     async def async_step_init(
@@ -1404,7 +1439,7 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="zigbee_firmware")
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",

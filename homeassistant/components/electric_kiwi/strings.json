@@ -46,5 +46,13 @@
         "name": "Total running balance"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with Electric Kiwi failed. Please re-authenticate."
+    },
+    "set_hop_failed": {
+      "message": "Failed to set the hour of free power."
+    }
   }
 }

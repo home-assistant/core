@@ -10,7 +10,7 @@ from elmax_api.constants import (
     ENDPOINT_DISCOVERY,
     ENDPOINT_LOGIN,
 )
-from httpx import Response
+from httpx2 import Response
 import jwt
 import pytest
 import respx
