@@ -142,7 +142,7 @@ Every check has a code following the
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
-| `W7439` | [`home-assistant-device-info-dict`](#w7439-home-assistant-device-info-dict) | Use `DeviceInfo` instead of a dict for `_attr_device_info` |
+| `W7439` | [`home-assistant-device-info-dict`](#w7439-home-assistant-device-info-dict) | Use `DeviceInfo` instead of a dict for entity device info |
 
 
 ## `home_assistant_logger` checker
@@ -1066,9 +1066,10 @@ on config flows. Remove the attribute.
 
 ## `home_assistant_device_info_dict` checker
 
-Detects `_attr_device_info` being set to a plain dict.
+Detects entity device info being set to a plain dict.
 
 ### `W7439`: `home-assistant-device-info-dict`
 
-`_attr_device_info` is set to a dict literal or `dict(...)` call. Use the
-`DeviceInfo` object instead, as it is type-safe.
+`_attr_device_info` is set to a dict literal or `dict(...)` call, or the
+`device_info` property of an entity class returns one. Use the `DeviceInfo`
+object instead, as it is type-safe.

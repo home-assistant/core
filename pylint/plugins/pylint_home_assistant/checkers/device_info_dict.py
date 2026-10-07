@@ -1,7 +1,8 @@
-"""Checker for ``_attr_device_info`` set to a plain dict.
+"""Checker for entity device info set to a plain dict.
 
-``_attr_device_info`` should be set using the ``DeviceInfo`` object, as that
-is type-safe, instead of a dict literal or ``dict(...)`` call.
+``_attr_device_info`` and the ``device_info`` property of an entity should
+use the ``DeviceInfo`` object, as that is type-safe, instead of a dict
+literal or ``dict(...)`` call.
 
 ``W7439`` (``home-assistant-device-info-dict``)
 """
@@ -10,6 +11,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.entity_class import inherits_from_entity
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 
@@ -40,9 +42,10 @@ class DeviceInfoDictChecker(BaseChecker):
     priority = -1
     msgs = {
         "W7439": (
-            "Use DeviceInfo instead of a dict for _attr_device_info",
+            "Use DeviceInfo instead of a dict for entity device info",
             "home-assistant-device-info-dict",
-            "Used when _attr_device_info is set to a dict. Use the "
+            "Used when _attr_device_info is set to a dict, or when the "
+            "device_info property of an entity returns a dict. Use the "
             "DeviceInfo object instead, as it is type-safe.",
         ),
     }
@@ -71,6 +74,19 @@ class DeviceInfoDictChecker(BaseChecker):
         if not _is_dict(node.value) or not _is_device_info_target(node.target):
             return
         self.add_message("home-assistant-device-info-dict", node=node.value)
+
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
+        """Check dicts returned from an entity's ``device_info`` property."""
+        if not self._in_integration or node.name != "device_info":
+            return
+        class_node = node.parent
+        if not isinstance(class_node, nodes.ClassDef) or not inherits_from_entity(
+            class_node
+        ):
+            return
+        for return_node in node.nodes_of_class(nodes.Return):
+            if return_node.frame() is node and _is_dict(return_node.value):
+                self.add_message("home-assistant-device-info-dict", node=return_node)
 
 
 def register(linter: PyLinter) -> None:
