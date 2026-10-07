@@ -319,6 +319,9 @@ async def test_coordinator_skips_malformed_events(
             {"id": "no-attributes"},
         ]
     }
+    # The service call stays inside the patch scope: the requested 2030
+    # range is outside the rolling poll window, so the coordinator live
+    # fetches via the same API method.
     with patch(
         "skylight_api.SkylightAPI.get_calendar_events",
         return_value=raw_events,
@@ -327,17 +330,17 @@ async def test_coordinator_skips_malformed_events(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    result = await hass.services.async_call(
-        CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
-        {
-            "entity_id": "calendar.home_frame_calendar",
-            "start_date_time": datetime(2030, 10, 9, tzinfo=UTC),
-            "end_date_time": datetime(2030, 10, 13, tzinfo=UTC),
-        },
-        blocking=True,
-        return_response=True,
-    )
+        result = await hass.services.async_call(
+            CALENDAR_DOMAIN,
+            SERVICE_GET_EVENTS,
+            {
+                "entity_id": "calendar.home_frame_calendar",
+                "start_date_time": datetime(2030, 10, 9, tzinfo=UTC),
+                "end_date_time": datetime(2030, 10, 13, tzinfo=UTC),
+            },
+            blocking=True,
+            return_response=True,
+        )
     events = result["calendar.home_frame_calendar"]["events"]
     assert [event["summary"] for event in events] == [
         "Fine",
