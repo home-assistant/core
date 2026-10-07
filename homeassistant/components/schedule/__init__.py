@@ -1,6 +1,7 @@
 """Support for schedules in Home Assistant."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import itertools
 from typing import Any, Literal, override
@@ -16,13 +17,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
     CollectionEntity,
@@ -35,7 +30,6 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
@@ -46,6 +40,7 @@ from .const import (  # noqa: F401
     CONF_DATA,
     CONF_FROM,
     CONF_TO,
+    DATA_SCHEDULE,
     DOMAIN,
     LOGGER,
     SERVICE_GET,
@@ -53,6 +48,7 @@ from .const import (  # noqa: F401
     ScheduleEntityCapabilityAttribute,
     ScheduleEntityStateAttribute,
 )
+from .services import async_setup_services
 
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 1
@@ -167,6 +163,14 @@ ENTITY_SCHEMA = probatio.Schema(
 )
 
 
+@dataclass(slots=True)
+class ScheduleData:
+    """Runtime data for the schedule integration."""
+
+    component: EntityComponent[Schedule]
+    yaml_collection: YamlCollection
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up a schedule."""
     component = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
@@ -200,26 +204,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA,
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_SCHEDULE] = ScheduleData(component, yaml_collection)
 
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-    )
+    async_setup_services(hass)
 
-    component.async_register_entity_service(
-        SERVICE_GET,
-        {},
-        async_get_schedule_service,
-        supports_response=SupportsResponse.ONLY,
-    )
     await component.async_setup(config)
 
     return True
@@ -425,10 +413,3 @@ class Schedule(CollectionEntity):
                 data_keys.update(time_range_custom_data.keys())
 
         return frozenset(data_keys)
-
-
-async def async_get_schedule_service(
-    schedule: Schedule, service_call: ServiceCall
-) -> ServiceResponse:
-    """Return the schedule configuration."""
-    return schedule.get_schedule()

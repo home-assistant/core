@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-import httpx
+import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
@@ -646,7 +646,7 @@ async def test_subentry_unsupported_reasoning_effort(
         (APIConnectionError(request=None), "cannot_connect"),
         (
             AuthenticationError(
-                response=httpx.Response(status_code=None, request=""),
+                response=httpx2.Response(status_code=None, request=""),
                 body=None,
                 message=None,
             ),
@@ -654,7 +654,7 @@ async def test_subentry_unsupported_reasoning_effort(
         ),
         (
             BadRequestError(
-                response=httpx.Response(status_code=None, request=""),
+                response=httpx2.Response(status_code=None, request=""),
                 body=None,
                 message=None,
             ),
@@ -1468,7 +1468,99 @@ async def test_creating_ai_task_subentry_additional(
         CONF_TOP_P: 0.9,
         CONF_CODE_INTERPRETER: False,
         CONF_SERVICE_TIER: "auto",
+        CONF_WEB_SEARCH: False,
+        CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+        CONF_WEB_SEARCH_USER_LOCATION: False,
+        CONF_WEB_SEARCH_INLINE_CITATIONS: False,
     }
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "has_web_search"),
+    [
+        ("gpt-4o", True),
+        ("gpt-5.6", True),
+        ("gpt-6-luna", True),
+        ("gpt-6-astra", True),
+        ("gpt-6.1-sol", True),
+        ("o3", True),
+        ("gpt-3.5-turbo", False),
+        ("gpt-4-turbo", False),
+        ("gpt-4.1-nano-2025-04-14", False),
+        ("o1", False),
+        ("o3-mini", False),
+    ],
+)
+async def test_ai_task_web_search_supported_models(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    has_web_search: bool,
+) -> None:
+    """Expose task search for models outside the existing exclusion list."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    assert result["step_id"] == "model"
+    assert (CONF_WEB_SEARCH in result["data_schema"].schema) == has_web_search
+    assert (
+        CONF_WEB_SEARCH_CONTEXT_SIZE in result["data_schema"].schema
+    ) == has_web_search
+    assert (
+        CONF_WEB_SEARCH_USER_LOCATION in result["data_schema"].schema
+    ) == has_web_search
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("model", ["gpt-6-luna", "gpt-6-astra", "gpt-6.1-sol"])
+@pytest.mark.parametrize("web_search", [False, True])
+async def test_ai_task_gpt6_saved_search_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    web_search: bool,
+) -> None:
+    """Save both tool settings through the native task configuration flow."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: model}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "low",
+            CONF_WEB_SEARCH: web_search,
+            CONF_CODE_INTERPRETER: True,
+        },
+    )
+    assert result["reason"] == "reconfigure_successful"
+    saved = mock_config_entry.subentries[subentry.subentry_id].data
+    assert saved[CONF_CHAT_MODEL] == model
+    assert saved[CONF_REASONING_EFFORT] == "low"
+    assert saved[CONF_WEB_SEARCH] == web_search
+    assert saved[CONF_CODE_INTERPRETER] is True
 
 
 async def test_creating_stt_subentry(
@@ -1723,7 +1815,7 @@ async def test_reconfigure_invalid_auth(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
         new_callable=AsyncMock,
         side_effect=AuthenticationError(
-            response=httpx.Response(status_code=None, request=""),
+            response=httpx2.Response(status_code=None, request=""),
             body=None,
             message=None,
         ),

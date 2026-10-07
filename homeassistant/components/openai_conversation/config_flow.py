@@ -206,7 +206,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#generate-an-api-key",
+                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#prerequisites",
             },
         )
 
@@ -518,9 +518,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if options.get(CONF_SERVICE_TIER) not in service_tiers:
             options.pop(CONF_SERVICE_TIER, None)
 
-        if self._subentry_type == "conversation" and not model.startswith(
-            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
-        ):
+        if not model.startswith(tuple(UNSUPPORTED_WEB_SEARCH_MODELS)):
             step_schema.update(
                 {
                     probatio.Optional(

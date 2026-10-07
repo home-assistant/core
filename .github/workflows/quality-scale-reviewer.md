@@ -191,17 +191,12 @@ steps:
       path: /tmp/gh-aw/agent
   - name: Check out the pull request head
     env:
-      PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
       HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
     run: |
       set -euo pipefail
       BASE_SHA=$(git rev-parse HEAD)
-      git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
-      # The prepared diff describes HEAD_SHA; a newer push requires its own workflow run to be reviewed.
-      if [ "$(git rev-parse FETCH_HEAD)" != "${HEAD_SHA}" ]; then
-        echo "::error title=Quality scale review aborted::PR #${PR_NUMBER} head moved since preparation, aborting"
-        exit 1
-      fi
+      # The prepared diff describes HEAD_SHA, so review it even if the PR head moved since.
+      git fetch --depth=1 origin "${HEAD_SHA}"
       git checkout --detach "${HEAD_SHA}"
       # Agent configuration must come from the trusted default branch, not from the PR.
       # Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.
@@ -312,6 +307,10 @@ integration's codebase, analyze only the files and lines changed in
 cannot be judged without them. The exception is a newly claimed rule, which is
 verified against the integration as a whole because a PR that claims a rule
 must satisfy it.
+
+A Python environment is not available. For rules where running tests or scripts is
+desirable, judge statically from the code and tests instead. If the static evidence is
+insufficient for a confident verdict, do not report a finding.
 
 A finding is reportable only when all of the following hold:
 
