@@ -612,6 +612,7 @@ class _DefaultPipelineProcessor:
                 tts_input_stream = None
             chat_log_role = None
             delta_character_count = 0
+            last_assistant_content = ""
 
             @callback
             def chat_log_delta_listener(
@@ -629,10 +630,20 @@ class _DefaultPipelineProcessor:
                 if tts_input_stream is None:
                     return
 
-                nonlocal chat_log_role
+                nonlocal chat_log_role, last_assistant_content
 
                 if role := delta.get("role"):
                     chat_log_role = role
+
+                    # Keep TTS from running a new assistant message into the
+                    # previous one, for example around a tool call
+                    if (
+                        role == "assistant"
+                        and last_assistant_content
+                        and not last_assistant_content[-1].isspace()
+                    ):
+                        tts_input_stream.put_nowait(" ")
+                        last_assistant_content = " "
 
                 # We are only interested in assistant deltas
                 if chat_log_role != "assistant":
@@ -640,6 +651,7 @@ class _DefaultPipelineProcessor:
 
                 if content := delta.get("content"):
                     tts_input_stream.put_nowait(content)
+                    last_assistant_content = content
 
                 if self._streamed_response_text:
                     return

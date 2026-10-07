@@ -5,28 +5,39 @@ from asyncio import Task
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
+from bleak.exc import BleakError
 from pylamarzocco import LaMarzoccoMachine
+from pylamarzocco.const import MachineMode, WidgetType
 from pylamarzocco.exceptions import (
     AuthFail,
     BluetoothConnectionFailed,
     RequestNotSuccessful,
 )
+from pylamarzocco.models import BluetoothMachineTelemetry, MachineStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_OFFLINE_MODE, DOMAIN
+from .const import CONF_OFFLINE_MODE, DOMAIN, TO_REDACT
 
 SCAN_INTERVAL = timedelta(seconds=60)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=8)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=30)
 STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
+SHOT_TIMER_RETRY_DELAYS = (
+    timedelta(minutes=1),
+    timedelta(minutes=5),
+    timedelta(minutes=15),
+)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -110,7 +121,10 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from err
         else:
             self.update_success = True
-        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+        _LOGGER.debug(
+            "Current status: %s",
+            async_redact_data(self.device.dashboard.to_dict(), TO_REDACT),
+        )
 
     @override
     async def _async_setup(self) -> None:
@@ -138,7 +152,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Set up the coordinator."""
         await self.device.ensure_token_valid()
         await self.device.get_dashboard()
-        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
     @override
     async def _internal_async_update_data(self) -> None:
@@ -175,7 +188,10 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
         @callback
         def update_callback(_: Any | None = None) -> None:
-            _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+            _LOGGER.debug(
+                "Current status: %s",
+                async_redact_data(self.device.dashboard.to_dict(), TO_REDACT),
+            )
             self.async_set_updated_data(None)
 
         await self.device.connect_dashboard_websocket(
@@ -196,7 +212,10 @@ class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_settings()
-        _LOGGER.debug("Current settings: %s", self.device.settings.to_dict())
+        _LOGGER.debug(
+            "Current settings: %s",
+            async_redact_data(self.device.settings.to_dict(), TO_REDACT),
+        )
 
 
 class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
@@ -208,7 +227,10 @@ class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_schedule()
-        _LOGGER.debug("Current schedule: %s", self.device.schedule.to_dict())
+        _LOGGER.debug(
+            "Current schedule: %s",
+            async_redact_data(self.device.schedule.to_dict(), TO_REDACT),
+        )
 
 
 class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
@@ -220,7 +242,10 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_coffee_and_flush_counter()
-        _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())
+        _LOGGER.debug(
+            "Current statistics: %s",
+            async_redact_data(self.device.statistics.to_dict(), TO_REDACT),
+        )
 
 
 class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
@@ -228,16 +253,133 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _ignore_offline_mode = True
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: LaMarzoccoConfigEntry,
+        device: LaMarzoccoMachine,
+        config_coordinator: LaMarzoccoConfigUpdateCoordinator,
+    ) -> None:
+        """Initialize the Bluetooth coordinator."""
+        super().__init__(hass, entry, device)
+        self._config_coordinator = config_coordinator
+        self._shot_timer_task: Task | None = None
+        self._shot_timer_supported = True
+        self._shot_timer_started = False
+        self._shot_timer_retry_delays = iter(SHOT_TIMER_RETRY_DELAYS)
+        self._shot_timer_retry_after = dt_util.utcnow()
+        # cloud updates may switch the machine between standby and brewing mode
+        entry.async_on_unload(
+            config_coordinator.async_add_listener(self._async_update_shot_timer)
+        )
+        entry.async_on_unload(
+            device.register_bluetooth_connection_callback(
+                lambda _: self.async_update_listeners()
+            )
+        )
+
     @override
     async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
         await self.device.get_model_info_from_bluetooth()
+
+    @property
+    def _machine_can_brew(self) -> bool:
+        """Return whether the machine is out of standby."""
+        machine_status = self.device.dashboard.config.get(WidgetType.CM_MACHINE_STATUS)
+        return (
+            machine_status is not None
+            and cast(MachineStatus, machine_status).mode is not MachineMode.STANDBY
+        )
+
+    @callback
+    def _async_update_shot_timer(self) -> None:
+        """Run the shot timer only while the machine is able to brew."""
+        if not self._shot_timer_supported or (
+            self._shot_timer_task is not None and not self._shot_timer_task.done()
+        ):
+            return
+        can_brew = self._machine_can_brew
+        if can_brew == self._shot_timer_started or (
+            can_brew and dt_util.utcnow() < self._shot_timer_retry_after
+        ):
+            return
+        # starting and stopping update the listeners, which call this again
+        self._shot_timer_started = can_brew
+        self._shot_timer_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_connect_shot_timer()
+            if can_brew
+            else self._async_disconnect_shot_timer(),
+            "lm_shot_timer_task",
+            eager_start=False,
+        )
+        self._shot_timer_task.add_done_callback(
+            partial(self._async_shot_timer_task_done, can_brew=can_brew)
+        )
+
+    @callback
+    def _async_shot_timer_task_done(self, task: Task, can_brew: bool) -> None:
+        """Catch up if the machine mode changed while the task was running."""
+        if task.cancelled():
+            return
+        if (err := task.exception()) is not None:
+            _LOGGER.error("Error in the Bluetooth shot timer", exc_info=err)
+        if self._machine_can_brew != can_brew:
+            self._async_update_shot_timer()
+
+    @callback
+    def _async_update_all_listeners(self, _: Any = None) -> None:
+        """Update the entities of both coordinators showing brewing data."""
+        self._config_coordinator.async_update_listeners()
+        self.async_update_listeners()
+
+    @callback
+    def _async_bluetooth_telemetry_received(
+        self, telemetry: BluetoothMachineTelemetry
+    ) -> None:
+        """Refresh right away when the machine reports a new mode."""
+        if telemetry.machine_mode is not None:
+            self._async_update_all_listeners()
+
+    async def _async_connect_shot_timer(self) -> None:
+        """Connect the Bluetooth shot timer, back off on failures."""
+        connected = False
+        try:
+            connected = await self.device.connect_bluetooth_shot_counter(
+                self._async_update_all_listeners,
+                self._async_bluetooth_telemetry_received,
+            )
+        except (BleakError, BluetoothConnectionFailed, TimeoutError) as err:
+            _LOGGER.debug("Could not start the shot timer: %s", err)
+        else:
+            # a missing characteristic is only final if the cloud agrees
+            if not connected and not self.device.dashboard.shot_counter_supported:
+                _LOGGER.info("Machine does not support the Bluetooth shot timer")
+                self._shot_timer_supported = False
+        finally:
+            self._shot_timer_started = connected
+            if connected:
+                self._shot_timer_retry_delays = iter(SHOT_TIMER_RETRY_DELAYS)
+            else:
+                # back off, staying at the longest delay
+                self._shot_timer_retry_after = dt_util.utcnow() + next(
+                    self._shot_timer_retry_delays, SHOT_TIMER_RETRY_DELAYS[-1]
+                )
+        self._async_update_all_listeners()
+
+    async def _async_disconnect_shot_timer(self) -> None:
+        """Disconnect the Bluetooth shot timer while the machine is in standby."""
+        try:
+            await self.device.disconnect_bluetooth_shot_counter()
+        finally:
+            self._async_update_all_listeners()
 
     @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from Bluetooth endpoint."""
         # if the websocket is connected and the machine is connected to the cloud
         # skip bluetooth update, because we get push updates
-        if self.device.websocket.connected and self.device.dashboard.connected:
-            return
-        await self.device.get_dashboard_from_bluetooth()
+        if not (self.device.websocket.connected and self.device.dashboard.connected):
+            await self.device.get_dashboard_from_bluetooth()
+        self._async_update_shot_timer()

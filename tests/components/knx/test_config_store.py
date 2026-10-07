@@ -17,9 +17,12 @@ from homeassistant.components.knx.storage.config_store import (
 )
 from homeassistant.components.knx.storage.const import CONF_DATA
 from homeassistant.components.knx.storage.entity_store_schema import (
+    BaseEntityConfig,
     BinarySensorKnxConfig,
+    CoverKnxConfig,
     DateKnxConfig,
     DatetimeKnxConfig,
+    KnxEntityData,
     NotifyKnxConfig,
     NumberKnxConfig,
     SceneKnxConfig,
@@ -27,8 +30,10 @@ from homeassistant.components.knx.storage.entity_store_schema import (
     SwitchKnxConfig,
     TextKnxConfig,
     TimeKnxConfig,
+    WeatherKnxConfig,
 )
 from homeassistant.components.knx.storage.entity_store_validation import (
+    EntityStoreValidationException,
     validate_entity_data,
 )
 from homeassistant.components.knx.storage.serialize import get_serialized_schema
@@ -751,7 +756,7 @@ async def test_load_applies_schema_defaults_and_coercion(
     )
     assert hass.states.get("light.missing_defaults") is not None
     config_store = hass.data[KNX_MODULE_KEY].config_store
-    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID][DOMAIN]
+    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID].knx
     assert light_config["color_temp_min"] == 2700
     assert light_config["color_temp_max"] == 6000
 
@@ -963,6 +968,56 @@ TYPED_CONFIG_CASES = [
         },
         id="text",
     ),
+    pytest.param(
+        Platform.WEATHER,
+        WeatherKnxConfig,
+        {
+            "ga_temperature": {"state": "1/2/3"},
+            "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
+        },
+        {
+            "ga_temperature": {"state": "1/2/3", "passive": []},
+            "ga_humidity": None,
+            "ga_air_pressure": None,
+            "ga_wind_speed": None,
+            "ga_wind_bearing": None,
+            "ga_brightness_east": None,
+            "ga_brightness_south": None,
+            "ga_brightness_west": None,
+            "ga_brightness_north": None,
+            "ga_day_night": None,
+            "invert_day_night": False,
+            "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
+            "ga_frost_alarm": None,
+            "ga_wind_alarm": None,
+            "sync_state": True,
+        },
+        id="weather",
+    ),
+    pytest.param(
+        Platform.COVER,
+        CoverKnxConfig,
+        {
+            "ga_up_down": {"write": "1/2/3"},
+            "ga_angle": {"write": "1/2/4", "state": "1/2/5"},
+            "travelling_time_down": 10,
+        },
+        {
+            "ga_up_down": {"write": "1/2/3", "passive": []},
+            "invert_updown": False,
+            "ga_stop": None,
+            "ga_step": None,
+            "ga_position_set": None,
+            "ga_position_state": None,
+            "invert_position": False,
+            "ga_angle": {"write": "1/2/4", "state": "1/2/5", "passive": []},
+            "invert_angle": False,
+            "travelling_time_up": 25.0,
+            "travelling_time_down": 10.0,
+            "sync_state": True,
+        },
+        id="cover",
+    ),
 ]
 
 
@@ -980,16 +1035,23 @@ def test_typed_config_storage_roundtrip(
     validated = validate_entity_data(
         {CONF_PLATFORM: platform, CONF_DATA: {"entity": entity_input, "knx": knx_input}}
     )[CONF_DATA]
-    assert isinstance(validated[DOMAIN], config_type)
+    assert isinstance(validated, KnxEntityData)
+    assert validated.entity == BaseEntityConfig(name="test")
+    assert isinstance(validated.knx, config_type)
 
     stored = to_storage_dict(validated)
+    assert stored["entity"] == {
+        "name": "test",
+        "device_info": None,
+        "entity_category": None,
+    }
     assert stored["knx"] == knx_stored
     assert json.loads(json.dumps(stored)) == stored  # storage is JSON
 
     reloaded = validate_entity_data({CONF_PLATFORM: platform, CONF_DATA: stored})[
         CONF_DATA
     ]
-    assert reloaded[DOMAIN] == validated[DOMAIN]
+    assert reloaded == validated
     assert to_storage_dict(reloaded) == stored
 
 
@@ -1008,3 +1070,31 @@ def test_typed_config_field_order_is_ui_order(
     assert [field["name"] for field in serialized] == [
         field.name for field in dataclasses.fields(config_type)
     ]
+
+
+@pytest.mark.parametrize(
+    "knx_data",
+    [
+        pytest.param({"ga_stop": {"write": "1/2/3"}}, id="no_control"),
+        pytest.param({"ga_up_down": {"passive": ["1/2/3"]}}, id="up_down_not_writable"),
+        pytest.param(
+            {"ga_position_set": {"passive": ["1/2/3"]}},
+            id="position_set_not_writable",
+        ),
+    ],
+)
+def test_cover_requires_writable_control(knx_data: dict[str, Any]) -> None:
+    """Test a cover needs a writable open/close or set position address."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {
+                CONF_PLATFORM: Platform.COVER,
+                CONF_DATA: {"entity": {"name": "test"}, "knx": knx_data},
+            }
+        )
+    errors = exc_info.value.validation_error["errors"]
+    assert len(errors) == 1
+    assert errors[0]["path"] == ["data", "knx"]
+    assert errors[0]["message"] == (
+        "At least one of 'Open/Close control' or 'Position - Set position' is required."
+    )

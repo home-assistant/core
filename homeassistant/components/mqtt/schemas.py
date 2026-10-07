@@ -97,7 +97,7 @@ _MQTT_AVAILABILITY_LIST_SCHEMA = probatio.Schema(
             CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST
         ): probatio.All(cv.string, probatio.In(AVAILABILITY_MODES)),
         probatio.Exclusive(CONF_AVAILABILITY, "availability"): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(CONF_TOPIC): valid_subscribe_topic,
@@ -135,10 +135,10 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_CONNECTIONS, default=list): probatio.All(
-                cv.ensure_list, [probatio.All(probatio.Length(2), [cv.string])]
+                probatio.EnsureList(), [probatio.All(probatio.Length(2), [cv.string])]
             ),
             probatio.Optional(CONF_MANUFACTURER): cv.string,
             probatio.Optional(CONF_MODEL): cv.string,
@@ -170,7 +170,7 @@ MQTT_ORIGIN_INFO_SCHEMA = probatio.All(
 def valid_message_expiry_interval(value: Any) -> int:
     """Return Message Expiry Interval in seconds."""
     if isinstance(value, int):
-        return cv.positive_int(value)  # type: ignore[no-any-return]
+        return cv.positive_int(value)
     return int(cv.positive_time_period_dict(value).total_seconds())
 
 

@@ -1,6 +1,6 @@
 """Test Waze Travel Time sensors."""
 
-import httpx
+import httpx2
 import pytest
 from pywaze.route_calculator import WRCError
 
@@ -39,8 +39,8 @@ def mock_update_wrcerror_fixture(mock_update):
 
 @pytest.fixture(name="mock_update_connect_error")
 def mock_update_connect_error_fixture(mock_update):
-    """Mock an update to the sensor failed with httpx.ConnectError."""
-    mock_update.side_effect = httpx.ConnectError("[Errno -3] Try again")
+    """Mock an update to the sensor failed with httpx2.ConnectError."""
+    mock_update.side_effect = httpx2.ConnectError("[Errno -3] Try again")
     return mock_update
 
 
