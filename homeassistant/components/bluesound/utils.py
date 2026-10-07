@@ -10,11 +10,6 @@ def format_unique_id(mac: str, port: int) -> str:
     return f"{format_mac(mac)}-{port}"
 
 
-def dispatcher_join_signal(entity_id: str) -> str:
-    """Join an entity ID with a signal."""
-    return f"bluesound_join_{entity_id}"
-
-
 def dispatcher_unjoin_signal(leader_id: str) -> str:
     """Unjoin an entity ID with a signal.
 
