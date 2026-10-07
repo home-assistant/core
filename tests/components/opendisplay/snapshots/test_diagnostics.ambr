@@ -103,6 +103,7 @@
       }),
       'touch_controllers': list([
       ]),
+      'unparsed_tail': '',
       'version': 0,
       'wifi_config': None,
     }),
