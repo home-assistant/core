@@ -735,3 +735,97 @@ async def test_no_rgbww_light(
         ColorMode.RGBW,
     ]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
+
+
+async def _async_refresh_with(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    light_capabilities: int,
+    led_config: dict[str, Any] | None,
+) -> None:
+    """Let the device answer with another LED setup on the next update."""
+    data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
+    data["info"]["leds"]["seglc"] = [light_capabilities]
+    data["state"]["seg"][0]["col"] = [[255, 0, 0, 255], [0, 0, 0, 0], [0, 0, 0, 0]]
+    if led_config is not None:
+        data["cfg"] = {"hw": {"led": led_config}}
+    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_color_modes_follow_led_type_change(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the color modes follow a change of the LED type."""
+    sk6812 = {"cct": True, "ins": [{"start": 0, "len": 178, "type": 30}]}
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], sk6812
+    )
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert ColorMode.RGBW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+
+    await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, WS2805)
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_color_modes_follow_light_capabilities_change(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the color modes follow a change of a segment's capabilities."""
+    await _async_load_segment(hass, mock_wled, mock_config_entry, 1, [255, 0, 0])
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
+
+    await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, None)
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGBW,
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_color_modes_kept_when_led_setup_not_known(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an LED setup that can't be fetched for a moment changes nothing."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], WS2805
+    )
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, None)
+
+    reload.assert_not_called()
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_color_modes_once_led_setup_is_known(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an LED setup not known at setup is picked up once it is."""
+    await _async_load_segment(hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255])
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert ColorMode.RGBW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+
+    await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, WS2805)
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]

@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for WLED."""
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from wled import (
     WLED,
@@ -43,6 +43,26 @@ def normalize_mac_address(mac: str) -> str:
     return mac.lower().replace(":", "").replace(".", "").replace("-", "").strip()
 
 
+def _led_setup(device: WLEDDevice) -> tuple[Any, ...] | None:
+    """Return what of the LED setup the color modes depend on, if known."""
+    if (led_config := device.led_config) is None:
+        return None
+
+    return (
+        led_config.cct_from_rgb,
+        tuple(
+            (
+                output.start,
+                output.length,
+                output.has_rgb,
+                output.has_white,
+                output.has_cct,
+            )
+            for output in led_config.outputs
+        ),
+    )
+
+
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
@@ -61,6 +81,8 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
+        # The LED setup the lights set up their color modes from, if known.
+        self._led_setup: tuple[Any, ...] | None = None
 
         if TYPE_CHECKING:
             assert entry.unique_id
@@ -73,6 +95,25 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+
+    def _led_setup_changed(self, device: WLEDDevice) -> bool:
+        """Return whether the LED setup the color modes came from changed.
+
+        A setup that isn't known right now, like when fetching it failed,
+        doesn't count: that would reload the integration twice for nothing.
+        """
+        # A segment can do other colors, like after changing the LED type.
+        old_segments = self.data.state.segments
+        if any(
+            segment_id in old_segments
+            and old_segments[segment_id].light_capabilities
+            != segment.light_capabilities
+            for segment_id, segment in device.state.segments.items()
+        ):
+            return True
+
+        led_setup = _led_setup(device)
+        return led_setup is not None and led_setup != self._led_setup
 
     @property
     def has_main_light(self) -> bool:
@@ -174,8 +215,13 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             )
 
         # Firmware from another repository changes which updates can be offered,
-        # like after flashing a fork; set the integration up again for it.
-        if self.data is not None and device.info.repo != self.data.info.repo:
+        # like after flashing a fork; a changed LED setup changes the color
+        # modes of the lights. Set the integration up again for either.
+        previous: WLEDDevice | None = self.data
+        if previous is None:
+            # Nothing to compare with yet; remember what the lights start from.
+            self._led_setup = _led_setup(device)
+        elif device.info.repo != previous.info.repo or self._led_setup_changed(device):
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
         # If the device supports a WebSocket, try activating it.
