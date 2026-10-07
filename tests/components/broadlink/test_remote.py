@@ -1,5 +1,6 @@
 """Tests for Broadlink remotes."""
 
+import asyncio
 from base64 import b64decode, b64encode
 from datetime import timedelta
 from typing import Any
@@ -364,6 +365,41 @@ async def test_remote_learn_rf_command_failure(
     assert getattr(mock_api, api_method).called
     assert mock_api.cancel_sweep_frequency.call_count == sweep_cancels
     assert f"broadlink_remote_{device.mac}_codes" not in hass_storage
+
+
+@pytest.mark.usefixtures("mock_sleep")
+async def test_remote_learn_rf_command_cancelled(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cancelling RF learning while polling the frequency ends the sweep."""
+    device = get_device("Garage")
+    mock_api = device.get_mock_api()
+    mock_api.check_frequency.side_effect = asyncio.CancelledError
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+    entity_id = _get_remote_entity_id(
+        hass,
+        device_registry,
+        entity_registry,
+        mock_setup.entry.unique_id,
+        mock_setup.entry.entry_id,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_LEARN_COMMAND,
+            {
+                "entity_id": entity_id,
+                "device": "fan",
+                "command": "light",
+                "command_type": "rf",
+            },
+            blocking=True,
+        )
+
+    assert mock_api.cancel_sweep_frequency.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_sleep")

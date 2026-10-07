@@ -428,8 +428,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
 
-        except BroadlinkException, OSError:
-            # Leave the device out of sweep mode so later learning still works.
+        except BroadlinkException, OSError, asyncio.CancelledError:
+            # Leave the device out of sweep mode so later learning still works,
+            # also when the action is cancelled while polling.
             with suppress(BroadlinkException, OSError):
                 await device.async_request(device.api.cancel_sweep_frequency)
             raise
