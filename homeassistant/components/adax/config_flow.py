@@ -152,12 +152,9 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 formatted_mac = format_mac(user_input[CONF_MAC])
                 mac_parts = formatted_mac.split(":")
-                if (
-                    len(mac_parts) != 6
-                    or any(
-                        len(part) != 2 or not all(c in hexdigits for c in part)
-                        for part in mac_parts
-                    )
+                if len(mac_parts) != 6 or any(
+                    len(part) != 2 or not all(c in hexdigits for c in part)
+                    for part in mac_parts
                 ):
                     errors[CONF_MAC] = "invalid_mac"
                 else:
