@@ -92,3 +92,20 @@ async def test_api_events(
     )
 
     assert await response.json() == snapshot
+
+
+@pytest.mark.usefixtures("habitica")
+@pytest.mark.freeze_time("2024-09-22T10:00:00.000Z")
+async def test_dailies_start_on_local_day_of_last_cron(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the dailies start on the local day the cron ran, not the UTC day."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The cron ran at 2024-09-21T22:01:55Z, which is already September 22 in Berlin
+    assert (state := hass.states.get("calendar.test_user_dailies"))
+    assert state.attributes["start_time"] == "2024-09-22 00:00:00"
