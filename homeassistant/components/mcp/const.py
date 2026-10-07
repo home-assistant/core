@@ -12,10 +12,6 @@ CONF_SLUG = "slug"
 # Shown on the authorization server and in Application Credentials.
 DCR_CLIENT_NAME = "Home Assistant"
 
-# Prefix for auth domains of clients issued by RFC 7591 registration.
-# The remainder is "{token_endpoint_auth_method}.{slug}".
-DCR_AUTH_DOMAIN_PREFIX = "dcr."
-
 TOKEN_ENDPOINT_AUTH_NONE = "none"
 TOKEN_ENDPOINT_AUTH_POST = "client_secret_post"
 TOKEN_ENDPOINT_AUTH_BASIC = "client_secret_basic"

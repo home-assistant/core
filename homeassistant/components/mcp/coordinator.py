@@ -1,12 +1,13 @@
 """Types for the Model Context Protocol integration."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager
 import datetime
 import logging
 from typing import override
 
+import httpx  # noqa: TID251
 import httpx2
 from mcp import McpError
 from mcp.client.session import ClientSession
@@ -40,6 +41,79 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]
+
+
+def _iter_wrapped_errors(exc: BaseException) -> Iterator[BaseException]:
+    """Yield an exception and errors nested in groups or causes."""
+    seen: set[int] = set()
+    stack = [exc]
+    while stack:
+        current = stack.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, BaseExceptionGroup):
+            stack.extend(reversed(current.exceptions))
+            if current.__cause__ is not None:
+                stack.append(current.__cause__)
+            continue
+        yield current
+        if current.__cause__ is not None:
+            stack.append(current.__cause__)
+
+
+def _as_httpx2_error(error: BaseException) -> BaseException:
+    """Return an httpx2 error equivalent to an MCP SDK httpx error.
+
+    The MCP SDK imports httpx. Home Assistant imports httpx2. Status errors
+    from those packages do not share a class, so callers that catch httpx2
+    would otherwise miss a 401.
+    """
+    if isinstance(error, httpx2.HTTPError):
+        return error
+    if isinstance(error, httpx.HTTPStatusError):
+        sdk_request = error.response.request
+        request = httpx2.Request(sdk_request.method, str(sdk_request.url))
+        response = httpx2.Response(
+            status_code=error.response.status_code,
+            headers=dict(error.response.headers),
+            request=request,
+        )
+        return httpx2.HTTPStatusError(str(error), request=request, response=response)
+    if isinstance(error, httpx.TimeoutException):
+        return httpx2.TimeoutException(str(error))
+    if isinstance(error, httpx.HTTPError):
+        return httpx2.HTTPError(str(error))
+    return error
+
+
+def _representative_mcp_error(exc: BaseException) -> BaseException:
+    """Pick the transport error callers should handle.
+
+    anyio wraps the SDK's httpx.HTTPStatusError in an ExceptionGroup. A 401
+    has to stay an auth failure instead of being reported as an unknown error.
+    """
+    status_error: BaseException | None = None
+    mcp_error: BaseException | None = None
+    http_error: BaseException | None = None
+    fallback: BaseException | None = None
+    for nested in _iter_wrapped_errors(exc):
+        normalized = _as_httpx2_error(nested)
+        if fallback is None:
+            fallback = normalized
+        if status_error is None and isinstance(normalized, httpx2.HTTPStatusError):
+            status_error = normalized
+        elif mcp_error is None and isinstance(normalized, McpError):
+            mcp_error = normalized
+        elif http_error is None and isinstance(normalized, httpx2.HTTPError):
+            http_error = normalized
+    if status_error is not None:
+        return status_error
+    if mcp_error is not None:
+        return mcp_error
+    if http_error is not None:
+        return http_error
+    return fallback if fallback is not None else exc
 
 
 def _create_sse_httpx_client(
@@ -89,7 +163,7 @@ async def mcp_client(
             result = await session.initialize()
             yield session, result
     except ExceptionGroup as streamable_err:
-        main_error = streamable_err.exceptions[0]
+        main_error = _representative_mcp_error(streamable_err)
         # Method not Allowed likely means this is not a streamable HTTP server,
         # but it may be an SSE server. This is part of the MCP Transport
         # backwards compatibility specification.
@@ -115,10 +189,14 @@ async def mcp_client(
                     yield session, result
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
-                raise sse_err.exceptions[0] from sse_err
+                raise _representative_mcp_error(sse_err) from sse_err
+            except httpx.HTTPError as sse_http_err:
+                raise _as_httpx2_error(sse_http_err) from sse_http_err
         else:
             _LOGGER.debug("Error creating MCP client: %s", streamable_err)
             raise main_error from streamable_err
+    except httpx.HTTPError as http_err:
+        raise _as_httpx2_error(http_err) from http_err
 
 
 def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:
@@ -193,7 +271,7 @@ class ModelContextProtocolTool(llm.Tool):
             raise ConfigEntryAuthFailed(
                 "OAuth token request failed when calling tool"
             ) from error
-        except httpx2.HTTPStatusError as error:
+        except (httpx.HTTPStatusError, httpx2.HTTPStatusError) as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             if error.response.status_code == 401:
                 auth_header = AuthenticateHeader.from_header(
@@ -206,7 +284,7 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        except httpx2.HTTPError as error:
+        except (httpx.HTTPError, httpx2.HTTPError) as error:
             _LOGGER.debug(
                 "Error communicating with MCP server when calling tool: %s", error
             )
@@ -259,7 +337,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         except OAuth2TokenRequestReauthError as error:
             _LOGGER.debug("OAuth token request failed: %s", error)
             raise ConfigEntryAuthFailed("OAuth token request failed") from error
-        except httpx2.HTTPStatusError as error:
+        except (httpx.HTTPStatusError, httpx2.HTTPStatusError) as error:
             _LOGGER.debug("Error communicating with API: %s", error)
             if error.response.status_code == 401:
                 auth_header = AuthenticateHeader.from_header(
@@ -272,7 +350,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     "The MCP server requires authentication"
                 ) from error
             raise UpdateFailed(f"Error communicating with API: {error}") from error
-        except httpx2.HTTPError as err:
+        except (httpx.HTTPError, httpx2.HTTPError) as err:
             _LOGGER.debug("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

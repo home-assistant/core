@@ -1,15 +1,26 @@
 """Authentication helper classes for the Model Context Protocol integration."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import re
+from typing import Protocol
 
-import httpx2
 from yarl import URL
 
 # Headers and regex for WWW-Authenticate parsing for rfc9728
 WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
 RESOURCE_METADATA_REGEXP = r'resource_metadata="([^"]+)"'
 SCOPES_REGEXP = r'scope="([^"]+)"'
+
+
+class _ResponseWithHeaders(Protocol):
+    """HTTP response that exposes headers.
+
+    The MCP SDK raises httpx errors and Home Assistant uses httpx2. Both
+    response types satisfy this.
+    """
+
+    headers: Mapping[str, str]
 
 
 @dataclass
@@ -21,7 +32,7 @@ class AuthenticateHeader:
 
     @classmethod
     def from_header(
-        cls, url: str, error_response: httpx2.Response
+        cls, url: str, error_response: _ResponseWithHeaders
     ) -> AuthenticateHeader | None:
         """Create AuthenticateHeader from WWW-Authenticate header."""
         if not (header := error_response.headers.get(WWW_AUTHENTICATE_HEADER)) or not (

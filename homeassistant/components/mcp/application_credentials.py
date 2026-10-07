@@ -25,7 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import DCR_CLIENT_NAME, TOKEN_ENDPOINT_AUTH_BASIC, TOKEN_ENDPOINT_AUTH_NONE
-from .registration import token_endpoint_auth_method_from_domain
+from .registration import decode_registered_client_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,16 +66,19 @@ async def async_get_auth_implementation(
     servers that only support those clients are unchanged.
     """
     authorization_server = await async_get_authorization_server(hass)
-    if (method := token_endpoint_auth_method_from_domain(auth_domain)) is None:
+    # Manual credentials store the OAuth client id directly. Registered
+    # clients store a server-scoped encoding so the same client id can be
+    # issued by more than one authorization server.
+    if (identity := decode_registered_client_id(credential.client_id)) is None:
         return AuthImplementation(hass, auth_domain, credential, authorization_server)
     return McpRegisteredOAuth2Implementation(
         hass,
         auth_domain,
-        credential.client_id,
+        identity.client_id,
         authorization_server.authorize_url,
         authorization_server.token_url,
         credential.client_secret,
-        token_endpoint_auth_method=method,
+        token_endpoint_auth_method=identity.method,
     )
 
 
