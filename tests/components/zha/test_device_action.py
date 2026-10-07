@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, patch
 
+import probatio
 import pytest
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
@@ -276,6 +277,38 @@ async def test_inovelli_led_effect_from_unvalidated_config(
     assert getattr(cluster, cluster_method).call_args.kwargs["led_effect"] is (
         expected_effect
     )
+
+
+@pytest.mark.parametrize(
+    ("action_type", "extra_config"),
+    [
+        pytest.param("issue_all_led_effect", {}, id="all_leds"),
+        pytest.param(
+            "issue_individual_led_effect", {"led_number": 1}, id="individual_led"
+        ),
+    ],
+)
+@pytest.mark.parametrize("effect_type", [77, "77", "Unknown"])
+async def test_inovelli_led_effect_rejects_unknown_effect(
+    hass: HomeAssistant,
+    action_type: str,
+    extra_config: dict[str, int],
+    effect_type: int | str,
+) -> None:
+    """Test only known effect names pass validation, not raw effect codes."""
+    config = {
+        "device_id": "device_id",
+        "domain": DOMAIN,
+        "type": action_type,
+        "effect_type": effect_type,
+        "color": 200,
+        "level": 100,
+        "duration": 255,
+        **extra_config,
+    }
+
+    with pytest.raises(probatio.Invalid):
+        await device_action.async_validate_action_config(hass, config)
 
 
 async def test_client_unique_id_suffix_stripped(

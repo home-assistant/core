@@ -37,7 +37,9 @@ INOVELLI_ALL_LED_EFFECT_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): INOVELLI_ALL_LED_EFFECT,
         probatio.Required(CONF_DOMAIN): DOMAIN,
-        probatio.Required("effect_type"): AllLEDEffectType,
+        probatio.Required("effect_type"): probatio.In(
+            AllLEDEffectType.__members__.keys()
+        ),
         probatio.Required("color"): probatio.All(
             probatio.Coerce(int), probatio.Range(0, 255)
         ),
@@ -53,7 +55,9 @@ INOVELLI_ALL_LED_EFFECT_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): INOVELLI_INDIVIDUAL_LED_EFFECT,
-        probatio.Required("effect_type"): SingleLEDEffectType,
+        probatio.Required("effect_type"): probatio.In(
+            SingleLEDEffectType.__members__.keys()
+        ),
         probatio.Required("led_number"): probatio.All(
             probatio.Coerce(int), probatio.Range(0, 6)
         ),
@@ -221,9 +225,9 @@ async def _execute_inovelli_all_led_effect(
 
     async with convert_zha_error_to_ha_error():
         await cluster.led_effect(
-            # The action isn't validated when ZHA wasn't loaded yet, so this
-            # can still be the effect name instead of the enum member
-            led_effect=AllLEDEffectType(config["effect_type"]),
+            # The action isn't validated when ZHA wasn't loaded yet, so the
+            # effect type is converted here instead of in the schema
+            led_effect=AllLEDEffectType[config["effect_type"]],
             led_color=config["color"],
             led_level=config["level"],
             led_duration=config["duration"],
@@ -239,7 +243,7 @@ async def _execute_inovelli_individual_led_effect(
 
     async with convert_zha_error_to_ha_error():
         await cluster.individual_led_effect(
-            led_effect=SingleLEDEffectType(config["effect_type"]),
+            led_effect=SingleLEDEffectType[config["effect_type"]],
             led_color=config["color"],
             led_level=config["level"],
             led_duration=config["duration"],
