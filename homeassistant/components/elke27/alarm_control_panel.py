@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -77,7 +78,11 @@ class Elke27AreaAlarmControlPanel(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, area_identifier)},
             name=area.name or f"Area {area.area_id}",
-            via_device=(DOMAIN, panel_identifier),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, panel_identifier),
+                config_entry_id=entry.entry_id,
+            ),
         )
 
     @property

@@ -34,7 +34,9 @@ async def test_load_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    device = dr.async_get(hass).async_get_device({(DOMAIN, "1234")})
+    device = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, "1234"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.manufacturer == "Elk Products"
     assert device.name == "Panel"

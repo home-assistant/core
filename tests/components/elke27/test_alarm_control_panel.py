@@ -76,9 +76,13 @@ async def test_area_entities_and_devices(
     assert entity_entry is not None
     assert entity_entry.unique_id == "1234:1"
 
-    panel_device = device_registry.async_get_device({(DOMAIN, "1234")})
+    panel_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), mock_config_entry.entry_id
+    )
     assert panel_device is not None
-    area_device = device_registry.async_get_device({(DOMAIN, "1234:area:1")})
+    area_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234:area:1"), mock_config_entry.entry_id
+    )
     assert area_device is not None
     assert area_device.name == "Area 1"
     assert area_device.via_device_id == panel_device.id
