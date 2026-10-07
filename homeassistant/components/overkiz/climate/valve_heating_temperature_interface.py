@@ -52,7 +52,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -83,7 +83,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature."""
         return cast(
             float, self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
@@ -91,7 +91,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(
@@ -137,7 +137,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         # we need to pass in a temperature. Manual mode will
         # be on automatically if a user sets a temperature
         if preset_mode == PRESET_MANUAL:
-            if current_temperature := self.current_temperature:
+            if current_temperature := self.native_current_temperature:
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_DEROGATION,
                     current_temperature,
