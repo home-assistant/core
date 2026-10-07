@@ -1,6 +1,7 @@
 """Component to create an interface to a Pilight daemon."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import functools
 import logging
@@ -25,6 +26,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
+from .const import DATA_PILIGHT, DOMAIN, EVENT, SERVICE_NAME
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SEND_DELAY = "send_delay"
@@ -32,9 +35,7 @@ CONF_SEND_DELAY = "send_delay"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 5001
 DEFAULT_SEND_DELAY = 0.0
-DOMAIN = "pilight"
 
-EVENT = "pilight_received"
 type EVENT_TYPE = Event[dict[str, Any]]
 
 # The Pilight code schema depends on the protocol. Thus only require to have
@@ -48,8 +49,6 @@ RF_CODE_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-
-SERVICE_NAME = "send"
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -93,18 +92,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
-    @send_throttler.limited
+    hass.data[DATA_PILIGHT] = PilightData(pilight_client, send_throttler)
+
     def send_code(call: ServiceCall) -> None:
         """Send RF code to the pilight-daemon."""
-        # Change type to dict from mappingproxy since data has to be JSON
-        # serializable
-        message_data = dict(call.data)
-
-        try:
-            pilight_client.send_code(message_data)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except OSError:
-            _LOGGER.error("Pilight send failed for %s", str(message_data))
+        data = call.hass.data[DATA_PILIGHT]
+        data.send_throttler.limited(_send_code)(data.client, call)
 
     def _register_service() -> None:
         hass.services.async_register(
@@ -193,3 +186,24 @@ class CallRateDelayThrottle:
                     self._schedule(action, schedule_ts)
 
         return decorated
+
+
+@dataclass
+class PilightData:
+    """Runtime data for the Pilight integration."""
+
+    client: pilight.Client
+    send_throttler: CallRateDelayThrottle
+
+
+def _send_code(client: pilight.Client, call: ServiceCall) -> None:
+    """Send RF code to the pilight-daemon."""
+    # Change type to dict from mappingproxy since data has to be JSON
+    # serializable
+    message_data = dict(call.data)
+
+    try:
+        client.send_code(message_data)
+    # pylint: disable-next=home-assistant-action-swallowed-exception
+    except OSError:
+        _LOGGER.error("Pilight send failed for %s", str(message_data))

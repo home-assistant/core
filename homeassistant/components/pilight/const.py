@@ -1,5 +1,19 @@
 """Consts used by pilight."""
 
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import PilightData
+
+DOMAIN = "pilight"
+
+DATA_PILIGHT: HassKey[PilightData] = HassKey(DOMAIN)
+
+EVENT = "pilight_received"
+SERVICE_NAME = "send"
+
 CONF_DIMLEVEL_MAX = "dimlevel_max"
 CONF_DIMLEVEL_MIN = "dimlevel_min"
 CONF_ECHO = "echo"
