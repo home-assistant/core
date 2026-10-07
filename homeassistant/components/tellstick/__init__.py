@@ -33,7 +33,9 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Inclusive(CONF_HOST, "tellcore-net"): cv.string,
                 probatio.Inclusive(CONF_PORT, "tellcore-net"): probatio.All(
-                    cv.ensure_list, [cv.port], probatio.Length(min=2, max=2)
+                    probatio.EnsureList(),
+                    [probatio.Port()],
+                    probatio.Length(min=2, max=2),
                 ),
                 probatio.Optional(
                     CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS

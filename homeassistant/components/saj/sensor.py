@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             CONNECTION_TYPES
         ),
         probatio.Inclusive(CONF_USERNAME, "credentials"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "credentials"): cv.string,
     }
 )
 

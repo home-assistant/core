@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -122,36 +122,4 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        username = import_data[CONF_USERNAME]
-        password = import_data[CONF_PASSWORD]
-
-        client = WaterFurnace(username, password)
-
-        try:
-            # Login is a blocking call, run in executor
-            await self.hass.async_add_executor_job(client.login)
-        except WFCredentialError:
-            return self.async_abort(reason="invalid_auth")
-        except WFException:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected error importing WaterFurnace configuration")
-            return self.async_abort(reason="unknown")
-
-        if not client.devices:
-            return self.async_abort(reason="no_devices")
-
-        if client.account_id is None:
-            return self.async_abort(reason="unknown")
-
-        await self.async_set_unique_id(str(client.account_id))
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"WaterFurnace {username}",
-            data=import_data,
         )

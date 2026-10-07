@@ -44,14 +44,21 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
 async def test_api_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
+
     with patch(
         "homeassistant.components.p1_monitor.coordinator.P1Monitor.settings",
         side_effect=P1MonitorError,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_HOST: "example.com", CONF_PORT: 80},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "example.com", CONF_PORT: 80},
         )
 
     assert result.get("type") is FlowResultType.FORM

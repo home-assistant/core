@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 from pizone import Controller, Zone
-import probatio
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -26,13 +25,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN
+from .const import ATTR_AIRFLOW, DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .entity import IZoneCoordinatorEntity
 
@@ -46,20 +44,6 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.AUTO: FAN_AUTO,
 }
 
-ATTR_AIRFLOW = "airflow"
-
-IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
-IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
-
-IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_AIRFLOW): probatio.All(
-        probatio.Coerce(float),
-        probatio.In(range(0, 101, 5)),
-        probatio.Coerce(int),
-        msg="invalid airflow",
-    ),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -70,18 +54,6 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     controller_device = ControllerDevice(coordinator)
     async_add_entities([controller_device, *controller_device.zones.values()])
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        IZONE_SERVICE_AIRFLOW_MIN,
-        IZONE_SERVICE_AIRFLOW_SCHEMA,
-        "async_set_airflow_min",
-    )
-    platform.async_register_entity_service(
-        IZONE_SERVICE_AIRFLOW_MAX,
-        IZONE_SERVICE_AIRFLOW_SCHEMA,
-        "async_set_airflow_max",
-    )
 
 
 class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):

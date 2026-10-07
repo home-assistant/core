@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.components.switch import (
@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
@@ -120,7 +120,7 @@ async def async_setup_platform(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
         )
-    except (TimeoutError, httpx.RequestError) as exc:
+    except (TimeoutError, httpx2.RequestError) as exc:
         raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
@@ -136,11 +136,11 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         """Initialize the REST switch."""
         ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
 
-        auth: httpx.BasicAuth | None = None
+        auth: httpx2.BasicAuth | None = None
         username: str | None = None
         if username := config.get(CONF_USERNAME):
             password: str = config[CONF_PASSWORD]
-            auth = httpx.BasicAuth(username, password=password)
+            auth = httpx2.BasicAuth(username, password=password)
 
         self._resource: str = config[CONF_RESOURCE]
         self._state_resource: str = config.get(CONF_STATE_RESOURCE) or self._resource
@@ -167,7 +167,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_on_t)
-        except (TimeoutError, httpx.RequestError) as err:
+        except (TimeoutError, httpx2.RequestError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="error_communicating",
@@ -190,7 +190,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_off_t)
-        except (TimeoutError, httpx.RequestError) as err:
+        except (TimeoutError, httpx2.RequestError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="error_communicating",
@@ -206,14 +206,14 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         self._attr_is_on = False
 
-    async def set_device_state(self, body: Any) -> httpx.Response:
+    async def set_device_state(self, body: Any) -> httpx2.Response:
         """Send a state update to the device."""
         websession = get_async_client(self.hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        req: httpx.Response = await getattr(websession, self._method)(
+        req: httpx2.Response = await getattr(websession, self._method)(
             self._resource,
             auth=self._auth,
             content=bytes(body, "utf-8"),
@@ -228,13 +228,13 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         req = None
         try:
             req = await self.get_response(self.hass)
-        except TimeoutError, httpx.TimeoutException:
+        except TimeoutError, httpx2.TimeoutException:
             _LOGGER.exception(
                 "Timed out while fetching data for %s from %s",
                 self.entity_id,
                 self._state_resource,
             )
-        except httpx.RequestError:
+        except httpx2.RequestError:
             _LOGGER.exception(
                 "Error fetching data for %s from %s",
                 self.entity_id,
@@ -244,7 +244,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         if req:
             self._async_update(req.text)
 
-    async def get_response(self, hass: HomeAssistant) -> httpx.Response:
+    async def get_response(self, hass: HomeAssistant) -> httpx2.Response:
         """Get the latest data from REST API and update the state."""
         websession = get_async_client(hass, self._verify_ssl)
 

@@ -275,6 +275,9 @@
       "siren_duration": {
         "name": "Siren duration"
       },
+      "speed": {
+        "name": "[%key:component::sensor::entity_component::speed::name%]"
+      },
       "target_dis_closest": {
         "name": "Closest target distance"
       },
@@ -544,6 +547,9 @@
           "smart": "Smart"
         }
       },
+      "pump_mode": {
+        "name": "Mode"
+      },
       "quick_heat_temperature": {
         "name": "Quick heat temperature",
         "state": {
@@ -794,6 +800,9 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
+      "indexed_apparent_power": {
+        "name": "Apparent power channel {index}"
+      },
       "indexed_current": {
         "name": "Current channel {index}"
       },
@@ -815,6 +824,12 @@
       },
       "indexed_power": {
         "name": "Power channel {index}"
+      },
+      "indexed_power_factor": {
+        "name": "Power factor channel {index}"
+      },
+      "indexed_reactive_power": {
+        "name": "Reactive power channel {index}"
       },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
@@ -1289,6 +1304,9 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
+    "command_rejected": {
+      "message": "The Tuya cloud rejected the command."
+    },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."
     },
@@ -1303,6 +1321,9 @@
     },
     "invalid_meal_plan_data": {
       "message": "Unable to parse meal plan data."
+    },
+    "send_command_failed": {
+      "message": "Failed to send the command to the Tuya cloud."
     }
   },
   "selector": {

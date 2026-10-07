@@ -291,6 +291,14 @@ class TokenView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         data = cast(MultiDictProxy[str], await request.post())
 
+        # RFC 6749 3.2: parameters must not be included more than once.
+        if len(data) != len(set(data)) or any(
+            not isinstance(value, str) for value in data.values()
+        ):
+            return self.json(
+                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+
         grant_type = data.get("grant_type")
 
         # IndieAuth 6.3.5
@@ -494,7 +502,7 @@ class LinkUserView(HomeAssistantView):
 
         entry = self._retrieve_credentials(data["client_id"], data["code"])
 
-        if entry is None:
+        if entry is None or entry.code_challenge is not None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
         linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)

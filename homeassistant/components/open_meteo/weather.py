@@ -86,35 +86,33 @@ class OpenMeteoWeatherEntity(
     @override
     def condition(self) -> str | None:
         """Return the current condition."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.current:
             return None
-        return WMO_TO_HA_CONDITION_MAP.get(
-            self.coordinator.data.current_weather.weather_code
-        )
+        return WMO_TO_HA_CONDITION_MAP.get(self.coordinator.data.current.weather_code)
 
     @property
     @override
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.current:
             return None
-        return self.coordinator.data.current_weather.temperature
+        return self.coordinator.data.current.temperature_2m
 
     @property
     @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.current:
             return None
-        return self.coordinator.data.current_weather.wind_speed
+        return self.coordinator.data.current.wind_speed_10m
 
     @property
     @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.current:
             return None
-        return self.coordinator.data.current_weather.wind_direction
+        return self.coordinator.data.current.wind_direction_10m
 
     @callback
     @override
@@ -132,9 +130,9 @@ class OpenMeteoWeatherEntity(
                 datetime=_datetime.isoformat(),
             )
 
-            if daily.weathercode is not None:
+            if daily.weather_code is not None:
                 forecast[ATTR_FORECAST_CONDITION] = WMO_TO_HA_CONDITION_MAP.get(
-                    daily.weathercode[index]
+                    daily.weather_code[index]
                 )
 
             if daily.apparent_temperature_max is not None:
