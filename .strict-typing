@@ -109,6 +109,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.axle_energy.*
 homeassistant.components.azure_storage.*
 homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
@@ -173,6 +174,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discogs.*
 homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dlna_dms.*
@@ -202,6 +204,7 @@ homeassistant.components.energieleser.*
 homeassistant.components.energy.*
 homeassistant.components.energyid.*
 homeassistant.components.energyzero.*
+homeassistant.components.engie_be.*
 homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
@@ -255,6 +258,7 @@ homeassistant.components.google_sheets.*
 homeassistant.components.google_weather.*
 homeassistant.components.govee_ble.*
 homeassistant.components.gpsd.*
+homeassistant.components.gree_infrared.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -311,6 +315,7 @@ homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.indevolt.*
+homeassistant.components.indi_allsky.*
 homeassistant.components.inels.*
 homeassistant.components.infrared.*
 homeassistant.components.input_button.*
@@ -380,6 +385,7 @@ homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
+homeassistant.components.marketplace.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -447,6 +453,7 @@ homeassistant.components.openuv.*
 homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
+homeassistant.components.osram_infrared.*
 homeassistant.components.otbr.*
 homeassistant.components.otp.*
 homeassistant.components.ouman_eh_800.*
@@ -599,6 +606,7 @@ homeassistant.components.teltonika.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
+homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
@@ -642,6 +650,7 @@ homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
 homeassistant.components.vistapool.*
+homeassistant.components.vitesy.*
 homeassistant.components.vivotek.*
 homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*

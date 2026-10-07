@@ -5,12 +5,13 @@ import re
 import aiohttp
 from loqedAPI import loqed
 
+from homeassistant.components import cloud
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import LoqedConfigEntry, LoqedDataCoordinator
+from .coordinator import LoqedConfigEntry, LoqedDataCoordinator, is_auth_error
 
 PLATFORMS: list[Platform] = [Platform.LOCK, Platform.SENSOR]
 
@@ -35,9 +36,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> boo
         TimeoutError,
         aiohttp.ClientError,
     ) as ex:
+        if is_auth_error(ex):
+            raise ConfigEntryAuthFailed(
+                f"The bridge at {host} rejected the credentials"
+            ) from ex
         raise ConfigEntryNotReady(f"Unable to connect to bridge at {host}") from ex
     coordinator = LoqedDataCoordinator(hass, entry, api, lock)
-    await coordinator.ensure_webhooks()
+
+    try:
+        await coordinator.ensure_webhooks()
+    except (TimeoutError, aiohttp.ClientError) as ex:
+        if is_auth_error(ex):
+            raise ConfigEntryAuthFailed(
+                f"The bridge at {host} rejected the credentials"
+            ) from ex
+        raise ConfigEntryNotReady(f"Unable to connect to bridge at {host}") from ex
+    except cloud.CloudNotAvailable as ex:
+        raise ConfigEntryNotReady(
+            "Unable to create Home Assistant Cloud webhook"
+        ) from ex
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -50,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.remove_webhooks()
+    if unload_ok:
+        await entry.runtime_data.remove_webhooks()
 
     return unload_ok

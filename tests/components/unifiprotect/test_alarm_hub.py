@@ -4,14 +4,19 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from uiprotect.data import LinkStation, PublicBootstrap, WSAction
+from uiprotect.data import LinkStation, WSAction
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import MockUFPFixture, init_entry, public_device_ws_message
+from .utils import (
+    MockUFPFixture,
+    init_entry,
+    make_public_bootstrap,
+    public_device_ws_message,
+)
 
 from tests.common import load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -30,31 +35,16 @@ def _make_alarm_hub() -> LinkStation:
 
 def _make_public_bootstrap(hub: LinkStation | None) -> Mock:
     """Build a public bootstrap mock holding the given alarm hub."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.alarm_hubs = {hub.id: hub} if hub is not None else {}
-    pb.sirens = {}
-    pb.relays = {}
-    pb.cameras = {}
-    pb.lights = {}
-    pb.fobs = {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
-    pb.nvr = Mock()
+    nvr = Mock()
     # Distinct from ALARM_HUB_MAC: a shared mac would make the hub its own via device.
-    pb.nvr.mac = "112233445566"
-    pb.nvr.name = "Test NVR"
-    pb.nvr.display_name = "Test NVR"
-    pb.nvr.device_type = None
-    pb.nvr.type = None
-
-    # The baseline and reconnect resync enumerate all_devices(); a hub missing
-    # from it would be redispatched as new on every reconnect.
-    def _all_devices(*, include_nvr: bool = False) -> list[Mock]:
-        devices = list(pb.alarm_hubs.values())
-        return [pb.nvr, *devices] if include_nvr else devices
-
-    pb.all_devices = _all_devices
-    return pb
+    nvr.mac = "112233445566"
+    nvr.name = "Test NVR"
+    nvr.display_name = "Test NVR"
+    nvr.device_type = None
+    nvr.type = None
+    return make_public_bootstrap(
+        alarm_hubs={hub.id: hub} if hub is not None else {}, nvr=nvr
+    )
 
 
 @pytest.fixture(name="alarm_hub")

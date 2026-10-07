@@ -1,6 +1,6 @@
 """The tplink_lte integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -8,9 +8,9 @@ from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "tplink_lte"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {DOMAIN: cv.match_all},
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

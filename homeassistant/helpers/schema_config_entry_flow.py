@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import types
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -37,11 +37,13 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
     schema: (
-        vol.Schema
-        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]]
+        probatio.Schema
+        | Callable[
+            [SchemaCommonFlowHandler], Coroutine[Any, Any, probatio.Schema | None]
+        ]
         | None
     ) = None
-    """Optional voluptuous schema, or function which returns a schema or None, for
+    """Optional schema, or function which returns a schema or None, for
     requesting and validating user input.
 
     - If a function is specified, the function will be passed the current
@@ -168,10 +170,12 @@ class SchemaCommonFlowHandler:
             return form_step.options
         return await form_step.options(self)
 
-    async def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
+    async def _get_schema(
+        self, form_step: SchemaFlowFormStep
+    ) -> probatio.Schema | None:
         if form_step.schema is None:
             return None
-        if isinstance(form_step.schema, vol.Schema):
+        if isinstance(form_step.schema, probatio.Schema):
             return form_step.schema
         return await form_step.schema(self)
 
@@ -203,13 +207,13 @@ class SchemaCommonFlowHandler:
         self,
         values: dict[str, Any],
         user_input: dict[str, Any],
-        data_schema: vol.Schema | None,
+        data_schema: probatio.Schema | None,
     ) -> None:
         values.update(user_input)
         if data_schema and data_schema.schema:
             for key in data_schema.schema:
                 if (
-                    isinstance(key, vol.Optional)
+                    isinstance(key, probatio.Optional)
                     and key not in user_input
                     and not (
                         # don't remove read_only keys

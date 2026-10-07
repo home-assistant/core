@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -373,6 +373,49 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     assert hass.states.get("test.mock_1") is None
 
 
+async def test_entity_component_collection_update_after_entity_id_change(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test updates still reach the entity after its entity ID changed."""
+    ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
+    await ent_comp.async_setup({})
+    coll = MockObservableCollection(None)
+    collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
+
+    await coll.notify_changes(
+        [
+            collection.CollectionChange(
+                collection.CHANGE_ADDED,
+                "mock_id",
+                {"id": "mock_id", "state": "initial", "name": "Mock 1"},
+            )
+        ],
+    )
+
+    entity_registry.async_update_entity("test.mock_1", new_entity_id="test.renamed")
+    await hass.async_block_till_done()
+    assert hass.states.get("test.renamed").state == "initial"
+
+    await coll.notify_changes(
+        [
+            collection.CollectionChange(
+                collection.CHANGE_UPDATED,
+                "mock_id",
+                {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
+            )
+        ],
+    )
+
+    assert hass.states.get("test.renamed").name == "Mock 1 updated"
+    assert hass.states.get("test.renamed").state == "second"
+
+    await coll.notify_changes(
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
+    )
+
+    assert hass.states.get("test.renamed") is None
+
+
 async def test_entity_component_collection_abort(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -522,8 +565,8 @@ async def test_storage_collection_websocket(
         coll,
         "test_item/collection",
         "test_item",
-        {vol.Required("name"): str, vol.Required("immutable_string"): str},
-        {vol.Optional("name"): str},
+        {probatio.Required("name"): str, probatio.Required("immutable_string"): str},
+        {probatio.Optional("name"): str},
     ).async_setup(hass)
 
     client = await hass_ws_client(hass)
@@ -655,8 +698,8 @@ async def test_storage_collection_websocket_subscribe(
         coll,
         "test_item/collection",
         "test_item",
-        {vol.Required("name"): str, vol.Required("immutable_string"): str},
-        {vol.Optional("name"): str},
+        {probatio.Required("name"): str, probatio.Required("immutable_string"): str},
+        {probatio.Optional("name"): str},
     ).async_setup(hass)
 
     client = await hass_ws_client(hass)

@@ -1,9 +1,15 @@
-"""Tests for the Sofar Inverter Modbus integration."""
+"""Tests for the Sofar integration."""
 
 from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.sofar.const import CONF_UNIT_ID
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.sofar.const import (
+    CONF_BAUDRATE,
+    CONF_UNIT_ID,
+    DEFAULT_BAUDRATE,
+    TYPE_SERIAL,
+    TYPE_TCP,
+)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 MOCK_SERIAL = "SS2ES104N5S445"
 MOCK_MODEL = "4.4 KTLX-G3"
@@ -13,11 +19,20 @@ MOCK_HYBRID_MODEL = "HYDxxKTL-3P"
 MOCK_HW_VERSION = "V100"
 MOCK_SW_VERSION = "V220"
 
-MOCK_USER_INPUT = {
+MOCK_TCP_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 502,
     CONF_UNIT_ID: 1,
 }
+
+MOCK_ENTRY_DATA = {CONF_TYPE: TYPE_TCP, **MOCK_TCP_INPUT}
+
+MOCK_SERIAL_INPUT = {
+    CONF_DEVICE: "/dev/ttyUSB0",
+    CONF_BAUDRATE: DEFAULT_BAUDRATE,
+    CONF_UNIT_ID: 1,
+}
+MOCK_SERIAL_ENTRY_DATA = {CONF_TYPE: TYPE_SERIAL, **MOCK_SERIAL_INPUT}
 
 
 def _seed_string(unit: MockModbusUnit, address: int, words: int, text: str) -> None:
@@ -48,6 +63,19 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
     unit.holding[0x0687] = 150  # solar_generation_total low word -> 15.0 kWh
     unit.holding[0x0684] = 0  # solar_generation_today high word
     unit.holding[0x0685] = 1000  # solar_generation_today low word -> 10.0 kWh
+
+
+def deny_meter_energy(unit: MockModbusUnit) -> None:
+    """Seed a model that denies the meter block from 0x0688 on."""
+    # Bits 0-3 must stay set, or the mask is ignored and denies nothing.
+    unit.holding[0x0683] = 0x00FF
+
+
+def serve_meter_energy(unit: MockModbusUnit) -> None:
+    """Seed a model that serves the whole meter block."""
+    unit.holding[0x0683] = 0xFFFF  # 0x0680-0x068F
+    unit.holding[0x0682] = 0x000F  # 0x0690-0x0693
+    unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
 
 
 def seed_hybrid_inverter(

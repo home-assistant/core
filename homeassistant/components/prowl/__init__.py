@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except prowlpy.APIError as ex:
         if str(ex).startswith("Not accepted: exceeded rate limit"):
             raise ConfigEntryNotReady("Prowl API rate limit exceeded") from ex
-        raise ConfigEntryError("Failed to validate Prowl API key ({ex})") from ex
+        raise ConfigEntryError(f"Failed to validate Prowl API key ({ex})") from ex
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -2,11 +2,10 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from http import HTTPStatus
 import logging
 from typing import Any, Concatenate, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.catalog.models import Image
 from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
@@ -128,6 +127,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
+
         status = self.data.status
         if status.playback_state in XBOX_STATE_MAP:
             return XBOX_STATE_MAP[status.playback_state]
@@ -137,7 +137,10 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if not self.available or self.state not in [
+            MediaPlayerState.PLAYING,
+            MediaPlayerState.PAUSED,
+        ]:
             return (
                 SUPPORT_XBOX
                 & ~MediaPlayerEntityFeature.NEXT_TRACK
@@ -182,7 +185,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
 
         return (
             to_https(image.uri)
-            if (app_details := self.data.app_details)
+            if self.available
+            and (app_details := self.data.app_details)
             and (image := _find_media_image(app_details.localized_properties[0].images))
             else None
         )
@@ -191,15 +195,16 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        try:
-            await self.client.smartglass.wake_up(self._console.id)
-        except HTTPStatusError as e:
-            if e.response.status_code == HTTPStatus.NOT_FOUND:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="turn_on_failed",
-                ) from e
-            raise
+        if (
+            err := await self.client.smartglass.wake_up(self._console.id)
+        ).status.error_code != "OK":
+            _LOGGER.debug(
+                "Xbox error: %s (%s)", err.status.error_message, err.status.error_code
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+            )
 
     @exception_handler
     @override

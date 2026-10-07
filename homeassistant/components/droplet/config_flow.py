@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pydroplet.droplet import DropletConnection, DropletDiscovery
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_PORT
@@ -57,7 +57,11 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             # Test if we can connect before returning
             session = async_get_clientsession(self.hass)
             code = normalize_pairing_code(user_input[CONF_CODE])
-            if await self._droplet_discovery.try_connect(session, code):
+            try:
+                connected = await self._droplet_discovery.try_connect(session, code)
+            finally:
+                await self._droplet_discovery.close()
+            if connected:
                 device_data = {
                     CONF_IP_ADDRESS: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
@@ -72,9 +76,9 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CODE): str,
+                    probatio.Required(CONF_CODE): str,
                 }
             ),
             description_placeholders={
@@ -95,9 +99,13 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             session = async_get_clientsession(self.hass)
             code = normalize_pairing_code(user_input[CONF_CODE])
-            if await self._droplet_discovery.try_connect(session, code) and (
-                device_id := await self._droplet_discovery.get_device_id()
-            ):
+            device_id = ""
+            try:
+                if await self._droplet_discovery.try_connect(session, code):
+                    device_id = await self._droplet_discovery.get_device_id()
+            finally:
+                await self._droplet_discovery.close()
+            if device_id:
                 device_data = {
                     CONF_IP_ADDRESS: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
@@ -116,8 +124,11 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_CODE): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_IP_ADDRESS): str,
+                    probatio.Required(CONF_CODE): str,
+                }
             ),
             errors=errors,
         )

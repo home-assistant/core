@@ -5,8 +5,8 @@ from json import JSONDecodeError
 import logging
 
 from aiohttp import web
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -44,18 +44,22 @@ def _id(value: str) -> str:
     return value.replace("-", "")
 
 
-WEBHOOK_SCHEMA = vol.Schema(
+WEBHOOK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ID): vol.All(cv.string, _id),
-        vol.Required(ATTR_LATITUDE): cv.latitude,
-        vol.Required(ATTR_LONGITUDE): cv.longitude,
-        vol.Optional(ATTR_ACCURACY, default=DEFAULT_ACCURACY): vol.Coerce(float),
-        vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-        vol.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): vol.Coerce(float),
-        vol.Optional(ATTR_BEARING): vol.Coerce(float),
-        vol.Optional(ATTR_SPEED): vol.Coerce(float),
+        probatio.Required(ATTR_ID): probatio.All(cv.string, _id),
+        probatio.Required(ATTR_LATITUDE): cv.latitude,
+        probatio.Required(ATTR_LONGITUDE): cv.longitude,
+        probatio.Optional(ATTR_ACCURACY, default=DEFAULT_ACCURACY): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(ATTR_ALTITUDE): probatio.Coerce(float),
+        probatio.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(ATTR_BEARING): probatio.Coerce(float),
+        probatio.Optional(ATTR_SPEED): probatio.Coerce(float),
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 
@@ -83,17 +87,22 @@ async def handle_webhook(
 ) -> web.Response:
     """Handle incoming webhook with Traccar Client request."""
     if not (requestdata := dict(request.query)):
-        try:
-            requestdata = _parse_json_body(await request.json())
-        except JSONDecodeError as error:
-            LOGGER.error("Error parsing JSON body: %s", error)
-            return web.Response(
-                text="Invalid JSON",
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
+        # Traccar Client 10 posts its data as a form
+        if request.content_type == "application/x-www-form-urlencoded":
+            form = await request.post()
+            requestdata = {key: str(value) for key, value in form.items()}
+        else:
+            try:
+                requestdata = _parse_json_body(await request.json())
+            except JSONDecodeError as error:
+                LOGGER.error("Error parsing JSON body: %s", error)
+                return web.Response(
+                    text="Invalid JSON",
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                )
     try:
         data = WEBHOOK_SCHEMA(requestdata)
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         LOGGER.warning(humanize_error(requestdata, error))
         return web.Response(
             text=error.error_message,

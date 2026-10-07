@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from verisure import (
     Error as VerisureError,
     LoginError as VerisureLoginError,
@@ -10,7 +11,6 @@ from verisure import (
     ResponseError as VerisureResponseError,
     Session as Verisure,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD
@@ -25,6 +25,9 @@ from .const import (
     LOGGER,
 )
 from .coordinator import VerisureConfigEntry
+
+# Observed on the Danish My Pages site, other countries may differ.
+MAX_PASSWORD_LENGTH = 30
 
 
 class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -90,7 +93,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_mfa()
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
-                    errors["base"] = "invalid_auth"
+                    errors["base"] = (
+                        "invalid_auth_password_too_long"
+                        if len(self.password) > MAX_PASSWORD_LENGTH
+                        else "invalid_auth"
+                    )
             except VerisureRateLimitError as ex:
                 LOGGER.debug("Verisure rate limited during login, %s", ex)
                 errors["base"] = "mfa_rate_limited"
@@ -102,10 +109,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -133,10 +140,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="mfa",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CODE): vol.All(
-                        vol.Coerce(str), vol.Length(min=6, max=6)
+                    probatio.Required(CONF_CODE): probatio.All(
+                        probatio.Coerce(str), probatio.Length(min=6, max=6)
                     )
                 }
             ),
@@ -163,8 +170,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if len(installations) != 1:
                 return self.async_show_form(
                     step_id="installation",
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_GIID): vol.In(installations)}
+                    data_schema=probatio.Schema(
+                        {probatio.Required(CONF_GIID): probatio.In(installations)}
                     ),
                 )
             user_input = {CONF_GIID: list(installations)[0]}
@@ -233,7 +240,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_reauth_mfa()
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
-                    errors["base"] = "invalid_auth"
+                    errors["base"] = (
+                        "invalid_auth_password_too_long"
+                        if len(self.password) > MAX_PASSWORD_LENGTH
+                        else "invalid_auth"
+                    )
             except VerisureRateLimitError as ex:
                 LOGGER.debug("Verisure rate limited during reauth login, %s", ex)
                 errors["base"] = "mfa_rate_limited"
@@ -251,12 +262,12 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_EMAIL, default=self._get_reauth_entry().data[CONF_EMAIL]
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -290,11 +301,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_mfa",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CODE): vol.All(
-                        vol.Coerce(str),
-                        vol.Length(min=6, max=6),
+                    probatio.Required(CONF_CODE): probatio.All(
+                        probatio.Coerce(str),
+                        probatio.Length(min=6, max=6),
                     )
                 }
             ),
@@ -316,9 +327,9 @@ class VerisureOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LOCK_CODE_DIGITS,
                         description={
                             "suggested_value": self.config_entry.options.get(

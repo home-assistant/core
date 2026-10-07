@@ -35,6 +35,21 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "direction": {
+            "name": "Direction",
+            "state": {
+              "down": "Down",
+              "up": "Up"
+            }
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -102,7 +117,7 @@
           "name": "Command"
         },
         "isy": {
-          "description": "If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.",
+          "description": "If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console). If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.",
           "name": "ISY"
         },
         "name": {

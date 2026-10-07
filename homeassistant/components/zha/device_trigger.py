@@ -1,6 +1,6 @@
 """Provides device automations for ZHA devices that emit events."""
 
-import voluptuous as vol
+import probatio
 from zha.application.const import ZHA_EVENT
 
 from homeassistant.components.device_automation import (
@@ -22,7 +22,7 @@ DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+    {probatio.Required(CONF_TYPE): str, probatio.Required(CONF_SUBTYPE): str}
 )
 
 
