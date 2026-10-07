@@ -1,5 +1,6 @@
 """Platform for Roth Touchline floor heating controller."""
 
+from datetime import timedelta
 from typing import Any, NamedTuple, override
 
 from pytouchline_extended import PyTouchline
@@ -42,6 +43,8 @@ TOUCHLINE_HA_PRESETS = {
     (settings.mode, settings.program): preset
     for preset, settings in PRESET_MODES.items()
 }
+
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(
