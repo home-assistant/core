@@ -71,7 +71,6 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
-    DEFAULT_WS_HEADERS,
     DEFAULT_WS_PATH,
     DOMAIN,
     MQTT_CONNECTION_STATE,
@@ -414,7 +413,7 @@ class MqttClientSetup:
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
-            ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, DEFAULT_WS_HEADERS)
+            ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, {})
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
@@ -1159,8 +1158,10 @@ class MQTT:
             await self._async_wait_for_mid_or_raise(mid, result)
 
         # Remove stored subscription identifiers for topics that were just unsubscribed
+        # Keep the ID if the topic was subscribed again while waiting for the UNSUBACK
         for topic in topics:
-            self._mqtt_data.subscription_id_generator.release(topic)
+            if not self.is_active_subscription(topic):
+                self._mqtt_data.subscription_id_generator.release(topic)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage

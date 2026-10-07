@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import socket
+from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
 import pypjlink
@@ -25,6 +26,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -322,3 +324,84 @@ async def test_failed_yaml_import(
     assert issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{error_str}"
     )
+
+
+_ERROR = ProjectorError("projector error")
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "method_name"),
+    [
+        pytest.param("turn_off", {}, "set_power", id="turn_off"),
+        pytest.param("turn_on", {}, "set_power", id="turn_on"),
+        pytest.param(
+            "volume_mute", {"is_volume_muted": True}, "set_mute", id="volume_mute"
+        ),
+        pytest.param(
+            "select_source", {"source": "VGA 1"}, "set_input", id="select_source"
+        ),
+    ],
+)
+async def test_service_command_error_is_home_assistant_error(
+    mocked_projector: MagicMock,
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, Any],
+    method_name: str,
+) -> None:
+    """Projector failures during a service command surface as HomeAssistantError."""
+
+    getattr(mocked_projector, method_name).side_effect = _ERROR
+
+    await setup_pjlink_entry(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "media_player.test", **service_data},
+            blocking=True,
+        )
+
+
+async def test_service_error_when_projector_unreachable_is_home_assistant_error(
+    mocked_projector: MagicMock,
+    projector_from_address: MagicMock,
+    hass: HomeAssistant,
+) -> None:
+    """A command on an unreachable projector surfaces as HomeAssistantError."""
+
+    await setup_pjlink_entry(hass)
+
+    projector_from_address.side_effect = socket.timeout
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            "turn_off",
+            {ATTR_ENTITY_ID: "media_player.test"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "socket_error", [TimeoutError, OSError], ids=["timeout", "os_error"]
+)
+async def test_service_socket_error_during_command_is_home_assistant_error(
+    mocked_projector: MagicMock,
+    hass: HomeAssistant,
+    socket_error: type[Exception],
+) -> None:
+    """A socket error raised by the command itself surfaces as HomeAssistantError."""
+
+    mocked_projector.set_power.side_effect = socket_error
+
+    await setup_pjlink_entry(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            "turn_off",
+            {ATTR_ENTITY_ID: "media_player.test"},
+            blocking=True,
+        )

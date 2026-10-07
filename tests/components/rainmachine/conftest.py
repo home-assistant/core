@@ -1,18 +1,21 @@
 """Define test fixtures for RainMachine."""
 
 from collections.abc import AsyncGenerator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.rainmachine import DOMAIN
+from homeassistant.components.rainmachine.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 @pytest.fixture(name="client")
@@ -90,27 +93,27 @@ def controller_mac_fixture() -> str:
 @pytest.fixture(name="data_api_versions", scope="package")
 def data_api_versions_fixture():
     """Define API version data."""
-    return json.loads(load_fixture("api_versions_data.json", "rainmachine"))
+    return load_json_object_fixture("api_versions_data.json", "rainmachine")
 
 
 @pytest.fixture(name="data_diagnostics_current", scope="package")
 def data_diagnostics_current_fixture():
     """Define current diagnostics data."""
-    return json.loads(load_fixture("diagnostics_current_data.json", "rainmachine"))
+    return load_json_object_fixture("diagnostics_current_data.json", "rainmachine")
 
 
 @pytest.fixture(name="data_machine_firmare_update_status", scope="package")
 def data_machine_firmare_update_status_fixture():
     """Define machine firmware update status data."""
-    return json.loads(
-        load_fixture("machine_firmware_update_status_data.json", "rainmachine")
+    return load_json_object_fixture(
+        "machine_firmware_update_status_data.json", "rainmachine"
     )
 
 
 @pytest.fixture(name="data_programs", scope="package")
 def data_programs_fixture():
     """Define program data."""
-    raw_data = json.loads(load_fixture("programs_data.json", "rainmachine"))
+    raw_data = load_json_array_fixture("programs_data.json", "rainmachine")
     # This replicate the process from `regenmaschine` to convert list to dict
     return {program["uid"]: program for program in raw_data}
 
@@ -118,27 +121,27 @@ def data_programs_fixture():
 @pytest.fixture(name="data_provision_settings", scope="package")
 def data_provision_settings_fixture():
     """Define provisioning settings data."""
-    return json.loads(load_fixture("provision_settings_data.json", "rainmachine"))
+    return load_json_object_fixture("provision_settings_data.json", "rainmachine")
 
 
 @pytest.fixture(name="data_restrictions_current", scope="package")
 def data_restrictions_current_fixture():
     """Define current restrictions settings data."""
-    return json.loads(load_fixture("restrictions_current_data.json", "rainmachine"))
+    return load_json_object_fixture("restrictions_current_data.json", "rainmachine")
 
 
 @pytest.fixture(name="data_restrictions_universal", scope="package")
 def data_restrictions_universal_fixture():
     """Define universal restrictions settings data."""
-    return json.loads(load_fixture("restrictions_universal_data.json", "rainmachine"))
+    return load_json_object_fixture("restrictions_universal_data.json", "rainmachine")
 
 
 @pytest.fixture(name="data_zones", scope="package")
 def data_zones_fixture():
     """Define zone data."""
-    raw_data = json.loads(load_fixture("zones_data.json", "rainmachine"))
+    raw_data = load_json_array_fixture("zones_data.json", "rainmachine")
     # This replicate the process from `regenmaschine` to convert list to dict
-    zone_details = json.loads(load_fixture("zones_details.json", "rainmachine"))
+    zone_details = load_json_array_fixture("zones_details.json", "rainmachine")
 
     zones: dict[int, dict[str, Any]] = {}
     for zone in raw_data:

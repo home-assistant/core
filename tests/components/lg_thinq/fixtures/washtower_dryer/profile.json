@@ -1,0 +1,154 @@
+{
+  "notification": {
+    "push": ["DRYING_IS_COMPLETE", "ERROR_DURING_DRYING"]
+  },
+  "property": {
+    "operation": {
+      "dryerOperationMode": {
+        "mode": ["w"],
+        "type": "enum",
+        "value": {
+          "w": ["START", "STOP", "POWER_OFF", "POWER_ON"]
+        }
+      }
+    },
+    "remoteControlEnable": {
+      "remoteControlEnabled": {
+        "mode": ["r"],
+        "type": "boolean",
+        "value": {
+          "r": [false, true]
+        }
+      }
+    },
+    "runState": {
+      "currentState": {
+        "mode": ["r"],
+        "type": "enum",
+        "value": {
+          "r": [
+            "POWER_OFF",
+            "INITIAL",
+            "RUNNING",
+            "PAUSE",
+            "COOLING",
+            "END",
+            "ERROR",
+            "RESERVED",
+            "SLEEP"
+          ]
+        }
+      }
+    },
+    "timer": {
+      "relativeHourToStart": {
+        "mode": ["r", "w"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 19,
+            "min": 1,
+            "step": 1
+          },
+          "w": {
+            "except": [],
+            "max": 19,
+            "min": 1,
+            "step": 1
+          }
+        }
+      },
+      "relativeMinuteToStart": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 30,
+            "min": 0,
+            "step": 1
+          }
+        }
+      },
+      "relativeHourToStop": {
+        "mode": ["r", "w"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 19,
+            "min": 1,
+            "step": 1
+          },
+          "w": {
+            "except": [],
+            "max": 19,
+            "min": 1,
+            "step": 1
+          }
+        }
+      },
+      "relativeMinuteToStop": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 59,
+            "min": 0,
+            "step": 1
+          }
+        }
+      },
+      "remainHour": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 30,
+            "min": 0,
+            "step": 1
+          }
+        }
+      },
+      "remainMinute": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 59,
+            "min": 0,
+            "step": 1
+          }
+        }
+      },
+      "totalHour": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 30,
+            "min": 0,
+            "step": 1
+          }
+        }
+      },
+      "totalMinute": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "except": [],
+            "max": 59,
+            "min": 0,
+            "step": 1
+          }
+        }
+      }
+    }
+  }
+}

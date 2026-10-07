@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_MAXIMUM, ATTR_MINIMUM, ATTR_STEP, DOMAIN, SERVICE_SET_VALUE, VALUE
+from . import DOMAIN, SERVICE_SET_VALUE, VALUE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,25 +32,13 @@ async def _async_reproduce_state(
         return
 
     # Return if we are already at the right state.
-    if (
-        cur_state.state == state.state
-        and cur_state.attributes.get(ATTR_MAXIMUM) == state.attributes.get(ATTR_MAXIMUM)
-        and cur_state.attributes.get(ATTR_MINIMUM) == state.attributes.get(ATTR_MINIMUM)
-        and cur_state.attributes.get(ATTR_STEP) == state.attributes.get(ATTR_STEP)
-    ):
+    if cur_state.state == state.state:
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id, VALUE: state.state}
-    service = SERVICE_SET_VALUE
-    if ATTR_MAXIMUM in state.attributes:
-        service_data[ATTR_MAXIMUM] = state.attributes[ATTR_MAXIMUM]
-    if ATTR_MINIMUM in state.attributes:
-        service_data[ATTR_MINIMUM] = state.attributes[ATTR_MINIMUM]
-    if ATTR_STEP in state.attributes:
-        service_data[ATTR_STEP] = state.attributes[ATTR_STEP]
 
     await hass.services.async_call(
-        DOMAIN, service, service_data, context=context, blocking=True
+        DOMAIN, SERVICE_SET_VALUE, service_data, context=context, blocking=True
     )
 
 

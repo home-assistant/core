@@ -41,8 +41,8 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
 
 from . import util
 from .const import (
@@ -156,6 +156,8 @@ class EventStateReportedData(EventStateEventData):
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
+# How long to wait until startup jobs have to finish.
+TIMEOUT_STARTUP_JOBS = 15
 
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
@@ -416,6 +418,7 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self._startup_jobs: list[HassJobWithArgs] = []
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
@@ -503,6 +506,20 @@ class HomeAssistant:
         """
         _LOGGER.info("Starting Home Assistant %s", __version__)
 
+        def _log_startup_blocked(tasks: set[asyncio.Future[Any]]) -> None:
+            """Log when startup is blocked by tasks."""
+            _LOGGER.warning(
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
+                ),
+                ", ".join(self.config.components),
+                tasks,
+            )
+
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_START)
@@ -515,20 +532,23 @@ class HomeAssistant:
             )
 
         if pending:
-            _LOGGER.warning(
-                (
-                    "Something is blocking Home Assistant from wrapping up the start up"
-                    " phase. We're going to continue anyway. Please report the"
-                    " following info at"
-                    " https://github.com/home-assistant/core/issues: %s"
-                    " The system is waiting for tasks: %s"
-                ),
-                ", ".join(self.config.components),
-                self._tasks,
-            )
+            _log_startup_blocked(self._tasks)
 
-        # Allow automations to set up the start triggers before changing state
-        await asyncio.sleep(0)
+        # Run startup jobs
+        tasks: list[asyncio.Future[Any]] = []
+        for job in self._startup_jobs:
+            task_or_none = self.async_run_hass_job(job.job, *job.args)
+            if task_or_none is None:
+                continue
+            tasks.append(task_or_none)
+        self._startup_jobs.clear()
+        if not tasks:
+            pending = None
+        else:
+            _done, pending = await asyncio.wait(tasks, timeout=TIMEOUT_STARTUP_JOBS)
+
+        if pending:
+            _log_startup_blocked(pending)
 
         if self.state is not CoreState.starting:
             _LOGGER.warning(
@@ -1035,6 +1055,9 @@ class HomeAssistant:
     ) -> CALLBACK_TYPE:
         """Add a HassJob which will be executed on shutdown.
 
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STOP when Home Assistant is shutting down.
+
         This method must be run in the event loop.
 
         hassjob: HassJob
@@ -1048,6 +1071,44 @@ class HomeAssistant:
         @callback
         def remove_job() -> None:
             self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on startup.
+
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STARTED when Home Assistant is starting.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._startup_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            if job_with_args in self._startup_jobs:
+                self._startup_jobs.remove(job_with_args)
 
         return remove_job
 
@@ -1667,8 +1728,9 @@ class EventBus:
 
             frame.report_usage(
                 "calls `async_listen` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1737,8 +1799,9 @@ class EventBus:
 
             frame.report_usage(
                 "calls `async_listen_once` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -2631,7 +2694,7 @@ class ServiceRegistry:
             [ServiceCall],
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: probatio.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
@@ -2863,7 +2926,7 @@ class ServiceRegistry:
         if handler.schema:
             try:
                 processed_data: dict[str, Any] = handler.schema(service_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
                     domain,

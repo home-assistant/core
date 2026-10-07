@@ -11,11 +11,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfDataRate,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -92,6 +94,27 @@ async def async_setup_entry(
         )
         for sensor_id, sensor_name in router.sensors_temperature_names.items()
     ]
+
+    _LOGGER.debug(
+        "%s - %s - %s fan sensors",
+        router.name,
+        router.mac,
+        len(router.sensors_fan_names),
+    )
+    entities.extend(
+        FreeboxSensor(
+            router,
+            SensorEntityDescription(
+                key=fan_id,
+                name=fan_name,
+                native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                icon="mdi:fan",
+            ),
+        )
+        for fan_id, fan_name in router.sensors_fan_names.items()
+    )
 
     entities.extend(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
@@ -224,9 +247,10 @@ class FreeboxDiskSensor(FreeboxSensor):
             model=disk["model"],
             name=f"Disk {disk['id']}",
             sw_version=disk["firmware"],
-            via_device=(
-                DOMAIN,
-                router.mac,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                router.hass,
+                (DOMAIN, router.mac),
+                config_entry_id=router.config_entry.entry_id,
             ),
         )
 

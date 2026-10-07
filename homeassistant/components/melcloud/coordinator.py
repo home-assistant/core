@@ -11,6 +11,7 @@ from pymelcloud.atw_device import Zone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -37,6 +38,8 @@ type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordi
 
 class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
     """Per-device coordinator for MELCloud data updates."""
+
+    config_entry: MelCloudConfigEntry
 
     def __init__(
         self,
@@ -110,7 +113,11 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
             name=f"{self.device.name} {zone.name}",
-            via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{dev.mac}-{dev.serial}"),
+                config_entry_id=self.config_entry.entry_id,
+            ),
         )
 
     @override

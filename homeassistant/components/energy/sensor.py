@@ -8,17 +8,17 @@ import logging
 from typing import Any, Final, Literal, cast, override
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     reset_detected,
 )
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -397,11 +397,12 @@ class EnergyCostSensor(SensorEntity):
         self._attr_state_class = SensorStateClass.TOTAL
         self._config = config
         self._last_energy_sensor_state: State | None = None
-        # add_finished is set when either of async_added_to_hass
-        # or add_to_platform_abort is called
+        # SensorManager awaits add_finished; async_on_remove resolves it on the
+        # abort path too, since add_to_platform_abort fires on-remove callbacks.
         self.add_finished: asyncio.Future[None] = (
             asyncio.get_running_loop().create_future()
         )
+        self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
@@ -436,7 +437,9 @@ class EnergyCostSensor(SensorEntity):
         if energy_state is None:
             return
 
-        state_class = energy_state.attributes.get(ATTR_STATE_CLASS)
+        state_class = energy_state.attributes.get(
+            SensorEntityCapabilityAttribute.STATE_CLASS
+        )
         if state_class not in SUPPORTED_STATE_CLASSES:
             if not self._wrong_state_class_reported:
                 self._wrong_state_class_reported = True
@@ -450,7 +453,7 @@ class EnergyCostSensor(SensorEntity):
         # last_reset must be set if the sensor is SensorStateClass.MEASUREMENT
         if (
             state_class == SensorStateClass.MEASUREMENT
-            and ATTR_LAST_RESET not in energy_state.attributes
+            and SensorEntityStateAttribute.LAST_RESET not in energy_state.attributes
         ):
             return
 
@@ -478,22 +481,28 @@ class EnergyCostSensor(SensorEntity):
         if energy_price is None:
             return
 
-        energy_unit: str | None = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        energy_unit: str | None = energy_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
 
         if energy_unit is None or energy_unit not in valid_units:
             if not self._wrong_unit_reported:
                 self._wrong_unit_reported = True
                 _LOGGER.warning(
                     "Found unexpected unit %s for %s",
-                    energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                    energy_state.attributes.get(
+                        EntityStateAttribute.UNIT_OF_MEASUREMENT
+                    ),
                     energy_state.entity_id,
                 )
             return
 
         if (
             state_class != SensorStateClass.TOTAL_INCREASING
-            and energy_state.attributes.get(ATTR_LAST_RESET)
-            != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
+            and energy_state.attributes.get(SensorEntityStateAttribute.LAST_RESET)
+            != self._last_energy_sensor_state.attributes.get(
+                SensorEntityStateAttribute.LAST_RESET
+            )
         ) or (
             state_class == SensorStateClass.TOTAL_INCREASING
             and reset_detected(
@@ -544,7 +553,7 @@ class EnergyCostSensor(SensorEntity):
         energy_price = float(energy_price_state.state)
 
         energy_price_unit: str | None = energy_price_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, ""
+            EntityStateAttribute.UNIT_OF_MEASUREMENT, ""
         ).partition("/")[2]
 
         # For backwards compatibility we don't validate the unit of the price
@@ -603,13 +612,6 @@ class EnergyCostSensor(SensorEntity):
         """Handle child updates."""
         self._update_cost()
         self.async_write_ha_state()
-
-    @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        _set_result_unless_done(self.add_finished)
-        super().add_to_platform_abort()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -689,11 +691,12 @@ class EnergyPowerSensor(SensorEntity):
                 config["stat_rate_to"],
             ]
 
-        # add_finished is set when either async_added_to_hass or add_to_platform_abort
-        # is called
+        # SensorManager awaits add_finished; async_on_remove resolves it on the
+        # abort path too, since add_to_platform_abort fires on-remove callbacks.
         self.add_finished: asyncio.Future[None] = (
             asyncio.get_running_loop().create_future()
         )
+        self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
 
     @property
     @override
@@ -731,7 +734,7 @@ class EnergyPowerSensor(SensorEntity):
                 return
 
             self._attr_native_unit_of_measurement = source_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
             self._attr_native_value = value * -1
 
@@ -756,8 +759,12 @@ class EnergyPowerSensor(SensorEntity):
                 return
 
             # Get units from state attributes
-            discharge_unit = discharge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            charge_unit = charge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            discharge_unit = discharge_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
+            charge_unit = charge_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
 
             # Convert to Watts if units are present
             if discharge_unit:
@@ -835,10 +842,3 @@ class EnergyPowerSensor(SensorEntity):
         """Handle source sensor state changes."""
         self._update_state()
         self.async_write_ha_state()
-
-    @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        _set_result_unless_done(self.add_finished)
-        super().add_to_platform_abort()

@@ -4,7 +4,6 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.quality_scale.reauthentication_flow import (
     ReauthenticationFlowChecker,
 )
@@ -12,7 +11,7 @@ from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cach
 import pytest
 import yaml
 
-from tests.pylint import assert_adds_messages, assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="reauth_checker")
@@ -54,11 +53,8 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     )
     root_node.file = str(integration_dir / "config_flow.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(reauth_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, reauth_checker, root_node)
 
 
 def test_reauth_missing_fires(
@@ -80,9 +76,6 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     )
     root_node.file = str(integration_dir / "config_flow.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(reauth_checker)
-
     with assert_adds_messages(
         linter,
         MessageTest(
@@ -92,7 +85,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
             col_offset=0,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, reauth_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -146,8 +139,5 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     )
     root_node.file = str(integration_dir / "config_flow.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(reauth_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, reauth_checker, root_node)

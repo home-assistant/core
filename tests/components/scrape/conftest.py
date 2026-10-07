@@ -55,7 +55,7 @@ async def get_resource_config_to_integration_load() -> dict[str, Any]:
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: DEFAULT_METHOD,
         "auth": {},
-        "advanced": {
+        "additional": {
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
             CONF_ENCODING: DEFAULT_ENCODING,
@@ -72,7 +72,11 @@ async def get_sensor_config_to_integration_load() -> tuple[dict[str, Any], ...]:
     """
     return (
         {
-            "data": {"advanced": {}, CONF_INDEX: 0, CONF_SELECT: ".current-version h1"},
+            "data": {
+                "additional": {},
+                CONF_INDEX: 0,
+                CONF_SELECT: ".current-version h1",
+            },
             "subentry_id": "01JZN07D8D23994A49YKS649S7",
             "subentry_type": "entity",
             "title": "Current version",

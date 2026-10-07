@@ -1,6 +1,19 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import ClimateEntity
+
+DOMAIN: Final = "climate"
+
+DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
 
 
 class HVACMode(StrEnum):
@@ -124,8 +137,8 @@ DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN = "climate"
 
+INTENT_SET_FAN_MODE = "HassClimateSetFanMode"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
 
 SERVICE_SET_FAN_MODE = "set_fan_mode"
@@ -153,15 +166,24 @@ class ClimateEntityCapabilityAttribute(StrEnum):
     SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 
 
-class ClimateEntityStateAttribute(StrEnum):
+class ClimateEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.2.0"),
+        "HUMIDITY": ("ClimateEntityStateAttribute.TARGET_HUMIDITY", "2027.2.0"),
+    },
+):
     """State attributes for climate entities."""
 
     CURRENT_TEMPERATURE = "current_temperature"
-    TEMPERATURE = "temperature"
+    TARGET_TEMPERATURE = "temperature"
+    TEMPERATURE = "temperature"  # Deprecated, replaced with TARGET_TEMPERATURE
     TARGET_TEMP_HIGH = "target_temp_high"
     TARGET_TEMP_LOW = "target_temp_low"
     CURRENT_HUMIDITY = "current_humidity"
-    HUMIDITY = "humidity"
+    TARGET_HUMIDITY = "humidity"
+    HUMIDITY = "humidity"  # Deprecated, replaced with TARGET_HUMIDITY
     FAN_MODE = "fan_mode"
     HVAC_ACTION = "hvac_action"
     PRESET_MODE = "preset_mode"

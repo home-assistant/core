@@ -3,10 +3,10 @@
 import logging
 from typing import Any, override
 
+import probatio
 import requests
 import rxv
 from rxv import RXV
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -32,18 +32,10 @@ from .const import (
     DISCOVER_TIMEOUT,
     DOMAIN,
     KNOWN_ZONES,
-    SERVICE_ENABLE_OUTPUT,
-    SERVICE_MENU_CURSOR,
-    SERVICE_SELECT_SCENE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURSOR = "cursor"
-ATTR_ENABLED = "enabled"
-ATTR_PORT = "port"
-
-ATTR_SCENE = "scene"
 
 CONF_SOURCE_IGNORE = "source_ignore"
 CONF_SOURCE_NAMES = "source_names"
@@ -72,16 +64,16 @@ SUPPORT_YAMAHA = (
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_SOURCE_IGNORE, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
-        vol.Optional(CONF_ZONE_IGNORE, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Optional(CONF_ZONE_IGNORE, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
-        vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
-        vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+        probatio.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+        probatio.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
     }
 )
 
@@ -181,26 +173,6 @@ async def async_setup_platform(
             )
 
     async_add_entities(entities)
-
-    # Register Service 'select_scene'
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SELECT_SCENE,
-        {vol.Required(ATTR_SCENE): cv.string},
-        "set_scene",
-    )
-    # Register Service 'enable_output'
-    platform.async_register_entity_service(
-        SERVICE_ENABLE_OUTPUT,
-        {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
-        "enable_output",
-    )
-    # Register Service 'menu_cursor'
-    platform.async_register_entity_service(
-        SERVICE_MENU_CURSOR,
-        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
-        YamahaDeviceZone.menu_cursor.__name__,
-    )
 
 
 class YamahaDeviceZone(MediaPlayerEntity):

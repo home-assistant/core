@@ -67,6 +67,7 @@ _LEAP_DEVICE_TYPES = {
         "RightDrawDrape",
         "Shade",
         "SerenaTiltOnlyWoodBlind",
+        "OpenCloseStop",
     ],
     "sensor": [
         "Pico1Button",
@@ -204,13 +205,15 @@ class MockBridge:
     async def set_warm_dim(
         self,
         device_id: str,
+        enabled: bool,
         value: int | None = None,
         fade_time: timedelta | None = None,
     ) -> None:
         """Mock changing the warm dim state and invoke callbacks."""
-        if device_id in self.devices and value is not None:
-            self.devices[device_id]["current_state"] = value
-            self.devices[device_id]["warm_dim"] = True
+        if device_id in self.devices:
+            self.devices[device_id]["warm_dim"] = enabled
+            if value is not None:
+                self.devices[device_id]["current_state"] = value
         self.call_subscribers(device_id)
 
     def load_devices(self):
@@ -503,3 +506,25 @@ async def async_setup_integration(
         await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
     return mock_entry
+
+
+class MockBridgeWithOpenCloseStopCover(MockBridge):
+    """Mock bridge that also exposes an OpenCloseStop cover."""
+
+    def load_devices(self):
+        """Add an OpenCloseStop zone to the mock devices."""
+        devices = super().load_devices()
+        devices["805"] = {
+            "device_id": "805",
+            "current_state": -1,
+            "fan_speed": None,
+            "zone": "805",
+            "name": "Basement Bedroom_Armor Screen",
+            "button_groups": None,
+            "type": "OpenCloseStop",
+            "model": None,
+            "serial": 5442325,
+            "tilt": None,
+            "area": "822",
+        }
+        return devices

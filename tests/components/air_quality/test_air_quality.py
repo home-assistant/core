@@ -11,7 +11,7 @@ from homeassistant.components.air_quality import (
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    UnitOfDensity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -52,5 +52,5 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert data.get(ATTR_OZONE) is None
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
     assert (
-        data.get(ATTR_UNIT_OF_MEASUREMENT) == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        data.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )

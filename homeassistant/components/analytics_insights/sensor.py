@@ -20,6 +20,8 @@ from . import AnalyticsInsightsConfigEntry
 from .const import DOMAIN
 from .coordinator import AnalyticsData, HomeassistantAnalyticsDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class AnalyticsSensorEntityDescription(SensorEntityDescription):

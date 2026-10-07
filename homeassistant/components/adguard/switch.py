@@ -3,11 +3,16 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 from typing import Any, override
 
 from adguardhome import AdGuardHome, AdGuardHomeError
+from adguardhome.filtering import AdGuardHomeFiltering
+from adguardhome.querylog import AdGuardHomeQueryLog
+from adguardhome.safesearch import AdGuardHomeSafeSearch
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,11 +34,23 @@ class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
 
 
+async def _protection_enabled(adguard: AdGuardHome) -> bool:
+    """Return if AdGuard Home protection is enabled."""
+    return (await adguard.status()).protection_enabled
+
+
+async def _config_enabled(
+    area: AdGuardHomeFiltering | AdGuardHomeQueryLog | AdGuardHomeSafeSearch,
+) -> bool:
+    """Return if a feature of AdGuard Home is enabled in its configuration."""
+    return (await area.config()).enabled
+
+
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         translation_key="protection",
-        is_on_fn=lambda adguard: adguard.protection_enabled,
+        is_on_fn=lambda adguard: partial(_protection_enabled, adguard),
         turn_on_fn=lambda adguard: adguard.enable_protection,
         turn_off_fn=lambda adguard: adguard.disable_protection,
     ),
@@ -47,7 +64,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safesearch",
         translation_key="safe_search",
-        is_on_fn=lambda adguard: adguard.safesearch.enabled,
+        is_on_fn=lambda adguard: partial(_config_enabled, adguard.safesearch),
         turn_on_fn=lambda adguard: adguard.safesearch.enable,
         turn_off_fn=lambda adguard: adguard.safesearch.disable,
     ),
@@ -61,14 +78,14 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="filtering",
         translation_key="filtering",
-        is_on_fn=lambda adguard: adguard.filtering.enabled,
+        is_on_fn=lambda adguard: partial(_config_enabled, adguard.filtering),
         turn_on_fn=lambda adguard: adguard.filtering.enable,
         turn_off_fn=lambda adguard: adguard.filtering.disable,
     ),
     AdGuardHomeSwitchEntityDescription(
         key="querylog",
         translation_key="query_log",
-        is_on_fn=lambda adguard: adguard.querylog.enabled,
+        is_on_fn=lambda adguard: partial(_config_enabled, adguard.querylog),
         turn_on_fn=lambda adguard: adguard.querylog.enable,
         turn_off_fn=lambda adguard: adguard.querylog.disable,
     ),
@@ -103,11 +120,12 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
         """Initialize AdGuard Home switch."""
         super().__init__(data, entry)
         self.entity_description = description
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
             [
                 DOMAIN,
-                self.adguard.host,
-                str(self.adguard.port),
+                entry.data[CONF_HOST],
+                str(entry.data[CONF_PORT]),
                 "switch",
                 description.key,
             ]

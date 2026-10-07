@@ -1,7 +1,7 @@
 """Common fixtures for the Notifications for Android TV / Fire TV tests."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,6 +11,15 @@ from homeassistant.const import CONF_HOST
 from . import HOST, NAME
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.nfandroidtv.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture

@@ -10,10 +10,9 @@ from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -128,6 +127,7 @@ class NMBSLiveBoard(SensorEntity):
 
         unique_id = f"{self._station.id}_{self._station_from.id}_{self._station_to.id}"
         vias = "_excl_vias" if self._excl_vias else ""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
@@ -224,6 +224,7 @@ class NMBSSensor(SensorEntity):
         unique_id = f"{self._station_from.id}_{self._station_to.id}"
 
         vias = "_excl_vias" if self._excl_vias else ""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"nmbs_connection_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
@@ -275,8 +276,8 @@ class NMBSSensor(SensorEntity):
             attrs["departure_minutes"] = departure
 
         if self._show_on_map and self.station_coordinates:
-            attrs[ATTR_LATITUDE] = self.station_coordinates[0]
-            attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
+            attrs[EntityStateAttribute.LATITUDE] = self.station_coordinates[0]
+            attrs[EntityStateAttribute.LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
             via = self._attrs.vias[0]

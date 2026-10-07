@@ -39,8 +39,9 @@ class FibaroScene(Scene):
             room_name = "Unknown"
 
         self._attr_name = f"{room_name} {fibaro_scene.name}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
-            f"{slugify(controller.hub_serial)}.scene.{fibaro_scene.fibaro_id}"
+            f"{slugify(controller.hub_serial)}.scene.{fibaro_scene.fibaro_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         )
         self._attr_extra_state_attributes = {"fibaro_id": fibaro_scene.fibaro_id}
         # propagate hidden attribute set in fibaro home center to HA

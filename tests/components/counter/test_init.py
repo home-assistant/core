@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 
 from homeassistant.components.counter import (
-    ATTR_EDITABLE,
     ATTR_INITIAL,
     ATTR_MAXIMUM,
     ATTR_MINIMUM,
@@ -24,7 +23,13 @@ from homeassistant.components.counter import (
     SERVICE_SET_VALUE,
     VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    ATTR_NAME,
+)
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -278,6 +283,58 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == "5"
+
+
+async def test_negative_with_config(hass: HomeAssistant) -> None:
+    """Test increment, decrement, set, and reset methods with negative values."""
+    config = {
+        DOMAIN: {
+            "test": {
+                CONF_NAME: "Hello World",
+                CONF_INITIAL: -10,
+                CONF_STEP: 2,
+                CONF_MINIMUM: -10,
+                CONF_MAXIMUM: -2,
+            }
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    entity_id = "counter.test"
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -10
+
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -8
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: -4,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -4
+
+    async_decrement(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -6
+
+    async_reset(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -10
 
 
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:

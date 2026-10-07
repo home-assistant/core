@@ -8,7 +8,13 @@ import pytest
 
 from homeassistant.components.sma.const import CONF_GROUP, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
@@ -100,6 +106,35 @@ async def test_form_exceptions(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_device_info_error_closes_session(
+    hass: HomeAssistant, mock_sma_client: MagicMock
+) -> None:
+    """Test the session is closed when reading the device info fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_sma_client.device_info.side_effect = SmaReadException
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_retrieve_device_info"}
+    mock_sma_client.close_session.assert_called_once()
+
+    mock_sma_client.device_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_sma_client.close_session.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
     hass: HomeAssistant, mock_sma_client: AsyncMock
 ) -> None:
@@ -160,6 +195,26 @@ async def test_dhcp_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_updates_host(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP discovery updates the host of a device that changed IP address."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2", hostname="SMA123456789", macaddress="0015bb00abcd"
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
+
+
 async def test_dhcp_already_configured_duplicate(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -185,6 +240,86 @@ async def test_dhcp_already_configured_duplicate(
     assert mock_config_entry.data.get(CONF_MAC) == format_mac(
         DHCP_DISCOVERY_DUPLICATE_001.macaddress
     )
+
+
+@pytest.mark.parametrize(
+    ("hostname", "result_type"),
+    [
+        pytest.param("SMA987654321", FlowResultType.FORM, id="other_serial"),
+        pytest.param("evcharger", FlowResultType.ABORT, id="not_sma"),
+    ],
+)
+async def test_dhcp_other_device_on_same_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hostname: str,
+    result_type: FlowResultType,
+) -> None:
+    """Test another device on the host of an entry doesn't change that entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=mock_config_entry.data[CONF_HOST],
+            hostname=hostname,
+            macaddress="0015bb00ffff",
+        ),
+    )
+
+    assert result["type"] is result_type
+    assert CONF_MAC not in mock_config_entry.data
+
+
+@pytest.mark.parametrize(
+    ("hostname", "unique_id"),
+    [
+        pytest.param("SMA123456789", "123456789", id="serial"),
+        pytest.param("SMA-123456789", "123456789", id="dash_serial"),
+        pytest.param("sma123456789-2856", "123456789", id="serial_suffix"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_hostname_serial(
+    hass: HomeAssistant, hostname: str, unique_id: str
+) -> None:
+    """Test the serial number is read from the DHCP hostname."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2", hostname=hostname, macaddress="0015bb00abcd"
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["unique_id"] == unique_id
+
+
+@pytest.mark.parametrize(
+    "hostname",
+    [
+        pytest.param("SMA", id="prefix_only"),
+        pytest.param("SMA-EVCharger", id="name"),
+        pytest.param("smaevc22", id="no_serial"),
+        pytest.param("sma12abc", id="partial_serial"),
+    ],
+)
+async def test_dhcp_not_supported(hass: HomeAssistant, hostname: str) -> None:
+    """Test DHCP discovery aborts for hostnames without a serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2", hostname=hostname, macaddress="0015bb00abcd"
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
 
 
 @pytest.mark.parametrize(
@@ -338,6 +473,7 @@ async def test_full_flow_reconfigure(
     assert entry.data[CONF_SSL] is True
     assert entry.data[CONF_VERIFY_SSL] is False
     assert entry.data[CONF_GROUP] == "user"
+    assert entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -385,6 +521,7 @@ async def test_full_flow_reconfigure_exceptions(
     assert entry.data[CONF_SSL] is True
     assert entry.data[CONF_VERIFY_SSL] is False
     assert entry.data[CONF_GROUP] == "user"
+    assert entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

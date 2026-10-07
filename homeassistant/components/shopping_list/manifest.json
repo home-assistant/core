@@ -1,6 +1,6 @@
 {
   "domain": "shopping_list",
-  "name": "Shopping List",
+  "name": "Shopping list",
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["http"],

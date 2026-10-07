@@ -7,8 +7,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -27,7 +27,6 @@ from homeassistant.const import (  # noqa: F401
     CONF_PATH,
     CONF_TRIGGERS,
     CONF_VARIABLES,
-    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -38,7 +37,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     CoreState,
-    Event,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -273,8 +272,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_TRIGGER,
         {
-            vol.Optional(ATTR_VARIABLES, default={}): dict,
-            vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
+            probatio.Optional(ATTR_VARIABLES, default={}): dict,
+            probatio.Optional(CONF_SKIP_CONDITION, default=True): bool,
         },
         trigger_service_handler,
     )
@@ -282,7 +281,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
+        {
+            probatio.Optional(
+                CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS
+            ): cv.boolean
+        },
         "async_turn_off",
     )
 
@@ -308,7 +311,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({vol.Optional(CONF_ID): str}),
+        schema=probatio.Schema({probatio.Optional(CONF_ID): str}),
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -629,7 +632,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
-            last_triggered = state.attributes.get("last_triggered")
+            last_triggered = state.attributes.get(
+                AutomationEntityStateAttribute.LAST_TRIGGERED
+            )
             if last_triggered is not None:
                 self.action_script.last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
@@ -734,7 +739,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if not skip_condition and self._condition is not None:
                 try:
                     conditions_pass = self._condition.async_check(variables=variables)
-                except (vol.Invalid, HomeAssistantError) as err:
+                except (probatio.Invalid, HomeAssistantError) as err:
                     self._logger.error(
                         "Error while checking conditions of automation %s: %s",
                         self.entity_id,
@@ -801,7 +806,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     },
                 )
                 automation_trace.set_error(err)
-            except (vol.Invalid, HomeAssistantError) as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 self._logger.error(
                     "Error while executing automation %s: %s",
                     self.entity_id,
@@ -830,13 +835,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             self._condition.async_unload()
 
-    async def _async_enable_automation(self, event: Event) -> None:
-        """Start automation on startup."""
+    async def _async_enable_automation(self) -> None:
+        """Arm the automation's triggers on startup."""
         # Don't do anything if no longer enabled or already attached
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
-        self._async_detach_triggers = await self._async_attach_triggers(True)
+        self._async_detach_triggers = await self._async_attach_triggers()
         self.async_write_ha_state()
 
     async def _async_enable(self) -> None:
@@ -851,13 +856,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
         # HomeAssistant is starting up
         if self.hass.state is not CoreState.not_running:
-            self._async_detach_triggers = await self._async_attach_triggers(False)
+            self._async_detach_triggers = await self._async_attach_triggers()
             return
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED,
-            self._async_enable_automation,
-        )
+        # Arm the triggers in a startup job, which runs after all listeners to
+        # EVENT_HOMEASSISTANT_START have run but before EVENT_HOMEASSISTANT_STARTED
+        # has fired. This ensures automations do not fire during startup, but
+        # triggers listening for the started event are armed in time to catch it.
+        self.hass.async_add_startup_job(HassJob(self._async_enable_automation))
 
     async def _async_disable(self, stop_actions: bool = DEFAULT_STOP_ACTIONS) -> None:
         """Disable the automation entity.
@@ -942,9 +948,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             script_execution_set("not_triggered")
 
-    async def _async_attach_triggers(
-        self, home_assistant_start: bool
-    ) -> Callable[[], None] | None:
+    async def _async_attach_triggers(self) -> Callable[[], None] | None:
         """Set up the triggers."""
         this = None
         if state := self.hass.states.get(self.entity_id):
@@ -968,8 +972,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             DOMAIN,
             str(self.name),
             self._log_callback,
-            home_assistant_start,
-            variables,
+            variables=variables,
             did_not_trigger=self._handle_not_triggered,
         )
 

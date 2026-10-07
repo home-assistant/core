@@ -56,7 +56,8 @@ class AirOSUpdateEntity(AirOSEntity, UpdateEntity):
         self.status = status
         self.firmware = firmware
 
-        self._attr_unique_id = f"{status.data.derived.mac}_firmware_update"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{status.data.derived.mac}_firmware_update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override

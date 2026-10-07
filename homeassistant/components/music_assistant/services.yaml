@@ -5,6 +5,7 @@ play_media:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
@@ -58,12 +59,25 @@ play_announcement:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
         - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
   fields:
+    message:
+      required: false
+      example: "Dinner is ready!"
+      selector:
+        text:
+          multiline: true
+    tts_entity_id:
+      required: false
+      example: "tts.piper"
+      selector:
+        entity:
+          domain: tts
     url:
-      required: true
+      required: false
       example: "http://someremotesite.com/doorbell.mp3"
       selector:
         text:
@@ -88,12 +102,14 @@ transfer_queue:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
   fields:
     source_player:
       selector:
         entity:
           domain: media_player
           integration: music_assistant
+          device_class: speaker
     auto_play:
       example: "true"
       selector:
@@ -104,6 +120,7 @@ get_queue:
     entity:
       domain: media_player
       integration: music_assistant
+      device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
 
@@ -156,6 +173,10 @@ search:
           default: false
           selector:
             boolean:
+    username:
+      example: "john"
+      selector:
+        text:
 
 get_library:
   fields:
@@ -246,3 +267,7 @@ get_library:
       default: false
       selector:
         boolean:
+    username:
+      example: "john"
+      selector:
+        text:

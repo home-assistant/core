@@ -32,7 +32,8 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         """Initialize TOLO fan entity."""
         super().__init__(coordinator, entry)
 
-        self._attr_unique_id = f"{entry.entry_id}_fan"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{entry.entry_id}_fan"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override

@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from . import DOMAIN, WOMETERTHPC_SERVICE_INFO
+from . import DOMAIN, STANDING_FAN_SERVICE_INFO, WOMETERTHPC_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -169,3 +169,52 @@ async def test_set_display_time_offset_out_of_range(
             )
 
         mock_set_time_offset.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "set_method"),
+    [
+        (
+            "number.test_name_horizontal_oscillation_angle",
+            "set_horizontal_oscillation_angle",
+        ),
+        (
+            "number.test_name_vertical_oscillation_angle",
+            "set_vertical_oscillation_angle",
+        ),
+    ],
+)
+async def test_standing_fan_oscillation_angle_number(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    entity_id: str,
+    set_method: str,
+) -> None:
+    """Test horizontal/vertical oscillation angle number entities."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="standing_fan")
+    entry.add_to_hass(hass)
+
+    mocked_set = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.number.switchbot.SwitchbotStandingFan",
+        get_basic_info=AsyncMock(return_value=None),
+        **{set_method: mocked_set},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 60},
+            blocking=True,
+        )
+
+        mocked_set.assert_awaited_once_with(60)
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == 60

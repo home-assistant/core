@@ -50,8 +50,8 @@ async def test_device_diagnostics(
         hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://1234-5678-6867/16756006")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "rts://1234-5678-6867/16756006"), init_integration.entry_id
     )
     assert device is not None
 
@@ -79,8 +79,8 @@ async def test_device_diagnostics_execution_history_subsystem(
         hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://1234-5678-6867/16756006")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "rts://1234-5678-6867/16756006"), init_integration.entry_id
     )
     assert device is not None
 

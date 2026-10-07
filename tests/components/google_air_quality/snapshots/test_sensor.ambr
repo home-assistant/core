@@ -90,7 +90,7 @@
     'supported_features': 0,
     'translation_key': 'benzene',
     'unique_id': 'c6h6_10.1_20.1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_benzene-state]
@@ -99,7 +99,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Benzene',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_benzene',
@@ -559,7 +559,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'pm10_10.1_20.1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm10-state]
@@ -569,7 +569,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -615,7 +615,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'pm25_10.1_20.1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm2_5-state]
@@ -625,7 +625,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -1280,7 +1280,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'pm10_10.1_20.1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm10-state]
@@ -1290,7 +1290,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -1336,7 +1336,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'pm25_10.1_20.1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm2_5-state]
@@ -1346,7 +1346,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',

@@ -4,8 +4,14 @@ import datetime
 import logging
 from typing import override
 
-from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice, TriState
-import httpx
+from ccm15 import (
+    CCM15Device,
+    CCM15DeviceState,
+    CCM15ReturnCode,
+    CCM15SlaveDevice,
+    TriState,
+)
+import httpx2
 
 from homeassistant.components.climate import SWING_ON, HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -53,7 +59,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Fetch data from Rain Bird device."""
         try:
             return await self._fetch_data()
-        except httpx.RequestError as err:  # pragma: no cover
+        except httpx2.RequestError as err:  # pragma: no cover
             raise UpdateFailed("Error communicating with Device") from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
@@ -62,7 +68,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_state(self, ac_index: int, data) -> None:
         """Set new target states."""
-        if await self._ccm15.async_set_state(ac_index, data):
+        if await self._ccm15.async_set_state(ac_index, data) is CCM15ReturnCode.OK:
             await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:

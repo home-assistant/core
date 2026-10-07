@@ -9,11 +9,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_LOCK_DEFAULT_CODE, LOGGER
+from .const import CONF_GIID, CONF_LOCK_DEFAULT_CODE, DOMAIN, LOGGER
 from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -23,6 +29,15 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Verisure integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
@@ -38,7 +53,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> 
 
     entry.runtime_data = coordinator
 
-    # Migrate lock default code from config entry to lock entity
+    # Register the alarm (VBox) device so children can link to it via via_device_id
+    # regardless of platform setup order.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_GIID])},
+        manufacturer="Verisure",
+        model="VBox",
+        name="Verisure Alarm",
+        configuration_url="https://mypages.verisure.com",
+    )
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

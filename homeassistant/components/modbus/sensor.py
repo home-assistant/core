@@ -25,12 +25,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
 )
 from .entity import ModbusStructEntity
 from .modbus import ModbusHub
@@ -100,7 +100,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=None,
             name=name,
         )
