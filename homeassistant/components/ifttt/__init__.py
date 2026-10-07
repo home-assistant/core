@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_API_KEYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +68,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     api_keys = config[DOMAIN][CONF_KEY]
     if isinstance(api_keys, str):
         api_keys = {"default": api_keys}
+    hass.data[DATA_API_KEYS] = api_keys
 
     def trigger_service(call: ServiceCall) -> None:
         """Handle IFTTT trigger service calls."""
+        api_keys = call.hass.data[DATA_API_KEYS]
         event = call.data[ATTR_EVENT]
         targets = call.data.get(ATTR_TARGET, list(api_keys))
         value1 = call.data.get(ATTR_VALUE1)
