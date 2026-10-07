@@ -89,7 +89,7 @@
       ]),
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 24.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 24.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',

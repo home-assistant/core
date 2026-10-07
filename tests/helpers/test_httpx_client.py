@@ -1,14 +1,22 @@
 """Test the httpx client helper."""
 
+import ssl
 from unittest.mock import Mock, patch
 
-import httpx
+import httpcore2
+from httpcore2._backends.mock import AsyncMockBackend
+import httpx2
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client as client
-from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSL_ALPN_HTTP11_HTTP2
+from homeassistant.util.ssl import (
+    SSL_ALPN_HTTP11,
+    SSL_ALPN_HTTP11_HTTP2,
+    SSLCipherList,
+    client_context,
+)
 
 from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
@@ -19,7 +27,7 @@ async def test_get_async_client_with_ssl(hass: HomeAssistant) -> None:
 
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
 
@@ -29,7 +37,7 @@ async def test_get_async_client_without_ssl(hass: HomeAssistant) -> None:
 
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(False, SSL_ALPN_HTTP11)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
 
@@ -40,7 +48,7 @@ async def test_create_async_httpx_client_with_ssl_and_cookies(
     client.get_async_client(hass)
 
     httpx_client = client.create_async_httpx_client(hass, cookies={"bla": True})
-    assert isinstance(httpx_client, httpx.AsyncClient)
+    assert isinstance(httpx_client, httpx2.AsyncClient)
     assert hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)] != httpx_client
 
 
@@ -53,7 +61,7 @@ async def test_create_async_httpx_client_without_ssl_and_cookies(
     httpx_client = client.create_async_httpx_client(
         hass, verify_ssl=False, cookies={"bla": True}
     )
-    assert isinstance(httpx_client, httpx.AsyncClient)
+    assert isinstance(httpx_client, httpx2.AsyncClient)
     assert hass.data[client.DATA_ASYNC_CLIENT][(False, SSL_ALPN_HTTP11)] != httpx_client
 
 
@@ -62,7 +70,7 @@ async def test_create_async_httpx_client_default_headers(
 ) -> None:
     """Test init async client with default headers."""
     httpx_client = client.create_async_httpx_client(hass)
-    assert isinstance(httpx_client, httpx.AsyncClient)
+    assert isinstance(httpx_client, httpx2.AsyncClient)
     assert httpx_client.headers[client.USER_AGENT] == client.SERVER_SOFTWARE
 
 
@@ -71,7 +79,7 @@ async def test_create_async_httpx_client_with_headers(
 ) -> None:
     """Test init async client with headers."""
     httpx_client = client.create_async_httpx_client(hass, headers={"x-test": "true"})
-    assert isinstance(httpx_client, httpx.AsyncClient)
+    assert isinstance(httpx_client, httpx2.AsyncClient)
     assert httpx_client.headers["x-test"] == "true"
     # Default headers are preserved
     assert httpx_client.headers[client.USER_AGENT] == client.SERVER_SOFTWARE
@@ -83,7 +91,7 @@ async def test_get_async_client_cleanup(hass: HomeAssistant) -> None:
 
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
@@ -98,7 +106,7 @@ async def test_get_async_client_cleanup_without_ssl(hass: HomeAssistant) -> None
 
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(False, SSL_ALPN_HTTP11)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
@@ -110,11 +118,11 @@ async def test_get_async_client_cleanup_without_ssl(hass: HomeAssistant) -> None
 async def test_get_async_client_patched_close(hass: HomeAssistant) -> None:
     """Test closing the async client does not work."""
 
-    with patch("httpx.AsyncClient.aclose") as mock_aclose:
+    with patch("httpx2.AsyncClient.aclose") as mock_aclose:
         httpx_session = client.get_async_client(hass)
         assert isinstance(
             hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)],
-            httpx.AsyncClient,
+            httpx2.AsyncClient,
         )
 
         with pytest.raises(RuntimeError):
@@ -126,11 +134,11 @@ async def test_get_async_client_patched_close(hass: HomeAssistant) -> None:
 async def test_get_async_client_context_manager(hass: HomeAssistant) -> None:
     """Test using the async client with a context manager does not close the session."""
 
-    with patch("httpx.AsyncClient.aclose") as mock_aclose:
+    with patch("httpx2.AsyncClient.aclose") as mock_aclose:
         httpx_session = client.get_async_client(hass)
         assert isinstance(
             hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)],
-            httpx.AsyncClient,
+            httpx2.AsyncClient,
         )
 
         async with httpx_session:
@@ -148,11 +156,11 @@ async def test_get_async_client_http2(hass: HomeAssistant) -> None:
     assert http1_client is not http2_client
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11_HTTP2)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
     # Same parameters should return cached client
@@ -169,7 +177,7 @@ async def test_get_async_client_http2_cleanup(hass: HomeAssistant) -> None:
 
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(True, SSL_ALPN_HTTP11_HTTP2)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
@@ -186,7 +194,7 @@ async def test_get_async_client_http2_without_ssl(hass: HomeAssistant) -> None:
 
     assert isinstance(
         hass.data[client.DATA_ASYNC_CLIENT][(False, SSL_ALPN_HTTP11_HTTP2)],
-        httpx.AsyncClient,
+        httpx2.AsyncClient,
     )
 
     # Same parameters should return cached client
@@ -209,8 +217,8 @@ async def test_create_async_httpx_client_http2(hass: HomeAssistant) -> None:
     assert http1_client is not http2_client
 
     # Both should be valid clients
-    assert isinstance(http1_client, httpx.AsyncClient)
-    assert isinstance(http2_client, httpx.AsyncClient)
+    assert isinstance(http1_client, httpx2.AsyncClient)
+    assert isinstance(http2_client, httpx2.AsyncClient)
 
 
 async def test_warning_close_session_integration(
@@ -296,3 +304,30 @@ async def test_warning_close_session_custom(
         "at custom_components/hue/light.py, line 23: await session.aclose(). "
         "Please report it to the author of the 'hue' custom integration"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("alpn_protocols", "http2"),
+    [
+        pytest.param(SSL_ALPN_HTTP11, False, id="http1"),
+        pytest.param(SSL_ALPN_HTTP11_HTTP2, True, id="http2"),
+    ],
+)
+async def test_httpcore2_does_not_mutate_ssl_context_alpn(
+    alpn_protocols: tuple[str, ...], http2: bool
+) -> None:
+    """Test httpcore2 sets the same ALPN protocols HA preconfigured."""
+    context = client_context(SSLCipherList.PYTHON_DEFAULT, alpn_protocols)
+    backend = AsyncMockBackend(
+        [b"HTTP/1.1 200 OK\r\n", b"Content-Length: 0\r\n", b"\r\n"]
+    )
+
+    with patch.object(
+        ssl.SSLContext, "set_alpn_protocols", autospec=True
+    ) as mock_set_alpn:
+        async with httpcore2.AsyncConnectionPool(
+            ssl_context=context, http2=http2, network_backend=backend
+        ) as pool:
+            await pool.request("GET", "https://example.com/")
+
+    mock_set_alpn.assert_called_once_with(context, list(alpn_protocols))

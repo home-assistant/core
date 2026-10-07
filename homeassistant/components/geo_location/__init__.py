@@ -7,7 +7,11 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE  # noqa: F401
+from homeassistant.const import (  # noqa: F401
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -15,11 +19,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import GeolocationEntityStateAttribute
+from .const import DOMAIN, GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "geo_location"
 DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
@@ -105,7 +108,7 @@ class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state attributes of this external event."""
         data: dict[str, Any] = {GeolocationEntityStateAttribute.SOURCE: self.source}
         if self.latitude is not None:
-            data[GeolocationEntityStateAttribute.LATITUDE] = round(self.latitude, 5)
+            data[EntityStateAttribute.LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
-            data[GeolocationEntityStateAttribute.LONGITUDE] = round(self.longitude, 5)
+            data[EntityStateAttribute.LONGITUDE] = round(self.longitude, 5)
         return data

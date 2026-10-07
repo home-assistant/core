@@ -15,6 +15,20 @@
         "rtime_last_played": 1782145718,
         "content_descriptorids": [1, 2, 5],
         "playtime_disconnected": 0
+      },
+      {
+        "appid": 1180660,
+        "name": "Tell Me Why",
+        "playtime_forever": 1267,
+        "img_icon_url": "6eb40e6f71226ce5bea75601a1ec0f9d6f647dd1",
+        "has_community_visible_stats": true,
+        "playtime_windows_forever": 1267,
+        "playtime_mac_forever": 0,
+        "playtime_linux_forever": 0,
+        "playtime_deck_forever": 0,
+        "rtime_last_played": 1642893397,
+        "content_descriptorids": [5],
+        "playtime_disconnected": 0
       }
     ]
   }

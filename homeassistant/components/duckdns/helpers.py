@@ -12,7 +12,7 @@ async def update_duckdns(
     domain: str,
     token: str,
     *,
-    txt: str | None | UndefinedType = UNDEFINED,
+    txt: str | UndefinedType | None = UNDEFINED,
     clear: bool = False,
 ) -> bool:
     """Update DuckDNS."""

@@ -8,7 +8,7 @@ import traceback
 from types import FrameType
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
@@ -17,46 +17,46 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    CONF_FIRE_EVENT,
+    CONF_LEVEL,
+    CONF_LOGGER,
+    CONF_MAX_ENTRIES,
+    CONF_MESSAGE,
+    DEFAULT_FIRE_EVENT,
+    DEFAULT_MAX_ENTRIES,
+    DOMAIN,
+    EVENT_SYSTEM_LOG,
+    SERVICE_CLEAR,
+    SERVICE_WRITE,
+)
+
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
 
-CONF_MAX_ENTRIES = "max_entries"
-CONF_FIRE_EVENT = "fire_event"
-CONF_MESSAGE = "message"
-CONF_LEVEL = "level"
-CONF_LOGGER = "logger"
-
-DATA_SYSTEM_LOG = "system_log"
-DEFAULT_MAX_ENTRIES = 50
-DEFAULT_FIRE_EVENT = False
-DOMAIN = "system_log"
-
-EVENT_SYSTEM_LOG = "system_log_event"
-
-SERVICE_CLEAR = "clear"
-SERVICE_WRITE = "write"
-
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES
                 ): cv.positive_int,
-                vol.Optional(CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT): cv.boolean,
+                probatio.Optional(
+                    CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT
+                ): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_CLEAR_SCHEMA = vol.Schema({})
-SERVICE_WRITE_SCHEMA = vol.Schema(
+SERVICE_CLEAR_SCHEMA = probatio.Schema({})
+SERVICE_WRITE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MESSAGE): cv.string,
-        vol.Optional(CONF_LEVEL, default="error"): vol.In(
+        probatio.Required(CONF_MESSAGE): cv.string,
+        probatio.Optional(CONF_LEVEL, default="error"): probatio.In(
             ["debug", "info", "warning", "error", "critical"]
         ),
-        vol.Optional(CONF_LOGGER): cv.string,
+        probatio.Optional(CONF_LOGGER): cv.string,
     }
 )
 
@@ -340,7 +340,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "system_log/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "system_log/list"})
 @callback
 def list_errors(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]

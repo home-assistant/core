@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
@@ -505,3 +505,49 @@ async def test_service_pck(
         )
 
     pck.assert_awaited_with("PIN4")
+
+
+async def test_service_unknown_device_id(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+) -> None:
+    """Test service call with an unknown device id raises."""
+    await async_setup_component(hass, "persistent_notification", {})
+    await init_integration(hass, entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.PCK,
+            {
+                CONF_DEVICE_ID: "unknown_device_id",
+                CONF_PCK: "PIN4",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_not_found"
+
+
+async def test_service_unloaded_config_entry(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+) -> None:
+    """Test service call to a device of an unloaded config entry raises."""
+    await async_setup_component(hass, "persistent_notification", {})
+    await init_integration(hass, entry)
+    device_id = get_device(hass, entry, (0, 7, False)).id
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.PCK,
+            {
+                CONF_DEVICE_ID: device_id,
+                CONF_PCK: "PIN4",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"

@@ -107,7 +107,11 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 "probe_number": str(probe_number),
             },
             identifiers={(DOMAIN, f"{self.address}_{probe_number}")},
-            via_device=(DOMAIN, self.address),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.address),
+                config_entry_id=self.config_entry.entry_id,
+            ),
         )
 
     @callback

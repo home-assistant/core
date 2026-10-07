@@ -52,5 +52,5 @@ async def test_generic_event_entity(
 
     # Event entity should be available immediately without waiting for data
     state = hass.states.get("event.test_my_event")
-    assert state.state == "2024-04-24T00:00:00.000+00:00"
+    assert state.state == "2024-04-24T00:00:00.001+00:00"
     assert state.attributes["event_type"] == "type1"

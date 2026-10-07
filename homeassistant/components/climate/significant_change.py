@@ -15,14 +15,14 @@ SIGNIFICANT_ATTRIBUTES: set[str] = {
     ClimateEntityStateAttribute.CURRENT_HUMIDITY,
     ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
     ClimateEntityStateAttribute.FAN_MODE,
-    ClimateEntityStateAttribute.HUMIDITY,
+    ClimateEntityStateAttribute.TARGET_HUMIDITY,
     ClimateEntityStateAttribute.HVAC_ACTION,
     ClimateEntityStateAttribute.PRESET_MODE,
     ClimateEntityStateAttribute.SWING_MODE,
     ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
     ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
     ClimateEntityStateAttribute.TARGET_TEMP_LOW,
-    ClimateEntityStateAttribute.TEMPERATURE,
+    ClimateEntityStateAttribute.TARGET_TEMPERATURE,
 }
 
 
@@ -74,7 +74,7 @@ def async_check_significant_change(
             ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
             ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
             ClimateEntityStateAttribute.TARGET_TEMP_LOW,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
         ]:
             if ha_unit == UnitOfTemperature.FAHRENHEIT:
                 absolute_change = 1.0
@@ -83,7 +83,7 @@ def async_check_significant_change(
 
         if attr_name in [
             ClimateEntityStateAttribute.CURRENT_HUMIDITY,
-            ClimateEntityStateAttribute.HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
         ]:
             absolute_change = 1.0
 

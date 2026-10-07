@@ -1,17 +1,23 @@
 """Fixtures for Lunatone tests."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
-from lunatone_rest_api_client.models import InfoData, SensorsData
+from lunatone_rest_api_client.models import (
+    InfoData,
+    ScanData,
+    ScanLineData,
+    SensorsData,
+)
 import pytest
 
 from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SENSORS_DATA, UUID, build_devices_data
+from . import BASE_URL, INFO_DATA, SENSORS_DATA, UUID, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +33,24 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lunatone_devices() -> Generator[AsyncMock]:
+def mock_lunatone_auth() -> Generator[AsyncMock]:
+    """Mock a Lunatone Auth object."""
+    with (
+        patch(
+            "homeassistant.components.lunatone.Auth",
+            autospec=True,
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.lunatone.config_flow.Auth",
+            new=mock_auth,
+        ),
+    ):
+        auth = mock_auth.return_value
+        yield auth
+
+
+@pytest.fixture
+def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
 
     def build_devices_mock(devices: Devices):
@@ -76,6 +99,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         "homeassistant.components.lunatone.Devices", autospec=True
     ) as mock_devices:
         devices = mock_devices.return_value
+        devices.auth = mock_lunatone_auth
         devices.data = build_devices_data()
         type(devices).devices = PropertyMock(
             side_effect=lambda d=devices: build_devices_mock(d)
@@ -84,7 +108,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lunatone_info() -> Generator[AsyncMock]:
+def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
     """Mock a Lunatone info object."""
     with (
         patch(
@@ -101,35 +125,32 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
         ),
     ):
         info = mock_info.return_value
+        info.auth = mock_lunatone_auth
 
         def _set_data(data: InfoData) -> Info:
             info.data = data
-            info.name = info.data.name
-            info.product_name = PRODUCT_NAME
-            info.serial_number = info.data.device.serial
-            info.uid = info.data.uid
-            info.version = info.data.version
             return info
 
         info.set_data = _set_data
-        info.set_data(INFO_DATA)
+        info.set_data(deepcopy(INFO_DATA))
         yield info
 
 
 @pytest.fixture
-def mock_lunatone_dali_broadcast() -> Generator[AsyncMock]:
+def mock_lunatone_dali_broadcast(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
     """Mock a Lunatone DALI broadcast object."""
     with patch(
-        "homeassistant.components.lunatone.DALIBroadcast",
+        "homeassistant.components.lunatone.light.DALIBroadcast",
         autospec=True,
     ) as mock_dali_broadcast:
         dali_broadcast = mock_dali_broadcast.return_value
+        dali_broadcast.auth = mock_lunatone_auth
         dali_broadcast.line = 0
         yield dali_broadcast
 
 
 @pytest.fixture
-def mock_lunatone_sensors() -> Generator[AsyncMock]:
+def mock_lunatone_sensors(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
     """Mock a Lunatone sensors object."""
 
     def build_sensors_mock(sensors: Sensors):
@@ -139,8 +160,6 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
         for sensor_data in sensors.data.sensors:
             sensor = AsyncMock(spec=Sensor)
             sensor.data = sensor_data
-            sensor.id = sensor.data.id
-            sensor.name = sensor.data.name
             sensor_list.append(sensor)
         return sensor_list
 
@@ -149,6 +168,7 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_info:
         sensors = mock_info.return_value
+        sensors.auth = mock_lunatone_auth
 
         def _set_data(data: SensorsData) -> None:
             sensors.data = data
@@ -159,6 +179,27 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
         sensors.set_data = _set_data
         sensors.set_data(SENSORS_DATA)
         yield sensors
+
+
+@pytest.fixture
+def mock_lunatone_scan(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+    """Mock a Lunatone DALI scan object."""
+    with (
+        patch(
+            "homeassistant.components.lunatone.DALIScan",
+            autospec=True,
+        ) as mock_dali_scan,
+        patch(
+            "homeassistant.components.lunatone.coordinator.DALIScan",
+            new=mock_dali_scan,
+        ),
+    ):
+        scan = mock_dali_scan.return_value
+        scan.auth = mock_lunatone_auth
+        scan.data = ScanData(
+            lines=[ScanLineData(line=int(line_id)) for line_id in INFO_DATA.lines]
+        )
+        yield scan
 
 
 @pytest.fixture

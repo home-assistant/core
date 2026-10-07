@@ -5,7 +5,7 @@ import logging
 
 DOMAIN = "yoto"
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 YOTO_AUDIENCE = "https://api.yotoplay.com"
 

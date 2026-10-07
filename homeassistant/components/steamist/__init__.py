@@ -1,4 +1,5 @@
 """The Steamist integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 from typing import Any

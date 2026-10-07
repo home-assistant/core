@@ -226,7 +226,7 @@ async def async_setup_entry(
     ] = [
         ReolinkSensorEntity(reolink_data, channel, entity_description)
         for entity_description in SENSORS
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(

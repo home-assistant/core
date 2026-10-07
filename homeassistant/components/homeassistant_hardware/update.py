@@ -8,7 +8,6 @@ from typing import Any, cast, override
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.update import (
@@ -28,8 +27,10 @@ from .helpers import async_register_firmware_info_callback
 from .util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
     async_get_raspberry_pi_firmware_info,
     async_update_raspberry_pi_firmware,
     humanize_rpi_firmware_version,
@@ -99,7 +100,7 @@ class BaseFirmwareUpdateEntity(
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
     _attr_has_entity_name = True
-    _flasher_cls: type[DeviceSpecificFlasher]
+    _flasher_type: FlasherType
 
     def __init__(
         self,
@@ -198,7 +199,7 @@ class BaseFirmwareUpdateEntity(
                     self.entity_description.expected_firmware_type,
                     self._current_firmware_info.firmware_type,
                 )
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.warning(
                     "Failed to call firmware type changed callback", exc_info=True
                 )
@@ -292,7 +293,9 @@ class BaseFirmwareUpdateEntity(
                     hass=self.hass,
                     device=self._current_device,
                     fw_data=fw_data,
-                    flasher_cls=self._flasher_cls,
+                    flasher_cls=await async_get_flasher_cls(
+                        self.hass, self._flasher_type
+                    ),
                     expected_installed_firmware_type=self.entity_description.expected_firmware_type,
                     progress_callback=self._update_progress,
                 )

@@ -5,7 +5,7 @@ from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import init_integration, init_integration_gen4
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -23,4 +23,22 @@ async def test_entry_diagnostics(
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
+    assert result == snapshot(exclude=props("created_at", "modified_at", "entry_id"))
+
+
+async def test_entry_diagnostics_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Gen4 fixture names are redacted from diagnostics."""
+    entry = await init_integration_gen4(hass, aioclient_mock)
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    fixture_names = [
+        fixture["name"] for fixture in result["device"]["status"]["light_fixtures"]
+    ]
+    assert fixture_names == ["**REDACTED**", "**REDACTED**"]
     assert result == snapshot(exclude=props("created_at", "modified_at", "entry_id"))
